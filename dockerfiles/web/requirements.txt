@@ -1,0 +1,13 @@
+Django >= 2.0
+psycopg2-binary
+
+#django rest framework requirements
+djangorestframework
+markdown       # Markdown support for the browsable API.
+django-filter  # Filtering support
+
+
+paramiko #python ssh support
+Celery   #job queue support
+django-encrypted-model-fields
+docutils

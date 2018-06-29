@@ -1,0 +1,15 @@
+<h1>Jobs</h1>
+
+<ul>
+{% for job in jobs %}
+    <li>
+        {{ job.date_created|date }} - {{ job.cluster }} - {{ job.status }} : {{ job.status.description }}
+        <form action="{% url 'job_manager:submit_job' job.pk %}" method="post">
+        {% csrf_token %}
+        <input type="submit" value="Submit" />
+        </form>
+    </li>
+{% empty %}
+    <li>No articles yet.</li>
+{% endfor %}
+</ul>

@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+
+  web:
+    build: ./dockerfiles/web
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - ssh
+
+  adminer:
+    image: adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+  ssh:
+    build: ./dev/dockerfiles/test_cluster
+
+  rabbitmq:
+    image: rabbitmq:3.7.6-management
+    hostname: rabbitmq
+    ports:
+      - "15672:15672"
+
+  celery:
+    build: ./dockerfiles/web
+    volumes:
+      - .:/code
+    depends_on:
+      - rabbitmq
+    command: celery -A dirt2 worker --loglevel=info
