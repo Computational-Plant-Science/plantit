@@ -80,6 +80,7 @@ function update_status {
   DATE_TIME=$(date +%Y-%m-%dT%H:%M:%S)
   JSON="{
       \"submission_id\": \"\",
+      \"task_set\": [],
       \"status_set\": [
           {
               \"state\": $STATE,
@@ -87,6 +88,33 @@ function update_status {
               \"description\": \"$DESC\"
           }
       ]
+  }"
+
+  rest_command "$JSON" $JOB_PK "$TOKEN"
+}
+
+function task_complete {
+  if [ "$#" -lt 4 ]; then
+    echo "    Mark a task within a job complete"
+    echo "    Usage: status job_id state desc token"
+    echo "       job_id     the server assigned job id"
+    echo "       task_id    the server assigned task id"
+    echo "       token      authentication token provided by the webserver"
+    exit 1
+  fi
+
+  JOB_PK=${2}
+  TASK="${3}"
+  TOKEN="${4:-}"
+  JSON="{
+      \"submission_id\": \"\",
+      \"task_set\": [
+          {
+              \"pk\": $TASK,
+              \"complete\": \"true\"
+          }
+      ],
+      \"status_set\": []
   }"
 
   rest_command "$JSON" $JOB_PK "$TOKEN"
@@ -109,6 +137,7 @@ function update_sub_id {
   DATE_TIME=$(date +%Y-%m-%dT%H:%M:%S)
   JSON="{
     \"submission_id\": "$SUB_ID",
+    \"task_set\": [],
     \"status_set\": []
   }"
 
@@ -135,6 +164,14 @@ function help {
   echo "       job_id        the server assigned job id"
   echo "       submission_id the submission id"
   echo "       token          authentication token provided by the webserver"
+  echo ""
+  echo " task_complete:"
+  echo "   Set the submission id of the job. This is the id assigned by the"
+  echo "    cluster and is passsed to the server cancel script."
+  echo "   Usage: submission_id job_id submission_id token"
+  echo "       job_id        the server assigned job id"
+  echo "       submission_id the submission id"
+  echo "       token          authentication token provided by the webserver"
 }
 
 function main {
@@ -150,6 +187,9 @@ function main {
       ;;
     sub_id)
       update_sub_id "$@"
+      ;;
+    task_complete)
+      task_complete "$@"
       ;;
     help)
       help

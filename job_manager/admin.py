@@ -2,11 +2,10 @@ from django.contrib import admin
 from django import forms
 
 # Register your models here.
-from .models import Cluster,Job,Executor,File,Status
+from .models import Cluster, Status, Job, Task
+from .contrib import SubmissionTask, File
 from django.utils import timezone
-from job_manager import tasks
 from django.forms import ModelForm, PasswordInput
-
 
 class StatusInline(admin.StackedInline):
     readonly_fields = ['state', 'date', 'description']
@@ -17,9 +16,18 @@ class StatusInline(admin.StackedInline):
     def has_add_permission(self, request, obj=None):
         return False
 
+class TaskInline(admin.StackedInline):
+    readonly_fields = ['name','description','order_pos']
+    can_delete = False
+    model = Task
+    extra = 0
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
 class JobAdmin(admin.ModelAdmin):
     readonly_fields = ['auth_token', 'date_created', 'submission_id']
-    inlines = [StatusInline]
+    inlines = [StatusInline, TaskInline]
 
     def save_model(self, request, obj, form, change):
         super(JobAdmin, self).save_model(request, obj, form, change)
@@ -47,7 +55,7 @@ class ClusterForm(ModelForm):
 class ClusterAdmin(admin.ModelAdmin):
     form = ClusterForm
 
-admin.site.register(Executor)
+admin.site.register(SubmissionTask)
 admin.site.register(Job,JobAdmin)
 admin.site.register(Cluster, ClusterAdmin)
 admin.site.register(File, FileAdmin)

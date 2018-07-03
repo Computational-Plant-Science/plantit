@@ -8,7 +8,8 @@
 #
 ##
 job_pk=${1}
-token=${2}
+task_pk=${2}
+token=${3}
 
 ./server_update sub_id $job_pk "$RANDOM" "$token"
-./server_update status $job_pk 1 "Completed Confirmed" "$token"
+./server_update task_complete $job_pk $task_pk "$token"

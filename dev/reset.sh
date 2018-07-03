@@ -4,11 +4,12 @@
 # Resets everything back to a "Fresh" install by:
 #   - rebuilding all docker images
 #   - deleting all docker volumes
-#   - removing all django mmigrations
+#   - removing all django migrations
 # then rebuilds the images and runs initial django migration and
 #  creates an admin user:
 #      username: admin
 #      pass: admin
+#  as well as a default cluster and executor that ssh into the ssh docker cluster
 #
 
 #Delete all docker containers and volumes
@@ -41,16 +42,12 @@ docker-compose run web python manage.py shell << PYTHONCODE
 
 #Default admin user
 from django.contrib.auth.models import User;
-User.objects.create_superuser('admin', 'admin@example.com', 'admin')
+user = User.objects.create_superuser('admin', 'admin@example.com', 'admin')
 
 #Default objects to work with
-from job_manager.models import Cluster, Executor, Job
-from job_manager.test.test_models import create_cluster, create_script, create_executor
-cluster = create_cluster("./{sub_script} {job_pk} {auth_token}")
-sub_script = create_script('/code/dev/server_scripts/confirm_complete.sh')
-status_script = create_script('/code/dev/server_scripts/update_status.sh')
-exe = create_executor(sub_script)
-exe.files.add(status_script)
+from job_manager.models import Cluster
+from job_manager.test.test_models import create_cluster
+cluster = create_cluster("./{sub_script} {job_pk} {task_pk} {auth_token}")
 
 #END PYTHON CODE
 PYTHONCODE

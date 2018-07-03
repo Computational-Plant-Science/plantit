@@ -1,4 +1,4 @@
-from job_manager.models import Job, Status
+from job_manager.models import Job, Status, Task
 from rest_framework import serializers
 
 
@@ -7,12 +7,20 @@ class StatusSerializer(serializers.ModelSerializer):
         model = Status
         fields = ('state', 'date', 'description' )
 
+class TaskSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField()
+
+    class Meta:
+        model = Task
+        fields = ('pk','complete',)
+
 class JobSerializer(serializers.HyperlinkedModelSerializer):
     status_set = StatusSerializer(many=True)
+    task_set = TaskSerializer(many=True)
 
     class Meta:
         model = Job
-        fields = ('pk', 'date_created', 'status_set', 'submission_id')
+        fields = ('pk', 'date_created','submission_id', 'task_set', 'status_set')
 
     def create(self, validated_data):
         status_data = validated_data.pop('status_set')
@@ -25,20 +33,18 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
     def update(self, job, validated_data):
         if(validated_data['submission_id']):
             job.submission_id = validated_data['submission_id']
-        status_data = validated_data.pop('status_set')
-        for status in status_data:
-            Status.objects.create(job = job, **status)
+
+        status_data = validated_data.get('status_set',None)
+        if(status_data):
+            for status in status_data:
+                Status.objects.create(job = job, **status)
+
+        task_list = validated_data.get('task_set',None)
+        if(task_list):
+            for task_data in task_list:
+                task = job.task_set.get(pk=task_data['pk'])
+                if(task.complete == False and task_data['complete'] == True):
+                    task.finish()
+
         job.save()
         return job
-
-    #
-    # def get_current_status(self, job):
-    #     serializer = StatusSerializer(instance=job.current_status())
-    #     return serializer.data
-    #
-    # def validate_current_status(self, value):
-    #     print(value)
-    #
-    # def update(self, instance, validated_data):
-    #     print(validated_data)
-    #     return instance

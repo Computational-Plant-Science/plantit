@@ -3,7 +3,7 @@ import json
 from django.test import TestCase
 from rest_framework.test import APITestCase
 
-from job_manager.test.test_models import create_job
+from job_manager.test.test_models import create_job, add_task
 # Using the standard RequestFactory API to create a form POST request
 
 class TestAPI(APITestCase):
@@ -35,6 +35,7 @@ class TestAPI(APITestCase):
          Test updating a job's status
         """
         j = create_job()
+        e = add_task(j)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + j.auth_token)
         packet = {"submission_id" : "",
                    "status_set" : [
@@ -49,6 +50,7 @@ class TestAPI(APITestCase):
         response_data = json.loads(response.content)
         self.assertEqual(200,response.status_code)
         self.assertEqual("Status Set",response_data['status_set'][0]['description'])
+        self.assertEqual(1,response_data['task_set'][0]['pk'])
 
     def test_set_submission_id(self):
         """
@@ -63,3 +65,23 @@ class TestAPI(APITestCase):
         response_data = json.loads(response.content)
         self.assertEqual(200,response.status_code)
         self.assertEqual('55',response_data['submission_id'])
+
+    def test_set_task_state(self):
+        """
+            Test setting a job task to complete
+        """
+        j = create_job()
+        t = add_task(j)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + j.auth_token)
+        packet = {"submission_id" : 55,
+                   "task_set" : [{
+                    "pk": t.pk,
+                    "complete": True
+                    }
+                   ]
+                 }
+        response = self.client.patch(self.url + '/jobs/' + str(j.pk) + '/',packet, format='json')
+        response_data = json.loads(response.content)
+        self.assertEqual(200,response.status_code)
+        self.assertEqual(t.pk,response_data['task_set'][0]['pk'])
+        self.assertEqual(True,response_data['task_set'][0]['complete'])

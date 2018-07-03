@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'encrypted_model_fields',
     'job_manager.apps.JobManagerConfig',
-    'job_manager.api'
+    'job_manager.api',
 ]
 
 MIDDLEWARE = [

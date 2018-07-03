@@ -11,3 +11,4 @@ paramiko #python ssh support
 Celery   #job queue support
 django-encrypted-model-fields
 docutils
+django-model-utils # InheritanceManager used for Tasks

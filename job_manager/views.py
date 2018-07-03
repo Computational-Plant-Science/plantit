@@ -4,7 +4,6 @@ from django.views import generic
 from .models import Job
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-from job_manager import tasks
 
 # Create your views here.
 @login_required
@@ -21,6 +20,6 @@ def job_list(request):
 
 @login_required
 def submit_job(request, job_pk):
-    tasks.submit_job(job_pk)
+    Job.run_next(job_pk)
 
     return HttpResponseRedirect(reverse('job_manager:job_list'))

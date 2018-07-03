@@ -8,7 +8,10 @@ from django.utils import timezone
 from django.core import files
 from django.contrib.auth.models import User;
 
-from job_manager.models import Job, Status, Cluster, Executor, File
+
+from job_manager.models import Status, Cluster, Job, Task
+from job_manager.models import __cancel_job__, __run_next__
+from job_manager.contrib import SubmissionTask, File, DummyTask
 
 # Create your tests here.
 def create_script(file=None):
@@ -32,40 +35,36 @@ def create_cluster(submit_commands=None,uname=None):
                 hostname="ssh",
                 workdir="/root/",
                 submit_commands=submit_commands,
-                cancel_commands="")
+                cancel_commands="ls /")
     c.save()
     return c
 
-def create_executor(script = None):
+def add_task(job,script = None):
     if(not script):
         script = create_script()
 
-    e = Executor(name="test executor",
+    e = SubmissionTask(name="Test Task",
                  description="Does not do anything",
-                 submission_script=script)
+                 submission_script=script,
+                 job=job)
     e.save()
     return e
 
 def create_user():
     uname = 'test_' + ''.join(random.choice(string.ascii_letters) for x in range(5))
-    uname = 'email_' + ''.join(random.choice(string.ascii_letters) for x in range(5))
-    return User.objects.create_user('uname','no-email','test')
+    email = 'email_' + ''.join(random.choice(string.ascii_letters) for x in range(5))
+    return User.objects.create_user(uname,email,'test')
 
-def create_job(cluster = None, executor = None):
+def create_job(cluster = None, user = None):
     if(not cluster):
         cluster = create_cluster()
 
-    if(not executor):
-        executor = Executor(name="test executor",
-                    description="Does not do anything")
-        executor.save()
-
-    u = create_user()
+    if(not user):
+        user = create_user()
 
     j = Job(date_created=timezone.now(),
             cluster=cluster,
-            executor=executor,
-            user=u)
+            user=user)
     j.save()
     j.status_set.create(state=Status.CREATED,date=timezone.now(),description="Created")
     return j
@@ -79,4 +78,79 @@ class JobModelTests(TestCase):
         j = create_job()
         time = timezone.now() + datetime.timedelta(days=1)
         j.status_set.create(state=Status.RUNNING,date=time,description="Updated")
-        self.assertIs(j.current_status().date == time, True)
+        self.assertEqual(j.current_status().date,time)
+
+    def test_submit_job(self):
+        """
+            Test submitting job to cluster
+        """
+        c = create_cluster()
+        j = create_job(cluster=c)
+        add_task(j)
+
+        try:
+            __run_next__(j.pk)
+        except:
+            self.assertIs(False,True)
+
+    def test_login_failed(self):
+        """
+            Test that job state is set to FAILED if server login fails
+        """
+        c = create_cluster(uname="hacker")
+        j = create_job(cluster=c)
+        add_task(j)
+        __run_next__(j.pk)
+        self.assertEqual(j.current_status().state,Status.FAILED)
+
+    def test_submit_failed(self):
+        """
+            Test job state is set to FAILED if the server scripts return
+            and error code
+        """
+        c = create_cluster(submit_commands="cat a_file_that_does_not_exist.sh")
+        j = create_job(cluster=c)
+        add_task(j)
+        __run_next__(j.pk)
+        self.assertEqual(j.current_status().state,Status.FAILED)
+
+    def test_cancel_unsubmitted_job(self):
+        """
+            Test that a canceled job that was not sumbitted to the cluster
+            is has a state of FAILED
+        """
+        j = create_job()
+        __cancel_job__(j.pk)
+        self.assertEqual(j.current_status().state,Status.FAILED)
+
+    def test_multi_task_job(self):
+        j = create_job()
+
+        t2 = DummyTask(name="Task 2",
+                     description="should run Second",
+                     job = j,
+                     order_pos = 2)
+        t2.save()
+        t1 = DummyTask(name="Task 1",
+                     description="should run first",
+                     job = j,
+                     order_pos = 1)
+        t1.save()
+
+        __run_next__(j.pk)
+        t1.refresh_from_db()
+        t2.refresh_from_db()
+        self.assertIs(t1.ran,True)
+        self.assertIs(t2.ran,False)
+        t1.finish()
+        __run_next__(j.pk) # HACK to get around celery not working durning tests
+        t1.refresh_from_db()
+        t2.refresh_from_db()
+        self.assertIs(t1.ran,True)
+        self.assertIs(t2.ran,True)
+
+    def test_cancel_submitted_job(self):
+        pass
+
+    def test_cancel_failed(self):
+        pass
