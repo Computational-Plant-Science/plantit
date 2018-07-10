@@ -12,9 +12,3 @@ class JobViewSet(viewsets.ModelViewSet):
 
     queryset = Job.objects.all()
     serializer_class = JobSerializer
-
-    # def update(self, request, pk=None):
-    #     print(request)
-    #
-    # def partial_update(self, request, pk=None):
-    #     print(request)

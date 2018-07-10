@@ -14,7 +14,7 @@ import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+STATIC_URL = "/static/"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'encrypted_model_fields',
     'job_manager.apps.JobManagerConfig',
     'job_manager.api',
+    'file_manager.apps.FileManagerConfig'
 ]
 
 MIDDLEWARE = [
