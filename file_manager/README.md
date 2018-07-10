@@ -1,3 +1,5 @@
+## Setup
+
 forms.py:
 ```python
 from django import forms
@@ -17,6 +19,8 @@ views.py:
 ```python
 from file_manager.views import FileBrowserView
 from django.core.files.storage import FileSystemStorage
+from .forms import FileForm
+from django.shortcuts import render
 
 def filepicker(request):
     """
@@ -51,4 +55,23 @@ urlpatterns = [
     ...,
     path('ajax/<command>/',FileFormView.as_view(),name='ajax')
 ]
+```
+
+## Authentication
+
+Authentication can be added using django's built in class based view Authentication
+techniques (https://docs.djangoproject.com/en/2.0/topics/class-based-views/intro/)
+
+for example, to require authentication for uploading and browsing, decorate
+the methods with the "login_required" decorator
+
+views.py
+```python
+@method_decorator(login_required, name='upload')
+@method_decorator(login_required, name='browse')
+class ChooseFileView(FileBrowserView):
+  """
+    Handles the file browser ajax requests.
+  """
+  file_storage = FileSystemStorage('./files/')
 ```

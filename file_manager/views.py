@@ -2,23 +2,8 @@ import humanize
 import json
 
 from django.views import View
-from django.shortcuts import render
 from django.core.files.storage import FileSystemStorage
 from django.http import Http404, HttpResponse
-
-from django import forms
-from file_manager.forms import FileForm
-
-def filepicker(request):
-    if request.method == 'POST':
-        form = FileForm(request.POST)
-        print("Form Valid: " + str(form.is_valid()))
-
-        if form.is_valid():
-            print("Selected files: " + str(form.cleaned_data['files']))
-    else:
-        form = FileForm()
-    return render(request, 'file_manager/file.html', {'form': form})
 
 class FileBrowserView(View):
     """
