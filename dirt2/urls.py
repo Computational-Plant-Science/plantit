@@ -18,8 +18,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('jobs/', include('job_manager.urls')),
-    path('jobs/', include('job_manager.api.urls')),
-    path('files/', include('file_manager.urls')),
     path('admin/', admin.site.urls),
     path('accounts/',include('django.contrib.auth.urls')),
 ]
