@@ -8,7 +8,7 @@ from job_manager.test.test_models import create_job, add_task
 
 class TestAPI(APITestCase):
     def setUp(self):
-        self.url = '/api'
+        self.url = '/jobs/api'
 
     def test_authorization_needed(self):
         """

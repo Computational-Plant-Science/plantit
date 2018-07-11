@@ -116,6 +116,12 @@ class Job(models.Model):
         user: user that created the job
         submission_id: UID of the cluster job that is performing the job actions.
     """
+    def generate_work_dir():
+        """
+            Generate a string to use as the the working directory for a job
+        """
+        return timezone.now().strftime('%s') + "/"
+
     def generate_token():
         """
             Generate a valid auth_token
@@ -127,6 +133,10 @@ class Job(models.Model):
     auth_token = models.CharField(max_length=40,default=generate_token)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     submission_id = models.CharField(max_length=100,null=True,blank=True)
+    work_dir = models.CharField(max_length=100,
+                                null=True,
+                                blank=True,
+                                default=generate_work_dir)
 
     #def __str__(self):
         #return "Status: %s, Cluster: %s" (self.current_status(),self.cluster)

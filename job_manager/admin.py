@@ -3,7 +3,7 @@ from django import forms
 
 # Register your models here.
 from .models import Cluster, Status, Job, Task
-from .contrib import SubmissionTask, File
+from .contrib import SubmissionTask, File, UploadFileTask
 from django.utils import timezone
 from django.forms import ModelForm, PasswordInput
 
@@ -56,6 +56,7 @@ class ClusterAdmin(admin.ModelAdmin):
     form = ClusterForm
 
 admin.site.register(SubmissionTask)
+admin.site.register(UploadFileTask)
 admin.site.register(Job,JobAdmin)
 admin.site.register(Cluster, ClusterAdmin)
 admin.site.register(File, FileAdmin)

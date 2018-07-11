@@ -8,10 +8,11 @@ from django.utils import timezone
 from django.core import files
 from django.contrib.auth.models import User;
 
-
 from job_manager.models import Status, Cluster, Job, Task
 from job_manager.models import __cancel_job__, __run_next__
-from job_manager.contrib import SubmissionTask, File, DummyTask
+from job_manager.contrib import SubmissionTask, File, DummyTask, UploadFileTask
+
+import paramiko
 
 # Create your tests here.
 def create_script(file=None):
@@ -24,7 +25,7 @@ def create_script(file=None):
 
 def create_cluster(submit_commands=None,uname=None):
     if(not submit_commands):
-        submit_commands = "cat {sub_script}"
+        submit_commands = "./{sub_script}"
     if(not uname):
         uname="root"
     c = Cluster(name="Test",
@@ -154,3 +155,97 @@ class JobModelTests(TestCase):
 
     def test_cancel_failed(self):
         pass
+
+class TaskTests(TestCase):
+    def open_sftp(self,job):
+        """
+            Opens an sftp connection to the job's cluster and cds into
+            the jobs work directory
+        """
+        cluster = job.cluster
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(cluster.hostname,
+                       cluster.port,
+                       cluster.username,
+                       cluster.password)
+        sftp = client.open_sftp()
+        sftp.chdir(path=cluster.workdir + "/" + job.work_dir)
+        return sftp
+
+    def test_submission_task(self):
+        j = create_job()
+        submission_script = create_script()
+        file1 = create_script(file='dev/server_scripts/server_update')
+        task = SubmissionTask(name="Task 2",
+                     description="should run Second",
+                     job = j,
+                     order_pos = 1,
+                     submission_script=submission_script)
+        task.save()
+        task.files.add(file1)
+        task.run()
+
+        #The submission task catches most errors raised during the sftp/ssh calls,
+        # and sets the job status to Status.FAILED
+        job_status = j.current_status()
+        self.assertEqual(job_status.state,
+                         Status.CREATED,
+                         msg=job_status.description)
+
+        sftp = self.open_sftp(j)
+        uploaded_files = sftp.listdir()
+        self.assertTrue(file1.file_name in uploaded_files)
+        self.assertTrue(submission_script.file_name in uploaded_files)
+        self.assertTrue('test.file' in uploaded_files) #Created by the submission script
+
+    def test_upload_file_task(self):
+        j = create_job()
+        files = "test_create_file.sh,server_update"
+        task = UploadFileTask(name="Task",
+                     description="Uploads some files",
+                     job = j,
+                     order_pos = 1,
+                     pwd = './dev/server_scripts/',
+                     backend = "FileSystemStorage",
+                     files = files)
+        task.save()
+        task.run()
+
+        #The task catches most errors raised during the sftp calls,
+        # and sets the job status to Status.FAILED
+        job_status = j.current_status()
+        self.assertEqual(job_status.state,
+                         Status.CREATED,
+                         msg=job_status.description)
+
+        sftp = self.open_sftp(j)
+        uploaded_files = sftp.listdir("files/")
+        for file in files.split(","):
+            self.assertTrue(file in uploaded_files)
+
+        #This job should have marked itself complete
+        self.assertTrue(task.complete)
+
+    def test_upload_file_task_file_not_exist(self):
+        j = create_job()
+        files = "test_create_file.sh,non_existant_file"
+        task = UploadFileTask(name="Task",
+                     description="Uploads some files",
+                     job = j,
+                     order_pos = 1,
+                     pwd = './dev/server_scripts/',
+                     backend = "FileSystemStorage",
+                     files = files)
+        task.save()
+        task.run()
+
+        #The task catches the IOError associated with a nonexistant file
+        #  and sets the job status to failed
+        job_status = j.current_status()
+        self.assertEqual(job_status.state,
+                         Status.FAILED,
+                         msg=job_status.description)
+
+        #This job should have not marked itself complete since it failed
+        self.assertFalse(task.complete)

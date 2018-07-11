@@ -1,11 +1,14 @@
 import os
 import stat
+import errno
 
 from django.db import models
 from django.utils import timezone
+from django.core.files.storage import FileSystemStorage
 
 import paramiko
 from paramiko.ssh_exception import AuthenticationException
+
 
 from .models import Task, Job, Status
 
@@ -79,6 +82,7 @@ class SubmissionTask(Task):
         """
         job = self.job
         cluster = job.cluster
+        dir = job.work_dir
 
         try:
             #Connect to server
@@ -93,8 +97,13 @@ class SubmissionTask(Task):
             FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
             sftp = client.open_sftp()
             sftp.chdir(path=cluster.workdir)
-            dir = str(job.pk) + "_" + timezone.now().strftime('%s')
-            sftp.mkdir(dir) #Throws IOError if directory already exists
+
+            try:
+                sftp.mkdir(dir)
+            except OSError as e:
+                #Raised if dir already exists
+                pass
+
             for f in self.files.all():
                 fname = dir + "/" + os.path.basename(f.file_name)
                 sftp.put(f.content.path, fname)
@@ -117,9 +126,7 @@ class SubmissionTask(Task):
                 job.status_set.create(state=Status.FAILED,
                             date=timezone.now(),
                             description=str(error))
-                self.complete = False
                 return
-
 
         except (AuthenticationException, IOError) as e:
             job.status_set.create(state=Status.FAILED,
@@ -128,5 +135,73 @@ class SubmissionTask(Task):
         except Exception as e:
             job.status_set.create(state=Status.FAILED,
                         date=timezone.now(),
-                        description="Internal Server Error")
+                        description="Internal Server Error During SubmissionTask.run()")
+            raise e
+
+class UploadFileTask(Task):
+    """
+        Uploads a list of files to the server to a files folder in
+            the job work directory
+
+        fields: comma-seperated list of paths of files to uplaod,
+            paths must be relative to pwd field
+        backend: File system backend to use, supported options are:
+            "FileSystemStorage" : django.core.files.storage.FileSystemStorage
+        pwd: File system working directory
+    """
+    SUPPORTED_FILE_SYSTEMS = (('FileSystemStorage','FileSystemStorage'),)
+
+    files = models.TextField(blank=False)
+    backend = models.CharField(choices=SUPPORTED_FILE_SYSTEMS,
+                               blank=False,
+                               max_length=100)
+    pwd = models.CharField(max_length=250)
+
+    def run(self):
+        job = self.job
+        cluster = job.cluster
+        file_paths = self.files.split(',')
+        dir = job.work_dir + "/files/"
+
+        if(self.backend == 'FileSystemStorage'):
+            file_storage = FileSystemStorage(self.pwd)
+
+        try:
+            #Connect to server
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(cluster.hostname,
+                           cluster.port,
+                           cluster.username,
+                           cluster.password)
+
+            #Copy files to cluster
+            FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
+            sftp = client.open_sftp()
+            sftp.chdir(path=cluster.workdir)
+
+            #OSError raised if dir already exists
+            try:
+                sftp.mkdir(job.work_dir)
+            except OSError as e:
+                pass
+            try:
+                sftp.mkdir(dir)
+            except OSError as e:
+                pass
+
+            for file_name in file_paths:
+                file = file_storage.open(file_name)
+                fname = dir + "/" + os.path.basename(file.name)
+                sftp.putfo(file, fname)
+
+            self.finish()
+        except (AuthenticationException, IOError) as e:
+            job.status_set.create(state=Status.FAILED,
+                        date=timezone.now(),
+                        description=str(e))
+        except Exception as e:
+            job.status_set.create(state=Status.FAILED,
+                        date=timezone.now(),
+                        description="Internal Server Error During UploadFileTask.run()")
             raise e
