@@ -173,6 +173,36 @@ class TaskTests(TestCase):
         sftp.chdir(path=cluster.workdir + "/" + job.work_dir)
         return sftp
 
+    def test_submission_format_cluster_cmds(self):
+        j = create_job()
+        submission_script = create_script()
+        file1 = create_script(file='dev/server_scripts/server_update')
+        task = SubmissionTask(name="Task 2",
+                     description="should run Second",
+                     job = j,
+                     order_pos = 1,
+                     submission_script=submission_script,
+                     parameters="""{
+                                    "p":"-p",
+                                    "task":"--task test"
+                                }""")
+
+        res = task.format_cluster_cmds("{job_pk}")
+        self.assertEqual(str(j.pk),res)
+
+        res = task.format_cluster_cmds("{auth_token}")
+        self.assertEqual(str(j.auth_token),res)
+
+        res = task.format_cluster_cmds("{task_pk}")
+        self.assertEqual(str(task.pk),res)
+
+        res = task.format_cluster_cmds("{p} {task}")
+        self.assertEqual("-p --task test",res)
+
+        j.submission_id = 10
+        res = task.format_cluster_cmds("{sub_id}")
+        self.assertEqual(str(j.submission_id),res)
+
     def test_submission_task(self):
         j = create_job()
         submission_script = create_script()

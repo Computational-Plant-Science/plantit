@@ -2,6 +2,9 @@ import os
 import stat
 import errno
 
+import json
+from json.decoder import JSONDecodeError
+
 from django.db import models
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
@@ -51,6 +54,7 @@ class SubmissionTask(Task):
                                           on_delete=models.SET_NULL,
                                           related_name="submit_script")
     files = models.ManyToManyField(File,blank=True)
+    parameters = models.TextField(null=True,blank=True)
 
     def format_cluster_cmds(self,cmds):
         """
@@ -60,6 +64,11 @@ class SubmissionTask(Task):
             {job_pk}      the job pk
             {auth_token}  the REST authentication token for the job
             {sub_script}  the name of the script to run, provided by the task to be run
+            {task_pk}     the pk of the current task
+            {params}      the paramaters stored in the parameters field
+
+            Throws:
+                json.decoder.JSONDecodeError if paramaters are not decodeable
         """
         job = self.job
 
@@ -67,6 +76,10 @@ class SubmissionTask(Task):
         cmds = cmds.replace("{job_pk}", str(job.pk))
         cmds = cmds.replace("{auth_token}", str(job.auth_token))
         cmds = cmds.replace("{task_pk}",str(self.pk))
+        if(self.parameters):
+            params = json.loads(self.parameters)
+            for key,value in params.items():
+                cmds = cmds.replace("{%s}"%(key,),value)
         if(job.submission_id):
             cmds = cmds.replace("{sub_id}", str(job.submission_id))
         return cmds
@@ -132,6 +145,11 @@ class SubmissionTask(Task):
             job.status_set.create(state=Status.FAILED,
                         date=timezone.now(),
                         description=str(e))
+        except JSONDecodeError as e:
+            msg = "Paramater Decode Error: " + str(e)
+            job.status_set.create(state=Status.FAILED,
+                        date=timezone.now(),
+                        description=msg)
         except Exception as e:
             job.status_set.create(state=Status.FAILED,
                         date=timezone.now(),
