@@ -16,14 +16,19 @@ from paramiko.ssh_exception import AuthenticationException
 from .models import Task, Job, Status
 
 """
-    Classes that implment unimplmented methdos of their parent classes.
+    Classes that implment unimplmented methods of their parent classes.
 
     These classes are not vital to the core of the app, but are required
     to have a working example.
 """
+
 class File(models.Model):
     """
         Files that are copied to the cluster server to run a SubmissionTask
+
+        Attributes:
+            content (:class:`File`): The file
+            file_name (str): Name of the file
     """
     content = models.FileField(upload_to='files/scripts/job_manager/')
     file_name = models.CharField(max_length=100)
@@ -34,6 +39,9 @@ class File(models.Model):
 class DummyTask(Task):
     """
         A task that does nothing except keep track of its run state
+
+        Attributes:
+            ran (bool): set to true when :meth:`run` is called
     """
     ran = models.BooleanField(default=False)
 
@@ -45,8 +53,20 @@ class SubmissionTask(Task):
     """
         A job task for submitting jobs to a Cluster.
 
+        The submission task sshes into the cluster, copies its submission script
+        and files into the Job's working directory, the executes the cluster's
+        ":attr:job_manager.models.Cluster.submit_commands", substuting the "{}"
+        strings listed in :meth:`format_cluster_cmds` for their respective values.
+
         Submission tasks should be cluster agnostic. The cluster object
         should address any commands that are cluster specific.
+
+        Attributes:
+            submission_script (ForeignKey): the script (:class:`File`) executed
+                on the cluster
+            files (ManyToMany): The other :class:`File`s uploaded to the server
+            paramaters (str): JSON encoded set of paramters to pass to
+                submission_script upon execution (see :meth:`format_cluster_cmds`)
     """
     submission_script = models.ForeignKey(File,
                                           blank=True,
@@ -86,12 +106,12 @@ class SubmissionTask(Task):
 
     def run(self):
         """
-            This function opens an ssh connection and
-            submit the passed job
+            Opens an ssh connection, copies the files, and executes the
+            submission script
 
-            Exceptions that should be caught:
-            IOError: thrown during copyting of files
-            AuthenticationException: thrown if login to server fails
+            Exceptions:
+                IOError: thrown during copying of files
+                AuthenticationException: thrown if login to server fails
         """
         job = self.job
         cluster = job.cluster
@@ -109,7 +129,13 @@ class SubmissionTask(Task):
             #Copy run scripts to cluster
             FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
             sftp = client.open_sftp()
-            sftp.chdir(path=cluster.workdir)
+            try:
+                sftp.chdir(path=cluster.workdir)
+            except OSError:
+                job.status_set.create(state=Status.FAILED,
+                            date=timezone.now(),
+                            description="Cluster Workdir does not exist")
+                return
 
             try:
                 sftp.mkdir(dir)
@@ -130,15 +156,16 @@ class SubmissionTask(Task):
 
             #Submit job to cluster queue
             cmds = "cd " + cluster.workdir + "/" + dir + " ; " + cluster.submit_commands
-            cmds = self.format_cluster_cmds(cmds)
+            cmds = self.format_cluster_cmds(cmds.replace('\r\n','\n').replace('\r','\n'))
             stdin, stdout, stderr = client.exec_command(cmds)
-            error = stderr.readlines()
+            error = str(stderr.readlines())
             client.close()
 
             if(error):
+                error = (error[:100] + "..." + error[-100:]) if len(error) > 200 else error
                 job.status_set.create(state=Status.FAILED,
                             date=timezone.now(),
-                            description=str(error))
+                            description=error)
                 return
 
         except (AuthenticationException, IOError) as e:
@@ -161,12 +188,19 @@ class UploadFileTask(Task):
         Uploads a list of files to the server to a files folder in
             the job work directory
 
-        fields: comma-seperated list of paths of files to uplaod,
-            paths must be relative to pwd field
-        backend: File system backend to use, supported options are:
-            "FileSystemStorage" : django.core.files.storage.FileSystemStorage
-        pwd: File system working directory
+        Attributes:
+            fields (str): comma-seperated list of paths of files to uplaod,
+                paths must be relative to pwd field
+            backend (str): File system backend to use, supported options are:
+                ====================  ====================================================
+                Option                Class Loaded
+                ====================  ====================================================
+                "FileSystemStorage"   :class:`django.core.files.storage.FileSystemStorage`
+                ====================  ====================================================
+
+            pwd (str): File system working directory
     """
+
     SUPPORTED_FILE_SYSTEMS = (('FileSystemStorage','FileSystemStorage'),)
 
     files = models.TextField(blank=False)
@@ -196,7 +230,14 @@ class UploadFileTask(Task):
             #Copy files to cluster
             FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
             sftp = client.open_sftp()
-            sftp.chdir(path=cluster.workdir)
+
+            try:
+                sftp.chdir(path=cluster.workdir)
+            except OSError:
+                job.status_set.create(state=Status.FAILED,
+                            date=timezone.now(),
+                            description="Cluster Workdir does not exist")
+                return
 
             #OSError raised if dir already exists
             try:

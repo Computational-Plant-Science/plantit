@@ -6,6 +6,7 @@ services:
 
   web:
     build: ./dockerfiles/web
+    working_dir: /code/django
     command: python3 manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
@@ -35,6 +36,7 @@ services:
     build: ./dockerfiles/web
     volumes:
       - .:/code
+    working_dir: /code/django
     depends_on:
       - rabbitmq
     command: celery -A dirt2 worker --loglevel=info

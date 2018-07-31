@@ -15,12 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from dirt2 import views
 
 urlpatterns = [
     path('jobs/', include('job_manager.urls')),
     path('admin/', admin.site.urls),
     path('accounts/',include('django.contrib.auth.urls')),
-    path('forms/', views.filepicker),
-    path('forms/ajax/<command>/', views.ChooseFileView.as_view(), name='ajax')
+    path('workflows/', include('workflows.urls'), name="workflows"),
 ]

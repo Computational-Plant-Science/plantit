@@ -16,11 +16,11 @@
 docker-compose rm -v -f -s
 
 # Remove all previous django migrations
-find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
-find . -path "*/migrations/*.pyc"  -delete
+find . -path django/**/migrations/*.py -not -name "__init__.py" -delete
+find . -path django/**/migrations/*.py -delete
 
 # Remove all files saved to the server
-rm -rf 'files/scripts.job_manager/*'
+rm -rf django/files/*
 
 #recreate images
 docker-compose build
@@ -51,7 +51,6 @@ cluster = create_cluster("./{sub_script} {job_pk} {task_pk} {auth_token}")
 
 #END PYTHON CODE
 PYTHONCODE
-
 
 #Stop db container
 docker-compose stop

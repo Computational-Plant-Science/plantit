@@ -1,4 +1,3 @@
-from django.contrib import admin
 from django.urls import path, include
 from job_manager import views
 

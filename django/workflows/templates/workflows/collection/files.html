@@ -1,0 +1,9 @@
+{% extends 'workflows/collection/collection.html' %}
+
+{% block content %}
+  {% for file in files %}
+    <div>{{ file.name }}</div>
+  {% empty %}
+    No Files
+  {% endfor %}
+{% endblock %}

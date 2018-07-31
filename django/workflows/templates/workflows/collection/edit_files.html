@@ -1,0 +1,12 @@
+{% extends 'workflows/collection/collection.html' %}
+{% load static %}
+
+{% block content %}
+<h1>Add/Remove Files</h1>
+<form method="POST" class="post-form">{% csrf_token %}
+    <div class="form-group">
+    {{ form.as_p }}
+    </div>
+    <button type="submit" class="save btn btn-default">delete</button>
+</form>
+{% endblock %}

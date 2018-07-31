@@ -2,6 +2,12 @@
 files/
 **/migrations/
 
+# Documentation
+docs/build/*
+docs/source/*
+!docs/source/conf.py
+!docs/source/index.rst
+
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,0 +1,19 @@
+# Dummy qsub command for testing submitting jobs the cluster, jobs
+# are simply run in the current bash process using nohup
+#
+# Returns a "submission id" like qsub would, but it is just a RANDOM
+# number.
+#
+if [[ $# -lt 1 ]]; then
+  echo "Illegal number of paramaters"
+fi
+
+script="${@: -1}"
+
+if [[ ${script:0:1} == "/" ]] || [[ ${script:0:2} == "./" ]] || [[ ${script:0:2} == "~/" ]]; then
+  nohup "$script" > submit.out 2>&1 &
+else
+  nohup "./$script" > submit.out 2>&1 &
+fi
+
+echo $RANDOM

@@ -1,0 +1,29 @@
+{% extends 'workflows/collection/collection.html' %}
+
+{% block content %}
+  {% if form %}
+    <h1>Submit To Cluster</h1>
+    <form method="POST" class="post-form">{% csrf_token %}
+        <div class="form-group">
+        {{ form.as_p }}
+        </div>
+        <button type="submit" class="save btn btn-default">Submit</button>
+    </form>
+  {% else %}
+    <p>Created on: {{ job.date_created }}</p>
+    <p>Cluster: {{ job.cluster }}</p>
+    <p>Submission ID: {{ job.submission_id }}</p>
+    <p>Work Dir: {{ job.work_dir }}</p>
+    <p>
+      Task Progress: <br/>
+      {% for task in job.task_set.all %}
+        {{ task.name }} - {{ task.complete }} - {{ task.last_updated }}<br/>
+      {% endfor %}
+    <p>
+      Status History: <br/>
+      {% for status in job.status_set.all %}
+        {{ status.date }} - {{ status.description }} <br/>
+      {% endfor %}
+    </p>
+  {% endif %}
+{% endblock %}

@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     'encrypted_model_fields',
     'job_manager.apps.JobManagerConfig',
     'job_manager.api',
-    'file_manager.apps.FileManagerConfig'
+    'file_manager.apps.FileManagerConfig',
+    'workflows.apps.WorkflowsConfig',
+    'workflows.dirt2d.apps.Dirt2dConfig',
 ]
 
 MIDDLEWARE = [
@@ -120,12 +122,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.0/howto/static-files/
-
-STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

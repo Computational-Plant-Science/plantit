@@ -20,7 +20,7 @@ function rest_command {
   #
   # Submit a json paket to the server
 
-  API_URL="172.19.211.159:8000/api"
+  API_URL="172.19.211.159:8000/jobs/api"
   JSON="${1}"
   JOB_PK=${2}
   TOKEN="${3:-}"
@@ -166,12 +166,11 @@ function help {
   echo "       token          authentication token provided by the webserver"
   echo ""
   echo " task_complete:"
-  echo "   Set the submission id of the job. This is the id assigned by the"
-  echo "    cluster and is passsed to the server cancel script."
-  echo "   Usage: submission_id job_id submission_id token"
-  echo "       job_id        the server assigned job id"
-  echo "       submission_id the submission id"
-  echo "       token          authentication token provided by the webserver"
+  echo "    Mark a task within a job complete"
+  echo "    Usage: status job_id state desc token"
+  echo "       job_id     the server assigned job id"
+  echo "       task_id    the server assigned task id"
+  echo "       token      authentication token provided by the webserver"
 }
 
 function main {
