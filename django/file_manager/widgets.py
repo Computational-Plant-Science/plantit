@@ -36,10 +36,12 @@ class UploadFilesWidget(forms.widgets.Widget):
     class Media:
         js = ("https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js",
               "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js",
-              'file_manager/js/uploader.js',
+              'file_manager/js/uploader-config.js',
+              'file_manager/js/uploader-ui.js',
               'file_manager/js/jquery.dm-uploader.js' )
         css = {
-            'all' : ('file_manager/css/jquery.dm-uploader.css', )
+            'all' : ('file_manager/css/jquery.dm-uploader.css',
+                     'file_manager/css/uploader.css')
         }
 
     def __init__(self, *args, **kwargs):

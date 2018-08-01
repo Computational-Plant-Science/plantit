@@ -5,8 +5,19 @@
 <h1>Add/Remove Files</h1>
 <form method="POST" class="post-form">{% csrf_token %}
     <div class="form-group">
-    {{ form.as_p }}
+      <div class="border p-5">
+        Remove Files
+        <select class="custom-select" size=10 multiple>
+            {% for value,name in form.fields.files.choices %}
+              <option value="{{ value }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="save btn btn-danger">delete</button>
+      </div>
+      <div class="border p-5">
+        Add Files
+        {{ form.file }}
+      </div>
     </div>
-    <button type="submit" class="save btn btn-default">delete</button>
 </form>
 {% endblock %}

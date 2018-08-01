@@ -1,4 +1,53 @@
-<div id="drop-area">
-  <h3>Drag and Drop Files Here<h3/>
-  <input type="file" name="{{ widget.name }}" title="Click to add Files">
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <div id="drop-area" class="text-center border p-5">
+        <h3>Drag and Drop<h3/>
+        <label class="btn btn-primary btn-block mb-5">
+            or Browse <input type="file" style="display: none;" mutiple>
+        </label>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-header">
+          <div class="row text-center">
+            <div class="col">File Queue</div>
+          </div>
+          <div class="row text-center">
+            <div class="col">
+              <a href="#" class="ctlbtn btn btn-primary" id="btnApiStart">
+                Start
+              </a>
+              <a href="#" class="ctlbtn btn btn-danger" id="btnApiPause">
+                Pause
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col" id="files">
+          <div class="text-muted text-center empty">No files queued.</li>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- File item template -->
+<script type="text/html" id="files-template">
+  <div class="media">
+    <div class="media-body mb-1">
+      <p class="mb-2">
+        <strong>%%filename%%</strong> - Status: <span class="text-muted">Waiting</span>
+      </p>
+      <div class="progress mb-2">
+        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+          role="progressbar"
+          style="width: 0%"
+          aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        </div>
+      </div>
+      <hr class="mt-1 mb-1" />
+    </div>
+  </div>
+</script>
