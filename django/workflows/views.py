@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import CollectionFileForm, CreateJob
 
-from job_manager.models import Status, Job
+from job_manager.job import Status, Job
 
 """
     Views for viewing, editing, and analyzing a :class:`workflows.models.AbstractCollection`.
@@ -91,7 +91,7 @@ class FilesObjectMixin():
             Returns:
                 A queryselect object containing the files within this collection
         """
-        return self.get_files_object().all()
+        return self.get_files_object().all().values()
 
     def get_files_object(self):
         """
@@ -195,7 +195,6 @@ class NewCollection(LoginRequiredMixin,CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
-
 
 class EditCollectionDetails(LoginRequiredMixin,UpdateView):
     """
@@ -319,7 +318,7 @@ class AnalyzeCollection(LoginRequiredMixin,DetailView):
         job = form.save()
         job.status_set.create(description="Created")
         try:
-            self.submit(job)
+            self.submit(job,form)
         except Exception as e:
             job.delete()
             #Do something here to indicate to the user the job failed.
@@ -328,7 +327,7 @@ class AnalyzeCollection(LoginRequiredMixin,DetailView):
         self.object.save()
         return self.get(request, *args, **kwargs)
 
-    def submit(self,job):
+    def submit(self, job, form):
         """
             Start the first task of the job.
 
@@ -336,5 +335,5 @@ class AnalyzeCollection(LoginRequiredMixin,DetailView):
                 job (class:`job_manager.models.Job`): The job that will be
                     submitted
         """
-        job.status_set.create(state=Status.SUBMITTED,description="Submitted")
+        job.status_set.create(state=Status.OK,description="Submitted")
         Job.run_next(job.pk)

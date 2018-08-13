@@ -1,4 +1,4 @@
-from job_manager.models import Job, Status, Task
+from job_manager.job import Job, Status, Task
 from rest_framework import serializers
 
 

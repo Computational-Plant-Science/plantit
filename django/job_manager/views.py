@@ -1,9 +1,10 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.views import generic
-from .models import Job
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+
+from .job import Job
 
 # Create your views here.
 @login_required

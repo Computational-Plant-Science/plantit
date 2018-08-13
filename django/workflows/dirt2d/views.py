@@ -2,8 +2,9 @@ import workflows.views as views
 import workflows.forms as forms
 
 from .models import RootCollection, Defaults
+from .tasks import DownloadResultsTask
 
-from job_manager.contrib import SubmissionTask, UploadFileTask
+from job_manager.remote import SubmissionTask, UploadFileTask
 
 """
     View urls
@@ -58,25 +59,28 @@ class Analyze(views.AnalyzeCollection):
     """
     model = RootCollection
 
-    def submit(self,job):
+    def submit(self,job, form):
         defaults = Defaults.load()
+        cluster = form.cleaned_data['cluster']
 
         #Copy image task
-        copy_task = UploadFileTask(name="Dirt 2D File Upload",
+        copy_task = UploadFileTask(name="File Upload",
                     description="Uploades files to cluster",
                     backend='FileSystemStorage',
                     pwd='',
                     files=','.join([img.path for img in self.object.images.all()]),
-                    job=job)
+                    job=job,
+                    cluster=cluster)
         copy_task.save()
 
         #Submission task
-        submit_task = SubmissionTask(name="Dirt 2D Submission",
+        submit_task = SubmissionTask(name="Analysis",
                         description="Submits dirt2d Job",
                         submission_script=defaults.submission_script,
                         parameters=defaults.parameters,
                         order_pos=2,
-                        job=job)
+                        job=job,
+                        cluster=cluster)
         submit_task.save()
         try:
             for f in defaults.files.all():
@@ -85,4 +89,12 @@ class Analyze(views.AnalyzeCollection):
             submit_task.delete()
             raise e
 
-        super().submit(job)
+        #Results task
+        download_task = DownloadResultsTask(name="Download Results",
+                            description="Downloads and parses results",
+                            job=job,
+                            cluster=cluster,
+                            order_pos=3)
+        download_task.save()
+
+        super().submit(job,form)

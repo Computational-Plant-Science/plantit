@@ -1,11 +1,9 @@
 from django.contrib import admin
-from django import forms
-
-# Register your models here.
-from .models import Cluster, Status, Job, Task
-from .contrib import SubmissionTask, File, UploadFileTask
 from django.utils import timezone
 from django.forms import ModelForm, PasswordInput
+
+from .job import Status, Job, Task
+from .remote import Cluster, SubmissionTask, File, UploadFileTask
 
 class StatusInline(admin.StackedInline):
     readonly_fields = ['state', 'date', 'description']

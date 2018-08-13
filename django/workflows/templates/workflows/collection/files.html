@@ -9,6 +9,15 @@
           <ul class="list-unstyled"
             {% for file in files %}
               <li>{{ file.name }}</li>
+              <li>
+                <ul>
+                  {% for key, value in file.items %}
+                    {% if value %}
+                      <li>{{ key }} : {{ value }}</li>
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </li>
             {% empty %}
               <li class="text-muted text-center">No Files</li>
             {% endfor %}

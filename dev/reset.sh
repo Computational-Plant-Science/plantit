@@ -16,11 +16,11 @@
 docker-compose rm -v -f -s
 
 # Remove all previous django migrations
-find . -path django/**/migrations/*.py -not -name "__init__.py" -delete
-find . -path django/**/migrations/*.py -delete
+find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
 
 # Remove all files saved to the server
 rm -rf django/files/*
+mkdir -p django/files/tmp
 
 #recreate images
 docker-compose build
@@ -45,7 +45,7 @@ from django.contrib.auth.models import User;
 user = User.objects.create_superuser('admin', 'admin@example.com', 'admin')
 
 #Default objects to work with
-from job_manager.models import Cluster
+from job_manager.remote import Cluster
 from job_manager.test.test_models import create_cluster
 cluster = create_cluster("./{sub_script} {job_pk} {task_pk} {auth_token}")
 

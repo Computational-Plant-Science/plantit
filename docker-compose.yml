@@ -7,11 +7,11 @@ services:
   web:
     build: ./dockerfiles/web
     working_dir: /code/django
-    command: python3 manage.py runserver 0.0.0.0:8000
+    command: python3 manage.py runserver 0.0.0.0:80
     volumes:
       - .:/code
     ports:
-      - "8000:8000"
+      - "80:80"
     depends_on:
       - db
       - ssh

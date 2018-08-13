@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from job_manager.models import Job
+from job_manager.job import Job
 
 """
     A workflow consists of a collection of files, details about the files
