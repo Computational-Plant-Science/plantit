@@ -2,8 +2,34 @@ import humanize
 import json
 
 from django.views import View
-from django.core.files.storage import FileSystemStorage
 from django.http import Http404, HttpResponse
+from django.core.exceptions import PermissionDenied
+
+from .permissions import open_folder
+
+
+# from django.core.files.storage import FileSystemStorage
+# from django.shortcuts import render
+# from django import forms
+# from file_manager.fields import FileBrowserField
+#
+# class FileForm(forms.Form):
+#     # Example form that only has a file browser
+#     files = FileBrowserField("Dev",
+#                              path = '/')
+#
+# def filepicker(request):
+#     # Method based view that renders a form with only a file browser
+#     if request.method == 'POST':
+#         form = FileForm(request.POST)
+#         if form.is_valid():
+#             # Lists the files selected in the form.
+#             print("Selected files: " + str(form.cleaned_data['files']))
+#     else:
+#         form = FileForm()
+#     return render(request, 'file_manager/file.html', {'form': form})
+
+
 
 class FileBrowserView(View):
     """
@@ -12,21 +38,24 @@ class FileBrowserView(View):
         settable variables:
         file_storage: Must be a valid FileSystemStorage class
     """
-    file_storage = FileSystemStorage('./files/')
 
     def post(self,request, command):
         """
             Parses the ajax command request
         """
         if request.is_ajax():
+            self.file_storage = open_folder(request.POST.get('storage_type'),
+                                            request.POST.get('dir'),
+                                            request.user)
+
             if(command == 'browse'):
                 return self.browse(request)
             elif(command == 'upload'):
                 return self.upload(request)
             else:
-                raise Http404
+                raise Http404('Not a vaild command')
         else:
-            raise Http404
+            raise Http404 ('Not a vaild ajax call')
 
     def browse(self,request):
         """
@@ -46,19 +75,17 @@ class FileBrowserView(View):
             }
         """
         if request.POST:
-            dir = request.POST.get('dir')
-
-            (dirs,files) = self.file_storage.listdir(dir)
+            (dirs,files) = self.file_storage.listdir("./")
             sizes = []
 
             for file in files:
-                sizes.append( humanize.naturalsize(self.file_storage.size(dir + file)) )
+                sizes.append( humanize.naturalsize(self.file_storage.size(file)) )
             context = { 'dirs': dirs,
                         'files': list(map(lambda f, s: {'name': f, 'size': s} ,files,sizes)) }
 
             return HttpResponse(json.dumps(context), content_type='application/json')
         else:
-            raise Http404
+            raise Http404('No POST data')
 
     def upload(self,request):
         """
@@ -68,13 +95,13 @@ class FileBrowserView(View):
             files at once. Requests must contain the 'pwd' POST variable populated
             with the directory to store the uploaded files in.
         """
-        pwd = request.POST.get('pwd')
+
         files = request.FILES.getlist('file')
 
-        if(not files or not pwd):
+        if(not files):
             raise Http404
 
         for f in files:
-            self.file_storage.save(pwd + f.name,f)
+            self.file_storage.save(f.name,f)
 
         return HttpResponse(status=204)

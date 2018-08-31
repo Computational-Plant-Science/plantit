@@ -28,7 +28,6 @@ docker-compose build
 #start the databse container, it needs some time to initilize before
 # starting the webserver
 docker-compose up -d db
-
 echo "Waiting 30s for db to warm up..."
 sleep 30s
 
@@ -48,6 +47,12 @@ user = User.objects.create_superuser('admin', 'admin@example.com', 'admin')
 from job_manager.remote import Cluster
 from job_manager.test.test_models import create_cluster
 cluster = create_cluster("./{sub_script} {job_pk} {task_pk} {auth_token}")
+
+from file_manager.permissions import Permissions
+from file_manager.filesystems.local import Local
+l = Local(name = "Local")
+l.save()
+Permissions.allow(user,l,'./files/')
 
 #END PYTHON CODE
 PYTHONCODE

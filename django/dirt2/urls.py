@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/',include('django.contrib.auth.urls')),
     path('workflows/', include('workflows.urls'), name="workflows"),
+    path('filemanager/', include('file_manager.urls')),
 ]

@@ -15,14 +15,19 @@ class FileBrowserWidget(forms.widgets.Widget):
             'all' : ('file_manager/css/jquery.dm-uploader.css', )
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, storage_type, path, *args, **kwargs):
         super(forms.widgets.Widget, self).__init__(*args, **kwargs)
         self.attrs = {}
+        self.storage_type = storage_type
+        self.path = path
 
     def render(self, name, value, attrs=None, renderer=None):
         template_name = 'file_manager/file_list.html'
 
-        return mark_safe(render_to_string(template_name,{}))
+        attrs = { 'storage_type' : self.storage_type,
+                  'path' : self.path }
+
+        return mark_safe(render_to_string(template_name,attrs))
 
     def value_from_datadict(self, data, files, name):
         return data.getlist(name)

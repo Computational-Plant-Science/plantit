@@ -1,4 +1,14 @@
-<p id="pwd">./</p>
+<script type="text/javascript">
+  var storage_type = "{{ storage_type }}"
+  var base_path = "{{ path }}"
+  var urls = {
+              browse: "{% url 'file_manager:ajax' command='browse' %}",
+              upload: "{% url 'file_manager:ajax' command='upload' %}"
+            }
+  console.log(urls)
+</script>
+
+<p id="pwd">/</p>
 <p>
   <input type="checkbox" id="ckbCheckAll" />Check All
     <table id=file_table>

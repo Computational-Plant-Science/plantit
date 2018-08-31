@@ -14,3 +14,4 @@ docutils
 django-model-utils # InheritanceManager used for Tasks
 humanize # for formatting values in file manager
 Sphinx # for documentation support
+python-irodsclient

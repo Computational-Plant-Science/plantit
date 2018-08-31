@@ -7,7 +7,6 @@ from json.decoder import JSONDecodeError
 
 from django.db import models
 from django.utils import timezone
-from django.core.files.storage import FileSystemStorage
 
 from encrypted_model_fields.fields import EncryptedCharField
 

@@ -4,8 +4,10 @@ from file_manager.fields import FileUploadField
 from job_manager.job import Job
 from job_manager.remote import Cluster
 
+from file_manager.fields import FileBrowserField
+
 class CollectionFileForm(forms.Form):
-    files = forms.ModelMultipleChoiceField(required=False,queryset=None)
+    files = FileBrowserField("Dev", path = '/')
     file = FileUploadField(required=False)
 
     def __init__(self, choices = None, *args, **kwargs):
