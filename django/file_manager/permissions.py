@@ -105,7 +105,7 @@ def open_folder(storage_type, path, user, *kwargs):
         permissions.
 
         Args:
-            storage_type (str): name of the file system storage time must be
+            storage_type (str): name of the file system storage type must be
                 subclass of AbstractStorageType
             path: Folder path
             user: User that has permission to the folder path

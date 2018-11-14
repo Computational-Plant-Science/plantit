@@ -1,0 +1,52 @@
+{% comment %}
+
+Displays files contained within the collection.
+
+Attributes:
+  file (list): a list of files in the collection
+  object: The collection object
+
+  <li>
+    <ul>
+      {% for key, value in file.items %}
+        {% if value %}
+          <li>{{ key }} : {{ value }}</li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </li>
+{% empty %}
+  <li class="text-muted text-center">No Files</li>
+{% endfor %}
+
+{% endcomment %}
+
+{% load static %}
+{% include "includes/page-default.html" %}
+
+{% block page-content %}
+
+  <h1>[Collection Name Here]</h1>
+
+  <div class="content-column">
+    <div class="grid-container">
+      {% for file in files %}
+        <div class="grid-item grid-border">
+          <a href="#">
+            <div class="image"><img src="{% static 'images/logo.png' %}"></div>
+            <div class="title">{{ file.name }}</div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="button-nav">
+    <a href="{% url 'user_landing' %}"><button class="btn btn-nav">Home</button></a>
+    <a href="{% url 'collection:list' %}"><button class="btn btn-nav">My Collections</button></a>
+    <a href="{% url 'collection:edit_files' pk=object.pk %}"><button class="btn btn-nav">Add Files</button></a>
+    <a href="{% url 'collection:edit_files' pk=object.pk %}"><button class="btn btn-nav">Analyze</button></a>
+    <a href="#"><button class="btn btn-nav">Download</button></a>
+  </div>
+
+{% endblock %}

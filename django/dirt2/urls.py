@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from dirt2 import views
 
 urlpatterns = [
     path('jobs/', include('job_manager.urls')),
@@ -22,4 +23,7 @@ urlpatterns = [
     path('accounts/',include('django.contrib.auth.urls')),
     path('workflows/', include('workflows.urls'), name="workflows"),
     path('filemanager/', include('file_manager.urls')),
+    path('collection/', include('collection.urls')),
+    path('', views.index, name="index"),
+    path('user/', views.user_landing, name="user_landing")
 ]

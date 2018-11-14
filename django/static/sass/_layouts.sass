@@ -1,0 +1,109 @@
+/**
+  *
+  * Layouts for page content inside the page-content div
+  *
+  **/
+
+/**
+  Column
+
+  one column page:
+    <div class="content-column">
+      Page content
+    </div>
+
+  Two column page:
+    <div class="flex-row">
+      <div class="flex-box content-column">
+        Col 1 content
+      </div>
+      <div class="flex-box content-column">
+        Col 2 content
+      </div>
+    </div>
+  **/
+.content-column
+  background-color: $color-box-background
+  border-radius: 20px
+  padding: 25px
+
+/**
+ Flex Row
+ **/
+
+.flex-row
+  display: flex
+  flex-flow: row wrap
+
+  .flex-box
+    flex: 1 1 auto
+    margin: 5px
+
+@media only screen and (max-width: 990px)
+  .flex-row
+    .flex-box
+      width: 100%
+
+/**
+ Two-thirds
+ **/
+
+#two-thirds-left-column
+  float: left
+  width: 25%
+
+  .profile-data
+    background-color: $color-box-background
+    margin-top: 20px
+    text-align: center
+
+    ul
+      list-style: none
+      padding: 0
+      margin: 0
+
+  .profile-photo
+    height: 256px
+    background-color: $color-box-background
+
+#two-thirds-right-column
+  width: 73%
+  float: left
+  background-color: $color-box-background
+  margin-left: 10px
+  border-radius: 5px
+
+  .flex-box
+    padding-top: 10px
+    padding-bottom: 5px
+    text-align: center
+
+  .active
+    background-color: $color-box-background
+    margin-bottom: -3px
+
+  .content
+    background-color: $color-box-background
+    padding: 10px
+
+@media only screen and (max-width: 990px)
+  #two-thirds-left-column
+    display: none
+
+  #two-thirds-right-column
+    width: 100%
+    margin: 0px
+
+/** Grid **/
+.grid-container
+  display: grid
+  grid-column-gap: 10px
+  grid-row-gap: 10px
+  grid-template-columns: repeat( auto-fit, minmax(300px, 1fr) )
+
+.grid-item
+  width: 100%
+  text-align: center
+
+.grid-border
+  border: 2px solid $color-button

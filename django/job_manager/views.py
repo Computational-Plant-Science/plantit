@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.views import generic
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.views.generic.detail import DetailView
 
 from .job import Job
 
@@ -24,3 +25,11 @@ def submit_job(request, job_pk):
     Job.run_next(job_pk)
 
     return HttpResponseRedirect(reverse('job_manager:job_list'))
+
+class JobView(DetailView):
+    model = Job
+    template_name = "job_manager/html/job.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context

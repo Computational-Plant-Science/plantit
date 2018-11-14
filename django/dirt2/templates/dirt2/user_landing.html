@@ -1,0 +1,54 @@
+{% extends 'includes/page-default.html' %}
+{% load static %}
+{% load job_filters %}
+
+{% block page-content %}
+  <h2>Welcome {{ user.username }}</h2>
+
+  <div id="two-thirds-left-column">
+  <div class="profile-photo">
+    <img width="120px" src="{% static 'images/logo.png' %}">
+  </div>
+
+  <div class="profile-data">
+    Biography
+    <hr>
+    <ul>
+      <li>City: Athens</li>
+      <li>State: Georgia</li>
+      <li>Country: USA</li>
+      <li>Crop: Maize</li>
+    </ul>
+  </div>
+</div>
+
+<div id="two-thirds-right-column">
+
+    <div class="flex-row">
+      <div class="flex-box">Current</div>
+      <div class="flex-box active"><a href="{% url 'collection:list' %}">My Collections</a></div>
+      <div class="flex-box">My Analyses</div>
+    </div>
+
+    <div class="content">
+      <table>
+        <tr>
+          <th>Job Id</th>
+          <th>Current Status</th>
+          <th>Status Description</th>
+
+        </tr>
+        {% for job in jobs %}
+            <tr>
+              <td class="text-center"><a href="{% url 'job_manager:job' job.pk %}">{{ job.id }}</a></td>
+              <td class="text-center">{{ job|current_status }}</td>
+              <td>{{ job|current_status_description }}</td>
+            </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+</div>
+
+
+{% endblock %}

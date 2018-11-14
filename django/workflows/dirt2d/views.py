@@ -1,51 +1,10 @@
 import workflows.views as views
-import workflows.forms as forms
 
-from .models import RootCollection, Defaults
+from .models import Defaults
 from .tasks import DownloadResultsTask
 
-from job_manager.remote import SubmissionTask, UploadFileTask
-
-"""
-    View urls
-    ---------
-
-    ============================   ==============
-    Relative Path                  Class
-    ============================   ==============
-    /                              ListView
-    collection/new/,               New
-    collection/<pk>/images/        ImageView
-    collection/<pk>/details/       DetailView
-    collection/<pk>/analyze/       Analyze
-    collection/<pk>/edit/images    EditFiles
-    collection/<pk>/edit/details   EditDetails
-    ============================   ==============
-"""
-
-class New(views.NewCollection):
-    model = RootCollection
-
-class ListView(views.CollectionListView):
-    model = RootCollection
-
-class ImageView(views.CollectionFileView):
-    model = RootCollection
-
-    def get_files_object(self):
-        return self.object.images
-
-class DetailView(views.CollectionDetailView):
-    model = RootCollection
-
-class EditDetails(views.EditCollectionDetails):
-    model = RootCollection
-
-class EditFiles(views.EditCollectionFiles):
-    model = RootCollection
-
-    def get_files_object(self):
-        return self.object.images
+from job_manager.remote import SubmissionTask, UploadCollectionTask
+from collection.images import Images2D
 
 class Analyze(views.AnalyzeCollection):
     """
@@ -57,20 +16,26 @@ class Analyze(views.AnalyzeCollection):
             + a :class:`job_mangaer.contrib.DownloadFileTask` that downloads
                 the results of the analysis.
     """
-    model = RootCollection
+    model = Images2D
 
     def submit(self,job, form):
         defaults = Defaults.load()
         cluster = form.cleaned_data['cluster']
 
         #Copy image task
-        copy_task = UploadFileTask(name="File Upload",
-                    description="Uploades files to cluster",
-                    backend='FileSystemStorage',
-                    pwd='',
-                    files=','.join([img.path for img in self.object.images.all()]),
-                    job=job,
-                    cluster=cluster)
+        # copy_task = UploadFileTask(name="File Upload",
+        #             description="Uploades files to cluster",
+        #             backend='FileSystemStorage',
+        #             pwd='',
+        #             files=','.join([img.path for img in self.object.files.all()]),
+        #             order_pos=1,
+        #             job=job,
+        #             cluster=cluster)
+        copy_task = UploadCollectionTask(name="File Upload",
+                      description="Upload files to cluster",
+                      job=job,
+                      cluster=cluster,
+                      order_pos=1)
         copy_task.save()
 
         #Submission task

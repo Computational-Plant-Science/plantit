@@ -15,3 +15,8 @@ django-model-utils # InheritanceManager used for Tasks
 humanize # for formatting values in file manager
 Sphinx # for documentation support
 python-irodsclient
+
+#For automatic sass compiling
+libsass
+django-compressor
+django-sass-processor

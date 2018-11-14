@@ -1,0 +1,30 @@
+{% extends "includes/page-default.html" %}
+
+{% block header %}
+  <!-- Header block begin  -->
+  {{ form.media }}
+  <!-- header block end -->
+{% endblock %}
+
+{% block page-content %}
+  <h1>Add/Remove Files</h1>
+
+  <div class="content-column">
+
+    <form method="POST" class="post-form">
+      {% csrf_token %}
+        <div class="form-group">
+          <div class="border p-5">
+            Choose files to add to collection
+            {{ form }}
+          </div>
+        </div>
+        <button type="submit" class="save btn">Add</button>
+    </form>
+
+  </div>
+
+  <div class="button-nav">
+    <a href="{% url 'collection:details' object.pk %}"><button class="btn btn-nav">Back</button></a>
+  </div>
+{% endblock %}

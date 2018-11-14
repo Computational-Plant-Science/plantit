@@ -1,6 +1,7 @@
 # DIRT Specific
 files/
 **/migrations/
+assets/
 
 # Documentation
 docs/build/*

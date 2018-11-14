@@ -1,0 +1,72 @@
+/**
+  *
+  * Main file, brings all css togeather
+  *
+  **/
+$color-box-background: #A7A9AD //gray
+$color-button: #D6DF5D // yellow
+$color-highlight: #D3F74F // safety yellow
+
+@import '_text'
+@import '_mixins'
+@import '_elements'
+
+body
+  margin: 25px
+  min-width: 400px
+
+#whole-page
+  margin: auto
+  max-width: 1200px
+
+.navbar
+  border-bottom: 2px solid black
+
+#navbarNav
+  ul
+    li
+      border-left: 2px solid black
+    li:first-of-type
+      border: none
+
+#page-content
+  margin: 25px
+  font-weight: normal
+
+.button-nav
+  display: flex
+  justify-content: space-evenly
+  flex-wrap: wrap
+
+.btn-nav
+  background-color: $color-button
+  border-radius: 20px
+  margin-left: 40px
+  margin-right: 40px
+  margin-top: 15px
+  min-height: 50px
+
+  &:hover
+    background-color: $color-highlight
+
+// All layouts are inside the page-content div
+@import '_layouts'
+
+@media only screen and (max-width: 990px)
+  body
+    margin: 3px
+
+  .navbar
+    border-bottom: none
+
+  #navbarNav
+    ul
+      li
+        border-left: none
+
+  #page-content
+    .two-column
+      width: 100%
+
+  .button-row
+    column-count: 1

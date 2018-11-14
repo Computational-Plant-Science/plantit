@@ -109,7 +109,7 @@ function list_files(files,pwd){
   **/
   $.each(files, function(i,file) {
     $('<tr>').append(
-        $('<td>').html("<input type='checkbox' value='"+ pwd + file.name + "' class='selectFileCheckBox' name='files'>"),
+        $('<td>').html("<input type='checkbox' value='"+ pwd + "/" + file.name + "' class='selectFileCheckBox' name='file'>"),
         $('<td>').text(file.name),
         $('<td>').text(file.size)
     ).appendTo('#file_table');

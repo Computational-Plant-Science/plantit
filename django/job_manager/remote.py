@@ -1,4 +1,5 @@
 import os
+from os import path
 import stat
 import errno
 
@@ -14,6 +15,7 @@ import paramiko
 from paramiko.ssh_exception import AuthenticationException
 
 from .job import Task, Job, Status
+from file_manager import permissions
 
 class Cluster(models.Model):
     """
@@ -266,6 +268,32 @@ class SubmissionTask(SSHTaskMixin, Task):
                         date=timezone.now(),
                         description=msg)
 
+class UploadCollectionTask(SSHTaskMixin,Task):
+    """
+        Uploads all the files in a collection to the server to the files folder
+        in the job wok directory
+    """
+
+    def ssh(self):
+        dir = "files/"
+        collection = self.job.collection.cast() #Cast down to access the files attribute
+
+        file_storage = permissions.open_folder(storage_type = collection.storage_type,
+                                               path = collection.base_file_path,
+                                               user = collection.user)
+
+        try: #OSError raised if dir already exists
+            self.sftp.mkdir(dir)
+        except OSError as e:
+            pass
+
+        for file in collection.files.all():
+            file_object = file_storage.open(file.path.strip("/"))
+            fname = path.join(dir,os.path.basename(file.name))
+            self.sftp.putfo(file_object, fname)
+
+        self.finish()
+
 class UploadFileTask(SSHTaskMixin,Task):
     """
         Uploads a list of files to the server to a files folder in
@@ -284,17 +312,15 @@ class UploadFileTask(SSHTaskMixin,Task):
             pwd (str): File system working directory
     """
 
-    SUPPORTED_FILE_SYSTEMS = (('FileSystemStorage','FileSystemStorage'),)
-
     files = models.TextField(blank=False)
-    backend = models.CharField(choices=SUPPORTED_FILE_SYSTEMS,
-                               blank=False,
-                               max_length=100)
+    storage_type = models.CharField(blank=False, max_length=100)
     pwd = models.CharField(max_length=250)
 
     def ssh(self):
         file_paths = self.files.split(',')
         dir = "files/"
+
+        file_stroage = permissions.open_folder(storage_type, path, user, *kwargs)
 
         if(self.backend == 'FileSystemStorage'):
             file_storage = FileSystemStorage(self.pwd)

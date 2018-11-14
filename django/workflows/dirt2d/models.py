@@ -2,7 +2,8 @@ from django.db import models
 
 from job_manager.remote import File as JobFile
 from file_manager.models import AbstractFile
-from workflows.models import AbstractDefaults, Tag, AbstractMetaData, AbstractCollection
+from workflows.models import AbstractDefaults, Tag
+from collection.images import Image
 
 """
     Workflow for the DIRT2D code.
@@ -31,26 +32,11 @@ class Defaults(AbstractDefaults):
     files = models.ManyToManyField(JobFile,blank=True)
     parameters = models.TextField(null=True,blank=True)
 
-class MetaData(AbstractMetaData):
+class Results:
     """
-        Metadata
-
-        Attributes:
-            key (str): Metadata key
-            value (str): Metadata value
+        Represents the results from one root image file.
     """
-    pass
-
-class RootImage(AbstractFile):
-    """
-        Represents one root image file.
-
-        Attributes:
-            path (str): the path to the file
-            name (str): name of the file
-            metadata (ManyToManyField): User configurable metadata
-    """
-    metadata = models.ManyToManyField(MetaData,blank=True)
+    image = models.ManyToManyField(Image)
 
     EXP_CODE = models.FloatField(blank=True,null=True)
     CIR_RATIO = models.FloatField(blank=True,null=True)
@@ -140,25 +126,25 @@ class RootImage(AbstractFile):
     LT_AVG_DIA = models.FloatField(blank=True,null=True)
 
 
-class RootCollection(AbstractCollection):
-    """
-        Contains a collection of root images that are analyzed togeather.
-        Typically representing one experiment or treatment
-
-        Attributes:
-            name (str): the name of the collection
-            description (str): text description
-            user (ForeignKey): primary user for the collection
-            images (ManyToMany): root images (:class:`.models.RootImage`) within
-                the collection
-            metadata (ForeignKey): User configurable metadata
-                (:class:`.models.MetaData`)
-    """
-    images = models.ManyToManyField(RootImage,blank=True)
-    metadata = models.ManyToManyField(MetaData,blank=True)
-
-    def __str__(self):
-        return self.name
-
-    def get_absolute_url(self):
-        return "/workflows/dirt2d/collection/%d/details"%(self.pk,)
+# class RootCollection(AbstractCollection):
+#     """
+#         Contains a collection of root images that are analyzed togeather.
+#         Typically representing one experiment or treatment
+#
+#         Attributes:
+#             name (str): the name of the collection
+#             description (str): text description
+#             user (ForeignKey): primary user for the collection
+#             images (ManyToMany): root images (:class:`.models.RootImage`) within
+#                 the collection
+#             metadata (ForeignKey): User configurable metadata
+#                 (:class:`.models.MetaData`)
+#     """
+#     images = models.ManyToManyField(RootImage,blank=True)
+#     metadata = models.ManyToManyField(MetaData,blank=True)
+#
+#     def __str__(self):
+#         return self.name
+#
+#     def get_absolute_url(self):
+#         return "/workflows/dirt2d/collection/%d/details"%(self.pk,)

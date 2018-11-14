@@ -7,8 +7,9 @@ import os
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
-
 from model_utils.managers import InheritanceManager
+
+from collection.models import Collection
 
 @shared_task
 def __run_next__(pk):
@@ -110,6 +111,7 @@ class Job(models.Model):
         """
         return binascii.hexlify(os.urandom(20)).decode()
 
+    collection = models.ForeignKey(Collection,on_delete=models.CASCADE)
     date_created = models.DateTimeField(default=timezone.now)
     auth_token = models.CharField(max_length=40,default=generate_token)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)

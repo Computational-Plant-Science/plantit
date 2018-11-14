@@ -23,7 +23,7 @@ class FileBrowserWidget(forms.widgets.Widget):
 
     def render(self, name, value, attrs=None, renderer=None):
         template_name = 'file_manager/file_list.html'
-
+        
         attrs = { 'storage_type' : self.storage_type,
                   'path' : self.path }
 

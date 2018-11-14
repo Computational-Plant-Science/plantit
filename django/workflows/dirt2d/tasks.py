@@ -3,7 +3,7 @@ import csv
 from job_manager.job import Task,Status
 from job_manager.remote import SSHTaskMixin
 
-from .models import RootImage
+from .models import Results
 
 class DownloadResultsTask(SSHTaskMixin,Task):
     """

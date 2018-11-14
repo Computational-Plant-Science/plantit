@@ -23,7 +23,7 @@ rm -rf django/files/*
 mkdir -p django/files/tmp
 
 #recreate images
-docker-compose build
+docker-compose build "$@"
 
 #start the databse container, it needs some time to initilize before
 # starting the webserver

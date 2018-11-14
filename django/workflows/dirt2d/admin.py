@@ -1,4 +1,9 @@
 from django.contrib import admin
-from .models import Defaults, RootCollection
+from .models import Defaults
+from workflows import registrar
+
 admin.site.register(Defaults)
-admin.site.register(RootCollection)
+
+name = "DIRT"
+description = "Digital imaging of root traits (DIRT) measures traits of monocot and dicot roots from digital images. DIRT automates the extraction of root traits by making high-throughput grid computing environment available to end-users without technical training."
+registrar.register(name,description,"dirt2d")

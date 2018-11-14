@@ -14,7 +14,9 @@ import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_ROOT = os.path.join(BASE_DIR, "assets")
 STATIC_URL = "/static/"
+SASS_PROCESSOR_ROOT = STATIC_ROOT
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
@@ -29,7 +31,6 @@ ALLOWED_HOSTS = ['*']
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,6 +45,8 @@ INSTALLED_APPS = [
     'file_manager.apps.FileManagerConfig',
     'workflows.apps.WorkflowsConfig',
     'workflows.dirt2d.apps.Dirt2dConfig',
+    'collection.apps.CollectionConfig',
+    'sass_processor',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +134,13 @@ REST_FRAMEWORK = {
 }
 
 FIELD_ENCRYPTION_KEY = b'mm8zveo6FRrzVuJ2I_M_LorHdL4lJwDByS5kPWBYaM8='
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static"),
+)
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'sass_processor.finders.CssFinder',
+]

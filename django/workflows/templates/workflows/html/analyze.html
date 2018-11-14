@@ -1,6 +1,6 @@
-{% extends 'workflows/collection/collection.html' %}
+{% extends 'includes/page-default.html' %}
 
-{% block content %}
+{% block page-content %}
   {% if form %}
     <h1>Submit To Cluster</h1>
     <form method="POST" class="post-form">{% csrf_token %}
