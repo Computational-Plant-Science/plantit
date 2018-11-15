@@ -52,3 +52,13 @@ class Collection(models.Model, CastableModelMixin):
 
     def add_file(self,file):
         raise NotImplementedError
+
+    def get_absolute_url(self):
+        """
+            Return the canonical URL for an object. Defines a default
+            url for FormViews that use this model.
+
+            see https://docs.djangoproject.com/en/2.0/ref/models/instances/#django.db.models.Model.get_absolute_url for
+            details.
+        """
+        return "/collection/%d/details/"%(self.pk,)

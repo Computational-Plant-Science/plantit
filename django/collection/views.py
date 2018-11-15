@@ -5,8 +5,10 @@ from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from job_manager.job import Status, Job
-from .forms import CollectionFileForm
+from .forms import CollectionFileForm, NewCollectionForm
 from .images import Images2D, Image
+
+from django import forms
 
 # class FilesObjectMixin():
 #     """
@@ -108,13 +110,15 @@ class New(LoginRequiredMixin,CreateView):
         also has all other attributes thereof.
     """
     template_name = "collection/html/new.html"
-    fields = ['name','description','tags','storage_type','base_file_path']
-    model = Images2D
+    initial={'base_file_path': 'files/'}
+
+    def get_form(self):
+        return NewCollectionForm(**self.get_form_kwargs())
 
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
-
+        
 class EditDetails(LoginRequiredMixin,UpdateView):
     """
         A form view for editing the details of a collection
