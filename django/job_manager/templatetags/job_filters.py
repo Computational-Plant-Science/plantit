@@ -43,3 +43,15 @@ def status_set(job):
         s.state_str = str(s)
 
     return states
+
+@register.filter()
+def tasks(job):
+    """
+        Get a list of the job tasks
+
+        Args:
+            job: the job to extract the statuses from
+    """
+    tasks = job.task_set.all().order_by('order_pos').select_subclasses()
+
+    return tasks

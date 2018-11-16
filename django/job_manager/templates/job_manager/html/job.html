@@ -5,13 +5,28 @@
 <div class="content-column">
   <h1>Job {{ job.pk }}</h1>
 
-  <b>Current Status:</b> {{ job|current_status }}</br>
+  <b>Current Status:</b> {{ job|current_status }}<br/>
   <b>Submission ID:</b> {{ job.submission_id }}<br/>
   <b>Work DIR:</b> {{ job.work_dir }}<br/>
   <b>Auth Token:</b> {{ job.auth_token }}<br/>
   <br/>
-  
-  <h3>State history for job {{ job.pk }}</h2>
+
+  <h3>Tasks</h3>
+  <table>
+    <tr>
+      <th>Name</th>
+      <th>Complete</th>
+    </tr>
+    {% for task in object|tasks %}
+      <tr>
+        <td>{{ task.name }}</td>
+        <td>{{ task.complete }}</td>
+        <td><a href="?rerun={{ task.pk }}">Rerun</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+
+  <h3>State history for job {{ job.pk }}</h3>
   <table>
     <tr>
       <th>Date</th>

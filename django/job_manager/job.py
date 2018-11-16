@@ -12,6 +12,18 @@ from model_utils.managers import InheritanceManager
 from collection.models import Collection
 
 @shared_task
+def __run_task__(task_pk):
+    """
+        Calls the run command asynchronously on the given task
+        regardless of its state.
+
+        Args:
+            task_pk: pk of the task to run
+    """
+    task = Task.objects.get_subclass(pk=task_pk)
+    task.run()
+
+@shared_task
 def __run_next__(pk):
     """
         Runs next uncompleted job task

@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.generic.detail import DetailView
 
+from .job import __run_task__
 from .job import Job
 
 # Create your views here.
@@ -18,7 +19,7 @@ def job_list(request):
 
     context = { 'jobs':jobs }
 
-    return render(request, 'job_manager/job_list.html', context)
+    return render(request, 'job_manager/html/job_list.html', context)
 
 @login_required
 def submit_job(request, job_pk):
@@ -33,3 +34,10 @@ class JobView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+
+    def get(self, request, *args, **kwargs):
+        task_pk = request.GET.get('rerun')
+        if(task_pk is not None):
+            __run_task__(task_pk)
+
+        return super(JobView,self).get(request, *args, **kwargs)

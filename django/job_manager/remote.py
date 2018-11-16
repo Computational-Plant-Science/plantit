@@ -280,7 +280,7 @@ class UploadCollectionTask(SSHTaskMixin,Task):
 
         file_storage = permissions.open_folder(storage_type = collection.storage_type,
                                                path = collection.base_file_path,
-                                               user = collection.user)
+                                               user = self.job.user)
 
         try: #OSError raised if dir already exists
             self.sftp.mkdir(dir)
@@ -312,18 +312,16 @@ class UploadFileTask(SSHTaskMixin,Task):
             pwd (str): File system working directory
     """
 
-    files = models.TextField(blank=False)
-    storage_type = models.CharField(blank=False, max_length=100)
+    files = models.TextField(blank=False,null=False)
+    storage_type = models.CharField(blank=False,null=False, max_length=100)
     pwd = models.CharField(max_length=250)
 
     def ssh(self):
         file_paths = self.files.split(',')
         dir = "files/"
+        collection = self.job.collection.cast() #Cast down to access the files attribute
 
-        file_stroage = permissions.open_folder(storage_type, path, user, *kwargs)
-
-        if(self.backend == 'FileSystemStorage'):
-            file_storage = FileSystemStorage(self.pwd)
+        file_storage = permissions.open_folder(self.storage_type, self.pwd, self.job.user)
 
         try: #OSError raised if dir already exists
             self.sftp.mkdir(dir)

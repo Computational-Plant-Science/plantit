@@ -14,6 +14,8 @@ from job_manager.job import Status, Job, Task, DummyTask
 from job_manager.remote import Cluster, SubmissionTask, File, UploadFileTask
 from job_manager.job import __cancel_job__, __run_next__
 
+from collection.models import Collection
+
 import paramiko
 
 # Create your tests here.
@@ -36,6 +38,19 @@ def create_script(file=None):
     script.save()
 
     return script
+
+def create_collection(user = None):
+    if(not user):
+        user = create_user()
+
+    c = Collection(name="Test Collection",
+                   description="test",
+                   user=user,
+                   storage_type="Fake",
+                   base_file_path="fake/")
+    c.save()
+
+    return c
 
 def create_cluster(submit_commands=None,uname=None):
     if(not submit_commands):
@@ -69,11 +84,16 @@ def create_user():
     email = 'email_' + ''.join(random.choice(string.ascii_letters) for x in range(5))
     return User.objects.create_user(uname,email,'test')
 
-def create_job(user = None):
+def create_job(user = None, collection = None):
     if(not user):
         user = create_user()
+    if(not collection):
+        collection = create_collection(user)
 
-    j = Job(date_created=timezone.now(), user=user)
+    j = Job(date_created=timezone.now(),
+            user=user,
+            collection=create_collection()
+            )
 
     j.save()
     j.status_set.create(state=Status.CREATED,date=timezone.now(),description="Created")
@@ -99,7 +119,7 @@ class JobTests(TestCase):
             __run_next__(j.pk)
         except:
             self.assertIs(False,True)
-            
+
         t.refresh_from_db()
         self.assertTrue(t.ran)
 
@@ -141,7 +161,17 @@ class JobTests(TestCase):
     def test_cancel_failed(self):
         pass
 
+from file_manager.permissions import Permissions
+from file_manager.filesystems.local import Local
+
 class RemoteTests(TestCase):
+    def setUp(self):
+        self.storage_type = Local(name = "Local")
+        self.storage_type.save()
+        self.user = create_user()
+        Permissions.allow(self.user,self.storage_type,'./files/')
+        Permissions.allow(self.user,self.storage_type,'./files/tmp/')
+
     def open_sftp(cluster,job):
         """
             Opens an sftp connection to the job's cluster and cds into
@@ -255,7 +285,7 @@ class RemoteTests(TestCase):
         self.assertFalse(task.complete) #Task must be marked complete by the cluster
 
     def test_upload_file_task(self):
-        j = create_job()
+        j = create_job(user=self.user)
         c = create_cluster()
         file1 = tempfile.NamedTemporaryFile(mode="w",dir='./files/tmp/',delete=False)
         file2 = tempfile.NamedTemporaryFile(mode="w",dir='./files/tmp/',delete=False)
@@ -268,7 +298,7 @@ class RemoteTests(TestCase):
              order_pos = 1,
              cluster = c,
              pwd = './files/tmp/',
-             backend = "FileSystemStorage",
+             storage_type=self.storage_type.name,
              files = files)
         task.save()
         task.run()
@@ -289,7 +319,7 @@ class RemoteTests(TestCase):
         self.assertTrue(task.complete)
 
     def test_upload_file_task_file_not_exist(self):
-        j = create_job()
+        j = create_job(user=self.user)
         file1 = tempfile.NamedTemporaryFile(mode="w",dir='./files/tmp/',delete=False)
         file1.close()
         files = "%s,non_existant_file"%(file1.name)
@@ -299,7 +329,7 @@ class RemoteTests(TestCase):
                      job = j,
                      order_pos = 1,
                      pwd = './files/tmp/',
-                     backend = "FileSystemStorage",
+                     storage_type=self.storage_type.name,
                      files = files)
         task.save()
         task.run()

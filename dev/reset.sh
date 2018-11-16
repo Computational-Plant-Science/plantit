@@ -36,26 +36,9 @@ docker-compose run web python manage.py makemigrations
 docker-compose run web python manage.py migrate
 
 #Add some defaults to the server
-docker-compose run web python manage.py shell << PYTHONCODE
-#BEGIN PYTHON CODE
-
-#Default admin user
-from django.contrib.auth.models import User;
-user = User.objects.create_superuser('admin', 'admin@example.com', 'admin')
-
-#Default objects to work with
-from job_manager.remote import Cluster
-from job_manager.test.test_models import create_cluster
-cluster = create_cluster("./{sub_script} {job_pk} {task_pk} {auth_token}")
-
-from file_manager.permissions import Permissions
-from file_manager.filesystems.local import Local
-l = Local(name = "Local")
-l.save()
-Permissions.allow(user,l,'./files/')
-
-#END PYTHON CODE
-PYTHONCODE
+cp dev/server_scripts/server_update django/files/ # must be within MEDIA_ROOT
+cp dev/server_scripts/traits.csv django/files/
+cat dev/setup_defaults.py | docker-compose run web python manage.py shell
 
 #Stop db container
 docker-compose stop
