@@ -86,7 +86,7 @@ def list_workflows(request):
     context = {'workflows': registrar.list,
                'collection': request.GET['collection']}
 
-    return render(request, 'workflows/html/list_workflows.html', context)
+    return render(request, 'workflows/html/choose_workflow.html', context)
 
 class AnalyzeCollection(LoginRequiredMixin,DetailView):
     """

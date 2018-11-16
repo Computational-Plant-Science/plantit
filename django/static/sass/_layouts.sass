@@ -4,8 +4,12 @@
   *
   **/
 
-/**
-  Column
+/** ********************************************************
+  Column Layout
+
+  Provides a layout with 1 or more columns:
+
+  Examples:
 
   one column page:
     <div class="content-column">
@@ -21,15 +25,12 @@
         Col 2 content
       </div>
     </div>
-  **/
+
+ ************************************************************ **/
 .content-column
   background-color: $color-box-background
   border-radius: 20px
   padding: 25px
-
-/**
- Flex Row
- **/
 
 .flex-row
   display: flex
@@ -44,9 +45,21 @@
     .flex-box
       width: 100%
 
-/**
- Two-thirds
- **/
+/** *****************************************************************
+ Two-thirds layout
+ Creates 2 columns, a left, smaller column and a right larger column'
+
+ Example:
+
+  <div id="two-thirds-left-column">
+    Left smaller column
+  </div>
+
+  <div id="two-thirds-right-column">
+    Right larger column
+  </div>
+
+ ****************************************************************** **/
 
 #two-thirds-left-column
   float: left
@@ -94,7 +107,21 @@
     width: 100%
     margin: 0px
 
-/** Grid **/
+/** ********************************************************************
+  Grid Layout
+  Display a grid of items
+
+  Example:
+
+    <div class="grid-container">
+        {% for item in grid %}
+            <div class="grid-item grid-border">
+              Grid content
+            </div>
+        {% endfor %}
+    </div>
+
+ ******************************************************************* **/
 .grid-container
   display: grid
   grid-column-gap: 10px
