@@ -46,8 +46,8 @@ def create_collection(user = None):
     c = Collection(name="Test Collection",
                    description="test",
                    user=user,
-                   storage_type="Fake",
-                   base_file_path="fake/")
+                   storage_type="Local",
+                   base_file_path="files/")
     c.save()
 
     return c
@@ -69,11 +69,10 @@ def create_cluster(submit_commands=None,uname=None):
     c.save()
     return c
 
-def add_task(job,script = None):
-    if(not script):
-        script = create_script()
-
-    e = DummyTask(name="Test Task",
+def add_task(job,name = None):
+    if not name:
+        name = "Test Task"
+    e = DummyTask(name=name,
                  description="Does not do anything",
                  job=job)
     e.save()

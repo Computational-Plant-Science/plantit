@@ -39,3 +39,11 @@ d = Defaults(submission_script = sub_script)
 d.save()
 d.files.add(server_update)
 d.files.add(traits_file)
+
+#Some fake objects to fill the website
+from job_manager.test.test_models import create_collection, create_job, add_task
+collection = create_collection(user = user)
+job = create_job(user = user, collection= collection)
+add_task(job,"Fake Task 1")
+add_task(job,"Fake Task 2")
+add_task(job,"Fake Task 3")
