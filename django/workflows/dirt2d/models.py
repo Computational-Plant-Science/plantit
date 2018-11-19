@@ -5,6 +5,7 @@ from job_manager.remote import File as JobFile
 from file_manager.models import AbstractFile
 from workflows.models import AbstractDefaults, Tag
 from collection.images import Image
+from django.core import serializers
 
 """
     Workflow for the DIRT2D code.
@@ -216,3 +217,14 @@ class Result(models.Model):
     LT_DIST_FIRST = models.FloatField(blank=True,null=True)
     LT_MED_DIA = models.FloatField(blank=True,null=True)
     LT_AVG_DIA = models.FloatField(blank=True,null=True)
+
+    def serialize(self):
+        result = {}
+
+        result = serializers.serialize('python',
+            [self, ],
+            fields = self.attributes.keys() )[0]
+
+        result['name'] = self.image.name
+
+        return result

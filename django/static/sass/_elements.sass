@@ -5,3 +5,30 @@ table
 
   td.text-center
     text-align: center
+
+/** ********************************************************
+  Discrete Progress Bar
+
+  Genrates a discrete progress bar
+ ************************************************************ **/
+.discrete-progress-bar
+  width: 100%
+  list-style-type: none
+  margin: 0px
+  padding: 0px
+
+ul.discrete-progress-bar li
+  display: block
+  float: left
+  text-align: center
+  background-color: $color-highlight
+  height: 30px
+  width: 50px
+  margin: 0px
+  border-left: 2px solid $color-box-background
+
+ul.discrete-progress-bar li.complete
+  background-color: $color-disabled
+
+ul.discrete-progress-bar span.fas
+  margin-top: 7px

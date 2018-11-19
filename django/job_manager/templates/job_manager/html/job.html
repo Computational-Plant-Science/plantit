@@ -41,6 +41,19 @@
     </tr>
     {% endfor %}
   </table>
+
+  <h3>Results</h3>
+    <ul>
+    {% for result in object|results %}
+      <li>File: {{ result.name }}
+        <ul>
+          {% for field, value in result.fields.items %}
+              <li>{{ field }} : {{ value }}</li>
+          {% endfor %}
+        </ul>
+      </li>
+    {% endfor %}
+    </ul>
 </div>
 
 <div class="button-nav">

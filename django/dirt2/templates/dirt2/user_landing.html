@@ -1,9 +1,25 @@
 {% extends 'includes/page-default.html' %}
+
+{% comment %}
+
+User landing/home page.
+
+Attributes:
+  user (djanog.contrib.auth.User): user object
+  jobs (list): list of jobs (job_manager.job.Job) that the user has started
+
+{% endcomment %}
+
 {% load static %}
 {% load job_filters %}
+{% load sass_tags %}
+
+{% block header %}
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+{% endblock %}
 
 {% block page-content %}
-  <h2>Welcome {{ user.username }}</h2>
+  <h2>Welcome {{ user.username }} <span class="glyphicon glyphicon-ok"></span></h2>
 
   <div id="two-thirds-left-column">
   <div class="profile-photo">
@@ -34,6 +50,7 @@
       <table>
         <tr>
           <th>Job Id</th>
+          <th>Progress</th>
           <th>Current Status</th>
           <th>Status Description</th>
 
@@ -41,6 +58,16 @@
         {% for job in jobs %}
             <tr>
               <td class="text-center"><a href="{% url 'job_manager:job' job.pk %}">{{ job.id }}</a></td>
+              <td nowrap>
+                <ul class="discrete-progress-bar">
+                  {% for task in job|tasks %}
+                    {% if task.complete %}
+                      <li class="complete"><span class="fas fa-check"></span></li>
+                    {% else %}
+                      <li></li>
+                    {% endif %}
+                  {% endfor %}
+                </ul>
               <td class="text-center">{{ job|current_status }}</td>
               <td>{{ job|current_status_description }}</td>
             </tr>

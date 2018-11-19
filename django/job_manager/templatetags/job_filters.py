@@ -1,4 +1,5 @@
 from django import template
+
 register = template.Library()
 
 @register.filter()
@@ -55,3 +56,12 @@ def tasks(job):
     tasks = job.task_set.all().order_by('order_pos').select_subclasses()
 
     return tasks
+
+@register.filter()
+def results(job):
+    query = job.result_set.all()
+    results = []
+    for obj in query:
+        results.append(obj.serialize())
+
+    return results
