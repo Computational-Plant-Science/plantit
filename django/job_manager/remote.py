@@ -220,9 +220,10 @@ class SubmissionTask(SSHTaskMixin, Task):
         if(self.parameters):
             params = json.loads(self.parameters)
             for key,value in params.items():
-                cmds = cmds.replace("{%s}"%(key,),value)
+                cmds = cmds + " " + key + " \"" + value + '\"'
         if(self.job.submission_id):
             cmds = cmds.replace("{sub_id}", str(self.job.submission_id))
+        print(cmds)
         return cmds
 
     def ssh(self):
@@ -296,41 +297,25 @@ class UploadCollectionTask(SSHTaskMixin,Task):
 
 class UploadFileTask(SSHTaskMixin,Task):
     """
-        Uploads a list of files to the server to a files folder in
-            the job work directory
+        Uploads a list of files to the job work directory on the server.
 
         Attributes:
             fields (str): comma-seperated list of paths of files to uplaod,
-                paths must be relative to pwd field
-            backend (str): File system backend to use, supported options are:
-                ====================  ====================================================
-                Option                Class Loaded
-                ====================  ====================================================
-                "FileSystemStorage"   :class:`django.core.files.storage.FileSystemStorage`
-                ====================  ====================================================
-
-            pwd (str): File system working directory
+                paths must be relative to webserver root
+            delete (bool): delete local file after upload
     """
 
     files = models.TextField(blank=False,null=False)
-    storage_type = models.CharField(blank=False,null=False, max_length=100)
-    pwd = models.CharField(max_length=250)
+    delete = models.BooleanField()
 
     def ssh(self):
         file_paths = self.files.split(',')
-        dir = "files/"
-        collection = self.job.collection.cast() #Cast down to access the files attribute
-
-        file_storage = permissions.open_folder(self.storage_type, self.pwd, self.job.user)
-
-        try: #OSError raised if dir already exists
-            self.sftp.mkdir(dir)
-        except OSError as e:
-            pass
 
         for file_name in file_paths:
-            file = file_storage.open(file_name)
-            fname = dir + "/" + os.path.basename(file.name)
+            file = open(file_name)
+            fname = os.path.basename(file.name)
             self.sftp.putfo(file, fname)
+            if(self.delete):
+                os.remove(file_name)
 
         self.finish()

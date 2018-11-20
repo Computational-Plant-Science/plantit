@@ -41,94 +41,688 @@ class Result(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
     image = models.ForeignKey(Image, on_delete=models.CASCADE)
 
-    #Generated with the help of:
-    # cat traits.csv | awk -F , '{printf "'\''%s'\'':('\''%s'\'',float),\n ", $1, $1}'
+    #Generated using django/workflows/dirt2d/dev/attributes.py
     attributes = {
-        'circle ratio': ('CIR_RATIO',float),
-        'x pixel':('X_PIXEL',float),
-        'y pixel':('Y_PIXEL',float),
-        'xScale':('X_SCALE',float),
-        'yScale':('Y_SCALE',float),
-        'computation time':('COMP_TIME',float),
-        'Skeleton Vertices':('SKL_NODES',float),
-        'DIA_STM':('DIA_STM',float),
-        'DIA_STM_SIMPLE':('DIA_STM_SIMPLE',float),
-        'AREA':('AREA',float),
-        'AVG_DENSITY':('AVG_DENSITY',float),
-        'TD_MED':('TD_MED',float),
-        'TD_AVG':('TD_AVG',float),
-        'WIDTH_MED':('WIDTH_MED',float),
-        'WIDTH_MAX':('WIDTH_MAX',float),
-        'D10':('D10',float),
-        'D20':('D20',float),
-        'D30':('D30',float),
-        'D40':('D40',float),
-        'D50':('D50',float),
-        'D60':('D60',float),
-        'D70':('D70',float),
-        'D80':('D80',float),
-        'D90':('D90',float),
-        'DS10':('DS10',float),
-        'DS20':('DS20',float),
-        'DS30':('DS30',float),
-        'DS40':('DS40',float),
-        'DS50':('DS50',float),
-        'DS60':('DS60',float),
-        'DS70':('DS70',float),
-        'DS80':('DS80',float),
-        'DS90':('DS90',float),
-        'RDISTR_X':('RDISTR_X',float),
-        'RDISTR_Y':('RDISTR_Y',float),
-        'SKL_DEPTH':('SKL_DEPTH',float),
-        'SKL_WIDTH':('SKL_WIDTH',float),
-        'RTP_COUNT':('RTP_COUNT',float),
-        'ANG_TOP':('ANG_TOP',float),
-        'ANG_BTM':('ANG_BTM',float),
-        'STA_RANGE':('STA_RANGE',float),
-        'STA_DOM_I':('STA_DOM_I',float),
-        'STA_DOM_II':('STA_DOM_II',float),
-        'STA_25_I':('STA_25_I',float),
-        'STA_25_II':('STA_25_II',float),
-        'STA_50_I':('STA_50_I',float),
-        'STA_50_II':('STA_50_II',float),
-        'STA_75_I':('STA_75_I',float),
-        'STA_75_II':('STA_75_II',float),
-        'STA_90_I':('STA_90_I',float),
-        'STA_90_II':('STA_90_II',float),
-        'RTA_DOM_I':('RTA_DOM_I',float),
-        'RTA_DOM_II':('RTA_DOM_II',float),
-        'STA_MIN':('STA_MIN',float),
-        'STA_MAX':('STA_MAX',float),
-        'STA_MED':('STA_MED',float),
-        'RTA_RANGE':('RTA_RANGE',float),
-        'RTA_MIN':('RTA_MIN',float),
-        'RTA_MAX':('RTA_MAX',float),
-        'RTA_MED':('RTA_MED',float),
-        'NR_RTP_SEG_I':('NR_RTP_SEG_I',float),
-        'NR_RTP_SEG_II':('NR_RTP_SEG_II',float),
-        'ADVT_COUNT':('ADVT_COUNT',float),
-        'BASAL_COUNT':('BASAL_COUNT',float),
-        'ADVT_ANG':('ADVT_ANG',float),
-        'BASAL_ANG':('BASAL_ANG',float),
-        'HYP_DIA':('HYP_DIA',float),
-        'TAP_DIA':('TAP_DIA',float),
-        'MAX_DIA_90':('MAX_DIA_90',float),
-        'DROP_50':('DROP_50',float),
-        'CP_DIA25':('CP_DIA25',float),
-        'CP_DIA50':('CP_DIA50',float),
-        'CP_DIA75':('CP_DIA75',float),
-        'CP_DIA90':('CP_DIA90',float),
-        'NODAL_LEN':('NODAL_LEN',float),
-        'NODAL_AVG_DIA':('NODAL_AVG_DIA',float),
-        'LT_BRA_FRQ':('LT_BRA_FRQ',float),
-        'LT_AVG_LEN':('LT_AVG_LEN',float),
-        'LT_AVG_ANG':('LT_AVG_ANG',float),
-        'LT_ANG_RANGE':('LT_ANG_RANGE',float),
-        'LT_MIN_ANG':('LT_MIN_ANG',float),
-        'LT_MAX_ANG':('LT_MAX_ANG',float),
-        'LT_DIST_FIRST':('LT_DIST_FIRST',float),
-        'LT_MED_DIA':('LT_MED_DIA',float),
-        'LT_AVG_DIA':('LT_AVG_DIA',float),
+        'D70':{
+            'field': 'D70',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'D70'
+        },
+        'RTP_COUNT':{
+            'field': 'RTP_COUNT',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'RTP_COUNT'
+        },
+        'D10':{
+            'field': 'D10',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'D10'
+        },
+        'SKL_DEPTH':{
+            'field': 'SKL_DEPTH',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'SKL_DEPTH'
+        },
+        'D30':{
+            'field': 'D30',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'D30'
+        },
+        'DS40':{
+            'field': 'DS40',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DS40'
+        },
+        'DS90':{
+            'field': 'DS90',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DS90'
+        },
+        'WIDTH_MAX':{
+            'field': 'WIDTH_MAX',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'WIDTH_MAX'
+        },
+        'D50':{
+            'field': 'D50',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'D50'
+        },
+        'DS80':{
+            'field': 'DS80',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DS80'
+        },
+        'DIA_STM_SIMPLE':{
+            'field': 'DIA_STM_SIMPLE',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DIA_STM_SIMPLE'
+        },
+        'D90':{
+            'field': 'D90',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'D90'
+        },
+        'TD_AVG':{
+            'field': 'TD_AVG',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'TD_AVG'
+        },
+        'DS10':{
+            'field': 'DS10',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DS10'
+        },
+        'AVG_DENSITY':{
+            'field': 'AVG_DENSITY',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'AVG_DENSITY'
+        },
+        'DS30':{
+            'field': 'DS30',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DS30'
+        },
+        'DS60':{
+            'field': 'DS60',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DS60'
+        },
+        'SKL_WIDTH':{
+            'field': 'SKL_WIDTH',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'SKL_WIDTH'
+        },
+        'D20':{
+            'field': 'D20',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'D20'
+        },
+        'DS70':{
+            'field': 'DS70',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DS70'
+        },
+        'DS50':{
+            'field': 'DS50',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DS50'
+        },
+        'DIA_STM':{
+            'field': 'DIA_STM',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DIA_STM'
+        },
+        'D40':{
+            'field': 'D40',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'D40'
+        },
+        'D60':{
+            'field': 'D60',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'D60'
+        },
+        'RDISTR_Y':{
+            'field': 'RDISTR_Y',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'RDISTR_Y'
+        },
+        'RDISTR_X':{
+            'field': 'RDISTR_X',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'RDISTR_X'
+        },
+        'AREA':{
+            'field': 'AREA',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'AREA'
+        },
+        'D80':{
+            'field': 'D80',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'D80'
+        },
+        'TD_MED':{
+            'field': 'TD_MED',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'TD_MED'
+        },
+        'WIDTH_MED':{
+            'field': 'WIDTH_MED',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'WIDTH_MED'
+        },
+        'DS20':{
+            'field': 'DS20',
+            'type': float,
+            'initial': True,
+            'description': 'description',
+            'group':'Common Traits',
+            'name': 'DS20'
+        },
+        'Skeleton Vertices':{
+            'field': 'SKL_NODES',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Computation',
+            'name': 'Skeleton Vertices'
+        },
+        'circle ratio':{
+            'field': 'CIR_RATIO',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Computation',
+            'name': 'circle ratio'
+        },
+        'yScale':{
+            'field': 'Y_SCALE',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Computation',
+            'name': 'yScale'
+        },
+        'xScale':{
+            'field': 'X_SCALE',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Computation',
+            'name': 'xScale'
+        },
+        'computation time':{
+            'field': 'COMP_TIME',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Computation',
+            'name': 'computation time'
+        },
+        'x pixel':{
+            'field': 'X_PIXEL',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Computation',
+            'name': 'x pixel'
+        },
+        'y pixel':{
+            'field': 'Y_PIXEL',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Computation',
+            'name': 'y pixel'
+        },
+        'ADVT_ANG':{
+            'field': 'ADVT_ANG',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'ADVT_ANG'
+        },
+        'CP_DIA25':{
+            'field': 'CP_DIA25',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'CP_DIA25'
+        },
+        'RTA_MED':{
+            'field': 'RTA_MED',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'RTA_MED'
+        },
+        'CP_DIA50':{
+            'field': 'CP_DIA50',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'CP_DIA50'
+        },
+        'STA_MIN':{
+            'field': 'STA_MIN',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_MIN'
+        },
+        'NR_RTP_SEG_I':{
+            'field': 'NR_RTP_SEG_I',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'NR_RTP_SEG_I'
+        },
+        'STA_25_II':{
+            'field': 'STA_25_II',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_25_II'
+        },
+        'STA_MAX':{
+            'field': 'STA_MAX',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_MAX'
+        },
+        'CP_DIA90':{
+            'field': 'CP_DIA90',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'CP_DIA90'
+        },
+        'STA_50_I':{
+            'field': 'STA_50_I',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_50_I'
+        },
+        'BASAL_ANG':{
+            'field': 'BASAL_ANG',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'BASAL_ANG'
+        },
+        'STA_75_II':{
+            'field': 'STA_75_II',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_75_II'
+        },
+        'STA_MED':{
+            'field': 'STA_MED',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_MED'
+        },
+        'RTA_MIN':{
+            'field': 'RTA_MIN',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'RTA_MIN'
+        },
+        'STA_90_II':{
+            'field': 'STA_90_II',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_90_II'
+        },
+        'STA_50_II':{
+            'field': 'STA_50_II',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_50_II'
+        },
+        'RTA_RANGE':{
+            'field': 'RTA_RANGE',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'RTA_RANGE'
+        },
+        'STA_25_I':{
+            'field': 'STA_25_I',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_25_I'
+        },
+        'HYP_DIA':{
+            'field': 'HYP_DIA',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'HYP_DIA'
+        },
+        'STA_DOM_II':{
+            'field': 'STA_DOM_II',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_DOM_II'
+        },
+        'NR_RTP_SEG_II':{
+            'field': 'NR_RTP_SEG_II',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'NR_RTP_SEG_II'
+        },
+        'MAX_DIA_90':{
+            'field': 'MAX_DIA_90',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'MAX_DIA_90'
+        },
+        'BASAL_COUNT':{
+            'field': 'BASAL_COUNT',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'BASAL_COUNT'
+        },
+        'RTA_MAX':{
+            'field': 'RTA_MAX',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'RTA_MAX'
+        },
+        'STA_75_I':{
+            'field': 'STA_75_I',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_75_I'
+        },
+        'RTA_DOM_II':{
+            'field': 'RTA_DOM_II',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'RTA_DOM_II'
+        },
+        'STA_90_I':{
+            'field': 'STA_90_I',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_90_I'
+        },
+        'STA_DOM_I':{
+            'field': 'STA_DOM_I',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_DOM_I'
+        },
+        'CP_DIA75':{
+            'field': 'CP_DIA75',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'CP_DIA75'
+        },
+        'DROP_50':{
+            'field': 'DROP_50',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'DROP_50'
+        },
+        'TAP_DIA':{
+            'field': 'TAP_DIA',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'TAP_DIA'
+        },
+        'ADVT_COUNT':{
+            'field': 'ADVT_COUNT',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'ADVT_COUNT'
+        },
+        'RTA_DOM_I':{
+            'field': 'RTA_DOM_I',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'RTA_DOM_I'
+        },
+        'STA_RANGE':{
+            'field': 'STA_RANGE',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Dicot Root Traits',
+            'name': 'STA_RANGE'
+        },
+        'LT_MIN_ANG':{
+            'field': 'LT_MIN_ANG',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'LT_MIN_ANG'
+        },
+        'LT_AVG_ANG':{
+            'field': 'LT_AVG_ANG',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'LT_AVG_ANG'
+        },
+        'NODAL_AVG_DIA':{
+            'field': 'NODAL_AVG_DIA',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'NODAL_AVG_DIA'
+        },
+        'LT_BRA_FRQ':{
+            'field': 'LT_BRA_FRQ',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'LT_BRA_FRQ'
+        },
+        'LT_AVG_LEN':{
+            'field': 'LT_AVG_LEN',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'LT_AVG_LEN'
+        },
+        'LT_DIST_FIRST':{
+            'field': 'LT_DIST_FIRST',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'LT_DIST_FIRST'
+        },
+        'NODAL_LEN':{
+            'field': 'NODAL_LEN',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'NODAL_LEN'
+        },
+        'LT_ANG_RANGE':{
+            'field': 'LT_ANG_RANGE',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'LT_ANG_RANGE'
+        },
+        'LT_MAX_ANG':{
+            'field': 'LT_MAX_ANG',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'LT_MAX_ANG'
+        },
+        'LT_MED_DIA':{
+            'field': 'LT_MED_DIA',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'LT_MED_DIA'
+        },
+        'LT_AVG_DIA':{
+            'field': 'LT_AVG_DIA',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Excised Root Traits',
+            'name': 'LT_AVG_DIA'
+        },
+        'ANG_BTM':{
+            'field': 'ANG_BTM',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Monocot Root Traits',
+            'name': 'ANG_BTM'
+        },
+        'ANG_TOP':{
+            'field': 'ANG_TOP',
+            'type': float,
+            'initial': False,
+            'description': 'description',
+            'group':'Monocot Root Traits',
+            'name': 'ANG_TOP'
+        },
     }
 
     EXP_CODE = models.FloatField(blank=True,null=True)
