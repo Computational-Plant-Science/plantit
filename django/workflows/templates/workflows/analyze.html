@@ -1,0 +1,30 @@
+{% extends 'includes/page-default.html' %}
+
+{% load static %}
+
+{% block header %}
+<script src="{% static 'workflows/js/analyze.js' %}"></script>
+{% endblock %}
+
+{% block page-content %}
+    <h1>Submit To Cluster</h1>
+    <form method="POST" class="post-form">{% csrf_token %}
+      {% csrf_token %}
+      {% regroup form by field.group as field_groups %}
+      {% for field_group in field_groups %}
+        <div class="field-group">
+          <h3>{{field_group.grouper}}</h3>
+          <span class="ui-action check-all">Check All</span>
+          <span class="ui-action uncheck-all">Uncheck All</span>
+          <br>
+          {% for field in field_group.list %}
+            {{ field.label }} : {{ field }}
+          {% endfor %}
+        </div>
+      {% endfor %}
+      <br/>
+        <button type="submit" class="save btn btn-default">Submit</button>
+    </form>
+
+    {{ form.media }}
+{% endblock %}

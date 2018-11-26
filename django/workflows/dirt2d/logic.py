@@ -1,9 +1,14 @@
 import os
+import json
+import io
+
+import imageio
+
 from .models import Defaults
 from .tasks import DownloadResultsTask
 
 from job_manager.remote import SubmissionTask, UploadCollectionTask, UploadFileTask
-import json
+from .segmentation import calculateMask
 
 def add_tasks(job,cluster,traits):
     '''
@@ -64,3 +69,20 @@ def add_tasks(job,cluster,traits):
                         cluster=cluster,
                         order_pos=4)
     download_task.save()
+
+def segment(imgFile,threshold):
+    """
+        Args:
+            img (File like object): image to segment (Can be any format supported by imageio)
+            threshold (float): the segmentation threshold as used by DIRT
+
+        returns (io.BytesIO): segmented image
+    """
+    inImg = imageio.imread(imgFile, as_gray=True)
+    outImg = io.BytesIO()
+
+    imageio.imwrite(outImg,
+                    calculateMask(inImg, mask_threshold=threshold),
+                    format="JPEG-PIL")
+
+    return outImg

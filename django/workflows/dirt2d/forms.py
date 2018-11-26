@@ -1,12 +1,36 @@
 from django import forms
+from django.forms.widgets import NumberInput
+from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 
 from job_manager.remote import Cluster
 
 from .models import Result
 
+class ThresholdWidget(NumberInput):
+    """
+        Provides a ajax file browser
+    """
+    class Media:
+        js = ("workflows/dirt2d/js/load_image.js",)
+        css = {
+            'all' : ('workflows/dirt2d/css/load_image.css',)
+        }
+
+    def __init__(self, thresholds=(0.5,1,10,25), *args, **kwargs):
+        super(forms.widgets.Widget, self).__init__(*args, **kwargs)
+        self.attrs = { 'thresholds': thresholds }
+
+    def render(self, name, value, attrs=None, renderer=None):
+        template_name = 'workflows/dirt2d/thresholds.html'
+
+        return mark_safe(render_to_string(template_name,self.attrs))
+
 class CreateJob(forms.Form):
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.all())
     cluster.group = "Job Settings"
+    threshold = forms.FloatField(widget=ThresholdWidget)
+    threshold.group = "Job Settings"
 
     class Meta:
         model = Result

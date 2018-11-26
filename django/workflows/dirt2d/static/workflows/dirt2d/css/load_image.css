@@ -1,0 +1,14 @@
+.threshold{
+  display: inline-block;
+  width: 200px;
+  text-align: center;
+  margin: 10px;
+}
+
+.threshold img{
+  float: left;
+}
+
+.threshold .value{
+  flaot: left;
+}
