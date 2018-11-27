@@ -32,7 +32,7 @@ Attributes:
       {% for key, value in workflows.items %}
           <div class="grid-item grid-border">
 				    <div class="grid-item-icon-background">
-              <img class="grid-item-icon" src="{% static "workflows/dirt2d/icon.png" %}">
+              <img class="grid-item-icon" src="{% static value.icon %}">
             </div>
             <div class="grid-item-text">
               <a href="{% url value.app_url_pattern collection %}">{{ key }}</a><br />
