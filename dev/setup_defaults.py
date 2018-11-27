@@ -32,9 +32,7 @@ sub_script.save()
 server_update = JobFile(content=File(open("files/server_update")),
                         file_name="server_update")
 server_update.save()
-traits_file = JobFile(content=File(open("files/traits.csv")),
-                      file_name="traits.csv")
-traits_file.save()
+
 d = Defaults(submission_script = sub_script)
 d.save()
 d.files.add(server_update)
