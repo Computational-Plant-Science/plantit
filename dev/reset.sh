@@ -37,7 +37,6 @@ docker-compose run web python manage.py migrate
 
 #Add some defaults to the server
 cp dev/server_scripts/server_update django/files/ # must be within MEDIA_ROOT
-cp dev/server_scripts/traits.csv django/files/
 cat dev/setup_defaults.py | docker-compose run web python manage.py shell
 
 #Stop db container
