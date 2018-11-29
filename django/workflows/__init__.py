@@ -42,10 +42,3 @@ class Registrar():
                            "icon": icon}
 
 registrar = Registrar()
-
-description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean blandit, nisl eget varius porta, enim libero lacinia libero, bibendum accumsan neque enim eget ligula. Vestibulum eleifend suscipit sapien vel condimentum. Vivamus laoreet ullamcorper rhoncus. Integer massa lorem, ultricies id neque."
-icon_loc = "images/icons/Artboard 1.png"
-registrar.register("Fake1",description,"dirt2d",icon_loc)
-registrar.register("Fake2",description,"dirt2d",icon_loc)
-registrar.register("Fake3",description,"dirt2d",icon_loc)
-registrar.register("Fake4",description,"dirt2d",icon_loc)
