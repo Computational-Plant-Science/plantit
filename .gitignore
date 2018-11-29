@@ -239,4 +239,3 @@ pip-selfcheck.json
 .idea/
 
 .pytest_cache/
-django/workflows/static/workflows/sass/main.sass
