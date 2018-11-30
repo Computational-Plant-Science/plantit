@@ -30,11 +30,11 @@ Attributes:
 
   <div class="content-column">
     <div class="grid-container">
-      {% for file in files %}
+      {% for sample in samples %}
         <div class="grid-item grid-border">
           <a href="#">
             <div class="image"><img src="{% static 'images/logo.png' %}"></div>
-            <div class="title">{{ file.name }}</div>
+            <div class="title">{{ sample }}</div>
           </a>
         </div>
       {% endfor %}

@@ -1,3 +1,5 @@
+import os.path
+
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, FormView
@@ -6,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from job_manager.job import Status, Job
 from .forms import CollectionFileForm, NewCollectionForm
-from .images import Images2D, Image
+from .models import Collection
 
 from django import forms
 
@@ -51,13 +53,13 @@ class Details(LoginRequiredMixin,DetailView):
         also has all other attributes thereof.
     """
     template_name = "collection/html/collection.html"
-    model = Images2D
+    model = Collection
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['tags'] =  [t for t in self.object.tags.all()]
         context['metadata'] =  [m for m in self.object.metadata.all()]
-        context['files'] =  [f for f in self.object.files.all()]
+        context['samples'] =  [f.name for f in self.object.sample_set.all()]
         return context
 
     def post(self, request, *args, **kwargs):
@@ -69,7 +71,7 @@ class Details(LoginRequiredMixin,DetailView):
 
     def remove_files(self,request):
         for pk in request.POST.getlist('pk'):
-            self.object.files.get(pk=pk).delete()
+            self.object.samples.get(pk=pk).delete()
 
 class List(LoginRequiredMixin,ListView):
     """
@@ -85,7 +87,7 @@ class List(LoginRequiredMixin,ListView):
         The class extends the django.views.generic.list.ListView class and
         also has all other attributes thereof.
     """
-    model = Images2D
+    model = Collection
     template_name = "collection/html/collection_list.html"
 
     def get(self, request, *args, **kwargs):
@@ -118,7 +120,7 @@ class New(LoginRequiredMixin,CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
-        
+
 class EditDetails(LoginRequiredMixin,UpdateView):
     """
         A form view for editing the details of a collection
@@ -134,7 +136,7 @@ class EditDetails(LoginRequiredMixin,UpdateView):
         also has all other attributes thereof.
     """
     template_name = "collection/html/edit_details.html"
-    model = Images2D
+    model = Collection
     fields = ['name','description','tags','metadata']
 
 class AddFiles(DetailView):
@@ -149,7 +151,7 @@ class AddFiles(DetailView):
                 workflows.models.AbstractCollection class
     """
     template_name = "collection/html/add_files.html"
-    model = Images2D
+    model = Collection
 
     def get_form(self, POST = None, FILES = None):
         return CollectionFileForm(storage_type=self.object.storage_type,
@@ -170,6 +172,8 @@ class AddFiles(DetailView):
             if(form.is_valid()):
                 files = form.cleaned_data['file']
                 for file in files:
-                    self.object.add_file(file)
+                    path = file.lstrip("/")
+                    self.object.add_sample(path = path,
+                                           name = os.path.basename(path))
 
         return self.get(request, *args, **kwargs)

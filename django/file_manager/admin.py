@@ -4,5 +4,3 @@ from .filesystems import local, irods
 
 admin.site.register(Permissions)
 admin.site.register(Location)
-admin.site.register(irods.IRods)
-admin.site.register(local.Local)

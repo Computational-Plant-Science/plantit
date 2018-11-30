@@ -1,5 +1,5 @@
 import workflows.views as views
-from collection.images import Images2D
+from collection.models import Collection
 from .forms import CreateJob
 from . import logic
 
@@ -13,7 +13,7 @@ class Analyze(views.AnalyzeCollection):
             + a :class:`job_mangaer.contrib.DownloadFileTask` that downloads
                 the results of the analysis.
     """
-    model = Images2D
+    model = Collection
     form_class = CreateJob
 
     def submit(self,job, form):

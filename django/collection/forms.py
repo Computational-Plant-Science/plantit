@@ -1,7 +1,8 @@
 from django import forms
-from collection.images import Images2D
+from collection.models import Collection
 from file_manager.fields import FileBrowserField
 from file_manager.filesystems.storage import AbstractStorageType
+from file_manager.filesystems import registrar
 
 class CollectionFileForm(forms.Form):
     def __init__(self, storage_type, base_path, *args, **kwargs):
@@ -15,9 +16,8 @@ class NewCollectionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        storage_types = AbstractStorageType.objects.all()
-        self.fields['storage_type'].choices = [(x.name,x.name) for x in storage_types]
+        self.fields['storage_type'].choices = [(x,x) for x in registrar.list.keys()]
 
     class Meta:
-        model = Images2D
+        model = Collection
         fields = ['name','description','tags','storage_type','base_file_path']

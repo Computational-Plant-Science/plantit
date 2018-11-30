@@ -1,0 +1,4 @@
+IRODS_PASSWORD = "rods"
+IRODS_USERNAME = "rods"
+IRODS_HOSTNAME = "irods"
+IRODS_ZONE = "tempZone"

@@ -1,15 +1,10 @@
-from django.db import models
-
-from model_utils.managers import InheritanceManager
-
-class AbstractStorageType(models.Model):
+class AbstractStorageType:
     """
         StorageTypes hold the information required to connect to a filesystem
         :class:`Storage` and an :meth:`open` method to open a connection
-        to that filesystem. 
+        to that filesystem.
     """
-    objects = InheritanceManager()
-    name = models.CharField(max_length=25,unique=True)
+    name = ""
 
     def open(self,path):
         """

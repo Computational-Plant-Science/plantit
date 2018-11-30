@@ -276,7 +276,7 @@ class UploadCollectionTask(SSHTaskMixin,Task):
     """
 
     def ssh(self):
-        dir = "files/"
+        dir = "samples/"
         collection = self.job.collection.cast() #Cast down to access the files attribute
 
         file_storage = permissions.open_folder(storage_type = collection.storage_type,
@@ -288,10 +288,13 @@ class UploadCollectionTask(SSHTaskMixin,Task):
         except OSError as e:
             pass
 
-        for file in collection.files.all():
-            file_object = file_storage.open(file.path.strip("/"))
-            fname = path.join(dir,os.path.basename(file.name))
+        for sample in collection.sample_set.all():
+            file_object = file_storage.open(sample.path.strip("/"))
+            fname = path.join(dir,os.path.basename(sample.name))
             self.sftp.putfo(file_object, fname)
+
+        with self.sftp.open('samples.json','w') as file:
+            file.write(collection.to_json())
 
         self.finish()
 
