@@ -61,7 +61,7 @@ class Collection(models.Model, CastableModelMixin):
                 samples.append({
                         "name": sample.name,
                         "storage": "irods",
-                        "dir": os.path.dirname(sample.path)
+                        "dir": os.path.join(self.base_file_path,os.path.dirname(sample.path))
                     })
         return json.dumps({"samples": samples})
 
