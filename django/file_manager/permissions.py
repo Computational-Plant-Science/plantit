@@ -47,6 +47,10 @@ class Permissions(models.Model):
                     where the folder is contained
                 folder (str): folder path
         """
+
+        if storage_type not in registrar.list.keys():
+            raise KeyError("No storage type of type" + storage_type)
+
         perms, _ = Permissions.objects.get_or_create(user=user)
         folder, _ = Location.objects.get_or_create(storage_type=storage_type,path=Permissions.normalize_path(folder))
 
@@ -87,6 +91,9 @@ class Permissions(models.Model):
             Retruns:
                 bool: True if user has permission to access folder, False otheriwse
         """
+        if storage_type not in registrar.list.keys():
+            raise KeyError("No storage type of type" + storage_type)
+
         try:
             perms = Permissions.objects.get(user=user)
         except Permissions.DoesNotExist:
@@ -114,7 +121,9 @@ def open_folder(storage_type, path, user, *kwargs):
     if not Permissions.allowed(user = user,
                             storage_type = storage_type,
                             path = path):
-        raise PermissionDenied
+        raise PermissionDenied("Permission denied for path \"" + path +
+                                "\" on storage \"" + storage_type +
+                                "\" for user " + str(user))
 
     storage = registrar.list[storage_type]
 
