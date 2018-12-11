@@ -7,6 +7,8 @@ from workflows.models import Tag
 from model_utils.managers import InheritanceManager
 from .mixins import CastableModelMixin, CastableQuerySetMixin
 
+from file_manager.filesystems import registrar
+
 class MetaData(models.Model):
     """
         Basic Metadata class.
@@ -49,21 +51,34 @@ class Collection(models.Model, CastableModelMixin):
         return self.name
 
     def to_json(self):
-        samples = []
-        if(self.storage_type == "local"):
+        """
+            Create a json representation of the collection
+
+            returns (String): json string
+        """
+        collection = {
+            "samples": {},
+        }
+        if self.storage_type == "local":
             for sample in self.sample_set.all():
-                samples.append({
-                        "name": sample.name,
-                        "storage": "local"
-                    })
-        elif(self.storage_type == "irods"):
+                collection['samples'][sample.name] = {
+                            "storage": "local",
+                            "path": sample.path
+                        }
+        elif self.storage_type == "irods":
             for sample in self.sample_set.all():
-                samples.append({
-                        "name": sample.name,
-                        "storage": "irods",
-                        "dir": os.path.join(self.base_file_path,os.path.dirname(sample.path))
-                    })
-        return json.dumps({"samples": samples})
+                irods_storage = registrar.list["irods"]
+                collection['samples'][sample.name] = {
+                            "storage": "irods",
+                            "path": os.path.join(self.base_file_path,
+                                                 sample.path),
+                            "hostname": irods_storage.hostname,
+                            "password": irods_storage.password,
+                            "port": irods_storage.port,
+                            "zone": irods_storage.zone,
+                            "username": irods_storage.username
+                        }
+        return json.dumps(collection)
 
     def get_absolute_url(self):
         """
@@ -85,8 +100,8 @@ class Sample(models.Model):
 
         Attributes:
             collection (:class:`Collection`): the collection this sample
-                belongsto
-            path (str): the path to the file relative to collection's
+                belongs to
+            path (String): the path to the file relative to collection's
                 base file path.
     """
     objects = CustomQuerySet.as_manager()
