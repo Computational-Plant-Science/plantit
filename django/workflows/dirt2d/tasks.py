@@ -21,14 +21,15 @@ class DownloadResultsTask(SSHTaskMixin,Task):
         collection = self.job.collection.cast()
         for i,row in enumerate(reader):
             if(i%2 == 0):#Skip the rows that are file headers
-                try:
-                    image = collection.files.get(name=row['Image name'])
-                except DoesNotExist as e:
-                    #TODO: Report this error to the job
-                    print("FILE DID NOT EXIST!!!!")
-                    continue
+                image = collection.sample_set.get(name=row['Image name'])
+                # try:
+                #     image = collection.sample_set.get(name=row['Image name'])
+                # except DoesNotExist as e:
+                #     #TODO: Report this error to the job
+                #     print("FILE DID NOT EXIST!!!!")
+                #     continue
 
-                result = Result(job=self.job,image=image)
+                result = Result(job=self.job,sample=image)
 
                 for key, value in row.items():
                     if key in Result.attributes:

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import FileSystemStorage
 
-from .filesystems.storage import AbstractStorageType
+from .filesystems import registrar
 
 """
     Folder-level persmission system. Default permissions for a user are
@@ -13,7 +13,7 @@ from .filesystems.storage import AbstractStorageType
 class Location(models.Model):
     ##TODO: delete a folder entry if no Permissions objects link to it
     path = models.TextField()
-    storage_type = models.ForeignKey(AbstractStorageType,on_delete=models.CASCADE)
+    storage_type = models.CharField(max_length=50)
 
     def __str__(self):
         return "%s on %s"%(self.path,self.storage_type)
@@ -47,6 +47,10 @@ class Permissions(models.Model):
                     where the folder is contained
                 folder (str): folder path
         """
+
+        if storage_type not in registrar.list.keys():
+            raise KeyError("No storage type of type" + storage_type)
+
         perms, _ = Permissions.objects.get_or_create(user=user)
         folder, _ = Location.objects.get_or_create(storage_type=storage_type,path=Permissions.normalize_path(folder))
 
@@ -87,6 +91,9 @@ class Permissions(models.Model):
             Retruns:
                 bool: True if user has permission to access folder, False otheriwse
         """
+        if storage_type not in registrar.list.keys():
+            raise KeyError("No storage type of type" + storage_type)
+
         try:
             perms = Permissions.objects.get(user=user)
         except Permissions.DoesNotExist:
@@ -111,13 +118,13 @@ def open_folder(storage_type, path, user, *kwargs):
             user: User that has permission to the folder path
             *kwargs: unique paramaters for each STORAGE type
     """
-    storage = AbstractStorageType.objects.get_subclass(name=storage_type)
-
     if not Permissions.allowed(user = user,
-                            storage_type = storage,
+                            storage_type = storage_type,
                             path = path):
-        raise PermissionDenied
+        raise PermissionDenied("Permission denied for path \"" + path +
+                                "\" on storage \"" + storage_type +
+                                "\" for user " + str(user))
 
-
+    storage = registrar.list[storage_type]
 
     return storage.open(path)

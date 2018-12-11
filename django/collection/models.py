@@ -1,9 +1,13 @@
+import json
+import os.path
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
 from workflows.models import Tag
 from model_utils.managers import InheritanceManager
 from .mixins import CastableModelMixin, CastableQuerySetMixin
+
+from file_manager.filesystems import registrar
 
 class MetaData(models.Model):
     """
@@ -32,11 +36,6 @@ class Collection(models.Model, CastableModelMixin):
                 collection
             metadata (ManyToMany): User configurable metadata. Must extend
                 type :class:`workflows.models.AbstractMetaData`
-
-        Child classes must add the following attributes:
-            + files (ForeignKey): Files within the collection. Must extend
-                type :class:`job_manager.models.AbstractFile`
-
     """
     objects = CustomQuerySet.as_manager()
     name = models.CharField(max_length=250)
@@ -47,11 +46,39 @@ class Collection(models.Model, CastableModelMixin):
     storage_type = models.CharField(max_length=25)
     base_file_path = models.CharField(max_length=250)
 
+
     def __str__(self):
         return self.name
 
-    def add_file(self,file):
-        raise NotImplementedError
+    def to_json(self):
+        """
+            Create a json representation of the collection
+
+            returns (String): json string
+        """
+        collection = {
+            "samples": {},
+        }
+        if self.storage_type == "local":
+            for sample in self.sample_set.all():
+                collection['samples'][sample.name] = {
+                            "storage": "local",
+                            "path": sample.path
+                        }
+        elif self.storage_type == "irods":
+            for sample in self.sample_set.all():
+                irods_storage = registrar.list["irods"]
+                collection['samples'][sample.name] = {
+                            "storage": "irods",
+                            "path": os.path.join(self.base_file_path,
+                                                 sample.path),
+                            "hostname": irods_storage.hostname,
+                            "password": irods_storage.password,
+                            "port": irods_storage.port,
+                            "zone": irods_storage.zone,
+                            "username": irods_storage.username
+                        }
+        return json.dumps(collection)
 
     def get_absolute_url(self):
         """
@@ -62,3 +89,25 @@ class Collection(models.Model, CastableModelMixin):
             details.
         """
         return "/collection/%d/details/"%(self.pk,)
+
+    def add_sample(self,name,path,**kwargs):
+        self.sample_set.create(path=path,name=name,**kwargs)
+
+class Sample(models.Model):
+    """
+        Represents one experimental sample. I.E. The unit of information that
+        is analyzed by the workflow.
+
+        Attributes:
+            collection (:class:`Collection`): the collection this sample
+                belongs to
+            path (String): the path to the file relative to collection's
+                base file path.
+    """
+    objects = CustomQuerySet.as_manager()
+    name = models.CharField(max_length=250,null=False,blank=False)
+    path = models.CharField(max_length=250,null=False,blank=False)
+    collection = models.ForeignKey(Collection,on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name

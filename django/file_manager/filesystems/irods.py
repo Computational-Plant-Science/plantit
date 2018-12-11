@@ -6,6 +6,8 @@ from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
 
 from .storage import AbstractStorageType
+from . import registrar
+from dirt2 import secret
 
 class IRodsFileSystem(Storage):
     """
@@ -86,11 +88,14 @@ class IRods(AbstractStorageType):
 
         .. _iRODS: https://irods.org/
     """
-    username = models.CharField(max_length=100)
-    password = EncryptedCharField(max_length=100)
-    port = models.PositiveIntegerField(default=1247)
-    hostname = models.CharField(max_length=250)
-    zone = models.CharField(max_length=250)
+
+    def __init__(self, name, username, password, hostname, zone, port = 1247):
+        self.name = name
+        self.username = username
+        self.password = password
+        self.port = port
+        self.hostname = hostname
+        self.zone = zone
 
     def open(self,path):
         return IRodsFileSystem(host=self.hostname,
@@ -99,3 +104,9 @@ class IRods(AbstractStorageType):
                                password=self.password,
                                zone=self.zone,
                                path = path)
+
+registrar.register(IRods(name = "irods",
+                         username = secret.IRODS_USERNAME,
+                         password = secret.IRODS_PASSWORD,
+                         hostname = secret.IRODS_HOSTNAME,
+                         zone = secret.IRODS_ZONE))

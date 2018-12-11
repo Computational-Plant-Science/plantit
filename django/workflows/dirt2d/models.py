@@ -2,9 +2,8 @@ from django.db import models
 
 from job_manager.job import Job
 from job_manager.remote import File as JobFile
-from file_manager.models import AbstractFile
 from workflows.models import AbstractDefaults, Tag
-from collection.images import Image
+from collection.models import Sample
 from django.core import serializers
 
 """
@@ -39,7 +38,7 @@ class Result(models.Model):
         Represents the results from one root image file.
     """
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    image = models.ForeignKey(Image, on_delete=models.CASCADE)
+    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
 
     #Generated using django/workflows/dirt2d/dev/attributes.py
     attributes = {
@@ -819,6 +818,6 @@ class Result(models.Model):
             [self, ],
             fields = self.attributes.keys() )[0]
 
-        result['name'] = self.image.name
+        result['name'] = self.sample.name
 
         return result

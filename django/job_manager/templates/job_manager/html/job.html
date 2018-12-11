@@ -22,6 +22,8 @@
         <td>{{ task.name }}</td>
         <td>{{ task.complete }}</td>
         <td><a href="?rerun={{ task.pk }}">Rerun</a></td>
+		  {% load static %}
+<img src="{% static "loading.gif" %}">
       </tr>
     {% endfor %}
   </table>
