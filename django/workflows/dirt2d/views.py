@@ -26,12 +26,12 @@ class Analyze(views.AnalyzeCollection):
         super().submit(job,form)
 
 def segment_image(request,pk):
-    collection = Images2D.objects.get(pk = pk)
-    image_obj = collection.files.first()
+    collection = Collection.objects.get(pk = pk)
+    image_obj = collection.sample_set.first()
     threshold = float(request.GET['threshold'])
 
     file = image_obj.get(request.user,collection.base_file_path)
 
-    segmented = logic.segment(file.open(),threshold)
+    segmented = logic.segment(file,threshold)
 
     return HttpResponse(segmented.getvalue(), content_type="image/jpeg")

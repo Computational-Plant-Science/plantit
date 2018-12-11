@@ -8,6 +8,7 @@ from model_utils.managers import InheritanceManager
 from .mixins import CastableModelMixin, CastableQuerySetMixin
 
 from file_manager.filesystems import registrar
+import file_manager.permissions as permissions
 
 class MetaData(models.Model):
     """
@@ -111,3 +112,10 @@ class Sample(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get(self,user,base_file_path):
+        storage = permissions.open_folder(self.collection.storage_type,
+                                          self.collection.base_file_path,
+                                          self.collection.user)
+
+        return storage.open(self.path)
