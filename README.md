@@ -28,4 +28,4 @@ then it
       - gives admin user file access permissions to ./django/files
    - adds test cluster
 
-sudo is required to remove files added to ./djanog/files by the webserver.
+sudo is required to remove files added to ./django/files by the webserver.
