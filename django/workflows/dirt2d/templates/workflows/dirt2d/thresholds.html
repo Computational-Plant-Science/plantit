@@ -1,0 +1,11 @@
+{% load static %}
+
+<input type="number" name="threshold">
+<div class="threshold-images">
+  {% for t in thresholds %}
+    <div class="threshold">
+      <img class="threshold-img" threshold={{ t }} width="200px" src="{% static "images/icons/ajax-loader.gif" %}">
+      <span class="value">Threshold Value: {{ t }}</span>
+    </div>
+  {% endfor %}
+</div>

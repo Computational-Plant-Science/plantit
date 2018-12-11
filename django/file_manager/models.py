@@ -1,5 +1,7 @@
+from os import path
 from django.db import models
 from .filesystems.storage import AbstractStorageType
+import file_manager.permissions as permissions
 
 class AbstractFile(models.Model):
     """
@@ -21,3 +23,10 @@ class AbstractFile(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get(self,user,base_file_path):
+        storage = permissions.open_folder(self.storage.name,
+                                          base_file_path,
+                                          user)
+
+        return storage.open(self.name)
