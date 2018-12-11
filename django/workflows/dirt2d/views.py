@@ -1,3 +1,5 @@
+from django.http.response import HttpResponse
+
 import workflows.views as views
 from collection.models import Collection
 from .forms import CreateJob
@@ -22,3 +24,14 @@ class Analyze(views.AnalyzeCollection):
         logic.add_tasks(job,cluster,form.get_cleaned_attributes())
 
         super().submit(job,form)
+
+def segment_image(request,pk):
+    collection = Images2D.objects.get(pk = pk)
+    image_obj = collection.files.first()
+    threshold = float(request.GET['threshold'])
+
+    file = image_obj.get(request.user,collection.base_file_path)
+
+    segmented = logic.segment(file.open(),threshold)
+
+    return HttpResponse(segmented.getvalue(), content_type="image/jpeg")

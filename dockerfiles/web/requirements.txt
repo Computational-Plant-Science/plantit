@@ -20,3 +20,9 @@ python-irodsclient
 libsass
 django-compressor
 django-sass-processor
+
+#For dirt2 workflow
+numpy
+mahotas
+scipy
+imageio

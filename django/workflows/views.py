@@ -23,7 +23,7 @@ def list_workflows(request):
     context = {'workflows': registrar.list,
                'collection': request.GET['collection']}
 
-    return render(request, 'workflows/html/choose_workflow.html', context)
+    return render(request, 'workflows/choose_workflow.html', context)
 
 class AnalyzeCollection(LoginRequiredMixin,SingleObjectMixin,FormView):
     """
@@ -59,7 +59,7 @@ class AnalyzeCollection(LoginRequiredMixin,SingleObjectMixin,FormView):
                 (default="workflows/collection/analyze.html")
     """
 
-    template_name = "workflows/html/analyze.html"
+    template_name = "workflows/analyze.html"
     object = None
 
     def form_valid(self,form):
