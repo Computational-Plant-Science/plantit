@@ -32,20 +32,16 @@ class DownloadResultsTask(SSHTaskMixin,Task):
 
                 for key, value in row.items():
                     if key in Result.attributes:
-                        attr = Result.attributes[key][0]
-                        func = Result.attributes[key][1]
+                        attr = Result.attributes[key]['field']
+                        func = Result.attributes[key]['type']
                         setattr(result,
                                 attr,
                                 func(value))
                 result.save()
 
     def ssh(self):
-        print("here")
         output_file = self.workdir + "/calculated_traits.csv"
-
         file = self.sftp.file(output_file)
-        print("Got File" + str(file))
-
         self.parse_csv_file(file)
 
         #Cleanup
