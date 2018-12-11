@@ -1,3 +1,5 @@
+{% extends "includes/page-default.html" %}
+
 {% comment %}
 
 Displays a list of available workflows
@@ -8,24 +10,41 @@ Attributes:
     value:
       value.description: description of workflow
       value.app_name: url label of the workflow
+	  value.app_url_pattern: link to workflow
 
 {% endcomment %}
 
 {% load static %}
-{% include "includes/page-default.html" %}
+{% load sass_tags %}
+
+{% block header %}
+  <link rel="stylesheet"  type="text/css" href="{% sass_src 'workflows/sass/main.sass' %}">
+{% endblock %}
+
+
 
 {% block page-content %}
 
   <h1>Select a Workflow</h1>
+<h5>Additional data may be required on the following page</h5>
 
   <div class="grid-container">
       {% for key, value in workflows.items %}
-          <div class="grid-item grid-border" style="width: 200px">
-            <a href="{% url value.app_url_pattern collection %}">{{ key }}</a><br />
-            <hr>
-            {{ value.description }}
+          <div class="grid-item grid-border">
+				    <div class="grid-item-icon-background">
+              <img class="grid-item-icon" src="{% static value.icon %}">
+            </div>
+            <div class="grid-item-text">
+              <a href="{% url value.app_url_pattern collection %}">{{ key }}</a><br />
+              <hr>
+              {{ value.description }}
+            </div>
           </div>
       {% endfor %}
   </div>
+
+<div class="button-nav">
+  <a href="{% url 'user_landing' %}"><button class="btn btn-nav">Next</button></a>
+</div>
 
 {% endblock %}
