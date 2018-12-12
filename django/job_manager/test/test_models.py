@@ -16,6 +16,8 @@ from job_manager.job import __cancel_job__, __run_next__
 
 from collection.models import Collection
 
+from file_manager.filesystems import registrar
+
 import paramiko
 
 # Create your tests here.
@@ -91,7 +93,7 @@ def create_job(user = None, collection = None):
 
     j = Job(date_created=timezone.now(),
             user=user,
-            collection=create_collection()
+            collection=collection
             )
 
     j.save()
@@ -165,8 +167,7 @@ from file_manager.filesystems.local import Local
 
 class RemoteTests(TestCase):
     def setUp(self):
-        self.storage_type = Local(name = "Local")
-        self.storage_type.save()
+        self.storage_type = 'local'
         self.user = create_user()
         Permissions.allow(self.user,self.storage_type,'./files/')
         Permissions.allow(self.user,self.storage_type,'./files/tmp/')
@@ -233,8 +234,8 @@ class RemoteTests(TestCase):
                      order_pos = 1,
                      submission_script=submission_script,
                      parameters="""{
-                                    "p":"-p",
-                                    "task":"--task test"
+                                    "-p": null,
+                                    "--task":"test"
                                 }""")
 
         res = task.format_cluster_cmds("{job_pk}")
@@ -246,8 +247,8 @@ class RemoteTests(TestCase):
         res = task.format_cluster_cmds("{task_pk}")
         self.assertEqual(str(task.pk),res)
 
-        res = task.format_cluster_cmds("{p} {task}")
-        self.assertEqual("-p --task test",res)
+        res = task.format_cluster_cmds("{params}")
+        self.assertEqual(" -p --task \"test\"",res)
 
         j.submission_id = 10
         res = task.format_cluster_cmds("{sub_id}")
@@ -296,9 +297,8 @@ class RemoteTests(TestCase):
              job = j,
              order_pos = 1,
              cluster = c,
-             pwd = './files/tmp/',
-             storage_type=self.storage_type.name,
-             files = files)
+             files = files,
+             delete = True)
         task.save()
         task.run()
 
@@ -310,7 +310,7 @@ class RemoteTests(TestCase):
                          msg=job_status.description)
 
         sftp = RemoteTests.open_sftp(c,j)
-        uploaded_files = sftp.listdir("files/")
+        uploaded_files = sftp.listdir()
         for file in files.split(","):
             self.assertTrue(path.basename(file) in uploaded_files)
 
@@ -327,9 +327,8 @@ class RemoteTests(TestCase):
                      description="Uploads some files",
                      job = j,
                      order_pos = 1,
-                     pwd = './files/tmp/',
-                     storage_type=self.storage_type.name,
-                     files = files)
+                     files = files,
+                     delete = True)
         task.save()
         task.run()
 

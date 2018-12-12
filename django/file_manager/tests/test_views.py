@@ -21,9 +21,7 @@ class TestFileBrowseView(TestCase):
     def setUpTestData(self):
         self.factory = RequestFactory()
 
-        self.file_system = 'Local_FileSystem'
-        storage = Local(name = self.file_system)
-        storage.save()
+        self.storage = 'local'
 
         self.tempParentDir = tempfile.TemporaryDirectory(dir="/code/django/files/tmp/")
         self.tempFile = tempfile.NamedTemporaryFile(dir=self.tempParentDir.name)
@@ -34,14 +32,14 @@ class TestFileBrowseView(TestCase):
                             email='jacob@…',
                             password='top_secret')
 
-        Permissions.allow(self.user,storage, self.tempParentDir.name)
+        Permissions.allow(self.user, self.storage, self.tempParentDir.name)
 
     def test_upload_file(self):
         with tempfile.NamedTemporaryFile(dir="/code/django/files/tmp/") as file:
             request = self.factory.post(
                 reverse('file_manager:ajax', kwargs={ 'command':'browse'}),
                 {
-                  'storage_type': self.file_system,
+                  'storage_type': self.storage,
                   'dir': self.tempParentDir.name
                 },
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest'
@@ -56,7 +54,7 @@ class TestFileBrowseView(TestCase):
         request = self.factory.post(
             reverse('file_manager:ajax', kwargs={ 'command':'browse'}),
             {
-              'storage_type': self.file_system,
+              'storage_type': self.storage,
               'dir': '/'
             },
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
@@ -70,7 +68,7 @@ class TestFileBrowseView(TestCase):
         request = self.factory.post(
             reverse('file_manager:ajax', kwargs={ 'command':'browse'}),
             {
-              'storage_type': self.file_system,
+              'storage_type': self.storage,
               'dir': self.tempParentDir.name
             },
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'

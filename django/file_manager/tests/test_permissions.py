@@ -4,21 +4,21 @@ from django.test import TestCase
 from job_manager.test.test_models import create_user
 
 from file_manager.permissions import Permissions
+from file_manager.filesystems import registrar
 from file_manager.filesystems.local import Local
 
 # Create your tests here.
 class TestPermissions(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.storage = Local(name="Local")
-        cls.storage.save()
+        cls.storage = 'local'
 
     def check_always_denied_local(self,user):
         """
             Directories that should always be denied access
         """
         self.assertFalse(Permissions.allowed(user,self.storage,"./files/tmp/"))
-        self.assertFalse(Permissions.allowed(user,self.storage,"./files/tmp"))
+        self.assertFalse(Permissions.allowed(user,self.storage,"./files/tmpgTrmo"))
         self.assertFalse(Permissions.allowed(user,self.storage,"files/tmp/"))
         self.assertFalse(Permissions.allowed(user,self.storage,"files/tmp"))
         self.assertFalse(Permissions.allowed(user,self.storage,"./files/"))
@@ -43,9 +43,8 @@ class TestPermissions(TestCase):
 
             #Check variations
             self.check_always_denied_local(user)
-            l = Local(name="Hacker")
-            l.save()
-            self.assertFalse(Permissions.allowed(user,l,dir),
+            registrar.register(Local(name="Hacker"))
+            self.assertFalse(Permissions.allowed(user,"Hacker",dir),
                 "Access to other storage systems should be denied.")
 
     def test_revoked_access(self):

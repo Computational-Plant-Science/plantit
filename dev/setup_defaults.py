@@ -9,7 +9,7 @@ user = User.objects.create_superuser('admin', 'admin@example.com', 'admin')
 #Default objects to work with
 from job_manager.remote import Cluster
 from job_manager.test.test_models import create_cluster
-cluster = create_cluster("./{sub_script} {job_pk} {task_pk} {auth_token}")
+cluster = create_cluster("./{sub_script} {job_pk} {task_pk} {auth_token} {params}")
 
 from file_manager.permissions import Permissions
 Permissions.allow(user,"local",'./files/')

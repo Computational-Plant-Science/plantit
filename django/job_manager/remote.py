@@ -210,20 +210,24 @@ class SubmissionTask(SSHTaskMixin, Task):
             {params}      the paramaters stored in the parameters field
 
             Throws:
-                json.decoder.JSONDecodeError if paramaters are not decodeable
+                json.decoder.JSONDecodeError if parameters are not decodeable
         """
         if(self.submission_script):
             cmds = cmds.replace("{sub_script}", os.path.basename(self.submission_script.file_name))
         cmds = cmds.replace("{job_pk}", str(self.job.pk))
         cmds = cmds.replace("{auth_token}", str(self.job.auth_token))
         cmds = cmds.replace("{task_pk}",str(self.pk))
-        if(self.parameters):
+        if "{params}" in cmds:
+            cmd_params = ""
             params = json.loads(self.parameters)
             for key,value in params.items():
-                cmds = cmds + " " + key + " \"" + value + '\"'
+                if value is not None:
+                    cmd_params = cmd_params + " " + key + " \"" + value + '\"'
+                else:
+                    cmd_params = cmd_params + " " + key
+            cmds = cmds.replace("{params}",cmd_params)
         if(self.job.submission_id):
             cmds = cmds.replace("{sub_id}", str(self.job.submission_id))
-        print(cmds)
         return cmds
 
     def ssh(self):
@@ -309,7 +313,7 @@ class UploadFileTask(SSHTaskMixin,Task):
     """
 
     files = models.TextField(blank=False,null=False)
-    delete = models.BooleanField()
+    delete = models.BooleanField(default=False)
 
     def ssh(self):
         file_paths = self.files.split(',')

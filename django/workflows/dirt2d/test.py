@@ -7,23 +7,24 @@ from django.test import TestCase
 from job_manager.test.test_models import create_user, create_job
 
 from workflows.dirt2d.tasks import DownloadResultsTask
-from workflows.dirt2d.models import RootCollection
+from workflows.dirt2d.models import Result
+from collection.models import Collection
 
 
 def create_root_collection():
     user = create_user()
 
-    c = RootCollection.objects.create(name="TestCollection",
+    c = Collection.objects.create(name="TestCollection",
                                       description="Test files",
                                       user=user)
     c.save()
 
-    c.images.create(name='img1.png',
-        path = 'files/tmp/' + ''.join(random.choice(string.ascii_letters) for x in range(5)))
-    c.images.create(name='img2.png',
-        path = 'files/tmp/' + ''.join(random.choice(string.ascii_letters) for x in range(5)))
-    c.images.create(name='img3.png',
-        path = 'files/tmp/' + ''.join(random.choice(string.ascii_letters) for x in range(5)))
+    c.sample_set.create(name='img1.png',
+        path = 'files/tmp/img1.png')
+    c.sample_set.create(name='img2.png',
+        path = 'files/tmp/img2.png')
+    c.sample_set.create(name='img3.png',
+        path = 'files/tmp/img3.png')
 
     c.save()
 
@@ -40,28 +41,20 @@ Image ID,Image name,Failed,Experiment number,circle ratio,x pixel,y pixel,xScale
 
     def test_parse_csv(self):
         c = create_root_collection()
-        c.job = create_job()
-        c.save()
+        j = create_job(collection=c)
 
-        task = DownloadResultsTask();
-
-        #Set some variables that would be set when run() was called
-        task.job = c.job
+        task = DownloadResultsTask(job = j,name="Job");
 
         file = StringIO(self.calculated_traits_csv)
 
         task.parse_csv_file(file)
 
-        collection = task.job.rootcollection_set.only()[0]
-        img1 = collection.images.all()[0]
-        img3 = collection.images.all()[2]
+        samples = c.sample_set.all()
+        img1 = Result.objects.get(job=j,sample=c.sample_set.get(name="img1.png"))
+        img3 = Result.objects.get(job=j,sample=c.sample_set.get(name="img3.png"))
 
         #Check a few values
         self.assertEqual(img1.X_PIXEL,2)
         self.assertEqual(img1.SKL_NODES,11)
         self.assertEqual(img3.Y_SCALE,1.22)
         self.assertEqual(img3.COMP_TIME,7)
-
-        #Check attributes are set
-        for key,attr in DownloadResultsTask.attributes.items():
-            self.assertTrue(hasattr(img3,attr[0]))

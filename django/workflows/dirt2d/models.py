@@ -821,3 +821,6 @@ class Result(models.Model):
         result['name'] = self.sample.name
 
         return result
+
+    def __str__(self):
+        return "DIRT2D Result(sample=%s,job=%s)"%(self.sample,self.job)
