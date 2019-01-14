@@ -1,6 +1,8 @@
 from django.db import models
 from django.core import serializers
 
+from model_utils.managers import InheritanceManager
+
 from collection.models import Sample
 from job_manager.job import Job
 from job_manager.remote import SubmissionTask, UploadCollectionTask, UploadFileTask
@@ -22,9 +24,7 @@ class Result(models.Model):
     """
         Represents the results from one sample
     """
-    class Meta:
-        abstract = True
-
+    objects = InheritanceManager()
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
 

@@ -204,6 +204,7 @@ class SubmissionTask(SSHTaskMixin, Task):
                 json.decoder.JSONDecodeError if parameters are not decodeable
         """
 
+        print(self.parameters)
         params = {
             "job_pk": self.job.pk,
             "auth_token": self.job.auth_token,

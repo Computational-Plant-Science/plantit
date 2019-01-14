@@ -16,7 +16,7 @@ class DownloadResultsTask(SSHTaskMixin, Task):
         output_file = self.workdir + "/" + self.output_filename
         file = self.sftp.file(output_file)
 
-        self._parse(file)
+        self.parse(file)
 
         #Cleanup
         self.finish()

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'job_manager.api',
     'file_manager.apps.FileManagerConfig',
     'workflows.apps.WorkflowsConfig',
+    'workflows.fake_workflow.apps.WorkflowConfig',
     'workflows.dirt2d.apps.Dirt2dConfig',
     'collection.apps.CollectionConfig',
     'sass_processor',

@@ -96,9 +96,7 @@ class AnalyzeCollection(LoginRequiredMixin,SingleObjectMixin,FormView):
         """
         cluster = form.cleaned_data['cluster']
 
-        params =  { key: val for key,val in form.cleaned_data.items() if key != 'cluster'}
-        print(params)
-        self.workflow.add_tasks(job, cluster, params)
+        self.workflow.add_tasks(job, cluster, form)
 
         job.status_set.create(state=Status.OK,description="Submitted")
         Job.run_next(job.pk)

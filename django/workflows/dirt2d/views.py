@@ -2,8 +2,10 @@ from django.http.response import HttpResponse
 
 import workflows.views as views
 from collection.models import Collection
+
 from .forms import CreateJob
 from . import logic
+from .workflow import Workflow
 
 class Analyze(views.AnalyzeCollection):
     """
@@ -15,15 +17,8 @@ class Analyze(views.AnalyzeCollection):
             + a :class:`job_mangaer.contrib.DownloadFileTask` that downloads
                 the results of the analysis.
     """
-    model = Collection
+    workflow = Workflow
     form_class = CreateJob
-
-    def submit(self,job, form):
-        cluster = form.cleaned_data['cluster']
-
-        logic.add_tasks(job,cluster,form.get_cleaned_attributes())
-
-        super().submit(job,form)
 
 def segment_image(request,pk):
     collection = Collection.objects.get(pk = pk)

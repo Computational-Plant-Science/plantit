@@ -59,7 +59,7 @@ def tasks(job):
 
 @register.filter()
 def results(job):
-    query = job.result_set.all()
+    query = job.result_set.select_subclasses()
     results = []
     for obj in query:
         results.append(obj.serialize())
