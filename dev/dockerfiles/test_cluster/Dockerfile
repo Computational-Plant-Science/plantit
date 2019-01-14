@@ -23,3 +23,12 @@ RUN apt-get install -y curl vim
 RUN apt-get install -y singularity-container
 
 COPY qsub /usr/bin
+
+RUN apt-get update; apt-get install -y git python3 python3-pip
+RUN mkdir -p /opt/; \
+    cd /opt; \
+    git clone https://github.com/cottersci/DIRT2_ClusterSide.git; \
+    cd DIRT2_ClusterSide; \
+    pip3 install -e .; \
+    mkdir -p ~/.clusterside/; \
+    cp files/submit.sh ~/.clusterside/submit.sh

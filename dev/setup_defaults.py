@@ -9,26 +9,11 @@ user = User.objects.create_superuser('admin', 'admin@example.com', 'admin')
 #Default objects to work with
 from job_manager.remote import Cluster
 from job_manager.test.test_models import create_cluster
-cluster = create_cluster("./{sub_script} {job_pk} {task_pk} {auth_token} {params}")
+cluster = create_cluster("clusterside submit --url http://web/jobs/api/")
 
 from file_manager.permissions import Permissions
 Permissions.allow(user,"local",'./files/')
 Permissions.allow(user,"irods",'/home/rods/')
-
-#dirt2d workflow defaults
-from workflows.dirt2d.models import Defaults
-from django.core.files import File
-from job_manager.remote import File as JobFile
-sub_script = JobFile(content=File(open("workflows/dirt2d/dev/run.sh")),
-                     file_name="run.sh")
-sub_script.save()
-server_update = JobFile(content=File(open("files/server_update")),
-                        file_name="server_update")
-server_update.save()
-
-d = Defaults(submission_script = sub_script)
-d.save()
-d.files.add(server_update)
 
 #Some fake objects to fill the websitegv
 from job_manager.test.test_models import create_collection, create_job, add_task

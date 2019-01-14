@@ -184,21 +184,12 @@ class SubmissionTask(SSHTaskMixin, Task):
         should address any commands that are cluster specific.
 
         Attributes:
-            submission_script (ForeignKey): the script (:class:`File`) executed
-                on the cluster
-            files (ManyToMany): The other :class:`File`s uploaded to the server
-            paramaters (str): JSON encoded set of paramters to pass to
-                submission_script upon execution (see :meth:`format_cluster_cmds`)
     """
-    submission_script = models.ForeignKey(File,
-                                          blank=True,
-                                          null=True,
-                                          on_delete=models.SET_NULL,
-                                          related_name="submit_script")
-    files = models.ManyToManyField(File,blank=True)
+
+    singularity_url = models.URLField(null=False,blank=False)
     parameters = models.TextField(null=True,blank=True)
 
-    def format_cluster_cmds(self,cmds):
+    def get_params(self):
         """
             Replaces predfined string toeksn with saved information,
             tokens that replaced are:
@@ -212,23 +203,16 @@ class SubmissionTask(SSHTaskMixin, Task):
             Throws:
                 json.decoder.JSONDecodeError if parameters are not decodeable
         """
-        if(self.submission_script):
-            cmds = cmds.replace("{sub_script}", os.path.basename(self.submission_script.file_name))
-        cmds = cmds.replace("{job_pk}", str(self.job.pk))
-        cmds = cmds.replace("{auth_token}", str(self.job.auth_token))
-        cmds = cmds.replace("{task_pk}",str(self.pk))
-        if "{params}" in cmds:
-            cmd_params = ""
-            params = json.loads(self.parameters)
-            for key,value in params.items():
-                if value is not None:
-                    cmd_params = cmd_params + " " + key + " \"" + value + '\"'
-                else:
-                    cmd_params = cmd_params + " " + key
-            cmds = cmds.replace("{params}",cmd_params)
-        if(self.job.submission_id):
-            cmds = cmds.replace("{sub_id}", str(self.job.submission_id))
-        return cmds
+
+        params = {
+            "job_pk": self.job.pk,
+            "auth_token": self.job.auth_token,
+            "task_pk": self.pk,
+            "parameters": json.loads(self.parameters),
+            "singularity_url": self.singularity_url
+        }
+
+        return json.dumps(params)
 
     def ssh(self):
         """
@@ -242,20 +226,12 @@ class SubmissionTask(SSHTaskMixin, Task):
         #Copy run scripts to cluster
         FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
 
-        for f in self.files.all():
-            fname = os.path.basename(f.file_name)
-            self.sftp.put(f.content.path, fname)
-            self.sftp.chmod(fname,FILE_PERMISSIONS)
-        if(self.submission_script):
-            f = self.submission_script
-            fname = os.path.basename(f.file_name)
-            self.sftp.put(f.content.path, fname)
-            self.sftp.chmod(fname,FILE_PERMISSIONS)
+        with self.sftp.open('job_config.json','w') as file:
+            file.write(self.get_params())
 
         try:
             #Submit job to cluster queue
             cmds = "cd " + self.workdir + "; " + self.cluster.submit_commands
-            cmds = self.format_cluster_cmds(cmds.replace('\r\n','\n').replace('\r','\n'))
             stdin, stdout, stderr = self.client.exec_command(cmds)
             error = str(stderr.readlines())
 
@@ -278,27 +254,32 @@ class UploadCollectionTask(SSHTaskMixin,Task):
         Uploads all the files in a collection to the server to the files folder
         in the job wok directory
     """
+    collection_dir = "samples/"
 
     def ssh(self):
-        dir = "samples/"
         collection = self.job.collection.cast() #Cast down to access the files attribute
-
-        file_storage = permissions.open_folder(storage_type = collection.storage_type,
-                                               path = collection.base_file_path,
-                                               user = self.job.user)
-
-        try: #OSError raised if dir already exists
-            self.sftp.mkdir(dir)
-        except OSError as e:
-            pass
-
-        for sample in collection.sample_set.all():
-            file_object = file_storage.open(sample.path.strip("/"))
-            fname = path.join(dir,os.path.basename(sample.name))
-            self.sftp.putfo(file_object, fname)
 
         with self.sftp.open('samples.json','w') as file:
             file.write(collection.to_json())
+
+
+        if collection.storage_type == "local":
+
+            file_storage = permissions.open_folder(storage_type = collection.storage_type,
+                                                   path = collection.base_file_path,
+                                                   user = self.job.user)
+
+            try: #OSError raised if dir already exists
+                self.sftp.mkdir(self.collection_dir)
+            except OSError as e:
+                pass
+
+            for sample in collection.sample_set.all():
+                file_object = file_storage.open(sample.path.strip("/"))
+                fname = path.join(self.collection_dir,os.path.basename(sample.name))
+                self.sftp.putfo(file_object, fname)
+
+
 
         self.finish()
 

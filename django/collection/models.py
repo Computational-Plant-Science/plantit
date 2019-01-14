@@ -3,7 +3,6 @@ import os.path
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
-from workflows.models import Tag
 from model_utils.managers import InheritanceManager
 from .mixins import CastableModelMixin, CastableQuerySetMixin
 
@@ -20,6 +19,21 @@ class MetaData(models.Model):
     """
     key = models.CharField(max_length=50)
     objects = InheritanceManager()
+
+class Tag(models.Model):
+    """
+        All tags are available to all collections and should be used to broadly
+        describe the contents of a collection, allowing it to be easily
+        found via a site-wide search. For example, a collection that
+        is related to maze would get a "maze" tag, allowing it to show up
+        when users are looking for analysis related to maze.
+
+        Attributes:
+            tag (str): tag
+            description (str): tag description
+    """
+    tag = models.CharField(max_length=50)
+    description = models.CharField(max_length=250)
 
 class CustomQuerySet(CastableQuerySetMixin, models.QuerySet):
     pass
@@ -42,11 +56,10 @@ class Collection(models.Model, CastableModelMixin):
     name = models.CharField(max_length=250)
     description = models.TextField(blank=True,null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE)
-    tags = models.ManyToManyField(Tag,blank=True)
     metadata = models.ManyToManyField(MetaData,blank=True)
     storage_type = models.CharField(max_length=25)
     base_file_path = models.CharField(max_length=250)
-
+    tags = models.ManyToManyField(Tag,blank=True)
 
     def __str__(self):
         return self.name
