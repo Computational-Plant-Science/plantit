@@ -119,7 +119,7 @@ class Sample(models.Model):
                 base file path.
     """
     objects = CustomQuerySet.as_manager()
-    name = models.CharField(max_length=250,null=False,blank=False,unique=True)
+    name = models.CharField(max_length=250,null=False,blank=False)
     path = models.CharField(max_length=250,null=False,blank=False)
     collection = models.ForeignKey(Collection,on_delete=models.CASCADE)
 
