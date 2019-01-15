@@ -5,7 +5,9 @@ from django.utils.safestring import mark_safe
 
 from job_manager.remote import Cluster
 
-from .models import Result
+from workflows.forms import CreateJob
+
+from .models import Dirt2DResult
 
 class ThresholdWidget(NumberInput):
     """
@@ -26,14 +28,12 @@ class ThresholdWidget(NumberInput):
 
         return mark_safe(render_to_string(template_name,self.attrs))
 
-class CreateJob(forms.Form):
-    cluster = forms.ModelChoiceField(queryset=Cluster.objects.all())
-    cluster.group = "Job Settings"
+class CreateJob(CreateJob):
     threshold = forms.FloatField(widget=ThresholdWidget)
     threshold.group = "Job Settings"
 
     class Meta:
-        model = Result
+        model = Dirt2DResult
         exclude = ['circle ratio','x pixel','y pixel','xScale','yScale',
             'computation time','Skeleton Vertices']
 

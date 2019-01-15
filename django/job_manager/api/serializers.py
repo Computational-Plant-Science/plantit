@@ -31,7 +31,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
         return job
 
     def update(self, job, validated_data):
-        if(validated_data['submission_id']):
+        if 'submission_id' in validated_data.keys():
             job.submission_id = validated_data['submission_id']
 
         status_data = validated_data.get('status_set',None)

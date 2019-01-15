@@ -1,44 +1,12 @@
 from django.db import models
 
-from job_manager.job import Job
-from job_manager.remote import File as JobFile
-from workflows.models import AbstractDefaults, Tag
-from collection.models import Sample
-from django.core import serializers
+from workflows.tasks import DownloadResultsTask, ParseCSVMixin
+import workflows
 
-"""
-    Workflow for the DIRT2D code.
-"""
-
-class Defaults(AbstractDefaults):
-    """
-        Default Collection/Job Values
-
-        Contains the default submission_script, files, and paramaters required
-        to create a :class:`job_manager.contrib.SubmissionTask`.
-
-        Attributes:
-            submission_script (ForeignKey): the :class:`job_manager.contrib.File`
-                that is run by the cluster as {sub_script}
-                (see :class:`job_manager.models.Cluster`) upon submissionself.
-            files (ManyToMany): Supporting :class:`job_manager.contrib.File`
-                that are also copied to the cluster on submission
-            parameters (TextField): parameters passed to the submission_script
-    """
-    submission_script = models.ForeignKey(JobFile,
-                                        blank=True,
-                                        null=True,
-                                        on_delete=models.SET_NULL,
-                                        related_name="submission_script")
-    files = models.ManyToManyField(JobFile,blank=True)
-    parameters = models.TextField(null=True,blank=True)
-
-class Result(models.Model):
+class Dirt2DResult(workflows.models.Result):
     """
         Represents the results from one root image file.
     """
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
 
     #Generated using django/workflows/dirt2d/dev/attributes.py
     attributes = {
@@ -811,16 +779,6 @@ class Result(models.Model):
     LT_MED_DIA = models.FloatField(blank=True,null=True)
     LT_AVG_DIA = models.FloatField(blank=True,null=True)
 
-    def serialize(self):
-        result = {}
-
-        result = serializers.serialize('python',
-            [self, ],
-            fields = self.attributes.keys() )[0]
-
-        result['name'] = self.sample.name
-
-        return result
-
-    def __str__(self):
-        return "DIRT2D Result(sample=%s,job=%s)"%(self.sample,self.job)
+class DownloadDirt2DResults(ParseCSVMixin, DownloadResultsTask):
+    result_class = Dirt2DResult
+    output_filename = "calculated_traits.csv"

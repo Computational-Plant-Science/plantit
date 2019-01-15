@@ -6,16 +6,17 @@ from django.http.response import HttpResponseRedirect
 from django.urls import reverse
 
 from job_manager.job import Status, Job
+from collection.models import Collection
 
 from workflows import registrar
+from workflows.models import Result
+from workflows.classes import Workflow
 
 """
     Views for analyzing :class:`collection.models.Collection`s.
 
 
 """
-
-
 def list_workflows(request):
     """ List workflows """
 
@@ -60,6 +61,8 @@ class AnalyzeCollection(LoginRequiredMixin,SingleObjectMixin,FormView):
     """
 
     template_name = "workflows/analyze.html"
+    model = Collection
+    workflow = Workflow
     object = None
 
     def form_valid(self,form):
@@ -88,5 +91,9 @@ class AnalyzeCollection(LoginRequiredMixin,SingleObjectMixin,FormView):
                 form: The filled and validated form, set by the form_class
                     class variable
         """
+        cluster = form.cleaned_data['cluster']
+
+        self.workflow.add_tasks(job, cluster, form)
+
         job.status_set.create(state=Status.OK,description="Submitted")
         Job.run_next(job.pk)

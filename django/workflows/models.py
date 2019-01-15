@@ -1,4 +1,11 @@
 from django.db import models
+from django.core import serializers
+
+from model_utils.managers import InheritanceManager
+
+from collection.models import Sample
+from job_manager.job import Job
+from job_manager.remote import SubmissionTask, UploadCollectionTask, UploadFileTask
 
 """
     A workflow consists of a collection of files, details about the files
@@ -12,6 +19,30 @@ from django.db import models
 
     See :module:`workflows.dirt2d.models` for a working example
 """
+
+class Result(models.Model):
+    """
+        Represents the results from one sample
+    """
+    objects = InheritanceManager()
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+
+    attributes = {}
+
+    def serialize(self):
+        result = {}
+
+        result = serializers.serialize('python',
+            [self, ],
+            fields = self.attributes.keys() )[0]
+
+        result['name'] = self.sample.name
+
+        return result
+
+    def __str__(self):
+        return "Result(sample=%s,job=%s)"%(self.sample,self.job)
 
 class Tag(models.Model):
     """

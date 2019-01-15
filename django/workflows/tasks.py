@@ -3,18 +3,29 @@ import csv
 from job_manager.job import Task,Status
 from job_manager.remote import SSHTaskMixin
 
-from .models import Result
+class DownloadResultsTask(SSHTaskMixin, Task):
+    class Meta:
+        abstract = True
 
-class DownloadResultsTask(SSHTaskMixin,Task):
     """
-        Downloads and parsers the csv output by the DIRT algorithm. Populating
-        RootImage objects with the resutls from each analyzed image.
+        Downloads and parsers output of a workflow.
     """
+    output_filename = "output.csv"
 
-    def parse_csv_file(self,file):
+    def ssh(self):
+        output_file = self.workdir + "/" + self.output_filename
+        file = self.sftp.file(output_file)
+
+        self.parse(file)
+
+        #Cleanup
+        self.finish()
+
+class ParseCSVMixin():
+    def parse(self, file):
         """
-            Extracts the results from the csv file and inserts into the
-            cooresponding RootImage object using attributs for field
+            Extracts the results from the csv file and inserts into a
+            results object using attributes attribute for field
             mapping and value formatting.
         """
         reader = csv.DictReader(file, delimiter=',',restval=None)
@@ -29,21 +40,13 @@ class DownloadResultsTask(SSHTaskMixin,Task):
                 #     print("FILE DID NOT EXIST!!!!")
                 #     continue
 
-                result = Result(job=self.job,sample=image)
+                result = self.result_class(job=self.job,sample=image)
 
                 for key, value in row.items():
-                    if key in Result.attributes:
-                        attr = Result.attributes[key]['field']
-                        func = Result.attributes[key]['type']
+                    if key in self.result_class.attributes:
+                        attr = self.result_class.attributes[key]['field']
+                        func = self.result_class.attributes[key]['type']
                         setattr(result,
                                 attr,
                                 func(value))
                 result.save()
-
-    def ssh(self):
-        output_file = self.workdir + "/calculated_traits.csv"
-        file = self.sftp.file(output_file)
-        self.parse_csv_file(file)
-
-        #Cleanup
-        self.finish()

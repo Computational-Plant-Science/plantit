@@ -20,4 +20,4 @@ class NewCollectionForm(forms.ModelForm):
 
     class Meta:
         model = Collection
-        fields = ['name','description','tags','storage_type','base_file_path']
+        fields = ['name','description','storage_type','base_file_path']
