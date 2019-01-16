@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'file_manager.apps.FileManagerConfig',
     'workflows.apps.WorkflowsConfig',
     'workflows.dirt2d.apps.Dirt2dConfig',
+    'user.apps.UserConfig',
     'collection.apps.CollectionConfig',
     'sass_processor',
 ]
