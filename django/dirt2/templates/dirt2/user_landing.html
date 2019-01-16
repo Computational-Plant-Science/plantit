@@ -22,60 +22,75 @@ Attributes:
   <h2>Welcome {{ user.username }} <span class="glyphicon glyphicon-ok"></span></h2>
 
   <div id="two-thirds-left-column">
-  <div class="profile-photo">
-    <img width="120px" src="{% static 'images/logo.png' %}">
-  </div>
-
-  <div class="profile-data">
-    Biography
-    <hr>
-    <ul>
-      <li>City: Athens</li>
-      <li>State: Georgia</li>
-      <li>Country: USA</li>
-      <li>Crop: Maize</li>
-    </ul>
-  </div>
-</div>
-
-<div id="two-thirds-right-column">
-
-    <div class="flex-row">
-      <div class="flex-box">Current</div>
-      <div class="flex-box active"><a href="{% url 'collection:list' %}">My Collections</a></div>
-      <div class="flex-box">My Analyses</div>
+    <div class="profile-data">
+      Biography
+      <hr>
+      <ul>
+        <li>City: {{ user.profile.city }}</li>
+        <li>Country: {{ user.profile.country }}</li>
+        <li>Affiliation: {{ user.profile.affiliation }}</li>
+      </ul>
     </div>
+  </div>
 
-    <div class="content">
+  <div id="two-thirds-right-column">
+
+      <div class="content">
+        <h2> Recent Jobs </h2>
+        <table>
+          <tr>
+            <th>Job Id</th>
+            <th>Progress</th>
+            <th>Current Status</th>
+            <th>Status Description</th>
+
+          </tr>
+          {% for job in jobs|slice:":5" %}
+              <tr>
+                <td class="text-center"><a href="{% url 'job_manager:job' job.pk %}">{{ job.id }}</a></td>
+                <td nowrap>
+                  <ul class="discrete-progress-bar">
+                    {% for task in job|tasks %}
+                      {% if task.complete %}
+                        <li class="complete">
+                          <span class="fas fa-check"></span>
+                        </li>
+                      {% else %}
+                        <li></li>
+                      {% endif %}
+                    {% endfor %}
+                  </ul>
+                </td>
+                <td class="text-center">{{ job|current_status }}</td>
+                <td>{{ job|current_status_description }}</td>
+              </tr>
+          {% endfor %}
+        </table>
+        <h3><a href="{% url 'job_manager:job_list' %}">View all jobs</a></h3>
+
+      <h2> Recent Collections </h2>
       <table>
         <tr>
-          <th>Job Id</th>
-          <th>Progress</th>
-          <th>Current Status</th>
-          <th>Status Description</th>
-
+          <th>Name</th>
+          <th>Description</th>
         </tr>
-        {% for job in jobs %}
+
+        {% for collection in collections|slice:":5" %}
             <tr>
-              <td class="text-center"><a href="{% url 'job_manager:job' job.pk %}">{{ job.id }}</a></td>
-              <td nowrap>
-                <ul class="discrete-progress-bar">
-                  {% for task in job|tasks %}
-                    {% if task.complete %}
-                      <li class="complete"><span class="fas fa-check"></span></li>
-                    {% else %}
-                      <li></li>
-                    {% endif %}
-                  {% endfor %}
-                </ul>
-              <td class="text-center">{{ job|current_status }}</td>
-              <td>{{ job|current_status_description }}</td>
+              <td class="text-center">
+                <a href="{% url 'job_manager:job' collection.pk %}">
+                  {{ collection.name }}
+                </a>
+              </td>
+              <td class="text-center">{{ collection.description }}</td>
             </tr>
         {% endfor %}
       </table>
-    </div>
+      <h3><a href="{% url 'collection:list' %}">View all collections</a></h3>
 
-</div>
+      </div>
+
+  </div>
 
 
 {% endblock %}
