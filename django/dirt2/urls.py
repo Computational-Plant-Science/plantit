@@ -25,5 +25,5 @@ urlpatterns = [
     path('filemanager/', include('file_manager.urls')),
     path('collection/', include('collection.urls')),
     path('', views.index, name="index"),
-    path('user/', views.user_landing, name="user_landing")
+    path('user/', include('user.urls')),
 ]

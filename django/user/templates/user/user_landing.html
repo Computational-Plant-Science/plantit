@@ -16,6 +16,7 @@ Attributes:
 
 {% block header %}
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+  <link rel="stylesheet"  type="text/css" href="{% sass_src 'user/sass/user_landing.sass' %}">
 {% endblock %}
 
 {% block page-content %}
@@ -48,18 +49,22 @@ Attributes:
           {% for job in jobs|slice:":5" %}
               <tr>
                 <td class="text-center"><a href="{% url 'job_manager:job' job.pk %}">{{ job.id }}</a></td>
-                <td nowrap>
-                  <ul class="discrete-progress-bar">
+                <td nowrap width="30%">
+                  <div class="discrete-progress-bar">
                     {% for task in job|tasks %}
-                      {% if task.complete %}
-                        <li class="complete">
-                          <span class="fas fa-check"></span>
-                        </li>
-                      {% else %}
-                        <li></li>
-                      {% endif %}
+                      <div class="section">
+                        {% if task.complete %}
+                          <div class="progress complete">
+                            <i class="fas fa-check" ></i>
+                          </div>
+                        {% else %}
+                          <div class="progress queued" style="min-width: 5px; min-height: 15px">
+
+                          </div>
+                        {% endif %}
+                      </div>
                     {% endfor %}
-                  </ul>
+                  </div>
                 </td>
                 <td class="text-center">{{ job|current_status }}</td>
                 <td>{{ job|current_status_description }}</td>
@@ -78,7 +83,7 @@ Attributes:
         {% for collection in collections|slice:":5" %}
             <tr>
               <td class="text-center">
-                <a href="{% url 'job_manager:job' collection.pk %}">
+                <a href="{% url 'collection:details' collection.pk %}">
                   {{ collection.name }}
                 </a>
               </td>
