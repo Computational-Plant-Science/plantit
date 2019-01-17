@@ -19,9 +19,11 @@
 </head>
 
 <body>
-  <a href="{% url 'user_landing' %}"> <button class="btn btn-nav" id="btn-login">Login</button> </a>
+  <div id="page-header">
+    <a href="{% url 'user_landing' %}"> <button class="btn btn-nav" id="btn-login">Login</button> </a>
+  </div>
 
-  <div class="page-title">
+  <div id="page-title">
     <img src="{% static 'images/logo.png' %}">
     Plant IT
   </div>
@@ -29,7 +31,7 @@
   <nav class="navbar navbar-expand-lg navbar-light">
 
       <div id="navbarNav">
-        <ul class="navbar-nav mx-auto">
+        <ul class="navbar-nav">
           <li class="nav-item">
             <a class="nav-link" href="#">More About Us</a>
           </li>
