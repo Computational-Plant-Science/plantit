@@ -4,6 +4,7 @@ files/
 !**/migrations/__init__.py
 assets/
 django/dirt2d/secret.py
+django/static/collections
 
 # Documentation
 docs/build/*
