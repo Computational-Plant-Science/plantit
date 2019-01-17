@@ -1,15 +1,49 @@
-<h1>Jobs</h1>
+{% extends 'includes/page-default.html' %}
 
-<ul>
-{% for job in jobs %}
-    <li>
-        {{ job.date_created|date }} - {{ job.cluster }} - {{ job.status }} : {{ job.status.description }}
-        <form action="{% url 'job_manager:submit_job' job.pk %}" method="post">
-        {% csrf_token %}
-        <input type="submit" value="Submit" />
-        </form>
-    </li>
-{% empty %}
-    <li>No articles yet.</li>
-{% endfor %}
-</ul>
+{% load static %}
+{% load job_filters %}
+{% load sass_tags %}
+
+{% block header %}
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+{% endblock %}
+
+{% block page-content %}
+<div class="content-column">
+  <h1>Jobs</h1>
+
+  <table>
+    <tr>
+      <th>Job Id</th>
+      <th>Progress</th>
+      <th>Current Status</th>
+      <th>Status Description</th>
+
+    </tr>
+    {% for job in jobs %}
+    <tr>
+      <td class="text-center"><a href="{% url 'job_manager:job' job.pk %}">{{ job.id }}</a></td>
+      <td nowrap>
+        <div class="discrete-progress-bar">
+          {% for task in job|tasks %}
+            <div class="section">
+              {% if task.complete %}
+                <div class="progress complete">
+                  <i class="fas fa-check" ></i>
+                </div>
+              {% else %}
+                <div class="progress queued" style="min-width: 5px; min-height: 15px">
+
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </td>
+      <td class="text-center">{{ job|current_status }}</td>
+      <td>{{ job|current_status_description }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

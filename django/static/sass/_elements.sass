@@ -9,33 +9,71 @@ table
 .ui-action
   color: blue
   text-decoration: underline
-  
+
 .ui-action:hover
   cursor: pointer
+
+/** ********************************************************
+  ul Discrete Progress Bar
+
+  Genrates a discrete progress bar
+ ************************************************************ **/
+.discrete-progress-bar
+  display: inline-flex
+  width: 100%
+  justify-content: center
+  height: 100%
+
+  .section
+    flex-grow: 1
+    width: 1px
+
+  .progress
+    border-radius: 0
+    border-right: 2px solid gray
+    text-align: center
+
+  .progress i
+    display: inline-block
+    font-size: 100%
+    width: 100%
+    height: 100%
+    text-align: center
+    vertical-align: center
+    color: $color-highlight
+
+  div:first-child .progress
+    border-top-left-radius: 10px
+    border-bottom-left-radius: 10px
+
+  div:last-child .progress
+    border-top-right-radius: 10px
+    border-bottom-right-radius: 10px
+    border-right: 0
+
+  .complete
+    background-color: #303030
+
+  .queued
+    background-color: #D3F74F
+// ul.discrete-progress-bar li
+//   display: block
+//   float: left
+//   text-align: center
+//   background-color: $color-highlight
+//   height: 30px
+//   width: 50px
+//   margin: 0px
+//   border-left: 2px solid $color-box-background
+//
+// ul.discrete-progress-bar li.complete
+//   background-color: $color-disabled
+//
+// ul.discrete-progress-bar span.fas
+//   margin-top: 7px
 
 /** ********************************************************
   Discrete Progress Bar
 
   Genrates a discrete progress bar
  ************************************************************ **/
-.discrete-progress-bar
-  width: 100%
-  list-style-type: none
-  margin: 0px
-  padding: 0px
-
-ul.discrete-progress-bar li
-  display: block
-  float: left
-  text-align: center
-  background-color: $color-highlight
-  height: 30px
-  width: 50px
-  margin: 0px
-  border-left: 2px solid $color-box-background
-
-ul.discrete-progress-bar li.complete
-  background-color: $color-disabled
-
-ul.discrete-progress-bar span.fas
-  margin-top: 7px

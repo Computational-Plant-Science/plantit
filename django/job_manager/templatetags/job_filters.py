@@ -1,6 +1,17 @@
 from django import template
 
+from job_manager.job import Status
+
 register = template.Library()
+
+@register.filter()
+def has_failed(job):
+    """
+        Returns
+    """
+    state = job.current_status()
+
+    return state.state == Status.FAILED
 
 @register.filter()
 def current_status(job):
@@ -16,6 +27,19 @@ def current_status(job):
     return str(state)
 
 @register.filter()
+def current_status_date(job):
+    """
+        Get the human readable (i.e. as a string) latest status of the job.
+
+        Args:
+            job: the job to extract the state from
+    """
+
+    state = job.current_status()
+
+    return state.date
+
+@register.filter()
 def current_status_description(job):
     """
         Get the latest status description.
@@ -26,6 +50,7 @@ def current_status_description(job):
 
     state = job.current_status()
     return state.description
+
 
 @register.filter()
 def status_set(job):
