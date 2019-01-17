@@ -21,6 +21,8 @@ libsass
 django-compressor
 django-sass-processor
 
+django-imagekit #image caching/manipulation
+
 #For dirt2 workflow
 numpy
 mahotas

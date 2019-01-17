@@ -1,13 +1,37 @@
+from __future__ import absolute_import, unicode_literals
+from celery import shared_task
+
 import json
 import os.path
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
 from model_utils.managers import InheritanceManager
+
 from .mixins import CastableModelMixin, CastableQuerySetMixin
 
+from imagekit.models import ProcessedImageField
+from imagekit.processors import ResizeToFill
+
+import file_manager
 from file_manager.filesystems import registrar
 import file_manager.permissions as permissions
+
+@shared_task
+def generate_thumbnail(sample_pk):
+    """
+        Generate the thumbnail image for a sample
+
+        Args:
+            sample_pk: pk of the sample
+    """
+    sample = Sample.objects.get(pk = sample_pk)
+    base_file_path = sample.collection.base_file_path
+    storage_type = sample.collection.storage_type
+    folder = file_manager.open(storage_type,base_file_path)
+    file = folder.open(sample.path)
+
+    sample.thumbnail.save(sample.name,file)
 
 class MetaData(models.Model):
     """
@@ -105,7 +129,9 @@ class Collection(models.Model, CastableModelMixin):
         return "/collection/%d/details/"%(self.pk,)
 
     def add_sample(self,name,path,**kwargs):
-        self.sample_set.create(path=path,name=name,**kwargs)
+        s = self.sample_set.create(path=path,name=name,**kwargs)
+        print(s.pk)
+        generate_thumbnail.delay(s.pk)
 
 class Sample(models.Model):
     """
@@ -122,6 +148,11 @@ class Sample(models.Model):
     name = models.CharField(max_length=250,null=False,blank=False)
     path = models.CharField(max_length=250,null=False,blank=False)
     collection = models.ForeignKey(Collection,on_delete=models.CASCADE)
+    thumbnail = ProcessedImageField(upload_to='static/collections/thumbnails',
+                                       processors=[ResizeToFill(100, 100)],
+                                       format='JPEG',
+                                       options={'quality': 60},
+                                       blank=True)
 
     def __str__(self):
         return self.name

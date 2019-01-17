@@ -59,7 +59,7 @@ class Details(LoginRequiredMixin,DetailView):
         context = super().get_context_data(**kwargs)
         context['tags'] =  [t for t in self.object.tags.all()]
         context['metadata'] =  [m for m in self.object.metadata.all()]
-        context['samples'] =  [f.name for f in self.object.sample_set.all()]
+        context['samples'] =  [f for f in self.object.sample_set.all()]
         return context
 
     def post(self, request, *args, **kwargs):
