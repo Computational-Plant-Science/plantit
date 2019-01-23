@@ -75,7 +75,7 @@ class AnalyzeCollection(LoginRequiredMixin,SingleObjectMixin,FormView):
 
         try:
             self.submit(job,form)
-            return HttpResponseRedirect(reverse("user_landing"))
+            return HttpResponseRedirect(reverse("user:user_landing"))
         except Exception as e:
             job.delete()
             #TODO: Do something here to indicate to the user the job failed.
