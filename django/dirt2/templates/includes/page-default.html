@@ -58,7 +58,11 @@
             <a class="nav-link" href="#">Public Data Sets</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Login</a>
+            {% if user.is_authenticated %}
+              <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+            {% else %}
+              <a class="nav-link" href="{% url 'user:user_landing' %}">Login</a>
+            {% endif %}
           </li>
         </ul>
       </div>

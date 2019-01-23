@@ -26,4 +26,5 @@ urlpatterns = [
     path('collection/', include('collection.urls')),
     path('', views.index, name="index"),
     path('user/', include('user.urls')),
+    path('logout/', views.logout_view, name="logout")
 ]

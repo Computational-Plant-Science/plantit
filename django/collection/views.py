@@ -12,32 +12,6 @@ from .models import Collection
 
 from django import forms
 
-# class FilesObjectMixin():
-#     """
-#         Defines the stradgey for accessing the ForeignKey field in the
-#         collection object that contains the files. By default, this field is
-#         named "files" and all objects within the filed should be included.
-#         These defaults can changed by overriding the :meth:`get_files` and
-#         :meth:`get_files_object` methods.
-#     """
-#     def get_files(self):
-#         """
-#             Get the files within the collection.
-#
-#             Returns:
-#                 A queryselect object containing the files within this collection
-#         """
-#         return self.get_files_object().all().values()
-#
-#     def get_files_object(self):
-#         """
-#             Get the collection field containing the files
-#
-#             Returns:
-#                 object of the field that contains the collection files
-#         """
-#         return self.object.files
-
 class Details(LoginRequiredMixin,DetailView):
     """
         A view for showing the collection details.
@@ -90,6 +64,9 @@ class List(LoginRequiredMixin,ListView):
     model = Collection
     template_name = "collection/html/collection_list.html"
 
+    def get_queryset(self):
+        return self.model.objects.filter(user=self.request.user)
+
     def get(self, request, *args, **kwargs):
         delete_pk = request.GET.get('delete')
         if(delete_pk is not None):
@@ -112,7 +89,21 @@ class New(LoginRequiredMixin,CreateView):
         also has all other attributes thereof.
     """
     template_name = "collection/html/new.html"
-    initial={'base_file_path': 'files/'}
+    initial={
+                'base_file_path': '/tempZone/home/rods/',
+                'storage_type': 'irods'
+            }
+
+    # def get_initial(self):
+    #     """
+    #     Returns the initial data to use for forms on this view.
+    #     """
+    #     initial = super().get_initial()
+    #
+    #     initial['storage_type'] = 'cyverse'
+    #     initial['base_file_path'] = '/iplant/home/' + str(self.request.user)
+    #
+    #     return initial
 
     def get_form(self):
         return NewCollectionForm(**self.get_form_kwargs())

@@ -1,8 +1,35 @@
+{% include "includes/page-default.html" %}
+{% load sass_tags %}
+
+{% block header %}
+  <link rel="stylesheet"  type="text/css" href="{% sass_src 'collection/sass/new.sass' %}">
+{% endblock %}
+
 {% block content %}
-  <form method="POST" class="post-form">
-    {% csrf_token %}
-    <div class="form-group">
-      {{ form.as_p }}
-    </div>
-    <button type="submit" class="save btn btn-default">Create</button>
+  <div class="content-column">
+    <form method="POST" class="post-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <p>
+          <label>Collection Name:</label>
+          {{ form.name }}
+        </p>
+        <p>
+          <label>Description:</label>
+          {{form.description}}
+        </p>
+        {% if user.is_superuser %}
+          <p>
+            <label>Storage Location:</label>
+            {{form.storage_type}}
+          </p>
+          <p>
+            <label>Base File path:</label>
+            {{form.base_file_path}}
+          </p>
+        {% endif %}
+      </div>
+      <button type="submit" class="save btn btn-default">Create</button>
+    </form>
+  </div>
 {% endblock %}
