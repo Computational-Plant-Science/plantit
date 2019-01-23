@@ -1,0 +1,3 @@
+[submodule "django/workflows/dirt2d"]
+	path = django/workflows/dirt2d
+	url = git@github.com:Computational-Plant-Science/DIRT2D_Workflow.git

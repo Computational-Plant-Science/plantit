@@ -1,6 +1,15 @@
 # Installation
 
-The all processes are contained within docker containers, the full website can be run using docker-compose from the root of the repository:
+Individual workflows are linked to the web platform via git submodules. use `--recursive-submodules` when cloning to download the workflows.
+
+```bash
+git clone --recurisve-submodules git@github.com:cottersci/DIRT2_Webplatform.git
+```
+
+__The submodules are required for the website to work__. You can learn more
+about Git submodules [here](https://git-scm.com/book/en/v2/Git-Tools-Submodules).
+
+The processes are contained within docker containers, the full website can be run using docker-compose from the root of the repository:
 
 ```bash
 dev/reset.sh #Initialize databases and some other default values
