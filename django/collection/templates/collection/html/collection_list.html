@@ -14,6 +14,11 @@ Attributes:
 
   <h1>Collections</h1>
 
+  <div class="button-nav">
+    <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Dashboard</button></a>
+    <a href="{% url 'collection:new' %}"><button class="btn btn-nav">Create New Collection</button></a>
+  </div>
+
   <div class="content-column">
     <table style="width:100%">
 
@@ -48,10 +53,7 @@ Attributes:
 
 </div>
 
-<div class="button-nav">
-  <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Home</button></a>
-  <a href="{% url 'collection:new' %}"><button class="btn btn-nav">Create New Collection</button></a>
-</div>
+
 
 </div>
 

@@ -24,6 +24,11 @@
       </div>
   </div>
 
+  <div class="button-nav">
+    <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Dashboard</button></a>
+    <a href="{% url 'job_manager:list' %}"><button class="btn btn-nav">All Jobs</button></a>
+  </div>
+
   <div class="content-column job-content" >
 
     <img class="job-content-animation" src="{% static 'images/PlantITLoading.gif' %}" />
@@ -72,9 +77,5 @@
       {% endfor %}
     </table>
   <div>
-
-  <div class="button-nav">
-    <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Back</button></a>
-  </div>
 
 {% endblock %}

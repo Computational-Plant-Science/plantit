@@ -7,6 +7,8 @@
 {% load sass_tags %}
 {% load static %}
 
+{% url 'user:user_landing' as dashboard %}
+
 <!doctype html>
 <html lang="en">
 
@@ -45,9 +47,6 @@
 
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav mx-auto">
-          <li class="nav-item {% if request.path == '/' %} active {% endif %}">
-            <a class="nav-link" href="/">Home {% if request.path == '/' %} <span class="sr-only">(current)</span> {% endif %} </a>
-          </li>
           <li class="nav-item">
             <a class="nav-link" href="#">About</a>
           </li>

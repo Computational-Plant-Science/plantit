@@ -20,7 +20,7 @@ Attributes:
 {% endblock %}
 
 {% block page-content %}
-  <h2>Welcome {{ user.username }} <span class="glyphicon glyphicon-ok"></span></h2>
+  <h2>{{ user.username }}'s Dashboard <span class="glyphicon glyphicon-ok"></span></h2>
 
   <div id="two-thirds-left-column">
     <div class="profile-data">
@@ -35,6 +35,11 @@ Attributes:
   </div>
 
   <div id="two-thirds-right-column">
+
+      <div class="button-nav">
+        <a href="{% url 'collection:list' %}"><button class="btn btn-nav">My Collections</button></a>
+        <a href="{% url 'job_manager:list' %}"><button class="btn btn-nav">All Jobs</button></a>
+      </div>
 
       <div class="content">
         <h2> Recent Jobs </h2>
@@ -71,27 +76,6 @@ Attributes:
               </tr>
           {% endfor %}
         </table>
-        <h3><a href="{% url 'job_manager:job_list' %}">View all jobs</a></h3>
-
-      <h2> Recent Collections </h2>
-      <table>
-        <tr>
-          <th>Name</th>
-          <th>Description</th>
-        </tr>
-
-        {% for collection in collections|slice:":5" %}
-            <tr>
-              <td class="text-center">
-                <a href="{% url 'collection:details' collection.pk %}">
-                  {{ collection.name }}
-                </a>
-              </td>
-              <td class="text-center">{{ collection.description }}</td>
-            </tr>
-        {% endfor %}
-      </table>
-      <h3><a href="{% url 'collection:list' %}">View all collections</a></h3>
 
       </div>
 

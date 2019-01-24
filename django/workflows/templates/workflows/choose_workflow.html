@@ -28,6 +28,11 @@ Attributes:
   <h1>Select a Workflow</h1>
 <h5>Additional data may be required on the following page</h5>
 
+<div class="button-nav">
+  <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Dashboard</button></a>
+  <a href="{% url 'collection:details' collection %}"><button class="btn btn-nav">Cancel</button></a>
+</div>
+
   <div class="grid-container">
       {% for key, value in workflows.items %}
           <div class="grid-item grid-border">
@@ -43,8 +48,6 @@ Attributes:
       {% endfor %}
   </div>
 
-<div class="button-nav">
-  <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Cancel</button></a>
-</div>
+
 
 {% endblock %}
