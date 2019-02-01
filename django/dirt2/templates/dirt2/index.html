@@ -20,12 +20,18 @@
 
 <body>
   <div id="page-header">
-    <a href="{% url 'user:user_landing' %}"> <button class="btn btn-nav" id="btn-login">Login</button> </a>
+    <a href="{% url 'user:user_landing' %}"> <button class="btn btn-nav" id="btn-login">LOGIN</button> </a>
   </div>
 
   <div id="page-title">
-    <img src="{% static 'images/logo.png' %}">
-    Plant IT
+    <img src="{% static 'images/logo.png' %}" id="page-title-logo">
+    <div id="page-title-text">PLANT IT</div>
+  </div>
+
+  <div id="page-content">
+    Plant IT empowers computational researchers to make their algorithms
+    available to a broad community, and provides biological researchers with an
+    easy-to-use interface to apply the algorithms to their own data.
   </div>
 
   <nav class="navbar navbar-expand-lg navbar-light">
