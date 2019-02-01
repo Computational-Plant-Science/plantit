@@ -25,8 +25,8 @@ Permissions.allow(regular_user,"irods",'/tempZone/home/rods/')
 
 #Some fake objects to fill the website
 from job_manager.test.test_models import create_collection, create_job, add_task
-collection = create_collection(user = user)
-job = create_job(user = user, collection= collection)
+collection = create_collection(user = admin_user)
+job = create_job(user = admin_user, collection= collection)
 add_task(job,"Fake Task 1")
 add_task(job,"Fake Task 2")
 add_task(job,"Fake Task 3")
