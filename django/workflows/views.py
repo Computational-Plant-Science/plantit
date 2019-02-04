@@ -9,7 +9,6 @@ from job_manager.job import Status, Job
 from collection.models import Collection
 
 from workflows import registrar
-from workflows.models import Result
 from workflows.classes import Workflow
 
 """

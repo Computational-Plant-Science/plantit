@@ -132,6 +132,7 @@ class Job(models.Model):
                                 null=True,
                                 blank=True,
                                 default=generate_work_dir)
+    results_file = models.FileField(null=True,blank=True,upload_to="files/results/")
 
     # def __str__(self):
     #      return "Status: %s, Cluster: %s" (self.current_status().description,self.cluster)

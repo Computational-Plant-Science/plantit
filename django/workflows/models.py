@@ -20,29 +20,35 @@ from job_manager.remote import SubmissionTask, UploadCollectionTask, UploadFileT
     See :module:`workflows.dirt2d.models` for a working example
 """
 
-class Result(models.Model):
-    """
-        Represents the results from one sample
-    """
-    objects = InheritanceManager()
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-
-    attributes = {}
-
-    def serialize(self):
-        result = {}
-
-        result = serializers.serialize('python',
-            [self, ],
-            fields = self.attributes.keys() )[0]
-
-        result['name'] = self.sample.name
-
-        return result
-
-    def __str__(self):
-        return "Result(sample=%s,job=%s)"%(self.sample,self.job)
+#
+# This class was created to save results to the database. When this became
+# more complicated, saving the results to a file (saved in the Job class)
+# was utilized instead. I left the class here so that I can come back to
+# saving results in the database at a later date
+#
+# class Result(models.Model):
+#     """
+#         Represents the results from one sample
+#     """
+#     objects = InheritanceManager()
+#     job = models.ForeignKey(Job, on_delete=models.CASCADE)
+#     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+#
+#     attributes = {}
+#
+#     def serialize(self):
+#         result = {}
+#
+#         result = serializers.serialize('python',
+#             [self, ],
+#             fields = self.attributes.keys() )[0]
+#
+#         result['name'] = self.sample.name
+#
+#         return result
+#
+#     def __str__(self):
+#         return "Result(sample=%s,job=%s)"%(self.sample,self.job)
 
 class Tag(models.Model):
     """
@@ -60,51 +66,6 @@ class Tag(models.Model):
     """
     tag = models.CharField(max_length=50)
     description = models.CharField(max_length=250)
-
-class AbstractDefaults(models.Model):
-    """
-        Workflow defaults should be saved using this class by extending it and
-        adding fields for each default.
-
-        The class  guarantees only 1 defaults object can exist.
-
-        Example:
-            models.py:
-            .. code-block:: python
-                from workflows.models import AbstractDefaults
-                from django.db import models
-
-                class Defaults(AbstractDefaults):
-                    parameters = models.TextField(null=True,blank=True)
-
-            view.py:
-            .. code-block:: python
-                from .models import Defaults
-
-                ...
-                    defaults = Deafults.load()
-                    print(defaults.paramaters)
-                ...
-    """
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        self.pk = 1
-        super(AbstractDefaults, self).save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        pass
-
-    @classmethod
-    def load(cls):
-        """
-            Load defaults
-
-            Returns:
-                (object): defaults
-        """
-        return cls.objects.get(pk=1)
 
 class WorkFlows():
     registry = {}

@@ -12,7 +12,8 @@
   <div>
     <div class="flex-row">
       <div class="flex-box">
-        <h1>Job {{ job.pk }}</h1>
+        <h1>Job ID: {{ job.pk }}</h1>
+        <h3>Collection: {{ job.collection }}</h3>
       </div>
       <div class="flex-box">
         <div class="admin-job-details">
@@ -31,9 +32,19 @@
 
   <div class="content-column job-content" >
 
-    <img class="job-content-animation" src="{% static 'images/PlantITLoading.gif' %}" />
+    {% if job|has_completed %}
+      <div id="download-results">
+        <a href="{% url 'job_manager:download' job.pk %}"><button class="btn btn-nav">
+          <i class="fas fa-cloud-download-alt fa-9x"></i>
+          <br/>
+          Download Results
+        </button></a>
+      </div>
+    {% else %}
+      <img id="job-content-animation" src="{% static 'images/PlantITLoading.gif' %}" />
+    {% endif %}
 
-    <div class="discrete-progress-bar job-progress-bar">
+    <div class="discrete-progress-bar" id="job-progress-bar">
       {% for task in job|tasks %}
         <div class="section">
           {% if task.complete %}
@@ -61,7 +72,7 @@
   </div>
 
   <div class="admin-status-log">
-    <b>Job {{ job.pk }} run long:</b>
+    <b>Job {{ job.pk }} run log:</b>
     <table>
       <tr>
         <th>Date</th>

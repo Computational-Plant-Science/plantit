@@ -14,6 +14,15 @@ def has_failed(job):
     return state.state == Status.FAILED
 
 @register.filter()
+def has_completed(job):
+    """
+        Returns
+    """
+    state = job.current_status()
+
+    return state.state == Status.COMPLETED
+
+@register.filter()
 def current_status(job):
     """
         Get the human readable (i.e. as a string) latest status of the job.
