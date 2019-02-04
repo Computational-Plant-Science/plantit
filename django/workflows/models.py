@@ -20,29 +20,35 @@ from job_manager.remote import SubmissionTask, UploadCollectionTask, UploadFileT
     See :module:`workflows.dirt2d.models` for a working example
 """
 
-class Result(models.Model):
-    """
-        Represents the results from one sample
-    """
-    objects = InheritanceManager()
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-
-    attributes = {}
-
-    def serialize(self):
-        result = {}
-
-        result = serializers.serialize('python',
-            [self, ],
-            fields = self.attributes.keys() )[0]
-
-        result['name'] = self.sample.name
-
-        return result
-
-    def __str__(self):
-        return "Result(sample=%s,job=%s)"%(self.sample,self.job)
+#
+# This class was created to save results to the database. When this became
+# more complicated, saving the results to a file (saved in the Job class)
+# was utilized instead. I left the class here so that I can come back to
+# saving results in the database at a later date
+#
+# class Result(models.Model):
+#     """
+#         Represents the results from one sample
+#     """
+#     objects = InheritanceManager()
+#     job = models.ForeignKey(Job, on_delete=models.CASCADE)
+#     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+#
+#     attributes = {}
+#
+#     def serialize(self):
+#         result = {}
+#
+#         result = serializers.serialize('python',
+#             [self, ],
+#             fields = self.attributes.keys() )[0]
+#
+#         result['name'] = self.sample.name
+#
+#         return result
+#
+#     def __str__(self):
+#         return "Result(sample=%s,job=%s)"%(self.sample,self.job)
 
 class Tag(models.Model):
     """

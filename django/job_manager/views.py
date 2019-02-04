@@ -41,3 +41,15 @@ class JobView(DetailView):
             __run_task__(task_pk)
 
         return super(JobView,self).get(request, *args, **kwargs)
+
+@login_required
+def download_results(request, pk):
+    job = Job.objects.get(pk = pk)
+
+    file = job.results_file
+
+    filename = file.name.split('/')[-1]
+    response = HttpResponse(file, content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename=%s' % filename
+
+    return response

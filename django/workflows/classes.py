@@ -1,6 +1,5 @@
 import json
 
-from .models import Result
 from job_manager.remote import UploadCollectionTask, SubmissionTask
 
 class Workflow:
