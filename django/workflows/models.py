@@ -61,51 +61,6 @@ class Tag(models.Model):
     tag = models.CharField(max_length=50)
     description = models.CharField(max_length=250)
 
-class AbstractDefaults(models.Model):
-    """
-        Workflow defaults should be saved using this class by extending it and
-        adding fields for each default.
-
-        The class  guarantees only 1 defaults object can exist.
-
-        Example:
-            models.py:
-            .. code-block:: python
-                from workflows.models import AbstractDefaults
-                from django.db import models
-
-                class Defaults(AbstractDefaults):
-                    parameters = models.TextField(null=True,blank=True)
-
-            view.py:
-            .. code-block:: python
-                from .models import Defaults
-
-                ...
-                    defaults = Deafults.load()
-                    print(defaults.paramaters)
-                ...
-    """
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        self.pk = 1
-        super(AbstractDefaults, self).save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        pass
-
-    @classmethod
-    def load(cls):
-        """
-            Load defaults
-
-            Returns:
-                (object): defaults
-        """
-        return cls.objects.get(pk=1)
-
 class WorkFlows():
     registry = {}
 
