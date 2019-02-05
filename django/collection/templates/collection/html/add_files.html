@@ -6,13 +6,15 @@
   <!-- header block end -->
 {% endblock %}
 
+{% block contextual-nav %}
+  <ul>
+    <li><a href="{% url 'user:user_landing' %}">Dashboard</a></li>
+    <li><a href="{% url 'job_manager:list' %}">All Jobs</a></li>
+  </ul>
+{% endblock %}
+
 {% block page-content %}
   <h1>Add/Remove Files</h1>
-
-  <div class="button-nav">
-    <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Dashboard</button></a>
-    <a href="{% url 'collection:details' object.pk %}"><button class="btn btn-nav">Cancel</button></a>
-  </div>
 
   <div class="content-column">
 
@@ -25,6 +27,7 @@
           </div>
         </div>
         <button type="submit" class="save btn">Add</button>
+        <a href="{% url 'collection:details' object.pk %}" class="btn btn-default">Cancel</a>
     </form>
 
   </div>
