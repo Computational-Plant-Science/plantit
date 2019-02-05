@@ -17,8 +17,23 @@ body
   margin: auto
   max-width: 1200px
 
-.navbar
+
+#contextual-nav
+  width: 100%
+  text-align: center
   border-bottom: 2px solid black
+  
+  ul
+    list-style-type: none
+
+    li
+      padding-left: 5px
+      border-left: 2px solid $color-button
+      display: inline
+      a
+        color: $color-button
+    li:first-of-type
+      border: none
 
 #navbarNav
   ul

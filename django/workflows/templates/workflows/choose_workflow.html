@@ -21,7 +21,11 @@ Attributes:
   <link rel="stylesheet"  type="text/css" href="{% sass_src 'workflows/sass/main.sass' %}">
 {% endblock %}
 
-
+{% block contextual-nav %}
+  <ul>
+    <li><a href="{% url 'user:user_landing' %}">Dashboard</a></li>
+  </ul>
+{% endblock %}
 
 {% block page-content %}
 
@@ -29,7 +33,6 @@ Attributes:
 <h5>Additional data may be required on the following page</h5>
 
 <div class="button-nav">
-  <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Dashboard</button></a>
   <a href="{% url 'collection:details' collection %}"><button class="btn btn-nav">Cancel</button></a>
 </div>
 

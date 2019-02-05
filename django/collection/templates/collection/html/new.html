@@ -1,16 +1,17 @@
-{% include "includes/page-default.html" %}
+{% extends "includes/page-default.html" %}
 {% load sass_tags %}
 
 {% block header %}
   <link rel="stylesheet"  type="text/css" href="{% sass_src 'collection/sass/new.sass' %}">
 {% endblock %}
 
-{% block content %}
-<div class="button-nav">
-  <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Dashboard</button></a>
-  <a href="{% url 'collection:list' %}"><button class="btn btn-nav">Cancel</button></a>
-</div>
+{% block contextual-nav %}
+  <ul>
+    <li>  <a href="{% url 'user:user_landing' %}">Dashboard</a></li>
+  </ul>
+{% endblock %}
 
+{% block page-content %}
   <div class="content-column">
     <form method="POST" class="post-form">
       {% csrf_token %}
@@ -34,7 +35,11 @@
           </p>
         {% endif %}
       </div>
-      <button type="submit" class="save btn btn-default">Create</button>
+
+      <div class="button-nav">
+        <button type="submit" class="save btn btn-default">Create</button>
+        <a href="{% url 'collection:list' %}" class="btn btn-default">Cancel</a>
+      </div>
     </form>
   </div>
 {% endblock %}

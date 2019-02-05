@@ -19,6 +19,13 @@ Attributes:
   <link rel="stylesheet"  type="text/css" href="{% sass_src 'user/sass/user_landing.sass' %}">
 {% endblock %}
 
+{% block contextual-nav %}
+  <ul>
+    <li><a href="{% url 'collection:list' %}">Collections</li>
+    <li><a href="{% url 'job_manager:list' %}">Jobs</a></li>
+  </ul>
+{% endblock %}
+
 {% block page-content %}
   <h2>{{ user.username }}'s Dashboard <span class="glyphicon glyphicon-ok"></span></h2>
 
@@ -35,11 +42,6 @@ Attributes:
   </div>
 
   <div id="two-thirds-right-column">
-
-      <div class="button-nav">
-        <a href="{% url 'collection:list' %}"><button class="btn btn-nav">My Collections</button></a>
-        <a href="{% url 'job_manager:list' %}"><button class="btn btn-nav">All Jobs</button></a>
-      </div>
 
       <div class="content">
         <h2> Recent Jobs </h2>
