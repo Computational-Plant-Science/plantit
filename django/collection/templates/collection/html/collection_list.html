@@ -1,21 +1,16 @@
-{% comment %}
+{% extends "includes/page-default.html" %}
 
-Displays a list of collections available to the user.
-
-Attributes:
-  object_list (list): a list of collections to display
-    See collection.models.AbstractCollection for a list of collection attributes
-
-{% endcomment %}
-
-{% include "includes/page-default.html" %}
+{% block contextual-nav %}
+  <ul>
+    <li> <a href="{% url 'user:user_landing' %}">Dashboard</a></li>
+  </ul>
+{% endblock %}
 
 {% block page-content %}
 
   <h1>Collections</h1>
 
   <div class="button-nav">
-    <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Dashboard</button></a>
     <a href="{% url 'collection:new' %}"><button class="btn btn-nav">Create New Collection</button></a>
   </div>
 
@@ -33,9 +28,6 @@ Attributes:
           </td>
           <td>
             <a href="{% url 'workflows:list' %}?collection={{collection.pk}}">Analyze</a>
-          </td>
-          <td>
-            <a class="debug-red" href="#">Download</a>
           </td>
           <td>
             <a href="?delete={{collection.pk}}">Delete</a>

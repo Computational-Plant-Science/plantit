@@ -8,6 +8,13 @@
   <link rel="stylesheet"  type="text/css" href="{% sass_src 'job_manager/sass/job.sass' %}">
 {% endblock %}
 
+{% block contextual-nav %}
+  <ul>
+    <li><a href="{% url 'user:user_landing' %}">Dashboard</a></li>
+    <li><a href="{% url 'job_manager:list' %}">All Jobs</a>
+  </ul>
+{% endblock %}
+
 {% block page-content %}
   <div>
     <div class="flex-row">
@@ -24,12 +31,7 @@
         </div>
       </div>
   </div>
-
-  <div class="button-nav">
-    <a href="{% url 'user:user_landing' %}"><button class="btn btn-nav">Dashboard</button></a>
-    <a href="{% url 'job_manager:list' %}"><button class="btn btn-nav">All Jobs</button></a>
-  </div>
-
+  
   <div class="content-column job-content" >
 
     {% if job|has_completed %}
