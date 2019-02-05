@@ -1,5 +1,7 @@
 import os.path
 
+from django.urls import reverse
+from django.http import HttpResponseRedirect
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, FormView
@@ -167,4 +169,4 @@ class AddFiles(DetailView):
                     self.object.add_sample(path = path,
                                            name = os.path.basename(path))
 
-        return self.get(request, *args, **kwargs)
+        return HttpResponseRedirect(reverse('collection:details',args=[self.object.pk]))
