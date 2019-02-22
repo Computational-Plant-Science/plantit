@@ -94,19 +94,17 @@ class Collection(models.Model, CastableModelMixin):
 
             returns (String): json string
         """
-        collection = {
-            "samples": {},
-        }
+        collection = {}
         if self.storage_type == "local":
             for sample in self.sample_set.all():
-                collection['samples'][sample.name] = {
+                collection[sample.name] = {
                             "storage": "local",
                             "path": sample.path
                         }
         elif self.storage_type == "irods":
             for sample in self.sample_set.all():
                 irods_storage = registrar.list["irods"]
-                collection['samples'][sample.name] = {
+                collection[sample.name] = {
                             "storage": "irods",
                             "path": os.path.join(self.base_file_path,
                                                  sample.path),

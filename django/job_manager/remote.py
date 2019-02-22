@@ -206,6 +206,7 @@ class SubmissionTask(SSHTaskMixin, Task):
 
         print(self.parameters)
         params = {
+            "server_url": "http://web/jobs/api/",
             "job_pk": self.job.pk,
             "auth_token": self.job.auth_token,
             "task_pk": self.pk,
@@ -227,7 +228,12 @@ class SubmissionTask(SSHTaskMixin, Task):
         #Copy run scripts to cluster
         FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
 
-        with self.sftp.open('job_config.json','w') as file:
+
+        with open('workflows/dirt2d/process.py') as file:
+            fname = os.path.basename(file.name)
+            self.sftp.putfo(file, fname)
+
+        with self.sftp.open('workflow.json','w') as file:
             file.write(self.get_params())
 
         try:

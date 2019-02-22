@@ -32,3 +32,7 @@ RUN mkdir -p /opt/; \
     pip3 install -e .; \
     mkdir -p ~/.clusterside/; \
     cp files/submit.sh ~/.clusterside/submit.sh
+
+RUN apt-get install libfuse2
+RUN dpkg -i https://files.renci.org/pub/irods/releases/4.1.12/ubuntu14/irods-icommands-4.1.12-ubuntu14-x86_64.deb
+RUN printf 'irods\n1247\nrods\ntempZone\nrods\n' | iinit
