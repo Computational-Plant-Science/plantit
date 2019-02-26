@@ -5,13 +5,10 @@ from job_manager.job import Task,Status
 from job_manager.remote import SSHTaskMixin
 
 class DownloadResultsTask(SSHTaskMixin, Task):
-    class Meta:
-        abstract = True
-
     """
         Downloads and parsers output of a workflow.
     """
-    output_filename = "output.csv"
+    output_filename = "results.csv"
 
     def ssh(self):
         _, file_extension = os.path.splitext(self.output_filename)

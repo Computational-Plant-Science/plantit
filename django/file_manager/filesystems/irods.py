@@ -110,3 +110,9 @@ registrar.register(IRods(name = "irods",
                          password = secret.IRODS_PASSWORD,
                          hostname = secret.IRODS_HOSTNAME,
                          zone = secret.IRODS_ZONE))
+
+registrar.register(IRods(name = "cyverse",
+                         username = secret.CYVERSE_USERNAME,
+                         password = secret.CYVERSE_PASSWORD,
+                         hostname = secret.CYVERSE_HOSTNAME,
+                         zone = secret.CYVERSE_ZONE))

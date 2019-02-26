@@ -186,8 +186,8 @@ class SubmissionTask(SSHTaskMixin, Task):
         Attributes:
     """
 
-    singularity_url = models.URLField(null=False,blank=False)
     parameters = models.TextField(null=True,blank=True)
+    app_name = models.CharField(max_length=40)
 
     def get_params(self):
         """
@@ -204,14 +204,12 @@ class SubmissionTask(SSHTaskMixin, Task):
                 json.decoder.JSONDecodeError if parameters are not decodeable
         """
 
-        print(self.parameters)
         params = {
             "server_url": "http://web/jobs/api/",
             "job_pk": self.job.pk,
             "auth_token": self.job.auth_token,
             "task_pk": self.pk,
             "parameters": json.loads(self.parameters),
-            "singularity_url": self.singularity_url
         }
 
         return json.dumps(params)
@@ -228,8 +226,7 @@ class SubmissionTask(SSHTaskMixin, Task):
         #Copy run scripts to cluster
         FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
 
-
-        with open('workflows/dirt2d/process.py') as file:
+        with open(path.join('workflows', str(self.app_name) ,'process.py'),'r') as file:
             fname = os.path.basename(file.name)
             self.sftp.putfo(file, fname)
 

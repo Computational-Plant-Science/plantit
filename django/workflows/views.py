@@ -9,6 +9,7 @@ from job_manager.job import Status, Job
 from collection.models import Collection
 
 from workflows import registrar
+from workflows.forms import CreateJob
 from workflows.classes import Workflow
 
 """
@@ -62,6 +63,7 @@ class AnalyzeCollection(LoginRequiredMixin,SingleObjectMixin,FormView):
     template_name = "workflows/analyze.html"
     model = Collection
     workflow = Workflow
+    form_class = CreateJob
     object = None
 
     def form_valid(self,form):
@@ -92,7 +94,7 @@ class AnalyzeCollection(LoginRequiredMixin,SingleObjectMixin,FormView):
         """
         cluster = form.cleaned_data['cluster']
 
-        self.workflow.add_tasks(job, cluster, form)
+        self.workflow.add_tasks(job, cluster, form, self.app_name)
 
         job.status_set.create(state=Status.OK,description="Submitted")
         Job.run_next(job.pk)
