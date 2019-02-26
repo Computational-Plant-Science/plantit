@@ -3,7 +3,7 @@ files/
 **/migrations/*.py
 !**/migrations/__init__.py
 assets/
-django/dirt2d/secret.py
+django/dirt2/secret.py
 django/static/collections
 
 # Documentation
