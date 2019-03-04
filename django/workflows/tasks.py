@@ -8,12 +8,10 @@ class DownloadResultsTask(SSHTaskMixin, Task):
     """
         Downloads and parsers output of a workflow.
     """
-    output_filename = "results.csv"
 
     def ssh(self):
-        _, file_extension = os.path.splitext(self.output_filename)
-        output_file = self.workdir + "/" + self.output_filename
-        file = self.sftp.file(output_file)
+        _, file_extension = os.path.splitext(self.job.remote_results_path)
+        file = self.sftp.file(self.job.remote_results_path)
 
         self.job.results_file.save(
             "job%d%s"%(self.job.id,file_extension),
