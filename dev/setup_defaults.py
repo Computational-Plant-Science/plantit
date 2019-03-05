@@ -15,7 +15,7 @@ regular_user = User.objects.create_user(username = 'user1',
 #Default objects to work with
 from job_manager.remote import Cluster
 from job_manager.test.test_models import create_cluster
-cluster = create_cluster("clusterside submit --url http://web/jobs/api/")
+cluster = create_cluster("clusterside submit")
 
 from file_manager.permissions import Permissions
 Permissions.allow(admin_user,"local",'./files/')

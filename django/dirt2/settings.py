@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'job_manager.api',
     'file_manager.apps.FileManagerConfig',
     'workflows.apps.WorkflowsConfig',
-    'workflows.dirt2d.apps.Dirt2dConfig',
+    'workflows.dirt2d.django.app.WorkflowConfig',
     'user.apps.UserConfig',
     'collection.apps.CollectionConfig',
     'sass_processor',
@@ -144,4 +144,5 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'sass_processor.finders.CssFinder',
+    'workflows.finders.WorkflowDirectoriesFinder'
 ]

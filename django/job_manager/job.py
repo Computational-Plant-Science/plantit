@@ -133,7 +133,10 @@ class Job(models.Model):
                                 blank=True,
                                 default=generate_work_dir)
     results_file = models.FileField(null=True,blank=True,upload_to="files/results/")
-
+    remote_results_path = models.CharField(max_length=100,
+                                null=True,
+                                blank=True,
+                                default=None)
     # def __str__(self):
     #      return "Status: %s, Cluster: %s" (self.current_status().description,self.cluster)
 

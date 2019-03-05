@@ -31,7 +31,7 @@
         </div>
       </div>
   </div>
-  
+
   <div class="content-column job-content" >
 
     {% if job|has_completed %}
@@ -53,11 +53,10 @@
             <div class="progress complete">
               <i class="fas fa-check"></i>
             </div>
-            {{ task.name }}
           {% else %}
             <div class="progress queued"></div>
-            {{ task.name }}
           {% endif %}
+          {{ task.name }} (<a href="?rerun= {{ task.pk }}">rerun</a>)
         </div>
       {% endfor %}
     </div>

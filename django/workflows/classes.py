@@ -1,27 +1,12 @@
 import json
 
 from job_manager.remote import UploadCollectionTask, SubmissionTask
+from .tasks import DownloadResultsTask
 
 class Workflow:
-    results_task = None
 
     @classmethod
-    def get_singularity_params(cls,form):
-        """
-            The parameters to pass to the singularity container.
-
-            Returns:
-                a list of parameters to add to to the call to the singularity
-                container
-        """
-        params = []
-        for key, val in form.cleaned_data.items():
-            params.extend([str(key), str(val)])
-
-        return params
-
-    @classmethod
-    def add_tasks(cls,job,cluster,form):
+    def add_tasks(cls,job,cluster,form,app_name):
         '''
             Adds the tasks required to perform the analysis
 
@@ -44,15 +29,15 @@ class Workflow:
         #Submission task
         submit_task = SubmissionTask(name="Analysis",
                         description="Starts the analysis on the cluster",
-                        parameters=json.dumps(cls.get_singularity_params(form)),
+                        app_name=app_name,
+                        parameters=json.dumps(form.get_grouped_data(), default= lambda o: str(o)),
                         order_pos=20,
                         job=job,
-                        cluster=cluster,
-                        singularity_url=cls.singularity_url)
+                        cluster=cluster)
         submit_task.save()
 
         #Results task
-        download_task = cls.results_task(name="Download Results",
+        download_task = DownloadResultsTask(name="Download Results",
                             description="Downloads and parses results",
                             job=job,
                             cluster=cluster,

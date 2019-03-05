@@ -16,6 +16,7 @@ from paramiko.ssh_exception import AuthenticationException
 
 from .job import Task, Job, Status
 from file_manager import permissions
+from workflows import registrar
 
 class Cluster(models.Model):
     """
@@ -186,8 +187,8 @@ class SubmissionTask(SSHTaskMixin, Task):
         Attributes:
     """
 
-    singularity_url = models.URLField(null=False,blank=False)
     parameters = models.TextField(null=True,blank=True)
+    app_name = models.CharField(max_length=40)
 
     def get_params(self):
         """
@@ -204,13 +205,16 @@ class SubmissionTask(SSHTaskMixin, Task):
                 json.decoder.JSONDecodeError if parameters are not decodeable
         """
 
-        print(self.parameters)
+        config = registrar.list[self.app_name]
+
         params = {
+            "server_url": "http://web/jobs/api/",
             "job_pk": self.job.pk,
             "auth_token": self.job.auth_token,
             "task_pk": self.pk,
+            "singularity_url": config['singularity_url'],
+            "api_version": config['api_version'],
             "parameters": json.loads(self.parameters),
-            "singularity_url": self.singularity_url
         }
 
         return json.dumps(params)
@@ -227,7 +231,11 @@ class SubmissionTask(SSHTaskMixin, Task):
         #Copy run scripts to cluster
         FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
 
-        with self.sftp.open('job_config.json','w') as file:
+        with open(path.join('workflows', str(self.app_name) ,'process.py'),'r') as file:
+            fname = os.path.basename(file.name)
+            self.sftp.putfo(file, fname)
+
+        with self.sftp.open('workflow.json','w') as file:
             file.write(self.get_params())
 
         try:

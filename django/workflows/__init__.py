@@ -18,16 +18,22 @@ class Registrar():
     """
     list = {}
 
-    def register(self,name,description,app_name,icon):
+    def register(self,config):
         """
             Register a workflow with the server
 
             Args:
-                name (str): Human readable name of the workflow
-                description (str): Workflow description, up to 250 characters
-                app_name (str): name of app, as registed with django settings.py
-                icon (str): path to workflow icon, relative to STATIC_ROOT.
-                    icon size should be 200x200px
+                config (dict): The workflow configuration, containing:
+                    name (str): Human readable name of the workflow
+                    description (str): Workflow description, up to 250
+                            characters
+                    app_name (str): name of app, as registed with django
+                            settings.py
+                    icon (str): path to workflow icon, relative to STATIC_ROOT.
+                            icon size should be 200x200px
+                    singulairty_url (str): url to the workflow
+                            singularity container
+                    api_versin (float): api version to use
 
             Attention:
                 the icon path must be within a folder available to the
@@ -36,9 +42,8 @@ class Registrar():
                 then the icon path would be: workflows/[workflow_app_name]/icon.png
 
         """
-        app_url_pattern = "workflows:%s:analyze" % (app_name,)
-        self.list[name] = {"description": description,
-                           "app_url_pattern": app_url_pattern,
-                           "icon": icon}
+        config['app_url_pattern'] = "workflows:%s:analyze" % (config['app_name'],)
+
+        self.list[config['app_name']] = config
 
 registrar = Registrar()

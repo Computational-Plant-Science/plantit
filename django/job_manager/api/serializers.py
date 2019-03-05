@@ -20,7 +20,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Job
-        fields = ('pk', 'date_created','submission_id', 'task_set', 'status_set')
+        fields = ('pk', 'date_created','submission_id', 'remote_results_path', 'results_file', 'task_set',  'status_set')
 
     def create(self, validated_data):
         status_data = validated_data.pop('status_set')
@@ -33,6 +33,9 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
     def update(self, job, validated_data):
         if 'submission_id' in validated_data.keys():
             job.submission_id = validated_data['submission_id']
+
+        if 'remote_results_path' in validated_data.keys():
+            job.remote_results_path = validated_data['remote_results_path']
 
         status_data = validated_data.get('status_set',None)
         if(status_data):

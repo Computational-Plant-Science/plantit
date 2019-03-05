@@ -40,7 +40,7 @@ Attributes:
       {% for key, value in workflows.items %}
           <div class="grid-item grid-border">
 				    <div class="grid-item-icon-background">
-              <img class="grid-item-icon" src="{% static value.icon %}">
+              <img class="grid-item-icon" src="{% static value.icon_loc %}">
             </div>
             <div class="grid-item-text">
               <a href="{% url value.app_url_pattern collection %}">{{ key }}</a><br />
