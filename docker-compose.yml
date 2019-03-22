@@ -42,6 +42,8 @@ services:
   ssh:
     build: ./dev/dockerfiles/test_cluster
     privileged: true
+    depends_on:
+      - irods
 
   irods:
     image: mjstealey/irods-provider-postgres:4.2.3

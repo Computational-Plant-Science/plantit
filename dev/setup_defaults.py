@@ -1,6 +1,7 @@
 '''
 This file is run by reset.sh to setup some website defaults
 '''
+import os
 
 #Default admin user
 from django.contrib.auth.models import User;
@@ -23,10 +24,12 @@ Permissions.allow(regular_user,"local",'./files/')
 Permissions.allow(admin_user,"irods",'/tempZone/home/rods/')
 Permissions.allow(regular_user,"irods",'/tempZone/home/rods/')
 
-#Some fake objects to fill the website
-from job_manager.test.test_models import create_collection, create_job, add_task
-collection = create_collection(user = admin_user)
-job = create_job(user = admin_user, collection= collection)
-add_task(job,"Fake Task 1")
-add_task(job,"Fake Task 2")
-add_task(job,"Fake Task 3")
+variables = ["IRODS_USERNAME = 'rods'",
+             "IRODS_PASSWORD = 'rods'",
+             "IRODS_HOSTNAME = 'irods'",
+             "IRODS_ZONE = 'tempZone'"]
+
+if not os.path.exists('dirt2/secret.py'):
+    with open('dirt2/secret.py','w') as infile:
+        for line in variables:
+            infile.write(line + "\n")

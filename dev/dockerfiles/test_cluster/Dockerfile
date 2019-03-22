@@ -29,12 +29,10 @@ RUN mkdir -p /opt/; \
     cd /opt; \
     git clone https://github.com/cottersci/DIRT2_ClusterSide.git; \
     cd DIRT2_ClusterSide; \
-    pip3 install -e .; \
-    mkdir -p ~/.clusterside/; \
-    cp files/submit.sh ~/.clusterside/submit.sh
+    pip3 install -e .
 
 RUN apt-get install libfuse2
 RUN wget https://files.renci.org/pub/irods/releases/4.1.12/ubuntu14/irods-icommands-4.1.12-ubuntu14-x86_64.deb
 RUN dpkg -i irods-icommands-4.1.12-ubuntu14-x86_64.deb
 RUN rm irods-icommands-4.1.12-ubuntu14-x86_64.deb
-RUN printf 'irods\n1247\nrods\ntempZone\nrods\n' | iinit
+COPY irods_setup.sh /root/

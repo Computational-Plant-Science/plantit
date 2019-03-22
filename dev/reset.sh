@@ -38,5 +38,11 @@ docker-compose run web python manage.py migrate
 #Add some defaults to the server
 cat dev/setup_defaults.py | docker-compose run web python manage.py shell
 
+docker-compose up -d irods
+docker-compose up -d ssh
+echo "Waiting 30s for irods and ssh to warm up..."
+sleep 30s
+docker-compose exec ssh /bin/bash /root/irods_setup.sh
+
 #Stop db container
 docker-compose stop
