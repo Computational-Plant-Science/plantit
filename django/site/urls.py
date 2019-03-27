@@ -18,13 +18,8 @@ from django.urls import path, include
 from dirt2 import views
 
 urlpatterns = [
-    path('jobs/', include('job_manager.urls')),
     path('admin/', admin.site.urls),
     path('accounts/',include('django.contrib.auth.urls')),
-    path('workflows/', include('workflows.urls'), name="workflows"),
-    path('filemanager/', include('file_manager.urls')),
-    path('collection/', include('collection.urls')),
-    path('', views.index, name="index"),
-    path('user/', include('user.urls')),
-    path('logout/', views.logout_view, name="logout")
+    path('', include('front_end.urls')),
+    path('api/' include('apis.urls'))
 ]
