@@ -29,7 +29,7 @@ variables = ["IRODS_USERNAME = 'rods'",
              "IRODS_HOSTNAME = 'irods'",
              "IRODS_ZONE = 'tempZone'"]
 
-if not os.path.exists('dirt2/secret.py'):
-    with open('dirt2/secret.py','w') as infile:
+if not os.path.exists('plantit/secret.py'):
+    with open('plantit/secret.py','w') as infile:
         for line in variables:
             infile.write(line + "\n")

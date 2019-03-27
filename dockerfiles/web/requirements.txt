@@ -19,7 +19,6 @@ python-irodsclient
 #For automatic sass compiling
 libsass
 django-compressor
-django-sass-processor
 
 django-imagekit #image caching/manipulation
 

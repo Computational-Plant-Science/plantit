@@ -2,9 +2,9 @@
 files/
 **/migrations/*.py
 !**/migrations/__init__.py
-assets/
-django/dirt2/secret.py
-django/static/collections
+django/plantit/secret.py
+django/front_end/node_modules
+django/front_end/dist
 
 # Documentation
 docs/build/*

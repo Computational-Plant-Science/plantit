@@ -1,0 +1,45 @@
+{% extends "includes/page-default.html" %}
+{% load static %}
+
+{% block header %}
+  <link rel="stylesheet"  type="text/css" href="{% static 'collection/new.css' %}">
+{% endblock %}
+
+{% block contextual-nav %}
+  <ul>
+    <li>  <a href="{% url 'user:user_landing' %}">Dashboard</a></li>
+  </ul>
+{% endblock %}
+
+{% block page-content %}
+  <div class="content-column">
+    <form method="POST" class="post-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <p>
+          <label>Collection Name:</label>
+          {{ form.name }}
+        </p>
+        <p>
+          <label>Description:</label>
+          {{form.description}}
+        </p>
+        {% if user.is_superuser %}
+          <p>
+            <label>Storage Location:</label>
+            {{form.storage_type}}
+          </p>
+          <p>
+            <label>Base File path:</label>
+            {{form.base_file_path}}
+          </p>
+        {% endif %}
+      </div>
+
+      <div class="button-nav">
+        <button type="submit" class="save btn btn-default">Create</button>
+        <a href="{% url 'collection:list' %}" class="btn btn-default">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
