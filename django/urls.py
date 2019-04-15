@@ -21,10 +21,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    #path('admin/', admin.site.urls),
-    #path('accounts/',include('django.contrib.auth.urls')),
+    path('admin/', admin.site.urls),
+    path('accounts/',include('django.contrib.auth.urls')),
     path('',  TemplateView.as_view(template_name='index.html')),
-    #path('apis/files/', include('apis.file_manager.urls')),
-    #path('apis/jobs/',include('apis.job_manager.urls')),
-    #path('apis/collections/',include('apis.collection.urls'))
+    path('apis/files/', include('apis.file_manager.urls')),
+    path('apis/jobs/',include('apis.job_manager.urls')),
+    path('apis/collections/',include('apis.collection.urls'))
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
