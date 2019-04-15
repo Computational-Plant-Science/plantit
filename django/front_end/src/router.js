@@ -79,6 +79,12 @@ export default new Router({
             component: () =>
                 import(/* webpackChunkName: "about" */ './views/SubmitWorkflow.vue'),
             props: (route) => ({ job_pk: route.query.job_pk, workflow_pk: route.query.workflow_pk})
+        },
+        {
+            path: '/login',
+            name: 'login',
+            component: () =>
+                import(/* webpackChunkName: "about" */ './views/Login.vue'),
         }
     ]
 });
