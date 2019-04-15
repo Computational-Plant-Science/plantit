@@ -1,5 +1,5 @@
 module.exports = {
-    publicPath: '/static/',
+    assetsDir: 'assets/',
     pluginOptions: {
         'style-resources-loader': {
             preProcessor: 'sass',

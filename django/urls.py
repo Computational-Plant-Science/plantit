@@ -14,15 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import re_path, include
 from django.views.generic import TemplateView
 
 from django.conf import settings
 from django.conf.urls.static import static
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/',include('django.contrib.auth.urls')),
-    path('',  TemplateView.as_view(template_name='index.html')),
-    path('apis/v1/', include('apis.urls'))
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+[
+        re_path(r'^admin/', admin.site.urls),
+        re_path(r'^accounts/',include('django.contrib.auth.urls')),
+        re_path(r'^apis/v1/', include('apis.urls')),
+
+        #Send all other urls (besides what is listed above) to the vue router
+        re_path(r'^.*$',  TemplateView.as_view(template_name='index.html')),
+    ]

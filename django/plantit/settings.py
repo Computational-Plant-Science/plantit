@@ -16,10 +16,9 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
-STATIC_URL = "/static/"
+STATIC_URL = "/assets/"
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "front_end", "dist"),
-    os.path.join(BASE_DIR, "front_end", "assets"),
+    os.path.join(BASE_DIR, "front_end", "dist", "assets"),
 )
 
 STATICFILES_FINDERS = [
