@@ -1,33 +1,34 @@
 {
-  "name": "hello-world",
+  "name": "frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build-sass": "find src/**/ -iname '*.sass' -and -not -iname '_*' -exec sh -c 'node_modules/node-sass/bin/node-sass {} -o dist/static/css/`basename $(dirname {})`/'/ \\;",
-    "build-vue": "vue-cli-service build",
-    "build-css": "copyfiles -u 1 src/*/*.css dist/static/css/",
-    "build-templates": "copyfiles -u 1 src/*/*.html dist/templates",
-    "build": "npm run build-vue &&  npm run build-templates && npm run build-sass && npm run build-css",
-    "watch": "onchange 'src/*/*.css' -- npm run build-css & onchange 'src/*/*.html' -- npm run build-templates & onchange src/**/*.sass -- npm run build-sass & vue-cli-service build --mode production --watch --no-clean",
+    "serve": "vue-cli-service serve --port 8085",
+    "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "bootstrap-vue": "^2.0.0-rc.13",
+    "core-js": "^2.6.5",
     "vue": "^2.6.6",
     "vue-jstree": "^2.1.6",
-    "vue-upload-component": "^2.8.20"
+    "vue-router": "^3.0.1",
+    "vuex": "^3.0.1"
   },
   "devDependencies": {
+    "@babel/polyfill": "^7.2.5",
     "@vue/cli-plugin-babel": "^3.5.0",
     "@vue/cli-plugin-eslint": "^3.5.0",
     "@vue/cli-service": "^3.5.0",
+    "@vue/eslint-config-prettier": "^4.0.1",
     "babel-eslint": "^10.0.1",
-    "copyfiles": "^2.1.0",
     "eslint": "^5.8.0",
     "eslint-plugin-vue": "^5.0.0",
     "node-sass": "^4.11.0",
     "sass-loader": "^7.1.0",
+    "style-resources-loader": "^1.2.1",
+    "vue-cli-plugin-bootstrap-vue": "^0.2.0",
+    "vue-cli-plugin-style-resources-loader": "^0.1.3",
     "vue-template-compiler": "^2.5.21"
   },
   "eslintConfig": {
@@ -37,12 +38,16 @@
     },
     "extends": [
       "plugin:vue/essential",
-      "eslint:recommended"
+      "@vue/prettier"
     ],
     "rules": {},
     "parserOptions": {
       "parser": "babel-eslint"
     }
+  },
+  "prettier": {
+    "tabWidth": 4,
+    "singleQuote": true
   },
   "postcss": {
     "plugins": {
