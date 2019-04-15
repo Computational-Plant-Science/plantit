@@ -3,7 +3,7 @@ import json
 from django.test import TestCase
 from rest_framework.test import APITestCase
 
-from job_manager.test.test_models import create_job, add_task
+from ..test.test_models import create_job, add_task
 # Using the standard RequestFactory API to create a form POST request
 
 class TestAPI(APITestCase):

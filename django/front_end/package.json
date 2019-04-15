@@ -8,12 +8,15 @@
     "build-vue": "vue-cli-service build",
     "build-css": "copyfiles -u 1 src/*/*.css dist/static/css/",
     "build-templates": "copyfiles -u 1 src/*/*.html dist/templates",
-    "build": "npm run build-vue &&  npm run build-templates && npm run build-sass",
-    "watch": "onchange 'src/*/*.css -- npm run build-css & onchange 'src/*/*.html' -- npm run build-templates & onchange src/**/*.sass -- npm run build-sass & vue-cli-service build --watch --no-clean",
+    "build": "npm run build-vue &&  npm run build-templates && npm run build-sass && npm run build-css",
+    "watch": "onchange 'src/*/*.css' -- npm run build-css & onchange 'src/*/*.html' -- npm run build-templates & onchange src/**/*.sass -- npm run build-sass & vue-cli-service build --mode production --watch --no-clean",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "vue": "^2.6.6"
+    "axios": "^0.18.0",
+    "vue": "^2.6.6",
+    "vue-jstree": "^2.1.6",
+    "vue-upload-component": "^2.8.20"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.5.0",
@@ -24,6 +27,7 @@
     "eslint": "^5.8.0",
     "eslint-plugin-vue": "^5.0.0",
     "node-sass": "^4.11.0",
+    "sass-loader": "^7.1.0",
     "vue-template-compiler": "^2.5.21"
   },
   "eslintConfig": {

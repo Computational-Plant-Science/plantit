@@ -1,7 +1,7 @@
 from rest_framework import viewsets
-from job_manager.api.serializers import JobSerializer
-from job_manager.job import Job, Task
-from job_manager.authentication import JobTokenAuthentication
+from .serializers import JobSerializer
+from plantit.job_manager.job import Job, Task
+from plantit.job_manager.authentication import JobTokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 class JobViewSet(viewsets.ModelViewSet):

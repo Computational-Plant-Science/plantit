@@ -1,11 +1,9 @@
 from django.urls import path, include
 
-from .views import FileBrowserView
-#from .views import filepicker
-
-app_name = "file_manager"
+from . import views
 
 urlpatterns = [
-    path('ajax/<command>/', FileBrowserView.as_view(),name='ajax'),
-    #path('', filepicker)
+    path(r'', views.storage_types),
+    path(r'<str:storage_type>', views.folder, name='browse'),
+    path(r'<str:storage_type>/upload',views.upload, name='upload')
 ]

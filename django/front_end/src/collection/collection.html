@@ -25,9 +25,9 @@
           <div class="grid-item grid-border">
               <div class="image">
                 {% if sample.thumbnail %}
-                  <img src="/{{ sample.thumbnail.url }}">
+                  <img src="{{ sample.thumbnail.url }}">
                 {% else %}
-                  <img width=100 height=100 src="{% static 'images/icons/ajax-loader.gif' %}">
+                  <img width=100 height=100 src="{% static 'icons/ajax-loader.gif' %}">
                 {% endif %}
               </div>
               <div class="title">{{ sample.name }}</div>

@@ -14,11 +14,11 @@ regular_user = User.objects.create_user(username = 'user1',
 
 
 #Default objects to work with
-from job_manager.remote import Cluster
-from job_manager.test.test_models import create_cluster
+from plantit.job_manager.remote import Cluster
+from plantit.job_manager.test.test_models import create_cluster
 cluster = create_cluster("clusterside submit")
 
-from file_manager.permissions import Permissions
+from plantit.file_manager.permissions import Permissions
 Permissions.allow(admin_user,"local",'./files/')
 Permissions.allow(regular_user,"local",'./files/')
 Permissions.allow(admin_user,"irods",'/tempZone/home/rods/')

@@ -128,7 +128,6 @@ class Collection(models.Model, CastableModelMixin):
 
     def add_sample(self,name,path,**kwargs):
         s = self.sample_set.create(path=path,name=name,**kwargs)
-        print(s.pk)
         generate_thumbnail.delay(s.pk)
 
 class Sample(models.Model):
@@ -146,7 +145,7 @@ class Sample(models.Model):
     name = models.CharField(max_length=250,null=False,blank=False)
     path = models.CharField(max_length=250,null=False,blank=False)
     collection = models.ForeignKey(Collection,on_delete=models.CASCADE)
-    thumbnail = ProcessedImageField(upload_to='static/collections/thumbnails',
+    thumbnail = ProcessedImageField(upload_to='collections/thumbnails',
                                        processors=[ResizeToFill(100, 100)],
                                        format='JPEG',
                                        options={'quality': 60},

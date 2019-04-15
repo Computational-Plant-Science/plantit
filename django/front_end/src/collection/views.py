@@ -145,28 +145,3 @@ class AddFiles(DetailView):
     """
     template_name = "collection/add_files.html"
     model = Collection
-
-    def get_form(self, POST = None, FILES = None):
-        return CollectionFileForm(storage_type=self.object.storage_type,
-                           base_path=self.object.base_file_path,
-                           data = POST,
-                           files = FILES)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        form = self.get_form()
-        context['form'] = form
-        return context
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if request.method == 'POST':
-            form = self.get_form(POST = request.POST, FILES = request.FILES)
-            if(form.is_valid()):
-                files = form.cleaned_data['file']
-                for file in files:
-                    path = file.lstrip("/")
-                    self.object.add_sample(path = path,
-                                           name = os.path.basename(path))
-
-        return HttpResponseRedirect(reverse('collection:details',args=[self.object.pk]))

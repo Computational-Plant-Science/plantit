@@ -1,11 +1,11 @@
 import tempfile
 
 from django.test import TestCase
-from job_manager.test.test_models import create_user
+from plantit.job_manager.test.test_models import create_user
 
-from file_manager.permissions import Permissions
-from file_manager.filesystems import registrar
-from file_manager.filesystems.local import Local
+from ..permissions import Permissions
+from ..filesystems import registrar
+from ..filesystems.local import Local
 
 # Create your tests here.
 class TestPermissions(TestCase):

@@ -1,4 +1,4 @@
-from job_manager.job import Job
+from .job import Job
 from rest_framework import authentication
 from rest_framework import exceptions
 from rest_framework import authentication

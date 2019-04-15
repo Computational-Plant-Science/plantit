@@ -1,0 +1,41 @@
+{% extends "includes/page-default.html" %}
+
+{% block header %}
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+  <% for (var css in htmlWebpackPlugin.files.css) { %>
+  <link href="<%= htmlWebpackPlugin.files.css[css] %>" rel="stylesheet">
+  <% } %>
+{% endblock %}
+
+{% block contextual-nav %}
+  <ul>
+    <li> <a href="{% url 'user:user_landing' %}">Dashboard</a></li>
+  </ul>
+{% endblock %}
+
+{% block page-content %}
+
+  <h1>Collections</h1>
+
+  <div class="button-nav">
+    <a href="{% url 'collection:new' %}"><button class="btn btn-nav">Create New Collection</button></a>
+  </div>
+
+  <noscript>
+    <strong>We're sorry but PlantIT doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+  </noscript>
+  <div id="app"></div>
+
+  <script id="app_data" type="application/json">
+    [
+      { "isActive": true, "age": 10},
+      { "isActive": false, "age": 22}
+    ]
+  </script>
+
+  <!-- built files will be auto injected -->
+  <% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
+    <script src="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>"></script>
+  <% } %>
+
+{% endblock %}

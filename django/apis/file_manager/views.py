@@ -1,107 +1,98 @@
 import humanize
 import json
+import posixpath
 
-from django.views import View
-from django.http import Http404, HttpResponse
-from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse, Http404, HttpResponse
+from django.contrib.auth.decorators import login_required
 
-from .permissions import open_folder
+from plantit.file_manager.permissions import open_folder
+from plantit.file_manager.filesystems import registrar
 
+"""
+    Defines a RESTFUL API for interacting with the file manager
+"""
 
-# from django.core.files.storage import FileSystemStorage
-# from django.shortcuts import render
-# from django import forms
-# from file_manager.fields import FileBrowserField
-#
-# class FileForm(forms.Form):
-#     # Example form that only has a file browser
-#     files = FileBrowserField("Dev",
-#                              path = '/')
-#
-# def filepicker(request):
-#     # Method based view that renders a form with only a file browser
-#     if request.method == 'POST':
-#         form = FileForm(request.POST)
-#         if form.is_valid():
-#             # Lists the files selected in the form.
-#             print("Selected files: " + str(form.cleaned_data['files']))
-#     else:
-#         form = FileForm()
-#     return render(request, 'file_manager/file.html', {'form': form})
-
-
-
-class FileBrowserView(View):
+@login_required
+def storage_types(request):
     """
-        Provides an ajax based file browser.
+        List registered storage types
 
-        settable variables:
-        file_storage: Must be a valid FileSystemStorage class
+        Args:
+            request: the HTTP request
     """
 
-    def post(self,request, command):
-        """
-            Parses the ajax command request
-        """
-        if request.is_ajax():
-            self.file_storage = open_folder(request.POST.get('storage_type'),
-                                            request.POST.get('dir'),
-                                            request.user)
+    context = {
+        "Storage Types" : list(registrar.list.keys()),
+    }
 
-            if(command == 'browse'):
-                return self.browse(request)
-            elif(command == 'upload'):
-                return self.upload(request)
-            else:
-                raise Http404('Not a vaild command')
-        else:
-            raise Http404 ('Not a vaild ajax call')
+    return JsonResponse(context)
 
-    def browse(self,request):
-        """
-            ajax/browse/
+@login_required
+def folder(request, storage_type):
+    """
+        List files in a folder in the format required by
+        jsTree  (https://www.jstree.com/docs/json/)
 
-            Responds to ajax requests to list the files of a directory. Requests
-            must contain the 'dir' POST variable populated with the directory to list
+        Args:
+            request: the HTTP request
+            storage_type (str): The storage to open, must be from the list
+                registered in file_manger.permissions.registrar
+    """
 
-            The returned HttPresponse is json of the following structure:
+    if not 'path' in request.GET:
+        raise Http404("base_path required not in GET data")
 
-            {
-                'dirs' : ['list', 'of', 'dirs'],
-                'files': [
-                    { 'name': 'file name',
-                      'size': 'human readable file size' },
-                ]
-            }
-        """
-        if request.POST:
-            (dirs,files) = self.file_storage.listdir("./")
-            sizes = []
+    path = request.GET['path'].lstrip("/")
 
-            for file in files:
-                sizes.append( humanize.naturalsize(self.file_storage.size(file)) )
-            context = { 'dirs': dirs,
-                        'files': list(map(lambda f, s: {'name': f, 'size': s} ,files,sizes)) }
+    file_storage = open_folder(storage_type,
+                                    path,
+                                    request.user)
 
-            return HttpResponse(json.dumps(context), content_type='application/json')
-        else:
-            raise Http404('No POST data')
+    (dirs,files) = file_storage.listdir('.')
+    sizes = []
 
-    def upload(self,request):
-        """
-            ajax/upload
+    for file in files:
+        sizes.append( humanize.naturalsize(file_storage.size(file)) )
 
-            Responds to ajax requests to uplaod files. Can handle mutiple
-            files at once. Requests must contain the 'pwd' POST variable populated
-            with the directory to store the uploaded files in.
-        """
+    context = [
+                {
+                    "text" : dir,
+                    "path" : posixpath.join(path,dir),
+                    "icon" : "far fa-folder"
+                } for dir in dirs
+              ] + [
+                {
+                    "text" : file,
+                    "size" : size,
+                    "path" : file,
+                    "isLeaf" : True,
+                    "icon": "far fa-file"
+                } for file,size in zip(files, sizes)
+              ]
 
-        files = request.FILES.getlist('file')
+    return JsonResponse(context,safe=False)
 
-        if(not files):
-            raise Http404
+@login_required
+def upload(request,storage_type):
+    """
+        ajax/upload
 
-        for f in files:
-            self.file_storage.save(f.name,f)
+        Responds to ajax requests to uplaod files. Can handle mutiple
+        files at once. Requests must contain the 'pwd' POST variable populated
+        with the directory to store the uploaded files in.
+    """
 
-        return HttpResponse(status=204)
+    file_storage = open_folder(storage_type,
+                               request.POST['pwd'],
+                                request.user)
+
+    files = request.FILES.getlist('file')
+
+    if(not files):
+        raise Http404
+
+    file_names = []
+    for f in files:
+        file_names.append(file_storage.save(f.name,f))
+
+    return JsonResponse(file_names,safe=False)

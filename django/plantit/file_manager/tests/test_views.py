@@ -8,9 +8,9 @@ from django.test import RequestFactory
 from django.urls import reverse
 from django.core.exceptions import PermissionDenied
 
-from file_manager.views import FileBrowserView
-from file_manager.filesystems.local import Local
-from file_manager.permissions import Permissions
+from ..views import FileBrowserView
+from ..filesystems.local import Local
+from ..permissions import Permissions
 
 class TestFileBrowseView(TestCase):
     """

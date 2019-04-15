@@ -3,9 +3,9 @@ import os
 from celery import Celery
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dirt2.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'plantit.settings')
 
-app = Celery('dirt2',
+app = Celery('plantit',
              broker='amqp://rabbitmq',
              backend='amqp://rabbitmq')
 

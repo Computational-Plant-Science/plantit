@@ -1,4 +1,4 @@
-from job_manager.job import Job, Status, Task
+from plantit.job_manager.job import Job, Status, Task
 from rest_framework import serializers
 
 

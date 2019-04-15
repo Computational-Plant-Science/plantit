@@ -10,13 +10,13 @@ import django.core.files as files
 from django.contrib.auth.models import User;
 from django.core.exceptions import SuspiciousFileOperation
 
-from job_manager.job import Status, Job, Task, DummyTask
-from job_manager.remote import Cluster, SubmissionTask, File, UploadFileTask
-from job_manager.job import __cancel_job__, __run_next__
+from ..job import Status, Job, Task, DummyTask
+from ..remote import Cluster, SubmissionTask, File, UploadFileTask
+from ..job import __cancel_job__, __run_next__
 
-from collection.models import Collection
+from plantit.collection.models import Collection
 
-from file_manager.filesystems import registrar
+from plantit.file_manager.filesystems import registrar
 
 import paramiko
 
@@ -162,8 +162,8 @@ class JobTests(TestCase):
     def test_cancel_failed(self):
         pass
 
-from file_manager.permissions import Permissions
-from file_manager.filesystems.local import Local
+from plantit.file_manager.permissions import Permissions
+from plantit.file_manager.filesystems.local import Local
 
 class RemoteTests(TestCase):
     def setUp(self):

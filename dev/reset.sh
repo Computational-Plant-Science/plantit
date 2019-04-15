@@ -20,6 +20,7 @@ find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
 
 # Remove all files saved to the server
 rm -rf django/files/*
+mkdir -p django/files/public
 mkdir -p django/files/tmp
 
 #recreate images

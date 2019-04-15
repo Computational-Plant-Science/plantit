@@ -29,7 +29,7 @@ services:
     working_dir: /code/django
     depends_on:
       - rabbitmq
-    command: celery -A dirt2 worker --loglevel=info
+    command: celery -A plantit worker --loglevel=info
 
   ## Development
   adminer:

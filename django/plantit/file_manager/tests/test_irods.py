@@ -4,9 +4,9 @@ from django.test import TestCase
 
 from irods.session import iRODSSession
 
-from job_manager.test.test_models import create_user
+from ..test.test_models import create_user
 
-from file_manager.filesystems.irods import IRodsFileSystem
+from plantit.file_manager.filesystems.irods import IRodsFileSystem
 
 
 # Create your tests here.
@@ -37,7 +37,7 @@ class TestIRodsFileSystem(TestCase):
                                 password = cls.password,
                                 zone = cls.zone,
                                 path = '/tempZone/')
-                                
+
     def test_listdir(self):
         dirs,files = self.filesystem.listdir("")
 
