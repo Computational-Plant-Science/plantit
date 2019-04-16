@@ -5,6 +5,9 @@ export default {
     /**
      * Create a new collection
      *
+     * Requirements:
+     *   User must be logged in
+     *
      * Args:
      *    name (str): name of the collection
      *    description (str): Collection description
@@ -40,5 +43,64 @@ export default {
      **/
     return axios.get("/apis/v1/collections/")
     .then((response) => { return response.data })
+  },
+
+  getCollection(pk){
+    /**
+     * Get a collection.
+     *
+     * Requirements:
+     *   User must be logged in
+     *
+     * Returns:
+     *    Axios promise containing the collection object
+     **/
+    return axios.get(`/apis/v1/collections/${pk}/` )
+    .then((response) => { return response.data })
+  },
+
+  addSample(sample, pk){
+    /**
+      Add sample to the collection
+
+      Args:
+        sample (json): sample info:
+          {
+            name: "name of sample",
+            path: "path to sample"
+          }
+
+      Requires:
+        User is logged in and has permission for collection
+
+      Returns:
+        axios.patch promise
+    **/
+    return this.addSamples([sample], pk)
+  },
+
+  addSamples(samples, pk){
+    /**
+      Add sample to tje collection
+      Args:
+        sample (array of json): sample info:
+          [
+            {
+            name: "name of sample",
+            path: "path to sample"
+          },
+          ....
+        ]
+
+      Requires:
+        User is logged in and has permission for collection
+
+      Returns:
+        axios.patch promise
+    **/
+    const data = {
+      sample_set: samples
+    }
+    return axios.patch(`/apis/v1/collections/${pk}/`, data)
   }
 }

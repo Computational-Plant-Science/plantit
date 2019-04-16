@@ -21,7 +21,7 @@
 
             <b-form-group label="Location:" label-for="input-storageType">
                 <b-form-select
-                    :v-model="form.storageType"
+                    v-model="form.storageType"
                     :options="options"
                 ></b-form-select>
             </b-form-group>

@@ -17,13 +17,14 @@
       allow-batch
       whole-row
       class="file-browser"
+      :async="loadTreeDataAsync"
     ></v-jstree>
   </div>
 </template>
 
 <script>
 import VJstree from "vue-jstree";
-
+import FileManagerApi from '@/services/apiV1/FileManager'
 export default {
     name: 'BrowseFiles',
     components: {
@@ -35,44 +36,42 @@ export default {
         // selected[item.text] = item
         required: true,
         type: Object
+      },
+      basePath:{
+        //The base path of the file browse
+        required: true,
+        type: String
+      },
+      storageType:{
+        //The storage type to access
+        required: true,
+        type: String
       }
     },
     data(){
       return{
-        treeData: [
-          {
-            "text": "file1.txt",
-            "size": 10
-          },
-          {
-            "text": "file2.txt",
-            "size": 4
-          },
-          {
-            "text": "file3.txt",
-            "size": 12,
-            children: [
-              {
-                "text": "child file 1.txt",
-                "size": 11
-              }
-            ]
-          },
-          {
-            "text": "file4.txt",
-            "size": 15
-          }
-        ]
+        treeData: []
       }
     },
     methods:{
+      loadTreeDataAsync(oriNode, resolve){
+        let path = (oriNode.data.path ? oriNode.data.path : this.basePath)
+        FileManagerApi.listDir(path,this.storageType)
+        .then((data) => {
+          resolve(data)}
+        )
+      },
       changed(node, item, e){
         let set = (item) => {
-          this.$set(this.selectedFiles, item.text, item)
+          if(item.isLeaf){
+            this.$set(this.selectedFiles, item.text, item)
+          }
           item.children.forEach((i) => {set(i)})
         }
         let del = (item) => {
-          this.$delete(this.selectedFiles, item.text)
+          if(item.isLeaf){
+            this.$delete(this.selectedFiles, item.text)
+          }
           item.children.forEach((i) => {del(i)})
         }
         if(item.selected){

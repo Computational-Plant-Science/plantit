@@ -28,21 +28,23 @@ def storage_types(request):
     return JsonResponse(context)
 
 @login_required
-def folder(request, storage_type):
+def folder(request):
     """
         List files in a folder in the format required by
         jsTree  (https://www.jstree.com/docs/json/)
 
         Args:
             request: the HTTP request
-            storage_type (str): The storage to open, must be from the list
-                registered in file_manger.permissions.registrar
     """
 
     if not 'path' in request.GET:
         raise Http404("base_path required not in GET data")
 
+    if not 'storage_type' in request.GET:
+        raise Http404("storage_type required not in GET data")
+
     path = request.GET['path'].lstrip("/")
+    storage_type = request.GET['storage_type']
 
     file_storage = open_folder(storage_type,
                                     path,
@@ -64,7 +66,7 @@ def folder(request, storage_type):
                 {
                     "text" : file,
                     "size" : size,
-                    "path" : file,
+                    "path" : posixpath.join(path,str(file)),
                     "isLeaf" : True,
                     "icon": "far fa-file"
                 } for file,size in zip(files, sizes)
