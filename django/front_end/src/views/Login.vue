@@ -10,6 +10,7 @@
 </template>
 
 <script>
+import Auth from '@/services/apiV1/Auth'
 
 export default {
     name: 'Login',
@@ -17,25 +18,10 @@ export default {
     },
     methods:{
       login: function() {
-        this.$http.post("/apis/v1/auth/login/", {
-          username: "admin",
-          password: "admin"
-        })
-        .then(function (response) {
-          console.log(response);
-        })
-        .catch(function (error) {
-          console.log(error);
-        })
+        console.log(Auth.login("admin","admin"))
       },
       logout: function() {
-        this.$http.get("/apis/v1/auth/logout/")
-        .then(function (response) {
-          console.log(response);
-        })
-        .catch(function (error) {
-          console.log(error);
-        })
+        console.log(Auth.logout())
       }
     }
 };
