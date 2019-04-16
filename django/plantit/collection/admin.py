@@ -1,3 +1,4 @@
 from django.contrib import admin
-# from .models import Defaults
-# admin.site.register(Defaults)
+from .models import Collection
+
+admin.site.register(Collection)
