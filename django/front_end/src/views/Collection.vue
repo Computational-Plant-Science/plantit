@@ -21,9 +21,25 @@
         <b-container>
             <b-row>
                 <b-col class="content-box">
-                    <CollectionThumbnails
-                        :pk="this.$route.query.pk"
-                    ></CollectionThumbnails>
+                    <b-spinner
+                     v-if="this.collection.sample_set === undefined"
+                     label="Loading...">
+                   </b-spinner>
+                   <span v-else>
+                     <span
+                       v-if="this.collection.sample_set == 0"
+                     >
+                       Add files to the collection by clicking
+                       <b-link :to="{name: 'addFiles', query: { pk: this.pk }}">
+                         "Add Files"
+                       </b-link>
+                     </span>
+                      <CollectionThumbnails
+                          v-if="this.collection.sample_set.length > 0"
+                          :pk="this.$route.query.pk"
+                          :samples="collection.sample_set"
+                      ></CollectionThumbnails>
+                    </span>
                 </b-col>
                 <b-col class="content-box" md="5">
                     <CollectionDetails></CollectionDetails>
@@ -38,6 +54,7 @@ import router from '../router';
 import PageNavigation from '@/components/PageNavigation.vue';
 import CollectionThumbnails from '@/components/collections/CollectionThumbnails.vue';
 import CollectionDetails from '@/components/collections/CollectionDetails.vue';
+import CollectionApi from '@/services/apiV1/CollectionManager'
 
 export default {
     name: 'Collection',
@@ -50,6 +67,24 @@ export default {
       pk: {
         //Pk of the collection to show
         required: true
+      }
+    },
+    data(){
+      return {
+        collection: {}
+      }
+    },
+    mounted: function(){
+      CollectionApi.getCollection(this.pk)
+      .then((data) => {
+        this.collection = data
+        console.log(this.collection)
+      })
+    },
+    computed:{
+      hasSamples(){
+        return !(this.collection.sample_set === undefined
+                || this.collection.sample_set == 0)
       }
     },
     methods: {

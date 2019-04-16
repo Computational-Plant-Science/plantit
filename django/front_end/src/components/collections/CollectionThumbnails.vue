@@ -13,6 +13,7 @@
         </div>
 
         <b-pagination
+            v-if="samples.length > this.perPage"
             v-model="currentPage"
             :total-rows="rows"
             :per-page="perPage"
@@ -29,27 +30,12 @@ import router from '@/router';
 export default {
     name: 'CollectionThumbnails',
     components: {},
-    props: ['pk'],
+    props: ['pk','samples'],
     methods: {},
     data() {
         return {
             perPage: 10,
             currentPage: 1,
-            samples: [
-                { name: 'Sample 1', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 2', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 3', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 4', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 5', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 6', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 7', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 8', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 9', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 10', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 11', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 12', thumbnail: require('../../assets/logo.png') },
-                { name: 'Sample 13', thumbnail: require('../../assets/logo.png') }
-            ]
         };
     },
     computed: {
