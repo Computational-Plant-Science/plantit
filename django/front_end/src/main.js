@@ -9,9 +9,6 @@ import Axios from 'axios'
 Axios.defaults.xsrfCookieName = 'csrftoken'
 Axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
 
-// Make axios avilable in all vue components as this.$http
-Vue.prototype.$http = Axios;
-
 Vue.config.productionTip = false;
 
 new Vue({

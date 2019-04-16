@@ -8,11 +8,22 @@ class SampleSerializer(serializers.ModelSerializer):
 
 
 class CollectionSerializer(serializers.HyperlinkedModelSerializer):
-    sample_set = SampleSerializer(many=True)
+    sample_set = SampleSerializer(many=True, required=False)
 
     class Meta:
         model = Collection
         fields = ('pk', 'storage_type','base_file_path', 'name', 'description', 'sample_set')
+
+    def create(self, validated_data):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+
+        collection = Collection(**validated_data,user=user)
+        collection.save()
+
+        return collection
 
     def update(self, collection, validated_data):
         print("Request to update collection with: %s"%(validated_data))

@@ -22,7 +22,7 @@ def storage_types(request):
     """
 
     context = {
-        "Storage Types" : list(registrar.list.keys()),
+        "storage_types" : list(registrar.list.keys()),
     }
 
     return JsonResponse(context)

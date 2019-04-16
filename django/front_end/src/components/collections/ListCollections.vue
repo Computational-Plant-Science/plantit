@@ -74,6 +74,7 @@
 
 <script>
 import router from '@/router';
+import CollectionApi from '@/services/apiV1/CollectionManager'
 
 export default {
     name: 'ListCollections',
@@ -106,24 +107,16 @@ export default {
                     label: ''
                 },
                 {
-                    key: 'date',
-                    label: 'Created',
-                    sortable: true
-                },
-                {
                     key: 'pinned',
                     sortable: true
                 }
             ],
-            items: [
-                { name: 'test', pinned: true, date: 2, pk: 1 },
-                { name: 'testa', pinned: true, date: 122, pk: 2 },
-                { name: 'testga', pinned: false, date: 112, pk: 3 },
-                { name: 'testd', pinned: false, date: 132, pk: 4 },
-                { name: 'tesat', pinned: false, date: 1, pk: 5 },
-                { name: 'te22st', pinned: false, date: 11, pk: 6 }
-            ]
+            items: []
         };
+    },
+    mounted: function(){
+      CollectionApi.getCollectionList()
+      .then((list) => { this.items = list })
     }
 };
 </script>
