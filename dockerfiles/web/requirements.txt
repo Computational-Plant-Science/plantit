@@ -3,6 +3,7 @@ psycopg2-binary
 
 #django rest framework requirements
 djangorestframework
+
 markdown       # Markdown support for the browsable API.
 django-filter  # Filtering support
 
@@ -12,18 +13,8 @@ Celery   #job queue support
 django-encrypted-model-fields
 docutils
 django-model-utils # InheritanceManager used for Tasks
-humanize # for formatting values in file manager
-Sphinx # for documentation support
+humanize           # for formatting values in file manager
+Sphinx             # for documentation support
 python-irodsclient
 
-#For automatic sass compiling
-libsass
-django-compressor
-
 django-imagekit #image caching/manipulation
-
-#For dirt2 workflow
-numpy
-mahotas
-scipy
-imageio
