@@ -1,14 +1,24 @@
 <template>
     <div>
-        <div class="d-flex flex-wrap">
+        <div id="grid-container">
             <div
                 id="thumbnails"
                 class="p-2 thumbnail"
                 v-for="sample in displayedSamples"
             >
-                <b-img :src="sample.thumbnail" width="100px"></b-img>
+                <b-img
+                  v-if="sample.thumbnail"
+                  :src="sample.thumbnail"
+                  width="100px"
+                  v-b-tooltip.hover
+                  :title="sample.name">
+                </b-img>
+                <b-spinner
+                  v-else
+                  v-b-tooltip.hover
+                  :title="sample.name">
+                </b-spinner>
                 <br />
-                {{ sample.name }}
             </div>
         </div>
 
@@ -34,7 +44,7 @@ export default {
     methods: {},
     data() {
         return {
-            perPage: 10,
+            perPage: 20,
             currentPage: 1,
         };
     },
@@ -52,8 +62,13 @@ export default {
 };
 </script>
 
-<style scoped>
-.thumbnail {
-    text-align: center;
-}
+<style scoped lang="sass">
+.thumbnail
+    text-align: center
+
+#grid-container
+  display: grid
+  grid-template-columns: repeat( auto-fit, minmax(125px, 1fr) )
+  justify-items: center
+
 </style>
