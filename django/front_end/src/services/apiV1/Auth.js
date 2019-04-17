@@ -1,4 +1,5 @@
 import axios from 'axios'
+import Cookies from 'js-cookie'
 
 export default {
    login(username, password) {
@@ -27,12 +28,22 @@ export default {
      * Logout the current session.
      *
      * Returns:
-     *    Axios promise containing the server response 
+     *    Axios promise containing the server response
      **/
     return axios.get("/apis/v1/auth/logout/")
     .then((response) => { return response })
     .catch(function (error) {
       console.log(error);
     })
+  },
+
+  getCSRFToken(){
+    /**
+     * Get the current CSRF Token for this session
+     *
+     * Returns:
+     *     CSRF Toekn as a string
+     **/
+    return Cookies.get(axios.defaults.xsrfCookieName)
   }
 }

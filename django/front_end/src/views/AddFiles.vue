@@ -7,6 +7,11 @@
             >
                 Add Selected
             </b-button>
+            <b-button
+              @click="$router.push({name: 'collection', query: { pk: pk }})"
+            >
+                Cancel
+            </b-button>
         </template>
       </PageNavigation>
 
@@ -35,7 +40,7 @@
                 :borderless="true"
                 :striped="false"
                 :fields="table.fields"
-                style="overflow-y: scroll"
+                style="overflow-y: scroll;"
             >
           </b-table>
           </b-col>

@@ -3,9 +3,8 @@
   <div>
     <button @click="$refs['uploadModal'].show()">Upload Files</i></button>
 
-    <b-modal ref="uploadModal">
-      Upload your files here <br/>
-      (someday, we are still in alpha after all...)
+    <b-modal size="xl" ref="uploadModal">
+      <FileUpload @fileUploaded="fileUploaded"></FileUpload>
     </b-modal>
 
     <v-jstree
@@ -24,11 +23,14 @@
 
 <script>
 import VJstree from "vue-jstree";
+import FileUpload from "./FileUpload"
 import FileManagerApi from '@/services/apiV1/FileManager'
+
 export default {
     name: 'BrowseFiles',
     components: {
       VJstree,
+      FileUpload
     },
     props: {
       selectedFiles:{
@@ -55,11 +57,24 @@ export default {
     },
     methods:{
       loadTreeDataAsync(oriNode, resolve){
-        let path = (oriNode.data.path ? oriNode.data.path : this.basePath)
-        FileManagerApi.listDir(path,this.storageType)
+        let path = (oriNode.data.path ? oriNode.data.path : '')
+        FileManagerApi.listDirBase(this.basePath,path,this.storageType)
         .then((data) => {
           resolve(data)}
         )
+      },
+      fileUploaded(files){
+        files.forEach(file => {
+         this.treeData.push(
+           this.$refs.tree.initializeDataItem({
+             text: file,
+             size: 0,
+             path: file,
+             isLeaf: true,
+             icon: "far fa-file"
+           })
+         );
+       });
       },
       changed(node, item, e){
         let set = (item) => {

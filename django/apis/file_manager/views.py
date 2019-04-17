@@ -1,4 +1,3 @@
-import humanize
 import json
 import posixpath
 
@@ -54,7 +53,7 @@ def folder(request):
     sizes = []
 
     for file in files:
-        sizes.append( humanize.naturalsize(file_storage.size(file)) )
+        sizes.append( file_storage.size(file) )
 
     context = [
                 {
@@ -75,18 +74,22 @@ def folder(request):
     return JsonResponse(context,safe=False)
 
 @login_required
-def upload(request,storage_type):
+def upload(request):
     """
         ajax/upload
 
         Responds to ajax requests to uplaod files. Can handle mutiple
-        files at once. Requests must contain the 'pwd' POST variable populated
-        with the directory to store the uploaded files in.
+        files at once.
     """
+    if not 'path' in request.POST:
+        raise Http404("path required not in POST data")
 
-    file_storage = open_folder(storage_type,
-                               request.POST['pwd'],
-                                request.user)
+    if not 'storage_type' in request.POST:
+        raise Http404("storage_type required not in POST data")
+
+    file_storage = open_folder(request.POST['storage_type'],
+                               request.POST['path'],
+                               request.user)
 
     files = request.FILES.getlist('file')
 
