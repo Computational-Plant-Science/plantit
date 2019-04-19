@@ -52,7 +52,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'encrypted_model_fields',
     'plantit.apps.PlantITConfig',
-    'front_end.apps.FrontEndConfig'
+    'front_end.apps.FrontEndConfig',
+    'workflows.count_objects.django.app.WorkflowConfig',
+    'workflows.dirt2d.django.app.WorkflowConfig'
 ]
 
 MIDDLEWARE = [
@@ -70,7 +72,10 @@ ROOT_URLCONF = 'urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'front_end', 'dist'),],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'front_end', 'dist'),
+            os.path.join(BASE_DIR, 'templates') #<- This is temporary until cyverse login is implemented
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
