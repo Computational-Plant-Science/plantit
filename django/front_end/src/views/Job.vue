@@ -18,6 +18,7 @@
                     <b>Submission ID:</b> {{ job.submission_id }}<br />
                     <b>Work DIR:</b> {{ job.work_dir }}<br />
                     <b>Auth Token:</b> {{ job.auth_token }}<br />
+                    <b>Created:</b> {{job.date_created | format_date}}<br />
                 </b-col>
             </b-row>
             <b-row>
@@ -29,9 +30,9 @@
                     ></b-img>
                     <DiscreteProgress
                         style="padding: 20px 15% 10px 15%;"
-                        :tasks="tasks"
+                        :tasks="job.task_set"
                     ></DiscreteProgress>
-                    Current Status: {{ job.current_status }}
+                    Current Status: {{ current_status }}
                 </b-col>
             </b-row>
         </b-container>
@@ -41,6 +42,8 @@
 <script>
 import PageNavigation from '@/components/PageNavigation.vue';
 import DiscreteProgress from '@/components/DiscreteProgress.vue';
+import JobApi from '@/services/apiV1/JobManager.js'
+import moment from 'moment'
 
 export default {
     name: 'Job',
@@ -52,27 +55,35 @@ export default {
         return {
             job: {
                 pk: this.$route.query.pk,
-                collection: 'Test Collection',
-                current_status: 'Running',
+                collection: 'NULL',
+                current_status: 'NULL',
                 submission_id: 'NULL',
                 work_dir: 'NULL',
-                auth_token: 'NULL'
+                auth_token: 'NULL',
+                task_set: [],
+                status_set: []
             },
-            tasks: [
-                {
-                    name: 'Task 1',
-                    complete: true
-                },
-                {
-                    name: 'Task 2',
-                    complete: true
-                },
-                {
-                    name: 'Task 3',
-                    complete: false
-                }
-            ]
         };
+    },
+    mounted: function(){
+      JobApi.getJob(this.job.pk)
+      .then((data) => {
+        this.job = data
+      })
+    },
+    computed:{
+      current_status(){
+        if (this.job.status_set.length > 0) {
+          return this.job.status_set[0].description
+        }else{
+          return ''
+        }
+      }
+    },
+    filters: {
+      format_date(value){
+        return moment(value).format('MM/DD/YY hh:mm')
+      }
     }
 };
 </script>

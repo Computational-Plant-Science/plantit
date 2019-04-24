@@ -38,9 +38,12 @@
             >
                 <template slot="tasks" slot-scope="data">
                   <DiscreteProgress
-                    :tasks="data.item.tasks"
+                    :tasks="data.item.task_set"
                     :show-name="false"
                   ></DiscreteProgress>
+                </template>
+                <template slot='date_created' slot-scope="data">
+                  {{ data.item.date | format_date }}
                 </template>
                 <template slot="pinned" slot-scope="data">
                   <b-button
@@ -71,11 +74,13 @@
 <script>
 import router from '../router';
 import DiscreteProgress from './DiscreteProgress.vue'
+import JobApi from '@/services/apiV1/JobManager.js'
+import moment from 'moment'
 
 export default {
     name: 'ListJobs',
     components: {
-      DiscreteProgress
+      DiscreteProgress,
     },
     props: {
         perPage: {
@@ -103,10 +108,10 @@ export default {
                 {
                     key: 'tasks',
                     label: 'Progress',
-                    sortable: true
+                    sortable: false
                 },
                 {
-                    key: 'date',
+                    key: 'date_created',
                     sortable: true
                 },
                 {
@@ -114,93 +119,17 @@ export default {
                     sortable: true
                 }
             ],
-            items: [
-                {
-                    collection: 'test',
-                    status: 'Failed',
-                    pinned: true,
-                    date: 12,
-                    pk: 1,
-                    tasks: [
-                        {
-                            name: 'Task 1',
-                            complete: true
-                        },
-                        {
-                            name: 'Task 2',
-                            complete: true
-                        },
-                        {
-                            name: 'Task 3',
-                            complete: false
-                        }
-                    ]
-                },
-                {
-                    collection: 'test1',
-                    status: 'Failed',
-                    pinned: false,
-                    date: 12,
-                    pk: 2,
-                    tasks: [
-                        {
-                            name: 'Task 1',
-                            complete: true
-                        },
-                        {
-                            name: 'Task 2',
-                            complete: false
-                        },
-                        {
-                            name: 'Task 3',
-                            complete: false
-                        }
-                    ]
-                },
-                {
-                    collection: 'test3',
-                    status: 'Failed',
-                    pinned: false,
-                    date: 13,
-                    pk: 3,
-                    tasks: [
-                        {
-                            name: 'Task 1',
-                            complete: true
-                        },
-                        {
-                            name: 'Task 2',
-                            complete: true
-                        },
-                        {
-                            name: 'Task 3',
-                            complete: false
-                        }
-                    ]
-                },
-                {
-                    collection: 'tes3t',
-                    status: 'Failed',
-                    pinned: false,
-                    date: 11,
-                    pk: 4,
-                    tasks: [
-                        {
-                            name: 'Task 1',
-                            complete: false
-                        },
-                        {
-                            name: 'Task 2',
-                            complete: false
-                        },
-                        {
-                            name: 'Task 3',
-                            complete: false
-                        }
-                    ]
-                }
-            ]
+            items: []
         };
+    },
+    mounted: function(){
+      JobApi.getJobList()
+      .then((list) => { this.items = list })
+    },
+    filters:{
+      format_date(value){
+        return moment(value).format('MM/DD/YY hh:mm')
+      }
     }
 };
 </script>
