@@ -37,7 +37,7 @@
                 <b-img :src="workflow.icon_url"></b-img>
               </div>
               <div class="workflow-text">
-                <b-link :to="{name: 'submit_workflow', query: { job_pk: pk, workflow_pk: workflow.pk }}"> {{workflow.name}} </b-link>
+                <b-link :to="{name: 'submit_workflow', query: { collection_pk: pk, workflow_name: workflow.app_name }}"> {{workflow.name}} </b-link>
                 <hr>
                 {{workflow.description}}
               </div>
@@ -47,7 +47,8 @@
 </template>
 
 <script>
-import PageNavigation from '@/components/PageNavigation.vue';
+import PageNavigation from '@/components/PageNavigation';
+import WorkflowAPI from '@/services/apiV1/WorkflowManager'
 
 export default {
     name: 'Analyze',
@@ -66,33 +67,13 @@ export default {
         filter_query: "",
 
         //Available workflows.
-        workflows:[
-          {
-            name: "DIRT2D",
-            description: "A cool description",
-            icon_url: require('../assets/logo.png'),
-            pk: 1
-          },
-          {
-            name: "Workflow 2",
-            description: "A cool description",
-            icon_url: require('../assets/logo.png'),
-            pk: 2
-          },
-          {
-            name: "Workflow 3",
-            description: "A cool and very long description that tests how well the text wwraps",
-            icon_url: require('../assets/logo.png'),
-            pk: 3
-          },
-          {
-            name: "Workflow 4",
-            description: "A cool, but different, description",
-            icon_url: require('../assets/logo.png'),
-            pk: 4
-          }
-        ]
+        workflows:[]
       }
+    },
+    mounted: function(){
+      WorkflowAPI.getWorkflows().then((workflows) =>{
+        this.workflows = workflows
+      })
     },
     computed:{
       filter_text: function(){

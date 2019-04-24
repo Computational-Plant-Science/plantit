@@ -1,12 +1,32 @@
 import json
 
-from ..job_manager.remote import UploadCollectionTask, SubmissionTask
+from ..job_manager.remote import UploadCollectionTask, SubmissionTask, Cluster
 from .tasks import DownloadResultsTask
+from ..collection.models import Collection
+from ..job_manager.job import Job, Status
 
 class Workflow:
+    @classmethod
+    def default_params(cls):
+        clusters = Cluster.objects.all()
+
+        param_group = {
+            "id": "submission_settings",
+            "name": "Submission Settings",
+            "params": [{
+                "id": "cluster",
+                "type": "select",
+                "initial": clusters.first().name,
+                "options": [cluster.name for cluster in clusters],
+                "name": "Cluster",
+                "description": "Compute cluster to run the analysis on."
+            }]
+        }
+
+        return param_group
 
     @classmethod
-    def add_tasks(cls,job,cluster,form,app_name):
+    def add_tasks(cls,job,cluster,params,app_name):
         '''
             Adds the tasks required to perform the analysis
 
@@ -30,7 +50,7 @@ class Workflow:
         submit_task = SubmissionTask(name="Analysis",
                         description="Starts the analysis on the cluster",
                         app_name=app_name,
-                        parameters=json.dumps(form.get_grouped_data(), default= lambda o: str(o)),
+                        parameters=json.dumps(params),
                         order_pos=20,
                         job=job,
                         cluster=cluster)
@@ -43,3 +63,33 @@ class Workflow:
                             cluster=cluster,
                             order_pos=30)
         download_task.save()
+
+
+    @classmethod
+    def submit(cls,user,workflow,collection_pk,params):
+        '''
+            Submit a workflow for analysis
+
+            Args:
+                user: django user doing the analysis
+                workflow (str): app_name of workflow
+                collection_pk (int): pk of collection to analyze
+                params (dict): workflow parameter settings
+        '''
+
+        cluster = Cluster.objects.get(name = params['submission_settings']['cluster'])
+        collection = Collection.objects.get(pk = collection_pk)
+
+        job = Job(collection = collection,
+                  user = user)
+        job.save()
+        job.status_set.create(description="Created")
+
+        try:
+            cls.add_tasks(job, cluster, params, workflow)
+            job.status_set.create(state=Status.OK,description="Submitted")
+            Job.run_next(job.pk)
+        except Exception as e:
+            job.delete()
+            #TODO: Do something here to indicate to the user the job failed.
+            raise e

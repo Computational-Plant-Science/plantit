@@ -78,7 +78,7 @@ export default new Router({
             name: 'submit_workflow',
             component: () =>
                 import(/* webpackChunkName: "about" */ './views/SubmitWorkflow.vue'),
-            props: (route) => ({ job_pk: route.query.job_pk, workflow_pk: route.query.workflow_pk})
+            props: (route) => ({ collection_pk: route.query.collection_pk, workflow_name: route.query.workflow_name})
         },
         {
             path: '/login',

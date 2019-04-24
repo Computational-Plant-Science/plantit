@@ -12,6 +12,7 @@ router.register('collections', CollectionViewSet)
 urlpatterns = [
     url('', include(router.urls)),
     url('files/', include("apis.file_manager.urls")),
+    url('workflows/', include("apis.workflows.urls")),
     url('auth/login/', login_view),
     url('auth/logout/', logout_view)
 ]
