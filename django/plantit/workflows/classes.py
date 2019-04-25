@@ -77,7 +77,7 @@ class Workflow:
                 params (dict): workflow parameter settings
         '''
 
-        cluster = Cluster.objects.get(name = params['submission_settings']['cluster'])
+        cluster = Cluster.objects.get(name = params['submission_settings']['params']['cluster'])
         collection = Collection.objects.get(pk = collection_pk)
 
         job = Job(collection = collection,
@@ -88,8 +88,10 @@ class Workflow:
         try:
             cls.add_tasks(job, cluster, params, workflow)
             job.status_set.create(state=Status.OK,description="Submitted")
-            Job.run_next(job.pk)
+            #Job.run_next(job.pk)
         except Exception as e:
             job.delete()
             #TODO: Do something here to indicate to the user the job failed.
             raise e
+
+        return job.pk

@@ -37,6 +37,6 @@ def submit(request,workflow,pk):
     params = json.loads(request.body.decode('utf-8'))
     print(params)
 
-    Workflow.submit(request.user,workflow,pk,params)
+    job_id = Workflow.submit(request.user,workflow,pk,params)
 
-    return JsonResponse({"parameters": "ok"})
+    return JsonResponse({"job_id": job_id})

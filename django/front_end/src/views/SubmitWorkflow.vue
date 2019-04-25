@@ -73,7 +73,15 @@ export default {
         evt.preventDefault()
         WorkflowAPI.submitJob(this.workflow_name,this.collection_pk,this.values)
           .then((result) => {
-            router.push({name: 'job', query: { pk: this.collection_pk }})
+            if(result.status == 200){
+              router.push({name: 'job', query: { pk: result.data.job_id}})
+            }else{
+              //TODO: Replace this with something to alerts the user.
+              console.log("Submission Failed:" + result)
+            }
+          }).catch((error) =>{
+            //TODO: Replace this with something to alerts the user.
+            console.log("Submission Failed:" + error)
           })
       }
     }

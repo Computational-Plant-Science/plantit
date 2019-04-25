@@ -9,12 +9,12 @@
           class="p-2"
           v-for="field in group.params"
           :field="field"
-          @onChange="changed"
+          @onChange="fieldChanged"
           >
         </FormField>
       </div>
 
-      <FormGroup @onChange="changed" v-for="subgroup in group.groups" :group="subgroup"></FormGroup>
+      <FormGroup @onChange="groupChanged" v-for="subgroup in group.groups" :group="subgroup"></FormGroup>
   </div>
 </template>
 
@@ -28,12 +28,21 @@ export default {
     props: ['group'],
     data: function(){
       return {
-        values: {}
+        values: {
+          'params': {},
+          'groups': {}
+        }
       }
     },
     methods:{
-      changed(field,value){
-        this.values[field] = value
+      fieldChanged(field,value){
+        //Update paramater value
+        this.values['params'][field] = value
+        this.$emit('onChange',this.group.id,this.values)
+      },
+      groupChanged(group,value){
+        //Update values of subgroup
+        this.values['groups'][group] = value
         this.$emit('onChange',this.group.id,this.values)
       }
     }

@@ -13,9 +13,10 @@ export default {
      * Returns:
      *    Axios promise containing the server response
      **/
+     console.log("Token: " + this.getCSRFToken())
     return axios.post("/apis/v1/auth/login/", {
       username: username,
-      password: password
+      password: password,
     })
     .then((response) => {return response})
     .catch(function (error) {

@@ -43,7 +43,7 @@
                   ></DiscreteProgress>
                 </template>
                 <template slot='date_created' slot-scope="data">
-                  {{ data.item.date | format_date }}
+                  {{ data.item.date_created | format_date }}
                 </template>
                 <template slot="pinned" slot-scope="data">
                   <b-button

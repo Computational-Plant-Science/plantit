@@ -17,17 +17,27 @@
                     <b>Current Status:</b> {{ job.current_status }}<br />
                     <b>Submission ID:</b> {{ job.submission_id }}<br />
                     <b>Work DIR:</b> {{ job.work_dir }}<br />
-                    <b>Auth Token:</b> {{ job.auth_token }}<br />
                     <b>Created:</b> {{job.date_created | format_date}}<br />
                 </b-col>
             </b-row>
             <b-row>
                 <b-col class="content-box text-center p-5">
                     <b-img
+                        v-if="job.results_file == null"
                         :src="require('../assets/PlantITLoading.gif')"
                         width="250%"
                         alt="Plant IT"
                     ></b-img>
+                    <b-link
+                      v-else
+                      :href="job.results_file"
+                    >
+                      <b-img
+                          :src="require('../assets/icons/download.png')"
+                          width="250%"
+                          alt="Download"
+                      ></b-img>
+                    </b-link>
                     <DiscreteProgress
                         style="padding: 20px 15% 10px 15%;"
                         :tasks="job.task_set"

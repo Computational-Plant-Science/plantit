@@ -51,9 +51,6 @@ export default {
    console.log(params)
    return axios.post(`/apis/v1/workflows/${workflow}/submit/${pk}/`, params)
    .then((response) => {return response})
-   .catch(function (error) {
-     console.log("Error: " + error);
-   })
  }
 
 }

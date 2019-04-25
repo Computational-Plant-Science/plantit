@@ -18,10 +18,12 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
     status_set = StatusSerializer(many=True)
     task_set = TaskSerializer(many=True)
     collection = serializers.StringRelatedField()
-    
+
     class Meta:
         model = Job
-        fields = ('pk', 'collection', 'date_created','submission_id', 'remote_results_path', 'results_file', 'task_set',  'status_set')
+        fields = ('pk', 'collection',  'date_created', 'work_dir',
+                  'submission_id', 'remote_results_path', 'results_file',
+                  'task_set',  'status_set')
 
     def create(self, validated_data):
         status_data = validated_data.pop('status_set')

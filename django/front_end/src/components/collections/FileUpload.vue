@@ -61,7 +61,7 @@
         :multiple="true"
         :headers="headers"
         postAction="/apis/v1/files/upload/"
-        :data="{storage_type: 'local', path: 'files/'}"
+        :data="{storage_type: storageType, path: path}"
         ref="upload"
         @input-file="inputFile">
           Add Files
@@ -83,7 +83,7 @@ export default {
     components:{
       VueUpload
     },
-
+    props: ['storageType', 'path'],
     data(){
       return {
         files: [],

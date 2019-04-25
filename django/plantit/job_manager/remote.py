@@ -208,7 +208,7 @@ class SubmissionTask(SSHTaskMixin, Task):
         config = registrar.list[self.app_name]
 
         params = {
-            "server_url": "http://web/jobs/api/",
+            "server_url": "http://web/apis/v1/",
             "job_pk": self.job.pk,
             "auth_token": self.job.auth_token,
             "task_pk": self.pk,

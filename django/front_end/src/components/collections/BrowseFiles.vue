@@ -4,7 +4,7 @@
     <button @click="$refs['uploadModal'].show()">Upload Files</i></button>
 
     <b-modal size="xl" ref="uploadModal">
-      <FileUpload @fileUploaded="fileUploaded"></FileUpload>
+      <FileUpload @fileUploaded="fileUploaded" :storageType="storageType" :path="basePath"></FileUpload>
     </b-modal>
 
     <v-jstree
