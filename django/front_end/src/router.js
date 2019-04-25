@@ -116,6 +116,11 @@ let router = new Router({
             meta:{
               requiresAuth: true
             }
+        },
+        {
+          path: "*",
+          component: () =>
+              import(/* webpackChunkName: "about" */ './views/PageNotFound.vue'),
         }
     ]
 });
