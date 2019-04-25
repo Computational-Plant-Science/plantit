@@ -55,12 +55,12 @@
                     <b-img
                       v-if="data.item.pinned"
                       @click="data.item.pinned = true"
-                      :src="require('@/assets/pin icons/pin2.svg')"
+                      :src="require('@/assets/icons/pin icons/pin2.svg')"
                       width="30px">
                     </b-img>
                     <b-img
                       v-else
-                      :src="require('@/assets/pin icons/pin.svg')"
+                      :src="require('@/assets/icons/pin icons/pin.svg')"
                       @click="data.item.pinned = false"
                       width="30px">
                     </b-img>
