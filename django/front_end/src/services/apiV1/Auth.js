@@ -38,6 +38,24 @@ export default {
     })
   },
 
+  isLoggedIn() {
+    /**
+     * Check if user is logged in.
+     *
+     * Warning:
+     *    This is not a secure way to be sure the user is logged in.
+     *    It should only be used to decide if to show/request data that
+     *    requires authenication to access.
+     *
+     * Returns (bool):
+     *    true if user is logged in, false otherwise.
+     **/
+
+    //The plant IT object is set by django's template system.
+    // You can find the definition in public/index.html
+    return plantIT.is_authenticated
+  },
+
   getCSRFToken(){
     /**
      * Get the current CSRF Token for this session

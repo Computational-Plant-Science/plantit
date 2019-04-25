@@ -1,10 +1,11 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import Home from './views/Home.vue';
+import Auth from '@/services/apiV1/Auth.js'
 
 Vue.use(Router);
 
-export default new Router({
+let router = new Router({
     mode: 'history',
     base: process.env.BASE_URL,
     routes: [
@@ -26,65 +27,112 @@ export default new Router({
             path: '/user/jobs',
             name: 'jobs',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/Jobs.vue')
+                import(/* webpackChunkName: "about" */ './views/Jobs.vue'),
+            meta:{
+              requiresAuth: true
+            }
         },
         {
             path: '/user/job',
             name: 'job',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/Job.vue')
+                import(/* webpackChunkName: "about" */ './views/Job.vue'),
+            meta:{
+              requiresAuth: true
+            }
         },
         {
             path: '/user/dashboard',
             name: 'dashboard',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/Dashboard.vue')
+                import(/* webpackChunkName: "about" */ './views/Dashboard.vue'),
+            meta:{
+              requiresAuth: true
+            }
         },
         {
             path: '/user/collections',
             name: 'collections',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/Collections.vue')
+                import(/* webpackChunkName: "about" */ './views/Collections.vue'),
+            meta:{
+              requiresAuth: true
+            }
         },
         {
             path: '/user/collection',
             name: 'collection',
             component: () =>
                 import(/* webpackChunkName: "about" */ './views/Collection.vue'),
-            props: (route) => ({ pk: route.query.pk})
+            props: (route) => ({ pk: route.query.pk}),
+            meta:{
+              requiresAuth: true
+            }
         },
         {
             path: '/user/collection/new',
             name: 'newCollection',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/NewCollection.vue')
+                import(/* webpackChunkName: "about" */ './views/NewCollection.vue'),
+            meta:{
+              requiresAuth: true
+            }
         },
         {
           path: '/user/collection/add',
           name: 'addFiles',
           component: () =>
               import(/* webpackChunkName: "about" */ './views/AddFiles.vue'),
-          props: (route) => ({ pk: parseInt(route.query.pk) })
+          props: (route) => ({ pk: parseInt(route.query.pk) }),
+          meta:{
+            requiresAuth: true
+          }
         },
         {
             path: '/user/workflow/choose',
             name: 'analyze',
             component: () =>
                 import(/* webpackChunkName: "about" */ './views/Analyze.vue'),
-            props: (route) => ({ pk: route.query.pk })
+            props: (route) => ({ pk: route.query.pk }),
+            meta:{
+              requiresAuth: true
+            }
         },
         {
             path: '/user/workflow/submit',
             name: 'submit_workflow',
             component: () =>
                 import(/* webpackChunkName: "about" */ './views/SubmitWorkflow.vue'),
-            props: (route) => ({ collection_pk: route.query.collection_pk, workflow_name: route.query.workflow_name})
+            props: (route) => ({ collection_pk: route.query.collection_pk, workflow_name: route.query.workflow_name}),
+            meta:{
+              requiresAuth: true
+            }
         },
         {
             path: '/login',
             name: 'login',
             component: () =>
                 import(/* webpackChunkName: "about" */ './views/Login.vue'),
+            meta:{
+              requiresAuth: true
+            }
         }
     ]
 });
+
+router.beforeEach((to, from, next) => {
+  if(to.matched.some(record => record.meta.requiresAuth)) {
+    console.log(Auth.isLoggedIn())
+    if(! Auth.isLoggedIn()){
+      window.location = '/accounts/login/?next=' + to.fullPath
+    }else{
+      //User is logged in
+      next()
+    }
+  }else{
+    //No Auth required
+    next()
+  }
+})
+
+export default router
