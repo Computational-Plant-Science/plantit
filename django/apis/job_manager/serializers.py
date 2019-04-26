@@ -64,7 +64,3 @@ class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMetho
     def get_task_set(self, instance):
         status = instance.task_set.all().order_by('-order_pos')
         return TaskSerializer(status, many=True).data
-
-    def get_queryset(self):
-        user = self.request.user
-        return Job.objects.filter(user=user)

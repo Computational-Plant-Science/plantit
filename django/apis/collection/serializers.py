@@ -38,7 +38,3 @@ class CollectionSerializer(serializers.HyperlinkedModelSerializer,  PinnedSerili
         super().update(collection, validated_data)
 
         return collection
-
-    def get_queryset(self):
-        user = self.request.user
-        return Collection.objects.filter(user=user)

@@ -12,3 +12,7 @@ class CollectionViewSet(viewsets.ModelViewSet, PinViewMixin):
 
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(user=user)

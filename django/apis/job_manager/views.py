@@ -13,3 +13,7 @@ class JobViewSet(viewsets.ModelViewSet, PinViewMixin):
 
     queryset = Job.objects.all()
     serializer_class = JobSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(user=user)
