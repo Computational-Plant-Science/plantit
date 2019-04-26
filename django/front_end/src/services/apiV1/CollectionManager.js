@@ -31,6 +31,31 @@ export default {
     })
   },
 
+  pin(pk,pinned){
+    /**
+     * Pin or unpin the job to the user profile
+     *
+     * Args:
+     *    pk (int): job pk
+     *    pinned (bool): pinned state
+     *
+     * Requirements:
+     *    User must be logged in
+     *
+     * Returns:
+     *    Promise returning True if the pin was sucessfully added,
+     *    False otherwise
+     **/
+     let url = (pinned ? `/apis/v1/collections/${pk}/pin/` : `/apis/v1/collections/${pk}/unpin/`)
+     return axios.post(url)
+      .then((response) => {
+        return response.status == 200
+      }).catch(error => {
+        console.log(error)
+        return false
+      })
+  },
+
   getCollectionList(){
     /**
      * Get a list of collections for the current user.

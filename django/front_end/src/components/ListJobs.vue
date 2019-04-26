@@ -48,20 +48,16 @@
                 <template slot="pinned" slot-scope="data">
                   <b-button
                       size="sm"
-                      @click="
-                          data.item.pinned = data.item.pinned ? false : true
-                      "
+                      @click="togglePin(data.item.pk,data.item)"
                   >
                     <b-img
                       v-if="data.item.pinned"
-                      @click="data.item.pinned = true"
                       :src="require('@/assets/icons/pin icons/pin2.svg')"
                       width="30px">
                     </b-img>
                     <b-img
                       v-else
                       :src="require('@/assets/icons/pin icons/pin.svg')"
-                      @click="data.item.pinned = false"
                       width="30px">
                     </b-img>
                   </b-button>
@@ -93,6 +89,13 @@ export default {
     methods: {
         rowSelected: function(items) {
             router.push({ path: 'job', query: { pk: items[0].pk } });
+        },
+        togglePin(pk, item){
+          JobApi.pin(pk,!item.pinned).then(success =>{
+              if(success){
+                item.pinned = !item.pinned
+              }
+          })
         }
     },
     data() {

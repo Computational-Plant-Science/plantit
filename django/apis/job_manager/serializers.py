@@ -1,12 +1,12 @@
 from plantit.job_manager.job import Job, Status, Task
 from rest_framework import serializers
 
+from ..mixins import PinnedSerilizerMethodMixin
 
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Status
         fields = ('state', 'date', 'description' )
-
 
 class TaskSerializer(serializers.ModelSerializer):
     pk = serializers.IntegerField()
@@ -15,14 +15,15 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('pk','complete',)
 
-class JobSerializer(serializers.HyperlinkedModelSerializer):
+class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMethodMixin):
     status_set = serializers.SerializerMethodField()
     task_set = serializers.SerializerMethodField()
     collection = serializers.StringRelatedField()
+    pinned = serializers.SerializerMethodField('pinnedByUser', source='profile_pins')
 
     class Meta:
         model = Job
-        fields = ('pk', 'collection',  'date_created', 'work_dir',
+        fields = ('pinned', 'pk', 'collection',  'date_created', 'work_dir',
                   'submission_id', 'remote_results_path', 'results_file',
                   'task_set',  'status_set')
 
@@ -63,3 +64,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
     def get_task_set(self, instance):
         status = instance.task_set.all().order_by('-order_pos')
         return TaskSerializer(status, many=True).data
+
+    def get_queryset(self):
+        user = self.request.user
+        return Job.objects.filter(user=user)

@@ -3,8 +3,9 @@ from .serializers import JobSerializer
 from plantit.job_manager.job import Job, Task
 from plantit.job_manager.authentication import JobTokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from ..mixins import PinViewMixin
 
-class JobViewSet(viewsets.ModelViewSet):
+class JobViewSet(viewsets.ModelViewSet, PinViewMixin):
     """
     API endpoint that allows users to be viewed or edited.
     """

@@ -1,5 +1,6 @@
 from plantit.collection.models import Collection, Sample
 from rest_framework import serializers
+from ..mixins import PinnedSerilizerMethodMixin
 
 class SampleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,12 +8,13 @@ class SampleSerializer(serializers.ModelSerializer):
         fields = ('name', 'path', 'thumbnail')
 
 
-class CollectionSerializer(serializers.HyperlinkedModelSerializer):
+class CollectionSerializer(serializers.HyperlinkedModelSerializer,  PinnedSerilizerMethodMixin):
     sample_set = SampleSerializer(many=True, required=False)
+    pinned = serializers.SerializerMethodField('pinnedByUser', source='profile_pins')
 
     class Meta:
         model = Collection
-        fields = ('pk', 'storage_type','base_file_path', 'name', 'description', 'sample_set')
+        fields = ('pinned', 'pk', 'storage_type','base_file_path', 'name', 'description', 'sample_set')
 
     def create(self, validated_data):
         user = None

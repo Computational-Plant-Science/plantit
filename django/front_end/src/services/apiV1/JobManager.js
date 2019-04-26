@@ -16,6 +16,31 @@ export default {
     .then((response) => { return response.data })
   },
 
+  pin(pk,pinned){
+    /**
+     * Pin or unpin the job to the user profile
+     *
+     * Args:
+     *    pk (int): job pk
+     *    pinned (bool): pinned state
+     *
+     * Requirements:
+     *    User must be logged in
+     *
+     * Returns:
+     *    Promise returning True if the pin was sucessfully added,
+     *    False otherwise
+     **/
+     let url = (pinned ? `/apis/v1/jobs/${pk}/pin/` : `/apis/v1/jobs/${pk}/unpin/`)
+     return axios.post(url)
+      .then((response) => {
+        return response.status == 200
+      }).catch(error => {
+        console.log(error)
+        return false
+      })
+  },
+
   getJob(pk){
     /**
      * Get a jobs.

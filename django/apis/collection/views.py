@@ -2,8 +2,9 @@ from rest_framework import viewsets
 from .serializers import CollectionSerializer
 from plantit.collection.models import Collection
 from rest_framework.permissions import IsAuthenticated
+from ..mixins import PinViewMixin
 
-class CollectionViewSet(viewsets.ModelViewSet):
+class CollectionViewSet(viewsets.ModelViewSet, PinViewMixin):
     """
     API endpoint that allows collections to be viewed and edited.
     """
