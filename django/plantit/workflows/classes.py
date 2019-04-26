@@ -88,7 +88,7 @@ class Workflow:
         try:
             cls.add_tasks(job, cluster, params, workflow)
             job.status_set.create(state=Status.OK,description="Submitted")
-            #Job.run_next(job.pk)
+            Job.run_next(job.pk)
         except Exception as e:
             job.delete()
             #TODO: Do something here to indicate to the user the job failed.

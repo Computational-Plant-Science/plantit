@@ -33,9 +33,7 @@ def parameters(request,workflow):
     return JsonResponse({"parameters": params})
 
 def submit(request,workflow,pk):
-    #Gropu paramaters
     params = json.loads(request.body.decode('utf-8'))
-    print(params)
 
     job_id = Workflow.submit(request.user,workflow,pk,params)
 
