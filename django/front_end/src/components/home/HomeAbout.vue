@@ -78,9 +78,19 @@ export default {
   a:hover
     text-decoration: underline
 
+@keyframes down-arrow-highlight
+  0%
+    color: $color-box-background
+  100%
+    color: $color-highlight
+
 #about-down-arrow
   position: absolute
   bottom: 0
   margin-left: -40px
+  animation-name: down-arrow-highlight
+  animation-duration: 2s
+  animation-iteration-count: infinite
+  animation-direction: alternate
 
 </style>
