@@ -7,6 +7,7 @@ class StatusSerializer(serializers.ModelSerializer):
         model = Status
         fields = ('state', 'date', 'description' )
 
+
 class TaskSerializer(serializers.ModelSerializer):
     pk = serializers.IntegerField()
 
@@ -15,8 +16,8 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = ('pk','complete',)
 
 class JobSerializer(serializers.HyperlinkedModelSerializer):
-    status_set = StatusSerializer(many=True)
-    task_set = TaskSerializer(many=True)
+    status_set = serializers.SerializerMethodField()
+    task_set = serializers.SerializerMethodField()
     collection = serializers.StringRelatedField()
 
     class Meta:
@@ -54,3 +55,11 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
 
         job.save()
         return job
+
+    def get_status_set(self, instance):
+        status = instance.status_set.all().order_by('-date')
+        return StatusSerializer(status, many=True).data
+
+    def get_task_set(self, instance):
+        status = instance.task_set.all().order_by('-order_pos')
+        return TaskSerializer(status, many=True).data
