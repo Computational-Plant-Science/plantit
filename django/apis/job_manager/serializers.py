@@ -62,5 +62,5 @@ class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMetho
         return StatusSerializer(status, many=True).data
 
     def get_task_set(self, instance):
-        status = instance.task_set.all().order_by('-order_pos')
+        status = instance.task_set.all().order_by('order_pos')
         return TaskSerializer(status, many=True).data
