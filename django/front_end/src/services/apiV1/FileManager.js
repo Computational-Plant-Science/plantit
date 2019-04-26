@@ -15,6 +15,15 @@ function pathJoin(parts){
    return parts.join('/').replace(replace, '/');
 }
 
+function removeBase(base,path){
+  base = base.split('/')
+  path = path.split('/')
+
+  newPath = path.filter(value => !base.includes(value))
+
+  return newPath.join('/')
+}
+
 export default {
    getStorageTypes() {
     /**
@@ -70,7 +79,6 @@ export default {
      *    dir (str): path of directory to list,
      *    storage_type (str): The storage system to access
      **/
-     console.log(pathJoin([basePath,dir]))
      return axios.get(`/apis/v1/files/lsdir/`,{
        params:{
          'path': pathJoin([basePath,dir]),
@@ -78,6 +86,9 @@ export default {
        }
      }).then((response) => {
        return response.data.map((item) => {
+         // //Make the base path follow the format sent by the back end server
+         // basePath = basePath.split('/')
+         //              .filter(value => value != "").join('/') + "/"
          item.path = item.path.replace(basePath,'')
          return item
        })

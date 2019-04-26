@@ -42,7 +42,7 @@ def folder(request):
     if not 'storage_type' in request.GET:
         raise Http404("storage_type required not in GET data")
 
-    path = request.GET['path'].lstrip("/")
+    path = request.GET['path']
     storage_type = request.GET['storage_type']
 
     file_storage = open_folder(storage_type,
