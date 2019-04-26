@@ -1,7 +1,7 @@
 <template>
     <div id="app">
         <b-container fluid>
-            <app-navigation></app-navigation>
+            <app-navigation v-if="$route.path != '/'"></app-navigation>
 
             <router-view></router-view>
         </b-container>

@@ -17,7 +17,20 @@
                     </b-jumbotron>
                 </b-col>
             </b-row>
+            <b-row>
+              <b-col>
+                <b-nav class="mx-auto " id="main-nav">
+                  <b-navbar toggleable="lg" class="mx-auto">
+                      <b-nav-item>Contact</b-nav-item>
+                      <b-nav-item>Datasets</b-nav-item>
+                      <b-nav-item>FAQ</b-nav-item>
+                      <b-nav-item href="/user/dashboard">Login</b-nav-item>
+                  </b-navbar>
+                </b-nav>
+            </b-col>
+            </b-row>
         </b-container>
+        <i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i>
     </div>
 </template>
 
@@ -28,19 +41,46 @@ export default {
 </script>
 
 <style scoped lang="sass">
+@import "@/scss/_colors.sass"
+
 #background
   background-image: url('../../assets/frontpage/index_bg.png')
   background-repeat: no-repeat
   background-position: bottom
   background-size: 100%
+  min-height: 100vh
+  white-space: nowrap
+  position: relative
+  text-align: center
 
 #main
   text-align: center
   padding-bottom: 50px
+  white-space: normal
 
 #message
-  width: 50%
-  background-color: gray
+  width: 60%
+  background-color: $color-box-background
   margin: 0 auto
   color: white
+
+#main-nav
+  width: 60%
+  background-color: $color-box-background
+  margin-top: 10px
+  margin-bottom: 75px
+  border-radius: 10px
+
+  a
+    color: $color-highlight
+    margin: 0 auto
+
+  a:hover
+    text-decoration: underline
+
+#about-down-arrow
+  position: absolute
+  bottom: 0
+  margin-left: -40px
+
 </style>
