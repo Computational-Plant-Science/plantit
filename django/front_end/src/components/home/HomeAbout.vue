@@ -30,7 +30,7 @@
             </b-col>
             </b-row>
         </b-container>
-        <i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i>
+        <a href="#home-about-researchers"><i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i></a>
     </div>
 </template>
 
