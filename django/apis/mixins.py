@@ -52,6 +52,10 @@ class PinnedSerilizerMethodMixin:
         '''
         request = self.context.get('request', None)
         if request is not None:
-            return obj.profile_pins.filter(user=request.user).first() is not None
+            if(request.user.is_anonymous):
+                #If data is being access via a token, no user info is available.
+                return "N/A: Request did not originate from a user."
+            else:
+                return obj.profile_pins.filter(user=request.user).first() is not None
         else:
-            raise PermissionDenied("Must be logged into access pinned data.")
+            raise PermissionDenied("Must be a request to access user data.")

@@ -15,5 +15,11 @@ class JobViewSet(viewsets.ModelViewSet, PinViewMixin):
     serializer_class = JobSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        return self.queryset.filter(user=user)
+        if(not self.request.user.is_anonymous):
+            user = self.request.user
+            return self.queryset.filter(user=user)
+        else:
+            # If no user info, return all jobs.
+            # This will happen if access the jobs via a token.
+            # TODO: restrict to job with given token.
+            return self.queryset

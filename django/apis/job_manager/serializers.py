@@ -16,14 +16,14 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = ('pk','complete',)
 
 class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMethodMixin):
-    status_set = serializers.SerializerMethodField()
-    task_set = serializers.SerializerMethodField()
+    status_set = StatusSerializer(many=True)
+    task_set = TaskSerializer(many=True)
     collection = serializers.StringRelatedField()
     pinned = serializers.SerializerMethodField('pinnedByUser', source='profile_pins')
 
     class Meta:
         model = Job
-        fields = ('pinned', 'pk', 'collection',  'date_created', 'work_dir',
+        fields = ('pk', 'pinned', 'collection',  'date_created', 'work_dir',
                   'submission_id', 'remote_results_path', 'results_file',
                   'task_set',  'status_set')
 
@@ -36,6 +36,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMetho
         return job
 
     def update(self, job, validated_data):
+        print(validated_data)
         if 'submission_id' in validated_data.keys():
             job.submission_id = validated_data['submission_id']
 
@@ -56,11 +57,3 @@ class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMetho
 
         job.save()
         return job
-
-    def get_status_set(self, instance):
-        status = instance.status_set.all().order_by('-date')
-        return StatusSerializer(status, many=True).data
-
-    def get_task_set(self, instance):
-        status = instance.task_set.all().order_by('order_pos')
-        return TaskSerializer(status, many=True).data

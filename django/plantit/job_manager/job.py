@@ -200,6 +200,9 @@ class Task(models.Model):
     complete = models.BooleanField(default=False)
     last_updated = models.DateTimeField(default=None,blank=True,null=True)
 
+    class Meta:
+        ordering = ['order_pos']
+
     def run(self):
         """
             Command called to run the task
@@ -236,6 +239,9 @@ class Status(models.Model):
     WARN       = 4 # Status update, warning: recoverable error
     CREATED    = 5 # Job was crated but not yet started
 
+    class Meta:
+        ordering = ['-date']
+        
     State = (
         (COMPLETED, 'Completed'),
         (FAILED, 'Failed'),
