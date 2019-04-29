@@ -8,6 +8,7 @@ django/front_end/node_modules
 django/front_end/dist
 db/**
 !db/.gitkeep
+django/workflows/
 
 # Documentation
 docs/build/*
