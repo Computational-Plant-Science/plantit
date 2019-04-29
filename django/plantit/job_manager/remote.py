@@ -17,6 +17,7 @@ from paramiko.ssh_exception import AuthenticationException
 from .job import Task, Job, Status
 from ..file_manager import permissions
 from ..workflows import registrar
+from django.conf import settings
 
 class Cluster(models.Model):
     """
@@ -208,7 +209,7 @@ class SubmissionTask(SSHTaskMixin, Task):
         config = registrar.list[self.app_name]
 
         params = {
-            "server_url": "http://web/apis/v1/",
+            "server_url": settings.API_URL,
             "job_pk": self.job.pk,
             "auth_token": self.job.auth_token,
             "task_pk": self.pk,

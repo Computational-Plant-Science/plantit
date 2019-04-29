@@ -1,51 +1,42 @@
+# Base docker-compose file.
+#
+# Usage:
+#  For Developer mode:
+#    docker-compose -f docker-compose.yml -f compose-dev.yml up
+#
+#  For Production mode:
+#    docker-compose -f docker-compose.yml -f compose-production.yml up
+#
 version: '3'
 
 services:
-  ## Production
-  db:
-    image: postgres
-
-  web:
-    build: ./dockerfiles/web
+  djangoapp:
+    build: ./dockerfiles/djangoapp
     working_dir: /code/django
-    command: python3 manage.py runserver 0.0.0.0:80
     volumes:
       - .:/code
-    ports:
-      - "80:80"
-    depends_on:
-      - db
+    networks:
+      - database
 
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
-    ports:
-      - "15672:15672"
+    networks:
+      - database
 
   celery:
-    build: ./dockerfiles/web
+    build: ./dockerfiles/djangoapp
     volumes:
       - .:/code
     working_dir: /code/django
     depends_on:
       - rabbitmq
     command: celery -A plantit worker --loglevel=info
+    networks:
+      - database
 
-  ## Development
-  adminer:
-    image: adminer
-    ports:
-      - "8081:8080"
-    depends_on:
-      - db
-
-  ssh:
-    build: ./dev/dockerfiles/test_cluster
-    privileged: true
-    depends_on:
-      - irods
-
-  irods:
-    image: mjstealey/irods-provider-postgres:4.2.3
-    ports:
-      - "1247:1247"
+networks:
+  database:
+    #The database container is set
+    #  in prod/dev compose files
+    driver: bridge

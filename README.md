@@ -13,14 +13,14 @@ The processes are contained within docker containers, the full website can be ru
 
 ```bash
 dev/reset.sh #Initialize databases and some other default values
-docker-compose up
+docker-compose -f docker-compose.yml -f compose-dev.yml up
 ```
 
 reset.sh adds the __user__: _admin_ with __password:__ _admin_
 
 # Resetting an installation
 ```bash
-sudo dev/reset.#!/bin/sh
+sudo dev/reset.sh
 ```
 
 dev/reset.sh can also be used to resets everything back to a "Fresh" install. Running dev/reset.sh does the following:
@@ -38,3 +38,20 @@ then it
    - adds test cluster
 
 sudo is required to remove files added to ./django/files by the webserver.
+
+# Production
+The website can be run in production mode using a different docker-compose config:
+
+```bash
+docker-compose -f docker-compose.yml -f compose-prod.yml up
+```
+
+The production configuration:
+- Uses the nginx web server and gunicorn for wsgi to django
+- Saves the database files outside the docker container.
+
+For more info on setting up the production enviroment, see README-PRODUCTION.md
+
+__NOTE:__ Production environments and dev environments use different
+containers for the database server. This will cause problems if you try to
+to run both environments on the same code base. The django database migrations will not be synced. See README-PRODUCTION.md for more details.

@@ -11,9 +11,10 @@
 #      pass: admin
 #  as well as a default cluster and executor that ssh into the ssh docker cluster
 #
+DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f compose-dev.yml"
 
 #Delete all docker containers and volumes
-docker-compose rm -v -f -s
+$DOCKER_COMPOSE rm -v -f -s
 
 # Remove all previous django migrations
 find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
@@ -24,26 +25,26 @@ mkdir -p django/files/public
 mkdir -p django/files/tmp
 
 #recreate images
-docker-compose build "$@"
+$DOCKER_COMPOSE build "$@"
 
 #start the databse container, it needs some time to initilize before
 # starting the webserver
-docker-compose up -d db
+$DOCKER_COMPOSE up -d db-dev
 echo "Waiting 30s for db to warm up..."
 sleep 30s
 
 #Reinstall databases
-docker-compose run web python manage.py makemigrations
-docker-compose run web python manage.py migrate
+$DOCKER_COMPOSE run djangoapp python manage.py makemigrations
+$DOCKER_COMPOSE run djangoapp python manage.py migrate
 
 #Add some defaults to the server
-cat dev/setup_defaults.py | docker-compose run web python manage.py shell
+cat dev/setup_defaults.py | $DOCKER_COMPOSE run djangoapp python manage.py shell
 
-docker-compose up -d irods
-docker-compose up -d ssh
+$DOCKER_COMPOSE up -d irods
+$DOCKER_COMPOSE up -d ssh
 echo "Waiting 30s for irods and ssh to warm up..."
 sleep 30s
-docker-compose exec ssh /bin/bash /root/irods_setup.sh
+$DOCKER_COMPOSE exec ssh /bin/bash /root/irods_setup.sh
 
 #Stop db container
-docker-compose stop
+$DOCKER_COMPOSE stop

@@ -17,4 +17,9 @@ humanize           # for formatting values in file manager
 Sphinx             # for documentation support
 python-irodsclient
 
-django-imagekit #image caching/manipulation
+#image caching/manipulation
+django-imagekit
+pillow
+
+# Production requirements
+gunicorn

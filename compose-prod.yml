@@ -1,0 +1,62 @@
+# Runs PlantIT in production mode. That is:
+#    1) Starts the djangoapp by running gunicorn
+#    2) Runs the nginx webserver in a seprate container
+#    3) Connects gunicorn to nginx
+#    4) Saves database data to ./db
+#
+# For production the wsgi server is run on the djangoapp container with django
+# I chose to place the nginx server in its own container to:
+#    1) Allow me to use the prepackaged ngnix containers
+#    2) Not have it installed in the web container
+#    3) Allow easier changes of systems later (aka, use a different web server)
+#
+# See docker-compose.yml for usage.
+version: '3'
+
+services:
+  djangoapp:
+    command: ["gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
+    environment:
+      - DJANGO_SETTINGS_MODULE=plantit.settings_prod
+    networks:
+      - ngnix_network
+      - database
+    restart: always
+    depends_on:
+      - db-prod
+
+  celery:
+    environment:
+      - DJANGO_SETTINGS_MODULE=plantit.settings_prod
+
+  db-prod:
+    image: postgres
+    hostname: db
+    networks:
+      database:
+        aliases:
+          - db
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    restart: always
+
+  nginx:
+    image: nginx:1.15.12
+    #command: [nginx-debug, '-g', 'daemon off;']
+    ports:
+      - 80:80
+
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./django/front_end/dist:/usr/share/ngnix/html:ro
+
+    depends_on:  # <-- wait for djangoapp to be "ready" before starting this service
+      - djangoapp
+
+    networks:
+      - ngnix_network
+    restart: always
+
+networks:
+  ngnix_network:
+    driver: bridge

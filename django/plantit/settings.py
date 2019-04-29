@@ -30,17 +30,6 @@ STATICFILES_FINDERS = [
 MEDIA_URL = "/public/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "files", "public")
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'e#n-lzvcua1^+-0s^**@0_3*ecrpi0jp=5czckrt!i=q76_ue)'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
-
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -143,5 +132,3 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     )
 }
-
-FIELD_ENCRYPTION_KEY = b'mm8zveo6FRrzVuJ2I_M_LorHdL4lJwDByS5kPWBYaM8='
