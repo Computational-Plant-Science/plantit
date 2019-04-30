@@ -6,8 +6,7 @@ django/public/
 django/plantit/secret.py
 django/front_end/node_modules
 django/front_end/dist
-db/**
-!db/.gitkeep
+django/static/
 django/workflows/
 
 # Documentation

@@ -48,7 +48,7 @@ services:
 
     volumes:
       - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./django/front_end/dist:/usr/share/ngnix/html:ro
+      - ./django/static/:/opt/django/static/:ro
 
     depends_on:  # <-- wait for djangoapp to be "ready" before starting this service
       - djangoapp
