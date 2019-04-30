@@ -1,5 +1,5 @@
 <template>
-    <div id="background">
+    <div id="background" class="vertical-center">
         <b-container id="main">
             <b-row>
                 <b-col>
@@ -42,6 +42,13 @@ export default {
 
 <style scoped lang="sass">
 @import "@/scss/_colors.sass"
+
+.vertical-center
+  min-height: 100%  /* Fallback for browsers do NOT support vh unit */
+  min-height: 100vh /* These two lines are counted as one :-)       */
+
+  display: flex
+  align-items: center
 
 #background
   background-image: url('../../assets/frontpage/index_bg.png')
@@ -87,6 +94,7 @@ export default {
 #about-down-arrow
   position: absolute
   bottom: 0
+  left: 50%
   margin-left: -40px
   animation-name: down-arrow-highlight
   animation-duration: 2s
