@@ -4,8 +4,8 @@
             <b-row>
                 <b-col>
                     <h1>RESEARCHES</h1>
-                    <h4>You focuse on the data.</h4>
-                    <h4>We take care of everything else</h4>
+                    <h4>You focus on the data.</h4>
+                    <h4>We take care of everything else.</h4>
                     <b-img
                         center
                         fluid
