@@ -42,8 +42,6 @@ INSTALLED_APPS = [
     'encrypted_model_fields',
     'plantit.apps.PlantITConfig',
     'front_end.apps.FrontEndConfig',
-    'workflows.count_objects.django.app.WorkflowConfig',
-    'workflows.dirt2d.django.app.WorkflowConfig'
 ]
 
 MIDDLEWARE = [
