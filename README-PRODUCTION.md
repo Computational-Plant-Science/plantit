@@ -30,7 +30,13 @@ print("FIELD_ENCRYPTION_KEY: %s"%(key))
 ## 3) Set API_URL
 `django/plantit/settings_prod.py` requires requires the API_URL variable to be set. The API_URL is used by remote job (like the ones that run on an HPC) to communicate with the web app. This can usually be set the same as that used in settings_dev.py, but changing the domain name to match where the web app is hosted.
 
-## 4) Build Front End
+## 4) Set server_name
+Set correct `server_name` in `config/ngnix/conf.d/local.conf`
+
+If this is left to localhost nginx will send a 444 Error for
+all traffic that does not come from the localhost host name.  
+
+## 5) Build Front End
 Install the required npm modules and build the front end code:
 ```bash
 cd django/front_end
@@ -38,20 +44,21 @@ npm install
 npm run build
 ```
 
-## 5) Collect static files
+## 6) Build Containers
+To build containers from the docker images run:
+
+```bash
+docker-compose -f docker-compose.yml -f compose-prod.yml build
+```
+
+## 7) Collect static files
 Static files must be manually collected so that the nginx web server can serve them:
 ```bash
 docker-compose -f docker-compose.yml -f compose-prod.yml run djangoapp ./manage.py collectstatic --no-input
 ```
 
-## 6) Build Containers
-To build containers from the docker images run:
 
-```bash
-docker-compose -f docker-compose.yml -f compose-prod.yml up
-```
-
-## 7) Setup database
+## 8) Setup database
 The production environment uses a separate database container from that of the the dev env. It must be manually setup by running:  
 
 ```bash
