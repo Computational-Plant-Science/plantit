@@ -24,10 +24,20 @@ services:
     restart: always
     depends_on:
       - db-prod
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "django"
 
   celery:
     environment:
       - DJANGO_SETTINGS_MODULE=plantit.settings_prod
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "celery"
 
   db-prod:
     image: postgres
@@ -39,6 +49,11 @@ services:
     volumes:
       - ./db:/var/lib/postgresql/data
     restart: always
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "django-db"
 
   nginx:
     image: nginx:1.15.12
@@ -57,6 +72,19 @@ services:
     networks:
       - ngnix_network
     restart: always
+
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "ngnix"
+
+  rabbitmq:
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "rabbitmq"
 
 networks:
   ngnix_network:
