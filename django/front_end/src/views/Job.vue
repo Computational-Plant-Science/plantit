@@ -23,14 +23,14 @@
             <b-row>
                 <b-col class="content-box text-center p-5">
                     <b-img
-                        v-if="job.results_file == null"
+                        v-if="job.remote_results_path == null"
                         :src="require('../assets/PlantITLoading.gif')"
                         width="250%"
                         alt="Plant IT"
                     ></b-img>
                     <b-link
                       v-else
-                      :href="job.results_file"
+                      :href="job | resultsLink"
                     >
                       <b-img
                           :src="require('../assets/icons/download.png')"
@@ -70,6 +70,7 @@ export default {
                 submission_id: 'NULL',
                 work_dir: 'NULL',
                 auth_token: 'NULL',
+                remote_results_path: null,
                 task_set: [],
                 status_set: []
             },
@@ -93,6 +94,9 @@ export default {
     filters: {
       format_date(value){
         return moment(value).format('MM/DD/YY hh:mm')
+      },
+      resultsLink(job){
+        return JobApi.resultsLink(job.pk)
       }
     }
 };

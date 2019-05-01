@@ -53,5 +53,21 @@ export default {
      **/
     return axios.get(`/apis/v1/jobs/${pk}/` )
     .then((response) => { return response.data })
+  },
+
+  resultsLink(pk){
+    /**
+     * Returns the download link for the results for the given job
+     *
+     * Args:
+     *   pk (int): pk of job
+     *
+     * Requirements:
+     *   User must be logged in
+     *
+     * Returns (str):
+     *   url to download job results
+     */
+     return `/apis/v1/jobs/${pk}/download_results/`
   }
 }

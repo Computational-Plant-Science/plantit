@@ -56,13 +56,13 @@ class Workflow:
                         cluster=cluster)
         submit_task.save()
 
-        #Results task
-        download_task = DownloadResultsTask(name="Download Results",
-                            description="Downloads and parses results",
-                            job=job,
-                            cluster=cluster,
-                            order_pos=30)
-        download_task.save()
+        # #Results task
+        # download_task = DownloadResultsTask(name="Download Results",
+        #                     description="Downloads and parses results",
+        #                     job=job,
+        #                     cluster=cluster,
+        #                     order_pos=30)
+        # download_task.save()
 
 
     @classmethod

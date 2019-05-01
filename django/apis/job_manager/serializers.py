@@ -24,7 +24,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMetho
     class Meta:
         model = Job
         fields = ('pk', 'pinned', 'collection',  'date_created', 'work_dir',
-                  'submission_id', 'remote_results_path', 'results_file',
+                  'submission_id', 'remote_results_path',
                   'task_set',  'status_set')
 
     def create(self, validated_data):
