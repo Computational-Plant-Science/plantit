@@ -6,5 +6,4 @@ urlpatterns = [
     path(r'', views.storage_types),
     path(r'lsdir/', views.folder, name='browse'),
     path(r'upload/',views.upload, name='upload'),
-    path(r'download/', views.download, name='download')
 ]

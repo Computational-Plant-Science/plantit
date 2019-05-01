@@ -101,23 +101,3 @@ def upload(request):
         file_names.append(file_storage.save(f.name,f))
 
     return JsonResponse(file_names,safe=False)
-
-from plantit.file_manager.services import  download_stream
-
-@login_required
-def download(request):
-    '''
-        Stream a file from a file storage
-    '''
-    if not 'path' in request.GET:
-        raise Http404("base_path required not in GET data")
-
-    if not 'storage_type' in request.GET:
-        raise Http404("storage_type required not in GET data")
-
-    path = request.GET['path']
-    storage_type = request.GET['storage_type']
-
-    return download_stream(storage_type,
-                           path,
-                           request.user)

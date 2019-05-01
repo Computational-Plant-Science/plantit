@@ -132,7 +132,6 @@ class Job(models.Model):
                                 null=True,
                                 blank=True,
                                 default=generate_work_dir)
-    results_file = models.FileField(null=True,blank=True,upload_to="files/results/")
     remote_results_path = models.CharField(max_length=100,
                                 null=True,
                                 blank=True,
@@ -241,7 +240,7 @@ class Status(models.Model):
 
     class Meta:
         ordering = ['-date']
-        
+
     State = (
         (COMPLETED, 'Completed'),
         (FAILED, 'Failed'),
