@@ -3,6 +3,7 @@
         <HomeAbout></HomeAbout>
         <HomeResearchers></HomeResearchers>
         <HomeDevelopers></HomeDevelopers>
+        <HomeSponsors id="HomeSponsors"></HomeSponsors>
     </div>
 </template>
 
@@ -11,13 +12,15 @@
 import HomeAbout from '@/components/home/HomeAbout.vue';
 import HomeResearchers from '@/components/home/HomeResearchers.vue';
 import HomeDevelopers from '@/components/home/HomeDevelopers.vue';
+import HomeSponsors from '@/components/home/HomeSponsors.vue';
 
 export default {
     name: 'home',
     components: {
         HomeAbout,
         HomeResearchers,
-        HomeDevelopers
+        HomeDevelopers,
+        HomeSponsors
     }
 };
 </script>
@@ -25,5 +28,9 @@ export default {
 <style>
   html{
     scroll-behavior: smooth;
+  }
+
+  #HomeSponsors {
+    border-top: 3px solid black
   }
 </style>

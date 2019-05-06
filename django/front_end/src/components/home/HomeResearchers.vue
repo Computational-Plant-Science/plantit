@@ -3,7 +3,7 @@
         <b-container fluid class="m-0 p-4">
             <b-row>
                 <b-col>
-                    <h1>RESEARCHES</h1>
+                    <h1>RESEARCHERS</h1>
                     <h4>You focus on the data.</h4>
                     <h4>We take care of everything else.</h4>
                     <b-img
