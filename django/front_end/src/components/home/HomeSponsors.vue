@@ -2,7 +2,7 @@
     <b-container fluid class="m-0 p-4 center-container">
         <h1>Sponsors</h1>
 
-        <b-row id="sponsors">
+        <b-row class="sponsors">
           <b-col>
             <b-link href="http://www.cyverse.org/">
               <b-img
@@ -22,6 +22,15 @@
             </b-link>
           </b-col>
           <b-col>
+            <b-link href="http://www.xsede.org/">
+              <b-img
+                  :src="require('@/assets/sponsors/xsede.png')"
+                  height="100px"
+                  alt="XSEDE"
+              ></b-img>
+            </b-link>
+          </b-col>
+          <b-col>
             <b-link href="http://www.computational-plant-science.org">
               <b-img
                   :src="require('@/assets/sponsors/cps-black.png')"
@@ -30,6 +39,8 @@
               ></b-img>
             </b-link>
           </b-col>
+        </b-row>
+        <b-row class="sponsors">
           <b-col>
             <b-link href="http://www.uga.edu/">
               <b-img
@@ -64,9 +75,9 @@ export default {
   h1
     color: $color-highlight
 
-  #sponsors
+  .sponsors
     text-align: center
 
-  #sponsors > .col
+  .sponsors > .col
     padding-top: 30px
 </style>
