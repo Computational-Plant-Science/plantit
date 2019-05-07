@@ -14,7 +14,8 @@ Vue.config.productionTip = false;
 
 // Uncomment and set id to use google analytics tracking
 // Vue.use(VueAnalytics, {
-//   id: 'UA-XXX-X'
+//   id: 'UA-XXX-X',
+//   router
 // })
 
 new Vue({
