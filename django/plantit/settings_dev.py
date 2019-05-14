@@ -4,8 +4,6 @@
 
     Run django with settings_prod.py configuration for production.
 '''
-from plantit.settings import *
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -27,6 +25,7 @@ try:
     # API_URL, SECRET_KEY, INSTALLED_APPS, etc. can all be set in settings.py
     # For INSTALLED_APPS, use list concatenation:
     #                   INSTALLED_APPS += ['another.app']
-    import settings.py
-except:
-    pass
+    from settings import *
+    from plantit.settings import *
+except ImportError:
+    from plantit.settings import *

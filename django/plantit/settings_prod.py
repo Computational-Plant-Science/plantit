@@ -3,9 +3,8 @@
     need to be set manually for security reasons.
 
     It is best to create the django/settings.py file and set the required
-    variables there. django/settings.py is not tracked by Git. 
+    variables there. django/settings.py is not tracked by Git.
 '''
-from plantit.settings import *
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = None
@@ -26,9 +25,10 @@ try:
     # API_URL, SECRET_KEY, INSTALLED_APPS, etc. can all be set in settings.py
     # For INSTALLED_APPS, use list concatenation:
     #                   INSTALLED_APPS += ['another.app']
-    import settings.py
-except:
-    pass
+    from settings import *
+    from plantit.settings import *
+except ImportError:
+    from plantit.settings import *
 
 assert SECRET_KEY is not None, "SECRET_KEY must be set"
 assert FIELD_ENCRYPTION_KEY is not None, "FIELD_ENCRYPTION_KEY must be set"
