@@ -1,3 +1,9 @@
+'''
+    Provides some defaults to get a test server up and running. Almost every
+    setting in here should not be used in production.
+
+    Run django with settings_prod.py configuration for production.
+'''
 from plantit.settings import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -12,3 +18,15 @@ ALLOWED_HOSTS = ['*']
 
 #Sets the url to access the PlantIT api from
 API_URL = "http://djangoapp/apis/v1/"
+
+try:
+    #Try to import a settings.py file at django/settings.py
+    # django/settings.py is ignored by git. It is recommended you add any
+    # settings you want to change there.
+    #
+    # API_URL, SECRET_KEY, INSTALLED_APPS, etc. can all be set in settings.py
+    # For INSTALLED_APPS, use list concatenation:
+    #                   INSTALLED_APPS += ['another.app']
+    import settings.py
+except:
+    pass

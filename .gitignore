@@ -8,6 +8,7 @@ django/front_end/node_modules
 django/front_end/dist
 django/static/
 django/workflows/
+django/settings.py
 
 # Documentation
 docs/build/*
