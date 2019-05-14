@@ -24,9 +24,8 @@ from django_cas_ng import views
 
 urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + [
         re_path(r'^admin/', admin.site.urls),
-        re_path(r'^accounts/',include('django.contrib.auth.urls')),
-        re_path(r'^login$', views.LoginView.as_view()),
-        re_path(r'^logout$', views.LogoutView.as_view()),
+        re_path(r'^login/', views.LoginView.as_view(), name="cas_ng_login"),
+        re_path(r'^logout/', views.LogoutView.as_view(), name="cas_ng_logout"),
         re_path(r'^apis/v1/', include('apis.urls')),
         #Send all other urls (besides what is listed above) to the vue router
         re_path(r'^.*$',  TemplateView.as_view(template_name='index.html')),

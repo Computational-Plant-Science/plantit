@@ -17,8 +17,8 @@
                 <b-nav-item>Contact</b-nav-item>
                 <b-nav-item>Public Datasets</b-nav-item>
                 <b-nav-item>FAQ</b-nav-item>
-                <b-nav-item v-if="isLoggedIn" href="/accounts/logout/?next=/">Logout</b-nav-item>
-                <b-nav-item v-else href="/accounts/login/?next=/user/dashboard">Login</b-nav-item>
+                <b-nav-item v-if="isLoggedIn" href="/logout/?next=/">Logout</b-nav-item>
+                <b-nav-item v-else href="/login/?next=/user/dashboard">Login</b-nav-item>
             </b-navbar-nav>
         </b-collapse>
     </b-navbar>
