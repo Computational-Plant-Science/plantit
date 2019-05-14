@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'encrypted_model_fields',
     'plantit.apps.PlantITConfig',
     'front_end.apps.FrontEndConfig',
+    'django_cas_ng'
 ]
 
 MIDDLEWARE = [
@@ -52,7 +53,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_cas_ng.middleware.CASMiddleware'
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'django_cas_ng.backends.CASBackend',
+)
+
+CAS_SERVER_URL = "https://auth.iplantcollaborative.org/cas4/"
+CAS_APPLY_ATTRIBUTES_TO_USER=True
 
 ROOT_URLCONF = 'urls'
 

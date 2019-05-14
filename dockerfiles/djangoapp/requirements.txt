@@ -21,5 +21,8 @@ python-irodsclient
 django-imagekit
 pillow
 
+#CAS logins
+django-cas-ng
+
 # Production requirements
 gunicorn

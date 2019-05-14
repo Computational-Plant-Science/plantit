@@ -59,7 +59,7 @@ export default {
                 name: '',
                 description: '',
                 storageType: 'irods',
-                basePath: '/tempZone/home/rods/'
+                basePath: '/iplant/home/cotter/'
             },
             options: []
         };

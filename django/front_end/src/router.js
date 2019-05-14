@@ -109,15 +109,6 @@ let router = new Router({
             }
         },
         {
-            path: '/login',
-            name: 'login',
-            component: () =>
-                import(/* webpackChunkName: "about" */ './views/Login.vue'),
-            meta:{
-              requiresAuth: true
-            }
-        },
-        {
           path: "*",
           component: () =>
               import(/* webpackChunkName: "about" */ './views/PageNotFound.vue'),
@@ -129,7 +120,7 @@ router.beforeEach((to, from, next) => {
   if(to.matched.some(record => record.meta.requiresAuth)) {
     console.log(Auth.isLoggedIn())
     if(! Auth.isLoggedIn()){
-      window.location = '/accounts/login/?next=' + to.fullPath
+      window.location = '/login/?next=' + to.fullPath
     }else{
       //User is logged in
       next()
