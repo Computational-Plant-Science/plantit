@@ -9,6 +9,7 @@ django/front_end/dist
 django/static/
 django/workflows/
 django/settings.py
+django/filesystems.py
 
 # Documentation
 docs/build/*
