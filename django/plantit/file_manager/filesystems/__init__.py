@@ -1,6 +1,3 @@
-from .local import Local
-from .irods import IRods
-
 class Registrar():
     """
         Keeps a list of registered filesystems
@@ -19,4 +16,8 @@ class Registrar():
 
 registrar = Registrar()
 
-registrar.register(Local("local"))
+try:
+    from filesystems import *
+except ImportError as e:
+    print(e)
+    pass
