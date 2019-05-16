@@ -1,4 +1,5 @@
 from plantit.collection.models import Collection, Sample
+from plantit.file_manager import registrar
 from rest_framework import serializers
 from ..mixins import PinnedSerilizerMethodMixin
 
@@ -15,13 +16,15 @@ class CollectionSerializer(serializers.HyperlinkedModelSerializer,  PinnedSerili
     class Meta:
         model = Collection
         fields = ('pinned', 'pk', 'storage_type','base_file_path', 'name', 'description', 'sample_set')
-
+        extra_kwargs = {'base_file_path': {'required': False}}
+        
     def create(self, validated_data):
         user = None
         request = self.context.get("request")
         if request and hasattr(request, "user"):
             user = request.user
 
+        validated_data['base_file_path'] = registrar.default_path(validated_data['storage_type'], user)
         collection = Collection(**validated_data,user=user)
         collection.save()
 

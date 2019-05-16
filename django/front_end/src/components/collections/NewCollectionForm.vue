@@ -19,21 +19,12 @@
                 ></b-form-textarea>
             </b-form-group>
 
-            <!-- <b-form-group label="Location:" label-for="input-storageType">
+            <b-form-group label="Location:" label-for="input-storageType">
                 <b-form-select
                     v-model="form.storageType"
                     :options="options"
                 ></b-form-select>
             </b-form-group>
-
-            <b-form-group label="Base File Path:" label-for="input-base-path">
-                <b-form-input
-                    id="input-base-path"
-                    v-model="form.basePath"
-                    required
-                    placeholder="Enter base file path."
-                ></b-form-input>
-            </b-form-group> -->
 
             <b-button type="submit" variant="primary" class="mr-2"
                 >Submit</b-button
@@ -59,7 +50,6 @@ export default {
                 name: '',
                 description: '',
                 storageType: 'irods',
-                basePath: '/iplant/home/cotter/'
             },
             options: []
         };
