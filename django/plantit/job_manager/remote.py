@@ -61,7 +61,7 @@ class Cluster(models.Model):
     description = models.TextField(blank=True)
     workdir = models.CharField(max_length=250)
     username = models.CharField(max_length=100)
-    password = EncryptedCharField(max_length=100)
+    password = EncryptedCharField(max_length=100,blank=True,null=True,default=None)
     port = models.PositiveIntegerField(default=22)
     hostname = models.CharField(max_length=250)
     submit_commands = models.TextField(default="./{sub_script} {job_pk} {task_pk} {auth_token}")
@@ -112,11 +112,24 @@ class SSHTaskMixin(models.Model):
         #Open Connection
         try:
             client = paramiko.SSHClient()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            client.connect(self.cluster.hostname,
-                           self.cluster.port,
-                           self.cluster.username,
-                           self.cluster.password)
+            if getattr(settings,'DEUBG',False):
+                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            else:
+                client.load_system_host_keys("../config/ssh/known_hosts")
+                client.set_missing_host_key_policy(paramiko.RejectPolicy())
+            if self.cluster.password is None:
+                #Use ssh key
+                k = paramiko.RSAKey.from_private_key_file('../config/ssh/id_rsa')
+                client.connect(self.cluster.hostname,
+                               self.cluster.port,
+                               self.cluster.username,
+                               pkey= k)
+            else:
+                #Use password
+                client.connect(self.cluster.hostname,
+                               self.cluster.port,
+                               self.cluster.username,
+                               self.cluster.password)
         except (AuthenticationException) as e:
             self.job.status_set.create(state=Status.FAILED,
                         date=timezone.now(),
