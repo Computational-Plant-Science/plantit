@@ -1,5 +1,6 @@
 from plantit.job_manager.job import Job, Status, Task
 from rest_framework import serializers
+from datetime import datetime
 
 from ..mixins import PinnedSerilizerMethodMixin
 
@@ -46,6 +47,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMetho
         status_data = validated_data.get('status_set',None)
         if(status_data):
             for status in status_data:
+                status['date'] = datetime.now()
                 Status.objects.create(job = job, **status)
 
         task_list = validated_data.get('task_set',None)
