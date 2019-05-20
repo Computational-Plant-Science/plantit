@@ -112,7 +112,7 @@ class SSHTaskMixin(models.Model):
         #Open Connection
         try:
             client = paramiko.SSHClient()
-            if getattr(settings,'DEUBG',False):
+            if getattr(settings,'DEBUG',False):
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             else:
                 client.load_system_host_keys("../config/ssh/known_hosts")

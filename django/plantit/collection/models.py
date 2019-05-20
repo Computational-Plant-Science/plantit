@@ -100,26 +100,13 @@ class Collection(models.Model, CastableModelMixin):
             "base_file_path": self.base_file_path,
             "sample_set": {}
         }
-        
-        if self.storage_type == "local":
-            for sample in self.sample_set.all():
-                collection["sample_set"][sample.name] = {
-                            "storage": "local",
-                            "path": sample.path
-                        }
-        elif self.storage_type == "irods":
-            for sample in self.sample_set.all():
-                irods_storage = registrar.list["irods"]
-                collection['sample_set'][sample.name] = {
-                            "storage": "irods",
-                            "path": os.path.join(self.base_file_path,
-                                                 sample.path),
-                            "hostname": irods_storage.hostname,
-                            "password": irods_storage.password,
-                            "port": irods_storage.port,
-                            "zone": irods_storage.zone,
-                            "username": irods_storage.username
-                        }
+
+        for sample in self.sample_set.all():
+            collection["sample_set"][sample.name] = {
+                        "storage": self.storage_type,
+                        "path": sample.path
+                    }
+
         return json.dumps(collection)
 
     def get_absolute_url(self):
