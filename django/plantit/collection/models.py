@@ -104,7 +104,8 @@ class Collection(models.Model, CastableModelMixin):
         for sample in self.sample_set.all():
             collection["sample_set"][sample.name] = {
                         "storage": self.storage_type,
-                        "path": sample.path
+                        "path": os.path.join(self.base_file_path,
+                                             sample.path),
                     }
 
         return json.dumps(collection)
