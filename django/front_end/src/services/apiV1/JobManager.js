@@ -55,6 +55,26 @@ export default {
     .then((response) => { return response.data })
   },
 
+  deleteJob(pk){
+    /**
+     * Delete a job.
+     *
+     * Requirements:
+     *   User must be logged in
+     *
+     * Returns:
+     *    Axios promise containing true if the delete was sucessful,
+     *    false otherwise
+     **/
+     return axios.delete(`/apis/v1/jobs/${pk}/` )
+     .then((response) => {
+       return response.status == 204
+     }).catch(error => {
+       console.log("Error: " + error)
+       return false
+     })
+  },
+
   resultsLink(pk){
     /**
      * Returns the download link for the results for the given job

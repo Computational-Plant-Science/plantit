@@ -84,6 +84,26 @@ export default {
     .then((response) => { return response.data })
   },
 
+  deleteCollection(pk){
+    /**
+     * Delete a collection.
+     *
+     * Requirements:
+     *   User must be logged in
+     *
+     * Returns:
+     *    Axios promise containing true if the delete was sucessful,
+     *    false otherwise
+     **/
+     return axios.delete(`/apis/v1/collections/${pk}/` )
+     .then((response) => {
+       return response.status == 204
+     }).catch(error => {
+       console.log("Error :" + error)
+       return false
+     })
+  },
+
   addSample(sample, pk){
     /**
       Add sample to the collection

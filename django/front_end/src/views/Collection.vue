@@ -15,6 +15,12 @@
                 >
                     Analyze
                 </b-button>
+
+                <b-button
+                  @click="deleteCollection"
+                >
+                    Delete
+                </b-button>
             </template>
         </PageNavigation>
 
@@ -93,6 +99,24 @@ export default {
         },
         analyze() {
             router.push({name: 'analyze', query: { pk: this.pk }})
+        },
+        deleteCollection() {
+          this.$bvModal.msgBoxConfirm(`Delete collection ${this.collection.name}?`,{
+            title: 'Delete Confirmation',
+            centered: true
+          })
+            .then(value => {
+              if(value == true){
+                CollectionApi.deleteCollection(this.collection.pk).then(value => {
+                  if(value == true){
+                    router.push({name: 'collections'})
+                  }
+                })
+              }
+            })
+            .catch(err => {
+              console.log("Error :" + err)
+            })
         }
     }
 };

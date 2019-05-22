@@ -47,6 +47,7 @@
                 </template>
                 <template slot="pinned" slot-scope="data">
                   <b-button
+                      class="plantit-btn"
                       size="sm"
                       @click="togglePin(data.item.pk,data.item)"
                   >
@@ -61,6 +62,15 @@
                       width="30px">
                     </b-img>
                   </b-button>
+                </template>
+                <template slot="tools" slot-scope="data">
+                  <b-button
+                      class="plantit-btn"
+                      size="sm"
+                      @click='deleteJob(data.item.pk,data.item)'
+                  >
+                  <i class="fas fa-trash-alt fa-2x"></i>
+                </b-button>
                 </template>
             </b-table>
         </b-container>
@@ -96,7 +106,25 @@ export default {
                 item.pinned = !item.pinned
               }
           })
-        }
+        },
+        deleteJob(pk, item) {
+          this.$bvModal.msgBoxConfirm(`Delete this job?`,{
+            title: 'Delete Job',
+            centered: true
+          })
+            .then(value => {
+              if(value == true){
+                JobApi.deleteJob(pk).then(value => {
+                  if(value == true){
+                    this.items = this.items.filter(obj => {return obj.pk != pk})
+                  }
+                })
+              }
+            })
+            .catch(err => {
+              console.log("Error :" + err)
+            })
+        },
     },
     data() {
         return {
@@ -116,6 +144,10 @@ export default {
                 {
                     key: 'date_created',
                     sortable: true
+                },
+                {
+                    key: 'tools',
+                    label: ''
                 },
                 {
                     key: 'pinned',
