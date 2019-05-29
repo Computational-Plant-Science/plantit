@@ -11,13 +11,14 @@ class SampleSerializer(serializers.ModelSerializer):
 
 class CollectionSerializer(serializers.HyperlinkedModelSerializer,  PinnedSerilizerMethodMixin):
     sample_set = SampleSerializer(many=True, required=False)
+
     pinned = serializers.SerializerMethodField('pinnedByUser', source='profile_pins')
 
     class Meta:
         model = Collection
-        fields = ('pinned', 'pk', 'storage_type','base_file_path', 'name', 'description', 'sample_set')
+        fields = ('pinned', 'pk', 'storage_type','base_file_path', 'name', 'description', 'sample_set', 'metadata')
         extra_kwargs = {'base_file_path': {'required': False}}
-        
+
     def create(self, validated_data):
         user = None
         request = self.context.get("request")
