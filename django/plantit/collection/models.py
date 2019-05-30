@@ -4,6 +4,7 @@ from celery import shared_task
 import json
 import os.path
 from django.db import models
+from jsonfield import JSONField
 from django.urls import reverse
 from django.contrib.auth.models import User
 from model_utils.managers import InheritanceManager
@@ -33,16 +34,6 @@ def generate_thumbnail(sample_pk):
 
     sample.thumbnail.save(sample.name,file)
 
-class MetaData(models.Model):
-    """
-        Basic Metadata class.
-
-        Attributes:
-            key (str): Metadata key
-            value (str): Metadata value
-    """
-    key = models.CharField(max_length=50)
-    objects = InheritanceManager()
 
 class Tag(models.Model):
     """
@@ -80,10 +71,10 @@ class Collection(models.Model, CastableModelMixin):
     name = models.CharField(max_length=250)
     description = models.TextField(blank=True,null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE)
-    metadata = models.ManyToManyField(MetaData,blank=True)
     storage_type = models.CharField(max_length=25)
     base_file_path = models.CharField(max_length=250)
     tags = models.ManyToManyField(Tag,blank=True)
+    metadata = JSONField()
 
     def __str__(self):
         return self.name
@@ -144,6 +135,7 @@ class Sample(models.Model):
                                        format='JPEG',
                                        options={'quality': 60},
                                        blank=True)
+    metadata = JSONField()
 
     def __str__(self):
         return self.name

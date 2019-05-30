@@ -48,7 +48,9 @@
                     </span>
                 </b-col>
                 <b-col class="content-box" md="5">
-                    <CollectionDetails></CollectionDetails>
+                    <CollectionDetails
+                      :collection = "collection"
+                    ></CollectionDetails>
                 </b-col>
             </b-row>
         </b-container>

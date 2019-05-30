@@ -88,6 +88,9 @@ export default {
     /**
      * Delete a collection.
      *
+     * Args:
+     *   pk (int): collection pk
+     *
      * Requirements:
      *   User must be logged in
      *
@@ -114,6 +117,7 @@ export default {
             name: "name of sample",
             path: "path to sample"
           }
+        pk (int): collection pk
 
       Requires:
         User is logged in and has permission for collection
@@ -127,6 +131,7 @@ export default {
   addSamples(samples, pk){
     /**
       Add sample to tje collection
+
       Args:
         sample (array of json): sample info:
           [
@@ -136,6 +141,7 @@ export default {
           },
           ....
         ]
+        pk (int): collection pk
 
       Requires:
         User is logged in and has permission for collection
@@ -145,6 +151,39 @@ export default {
     **/
     const data = {
       sample_set: samples
+    }
+    return axios.patch(`/apis/v1/collections/${pk}/`, data)
+  },
+
+  updateMetadata(name,description,metadata,pk){
+    /**
+      Update (overwrite) the collection metadata, name, and description.
+      The collection with the give pk will have its metadata, name,
+      and description overwritten wtih the values passed.
+
+      Args:
+        name (string): Collection Name
+        description (string): Collection Description
+        metadata (array): An array of metadata fields. sample metadtata:
+          [
+            {
+            name: "name of field",
+            value: "value of field"
+          },
+          ....
+         ]
+        pk (int): collection pk
+
+      Requires:
+        User is logged in and has permission for collection
+
+      Returns:
+        axios.patch promise
+    **/
+    const data = {
+      name: name,
+      description: description,
+      metadata: metadata
     }
     return axios.patch(`/apis/v1/collections/${pk}/`, data)
   }
