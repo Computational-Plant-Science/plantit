@@ -4,9 +4,9 @@ from celery import shared_task
 import json
 import os.path
 from django.db import models
-from jsonfield import JSONField
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import JSONField
 from model_utils.managers import InheritanceManager
 
 from .mixins import CastableModelMixin, CastableQuerySetMixin
@@ -74,7 +74,7 @@ class Collection(models.Model, CastableModelMixin):
     storage_type = models.CharField(max_length=25)
     base_file_path = models.CharField(max_length=250)
     tags = models.ManyToManyField(Tag,blank=True)
-    metadata = JSONField()
+    metadata = JSONField(default=list)
 
     def __str__(self):
         return self.name
@@ -135,7 +135,7 @@ class Sample(models.Model):
                                        format='JPEG',
                                        options={'quality': 60},
                                        blank=True)
-    metadata = JSONField()
+    metadata = JSONField(default=list)
 
     def __str__(self):
         return self.name

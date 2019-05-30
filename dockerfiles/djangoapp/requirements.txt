@@ -6,7 +6,6 @@ djangorestframework
 
 markdown       # Markdown support for the browsable API.
 django-filter  # Filtering support
-django-jsonfield    # Json field support
 
 paramiko #python ssh support
 Celery   #job queue support
