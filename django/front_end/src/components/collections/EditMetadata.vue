@@ -1,25 +1,23 @@
 <template>
-  <b-modal id="editMetadata" title="Edit Metadata" hide-footer>
-    Name:
-    <b-form-input
-      v-model="collection.name">
-    </b-form-input>
-    Description:
-    <b-form-textarea
-      id="textarea"
-      v-model="collection.description"
-      rows="3"
-      max-rows="6"
-    ></b-form-textarea>
-    Metadata:
-    <table width="100%">
-      <tr v-for="(field,idx) in collection.metadata">
-        <td>{{ field.name }}</td>
+    <table>
+      <th>Key</th><th>Value</th>
+      <tr v-for="(field, index) in metadata" v-bind:key="field.name + field.value">
         <td>
-          <ClickToEdit v-model="field.value"></ClickToEdit>
+          <ClickToEdit
+            v-model="field.name"
+            v-b-tooltip.hover
+            title="Click on text to edit.">
+          </ClickToEdit>
         </td>
         <td>
-          <b-button @click="deleteField(idx)"><i class="fas fa-trash-alt"></i></b-button>
+          <ClickToEdit
+            v-model="field.value"
+            v-b-tooltip.hover
+            title="Click on text to edit.">
+          </ClickToEdit>
+        </td>
+        <td>
+          <b-button @click="deleteField(index)"><i class="fas fa-trash-alt"></i></b-button>
         </td>
       </tr>
       <tr>
@@ -28,14 +26,17 @@
             id="newField"
             ref="newField"
             v-model="newField.name"
-            v-on:keyup.enter="addField"
-            v-on:keyup.tab="this.$refs.newValue.focus()">
+            v-on:keyup="edited"
+            placeholder="E.g. Date Collected"
+            v-on:keyup.enter="addField">
         </td>
         <td>
           <input
             id="newValue"
             ref="newValue"
+            placeholder="E.g. 12/20/1998"
             v-model="newField.value"
+            v-on:keyup="edited"
             v-on:keyup.enter="addField"
           >
         </td>
@@ -44,65 +45,79 @@
         </td>
       </tr>
     </table>
-    <b-button class="mt-3" block @click="save">Save</b-button>
-    <b-button class="mt-3" block @click="cancel">Cancel</b-button>
-  </b-modal>
 </template>
 
 <script>
   import ClickToEdit from '@/components/collections/ClickToEdit'
-  import CollectionApi from '@/services/apiV1/CollectionManager'
 
   export default {
-    props: ['collection'],
-    data(){
-      return{
-        newField: {
-          name: '',
-          value: '',
-        }
-      }
-    },
+    /*
+      This allows editing of an objects metadata, for example for a Sample
+      or Collection. Metdata is an array of objects with a "name" and "value"
+      property. Both are saved as strings.
+
+      Events:
+        unsaved(): emits true when there is unsaved metadata (i.e.) text
+        in the input boxes, false when the input boxes are empty
+
+     */
     components:{
       ClickToEdit
     },
+    props: {
+      //The objects metadata. Provided as an arry of objects of key (name) and
+      // value (value) pairs.
+      // metadata: [
+      //  {
+      //    name: "Name of metadata value",
+      //      value: "value of metadata"
+      //  },
+      //  ...
+      // ]
+      metadata: {
+        type: Array,
+        required: true
+      },
+    },
+    model: {
+      prop: 'metadata',
+      event: 'input'
+    },
+    data: function(){
+      return {
+          // Keeps the values for a new metadata value to be added to the
+          // metadata array.
+          newField: {
+            type: Object,
+            required: false,
+            default: function(){
+              return {
+                name: '',
+                value: '',
+              }
+            }
+          },
+      }
+    },
     methods:{
-      show(){
-        this.$bvModal.show("editMetadata")
-      },
-      hide(){
-        this.$bvModal.hide("editMetadata")
-      },
-      toggle(){
-        this.$bvModal.toggle("editMetadata")
-      },
       addField(){
-        this.collection.metadata.push({...this.newField})
+        this.metadata.push({...this.newField})
         this.newField = {
           name: '',
           value: '',
         }
         this.$refs.newField.focus()
+        this.$emit('input', this.metadata)
+        this.edited()
       },
       deleteField(idx){
-        this.collection.metadata.splice(idx,1)
+        this.$delete(this.metadata,idx)
+        this.$emit('input', this.metadata)
       },
-      save(){
-        this.$bvModal.hide('editMetadata')
-        CollectionApi.updateMetadata(this.collection.name,
-                                     this.collection.description,
-                                     this.collection.metadata,
-                                     this.collection.pk)
-      },
-      cancel(){
-        CollectionApi.getCollection(this.collection.pk).then((collection) => {
-          this.collection.metadata = collection.metadata
-          this.collection.name = collection.name
-          this.collection.description = collection.description
-          this.$bvModal.hide('editMetadata')
-        })
+      edited(){
+        this.$emit('unsaved',!(this.newField.name == '' && this.newField.value == ''))
       }
-    }
+    },
   }
 </script>
 

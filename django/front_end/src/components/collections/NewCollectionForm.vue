@@ -19,6 +19,13 @@
                 ></b-form-textarea>
             </b-form-group>
 
+            <b-form-group label="Metadata:" label-for="input-desc">
+              <EditMetadata
+                v-model="form.metadata"
+                @unsaved="(e) => {unsavedMetadata = e}"
+              ></EditMetadata>
+            </b-form-group>
+
             <b-form-group label="Location:" label-for="input-storageType">
                 <b-form-select
                     v-model="form.storageType"
@@ -40,17 +47,22 @@
 import router from '@/router';
 import FileManagerApi from '@/services/apiV1/FileManager'
 import CollectionApi from '@/services/apiV1/CollectionManager'
+import EditMetadata from '@/components/collections/EditMetadata'
 
 export default {
     name: 'NewCollection',
-    components: {},
+    components: {
+      EditMetadata
+    },
     data() {
         return {
             form: {
                 name: '',
                 description: '',
                 storageType: 'irods',
+                metadata: []
             },
+            unsavedMetadata: false,
             options: []
         };
     },
@@ -64,17 +76,35 @@ export default {
     methods: {
         onSubmit(evt) {
             evt.preventDefault();
+            if(this.unsavedMetadata){
+              this.$bvModal.msgBoxConfirm(
+                `The metadata key/value left in the input box will not be saved,
+                 continue anyways? (Click the \"plus\" next to the value to save it)`,{
+                title: 'Unsaved Metadata',
+                centered: true
+              })
+              .then(value => {
+                if(value == true){
+                  this.saveCollection()
+                }
+              })
+          }else{
+            this.saveCollection()
+          }
+        },
+        cancel() {
+            router.push({ name: 'collections' });
+        },
+        saveCollection(){
             CollectionApi.newCollection(
               this.form.name,
               this.form.description,
               this.form.storageType,
+              this.form.metadata,
               this.form.basePath
             ).then((response) => {
               router.push({ name: 'collection', query: { pk: response.data.pk }})
             });
-        },
-        cancel() {
-            router.push({ name: 'collections' });
         }
     }
 };
