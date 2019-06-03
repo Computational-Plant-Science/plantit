@@ -10,20 +10,11 @@
                 style="position: relative; min-width: 100px"
                 @mouseover="selectedRow(idx)"
                 @mouseout="selectedRow(null)"
+                :id="`image-${idx}`"
               >
-                <b-img
-                  :id="`image-${idx}`"
-                  v-if="sample.thumbnail"
-                  :src="sample.thumbnail"
-                  width="100px"
-                  :title="sample.name">
-                </b-img>
-                <b-spinner
-                  v-else
-                  :id="`image-${idx}`"
-                  v-b-tooltip.hover
-                  :title="sample.name">
-                </b-spinner>
+                <SampleThumbnail
+                  :sample="sample" >
+                </SampleThumbnail>
 
                 <b-button
                   v-show="selectedSample.hover == true && selectedSample.index === idx"
@@ -87,12 +78,14 @@
 <script>
 import router from '@/router';
 import EditMetadataModal from '@/components/collections/EditMetadataModal'
+import SampleThumbnail from '@/components/collections/SampleThumbnail'
 import CollectionApi from '@/services/apiV1/CollectionManager'
 
 export default {
     name: 'CollectionThumbnails',
     components: {
-      EditMetadataModal
+      EditMetadataModal,
+      SampleThumbnail
     },
     props: ['pk','samples'],
     methods: {},
