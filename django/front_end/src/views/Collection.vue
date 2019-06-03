@@ -79,14 +79,15 @@ export default {
     },
     data(){
       return {
-        collection: {}
+        collection: {
+          metadata: [] //Must be defined for EditMetadata component.
+        }
       }
     },
     mounted: function(){
       CollectionApi.getCollection(this.pk)
       .then((data) => {
         this.collection = data
-        console.log(this.collection)
       })
     },
     computed:{

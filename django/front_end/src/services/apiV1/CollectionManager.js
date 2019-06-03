@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export default {
-   newCollection(name,desc,storageType,basePath) {
+   newCollection(name,desc,storageType,metadata,basePath) {
     /**
      * Create a new collection
      *
@@ -13,6 +13,7 @@ export default {
      *    description (str): Collection description
      *    storageType (str): Storage system that the
      *         collection samples are save on
+     *    metadata (Array of obects): Collection metadata
      *    basePath (str): The base folder in which the samples are
      *         saved on storageType
      *
@@ -23,6 +24,7 @@ export default {
       storage_type: storageType,
       base_file_path: basePath,
       name: name,
+      metadata: metadata,
       description: desc,
     })
     .then((response) => {return response })
@@ -130,7 +132,7 @@ export default {
 
   addSamples(samples, pk){
     /**
-      Add sample to tje collection
+      Add sample to the collection
 
       Args:
         sample (array of json): sample info:
@@ -153,6 +155,71 @@ export default {
       sample_set: samples
     }
     return axios.patch(`/apis/v1/collections/${pk}/`, data)
+  },
+
+  updateSample(sample){
+    /**
+      Update the sample list. This overwrites the collection sample list
+      with the the one give here.
+
+      Args:
+        sample (array of json): sample info:
+          [
+            {
+            name: "name of sample",
+            path: "path to sample"
+          },
+          ....
+        ]
+        pk (int): collection pk
+
+      Requires:
+        User is logged in and has permission for collection
+
+      Returns:
+        axios.patch promise
+    **/
+    return axios.patch(`/apis/v1/samples/${sample.pk}/`, sample)
+  },
+
+  getSample(pk){
+    /**
+      Get a single sample
+
+      Args:
+        pk (int): sample pk
+
+      Requires:
+        User is logged in and has permission for collection
+
+      Returns:
+        axios.patch promise returning the sample object
+    **/
+    return axios.get(`/apis/v1/samples/${pk}/` )
+    .then((response) => { return response.data })
+  },
+
+  deleteSample(pk){
+    /**
+      Delete a sample
+
+      Args:
+        pk (int): sample pk
+
+      Requires:
+        User is logged in and has permission for collection
+
+      Returns:
+       Axios promise returning true if the delete was sucessful,
+       false otherwise
+    **/
+    return axios.delete(`/apis/v1/samples/${pk}/` )
+    .then((response) => {
+      return response.status == 204
+    }).catch(error => {
+      console.log("Error :" + error)
+      return false
+    })
   },
 
   updateMetadata(name,description,metadata,pk){

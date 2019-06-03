@@ -74,7 +74,7 @@ class Collection(models.Model, CastableModelMixin):
     storage_type = models.CharField(max_length=25)
     base_file_path = models.CharField(max_length=250)
     tags = models.ManyToManyField(Tag,blank=True)
-    metadata = JSONField(default=list)
+    metadata = JSONField(default=list,blank=True)
 
     def __str__(self):
         return self.name
@@ -135,7 +135,7 @@ class Sample(models.Model):
                                        format='JPEG',
                                        options={'quality': 60},
                                        blank=True)
-    metadata = JSONField(default=list)
+    metadata = JSONField(default=list, blank=True)
 
     def __str__(self):
         return self.name
