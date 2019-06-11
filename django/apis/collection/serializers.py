@@ -6,7 +6,7 @@ from ..mixins import PinnedSerilizerMethodMixin
 class SampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sample
-        fields = ('pk','name', 'path', 'thumbnail', 'metadata')
+        fields = ('pk','name', 'path', 'thumbnail_supported', 'thumbnail', 'metadata')
         extra_kwargs = {
             'thumbnail': {
                 'read_only': True,

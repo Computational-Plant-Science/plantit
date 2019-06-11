@@ -21,7 +21,9 @@ import plantit.file_manager.permissions as permissions
 @shared_task
 def generate_thumbnail(sample_pk):
     """
-        Generate the thumbnail image for a sample
+        Generate the thumbnail image for a sample.
+
+        Currently only supports creating thumbnails of images.
 
         Args:
             sample_pk: pk of the sample
@@ -29,10 +31,22 @@ def generate_thumbnail(sample_pk):
     sample = Sample.objects.get(pk = sample_pk)
     base_file_path = sample.collection.base_file_path
     storage_type = sample.collection.storage_type
-    folder = file_manager.open(storage_type,base_file_path)
-    file = folder.open(sample.path)
 
-    sample.thumbnail.save(sample.name,file)
+    _, file_extension = os.path.splitext(sample.path)
+
+    if(file_extension.lower() in ['.jpeg', '.jpg', '.png', '.tiff']):
+        #Sample type is already a supported image type
+        #Simply open the image and let the thumbnail field format the image
+        folder = file_manager.open(storage_type,base_file_path)
+        file = folder.open(sample.path)
+        sample.thumbnail.save(sample.name,file)
+        sample.thumbnail_supported = True
+        sample.save()
+    else:
+        #No other supported file types, show a default image
+        sample.thumbnail_supported = False
+        sample.save()
+        pass
 
 
 class Tag(models.Model):
@@ -125,11 +139,20 @@ class Sample(models.Model):
                 belongs to
             path (String): the path to the file relative to collection's
                 base file path.
+            name (String): the name of the sample
+            thumbnail_supported (bool): Thumbnails are supproted for this sample
+                type. This is set to false by generate_thumbnail() if
+                the sample format is  not supported by generate_thumbnail
+            thumbnail (ProcessedImageField): url to the thumbnail. See
+                django-imagekit for details on saving a new thumbnail. This
+                is set to null if 1) generate_thumbnail was not called or
+                has not finished running, or 2) thubnail_supported = False
     """
     objects = CustomQuerySet.as_manager()
     name = models.CharField(max_length=250,null=False,blank=False)
     path = models.CharField(max_length=250,null=False,blank=False)
     collection = models.ForeignKey(Collection,on_delete=models.CASCADE)
+    thumbnail_supported = models.BooleanField(default=True)
     thumbnail = ProcessedImageField(upload_to='collections/thumbnails',
                                        processors=[ResizeToFill(100, 100)],
                                        format='JPEG',

@@ -1,7 +1,13 @@
 
 <template>
   <div>
+
     <button @click="$refs['uploadModal'].show()">Upload Files</i></button>
+
+    <b-form-group label="Sample Type">
+      <b-form-radio v-model="selectFiles" name="some-radios" :value="true">Indivudal Files</b-form-radio>
+      <b-form-radio v-model="selectFiles" name="some-radios" :value="false">Whole Folder</b-form-radio>
+    </b-form-group>
 
     <b-modal size="xl" ref="uploadModal">
       <FileUpload @fileUploaded="fileUploaded" :storageType="storageType" :path="basePath"></FileUpload>
@@ -13,7 +19,7 @@
       ref="tree"
       show-checkbox
       multiple
-      allow-batch
+      :allow-batch="selectFiles"
       whole-row
       class="file-browser"
       :async="loadTreeDataAsync"
@@ -52,18 +58,37 @@ export default {
     },
     data(){
       return{
-        treeData: []
+        //The file tree data structure
+        treeData: [],
+        // Select files (true) or folders (false) as samples
+        selectFiles: true
       }
     },
     methods:{
       loadTreeDataAsync(oriNode, resolve){
+        /* Load file tree branches as needed Async. */
         let path = (oriNode.data.path ? oriNode.data.path : '')
         FileManagerApi.listDirBase(this.basePath,path,this.storageType)
         .then((data) => {
+          console.log(data)
+          data = data.map((d) => {
+            if(d.isLeaf){
+              d.disabled = !this.selectFiles
+            }
+
+            console.log(this.sampleType)
+            return d
+          })
+          console.log(data)
           resolve(data)}
         )
       },
       fileUploaded(files){
+        /* Add uplaoded files to the file tree
+
+           Args:
+              files (array): name of files to add
+        */
         files.forEach(file => {
          this.treeData.push(
            this.$refs.tree.initializeDataItem({
@@ -77,23 +102,49 @@ export default {
        });
       },
       changed(node, item, e){
+        /*
+          Called when a file tree node is changed
+        */
         let set = (item) => {
-          if(item.isLeaf){
+          /** Add item to the selectedFiles list **/
+          if(this.selectFiles){
+            if(item.isLeaf){
+              this.$set(this.selectedFiles, item.text, item)
+            }
+            item.children.forEach((i) => {set(i)})
+          }else{
             this.$set(this.selectedFiles, item.text, item)
           }
-          item.children.forEach((i) => {set(i)})
         }
         let del = (item) => {
-          if(item.isLeaf){
+          /* remove item from the selected files list */
+          if(this.selectedFiles){
+            if(item.isLeaf){
+              this.$delete(this.selectedFiles, item.text)
+            }
+            item.children.forEach((i) => {del(i)})
+          }else{
             this.$delete(this.selectedFiles, item.text)
           }
-          item.children.forEach((i) => {del(i)})
         }
+
         if(item.selected){
           set(item)
         }else{
           del(item)
         }
+
+      }
+    },
+    watch: {
+      selectFiles(val){
+        /** Disable / Enable file selection in file tree **/
+        this.treeData = this.treeData.map((node) => {
+          if(node.isLeaf){
+            node.disabled = !this.selectFiles
+          }
+          return node
+        })
       }
     }
 };

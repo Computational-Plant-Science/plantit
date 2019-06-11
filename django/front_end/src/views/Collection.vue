@@ -42,7 +42,7 @@
                      </span>
                       <CollectionThumbnails
                           v-if="this.collection.sample_set.length > 0"
-                          :pk="this.$route.query.pk"
+                          :pk="pk"
                           :samples="collection.sample_set"
                       ></CollectionThumbnails>
                     </span>

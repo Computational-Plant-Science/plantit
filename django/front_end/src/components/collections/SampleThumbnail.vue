@@ -1,16 +1,25 @@
 <template>
   <p>
-    <b-img
-      v-if="url"
-      :src="url"
-      width="100px"
-      :alt="sample.name">
-    </b-img>
-    <b-spinner
-      v-else
-      v-b-tooltip.hover
-      :title="sample.name">
-    </b-spinner>
+    <span v-if="! thumbnail.supported">
+      <b-img
+        :src="require('@/assets/icons/no-thumbnail.png')"
+        width="100px"
+        :alt="sample.name"
+      ></b-img>
+    </span>
+    <span v-else>
+      <b-img
+        v-if="thumbnail.url"
+        :src="thumbnail.url"
+        width="100px"
+        :alt="sample.name">
+      </b-img>
+      <b-spinner
+        v-else
+        v-b-tooltip.hover
+        :title="sample.name">
+      </b-spinner>
+    </span>
   </p>
 </template>
 
@@ -32,20 +41,24 @@
     },
     data(){
       return {
-        url: this.sample.thumbnail,
+        thumbnail: {
+          url: this.sample.thumbnail,
+          supported: this.sample.thumbnail_supported,
+        },
         timer: ''
       }
     },
     created: function(){
-      if(! this.url){
+      if(this.thumbnail.supported && !this.thumbnail.url){
         this.timer = setInterval(this.fetch_url, 10000)
       }
     },
     methods:{
       fetch_url: function() {
         CollectionApi.getSample(this.sample.pk).then((sample) =>{
-          this.url = sample.thumbnail
-          if(this.url){
+          this.thumbnail.supported = sample.thumbnail_supported
+          this.thumbnail.url = sample.thumbnail
+          if(! this.thumbnail.supported || this.thumbnail.url != null){
             clearInterval(this.timer)
           }
         })
@@ -53,7 +66,7 @@
     },
     beforeDestroy() {
       clearInterval(this.timer)
-    }
+    },
   }
 </script>
 

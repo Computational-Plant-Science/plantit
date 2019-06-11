@@ -5,6 +5,7 @@
                 id="thumbnails"
                 class="p-2 thumbnail"
                 v-for="(sample,idx) in displayedSamples"
+                :key="sample.pk"
             >
               <div
                 style="position: relative; min-width: 100px"
@@ -13,7 +14,8 @@
                 :id="`image-${idx}`"
               >
                 <SampleThumbnail
-                  :sample="sample" >
+                  :sample="sample"
+                  key="sample" >
                 </SampleThumbnail>
 
                 <b-button
@@ -87,12 +89,25 @@ export default {
       EditMetadataModal,
       SampleThumbnail
     },
-    props: ['pk','samples'],
-    methods: {},
+    props: {
+      pk:{
+        //The collection pk
+        required: true,
+        type: Number
+      },
+      samples:{
+        //The Array of samples to display, as formatted in the colletion object.
+        required: true,
+        type: Array
+      }
+    },
     data() {
         return {
+            //Number of samples per page
             perPage: 20,
+            //Current page being displayed
             currentPage: 1,
+            //Current sample being interacted with by user
             selectedSample: {
               hover: false,
               index: null,

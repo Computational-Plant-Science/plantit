@@ -64,7 +64,7 @@ let router = new Router({
             name: 'collection',
             component: () =>
                 import(/* webpackChunkName: "about" */ './views/Collection.vue'),
-            props: (route) => ({ pk: route.query.pk}),
+            props: (route) => ({ pk: parseInt(route.query.pk)}),
             meta:{
               requiresAuth: true
             }
@@ -93,7 +93,7 @@ let router = new Router({
             name: 'analyze',
             component: () =>
                 import(/* webpackChunkName: "about" */ './views/Analyze.vue'),
-            props: (route) => ({ pk: route.query.pk }),
+            props: (route) => ({ pk: parseInt(route.query.pk) }),
             meta:{
               requiresAuth: true
             }
@@ -103,7 +103,7 @@ let router = new Router({
             name: 'submit_workflow',
             component: () =>
                 import(/* webpackChunkName: "about" */ './views/SubmitWorkflow.vue'),
-            props: (route) => ({ collection_pk: route.query.collection_pk, workflow_name: route.query.workflow_name}),
+            props: (route) => ({ collection_pk: parseInt(route.query.collection_pk), workflow_name: route.query.workflow_name}),
             meta:{
               requiresAuth: true
             }
@@ -118,7 +118,6 @@ let router = new Router({
 
 router.beforeEach((to, from, next) => {
   if(to.matched.some(record => record.meta.requiresAuth)) {
-    console.log(Auth.isLoggedIn())
     if(! Auth.isLoggedIn()){
       window.location = '/login/?next=' + to.fullPath
     }else{

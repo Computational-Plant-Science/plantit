@@ -64,8 +64,8 @@ class Cluster(models.Model):
     password = EncryptedCharField(max_length=100,blank=True,null=True,default=None)
     port = models.PositiveIntegerField(default=22)
     hostname = models.CharField(max_length=250)
-    submit_commands = models.TextField(default="./{sub_script} {job_pk} {task_pk} {auth_token}")
-    cancel_commands = models.TextField()
+    submit_commands = models.TextField(default="clusterside submit")
+    cancel_commands = models.TextField(default="# clusterside cancel #<- cancel commands are not implemented by clusterside. ")
 
     def __str__(self):
         return self.name
