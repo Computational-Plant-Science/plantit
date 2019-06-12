@@ -18,6 +18,14 @@ docker-compose -f docker-compose.yml -f compose-dev.yml up
 
 reset.sh adds the __user__: _admin_ with __password:__ _admin_
 
+# Installing Workflows
+Workflows created using the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be integrated into the web platform by cloning the repository (or copying the code) into the django/workflows directory.
+
+The web server must be restarted to load new workflows.
+
+__NOTE:__ The workflow folder name (inside django/workflows/) must be the same
+as the workflow app_name set in the workflow's WORKFLOW_CONFIG.
+
 # Resetting an installation
 ```bash
 sudo dev/reset.sh

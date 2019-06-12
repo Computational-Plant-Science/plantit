@@ -1,6 +1,10 @@
+from os import listdir
+from os.path import isdir, isfile, join
+import importlib
+
 class Registrar():
     """
-        Workflows are registed with the server via this classs.
+        Workflows are register with the server via this class.
 
         It is recommended that the registration is performed in the admin.py
         file of the workflow.
@@ -47,3 +51,26 @@ class Registrar():
         self.list[config['app_name']] = config
 
 registrar = Registrar()
+
+basepath = "./workflows/"
+folders = [f for f in listdir(basepath) if isdir(join(basepath,f))]
+
+for folder in folders:
+    if folder == "__pycache__":
+        continue
+
+    folder_path = join(basepath,folder)
+    files = [f for f in listdir(folder_path) if isfile(join(folder_path,f))]
+
+    assert "process.py" in files, "No process.py file in workflow %s"%(folder_path)
+    assert "workflow.py" in files, "No workflow.py file in workflow %s"%(folder_path)
+    assert "__init__.py" in files, "Workflow folder must be a module, add __init__.py to %s" % (folder)
+
+    WORKFLOW_CONFIG = importlib.import_module('workflows.' + folder + '.workflow',
+                                            package=None).WORKFLOW_CONFIG
+
+    assert WORKFLOW_CONFIG['app_name'] == folder, ("Workflow folder name (\"%s\")"
+        " must be the same as the workflow app name (\"%s\"). "
+        "Change folder name to \"%s\"") % (WORKFLOW_CONFIG['app_name'],folder, WORKFLOW_CONFIG['app_name'])
+
+    registrar.register(WORKFLOW_CONFIG)
