@@ -1,6 +1,6 @@
 <template>
     <div class="discrete-progress-bar">
-        <div v-for="task in tasks" class="section">
+        <div v-for="task in tasks" :key="task.name" class="section">
             <div v-if="task.complete" class="progress complete">
                 <i class="fas fa-check"></i>
             </div>
@@ -27,11 +27,11 @@ export default {
             type: Array,
             required: true
         },
-        showName:{
-          //Show the name of the task under each progress section
-          type: Boolean,
-          require: false,
-          default: true
+        showName: {
+            //Show the name of the task under each progress section
+            type: Boolean,
+            require: false,
+            default: true
         }
     }
 };

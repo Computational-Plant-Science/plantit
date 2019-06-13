@@ -26,11 +26,11 @@ export default {
 </script>
 
 <style>
-  html{
+html {
     scroll-behavior: smooth;
-  }
+}
 
-  #HomeSponsors {
-    border-top: 3px solid black
-  }
+#HomeSponsors {
+    border-top: 3px solid black;
+}
 </style>

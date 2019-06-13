@@ -4,67 +4,75 @@
             <div
                 id="thumbnails"
                 class="p-2 thumbnail"
-                v-for="(sample,idx) in displayedSamples"
+                v-for="(sample, idx) in displayedSamples"
                 :key="sample.pk"
             >
-              <div
-                style="position: relative; min-width: 100px"
-                @mouseover="selectedRow(idx)"
-                @mouseout="selectedRow(null)"
-                :id="`image-${idx}`"
-              >
-                <SampleThumbnail
-                  :sample="sample"
-                  key="sample" >
-                </SampleThumbnail>
-
-                <b-button
-                  v-show="selectedSample.hover == true && selectedSample.index === idx"
-                  style="position: absolute; right:0; top:0"
-                  class="plantit-btn thumbnail-btn"
-                  v-b-tooltip.hover
-                  title="Edit sample name and metadata."
-                  @click="$bvModal.show('editSampleMeta')"
+                <div
+                    style="position: relative; min-width: 100px"
+                    @mouseover="selectedRow(idx)"
+                    @mouseout="selectedRow(null)"
+                    :id="`image-${idx}`"
                 >
-                  <i class="far fa-edit"></i>
-                </b-button>
+                    <SampleThumbnail :sample="sample" key="sample">
+                    </SampleThumbnail>
 
-                <b-button
-                  v-show="selectedSample.hover == true && selectedSample.index === idx"
-                  style="position: absolute; left:0; top:0"
-                  class="plantit-btn thumbnail-btn"
-                  v-b-tooltip.hover
-                  title="Delete sample."
-                  @click="deleteSample(idx)"
-                >
-                  <i class="fas fa-trash-alt"></i>
-                </b-button>
+                    <b-button
+                        v-show="
+                            selectedSample.hover == true &&
+                                selectedSample.index === idx
+                        "
+                        style="position: absolute; right:0; top:0"
+                        class="plantit-btn thumbnail-btn"
+                        v-b-tooltip.hover
+                        title="Edit sample name and metadata."
+                        @click="$bvModal.show('editSampleMeta')"
+                    >
+                        <i class="far fa-edit"></i>
+                    </b-button>
 
-                <b-popover
-                  :target="`image-${idx}`"
-                  :title="sample.name"
-                  triggers="hover focus"
-                >
-                  <table width="100%">
-                    <tr v-for="field in sample.metadata">
-                      <td><b>{{ field.name }}:</b></td>
-                      <td>{{ field.value }}</td>
-                    </tr>
-                  </table>
+                    <b-button
+                        v-show="
+                            selectedSample.hover == true &&
+                                selectedSample.index === idx
+                        "
+                        style="position: absolute; left:0; top:0"
+                        class="plantit-btn thumbnail-btn"
+                        v-b-tooltip.hover
+                        title="Delete sample."
+                        @click="deleteSample(idx)"
+                    >
+                        <i class="fas fa-trash-alt"></i>
+                    </b-button>
 
-                </b-popover>
-                <br />
-              </div>
+                    <b-popover
+                        :target="`image-${idx}`"
+                        :title="sample.name"
+                        triggers="hover focus"
+                    >
+                        <table width="100%">
+                            <tr
+                                v-for="field in sample.metadata"
+                                :key="field.name + field.value"
+                            >
+                                <td>
+                                    <b>{{ field.name }}:</b>
+                                </td>
+                                <td>{{ field.value }}</td>
+                            </tr>
+                        </table>
+                    </b-popover>
+                    <br />
+                </div>
             </div>
         </div>
         <EditMetadataModal
-          modal-id="editSampleMeta"
-          :metadata="selectedSample.sample.metadata"
-          :name="selectedSample.sample.name"
-          @save="saveSample"
-          @cancel="cancelEdit"
+            modal-id="editSampleMeta"
+            :metadata="selectedSample.sample.metadata"
+            :name="selectedSample.sample.name"
+            @save="saveSample"
+            @cancel="cancelEdit"
         >
-       </EditMetadataModal>
+        </EditMetadataModal>
         <b-pagination
             v-if="samples.length > this.perPage"
             v-model="currentPage"
@@ -78,28 +86,27 @@
 </template>
 
 <script>
-import router from '@/router';
-import EditMetadataModal from '@/components/collections/EditMetadataModal'
-import SampleThumbnail from '@/components/collections/SampleThumbnail'
-import CollectionApi from '@/services/apiV1/CollectionManager'
+import EditMetadataModal from '@/components/collections/EditMetadataModal';
+import SampleThumbnail from '@/components/collections/SampleThumbnail';
+import CollectionApi from '@/services/apiV1/CollectionManager';
 
 export default {
     name: 'CollectionThumbnails',
     components: {
-      EditMetadataModal,
-      SampleThumbnail
+        EditMetadataModal,
+        SampleThumbnail
     },
     props: {
-      pk:{
-        //The collection pk
-        required: true,
-        type: Number
-      },
-      samples:{
-        //The Array of samples to display, as formatted in the colletion object.
-        required: true,
-        type: Array
-      }
+        pk: {
+            //The collection pk
+            required: true,
+            type: Number
+        },
+        samples: {
+            //The Array of samples to display, as formatted in the colletion object.
+            required: true,
+            type: Array
+        }
     },
     data() {
         return {
@@ -109,12 +116,12 @@ export default {
             currentPage: 1,
             //Current sample being interacted with by user
             selectedSample: {
-              hover: false,
-              index: null,
-              sample: {
-                metadata: [],
-                name: ""
-              }
+                hover: false,
+                index: null,
+                sample: {
+                    metadata: [],
+                    name: ''
+                }
             }
         };
     },
@@ -130,47 +137,51 @@ export default {
         }
     },
     methods: {
-      selectedRow(idx){
-        if(idx != null){
-          this.selectedSample.index = idx
-          this.selectedSample.sample = this.samples[idx]
-          this.selectedSample.hover = true
-        }else{
-          this.selectedSample.hover = false
-        }
-      },
-      saveSample(name,description,metadata){
-        this.selectedSample.sample.name = name
-        CollectionApi.updateSample(this.selectedSample.sample).then((response) =>{
-        }).catch((err) => {
-          console.log(err)
-        })
-      },
-      cancelEdit(){
-        CollectionApi.getSample(this.selectedSample.sample.pk)
-        .then((sample) =>{
-          this.$set(this.samples,this.selectedSample.index,sample)
-        }).catch((err) => {
-          console.log(err)
-        })
-      },
-      deleteSample(){
-        this.$bvModal.msgBoxConfirm(`Delete sample ${this.selectedSample.sample.name}?`,{
-          title: 'Delete Confirmation',
-          centered: true
-        })
-        .then(value => {
-            if(value == true){
-              CollectionApi.deleteSample(this.selectedSample.sample.pk).then((sucess) => {
-                if(sucess){
-                  this.samples.splice(this.selectedSample.index,1)
-                }
-              }).catch((err) => {
-                console.log(err)
-              })
+        selectedRow(idx) {
+            if (idx != null) {
+                this.selectedSample.index = idx;
+                this.selectedSample.sample = this.samples[idx];
+                this.selectedSample.hover = true;
+            } else {
+                this.selectedSample.hover = false;
             }
-          })
-      },
+        },
+        // eslint-disable-next-line no-unused-vars
+        saveSample(name, description, metadata) {
+            this.selectedSample.sample.name = name;
+            CollectionApi.updateSample(this.selectedSample.sample);
+        },
+        cancelEdit() {
+            CollectionApi.getSample(this.selectedSample.sample.pk).then(
+                sample => {
+                    this.$set(this.samples, this.selectedSample.index, sample);
+                }
+            );
+        },
+        deleteSample() {
+            this.$bvModal
+                .msgBoxConfirm(
+                    `Delete sample ${this.selectedSample.sample.name}?`,
+                    {
+                        title: 'Delete Confirmation',
+                        centered: true
+                    }
+                )
+                .then(value => {
+                    if (value == true) {
+                        CollectionApi.deleteSample(
+                            this.selectedSample.sample.pk
+                        ).then(sucess => {
+                            if (sucess) {
+                                this.samples.splice(
+                                    this.selectedSample.index,
+                                    1
+                                );
+                            }
+                        });
+                    }
+                });
+        }
     }
 };
 </script>
@@ -190,5 +201,4 @@ export default {
 
 .thumbnail-btn:hover
   opacity: 1
-
 </style>

@@ -17,8 +17,8 @@
                     </b-col>
                     <b-col>
                         <h3>Focus on your algorithm.</h3>
-                        Plant IT automatically parallelizes the analysis across all
-                        samples, allowing you to focus on your algorithms,
+                        Plant IT automatically parallelizes the analysis across
+                        all samples, allowing you to focus on your algorithms,
                         not logistics.
                     </b-col>
                 </b-row>
@@ -35,8 +35,9 @@
                     </b-col>
                     <b-col>
                         <h3>UI included.</h3>
-                        Plant IT provides a UI to help users run the algorithms and set algorithm parameters.
-                        Parameters are automatically validated and passed to your algorithm.
+                        Plant IT provides a UI to help users run the algorithms
+                        and set algorithm parameters. Parameters are
+                        automatically validated and passed to your algorithm.
                     </b-col>
                 </b-row>
 
@@ -53,8 +54,8 @@
                     <b-col>
                         <h3>No need to rewrite your existing code.</h3>
                         You can import libraries and run the analysis as python
-                        code inside the PlantIT framework, or call
-                        an external program.
+                        code inside the PlantIT framework, or call an external
+                        program.
                     </b-col>
                 </b-row>
             </b-col>
@@ -72,9 +73,10 @@
                     </b-col>
                     <b-col>
                         <h3>Autoformatted results.</h3>
-                        You choose what data to return to the user, then
-                        Plant IT automatically collates the results across all samples.
-                        Key-value pairs are return as a CSV, output files are organized by sample.
+                        You choose what data to return to the user, then Plant
+                        IT automatically collates the results across all
+                        samples. Key-value pairs are return as a CSV, output
+                        files are organized by sample.
                     </b-col>
                 </b-row>
 
@@ -90,10 +92,10 @@
                     </b-col>
                     <b-col>
                         <h3>You control the enviroment.</h3>
-                        You do not have to worry about
-                        if the system your code is running on has all the
-                        right libraries. All your algorithm code is run inside a
-                        Singularity container you provide.
+                        You do not have to worry about if the system your code
+                        is running on has all the right libraries. All your
+                        algorithm code is run inside a Singularity container you
+                        provide.
                     </b-col>
                 </b-row>
             </b-col>

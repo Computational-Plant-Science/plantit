@@ -39,6 +39,9 @@ export default {
         ListJobs,
         ListCollections,
         PageNavigation
+    },
+    data() {
+        return {};
     }
 };
 </script>

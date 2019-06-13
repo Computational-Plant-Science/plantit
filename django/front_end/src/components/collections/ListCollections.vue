@@ -23,7 +23,6 @@
 
             <b-table
                 selectable
-                striped
                 hover
                 :sort-by.sync="sortBy"
                 :sort-desc.sync="sortDesc"
@@ -31,7 +30,6 @@
                 :fields="fields"
                 :per-page="perPage"
                 :borderless="true"
-                :striped="false"
                 select-mode="single"
                 :filter="filter"
                 @row-selected="rowSelected"
@@ -43,35 +41,37 @@
                             query: { pk: data.item.pk }
                         }"
                     >
-                      Analyze
+                        Analyze
                     </b-link>
                 </template>
                 <template slot="pinned" slot-scope="data">
-                  <b-button
-                      size="sm"
-                      @click="togglePin(data.item.pk,data.item)"
-                      class="plantit-btn"
-                  >
-                    <b-img
-                      v-if="data.item.pinned"
-                      :src="require('@/assets/icons/pin icons/pin2.svg')"
-                      width="30px">
-                    </b-img>
-                    <b-img
-                      v-else
-                      :src="require('@/assets/icons/pin icons/pin.svg')"
-                      width="30px">
-                    </b-img>
-                  </b-button>
+                    <b-button
+                        size="sm"
+                        @click="togglePin(data.item.pk, data.item)"
+                        class="plantit-btn"
+                    >
+                        <b-img
+                            v-if="data.item.pinned"
+                            :src="require('@/assets/icons/pin icons/pin2.svg')"
+                            width="30px"
+                        >
+                        </b-img>
+                        <b-img
+                            v-else
+                            :src="require('@/assets/icons/pin icons/pin.svg')"
+                            width="30px"
+                        >
+                        </b-img>
+                    </b-button>
                 </template>
                 <template slot="tools" slot-scope="data">
-                  <b-button
-                      size="sm"
-                      class="plantit-btn"
-                      @click='deleteCollection(data.item.pk,data.item)'
-                  >
-                  <i class="fas fa-trash-alt fa-2x"></i>
-                </b-button>
+                    <b-button
+                        size="sm"
+                        class="plantit-btn"
+                        @click="deleteCollection(data.item.pk, data.item)"
+                    >
+                        <i class="fas fa-trash-alt fa-2x"></i>
+                    </b-button>
                 </template>
             </b-table>
         </b-container>
@@ -80,7 +80,7 @@
 
 <script>
 import router from '@/router';
-import CollectionApi from '@/services/apiV1/CollectionManager'
+import CollectionApi from '@/services/apiV1/CollectionManager';
 
 export default {
     name: 'ListCollections',
@@ -97,31 +97,31 @@ export default {
         rowSelected: function(items) {
             router.push({ path: 'collection', query: { pk: items[0].pk } });
         },
-        togglePin(pk, item){
-          CollectionApi.pin(pk,!item.pinned).then(success =>{
-              if(success){
-                item.pinned = !item.pinned
-              }
-          })
+        togglePin(pk, item) {
+            CollectionApi.pin(pk, !item.pinned).then(success => {
+                if (success) {
+                    item.pinned = !item.pinned;
+                }
+            });
         },
         deleteCollection(pk, item) {
-          this.$bvModal.msgBoxConfirm(`Delete collection ${item.name}?`,{
-            title: 'Delete Confirmation',
-            centered: true
-          })
-            .then(value => {
-              if(value == true){
-                CollectionApi.deleteCollection(pk).then(value => {
-                  if(value == true){
-                    this.items = this.items.filter(obj => {return obj.pk != pk})
-                  }
+            this.$bvModal
+                .msgBoxConfirm(`Delete collection ${item.name}?`, {
+                    title: 'Delete Confirmation',
+                    centered: true
                 })
-              }
-            })
-            .catch(err => {
-              console.log("Error :" + err)
-            })
-        },
+                .then(value => {
+                    if (value == true) {
+                        CollectionApi.deleteCollection(pk).then(value => {
+                            if (value == true) {
+                                this.items = this.items.filter(obj => {
+                                    return obj.pk != pk;
+                                });
+                            }
+                        });
+                    }
+                });
+        }
     },
     data() {
         return {
@@ -149,9 +149,10 @@ export default {
             items: []
         };
     },
-    mounted: function(){
-      CollectionApi.getCollectionList()
-      .then((list) => { this.items = list })
+    mounted: function() {
+        CollectionApi.getCollectionList().then(list => {
+            this.items = list;
+        });
     }
 };
 </script>

@@ -6,11 +6,10 @@
                 <b-nav-item to="/user/dashboard">Dashboard</b-nav-item>
                 <b-nav-item to="/user/jobs">Jobs</b-nav-item>
             </template>
-            <template v-slot:buttons>
-            </template>
+            <template v-slot:buttons> </template>
         </PageNavigation>
 
-        <h1> Choose a Workflow </h1>
+        <h1>Choose a Workflow</h1>
 
         <b-form-group label-cols-sm="2" label="Filter" style="width: 400px">
             <b-input-group>
@@ -28,74 +27,89 @@
             </b-input-group>
         </b-form-group>
 
-         <div class="d-flex flex-wrap justify-content-center align-items-stretch row-eq-height">
+        <div
+            class="d-flex flex-wrap justify-content-center align-items-stretch row-eq-height"
+        >
             <div
-              v-for="workflow in filtered"
-              class="p-3 m-3 workflow"
+                v-for="workflow in filtered"
+                :key="workflow.name"
+                class="p-3 m-3 workflow"
             >
-              <div class="workflow-icon">
-                <b-img :src="workflow.icon_url"></b-img>
-              </div>
-              <div class="workflow-text">
-                <b-link :to="{name: 'submit_workflow', query: { collection_pk: pk, workflow_name: workflow.app_name }}"> {{workflow.name}} </b-link>
-                <hr>
-                {{workflow.description}}
-              </div>
+                <div class="workflow-icon">
+                    <b-img :src="workflow.icon_url"></b-img>
+                </div>
+                <div class="workflow-text">
+                    <b-link
+                        :to="{
+                            name: 'submit_workflow',
+                            query: {
+                                collection_pk: pk,
+                                workflow_name: workflow.app_name
+                            }
+                        }"
+                    >
+                        {{ workflow.name }}
+                    </b-link>
+                    <hr />
+                    {{ workflow.description }}
+                </div>
             </div>
-          </div>
+        </div>
     </div>
 </template>
 
 <script>
 import PageNavigation from '@/components/PageNavigation';
-import WorkflowAPI from '@/services/apiV1/WorkflowManager'
+import WorkflowAPI from '@/services/apiV1/WorkflowManager';
 
 export default {
     name: 'Analyze',
     components: {
-      PageNavigation
+        PageNavigation
     },
-    props:{
-      pk:{
-        // the pk of the collection to analyze
-        required: true
-      },
+    props: {
+        pk: {
+            // the pk of the collection to analyze
+            required: true
+        }
     },
-    data: function () {
-      return{
-        // The text to filter the shown workflow by.
-        filter_query: "",
+    data: function() {
+        return {
+            // The text to filter the shown workflow by.
+            filter_query: '',
 
-        //Available workflows.
-        workflows:[]
-      }
+            //Available workflows.
+            workflows: []
+        };
     },
-    mounted: function(){
-      WorkflowAPI.getWorkflows().then((workflows) =>{
-        this.workflows = workflows
-      })
+    mounted: function() {
+        WorkflowAPI.getWorkflows().then(workflows => {
+            this.workflows = workflows;
+        });
     },
-    computed:{
-      filter_text: function(){
-        /*
+    computed: {
+        filter_text: function() {
+            /*
           returns (str): filter_query converted to all lower case
         */
-        return this.filter_query.toLowerCase()
-      },
-      filtered: function(){
-        /*
+            return this.filter_query.toLowerCase();
+        },
+        filtered: function() {
+            /*
           returns: An array of workflow objects that include the f
             ilter_query text in their name or description
         */
-        if(this.filter_text == ""){
-          return this.workflows
-        }else{
-          return this.workflows.filter((w) => {
-             return w.name.toLowerCase().includes(this.filter_text) ||
-                      w.description.toLowerCase().includes(this.filter_text)
-          })
+            if (this.filter_text == '') {
+                return this.workflows;
+            } else {
+                return this.workflows.filter(w => {
+                    return (
+                        w.name.toLowerCase().includes(this.filter_text) ||
+                        w.description.toLowerCase().includes(this.filter_text)
+                    );
+                });
+            }
         }
-      }
     }
 };
 </script>
@@ -122,5 +136,4 @@ export default {
 .workflow-text
   background-color: $color-box-background
   padding: 10px
-
 </style>

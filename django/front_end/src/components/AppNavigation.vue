@@ -17,22 +17,26 @@
                 <b-nav-item>Contact</b-nav-item>
                 <b-nav-item>Public Datasets</b-nav-item>
                 <b-nav-item>FAQ</b-nav-item>
-                <b-nav-item v-if="isLoggedIn" href="/logout/?next=/">Logout</b-nav-item>
-                <b-nav-item v-else href="/login/?next=/user/dashboard">Login</b-nav-item>
+                <b-nav-item v-if="isLoggedIn" href="/logout/?next=/"
+                    >Logout</b-nav-item
+                >
+                <b-nav-item v-else href="/login/?next=/user/dashboard"
+                    >Login</b-nav-item
+                >
             </b-navbar-nav>
         </b-collapse>
     </b-navbar>
 </template>
 
 <script>
-import Auth from '@/services/apiV1/Auth.js'
+import Auth from '@/services/apiV1/Auth.js';
 
 export default {
     name: 'AppNavigation',
-    computed:{
-      isLoggedIn(){
-        return Auth.isLoggedIn()
-      }
+    computed: {
+        isLoggedIn() {
+            return Auth.isLoggedIn();
+        }
     }
 };
 </script>

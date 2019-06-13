@@ -1,116 +1,136 @@
-import axios from 'axios'
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 
 export default {
-   newCollection(name,desc,storageType,metadata,basePath) {
-    /**
-     * Create a new collection
-     *
-     * Requirements:
-     *   User must be logged in
-     *
-     * Args:
-     *    name (str): name of the collection
-     *    description (str): Collection description
-     *    storageType (str): Storage system that the
-     *         collection samples are save on
-     *    metadata (Array of obects): Collection metadata
-     *    basePath (str): The base folder in which the samples are
-     *         saved on storageType
-     *
-     * Returns:
-     *    Axios promise containing the server response
-     **/
-    return axios.post("/apis/v1/collections/",{
-      storage_type: storageType,
-      base_file_path: basePath,
-      name: name,
-      metadata: metadata,
-      description: desc,
-    })
-    .then((response) => {return response })
-    .catch(function (error) {
-      console.log("Error: " + error);
-    })
-  },
+    newCollection(name, desc, storageType, metadata, basePath) {
+        /**
+         * Create a new collection
+         *
+         * Requirements:
+         *   User must be logged in
+         *
+         * Args:
+         *    name (str): name of the collection
+         *    description (str): Collection description
+         *    storageType (str): Storage system that the
+         *         collection samples are save on
+         *    metadata (Array of obects): Collection metadata
+         *    basePath (str): The base folder in which the samples are
+         *         saved on storageType
+         *
+         * Returns:
+         *    Axios promise containing the server response
+         **/
+        return axios
+            .post('/apis/v1/collections/', {
+                storage_type: storageType,
+                base_file_path: basePath,
+                name: name,
+                metadata: metadata,
+                description: desc
+            })
+            .then(response => {
+                return response;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
 
-  pin(pk,pinned){
-    /**
-     * Pin or unpin the job to the user profile
-     *
-     * Args:
-     *    pk (int): job pk
-     *    pinned (bool): pinned state
-     *
-     * Requirements:
-     *    User must be logged in
-     *
-     * Returns:
-     *    Promise returning True if the pin was sucessfully added,
-     *    False otherwise
-     **/
-     let url = (pinned ? `/apis/v1/collections/${pk}/pin/` : `/apis/v1/collections/${pk}/unpin/`)
-     return axios.post(url)
-      .then((response) => {
-        return response.status == 200
-      }).catch(error => {
-        console.log(error)
-        return false
-      })
-  },
+    pin(pk, pinned) {
+        /**
+         * Pin or unpin the job to the user profile
+         *
+         * Args:
+         *    pk (int): job pk
+         *    pinned (bool): pinned state
+         *
+         * Requirements:
+         *    User must be logged in
+         *
+         * Returns:
+         *    Promise returning True if the pin was sucessfully added,
+         *    False otherwise
+         **/
+        let url = pinned
+            ? `/apis/v1/collections/${pk}/pin/`
+            : `/apis/v1/collections/${pk}/unpin/`;
+        return axios
+            .post(url)
+            .then(response => {
+                return response.status == 200;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
 
-  getCollectionList(){
-    /**
-     * Get a list of collections for the current user.
-     *
-     * Requirements:
-     *   User must be logged in
-     *
-     * Returns:
-     *    Axios promise containing the user's collections in an array
-     **/
-    return axios.get("/apis/v1/collections/")
-    .then((response) => { return response.data })
-  },
+    getCollectionList() {
+        /**
+         * Get a list of collections for the current user.
+         *
+         * Requirements:
+         *   User must be logged in
+         *
+         * Returns:
+         *    Axios promise containing the user's collections in an array
+         **/
+        return axios
+            .get('/apis/v1/collections/')
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
 
-  getCollection(pk){
-    /**
-     * Get a collection.
-     *
-     * Requirements:
-     *   User must be logged in
-     *
-     * Returns:
-     *    Axios promise containing the collection object
-     **/
-    return axios.get(`/apis/v1/collections/${pk}/` )
-    .then((response) => { return response.data })
-  },
+    getCollection(pk) {
+        /**
+         * Get a collection.
+         *
+         * Requirements:
+         *   User must be logged in
+         *
+         * Returns:
+         *    Axios promise containing the collection object
+         **/
+        return axios
+            .get(`/apis/v1/collections/${pk}/`)
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
 
-  deleteCollection(pk){
-    /**
-     * Delete a collection.
-     *
-     * Args:
-     *   pk (int): collection pk
-     *
-     * Requirements:
-     *   User must be logged in
-     *
-     * Returns:
-     *    Axios promise containing true if the delete was sucessful,
-     *    false otherwise
-     **/
-     return axios.delete(`/apis/v1/collections/${pk}/` )
-     .then((response) => {
-       return response.status == 204
-     }).catch(error => {
-       console.log("Error :" + error)
-       return false
-     })
-  },
+    deleteCollection(pk) {
+        /**
+         * Delete a collection.
+         *
+         * Args:
+         *   pk (int): collection pk
+         *
+         * Requirements:
+         *   User must be logged in
+         *
+         * Returns:
+         *    Axios promise containing true if the delete was sucessful,
+         *    false otherwise
+         **/
+        return axios
+            .delete(`/apis/v1/collections/${pk}/`)
+            .then(response => {
+                return response.status == 204;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
 
-  addSample(sample, pk){
-    /**
+    addSample(sample, pk) {
+        /**
       Add sample to the collection
 
       Args:
@@ -127,11 +147,11 @@ export default {
       Returns:
         axios.patch promise
     **/
-    return this.addSamples([sample], pk)
-  },
+        return this.addSamples([sample], pk);
+    },
 
-  addSamples(samples, pk){
-    /**
+    addSamples(samples, pk) {
+        /**
       Add sample to the collection
 
       Args:
@@ -151,14 +171,16 @@ export default {
       Returns:
         axios.patch promise
     **/
-    const data = {
-      sample_set: samples
-    }
-    return axios.patch(`/apis/v1/collections/${pk}/`, data)
-  },
+        const data = {
+            sample_set: samples
+        };
+        return axios.patch(`/apis/v1/collections/${pk}/`, data).catch(err => {
+            Sentry.captureException(err);
+        });
+    },
 
-  updateSample(sample){
-    /**
+    updateSample(sample) {
+        /**
       Update the sample list. This overwrites the collection sample list
       with the the one give here.
 
@@ -179,11 +201,15 @@ export default {
       Returns:
         axios.patch promise
     **/
-    return axios.patch(`/apis/v1/samples/${sample.pk}/`, sample)
-  },
+        return axios
+            .patch(`/apis/v1/samples/${sample.pk}/`, sample)
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
 
-  getSample(pk){
-    /**
+    getSample(pk) {
+        /**
       Get a single sample
 
       Args:
@@ -195,12 +221,18 @@ export default {
       Returns:
         axios.patch promise returning the sample object
     **/
-    return axios.get(`/apis/v1/samples/${pk}/` )
-    .then((response) => { return response.data })
-  },
+        return axios
+            .get(`/apis/v1/samples/${pk}/`)
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
 
-  deleteSample(pk){
-    /**
+    deleteSample(pk) {
+        /**
       Delete a sample
 
       Args:
@@ -213,17 +245,18 @@ export default {
        Axios promise returning true if the delete was sucessful,
        false otherwise
     **/
-    return axios.delete(`/apis/v1/samples/${pk}/` )
-    .then((response) => {
-      return response.status == 204
-    }).catch(error => {
-      console.log("Error :" + error)
-      return false
-    })
-  },
+        return axios
+            .delete(`/apis/v1/samples/${pk}/`)
+            .then(response => {
+                return response.status == 204;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
 
-  updateMetadata(name,description,metadata,pk){
-    /**
+    updateMetadata(name, description, metadata, pk) {
+        /**
       Update (overwrite) the collection metadata, name, and description.
       The collection with the give pk will have its metadata, name,
       and description overwritten wtih the values passed.
@@ -247,11 +280,13 @@ export default {
       Returns:
         axios.patch promise
     **/
-    const data = {
-      name: name,
-      description: description,
-      metadata: metadata
+        const data = {
+            name: name,
+            description: description,
+            metadata: metadata
+        };
+        return axios.patch(`/apis/v1/collections/${pk}/`, data).catch(err => {
+            Sentry.captureException(err);
+        });
     }
-    return axios.patch(`/apis/v1/collections/${pk}/`, data)
-  }
-}
+};

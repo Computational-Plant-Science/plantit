@@ -80,6 +80,31 @@ To add a user to a newly setup system
 docker-compose -f docker-compose.yml -f compose-prod.yml run djangoapp ./manage.py createsuperuser
 ```
 
+# Google analytics
+Google are supported via VueAnalytics. It is automatically added to the
+website by setting the VUE_APP_ANALYTICS_ID variable is set in django/front_end/.env.
+
+__NOTE:__ the .env file should not be committed to the repository. These variables are do not work with ``npm run watch``
+
+E.g.:
+
+
+```
+VUE_APP_ANALYTICS_ID=id_provided_by_google
+```
+
+# Sentry IO
+Sentry IO is supported via the vue module for sentry. It is automatically added to the website by setting the VUE_APP_SENTRY_IO_KEY and VUE_APP_SENTRY_IO_PROJECT variables in django/front_end/.env.
+
+__NOTE:__ the .env file should not be committed to the repository. These variables are do not work with ``npm run watch``
+
+
+E.g.:
+
+```
+VUE_APP_SENTRY_IO_KEY=ddd3adfa...
+VUE_APP_SENTRY_IO_PROJECT=12345...
+```
 
 # Running
 The website can be run in production mode using a different docker-compose config:

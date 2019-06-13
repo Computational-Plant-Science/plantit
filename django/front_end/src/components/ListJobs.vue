@@ -23,7 +23,6 @@
 
             <b-table
                 selectable
-                striped
                 hover
                 :sort-by.sync="sortBy"
                 :sort-desc.sync="sortDesc"
@@ -31,46 +30,47 @@
                 :fields="fields"
                 :per-page="perPage"
                 :borderless="true"
-                :striped="false"
                 select-mode="single"
                 :filter="filter"
                 @row-selected="rowSelected"
             >
                 <template slot="tasks" slot-scope="data">
-                  <DiscreteProgress
-                    :tasks="data.item.task_set"
-                    :show-name="false"
-                  ></DiscreteProgress>
+                    <DiscreteProgress
+                        :tasks="data.item.task_set"
+                        :show-name="false"
+                    ></DiscreteProgress>
                 </template>
-                <template slot='date_created' slot-scope="data">
-                  {{ data.item.date_created | format_date }}
+                <template slot="date_created" slot-scope="data">
+                    {{ data.item.date_created | format_date }}
                 </template>
                 <template slot="pinned" slot-scope="data">
-                  <b-button
-                      class="plantit-btn"
-                      size="sm"
-                      @click="togglePin(data.item.pk,data.item)"
-                  >
-                    <b-img
-                      v-if="data.item.pinned"
-                      :src="require('@/assets/icons/pin icons/pin2.svg')"
-                      width="30px">
-                    </b-img>
-                    <b-img
-                      v-else
-                      :src="require('@/assets/icons/pin icons/pin.svg')"
-                      width="30px">
-                    </b-img>
-                  </b-button>
+                    <b-button
+                        class="plantit-btn"
+                        size="sm"
+                        @click="togglePin(data.item.pk, data.item)"
+                    >
+                        <b-img
+                            v-if="data.item.pinned"
+                            :src="require('@/assets/icons/pin icons/pin2.svg')"
+                            width="30px"
+                        >
+                        </b-img>
+                        <b-img
+                            v-else
+                            :src="require('@/assets/icons/pin icons/pin.svg')"
+                            width="30px"
+                        >
+                        </b-img>
+                    </b-button>
                 </template>
                 <template slot="tools" slot-scope="data">
-                  <b-button
-                      class="plantit-btn"
-                      size="sm"
-                      @click='deleteJob(data.item.pk,data.item)'
-                  >
-                  <i class="fas fa-trash-alt fa-2x"></i>
-                </b-button>
+                    <b-button
+                        class="plantit-btn"
+                        size="sm"
+                        @click="deleteJob(data.item.pk)"
+                    >
+                        <i class="fas fa-trash-alt fa-2x"></i>
+                    </b-button>
                 </template>
             </b-table>
         </b-container>
@@ -79,14 +79,14 @@
 
 <script>
 import router from '../router';
-import DiscreteProgress from './DiscreteProgress.vue'
-import JobApi from '@/services/apiV1/JobManager.js'
-import moment from 'moment'
+import DiscreteProgress from './DiscreteProgress.vue';
+import JobApi from '@/services/apiV1/JobManager.js';
+import moment from 'moment';
 
 export default {
     name: 'ListJobs',
     components: {
-      DiscreteProgress,
+        DiscreteProgress
     },
     props: {
         perPage: {
@@ -100,31 +100,31 @@ export default {
         rowSelected: function(items) {
             router.push({ path: 'job', query: { pk: items[0].pk } });
         },
-        togglePin(pk, item){
-          JobApi.pin(pk,!item.pinned).then(success =>{
-              if(success){
-                item.pinned = !item.pinned
-              }
-          })
+        togglePin(pk, item) {
+            JobApi.pin(pk, !item.pinned).then(success => {
+                if (success) {
+                    item.pinned = !item.pinned;
+                }
+            });
         },
-        deleteJob(pk, item) {
-          this.$bvModal.msgBoxConfirm(`Delete this job?`,{
-            title: 'Delete Job',
-            centered: true
-          })
-            .then(value => {
-              if(value == true){
-                JobApi.deleteJob(pk).then(value => {
-                  if(value == true){
-                    this.items = this.items.filter(obj => {return obj.pk != pk})
-                  }
+        deleteJob(pk) {
+            this.$bvModal
+                .msgBoxConfirm(`Delete this job?`, {
+                    title: 'Delete Job',
+                    centered: true
                 })
-              }
-            })
-            .catch(err => {
-              console.log("Error :" + err)
-            })
-        },
+                .then(value => {
+                    if (value == true) {
+                        JobApi.deleteJob(pk).then(value => {
+                            if (value == true) {
+                                this.items = this.items.filter(obj => {
+                                    return obj.pk != pk;
+                                });
+                            }
+                        });
+                    }
+                });
+        }
     },
     data() {
         return {
@@ -157,14 +157,15 @@ export default {
             items: []
         };
     },
-    mounted: function(){
-      JobApi.getJobList()
-      .then((list) => { this.items = list })
+    mounted: function() {
+        JobApi.getJobList().then(list => {
+            this.items = list;
+        });
     },
-    filters:{
-      format_date(value){
-        return moment(value).format('MM/DD/YY hh:mm')
-      }
+    filters: {
+        format_date(value) {
+            return moment(value).format('MM/DD/YY hh:mm');
+        }
     }
 };
 </script>

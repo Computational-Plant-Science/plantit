@@ -18,19 +18,23 @@
                 </b-col>
             </b-row>
             <b-row>
-              <b-col>
-                <b-nav class="mx-auto " id="main-nav">
-                  <b-navbar toggleable="lg" class="mx-auto">
-                      <b-nav-item>Contact</b-nav-item>
-                      <b-nav-item>Datasets</b-nav-item>
-                      <b-nav-item>FAQ</b-nav-item>
-                      <b-nav-item href="/user/dashboard">Login</b-nav-item>
-                  </b-navbar>
-                </b-nav>
-            </b-col>
+                <b-col>
+                    <b-nav class="mx-auto " id="main-nav">
+                        <b-navbar toggleable="lg" class="mx-auto">
+                            <b-nav-item>Contact</b-nav-item>
+                            <b-nav-item>Datasets</b-nav-item>
+                            <b-nav-item>FAQ</b-nav-item>
+                            <b-nav-item href="/user/dashboard"
+                                >Login</b-nav-item
+                            >
+                        </b-navbar>
+                    </b-nav>
+                </b-col>
             </b-row>
         </b-container>
-        <a href="#home-about-researchers"><i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i></a>
+        <a href="#home-about-researchers"
+            ><i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i
+        ></a>
     </div>
 </template>
 
@@ -100,5 +104,4 @@ export default {
   animation-duration: 2s
   animation-iteration-count: infinite
   animation-direction: alternate
-
 </style>
