@@ -1,7 +1,7 @@
 # Installation
 
 ```bash
-git clone git@github.com:cottersci/DIRT2_Webplatform.git
+git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 
 The processes are contained within docker containers, the full website can be run using docker-compose from the root of the repository:
@@ -48,7 +48,7 @@ docker-compose -f docker-compose.yml -f compose-dev.yml restart celery
 ### Environment specific configuration
 If present, PlantIT loads `django/settings.py` as part of django's settings.py file. This can be used for any environment specific configuration that should not be committed to the repository.
 
-Values set in `django/settings.py` override any PlantIT default settings. 
+Values set in `django/settings.py` override any PlantIT default settings.
 
 # Installing Workflows
 Workflows created using the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be integrated into the web platform by cloning the repository (or copying the code) into the django/workflows directory.
