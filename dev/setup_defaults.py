@@ -18,12 +18,6 @@ from plantit.job_manager.remote import Cluster
 from plantit.job_manager.test.test_models import create_cluster
 cluster = create_cluster("clusterside submit")
 
-from plantit.file_manager.permissions import Permissions
-Permissions.allow(admin_user,"local",'./files/')
-Permissions.allow(regular_user,"local",'./files/')
-Permissions.allow(admin_user,"irods",'/tempZone/home/rods/')
-Permissions.allow(regular_user,"irods",'/tempZone/home/rods/')
-
 variables = ["IRODS_USERNAME = 'rods'",
              "IRODS_PASSWORD = 'rods'",
              "IRODS_HOSTNAME = 'irods'",

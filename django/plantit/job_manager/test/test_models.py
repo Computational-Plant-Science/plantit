@@ -162,15 +162,12 @@ class JobTests(TestCase):
     def test_cancel_failed(self):
         pass
 
-from plantit.file_manager.permissions import Permissions
 from plantit.file_manager.filesystems.local import Local
 
 class RemoteTests(TestCase):
     def setUp(self):
         self.storage_type = 'local'
         self.user = create_user()
-        Permissions.allow(self.user,self.storage_type,'./files/')
-        Permissions.allow(self.user,self.storage_type,'./files/tmp/')
 
     def open_sftp(cluster,job):
         """

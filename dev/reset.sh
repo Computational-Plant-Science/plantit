@@ -11,6 +11,8 @@
 #      pass: admin
 #  as well as a default cluster and executor that ssh into the ssh docker cluster
 #
+
+
 DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f compose-dev.yml"
 
 #Delete all docker containers and volumes
@@ -48,3 +50,9 @@ $DOCKER_COMPOSE exec ssh /bin/bash /root/irods_setup.sh
 
 #Stop db container
 $DOCKER_COMPOSE stop
+
+#Build front end code
+cd django/front_end
+npm install
+npm run build
+cd ../..
