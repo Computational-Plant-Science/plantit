@@ -1,3 +1,13 @@
+# Requirements
+
+The following must be installed to run PlantIT:
+
+* [Docker](https://www.docker.com/)
+* [npm](https://www.npmjs.com/get-npm)
+* Python 3
+* A unix based shell
+
+
 # Installation
 
 ```bash
