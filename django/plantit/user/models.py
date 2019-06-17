@@ -14,8 +14,8 @@ class Profile(models.Model):
     city = models.CharField(max_length=30, blank=True)
     affiliation = models.CharField(max_length=50, blank=True)
     country = models.CharField(max_length=50)
-    pinned_jobs = models.ManyToManyField(Job, related_name='profile_pins', blank=True, null=True)
-    pinned_collections = models.ManyToManyField(Collection, related_name='profile_pins', blank=True, null=True)
+    pinned_jobs = models.ManyToManyField(Job, related_name='profile_pins', blank=True)
+    pinned_collections = models.ManyToManyField(Collection, related_name='profile_pins', blank=True)
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
