@@ -21,6 +21,9 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "front_end", "dist", "assets"),
 )
 
+#Where Plant IT workflows are kept
+WORKFLOW_DIR = os.path.join(BASE_DIR,"workflows")
+
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',

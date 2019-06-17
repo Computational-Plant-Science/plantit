@@ -1,8 +1,8 @@
 from os import listdir
 from os.path import isdir, isfile, join
 from shutil import copyfile
+from django.conf import settings
 import importlib
-import logging
 
 class Registrar():
     """
@@ -58,7 +58,7 @@ class Registrar():
 
 registrar = Registrar()
 
-basepath = "./workflows/"
+basepath = settings.WORKFLOW_DIR
 folders = [f for f in listdir(basepath) if isdir(join(basepath,f))]
 
 for folder in folders:

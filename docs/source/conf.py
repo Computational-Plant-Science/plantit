@@ -19,16 +19,16 @@ sys.path.insert(0, os.path.abspath('../../django'))
 # -- djanog Setup  -----------------------------------------------------------
 
 # Allow autodoc to be able to import django
-os.environ['DJANGO_SETTINGS_MODULE'] = 'dirt2.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'plantit.settings_dev'
 
 import django
 django.setup()
 
 # -- Project information -----------------------------------------------------
 
-project = 'DIRT2 Web'
-copyright = '2018, Chris Cotter'
-author = 'Chris Cotter'
+project = 'Plant IT'
+copyright = '2019, CPS Lab'
+author = 'CPS Lab'
 
 # The short X.Y version
 version = '0.00'
@@ -99,7 +99,7 @@ html_theme = 'alabaster'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['.doc_static']
+html_static_path = []
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
