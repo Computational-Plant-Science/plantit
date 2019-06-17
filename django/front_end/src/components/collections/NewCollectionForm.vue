@@ -107,8 +107,7 @@ export default {
                 this.form.name,
                 this.form.description,
                 this.form.storageType,
-                this.form.metadata,
-                this.form.basePath
+                this.form.metadata
             ).then(response => {
                 router.push({
                     name: 'collection',

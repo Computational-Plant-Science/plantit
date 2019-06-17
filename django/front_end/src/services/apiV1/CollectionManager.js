@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export default {
-    newCollection(name, desc, storageType, metadata, basePath) {
+    newCollection(name, desc, storageType, metadata) {
         /**
          * Create a new collection
          *
@@ -15,8 +15,6 @@ export default {
          *    storageType (str): Storage system that the
          *         collection samples are save on
          *    metadata (Array of obects): Collection metadata
-         *    basePath (str): The base folder in which the samples are
-         *         saved on storageType
          *
          * Returns:
          *    Axios promise containing the server response
@@ -24,7 +22,6 @@ export default {
         return axios
             .post('/apis/v1/collections/', {
                 storage_type: storageType,
-                base_file_path: basePath,
                 name: name,
                 metadata: metadata,
                 description: desc
