@@ -219,6 +219,7 @@ class SubmissionTask(SSHTaskMixin, Task):
                 json.decoder.JSONDecodeError if parameters are not decodeable
         """
 
+        #Workflow specific configuration in workflow.WORKFLOW dictionary
         config = registrar.list[self.app_name]
 
         params = {
@@ -226,10 +227,9 @@ class SubmissionTask(SSHTaskMixin, Task):
             "job_pk": self.job.pk,
             "auth_token": self.job.auth_token,
             "task_pk": self.pk,
-            "singularity_url": config['singularity_url'],
-            "api_version": config['api_version'],
-            "parameters": json.loads(self.parameters),
+            "parameters": json.loads(self.parameters)
         }
+        params.update(config) #Add config from workflow.WORKFLOW
 
         return json.dumps(params)
 
