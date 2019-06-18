@@ -1,8 +1,8 @@
 class CastableModelMixin:
     """
-    Add support to cast an object to its final class
+        Add support to cast an object to its final class
 
-    Borrowed from https://sophilabs.co/blog/castable-model-mixin
+        Borrowed from https://sophilabs.co/blog/castable-model-mixin
     """
 
     def cast(self):

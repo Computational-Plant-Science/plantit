@@ -33,8 +33,11 @@ plantit.collection.models module
 
 .. automodule:: plantit.collection.models
    :members:
-   :undoc-members:
    :show-inheritance:
+   :exclude-members: CustomQuerySet
+   
+.. autofunction:: plantit.collection.models.generate_thumbnail
+
 
 
 Module contents

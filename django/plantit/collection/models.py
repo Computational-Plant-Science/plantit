@@ -1,3 +1,25 @@
+'''
+    The collections module contains information and logic related to the
+    data users want to analyze using a Plant IT workflow.
+
+    Definitions:
+        **sample**: The individual unit fed into a Plant IT workflow. What is
+            contained in a sample is dependent on the workflow that will analyze
+            the sample. For example, a sample may be an individual image, a
+            folder containing slices from 3D imaging, or a csv file contining
+            points for a cloud map.
+
+            Plant IT makes no assumptions about what a sample is. Sample format
+            is defined by the workflow that will analyze it.
+
+        **collection**: A set of samples related in some way that will be
+            analyzed by the *same* workflow.
+
+            For example, all the roots collected in an experiment may go into
+            one collection, as they will all be analyzed by the same
+            downstream workflow.
+'''
+
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 
@@ -21,12 +43,26 @@ import plantit.file_manager.permissions as permissions
 @shared_task
 def generate_thumbnail(sample_pk):
     """
-        Generate the thumbnail image for a sample.
+        Generate the thumbnail image for a sample. This function runs
+        in a :mod:`~plantit.celery` task and is automatically called by
+        :func:`Collection.add_sample` when a
+        sample is added to a collection.
 
-        Currently only supports creating thumbnails of images.
+        Sample type is automatically detected and the correct thumbnail
+        code is run for the sample type. If the sample format is not supported,
+        :attr:`Sample.thumbnail_supported` is set to false and
+        :attr:`Sample.thumbnail` is left `null`
+
+        If a thumbnail is generated, :py:attr:`Sample.thumbnail_supported` is
+        set to true and :attr:`Sample.thumbnail` is set to the thumbnail image.
+        See :attr:`Sample.thumbnail` for more information.
+
+        Note:
+            Currently only supports creating thumbnails of images
+            (jpeg, jpg, png, tiff).
 
         Args:
-            sample_pk: pk of the sample
+            sample_pk (int): pk of the sample
     """
     sample = Sample.objects.get(pk = sample_pk)
     base_file_path = sample.collection.base_file_path
@@ -48,38 +84,28 @@ def generate_thumbnail(sample_pk):
         sample.save()
         pass
 
-
-class Tag(models.Model):
-    """
-        All tags are available to all collections and should be used to broadly
-        describe the contents of a collection, allowing it to be easily
-        found via a site-wide search. For example, a collection that
-        is related to maze would get a "maze" tag, allowing it to show up
-        when users are looking for analysis related to maze.
-
-        Attributes:
-            tag (str): tag
-            description (str): tag description
-    """
-    tag = models.CharField(max_length=50)
-    description = models.CharField(max_length=250)
-
 class CustomQuerySet(CastableQuerySetMixin, models.QuerySet):
+    '''
+        Add support to cast an object to its final class
+    '''
     pass
 
 class Collection(models.Model, CastableModelMixin):
     """
-        Collections are items that are analyzed togeather.
-        Typically representing one experiment or treatment.
+        Collections are a set of samples hat are analyzed together by the
+        same Plant IT workflow. Typically representing one experiment or
+        treatment.
 
         Attributes:
             name (str): the name of the collection
             description (str): text description and/or notes
             user (ForeignKey): primary user for the collection
-            tag (ManyToMany): :class:`workflows.models.Tag`s associated with the
-                collection
-            metadata (ManyToMany): User configurable metadata. Must extend
-                type :class:`workflows.models.AbstractMetaData`
+            storage_type (string): The name of the storage system the samples
+                are saved on. It must be a key in
+                :attr:`..file_manager.filesystems.Registrar.list`
+            base_file_path (str): Sample paths are relative to this path on the
+                file system.
+            metadata (:class:`JSONField`): Metadata for the collection.
     """
     objects = CustomQuerySet.as_manager()
     name = models.CharField(max_length=250)
@@ -87,7 +113,6 @@ class Collection(models.Model, CastableModelMixin):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     storage_type = models.CharField(max_length=25)
     base_file_path = models.CharField(max_length=250)
-    tags = models.ManyToManyField(Tag,blank=True)
     metadata = JSONField(default=list,blank=True)
 
     def __str__(self):
@@ -115,17 +140,18 @@ class Collection(models.Model, CastableModelMixin):
 
         return json.dumps(collection)
 
-    def get_absolute_url(self):
-        """
-            Return the canonical URL for an object. Defines a default
-            url for FormViews that use this model.
-
-            see https://docs.djangoproject.com/en/2.0/ref/models/instances/#django.db.models.Model.get_absolute_url for
-            details.
-        """
-        return "/collection/%d/details/"%(self.pk,)
-
     def add_sample(self,name,path,**kwargs):
+        '''
+            Create a new :class:`Sample` and add it to this collection.
+            :func:`generate_thumbnail` is automatically called when the sample
+            is added.
+
+            Args:
+                name (string): Name of the sample
+                path (string): Path to the sample. Relative to the collection's
+                    :attr:`~Collection.base_file_path` and
+                    :attr:`~Collection.storage_type`.
+        '''
         s = self.sample_set.create(path=path,name=name,**kwargs)
         generate_thumbnail.delay(s.pk)
 
