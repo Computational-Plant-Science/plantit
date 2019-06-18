@@ -9,7 +9,6 @@ Subpackages
    plantit.collection
    plantit.file_manager
    plantit.job_manager
-   plantit.migrations
    plantit.user
    plantit.workflows
 
@@ -49,30 +48,6 @@ plantit.settings module
 -----------------------
 
 .. automodule:: plantit.settings
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plantit.settings\_dev module
-----------------------------
-
-.. automodule:: plantit.settings_dev
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plantit.settings\_prod module
------------------------------
-
-.. automodule:: plantit.settings_prod
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plantit.wsgi module
--------------------
-
-.. automodule:: plantit.wsgi
    :members:
    :undoc-members:
    :show-inheritance:
