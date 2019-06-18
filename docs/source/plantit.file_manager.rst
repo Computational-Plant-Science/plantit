@@ -1,6 +1,13 @@
 plantit.file\_manager package
 =============================
 
+.. automodule:: plantit.file_manager
+
+Methods
+-------
+
+.. autofunction:: plantit.file_manager.open
+
 Subpackages
 -----------
 
@@ -10,22 +17,6 @@ Subpackages
 
 Submodules
 ----------
-
-plantit.file\_manager.apps module
----------------------------------
-
-.. automodule:: plantit.file_manager.apps
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plantit.file\_manager.fields module
------------------------------------
-
-.. automodule:: plantit.file_manager.fields
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 plantit.file\_manager.permissions module
 ----------------------------------------
@@ -39,23 +30,6 @@ plantit.file\_manager.services module
 -------------------------------------
 
 .. automodule:: plantit.file_manager.services
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plantit.file\_manager.widgets module
-------------------------------------
-
-.. automodule:: plantit.file_manager.widgets
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: plantit.file_manager
    :members:
    :undoc-members:
    :show-inheritance:

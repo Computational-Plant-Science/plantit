@@ -1,25 +1,3 @@
-'''
-    The collections module contains information and logic related to the
-    data users want to analyze using a Plant IT workflow.
-
-    Definitions:
-        **sample**: The individual unit fed into a Plant IT workflow. What is
-            contained in a sample is dependent on the workflow that will analyze
-            the sample. For example, a sample may be an individual image, a
-            folder containing slices from 3D imaging, or a csv file contining
-            points for a cloud map.
-
-            Plant IT makes no assumptions about what a sample is. Sample format
-            is defined by the workflow that will analyze it.
-
-        **collection**: A set of samples related in some way that will be
-            analyzed by the *same* workflow.
-
-            For example, all the roots collected in an experiment may go into
-            one collection, as they will all be analyzed by the same
-            downstream workflow.
-'''
-
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 
@@ -86,7 +64,8 @@ def generate_thumbnail(sample_pk):
 
 class CustomQuerySet(CastableQuerySetMixin, models.QuerySet):
     '''
-        Add support to cast an object to its final class
+        Add support to cast an object to its final class.
+        See :class:`CastableQuerySetMixin` for details.
     '''
     pass
 
@@ -160,13 +139,17 @@ class Sample(models.Model):
         Represents one experimental sample. I.E. The unit of information that
         is analyzed by the workflow.
 
+        Sample objects only contain a link to the path to the files
+        within the sample. :mod:`plantit.file_manager` is used to access
+        the files. 
+
         Attributes:
             collection (:class:`Collection`): the collection this sample
                 belongs to
             path (String): the path to the file relative to collection's
                 base file path.
             name (String): the name of the sample
-            thumbnail_supported (bool): Thumbnails are supproted for this sample
+            thumbnail_supported (bool): Thumbnails are supported for this sample
                 type. This is set to false by generate_thumbnail() if
                 the sample format is  not supported by generate_thumbnail
             thumbnail (ProcessedImageField): url to the thumbnail. See
@@ -189,7 +172,13 @@ class Sample(models.Model):
     def __str__(self):
         return self.name
 
-    def get(self,user,base_file_path):
+    def get(self):
+        '''
+            Get the sample file/folder.
+
+            Returns:
+                A file like object containing the sample data.
+        '''
         storage = permissions.open_folder(self.collection.storage_type,
                                           self.collection.base_file_path,
                                           self.collection.user)

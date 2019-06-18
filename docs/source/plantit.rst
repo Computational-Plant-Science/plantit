@@ -12,22 +12,6 @@ Subpackages
    plantit.user
    plantit.workflows
 
-plantit.admin module
---------------------
-
-.. automodule:: plantit.admin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plantit.apps module
--------------------
-
-.. automodule:: plantit.apps
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plantit.celery module
 ---------------------
 
@@ -48,15 +32,6 @@ plantit.settings module
 -----------------------
 
 .. automodule:: plantit.settings
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: plantit
    :members:
    :undoc-members:
    :show-inheritance:

@@ -12,7 +12,7 @@ from .filesystems import registrar
     Used to check user access on a storage system.
 """
 
-def open_folder(storage_type, path, user, *kwargs):
+def open_folder(storage_type, path, user):
     """
         Open a connection to the file system containing the path, checking
         that the folder is equal to or child to the base_path provided
@@ -20,10 +20,13 @@ def open_folder(storage_type, path, user, *kwargs):
 
         Args:
             storage_type (str): name of the file system storage type must be
-                subclass of AbstractStorageType
-            path: Folder path
-            user: User that has permission to the folder path
-            *kwargs: unique paramaters for each STORAGE type
+             a key in :attr:`plantit.file_manager.filesystems.Registrar.list`
+            path (str): folder path
+            user (:class:`~django.contrib.auth.models.User`):
+                user that has permission to the folder path
+
+        Returns:
+            A file-like object open to the given path.
     """
 
     split_path = normpath(path).rstrip("/").split("/")

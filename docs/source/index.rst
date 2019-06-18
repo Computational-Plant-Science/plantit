@@ -7,7 +7,7 @@ The plant it package (`django/plantit/`) contains the back end code for the
 website
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    plantit
 

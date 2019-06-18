@@ -1,32 +1,13 @@
 plantit.collection package
 ==========================
 
+.. automodule:: plantit.collection
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
-
-plantit.collection.admin module
--------------------------------
-
-.. automodule:: plantit.collection.admin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plantit.collection.apps module
-------------------------------
-
-.. automodule:: plantit.collection.apps
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plantit.collection.mixins module
---------------------------------
-
-.. automodule:: plantit.collection.mixins
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 plantit.collection.models module
 --------------------------------
@@ -35,15 +16,5 @@ plantit.collection.models module
    :members:
    :show-inheritance:
    :exclude-members: CustomQuerySet
-   
+
 .. autofunction:: plantit.collection.models.generate_thumbnail
-
-
-
-Module contents
----------------
-
-.. automodule:: plantit.collection
-   :members:
-   :undoc-members:
-   :show-inheritance:
