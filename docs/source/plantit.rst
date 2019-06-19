@@ -1,16 +1,7 @@
 plantit package
 ===============
 
-Subpackages
------------
-
-.. toctree::
-
-   plantit.collection
-   plantit.file_manager
-   plantit.job_manager
-   plantit.user
-   plantit.workflows
+.. automodule:: plantit
 
 plantit.celery module
 ---------------------
@@ -27,3 +18,14 @@ plantit.settings module
    :members:
    :undoc-members:
    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+  plantit.collection
+  plantit.file_manager
+  plantit.job_manager
+  plantit.user
+  plantit.workflows
