@@ -6,7 +6,7 @@ from django.http import JsonResponse, Http404, HttpResponse
 from django.contrib.auth.decorators import login_required
 
 from plantit.workflows import registrar
-from plantit.workflows.classes import Workflow
+from plantit.workflows import services
 """
     Defines a RESTFUL API for interacting with the file manager
 """
@@ -28,13 +28,13 @@ def workflows(request):
 def parameters(request,workflow):
 
     params = importlib.import_module('workflows.' + workflow + '.workflow').parameters.copy()
-    params.insert(0,Workflow.default_params())
+    params.insert(0,services.default_params())
 
     return JsonResponse({"parameters": params})
 
 def submit(request,workflow,pk):
     params = json.loads(request.body.decode('utf-8'))
 
-    job_id = Workflow.submit(request.user,workflow,pk,params)
+    job_id = services.submit(request.user,workflow,pk,params)
 
     return JsonResponse({"job_id": job_id})

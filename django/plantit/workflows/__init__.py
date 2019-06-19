@@ -1,3 +1,42 @@
+'''
+    Workflows are modular code provided by 3rd parties to analyze
+    samples within collections. Plant IT automatically
+    applies the workflow's analysis code to all samples withing a collection.
+
+    See https://plant-it-workflows.readthedocs.io/en/latest/ for more details
+    on creating workflows.
+
+    Workflows created using the Plant IT workflow cookiecutter template can be
+    integrated into the web platform by cloning the repository (
+    or copying the code) into the django/workflows directory.
+
+    On initialization of django, plant it automatically initializes an instance
+    of the workflow registrar (:class:`plantit.workflows.Registrar`) at
+    :attr:`plantit.workflows.registrar` and searches attempts to register
+    each folder in `django/workflows` as a Plant IT workflow. Assert checks
+    are performed for typical workflow errors. These asserts will stop
+    the web server from starting correctly if they fail.
+
+    Autoinitilization code can be found in `plantit.workflows.__init__.py`
+
+    Once automatically registered, workflows are ready to be used within Plant IT.
+
+    Note:
+        The web server and celery processes must be restarted to load
+        new workflows.
+
+    **Workflow Install Example:**
+
+    .. code-block:: bash
+
+        cd django/workflows/
+        git clone git@github.com:Computational-Plant-Science/DIRT2D_Workflow.git dirt2d #<- see note below
+
+    Note:
+        The workflow folder name (inside django/workflows/) must be the same
+        as the workflow app_name set in the workflow's WORKFLOW_CONFIG.
+
+'''
 from os import listdir
 from os.path import isdir, isfile, join
 from shutil import copyfile
@@ -8,19 +47,13 @@ class Registrar():
     """
         Workflows are register with the server via this class.
 
-        It is recommended that the registration is performed in the admin.py
-        file of the workflow.
+        Registration is automatically performed for workflows in `django/workflows`
 
-        Example:
-            admin.py:
-                from workflows import registrar
+        Manual registration is not recommended or supported.
 
-                admin.site.register(Defaults)
-
-                name = "DIRT"
-                description = "Up to 250 character description"
-                icon_loc = "workflows/dirt2d/static/icon.png"
-                registrar.register(name,description,"dirt2d",icon_loc)
+        An instance of this class is automatically created by Plant IT
+        at :attr:`plantit.workflows.registrar`. You should not need to use
+        the :class:`plantit.workflows.Registrar` class directly.
     """
     list = {}
 
