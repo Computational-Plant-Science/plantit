@@ -1,3 +1,7 @@
+'''
+    Classes for working with remove servers.
+'''
+
 import os
 from os import path
 import stat
@@ -19,10 +23,20 @@ from ..file_manager import permissions
 from ..workflows import registrar
 from django.conf import settings
 
+
+
 class Cluster(models.Model):
     """
         Contains information needed to login in to the cluster and submit
-        or cancel jobs. Clusters must support ssh via password authentication.
+        or cancel jobs. Clusters must support ssh via password authentication
+        or support ssh key authentication.
+
+        **Key Authentication**
+
+        If :attr:`~Cluster.password` is left blank, ssh will be attempted
+        using ssh keys. The private key must be placed in
+        <repository_root>/config/ssh/id_rsa and the server must be included
+        in the known hosts file at <repository_root>/config/ssh/known_hosts.
 
         Attributes:
             name (str): The name of the cluster (max_length=20)
@@ -37,25 +51,13 @@ class Cluster(models.Model):
             submit_commands (str): The command(s) to be run via an ssh terminal
                 submit_commands has access to variables_ set by either some tasks
                 or jobs. When available, they are automatically instered in place
-                of the following text (default='./{sub_script} {job_pk} {task_pk} {auth_token}')
+                of the following text (default='clusterside submit')
             cancel_commands (str): The coammnds(s) to be executed to cancel
-                a job on the cluster.
+                a job on the cluster. (default='# clusterside cancel #<- cancel
+                commands are not implemented by clusterside.')
 
-        .. _variables:
-        Variables:
-            +-------------+-----------------------------------------------+
-            + Varabile    + Description                                   |
-            +=============+===============================================+
-            |{sub_script} | the path (on the clustet) to the submission   |
-            |             | script provided by the current task           |
-            |             | (only valid for some tasks)                   |
-            +-------------+-----------------------------------------------+
-            |{job_pk}     | the current job id                            |
-            +-------------+-----------------------------------------------+
-            |{task_pk}    | the current task id                           |
-            +-------------+-----------------------------------------------+
-            |{auth_token} | the REST API authentication token             |
-            +-------------+-----------------------------------------------+
+            Note:
+                Cancel commands are not currently implemented by clusterside.
     """
     name = models.CharField(max_length=20)
     description = models.TextField(blank=True)
@@ -72,28 +74,49 @@ class Cluster(models.Model):
 
 class SSHTaskMixin(models.Model):
     """
-        Implements a run() method required for :class:`job_manager.models.Task`
+        Implements a run() method for :class:`job_manager.job.Task`
         that opens an ssh connection client and sftp to the job's cluster when
-        the task is run, then calls self.ssh(). Also handels closing the ssh
-        connections after self.ssh() returns or if ssh() thorws an exception.
+        the task is run, then calls self.ssh(). Also handles closing the ssh
+        connections after self.ssh() returns or if ssh() throws an exception.
 
         Classes extending this mixin must also extend :class:`job_manager.models.Task`
-        and should implment the ssh(self,client) method and perform task
+        and should implement the ssh(self,client) method and perform task
         functions within instead of in run().
 
         SSHTaskMixin handles silently IOError and AuthenticationException
         Exceptions (including ones raised by the ssh() method) by marking the
         job failed. Any other exceptions raised by ssh() will cause the job
-        status to be set to failed and the exception reraised.
+        status to be set to failed and the exception re-raised.
 
-        The SSHTaskMixin must be extdned before Task:
+        Note:
+            The SSHTaskMixin must be extended before Task:
+
+            Example:
+
+                .. code-block:: python
+
+                    class SomeTask(SSHTaskMixin,Task): #<- This is correct
+                        pass
+
+                    class SomeTask(Task,SSHTaskMixin): #<- Task's run() will run instead
+                        pass
 
         Example:
-            class SomeTask(SSHTaskMixin,Task): #<- This is correct
-                pass
 
-            class SomeTask(Task,SSHTaskMixin): #<- Task's run() will run instead
-                pass
+            .. code-block:: python
+
+                class SomeTask(SSHTaskMixin,Task):
+
+                    def ssh(self):
+                        #Access self.client for running
+                        # ssh bash commands
+                        # or self.sftp for sending/gettings
+                        # files via sftp.
+                        # the workdirectory of the job can be
+                        # found in
+                        # self.workdir.
+
+        See :class:`SubmissionTask` for a full example of using this mixin.
 
         Attributes:
             cluster (ForeignKey): ForeinKey to Cluster,
@@ -192,13 +215,15 @@ class SubmissionTask(SSHTaskMixin, Task):
 
         The submission task sshes into the cluster, copies its submission script
         and files into the Job's working directory, the executes the cluster's
-        ":attr:job_manager.models.Cluster.submit_commands", substuting the "{}"
-        strings listed in :meth:`format_cluster_cmds` for their respective values.
+        :attr:`job_manager.remote.Cluster.submit_commands`.
 
         Submission tasks should be cluster agnostic. The cluster object
         should address any commands that are cluster specific.
 
         Attributes:
+            parameters (str containing a JSON object): The workflow user
+                parameters as set by the user during submission.
+            app_name (str): The app_name of the workflow to run (Required)
     """
 
     parameters = models.TextField(null=True,blank=True)
@@ -206,17 +231,12 @@ class SubmissionTask(SSHTaskMixin, Task):
 
     def get_params(self):
         """
-            Replaces predfined string toeksn with saved information,
-            tokens that replaced are:
+            Combines workflow and server set parameters into a JSON
+            object to be saved provided as the workflow.json file
+            to ClusterSide.
 
-            {job_pk}      the job pk
-            {auth_token}  the REST authentication token for the job
-            {sub_script}  the name of the script to run, provided by the task to be run
-            {task_pk}     the pk of the current task
-            {params}      the paramaters stored in the parameters field
-
-            Throws:
-                json.decoder.JSONDecodeError if parameters are not decodeable
+            Returns:
+                JSON Object containing workflow parameters for this job.
         """
 
         #Workflow specific configuration in workflow.WORKFLOW dictionary
@@ -275,7 +295,16 @@ class SubmissionTask(SSHTaskMixin, Task):
 class UploadCollectionTask(SSHTaskMixin,Task):
     """
         Uploads all the files in a collection to the server to the files folder
-        in the job wok directory
+        in the job wok directory.
+
+        Note:
+            This was, and could be, used in conjunction with a
+            :class:`~plantit.file_manager.filesystems.local.Local` file system
+            to copy :class:`~plantit.collection.models.Sample` files saved
+            locally on the server to the cluster for analysis.
+
+            In the current build of Plant IT, such local file systems are not
+            supported.
     """
     collection_dir = "samples/"
 
@@ -285,22 +314,19 @@ class UploadCollectionTask(SSHTaskMixin,Task):
         with self.sftp.open('samples.json','w') as file:
             file.write(collection.to_json())
 
+        file_storage = permissions.open_folder(storage_type = collection.storage_type,
+                                               path = collection.base_file_path,
+                                               user = self.job.user)
 
-        if collection.storage_type == "local":
+        try: #OSError raised if dir already exists
+            self.sftp.mkdir(self.collection_dir)
+        except OSError as e:
+            pass
 
-            file_storage = permissions.open_folder(storage_type = collection.storage_type,
-                                                   path = collection.base_file_path,
-                                                   user = self.job.user)
-
-            try: #OSError raised if dir already exists
-                self.sftp.mkdir(self.collection_dir)
-            except OSError as e:
-                pass
-
-            for sample in collection.sample_set.all():
-                file_object = file_storage.open(sample.path.strip("/"))
-                fname = path.join(self.collection_dir,os.path.basename(sample.name))
-                self.sftp.putfo(file_object, fname)
+        for sample in collection.sample_set.all():
+            file_object = file_storage.open(sample.path.strip("/"))
+            fname = path.join(self.collection_dir,os.path.basename(sample.name))
+            self.sftp.putfo(file_object, fname)
 
 
 
