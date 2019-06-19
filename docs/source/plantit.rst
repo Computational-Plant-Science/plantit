@@ -20,14 +20,6 @@ plantit.celery module
    :undoc-members:
    :show-inheritance:
 
-plantit.secret module
----------------------
-
-.. automodule:: plantit.secret
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plantit.settings module
 -----------------------
 
