@@ -10,6 +10,13 @@ class Registrar():
         """
             Register a storage type
 
+            Attention:
+                The path string returned by default_path must be absolute
+                (start with a "/"), and end with a "/".
+
+                The presence of these /s is checked by register, the web server
+                will fail to start if the /s are missing.
+
             Args:
                 storage_type (:class:`file_manager.filesystems.storage.AbstractStorageType`):
                     the storage object
@@ -17,6 +24,10 @@ class Registrar():
                     base storage path. The function is passed the username
                     of the requesting user
         """
+
+        assert default_path("test_user")[-1] == "/", "Default paths must end with a \"/\""
+        assert default_path("test_user")[0] == "/", "Default path must be absoltue (start with a \"/\")"
+
         self.list[storage_type.name] = storage_type
         self.default_basename[storage_type.name] = default_path
 
