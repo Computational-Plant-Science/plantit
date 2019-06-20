@@ -22,10 +22,6 @@ end (`django/plantit`) code.
 
   apis
 
-.. include:: urls.rst
-.. include:: filesystems.rst
-.. include:: settings.rst
-
 Indices and tables
 ==================
 
