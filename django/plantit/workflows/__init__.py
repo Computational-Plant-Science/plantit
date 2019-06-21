@@ -84,7 +84,9 @@ class Registrar():
 
         icon_path = join(folder_path,'static','icon.png')
         if(isfile(icon_path)):
-            copyfile(icon_path,'plantit/static/workflow_icons/' + config['app_name'] + '.png')
+            copyfile(icon_path,join(settings.BASE_DIR,
+                                    'plantit/static/workflow_icons/',
+                                    config['app_name'] + '.png'))
             config['icon_url'] = '/assets/workflow_icons/' + config['app_name'] + '.png'
 
         self.list[config['app_name']] = config

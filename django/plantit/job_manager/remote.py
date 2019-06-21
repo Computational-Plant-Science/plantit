@@ -59,15 +59,24 @@ class Cluster(models.Model):
             Note:
                 Cancel commands are not currently implemented by clusterside.
     """
-    name = models.CharField(max_length=20)
-    description = models.TextField(blank=True)
-    workdir = models.CharField(max_length=250)
-    username = models.CharField(max_length=100)
-    password = EncryptedCharField(max_length=100,blank=True,null=True,default=None)
-    port = models.PositiveIntegerField(default=22)
-    hostname = models.CharField(max_length=250)
-    submit_commands = models.TextField(default="clusterside submit")
-    cancel_commands = models.TextField(default="# clusterside cancel #<- cancel commands are not implemented by clusterside. ")
+    name = models.CharField(max_length=20,
+            help_text="Human-readable name of cluster.")
+    description = models.TextField(blank=True,
+            help_text="Human-readable description of cluster.")
+    workdir = models.CharField(max_length=250,
+            help_text="Where (full path) to put folders for workflow analysis jobs on the cluster.")
+    username = models.CharField(max_length=100,
+            help_text="ssh username")
+    password = EncryptedCharField(max_length=100,blank=True,null=True,default=None,
+            help_text="ssh password. Leave blank for public-key auth. See README for setup.")
+    port = models.PositiveIntegerField(default=22,
+            help_text="ssh port")
+    hostname = models.CharField(max_length=250,
+            help_text="ssh hostname")
+    submit_commands = models.TextField(default="clusterside submit",
+            help_text="Commands to run on the cluster to submit a job.")
+    cancel_commands = models.TextField(default="# clusterside cancel #<- cancel commands are not implemented by clusterside.",
+            help_text="NOT IMPLEMENTED.")
 
     def __str__(self):
         return self.name
