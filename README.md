@@ -22,6 +22,8 @@ dev/reset.sh #Initialize databases, builds front end, and some other default val
 docker-compose -f docker-compose.yml -f compose-dev.yml up
 ```
 
+**ATTENTION:** By default, dev/reset.sh deletes ALL local docker containers and volumes.   
+
 Once the containers have started, the website is available at http://localhost
 
 To bypass CAS login, instead logging directly into django, use: `http://localhost/accounts/login/`
@@ -60,12 +62,12 @@ If present, PlantIT loads `django/settings.py` as part of django's settings.py f
 
 Values set in `django/settings.py` override any PlantIT default settings.
 
-# Installing Workflows
+### Installing Workflows
 Workflows created using the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be integrated into the web platform by cloning the repository (or copying the code) into the django/workflows directory.
 
 The web server and celery processes must be restarted to load new workflows.
 
-### Workflow install example:
+#### Workflow install example:
 ```
   cd django/workflows/
   git clone git@github.com:Computational-Plant-Science/DIRT2D_Workflow.git dirt2d #<- see note below
@@ -77,7 +79,7 @@ as the workflow app_name set in the workflow's WORKFLOW_CONFIG.
 
 # Resetting an installation
 ```bash
-sudo dev/reset.sh
+dev/reset.sh
 ```
 
 dev/reset.sh can also be used to resets everything back to a "Fresh" install. Running dev/reset.sh does the following:
@@ -94,7 +96,37 @@ then it
       - gives admin user file access permissions to ./django/files
    - adds test cluster
 
-sudo is required to remove files added to ./django/files by the webserver.
+**ATTENTION:** By default, dev/reset.sh deletes ALL local docker containers and volumes.   
+
+### Adding Clusters
+
+#### Installation
+See [ClusterSide README](https://github.com/Computational-Plant-Science/DIRT2_ClusterSide) for information
+on installation and configuration of required remote Plant IT code on cluster
+
+#### Adding Cluster to Plant IT backend. 
+Clusters are added via the admin interface `(/admin/)`. Choose Clusters->Add Cluster. Fill in the commands
+accordingly.
+
+Typically, the submit commands will include `clusterside submit`. They may also include loading packages necessary to run clusterside, for example, loading python3.
+
+For Sapelo2 (UGA's cluster), the submit command is:
+
+```
+ml Python/3.6.4-foss-2018a; /home/cotter/.local/bin/clusterside submit
+```
+
+##### Note:
+On some types of ssh connections, installation does not put clusterside in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
+
+#### Cluster ssh login configuration.
+Plant IT supports both ssh password and public-key based
+login. To use public-key login, leave the Password field blank. Public-key login requires the private key and a known_hosts list to be available. Plant IT expects this data to be in the following two files:
+
+- `config/ssh/id_rsa`: The private key used for login
+- `config/ssh/known_hosts`: The known_hosts file.
+
+The easiest way to setup public-key logins is to configure the keys for login from the web server, then copy the configured `id_rsa` and `known_hosts` files from the web server user (typically in `$HOME/.ssh/`) to `config/ssh/`
 
 # Front End Code
 The front end code is in django/front_end. It is built atop Vue.js. In development mode, it can be built using:
