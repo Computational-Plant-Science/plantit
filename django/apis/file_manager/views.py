@@ -45,7 +45,7 @@ def folder(request):
         **GET Parameters:**
             - path (str): the path to the folder
             - storage_type (str): The storage system the folder is on. Must be
-                in the list provided by :def:`storage_types`
+              in the list provided by :meth:`storage_types`
 
         **url:** `/apis/v1/files/lsdir/?path=<path>&storage_type=<storage_type>`
 
@@ -116,7 +116,7 @@ def upload(request):
         **POST Parameters:**
             - path (str): the path to the folder
             - storage_type (str): The storage system the folder is on. Must be
-                in the list provided by :def:`storage_types`
+              in the list provided by :meth:`storage_types`
 
         **url:** `/apis/v1/files/upload/`
 

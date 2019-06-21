@@ -1,9 +1,26 @@
 Plant IT
 ===================================
 
+Plant IT empowers computational researchers to make their algorithms available
+to a broad community, and provides biological researchers with an easy-to-use
+interface to apply the algorithms to their own data.
+
+.. toctree::
+  :maxdepth: 2
+
+  overview
+
+Server Configuration
+--------------------
+
+.. toctree::
+  :maxdepth: 2
+
+  configuration
+
 Plant IT Package
 -----------------
-The plant it package (`django/plantit/`) contains the back end code for the
+The plantit package (`django/plantit/`) contains the back end code for the
 website
 
 .. toctree::
