@@ -1,6 +1,8 @@
 from os import listdir
 from os.path import isdir, isfile, join
+from shutil import copyfile
 import importlib
+import logging
 
 class Registrar():
     """
@@ -26,6 +28,14 @@ class Registrar():
         """
             Register a workflow with the server
 
+            **Icons:**
+
+            If a workflow icon exists at <workflow_folder>/static/icon.png, it
+            will be copied to plantit/static/workflow_icons to be accessed
+            by the front end.
+
+            Icons must be 200x200 pixels.
+
             Args:
                 config (dict): The workflow configuration, containing:
                     name (str): Human readable name of the workflow
@@ -33,20 +43,19 @@ class Registrar():
                             characters
                     app_name (str): name of app, as registed with django
                             settings.py
-                    icon (str): path to workflow icon, relative to STATIC_ROOT.
-                            icon size should be 200x200px
                     singulairty_url (str): url to the workflow
                             singularity container
-                    api_versin (float): api version to use
-
-            Attention:
-                the icon path must be within a folder available to the
-                STATIC_ROOT. Suggest placing the icon in the workflow app's
-                static folder: django/workflows/[workflow_app_name]/static/workflows/[workflow_app_name]/icon.png
-                then the icon path would be: workflows/[workflow_app_name]/icon.png
-
+                    api_version (float): api version to use
         """
         config['app_url_pattern'] = "workflows:%s:analyze" % (config['app_name'],)
+
+        icon_path = join(folder_path,'static','icon.png')
+        if(isfile(icon_path)):
+            copyfile(icon_path,'plantit/static/workflow_icons/' + config['app_name'] + '.png')
+            config['icon_url'] = '/assets/workflow_icons/' + config['app_name'] + '.png'
+        else:
+            logger = logging.getLogger("plantit")
+            logger.warning("No workflow icon found for workflow \"%s\" at path \"%s\""%(config['app_name'],icon_path))
 
         self.list[config['app_name']] = config
 

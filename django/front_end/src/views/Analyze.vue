@@ -36,7 +36,7 @@
                 class="p-3 m-3 workflow"
             >
                 <div class="workflow-icon">
-                    <b-img :src="workflow.icon_url"></b-img>
+                    <b-img :src="workflow.icon_url"> </b-img>
                 </div>
                 <div class="workflow-text">
                     <b-link
@@ -130,7 +130,8 @@ export default {
   padding: 10px
 
   img
-    max-width: 100px
+    margin-top: 20px
+    max-width: 140px
     max-height: 190px
 
 .workflow-text
