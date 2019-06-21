@@ -53,9 +53,6 @@ class Registrar():
         if(isfile(icon_path)):
             copyfile(icon_path,'plantit/static/workflow_icons/' + config['app_name'] + '.png')
             config['icon_url'] = '/assets/workflow_icons/' + config['app_name'] + '.png'
-        else:
-            logger = logging.getLogger("plantit")
-            logger.warning("No workflow icon found for workflow \"%s\" at path \"%s\""%(config['app_name'],icon_path))
 
         self.list[config['app_name']] = config
 
