@@ -13,8 +13,11 @@ django-encrypted-model-fields
 docutils
 django-model-utils # InheritanceManager used for Tasks
 humanize           # for formatting values in file manager
-Sphinx             # for documentation support
 python-irodsclient
+
+# for documentation support
+Sphinx
+sphinx_rtd_theme
 
 #image caching/manipulation
 django-imagekit
