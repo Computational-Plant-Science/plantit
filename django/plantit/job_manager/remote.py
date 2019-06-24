@@ -49,7 +49,7 @@ class Cluster(models.Model):
             port (int): Cluster ssh server ssh port (default=22)
             hostname (str): Cluster hostname
             submit_commands (str): The command(s) to be run via an ssh terminal
-                submit_commands has access to variables_ set by either some tasks
+                submit_commands has access to variables set by either some tasks
                 or jobs. When available, they are automatically instered in place
                 of the following text (default='clusterside submit')
             cancel_commands (str): The coammnds(s) to be executed to cancel

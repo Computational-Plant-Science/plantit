@@ -71,14 +71,14 @@ class Registrar():
 
             Args:
                 config (dict): The workflow configuration, containing:
-                    name (str): Human readable name of the workflow
-                    description (str): Workflow description, up to 250
-                            characters
-                    app_name (str): name of app, as registed with django
-                            settings.py
-                    singulairty_url (str): url to the workflow
-                            singularity container
-                    api_version (float): api version to use
+                name (str): Human readable name of the workflow
+                description (str): Workflow description, up to 250
+                        characters
+                app_name (str): name of app, as registed with django
+                        settings.py
+                singulairty_url (str): url to the workflow
+                        singularity container
+                api_version (float): api version to use
         """
         config['app_url_pattern'] = "workflows:%s:analyze" % (config['app_name'],)
 
