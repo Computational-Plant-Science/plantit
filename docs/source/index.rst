@@ -39,14 +39,6 @@ end (`django/plantit`) code.
 
   apis
 
-Front End Code
------------------
-
-.. toctree::
-  :maxdepth: 1
-
-  front_end_client_side
-
 Indices and tables
 ==================
 
