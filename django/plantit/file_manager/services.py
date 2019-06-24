@@ -11,11 +11,13 @@ def download_stream(storage_type, filepath, user, *kwargs):
 
         Args:
             storage_type (str): name of the file system storage type must be
-                subclass of AbstractStorageType
-            path: path to file
-            user: User that has permission to the folder path
-            *kwargs: unique paramaters for each STORAGE type
+             a key in :attr:`plantit.file_manager.filesystems.Registrar.list`
+            path (str): path to file to download.
+            user (:class:`django.contrib.auth.models.User`):
+                user that has permission to the folder path
 
+        Returns:
+            :class:`django.http.StreamingHttpResponse`
     '''
     directory = dirname(filepath)
     filename = basename(filepath)

@@ -1,8 +1,7 @@
 class AbstractStorageType:
     """
-        StorageTypes hold the information required to connect to a filesystem
-        :class:`Storage` and an :meth:`open` method to open a connection
-        to that filesystem.
+        StorageTypes hold the information required to connect to a file system
+        and an :meth:`open` method to open a connection to that file system.
     """
     name = ""
 
@@ -12,6 +11,9 @@ class AbstractStorageType:
 
             Args:
                 path (str): Path on the storage system to the folder to open
+
+            Returns:
+                A file-like object open to the given path.
         """
         raise NotImplmentedError
 

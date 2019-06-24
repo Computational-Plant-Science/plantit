@@ -3,8 +3,8 @@ from .storage import AbstractStorageType
 
 class Local(AbstractStorageType):
     """
-        Implementes an AbstractStorageType for the FileSystemStorage storage type,
-            which provides access to the webserver's filesystem.
+        Implements an AbstractStorageType for the FileSystemStorage storage type,
+        which provides access to the web server's file system.
     """
 
     def __init__(self,name):

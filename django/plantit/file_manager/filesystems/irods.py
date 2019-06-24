@@ -10,7 +10,7 @@ from .storage import AbstractStorageType
 class IRodsFileSystem(Storage):
     """
         Implements basic file stroage on a iRODS_ filesystem. It inherits from
-            Storage and provides implementations for all the public methods thereof.
+        Storage and provides implementations for all the public methods thereof.
 
         .. _iRODS: https://irods.org/
     """
@@ -74,7 +74,7 @@ class IRodsFileSystem(Storage):
 class IRods(AbstractStorageType):
     """
         Implementes an AbstractStorageType for the IRodsFileSystem storage type,
-            which provides access to an iRODS_ server filesystem.
+        which provides access to an iRODS_ server file system.
 
         Attributes:
             name: Server Name

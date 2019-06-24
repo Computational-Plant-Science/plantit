@@ -1,13 +1,47 @@
-.. DIRT2 Web documentation master file, created by
-   sphinx-quickstart on Mon Jul 23 13:33:04 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Plant IT
+===================================
 
-Job Manager
-=====================================
+Plant IT empowers computational researchers to make their algorithms available
+to a broad community, and provides biological researchers with an easy-to-use
+interface to apply the algorithms to their own data.
 
-Modules
------------
+.. toctree::
+  :maxdepth: 2
 
-.. automodule:: job_manager.models
-   :members:
+  overview
+
+Server Configuration
+--------------------
+
+.. toctree::
+  :maxdepth: 2
+
+  configuration
+
+Plant IT Package
+-----------------
+The plantit package (`django/plantit/`) contains the back end code for the
+website
+
+.. toctree::
+   :maxdepth: 3
+
+   plantit
+
+Front End APIs
+----------------
+The apis package (`django/apis/`) is build atop the django rest framework and
+provides a bridge between the front-end code (`django/front-end`) and the back
+end (`django/plantit`) code.
+
+.. toctree::
+  :maxdepth: 3
+
+  apis
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

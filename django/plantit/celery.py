@@ -1,3 +1,15 @@
+'''
+    Plant IT celery configuration. Provides a
+    `celery task queue <http://www.celeryproject.org>`_ for running
+    jobs asynchronously of the web server. Used extensively by
+    :mod:`plantit.job_manager`.
+
+    Celery is run in the celery docker container.
+
+    Attention:
+        The celery container must be restarted to load any code changes.
+'''
+
 from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery

@@ -1,6 +1,19 @@
 class Registrar():
     """
-        Keeps a list of registered filesystems
+        A registry of file systems registered with Plant IT.
+
+        Note:
+            This class should not used directly. A instance of this class at
+            :attr:`plantit.file_manager.filesystems.registrar` should be used
+            for registration of file systems. See :mod:`file_manager` for
+            an example.
+
+        Attributes:
+            list (dict): key: storage object name. value: the sorage object
+            default_basename (dict): key: storage object name.
+                value: a function `func(user)` that returns the default
+                base file path given a django user object.
+
     """
     def __init__(self):
         self.list = {}
@@ -18,10 +31,11 @@ class Registrar():
                 will fail to start if the /s are missing.
 
             Args:
-                storage_type (:class:`file_manager.filesystems.storage.AbstractStorageType`):
-                    the storage object
+                storage_type (str): name of a registered file storage system.
+                    storage_type must be a key in
+                    :attr:`plantit.file_manager.filesystems.registrar.list`
                 default_location (function): A function that returns the default
-                    base storage path. The function is passed the username
+                    base storage path. The function is passed the user object
                     of the requesting user
         """
 
@@ -32,6 +46,16 @@ class Registrar():
         self.default_basename[storage_type.name] = default_path
 
     def default_path(self,storage_type, user):
+        """
+            Get the default path for a user on a storage type.
+
+            Args:
+                storage_type (str): name of a registered file storage system.
+                    storage_type must be a key in
+                    :attr:`plantit.file_manager.filesystems.registrar.list`
+                user (django user): the user to calculate the base file path
+                    for.
+        """
         return self.default_basename[storage_type](user)
 
 registrar = Registrar()
