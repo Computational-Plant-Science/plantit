@@ -1,0 +1,419 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>System Overview &mdash; Plant IT Alpha documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Server Configuration" href="configuration.html" />
+    <link rel="prev" title="Plant IT" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Plant IT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">System Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#workflows">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#collections-and-samples">Collections and Samples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sample">Sample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#collection">Collection</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#systems">Systems</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#front-end">Front End</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#urls">URLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#admin-interface">Admin Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#backend">Backend</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#job-manager-plantit-job-manager">Job Manager (<code class="xref py py-mod docutils literal notranslate"><span class="pre">plantit.job_manager</span></code>)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#workflows-plantit-workflows">Workflows (<code class="xref py py-mod docutils literal notranslate"><span class="pre">plantit.workflows</span></code>)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-manager-plantit-file-manager">File Manager (<code class="xref py py-mod docutils literal notranslate"><span class="pre">plantit.file_manager</span></code>)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#collection-plantit-collection">Collection (<code class="xref py py-mod docutils literal notranslate"><span class="pre">plantit.collection</span></code>)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#file-locations">File Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker-containers">Docker Containers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#remote-file-system-support">Remote File System Support</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Server Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plantit.html">plantit package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apis.html">apis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Plant IT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>System Overview</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/overview.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="system-overview">
+<h1>System Overview<a class="headerlink" href="#system-overview" title="Permalink to this headline">¶</a></h1>
+<p>Plant IT is a web app that simplifies performing a task in parallel across
+many experimental samples. It takes care of copying files to and from
+file systems and running the jobs on high performance computing clusters (HPCs).</p>
+<div class="section" id="workflows">
+<h2>Workflows<a class="headerlink" href="#workflows" title="Permalink to this headline">¶</a></h2>
+<p>Workflows are pre-packaged analysis pipelines that can be applied to a
+set of experimental samples in parallel. Workflows set up as modular
+plugins that Plant IT loads at start up.</p>
+<p>A major goal of Plant IT is to make it easy for developers to add their own
+pipelines to Plant IT. This is done using the
+<a class="reference external" href="https://github.com/Computational-Plant-Science/cookiecutter_PlantIT">workflow cookiecutter template</a>.</p>
+<p>See the <cite>template documentation</cite> for more details on workflows and developing
+new workflows <a class="reference external" href="https://plant-it-workflows.readthedocs.io/en/latest/">https://plant-it-workflows.readthedocs.io/en/latest/</a>.</p>
+<p>For information on installing workflows in Plant IT, see
+<a class="reference internal" href="configuration.html#configuration-installing-workflows"><span class="std std-ref">Installing Workflows</span></a>.</p>
+</div>
+<div class="section" id="collections-and-samples">
+<h2>Collections and Samples<a class="headerlink" href="#collections-and-samples" title="Permalink to this headline">¶</a></h2>
+<p>Collections are a set of experimental samples that are analyzed by workflows.</p>
+<div class="section" id="sample">
+<h3>Sample<a class="headerlink" href="#sample" title="Permalink to this headline">¶</a></h3>
+<p>The individual unit fed into a Plant IT workflow. What is
+contained in a sample is dependent on the workflow that will analyze
+the sample. For example, a sample may be an individual image, a
+folder containing slices from 3D imaging, or a csv file containing
+points for a cloud map.</p>
+<p>Plant IT makes no assumptions about what a sample is. Sample format
+is defined by the workflow that will analyze it.</p>
+</div>
+<div class="section" id="collection">
+<h3>Collection<a class="headerlink" href="#collection" title="Permalink to this headline">¶</a></h3>
+<p>A set of samples related in some way that will be
+analyzed by the <em>same</em> workflow.</p>
+<p>For example, all the roots collected in an experiment may go into
+one collection, as they will all be analyzed by the same
+downstream workflow.</p>
+</div>
+</div>
+<div class="section" id="systems">
+<h2>Systems<a class="headerlink" href="#systems" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="front-end">
+<h3>Front End<a class="headerlink" href="#front-end" title="Permalink to this headline">¶</a></h3>
+<p>The front end is built as a single page app using <a class="reference external" href="https://vuejs.org/">Vue.js</a>,
+with <cite>npm &lt;https://www.npmjs.com/&gt;</cite> utilized for package management and building.</p>
+<p>The root directory for the front end is <cite>django/front_end</cite>. The website
+can be built using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> django/front_end
+npm run build
+</pre></div>
+</div>
+<p>npm builds into <cite>django/front_end/dist/</cite>, which is configured as a <a class="reference external" href="https://docs.djangoproject.com/en/2.2/howto/static-files/">static
+directory</a> in
+django.</p>
+<div class="section" id="urls">
+<h4>URLs<a class="headerlink" href="#urls" title="Permalink to this headline">¶</a></h4>
+<p>The Vue app is loaded through django via the <cite>django/front_end/dist/index.html</cite>
+file generated by <cite>npm run build</cite>.</p>
+<p>With the exception of the url paths listed in <cite>django/urls.py</cite>,
+all paths are routed through Vue.js via the vue.js router
+(<cite>django/front_end/src/router.js</cite>)</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>All url paths require a trailing slash:</p>
+<p>Example:</p>
+<blockquote>
+<div><p>This works: <cite>http://localhost/admin/</cite></p>
+<p>This will not work: <cite>http://localhost/admin</cite></p>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="admin-interface">
+<h4>Admin Interface<a class="headerlink" href="#admin-interface" title="Permalink to this headline">¶</a></h4>
+<p>The django admin interface is available at <cite>http://localhost/admin/</cite> .</p>
+</div>
+</div>
+<div class="section" id="backend">
+<h3>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h3>
+<p>The back end is written in <a class="reference external" href="https://www.djangoproject.com/">django</a> and
+consists of the following packages:</p>
+<div class="section" id="job-manager-plantit-job-manager">
+<h4>Job Manager (<a class="reference internal" href="plantit.job_manager.html#module-plantit.job_manager" title="plantit.job_manager"><code class="xref py py-mod docutils literal notranslate"><span class="pre">plantit.job_manager</span></code></a>)<a class="headerlink" href="#job-manager-plantit-job-manager" title="Permalink to this headline">¶</a></h4>
+<p>The job manager provides a system for running ordered tasks asynchronously on
+the server side. Tasks are run on a celery task queue. This queue is run inside
+the celery docker container.</p>
+<p>The job manager’s main purpose it to submit workflow runs to a cluster.
+However, can be used for any collection of ordered task that need run
+asynchronously with respect to the web server.</p>
+</div>
+<div class="section" id="workflows-plantit-workflows">
+<h4>Workflows (<a class="reference internal" href="plantit.workflows.html#module-plantit.workflows" title="plantit.workflows"><code class="xref py py-mod docutils literal notranslate"><span class="pre">plantit.workflows</span></code></a>)<a class="headerlink" href="#workflows-plantit-workflows" title="Permalink to this headline">¶</a></h4>
+<p>Workflows are modular code provided by 3rd parties to analyze samples within
+collections. Plant IT automatically applies the workflow’s analysis code to all
+samples withing a collection.</p>
+</div>
+<div class="section" id="file-manager-plantit-file-manager">
+<h4>File Manager (<a class="reference internal" href="plantit.file_manager.html#module-plantit.file_manager" title="plantit.file_manager"><code class="xref py py-mod docutils literal notranslate"><span class="pre">plantit.file_manager</span></code></a>)<a class="headerlink" href="#file-manager-plantit-file-manager" title="Permalink to this headline">¶</a></h4>
+<p>The file manager handles interactions with a modular filesystems system to
+open connections with file servers that hold the files that make up a Sample.</p>
+</div>
+<div class="section" id="collection-plantit-collection">
+<h4>Collection (<a class="reference internal" href="plantit.collection.html#module-plantit.collection" title="plantit.collection"><code class="xref py py-mod docutils literal notranslate"><span class="pre">plantit.collection</span></code></a>)<a class="headerlink" href="#collection-plantit-collection" title="Permalink to this headline">¶</a></h4>
+<p>The collections module contains information and logic related to the data
+users want to analyze using a Plant IT workflow.</p>
+</div>
+</div>
+</div>
+<div class="section" id="file-locations">
+<h2>File Locations<a class="headerlink" href="#file-locations" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>.
+├── config
+│   ├── nginx &lt;-The configuration <span class="k">for</span> the nginx server used when running the
+                production environment. This is loaded into the nginx docker
+                container.
+│   │   └── conf.d
+│   └── ssh &lt;- Loaded by the djangoapp docker container. Can contain the files
+               required by Plant IT to log into a cluster using ssh
+               public-key auth.
+
+               See :ref:<span class="sb">`</span>configuration-clusters-ssh-config<span class="sb">`</span> <span class="k">for</span> details.
+├── dev &lt;- Docker container files and scripts <span class="k">for</span> the development environment.
+│   ├── dockerfiles
+│   │   └── test_cluster
+│   └── server_scripts
+├── django &lt;- the django server root.
+│   ├── apis &lt;- APIs <span class="k">for</span> connecting Vue.js with back end python code.
+│   │   ├── auth
+│   │   ├── collection
+│   │   ├── file_manager
+│   │   ├── job_manager
+│   │   ├── __pycache__
+│   │   └── workflows
+│   ├── files &lt;- Files generated / saved by Plant IT
+│   │   ├── public
+│   │   └── tmp
+│   ├── front_end &lt;- Front-end Vue.js code
+│   │   ├── dist &lt;- Django templates folder, contains index.html.
+                    This folder is auto-generated by npm run build.
+│   │   ├── node_modules
+│   │   ├── public &lt;- Contains the template that builds index.html
+│   │   └── src &lt;- Front end <span class="nb">source</span> code.
+│   ├── plantit &lt;- back end <span class="nb">source</span> code.
+│   │   ├── collection
+│   │   ├── file_manager
+│   │   ├── job_manager
+│   │   ├── migrations
+│   │   ├── __pycache__
+│   │   ├── static
+│   │   ├── user
+│   │   └── workflows
+│   ├── static &lt;- Where static files are placed by ./manage.py collectstatic.
+                  Auto-generated by collectstatic.
+│   ├── templates &lt;- Django templates folder.
+│   │   └── registration &lt;- Template used <span class="k">for</span> /accounts/login page.
+│   └── workflows &lt;- Where cookie cutter workflows should be placed.
+├── dockerfiles &lt;- Docker files to create images.
+│   └── djangoapp
+├── docs &lt;- This documentation
+│   └── <span class="nb">source</span>
+│       ├── _static
+│       └── _templates
+</pre></div>
+</div>
+</div>
+<div class="section" id="docker-containers">
+<h2>Docker Containers<a class="headerlink" href="#docker-containers" title="Permalink to this headline">¶</a></h2>
+<p>Plant IT is run within docker containers. See the <a class="reference internal" href="configuration.html#configuration-docker"><span class="std std-ref">Docker</span></a>
+Plant IT documentation for details.</p>
+</div>
+<div class="section" id="remote-file-system-support">
+<h2>Remote File System Support<a class="headerlink" href="#remote-file-system-support" title="Permalink to this headline">¶</a></h2>
+<p>Plant IT does not keep any of the sample files or workflow results files locally.</p>
+<p>A user selects files to be included as samples on a registered file system
+(See <a class="reference internal" href="configuration.html#configuration-filesystems"><span class="std std-ref">Filesystems</span></a>), links to the sample file path(s) are
+kept in <a class="reference internal" href="plantit.collection.html#plantit.collection.models.Sample" title="plantit.collection.models.Sample"><code class="xref py py-class docutils literal notranslate"><span class="pre">plantit.collection.models.Sample</span></code></a>.</p>
+<p>The results files are uploaded back to the file system by the
+<a class="reference external" href="https://github.com/Computational-Plant-Science/DIRT2_ClusterSide">cluster side software</a>
+and a link to the file is kept in <a class="reference internal" href="plantit.collection.html#plantit.collection.models.Sample" title="plantit.collection.models.Sample"><code class="xref py py-class docutils literal notranslate"><span class="pre">plantit.collection.models.Sample</span></code></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Server Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Plant IT" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CPS Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+workflows.modelscan\_workflow.django package
+============================================
+
+Submodules
+----------
+
+workflows.modelscan\_workflow.django.app module
+-----------------------------------------------
+
+.. automodule:: workflows.modelscan_workflow.django.app
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+workflows.modelscan\_workflow.django.forms module
+-------------------------------------------------
+
+.. automodule:: workflows.modelscan_workflow.django.forms
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+workflows.modelscan\_workflow.django.urls module
+------------------------------------------------
+
+.. automodule:: workflows.modelscan_workflow.django.urls
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+workflows.modelscan\_workflow.django.views module
+-------------------------------------------------
+
+.. automodule:: workflows.modelscan_workflow.django.views
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: workflows.modelscan_workflow.django
+   :members:
+   :undoc-members:
+   :show-inheritance:

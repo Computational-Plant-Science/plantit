@@ -1,0 +1,30 @@
+workflows.test\_workflow package
+================================
+
+Submodules
+----------
+
+workflows.test\_workflow.process module
+---------------------------------------
+
+.. automodule:: workflows.test_workflow.process
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+workflows.test\_workflow.workflow module
+----------------------------------------
+
+.. automodule:: workflows.test_workflow.workflow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: workflows.test_workflow
+   :members:
+   :undoc-members:
+   :show-inheritance:

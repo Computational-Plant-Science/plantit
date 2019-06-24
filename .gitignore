@@ -13,8 +13,8 @@ django/filesystems.py
 django/plantit/static/workflow_icons/*.png
 config/ssh/*
 
-# Documentation
-docs/build/*
+#Documentation
+!docs/build/
 
 ### Python template
 # Byte-compiled / optimized / DLL files

@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>plantit.workflows package &mdash; Plant IT Alpha documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="apis package" href="apis.html" />
+    <link rel="prev" title="plantit.user package" href="plantit.user.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Plant IT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">System Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Server Configuration</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="plantit.html">plantit package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plantit.html#module-plantit.celery">plantit.celery module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plantit.html#module-plantit.settings">plantit.settings module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="plantit.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plantit.collection.html">plantit.collection package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plantit.file_manager.html">plantit.file_manager package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plantit.job_manager.html">plantit.job_manager package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plantit.user.html">plantit.user package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">plantit.workflows package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-plantit.workflows.services">plantit.workflows.services module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apis.html">apis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Plant IT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="plantit.html">plantit package</a> &raquo;</li>
+        
+      <li>plantit.workflows package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/plantit.workflows.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-plantit.workflows">
+<span id="plantit-workflows-package"></span><h1>plantit.workflows package<a class="headerlink" href="#module-plantit.workflows" title="Permalink to this headline">¶</a></h1>
+<p>Workflows are modular code provided by 3rd parties to analyze
+samples within collections. Plant IT automatically
+applies the workflow’s analysis code to all samples withing a collection.</p>
+<p>See <a class="reference external" href="https://plant-it-workflows.readthedocs.io/en/latest/">https://plant-it-workflows.readthedocs.io/en/latest/</a> for more details
+on creating workflows.</p>
+<p>Workflows created using the Plant IT workflow cookiecutter template can be
+integrated into the web platform by cloning the repository (
+or copying the code) into the django/workflows directory.</p>
+<p>On initialization of django, plant it automatically initializes an instance
+of the workflow registrar (<a class="reference internal" href="#plantit.workflows.Registrar" title="plantit.workflows.Registrar"><code class="xref py py-class docutils literal notranslate"><span class="pre">plantit.workflows.Registrar</span></code></a>) at
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">plantit.workflows.registrar</span></code> and searches attempts to register
+each folder in <cite>django/workflows</cite> as a Plant IT workflow. Assert checks
+are performed for typical workflow errors. These asserts will stop
+the web server from starting correctly if they fail.</p>
+<p>Autoinitilization code can be found in <cite>plantit.workflows.__init__.py</cite></p>
+<p>Once automatically registered, workflows are ready to be used within Plant IT.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The web server and celery processes must be restarted to load
+new workflows.</p>
+</div>
+<p><strong>Workflow Install Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> django/workflows/
+git clone git@github.com:Computational-Plant-Science/DIRT2D_Workflow.git dirt2d <span class="c1">#&lt;- see note below</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The workflow folder name (inside django/workflows/) must be the same
+as the workflow app_name set in the workflow’s WORKFLOW_CONFIG.</p>
+</div>
+<dl class="class">
+<dt id="plantit.workflows.Registrar">
+<em class="property">class </em><code class="sig-prename descclassname">plantit.workflows.</code><code class="sig-name descname">Registrar</code><a class="reference internal" href="_modules/plantit/workflows.html#Registrar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.workflows.Registrar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Workflows are register with the server via this class.</p>
+<p>Registration is automatically performed for workflows in <cite>django/workflows</cite></p>
+<p>Manual registration is not recommended or supported.</p>
+<p>An instance of this class is automatically created by Plant IT
+at <code class="xref py py-attr docutils literal notranslate"><span class="pre">plantit.workflows.registrar</span></code>. You should not need to use
+the <a class="reference internal" href="#plantit.workflows.Registrar" title="plantit.workflows.Registrar"><code class="xref py py-class docutils literal notranslate"><span class="pre">plantit.workflows.Registrar</span></code></a> class directly.</p>
+<dl class="method">
+<dt id="plantit.workflows.Registrar.register">
+<code class="sig-name descname">register</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/workflows.html#Registrar.register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.workflows.Registrar.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a workflow with the server</p>
+<p><strong>Icons:</strong></p>
+<p>If a workflow icon exists at &lt;workflow_folder&gt;/static/icon.png, it
+will be copied to plantit/static/workflow_icons to be accessed
+by the front end.</p>
+<p>Icons must be 200x200 pixels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – The workflow configuration, containing:</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Human readable name of the workflow</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Workflow description, up to 250
+characters</p></li>
+<li><p><strong>app_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of app, as registed with django
+settings.py</p></li>
+<li><p><strong>singulairty_url</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – url to the workflow
+singularity container</p></li>
+<li><p><strong>api_version</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – api version to use</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-plantit.workflows.services">
+<span id="plantit-workflows-services-module"></span><h2>plantit.workflows.services module<a class="headerlink" href="#module-plantit.workflows.services" title="Permalink to this headline">¶</a></h2>
+<p>Methods for submitting workflow jobs.</p>
+<dl class="function">
+<dt id="plantit.workflows.services.add_tasks">
+<code class="sig-prename descclassname">plantit.workflows.services.</code><code class="sig-name descname">add_tasks</code><span class="sig-paren">(</span><em class="sig-param">job</em>, <em class="sig-param">cluster</em>, <em class="sig-param">params</em>, <em class="sig-param">app_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/workflows/services.html#add_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.workflows.services.add_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populates the given job with the tasks required to submit a workflow job
+to the a cluster to perform the analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>job</strong> (<a class="reference internal" href="plantit.job_manager.html#plantit.job_manager.job.Job" title="plantit.job_manager.job.Job"><code class="xref py py-class docutils literal notranslate"><span class="pre">plantit.job_manager.job.Job</span></code></a>) – the job to add the tasks to</p></li>
+<li><p><strong>cluster</strong> (<a class="reference internal" href="plantit.job_manager.html#plantit.job_manager.remote.Cluster" title="plantit.job_manager.remote.Cluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">plantit.job_manager.remote.Cluster</span></code></a>) – cluster the job
+will be submitted to</p></li>
+<li><p><strong>params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – workflow user-configurable parameters in the
+format accepted by the Plant IT cookiecutter process function.
+(i.e. params are passed into process as the args variable).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="plantit.workflows.services.default_params">
+<code class="sig-prename descclassname">plantit.workflows.services.</code><code class="sig-name descname">default_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/workflows/services.html#default_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.workflows.services.default_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the user configurable parameters required by Plant IT
+that are general to all workflow submissions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A dictionary of default parameters in the cookiecutter
+Plant IT workflow parameter format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="plantit.workflows.services.submit">
+<code class="sig-prename descclassname">plantit.workflows.services.</code><code class="sig-name descname">submit</code><span class="sig-paren">(</span><em class="sig-param">user</em>, <em class="sig-param">workflow</em>, <em class="sig-param">collection_pk</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/workflows/services.html#submit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.workflows.services.submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submit a workflow for analysis.</p>
+<p>Creates a <a class="reference internal" href="plantit.job_manager.html#plantit.job_manager.job.Job" title="plantit.job_manager.job.Job"><code class="xref py py-class docutils literal notranslate"><span class="pre">plantit.job_manager.job.Job</span></code></a>, populates it with tasks to
+apply the given workflow to the given collection and starts the job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">django.contrib.auth.models.User</span></code>) – django user doing the analysis</p></li>
+<li><p><strong>workflow</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – app_name of workflow</p></li>
+<li><p><strong>collection_pk</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – pk of collection to analyze</p></li>
+<li><p><strong>params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – workflow user-configurable parameters in the
+format accepted by the Plant IT cookiecutter process function.
+(i.e. params are passed into process as the args variable).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="apis.html" class="btn btn-neutral float-right" title="apis package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="plantit.user.html" class="btn btn-neutral float-left" title="plantit.user package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CPS Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

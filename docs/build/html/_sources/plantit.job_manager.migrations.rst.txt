@@ -1,0 +1,10 @@
+plantit.job\_manager.migrations package
+=======================================
+
+Module contents
+---------------
+
+.. automodule:: plantit.job_manager.migrations
+   :members:
+   :undoc-members:
+   :show-inheritance:

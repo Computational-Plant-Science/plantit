@@ -1,0 +1,528 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>model_utils.managers &mdash; Plant IT Alpha documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Plant IT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">System Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Server Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../plantit.html">plantit package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apis.html">apis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Plant IT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>model_utils.managers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for model_utils.managers</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">django</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="k">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django.db.models.fields.related</span> <span class="k">import</span> <span class="n">OneToOneField</span><span class="p">,</span> <span class="n">OneToOneRel</span>
+<span class="kn">from</span> <span class="nn">django.db.models.query</span> <span class="k">import</span> <span class="n">QuerySet</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">django.db.models.query</span> <span class="k">import</span> <span class="n">BaseIterable</span><span class="p">,</span> <span class="n">ModelIterable</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="c1"># Django 1.8 does not have iterable classes</span>
+    <span class="n">BaseIterable</span><span class="p">,</span> <span class="n">ModelIterable</span> <span class="o">=</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">object</span>
+<span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="k">import</span> <span class="n">ObjectDoesNotExist</span>
+
+<span class="kn">from</span> <span class="nn">django.db.models.constants</span> <span class="k">import</span> <span class="n">LOOKUP_SEP</span>
+<span class="kn">from</span> <span class="nn">django.utils.six</span> <span class="k">import</span> <span class="n">string_types</span>
+
+
+<span class="k">class</span> <span class="nc">InheritanceIterable</span><span class="p">(</span><span class="n">ModelIterable</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">queryset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queryset</span>
+        <span class="nb">iter</span> <span class="o">=</span> <span class="n">ModelIterable</span><span class="p">(</span><span class="n">queryset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">queryset</span><span class="p">,</span> <span class="s1">&#39;subclasses&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">extras</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">queryset</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="c1"># sort the subclass names longest first,</span>
+            <span class="c1"># so with &#39;a&#39; and &#39;a__b&#39; it goes as deep as possible</span>
+            <span class="n">subclasses</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">queryset</span><span class="o">.</span><span class="n">subclasses</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">:</span>
+                <span class="n">sub_obj</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">subclasses</span><span class="p">:</span>
+                    <span class="n">sub_obj</span> <span class="o">=</span> <span class="n">queryset</span><span class="o">.</span><span class="n">_get_sub_obj_recurse</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">sub_obj</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">sub_obj</span><span class="p">:</span>
+                    <span class="n">sub_obj</span> <span class="o">=</span> <span class="n">obj</span>
+
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">queryset</span><span class="p">,</span> <span class="s1">&#39;_annotated&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">queryset</span><span class="o">.</span><span class="n">_annotated</span><span class="p">:</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="n">sub_obj</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">extras</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">sub_obj</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+
+                <span class="k">yield</span> <span class="n">sub_obj</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">obj</span>
+
+
+<span class="k">class</span> <span class="nc">InheritanceQuerySetMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">InheritanceQuerySetMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">django</span><span class="o">.</span><span class="n">VERSION</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iterable_class</span> <span class="o">=</span> <span class="n">InheritanceIterable</span>
+
+    <span class="k">def</span> <span class="nf">select_subclasses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">subclasses</span><span class="p">):</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_maximum_depth</span><span class="p">()</span>
+        <span class="n">calculated_subclasses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_subclasses_recurse</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+        <span class="c1"># if none were passed in, we can just short circuit and select all</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">subclasses</span><span class="p">:</span>
+            <span class="n">subclasses</span> <span class="o">=</span> <span class="n">calculated_subclasses</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">verified_subclasses</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">subclass</span> <span class="ow">in</span> <span class="n">subclasses</span><span class="p">:</span>
+                <span class="c1"># special case for passing in the same model as the queryset</span>
+                <span class="c1"># is bound against. Rather than raise an error later, we know</span>
+                <span class="c1"># we can allow this through.</span>
+                <span class="k">if</span> <span class="n">subclass</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">subclass</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+                    <span class="n">subclass</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ancestors_path</span><span class="p">(</span>
+                        <span class="n">subclass</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">subclass</span> <span class="ow">in</span> <span class="n">calculated_subclasses</span><span class="p">:</span>
+                    <span class="n">verified_subclasses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subclass</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s1">&#39;</span><span class="si">%r</span><span class="s1"> is not in the discovered subclasses, tried: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                            <span class="n">subclass</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">calculated_subclasses</span><span class="p">))</span>
+                        <span class="p">)</span>
+            <span class="n">subclasses</span> <span class="o">=</span> <span class="n">verified_subclasses</span>
+
+        <span class="c1"># workaround https://code.djangoproject.com/ticket/16855</span>
+        <span class="n">previous_select_related</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">select_related</span>
+        <span class="n">new_qs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="o">*</span><span class="n">subclasses</span><span class="p">)</span>
+        <span class="n">previous_is_dict</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_select_related</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="n">new_is_dict</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_qs</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">select_related</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">previous_is_dict</span> <span class="ow">and</span> <span class="n">new_is_dict</span><span class="p">:</span>
+            <span class="n">new_qs</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">select_related</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">previous_select_related</span><span class="p">)</span>
+        <span class="n">new_qs</span><span class="o">.</span><span class="n">subclasses</span> <span class="o">=</span> <span class="n">subclasses</span>
+        <span class="k">return</span> <span class="n">new_qs</span>
+
+    <span class="k">def</span> <span class="nf">_chain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;subclasses&#39;</span><span class="p">,</span> <span class="s1">&#39;_annotated&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">InheritanceQuerySetMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_chain</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">klass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">setup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">django</span><span class="o">.</span><span class="n">VERSION</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">InheritanceQuerySetMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_clone</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;subclasses&#39;</span><span class="p">,</span> <span class="s1">&#39;_annotated&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">django</span><span class="o">.</span><span class="n">VERSION</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">):</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;klass&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">klass</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;setup&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">setup</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">InheritanceQuerySetMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_clone</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">annotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">qset</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">InheritanceQuerySetMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">qset</span><span class="o">.</span><span class="n">_annotated</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">default_alias</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">qset</span>
+
+    <span class="k">def</span> <span class="nf">iterator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Maintained for Django 1.8 compatability</span>
+        <span class="nb">iter</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">InheritanceQuerySetMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">iterator</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;subclasses&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">extras</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="c1"># sort the subclass names longest first,</span>
+            <span class="c1"># so with &#39;a&#39; and &#39;a__b&#39; it goes as deep as possible</span>
+            <span class="n">subclasses</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subclasses</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">:</span>
+                <span class="n">sub_obj</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">subclasses</span><span class="p">:</span>
+                    <span class="n">sub_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sub_obj_recurse</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">sub_obj</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">sub_obj</span><span class="p">:</span>
+                    <span class="n">sub_obj</span> <span class="o">=</span> <span class="n">obj</span>
+
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_annotated&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annotated</span><span class="p">:</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="n">sub_obj</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">extras</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">sub_obj</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+
+                <span class="k">yield</span> <span class="n">sub_obj</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">_get_subclasses_recurse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a Model class, find all related objects, exploring children</span>
+<span class="sd">        recursively, returning a `list` of strings representing the</span>
+<span class="sd">        relations for select_related</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">django</span><span class="o">.</span><span class="n">VERSION</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">):</span>
+            <span class="n">related_objects</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">get_all_related_objects</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">related_objects</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">get_fields</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">OneToOneRel</span><span class="p">)]</span>
+
+        <span class="n">rels</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">rel</span> <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">related_objects</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rel</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="n">OneToOneField</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">rel</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">rel</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">model</span>
+            <span class="p">]</span>
+
+        <span class="n">subclasses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">levels</span><span class="p">:</span>
+            <span class="n">levels</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">rels</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">levels</span> <span class="ow">or</span> <span class="n">levels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">subclass</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_subclasses_recurse</span><span class="p">(</span>
+                        <span class="n">rel</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">):</span>
+                    <span class="n">subclasses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">rel</span><span class="o">.</span><span class="n">get_accessor_name</span><span class="p">()</span> <span class="o">+</span> <span class="n">LOOKUP_SEP</span> <span class="o">+</span> <span class="n">subclass</span><span class="p">)</span>
+            <span class="n">subclasses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rel</span><span class="o">.</span><span class="n">get_accessor_name</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">subclasses</span>
+
+    <span class="k">def</span> <span class="nf">_get_ancestors_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Serves as an opposite to _get_subclasses_recurse, instead walking from</span>
+<span class="sd">        the Model class up the Model&#39;s ancestry and constructing the desired</span>
+<span class="sd">        select_related string backwards.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> is not a subclass of </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">))</span>
+
+        <span class="n">ancestry</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># should be a OneToOneField or None</span>
+        <span class="n">parent_link</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">get_ancestor_link</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">levels</span><span class="p">:</span>
+            <span class="n">levels</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">parent_link</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">django</span><span class="o">.</span><span class="n">VERSION</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">):</span>
+                <span class="n">related</span> <span class="o">=</span> <span class="n">parent_link</span><span class="o">.</span><span class="n">rel</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">related</span> <span class="o">=</span> <span class="n">parent_link</span><span class="o">.</span><span class="n">remote_field</span>
+            <span class="n">ancestry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">related</span><span class="o">.</span><span class="n">get_accessor_name</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">levels</span> <span class="ow">or</span> <span class="n">levels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">django</span><span class="o">.</span><span class="n">VERSION</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">):</span>
+                    <span class="n">parent_model</span> <span class="o">=</span> <span class="n">related</span><span class="o">.</span><span class="n">parent_model</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">parent_model</span> <span class="o">=</span> <span class="n">related</span><span class="o">.</span><span class="n">model</span>
+                <span class="n">parent_link</span> <span class="o">=</span> <span class="n">parent_model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">get_ancestor_link</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">parent_link</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">LOOKUP_SEP</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ancestry</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_sub_obj_recurse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">rel</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">LOOKUP_SEP</span><span class="p">)</span>
+
+        <span class="c1"># Django 1.9: If a primitive type gets passed to this recursive function,</span>
+        <span class="c1"># return None as non-models are not part of inheritance.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">rel</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ObjectDoesNotExist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">s</span><span class="p">:</span>
+            <span class="n">child</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sub_obj_recurse</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">child</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">node</span>
+
+    <span class="k">def</span> <span class="nf">get_subclass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_subclasses</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_maximum_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Under Django versions &lt; 1.6, to avoid triggering</span>
+<span class="sd">        https://code.djangoproject.com/ticket/16572 we can only look</span>
+<span class="sd">        as far as children.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">django</span><span class="o">.</span><span class="n">VERSION</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">levels</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">levels</span>
+
+
+<span class="k">class</span> <span class="nc">InheritanceQuerySet</span><span class="p">(</span><span class="n">InheritanceQuerySetMixin</span><span class="p">,</span> <span class="n">QuerySet</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">InheritanceManagerMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_queryset_class</span> <span class="o">=</span> <span class="n">InheritanceQuerySet</span>
+
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queryset_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">select_subclasses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">subclasses</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">select_subclasses</span><span class="p">(</span><span class="o">*</span><span class="n">subclasses</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_subclass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">InheritanceManager</span><span class="p">(</span><span class="n">InheritanceManagerMixin</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">QueryManagerMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Q</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_order_by</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">QueryManagerMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">order_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_order_by</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">qs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">QueryManagerMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_order_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">qs</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_order_by</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">qs</span>
+
+
+<span class="k">class</span> <span class="nc">QueryManager</span><span class="p">(</span><span class="n">QueryManagerMixin</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">SoftDeletableQuerySetMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    QuerySet for SoftDeletableModel. Instead of removing instance sets</span>
+<span class="sd">    its ``is_removed`` field to True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Soft delete objects from queryset (set their ``is_removed``</span>
+<span class="sd">        field to True)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">is_removed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">SoftDeletableQuerySet</span><span class="p">(</span><span class="n">SoftDeletableQuerySetMixin</span><span class="p">,</span> <span class="n">QuerySet</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">SoftDeletableManagerMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manager that limits the queryset by default to show only not removed</span>
+<span class="sd">    instances of model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_queryset_class</span> <span class="o">=</span> <span class="n">SoftDeletableQuerySet</span>
+
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return queryset limited to not removed entries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;using&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hints&#39;</span><span class="p">):</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;hints&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hints</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queryset_class</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">is_removed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">SoftDeletableManager</span><span class="p">(</span><span class="n">SoftDeletableManagerMixin</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CPS Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

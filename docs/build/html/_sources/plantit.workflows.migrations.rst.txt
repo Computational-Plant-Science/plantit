@@ -1,0 +1,10 @@
+plantit.workflows.migrations package
+====================================
+
+Module contents
+---------------
+
+.. automodule:: plantit.workflows.migrations
+   :members:
+   :undoc-members:
+   :show-inheritance:

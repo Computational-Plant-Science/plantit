@@ -1,0 +1,308 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>apis.job_manager.views &mdash; Plant IT Alpha documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Plant IT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">System Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">Server Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../plantit.html">plantit package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apis.html">apis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Plant IT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>apis.job_manager.views</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for apis.job_manager.views</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">rest_framework</span> <span class="k">import</span> <span class="n">viewsets</span>
+<span class="kn">from</span> <span class="nn">.serializers</span> <span class="k">import</span> <span class="n">JobSerializer</span>
+<span class="kn">from</span> <span class="nn">plantit.job_manager.job</span> <span class="k">import</span> <span class="n">Job</span><span class="p">,</span> <span class="n">Task</span>
+<span class="kn">from</span> <span class="nn">plantit.job_manager.authentication</span> <span class="k">import</span> <span class="n">JobTokenAuthentication</span>
+<span class="kn">from</span> <span class="nn">rest_framework.permissions</span> <span class="k">import</span> <span class="n">IsAuthenticated</span>
+<span class="kn">from</span> <span class="nn">..mixins</span> <span class="k">import</span> <span class="n">PinViewMixin</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="k">import</span> <span class="n">login_required</span>
+
+<div class="viewcode-block" id="JobViewSet"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.views.JobViewSet">[docs]</a><span class="k">class</span> <span class="nc">JobViewSet</span><span class="p">(</span><span class="n">viewsets</span><span class="o">.</span><span class="n">ModelViewSet</span><span class="p">,</span> <span class="n">PinViewMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List a user&#39;s jobs and job information.</span>
+
+<span class="sd">        **url:** `/apis/v1/jobs`</span>
+
+<span class="sd">        **Response Data:** A json array with 1 object per job.</span>
+
+<span class="sd">        **Requires:** User must be logged in.</span>
+
+<span class="sd">        Extends PineViewMixin, which provides the following extra urls:</span>
+
+<span class="sd">        - `/apis/v1/jobs/&lt;pk&gt;/pin`: Pin the job with the given pk to the user</span>
+<span class="sd">        - `/apis/v1/jobs/&lt;pk&gt;/unpin`: Unpin the job with the given pk to the user</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            .. code-block:: javascript</span>
+
+<span class="sd">                [</span>
+<span class="sd">                    {</span>
+<span class="sd">                        &quot;pk&quot;: 10,</span>
+<span class="sd">                        &quot;pinned&quot;: false,</span>
+<span class="sd">                        &quot;collection&quot;: &quot;Test&quot;,</span>
+<span class="sd">                        &quot;date_created&quot;: &quot;2019-06-19T15:09:26.609002-04:00&quot;,</span>
+<span class="sd">                        &quot;work_dir&quot;: &quot;1560989366/&quot;,</span>
+<span class="sd">                        &quot;submission_id&quot;: null,</span>
+<span class="sd">                        &quot;remote_results_path&quot;: &quot;/tempZone/home/rods/results_job10.csv&quot;,</span>
+<span class="sd">                        &quot;task_set&quot;: [</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;pk&quot;: 19,</span>
+<span class="sd">                                &quot;complete&quot;: true</span>
+<span class="sd">                            },</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;pk&quot;: 20,</span>
+<span class="sd">                                &quot;complete&quot;: true</span>
+<span class="sd">                            }</span>
+<span class="sd">                        ],</span>
+<span class="sd">                        &quot;status_set&quot;: [</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;state&quot;: 1,</span>
+<span class="sd">                                &quot;date&quot;: &quot;2019-06-19T15:10:18.394814-04:00&quot;,</span>
+<span class="sd">                                &quot;description&quot;: &quot;All Tasks Finished&quot;</span>
+<span class="sd">                            },</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;state&quot;: 3,</span>
+<span class="sd">                                &quot;date&quot;: &quot;2019-06-19T15:09:31.024499-04:00&quot;,</span>
+<span class="sd">                                &quot;description&quot;: &quot;Running&quot;</span>
+<span class="sd">                            },</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;state&quot;: 3,</span>
+<span class="sd">                                &quot;date&quot;: &quot;2019-06-19T15:09:27.888250-04:00&quot;,</span>
+<span class="sd">                                &quot;description&quot;: &quot;Queued&quot;</span>
+<span class="sd">                            },</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;state&quot;: 3,</span>
+<span class="sd">                                &quot;date&quot;: &quot;2019-06-19T15:09:26.662478-04:00&quot;,</span>
+<span class="sd">                                &quot;description&quot;: &quot;Submitted&quot;</span>
+<span class="sd">                            },</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;state&quot;: 5,</span>
+<span class="sd">                                &quot;date&quot;: &quot;2019-06-19T15:09:26.625078-04:00&quot;,</span>
+<span class="sd">                                &quot;description&quot;: &quot;Created&quot;</span>
+<span class="sd">                            }</span>
+<span class="sd">                        ]</span>
+<span class="sd">                    },</span>
+<span class="sd">                ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">permission_classes</span> <span class="o">=</span> <span class="p">(</span><span class="n">IsAuthenticated</span><span class="p">,)</span>
+
+    <span class="n">queryset</span> <span class="o">=</span> <span class="n">Job</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">serializer_class</span> <span class="o">=</span> <span class="n">JobSerializer</span>
+
+<div class="viewcode-block" id="JobViewSet.get_queryset"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.views.JobViewSet.get_queryset">[docs]</a>    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_anonymous</span><span class="p">):</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">user</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">queryset</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If no user info, return all jobs.</span>
+            <span class="c1"># This will happen if access the jobs via a token.</span>
+            <span class="c1"># TODO: restrict to job with given token.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">queryset</span></div></div>
+
+<span class="kn">from</span> <span class="nn">plantit.file_manager.services</span> <span class="k">import</span>  <span class="n">download_stream</span>
+
+<div class="viewcode-block" id="download_results"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.views.download_results">[docs]</a><span class="nd">@login_required</span>
+<span class="k">def</span> <span class="nf">download_results</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">pk</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stream the results file from a job to the the user.</span>
+
+<span class="sd">        **url:** `/apis/v1/jobs/&lt;job_pk&gt;/download_results/`</span>
+
+<span class="sd">        **Response Data:** A HTTP streaming response.</span>
+
+<span class="sd">        **Requires:** User must be logged in.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">Job</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">pk</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">download_stream</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">storage_type</span><span class="p">,</span>
+                           <span class="n">job</span><span class="o">.</span><span class="n">remote_results_path</span><span class="p">,</span>
+                           <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CPS Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

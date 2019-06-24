@@ -1,0 +1,54 @@
+workflows.dirt2d package
+========================
+
+Submodules
+----------
+
+workflows.dirt2d.logic module
+-----------------------------
+
+.. automodule:: workflows.dirt2d.logic
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+workflows.dirt2d.process module
+-------------------------------
+
+.. automodule:: workflows.dirt2d.process
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+workflows.dirt2d.traits module
+------------------------------
+
+.. automodule:: workflows.dirt2d.traits
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+workflows.dirt2d.views module
+-----------------------------
+
+.. automodule:: workflows.dirt2d.views
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+workflows.dirt2d.workflow module
+--------------------------------
+
+.. automodule:: workflows.dirt2d.workflow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: workflows.dirt2d
+   :members:
+   :undoc-members:
+   :show-inheritance:

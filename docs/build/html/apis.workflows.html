@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>apis.workflows package &mdash; Plant IT Alpha documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="apis.job_manager package" href="apis.job_manager.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Plant IT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">System Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Server Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plantit.html">plantit package</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="apis.html">apis package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="apis.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="apis.file_manager.html">apis.file_manager package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="apis.job_manager.html">apis.job_manager package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">apis.workflows package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-apis.workflows.views">apis.workflows.views module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="apis.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="apis.html#module-apis.mixins">apis.mixins module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Plant IT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="apis.html">apis package</a> &raquo;</li>
+        
+      <li>apis.workflows package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/apis.workflows.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-apis.workflows">
+<span id="apis-workflows-package"></span><h1>apis.workflows package<a class="headerlink" href="#module-apis.workflows" title="Permalink to this headline">¶</a></h1>
+<p>REST APIs for <a class="reference internal" href="plantit.workflows.html#module-plantit.workflows" title="plantit.workflows"><code class="xref py py-mod docutils literal notranslate"><span class="pre">plantit.workflows</span></code></a>.</p>
+<p>It can be accessed via: <cite>/apis/v1/workflows/</cite></p>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-apis.workflows.views">
+<span id="apis-workflows-views-module"></span><h2>apis.workflows.views module<a class="headerlink" href="#module-apis.workflows.views" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="apis.workflows.views.parameters">
+<code class="sig-prename descclassname">apis.workflows.views.</code><code class="sig-name descname">parameters</code><span class="sig-paren">(</span><em class="sig-param">request</em>, <em class="sig-param">workflow</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apis/workflows/views.html#parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apis.workflows.views.parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists the user settable parameters for a workflow. Parameters are
+in the format defined for the <cite>parameters</cite> variable in a workflow’s
+workflow.py config file.</p>
+<p><strong>url:</strong> <cite>/apis/v1/workflows/&lt;workflow app_name&gt;/</cite></p>
+<p><strong>Response Data:</strong>  A json array .</p>
+<p><strong>Requires:</strong> User must be logged in.</p>
+<p class="rubric">Example</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;parameters&quot;</span><span class="o">:</span><span class="p">{</span>
+        <span class="s1">&#39;id&#39;</span><span class="o">:</span> <span class="s1">&#39;settings&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="o">:</span> <span class="s1">&#39;Workflow Settings&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;params&#39;</span><span class="o">:</span><span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s1">&#39;id&#39;</span><span class="o">:</span> <span class="s1">&#39;example1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;type&#39;</span><span class="o">:</span> <span class="s1">&#39;bool&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;initial&#39;</span><span class="o">:</span> <span class="nx">False</span><span class="p">,</span>
+                <span class="s1">&#39;name&#39;</span><span class="o">:</span> <span class="s1">&#39;Example Checkbox&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;description&#39;</span><span class="o">:</span> <span class="s1">&#39;Example of a true/false workflow parameter&#39;</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s1">&#39;id&#39;</span><span class="o">:</span> <span class="s1">&#39;example2&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;type&#39;</span><span class="o">:</span> <span class="s1">&#39;float&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;initial&#39;</span><span class="o">:</span> <span class="mf">1.0</span><span class="p">,</span>
+                <span class="s1">&#39;name&#39;</span><span class="o">:</span> <span class="s1">&#39;Example Float Value&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;description&#39;</span><span class="o">:</span> <span class="s1">&#39;Example of a float workflow parameter&#39;</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="apis.workflows.views.submit">
+<code class="sig-prename descclassname">apis.workflows.views.</code><code class="sig-name descname">submit</code><span class="sig-paren">(</span><em class="sig-param">request</em>, <em class="sig-param">workflow</em>, <em class="sig-param">pk</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apis/workflows/views.html#submit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apis.workflows.views.submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submit a collection for analysis by a workflow.</p>
+<p><strong>url:</strong> <cite>/apis/v1/workflows/&lt;workflow app_name&gt;/</cite></p>
+<dl class="simple">
+<dt><strong>Body Data:</strong></dt><dd><p>JSON object containing the user’s choices for
+workflow parameters. JSON object should be in the
+format accepted by the Plant IT cookiecutter process function.
+(i.e. params are passed into process as the args variable).</p>
+</dd>
+</dl>
+<p><strong>Response Data:</strong>  A JSON object containing the “job_id”</p>
+<p><strong>Requires:</strong> User must be logged in.</p>
+<p class="rubric">Example</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;job_id&quot;</span><span class="o">:</span> <span class="mi">12</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="apis.workflows.views.workflows">
+<code class="sig-prename descclassname">apis.workflows.views.</code><code class="sig-name descname">workflows</code><span class="sig-paren">(</span><em class="sig-param">request</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apis/workflows/views.html#workflows"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apis.workflows.views.workflows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists the available workflows.</p>
+<p><strong>url:</strong> <cite>/apis/v1/workflows/</cite></p>
+<dl class="simple">
+<dt><strong>Response Data:</strong>  A JSON object with the “workflows” attribute.</dt><dd><p>The workflow attribute contains a JSON array with
+1 object per workflow.</p>
+</dd>
+</dl>
+<p><strong>Requires:</strong> User must be logged in.</p>
+<p class="rubric">Example</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;workflows&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="o">:</span> <span class="s2">&quot;Test Workflow&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="o">:</span> <span class="s2">&quot;asfd&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;icon_loc&quot;</span><span class="o">:</span> <span class="s2">&quot;workflows/test_workflow/icon.png&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;api_version&quot;</span><span class="o">:</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="s2">&quot;app_name&quot;</span><span class="o">:</span> <span class="s2">&quot;test_workflow&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;singularity_url&quot;</span><span class="o">:</span> <span class="s2">&quot;shub://frederic-michaud/python3&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;app_url_pattern&quot;</span><span class="o">:</span> <span class="s2">&quot;workflows:test_workflow:analyze&quot;</span>
+     <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="apis.job_manager.html" class="btn btn-neutral float-left" title="apis.job_manager package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CPS Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

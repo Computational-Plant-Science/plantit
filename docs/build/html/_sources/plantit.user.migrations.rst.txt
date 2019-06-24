@@ -1,0 +1,10 @@
+plantit.user.migrations package
+===============================
+
+Module contents
+---------------
+
+.. automodule:: plantit.user.migrations
+   :members:
+   :undoc-members:
+   :show-inheritance:

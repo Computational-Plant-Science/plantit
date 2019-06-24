@@ -1,0 +1,482 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>plantit.file_manager.filesystems package &mdash; Plant IT Alpha documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="plantit.job_manager package" href="plantit.job_manager.html" />
+    <link rel="prev" title="plantit.file_manager package" href="plantit.file_manager.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Plant IT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">System Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Server Configuration</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="plantit.html">plantit package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plantit.html#module-plantit.celery">plantit.celery module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plantit.html#module-plantit.settings">plantit.settings module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="plantit.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plantit.collection.html">plantit.collection package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="plantit.file_manager.html">plantit.file_manager package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="plantit.file_manager.html#registering-a-file-system">Registering a file system</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plantit.file_manager.html#opening-a-file">Opening a file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plantit.file_manager.html#file-permissions">File Permissions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plantit.file_manager.html#methods">Methods</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="plantit.file_manager.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plantit.file_manager.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plantit.file_manager.html#module-plantit.file_manager.permissions">plantit.file_manager.permissions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="plantit.file_manager.html#module-plantit.file_manager.services">plantit.file_manager.services module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="plantit.job_manager.html">plantit.job_manager package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plantit.user.html">plantit.user package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plantit.workflows.html">plantit.workflows package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apis.html">apis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Plant IT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="plantit.html">plantit package</a> &raquo;</li>
+        
+          <li><a href="plantit.file_manager.html">plantit.file_manager package</a> &raquo;</li>
+        
+      <li>plantit.file_manager.filesystems package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/plantit.file_manager.filesystems.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="plantit-file-manager-filesystems-package">
+<h1>plantit.file_manager.filesystems package<a class="headerlink" href="#plantit-file-manager-filesystems-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-plantit.file_manager.filesystems">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-plantit.file_manager.filesystems" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plantit.file_manager.filesystems.Registrar">
+<em class="property">class </em><code class="sig-prename descclassname">plantit.file_manager.filesystems.</code><code class="sig-name descname">Registrar</code><a class="reference internal" href="_modules/plantit/file_manager/filesystems.html#Registrar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.Registrar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A registry of file systems registered with Plant IT.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This class should not used directly. A instance of this class at
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">plantit.file_manager.filesystems.registrar</span></code> should be used
+for registration of file systems. See <code class="xref py py-mod docutils literal notranslate"><span class="pre">file_manager</span></code> for
+an example.</p>
+</div>
+<dl class="attribute">
+<dt id="plantit.file_manager.filesystems.Registrar.list">
+<code class="sig-name descname">list</code><a class="headerlink" href="#plantit.file_manager.filesystems.Registrar.list" title="Permalink to this definition">¶</a></dt>
+<dd><p>key: storage object name. value: the sorage object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="plantit.file_manager.filesystems.Registrar.default_basename">
+<code class="sig-name descname">default_basename</code><a class="headerlink" href="#plantit.file_manager.filesystems.Registrar.default_basename" title="Permalink to this definition">¶</a></dt>
+<dd><p>key: storage object name.
+value: a function <cite>func(user)</cite> that returns the default
+base file path given a django user object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.Registrar.default_path">
+<code class="sig-name descname">default_path</code><span class="sig-paren">(</span><em class="sig-param">storage_type</em>, <em class="sig-param">user</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems.html#Registrar.default_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.Registrar.default_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default path for a user on a storage type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>storage_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of a registered file storage system.
+storage_type must be a key in
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">plantit.file_manager.filesystems.registrar.list</span></code></p></li>
+<li><p><strong>user</strong> (<em>django user</em>) – the user to calculate the base file path
+for.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.Registrar.register">
+<code class="sig-name descname">register</code><span class="sig-paren">(</span><em class="sig-param">storage_type</em>, <em class="sig-param">default_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems.html#Registrar.register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.Registrar.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a storage type</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>The path string returned by default_path must be absolute
+(start with a “/”), and end with a “/”.</p>
+<p>The presence of these /s is checked by register, the web server
+will fail to start if the /s are missing.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>storage_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of a registered file storage system.
+storage_type must be a key in
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">plantit.file_manager.filesystems.registrar.list</span></code></p></li>
+<li><p><strong>default_location</strong> (<em>function</em>) – A function that returns the default
+base storage path. The function is passed the user object
+of the requesting user</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-plantit.file_manager.filesystems.storage">
+<span id="plantit-file-manager-filesystems-storage-module"></span><h2>plantit.file_manager.filesystems.storage module<a class="headerlink" href="#module-plantit.file_manager.filesystems.storage" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plantit.file_manager.filesystems.storage.AbstractStorageType">
+<em class="property">class </em><code class="sig-prename descclassname">plantit.file_manager.filesystems.storage.</code><code class="sig-name descname">AbstractStorageType</code><a class="reference internal" href="_modules/plantit/file_manager/filesystems/storage.html#AbstractStorageType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.storage.AbstractStorageType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>StorageTypes hold the information required to connect to a file system
+and an <a class="reference internal" href="#plantit.file_manager.filesystems.storage.AbstractStorageType.open" title="plantit.file_manager.filesystems.storage.AbstractStorageType.open"><code class="xref py py-meth docutils literal notranslate"><span class="pre">open()</span></code></a> method to open a connection to that file system.</p>
+<dl class="attribute">
+<dt id="plantit.file_manager.filesystems.storage.AbstractStorageType.name">
+<code class="sig-name descname">name</code><em class="property"> = ''</em><a class="headerlink" href="#plantit.file_manager.filesystems.storage.AbstractStorageType.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.storage.AbstractStorageType.open">
+<code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/storage.html#AbstractStorageType.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.storage.AbstractStorageType.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a connection to the storage system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path on the storage system to the folder to open</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A file-like object open to the given path.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-plantit.file_manager.filesystems.irods">
+<span id="plantit-file-manager-filesystems-irods-module"></span><h2>plantit.file_manager.filesystems.irods module<a class="headerlink" href="#module-plantit.file_manager.filesystems.irods" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plantit.file_manager.filesystems.irods.IRods">
+<em class="property">class </em><code class="sig-prename descclassname">plantit.file_manager.filesystems.irods.</code><code class="sig-name descname">IRods</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">username</em>, <em class="sig-param">password</em>, <em class="sig-param">hostname</em>, <em class="sig-param">zone</em>, <em class="sig-param">port=1247</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/irods.html#IRods"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRods" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#plantit.file_manager.filesystems.storage.AbstractStorageType" title="plantit.file_manager.filesystems.storage.AbstractStorageType"><code class="xref py py-class docutils literal notranslate"><span class="pre">plantit.file_manager.filesystems.storage.AbstractStorageType</span></code></a></p>
+<p>Implementes an AbstractStorageType for the IRodsFileSystem storage type,
+which provides access to an <a class="reference external" href="https://irods.org/">iRODS</a> server file system.</p>
+<dl class="attribute">
+<dt id="plantit.file_manager.filesystems.irods.IRods.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRods.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Server Name</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="plantit.file_manager.filesystems.irods.IRods.username">
+<code class="sig-name descname">username</code><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRods.username" title="Permalink to this definition">¶</a></dt>
+<dd><p>Login username</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="plantit.file_manager.filesystems.irods.IRods.password">
+<code class="sig-name descname">password</code><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRods.password" title="Permalink to this definition">¶</a></dt>
+<dd><p>Login password</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="plantit.file_manager.filesystems.irods.IRods.port">
+<code class="sig-name descname">port</code><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRods.port" title="Permalink to this definition">¶</a></dt>
+<dd><p>connection port</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="plantit.file_manager.filesystems.irods.IRods.hostname">
+<code class="sig-name descname">hostname</code><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRods.hostname" title="Permalink to this definition">¶</a></dt>
+<dd><p>hostname of server</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="plantit.file_manager.filesystems.irods.IRods.zone">
+<code class="sig-name descname">zone</code><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRods.zone" title="Permalink to this definition">¶</a></dt>
+<dd><p>irodsZone</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.irods.IRods.open">
+<code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/irods.html#IRods.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRods.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a connection to the storage system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path on the storage system to the folder to open</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A file-like object open to the given path.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="plantit.file_manager.filesystems.irods.IRodsFileSystem">
+<em class="property">class </em><code class="sig-prename descclassname">plantit.file_manager.filesystems.irods.</code><code class="sig-name descname">IRodsFileSystem</code><span class="sig-paren">(</span><em class="sig-param">host</em>, <em class="sig-param">port</em>, <em class="sig-param">user</em>, <em class="sig-param">password</em>, <em class="sig-param">zone</em>, <em class="sig-param">path='/'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/irods.html#IRodsFileSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRodsFileSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">django.core.files.storage.Storage</span></code></p>
+<p>Implements basic file stroage on a <a class="reference external" href="https://irods.org/">iRODS</a> filesystem. It inherits from
+Storage and provides implementations for all the public methods thereof.</p>
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.irods.IRodsFileSystem.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/irods.html#IRodsFileSystem.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRodsFileSystem.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.irods.IRodsFileSystem.delete">
+<code class="sig-name descname">delete</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/irods.html#IRodsFileSystem.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRodsFileSystem.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified file from the storage system.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.irods.IRodsFileSystem.exists">
+<code class="sig-name descname">exists</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/irods.html#IRodsFileSystem.exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRodsFileSystem.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if a file referenced by the given name already exists in the
+storage system, or False if the name is available for a new file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.irods.IRodsFileSystem.listdir">
+<code class="sig-name descname">listdir</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/irods.html#IRodsFileSystem.listdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRodsFileSystem.listdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>List the contents of the specified path. Return a 2-tuple of lists:
+the first item being directories, the second item being files.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.irods.IRodsFileSystem.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/irods.html#IRodsFileSystem.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.irods.IRodsFileSystem.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the total size, in bytes, of the file specified by name.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-plantit.file_manager.filesystems.local">
+<span id="plantit-file-manager-filesystems-local-module"></span><h2>plantit.file_manager.filesystems.local module<a class="headerlink" href="#module-plantit.file_manager.filesystems.local" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plantit.file_manager.filesystems.local.Local">
+<em class="property">class </em><code class="sig-prename descclassname">plantit.file_manager.filesystems.local.</code><code class="sig-name descname">Local</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/local.html#Local"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.local.Local" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#plantit.file_manager.filesystems.storage.AbstractStorageType" title="plantit.file_manager.filesystems.storage.AbstractStorageType"><code class="xref py py-class docutils literal notranslate"><span class="pre">plantit.file_manager.filesystems.storage.AbstractStorageType</span></code></a></p>
+<p>Implements an AbstractStorageType for the FileSystemStorage storage type,
+which provides access to the web server’s file system.</p>
+<dl class="method">
+<dt id="plantit.file_manager.filesystems.local.Local.open">
+<code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/filesystems/local.html#Local.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.filesystems.local.Local.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a connection to the storage system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Path on the storage system to the folder to open</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A file-like object open to the given path.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="plantit.job_manager.html" class="btn btn-neutral float-right" title="plantit.job_manager package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="plantit.file_manager.html" class="btn btn-neutral float-left" title="plantit.file_manager package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CPS Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

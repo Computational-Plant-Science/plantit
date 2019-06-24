@@ -1,0 +1,370 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>plantit.file_manager package &mdash; Plant IT Alpha documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="plantit.file_manager.filesystems package" href="plantit.file_manager.filesystems.html" />
+    <link rel="prev" title="plantit.collection package" href="plantit.collection.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Plant IT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">System Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Server Configuration</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="plantit.html">plantit package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plantit.html#module-plantit.celery">plantit.celery module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plantit.html#module-plantit.settings">plantit.settings module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="plantit.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plantit.collection.html">plantit.collection package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">plantit.file_manager package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#registering-a-file-system">Registering a file system</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#opening-a-file">Opening a file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#file-permissions">File Permissions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#methods">Methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-plantit.file_manager.permissions">plantit.file_manager.permissions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-plantit.file_manager.services">plantit.file_manager.services module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="plantit.job_manager.html">plantit.job_manager package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plantit.user.html">plantit.user package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plantit.workflows.html">plantit.workflows package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="apis.html">apis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Plant IT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="plantit.html">plantit package</a> &raquo;</li>
+        
+      <li>plantit.file_manager package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/plantit.file_manager.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-plantit.file_manager">
+<span id="plantit-file-manager-package"></span><h1>plantit.file_manager package<a class="headerlink" href="#module-plantit.file_manager" title="Permalink to this headline">¶</a></h1>
+<p>The file manager handles interactions with a modular <code class="xref py py-mod docutils literal notranslate"><span class="pre">filesystems</span></code>
+system to open connections with file servers that hold the files that
+make up a <a class="reference internal" href="plantit.collection.html#plantit.collection.models.Sample" title="plantit.collection.models.Sample"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sample</span></code></a>.</p>
+<div class="section" id="registering-a-file-system">
+<h2>Registering a file system<a class="headerlink" href="#registering-a-file-system" title="Permalink to this headline">¶</a></h2>
+<p>Plant IT looks for file-system configurations in <cite>django/filesystems.py</cite>.
+All file systems subclass <code class="xref py py-class docutils literal notranslate"><span class="pre">filesystems.AbstractStorageType</span></code>, which
+provides methods for connecting to the file system.</p>
+<p>There is currently support for local (<a class="reference internal" href="plantit.file_manager.filesystems.html#plantit.file_manager.filesystems.local.Local" title="plantit.file_manager.filesystems.local.Local"><code class="xref py py-class docutils literal notranslate"><span class="pre">filesystems.local.Local</span></code></a>) and
+and iRODS (<a class="reference internal" href="plantit.file_manager.filesystems.html#plantit.file_manager.filesystems.irods.IRods" title="plantit.file_manager.filesystems.irods.IRods"><code class="xref py py-class docutils literal notranslate"><span class="pre">filesystems.irods.IRods</span></code></a>) back ends.</p>
+<p>File systems are register with Plant IT using <code class="xref py py-attr docutils literal notranslate"><span class="pre">filesystems.registrar</span></code>.
+The <code class="xref py py-attr docutils literal notranslate"><span class="pre">filesystems.registrar</span></code> variable is an initialized
+<a class="reference internal" href="plantit.file_manager.filesystems.html#plantit.file_manager.filesystems.Registrar" title="plantit.file_manager.filesystems.Registrar"><code class="xref py py-class docutils literal notranslate"><span class="pre">filesystems.Registrar</span></code></a> object.</p>
+<p class="rubric">Example</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">django/filesystems.py:</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">plantit.file_manager.filesystems.irods</span> <span class="kn">import</span> <span class="n">IRods</span>
+<span class="kn">from</span> <span class="nn">plantit.file_manager.filesystems</span> <span class="kn">import</span> <span class="n">registrar</span>
+
+<span class="n">registrar</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">IRods</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;irods&quot;</span><span class="p">,</span>
+                         <span class="n">username</span> <span class="o">=</span> <span class="s2">&quot;rods&quot;</span><span class="p">,</span>
+                         <span class="n">password</span> <span class="o">=</span> <span class="s2">&quot;rods&quot;</span><span class="p">,</span>
+                         <span class="n">port</span> <span class="o">=</span> <span class="mi">1247</span><span class="p">,</span>
+                         <span class="n">hostname</span> <span class="o">=</span> <span class="s2">&quot;irods&quot;</span><span class="p">,</span>
+                         <span class="n">zone</span> <span class="o">=</span> <span class="s2">&quot;tempZone&quot;</span><span class="p">),</span>
+                    <span class="k">lambda</span> <span class="n">user</span><span class="p">:</span> <span class="s2">&quot;/tempZone/home/rods/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>See <a class="reference internal" href="plantit.file_manager.filesystems.html#plantit.file_manager.filesystems.Registrar" title="plantit.file_manager.filesystems.Registrar"><code class="xref py py-class docutils literal notranslate"><span class="pre">filesystems.Registrar</span></code></a> for registrar details.</p>
+</div>
+<div class="section" id="opening-a-file">
+<h2>Opening a file<a class="headerlink" href="#opening-a-file" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#plantit.file_manager.open" title="plantit.file_manager.open"><code class="xref py py-meth docutils literal notranslate"><span class="pre">open()</span></code></a> is provided as a convenience method for connecting to a file system.
+<a class="reference internal" href="#plantit.file_manager.open" title="plantit.file_manager.open"><code class="xref py py-meth docutils literal notranslate"><span class="pre">open()</span></code></a> respects file permissions.</p>
+</div>
+<div class="section" id="file-permissions">
+<h2>File Permissions<a class="headerlink" href="#file-permissions" title="Permalink to this headline">¶</a></h2>
+<p>A simple permission system is implemented in which only files down-tree of
+a user’s default path are acceptable to a user.</p>
+<p>The user’s default path is set at time of registering a file system.
+See <a class="reference internal" href="plantit.file_manager.filesystems.html#plantit.file_manager.filesystems.Registrar" title="plantit.file_manager.filesystems.Registrar"><code class="xref py py-class docutils literal notranslate"><span class="pre">filesystems.Registrar</span></code></a> and
+<a class="reference internal" href="#module-plantit.file_manager.permissions" title="plantit.file_manager.permissions"><code class="xref py py-mod docutils literal notranslate"><span class="pre">permissions</span></code></a> for more details.</p>
+</div>
+<div class="section" id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="plantit.file_manager.open">
+<code class="sig-prename descclassname">plantit.file_manager.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">storage_type</em>, <em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager.html#open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a folder on a storage_type. Respecting permissions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>storage_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of a registered file storage system.
+strage_type must be a key in
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">plantit.file_manager.filesystems.registrar.list</span></code></p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – path to open on the storage system.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A file-like object open to the given path.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="plantit.file_manager.filesystems.html">plantit.file_manager.filesystems package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plantit.file_manager.filesystems.html#module-plantit.file_manager.filesystems">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plantit.file_manager.filesystems.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plantit.file_manager.filesystems.html#module-plantit.file_manager.filesystems.storage">plantit.file_manager.filesystems.storage module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plantit.file_manager.filesystems.html#module-plantit.file_manager.filesystems.irods">plantit.file_manager.filesystems.irods module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plantit.file_manager.filesystems.html#module-plantit.file_manager.filesystems.local">plantit.file_manager.filesystems.local module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-plantit.file_manager.permissions">
+<span id="plantit-file-manager-permissions-module"></span><h2>plantit.file_manager.permissions module<a class="headerlink" href="#module-plantit.file_manager.permissions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="plantit.file_manager.permissions.open_folder">
+<code class="sig-prename descclassname">plantit.file_manager.permissions.</code><code class="sig-name descname">open_folder</code><span class="sig-paren">(</span><em class="sig-param">storage_type</em>, <em class="sig-param">path</em>, <em class="sig-param">user</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/permissions.html#open_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.permissions.open_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a connection to the file system containing the path, checking
+that the folder is equal to or child to the base_path provided
+by the storage system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>storage_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of the file system storage type must be
+a key in <a class="reference internal" href="plantit.file_manager.filesystems.html#plantit.file_manager.filesystems.Registrar.list" title="plantit.file_manager.filesystems.Registrar.list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">plantit.file_manager.filesystems.Registrar.list</span></code></a></p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – folder path</p></li>
+<li><p><strong>user</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – user that has permission to the folder path</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A file-like object open to the given path.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-plantit.file_manager.services">
+<span id="plantit-file-manager-services-module"></span><h2>plantit.file_manager.services module<a class="headerlink" href="#module-plantit.file_manager.services" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="plantit.file_manager.services.download_stream">
+<code class="sig-prename descclassname">plantit.file_manager.services.</code><code class="sig-name descname">download_stream</code><span class="sig-paren">(</span><em class="sig-param">storage_type</em>, <em class="sig-param">filepath</em>, <em class="sig-param">user</em>, <em class="sig-param">*kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plantit/file_manager/services.html#download_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plantit.file_manager.services.download_stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a downloadable stream to a file.
+File permissions are respected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>storage_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of the file system storage type must be
+a key in <a class="reference internal" href="plantit.file_manager.filesystems.html#plantit.file_manager.filesystems.Registrar.list" title="plantit.file_manager.filesystems.Registrar.list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">plantit.file_manager.filesystems.Registrar.list</span></code></a></p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – path to file to download.</p></li>
+<li><p><strong>user</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">django.contrib.auth.models.User</span></code>) – user that has permission to the folder path</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">django.http.StreamingHttpResponse</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="plantit.file_manager.filesystems.html" class="btn btn-neutral float-right" title="plantit.file_manager.filesystems package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="plantit.collection.html" class="btn btn-neutral float-left" title="plantit.collection package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CPS Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+plantit.file\_manager.tests package
+===================================
+
+Submodules
+----------
+
+plantit.file\_manager.tests.test\_irods module
+----------------------------------------------
+
+.. automodule:: plantit.file_manager.tests.test_irods
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plantit.file\_manager.tests.test\_permissions module
+----------------------------------------------------
+
+.. automodule:: plantit.file_manager.tests.test_permissions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plantit.file\_manager.tests.test\_views module
+----------------------------------------------
+
+.. automodule:: plantit.file_manager.tests.test_views
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: plantit.file_manager.tests
+   :members:
+   :undoc-members:
+   :show-inheritance:

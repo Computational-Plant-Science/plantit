@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>plantit.collection.models &mdash; Plant IT Alpha documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Plant IT
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.00
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">System Overview</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">Server Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../plantit.html">plantit package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apis.html">apis package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Plant IT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>plantit.collection.models</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for plantit.collection.models</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">celery</span> <span class="k">import</span> <span class="n">shared_task</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="k">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django.urls</span> <span class="k">import</span> <span class="n">reverse</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="k">import</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">django.contrib.postgres.fields</span> <span class="k">import</span> <span class="n">JSONField</span>
+<span class="kn">from</span> <span class="nn">model_utils.managers</span> <span class="k">import</span> <span class="n">InheritanceManager</span>
+
+<span class="kn">from</span> <span class="nn">.mixins</span> <span class="k">import</span> <span class="n">CastableModelMixin</span><span class="p">,</span> <span class="n">CastableQuerySetMixin</span>
+
+<span class="kn">from</span> <span class="nn">imagekit.models</span> <span class="k">import</span> <span class="n">ProcessedImageField</span>
+<span class="kn">from</span> <span class="nn">imagekit.processors</span> <span class="k">import</span> <span class="n">ResizeToFill</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">file_manager</span>
+<span class="kn">from</span> <span class="nn">plantit.file_manager.filesystems</span> <span class="k">import</span> <span class="n">registrar</span>
+<span class="kn">import</span> <span class="nn">plantit.file_manager.permissions</span> <span class="k">as</span> <span class="nn">permissions</span>
+
+<div class="viewcode-block" id="generate_thumbnail"><a class="viewcode-back" href="../../../plantit.collection.html#plantit.collection.models.generate_thumbnail">[docs]</a><span class="nd">@shared_task</span>
+<span class="k">def</span> <span class="nf">generate_thumbnail</span><span class="p">(</span><span class="n">sample_pk</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the thumbnail image for a sample. This function runs</span>
+<span class="sd">        in a :mod:`~plantit.celery` task and is automatically called by</span>
+<span class="sd">        :func:`Collection.add_sample` when a</span>
+<span class="sd">        sample is added to a collection.</span>
+
+<span class="sd">        Sample type is automatically detected and the correct thumbnail</span>
+<span class="sd">        code is run for the sample type. If the sample format is not supported,</span>
+<span class="sd">        :attr:`Sample.thumbnail_supported` is set to false and</span>
+<span class="sd">        :attr:`Sample.thumbnail` is left `null`</span>
+
+<span class="sd">        If a thumbnail is generated, :py:attr:`Sample.thumbnail_supported` is</span>
+<span class="sd">        set to true and :attr:`Sample.thumbnail` is set to the thumbnail image.</span>
+<span class="sd">        See :attr:`Sample.thumbnail` for more information.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Currently only supports creating thumbnails of images</span>
+<span class="sd">            (jpeg, jpg, png, tiff).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sample_pk (int): pk of the sample</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sample</span> <span class="o">=</span> <span class="n">Sample</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span> <span class="o">=</span> <span class="n">sample_pk</span><span class="p">)</span>
+    <span class="n">base_file_path</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">base_file_path</span>
+    <span class="n">storage_type</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">storage_type</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">file_extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">file_extension</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;.jpeg&#39;</span><span class="p">,</span> <span class="s1">&#39;.jpg&#39;</span><span class="p">,</span> <span class="s1">&#39;.png&#39;</span><span class="p">,</span> <span class="s1">&#39;.tiff&#39;</span><span class="p">]):</span>
+        <span class="c1">#Sample type is already a supported image type</span>
+        <span class="c1">#Simply open the image and let the thumbnail field format the image</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">file_manager</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">storage_type</span><span class="p">,</span><span class="n">base_file_path</span><span class="p">)</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">folder</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">sample</span><span class="o">.</span><span class="n">thumbnail</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">sample</span><span class="o">.</span><span class="n">thumbnail_supported</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">sample</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#No other supported file types, show a default image</span>
+        <span class="n">sample</span><span class="o">.</span><span class="n">thumbnail_supported</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">sample</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="k">pass</span></div>
+
+<span class="k">class</span> <span class="nc">CustomQuerySet</span><span class="p">(</span><span class="n">CastableQuerySetMixin</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">QuerySet</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Add support to cast an object to its final class.</span>
+<span class="sd">        See :class:`CastableQuerySetMixin` for details.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">pass</span>
+
+<div class="viewcode-block" id="Collection"><a class="viewcode-back" href="../../../plantit.collection.html#plantit.collection.models.Collection">[docs]</a><span class="k">class</span> <span class="nc">Collection</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">CastableModelMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collections are a set of samples hat are analyzed together by the</span>
+<span class="sd">        same Plant IT workflow. Typically representing one experiment or</span>
+<span class="sd">        treatment.</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            name (str): the name of the collection</span>
+<span class="sd">            description (str): text description and/or notes</span>
+<span class="sd">            user (ForeignKey): primary user for the collection</span>
+<span class="sd">            storage_type (string): The name of the storage system the samples</span>
+<span class="sd">                are saved on. It must be a key in</span>
+<span class="sd">                :attr:`..file_manager.filesystems.Registrar.list`</span>
+<span class="sd">            base_file_path (str): Sample paths are relative to this path on the</span>
+<span class="sd">                file system.</span>
+<span class="sd">            metadata (:class:`JSONField`): Metadata for the collection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">CustomQuerySet</span><span class="o">.</span><span class="n">as_manager</span><span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">250</span><span class="p">)</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">User</span><span class="p">,</span><span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">storage_type</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+    <span class="n">base_file_path</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">250</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">JSONField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<div class="viewcode-block" id="Collection.to_json"><a class="viewcode-back" href="../../../plantit.collection.html#plantit.collection.models.Collection.to_json">[docs]</a>    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Create a json representation of the collection</span>
+
+<span class="sd">            returns (String): json string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">&quot;storage_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_type</span><span class="p">,</span>
+            <span class="s2">&quot;base_file_path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_file_path</span><span class="p">,</span>
+            <span class="s2">&quot;sample_set&quot;</span><span class="p">:</span> <span class="p">{}</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_set</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">collection</span><span class="p">[</span><span class="s2">&quot;sample_set&quot;</span><span class="p">][</span><span class="n">sample</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;storage&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_type</span><span class="p">,</span>
+                        <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_file_path</span><span class="p">,</span>
+                                             <span class="n">sample</span><span class="o">.</span><span class="n">path</span><span class="p">),</span>
+                    <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Collection.add_sample"><a class="viewcode-back" href="../../../plantit.collection.html#plantit.collection.models.Collection.add_sample">[docs]</a>    <span class="k">def</span> <span class="nf">add_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">path</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Create a new :class:`Sample` and add it to this collection.</span>
+<span class="sd">            :func:`generate_thumbnail` is automatically called when the sample</span>
+<span class="sd">            is added.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                name (string): Name of the sample</span>
+<span class="sd">                path (string): Path to the sample. Relative to the collection&#39;s</span>
+<span class="sd">                    :attr:`~Collection.base_file_path` and</span>
+<span class="sd">                    :attr:`~Collection.storage_type`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_set</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">generate_thumbnail</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="Sample"><a class="viewcode-back" href="../../../plantit.collection.html#plantit.collection.models.Sample">[docs]</a><span class="k">class</span> <span class="nc">Sample</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Represents one experimental sample. I.E. The unit of information that</span>
+<span class="sd">        is analyzed by the workflow.</span>
+
+<span class="sd">        Sample objects only contain a link to the path to the files</span>
+<span class="sd">        within the sample. :mod:`plantit.file_manager` is used to access</span>
+<span class="sd">        the files. </span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            collection (:class:`Collection`): the collection this sample</span>
+<span class="sd">                belongs to</span>
+<span class="sd">            path (String): the path to the file relative to collection&#39;s</span>
+<span class="sd">                base file path.</span>
+<span class="sd">            name (String): the name of the sample</span>
+<span class="sd">            thumbnail_supported (bool): Thumbnails are supported for this sample</span>
+<span class="sd">                type. This is set to false by generate_thumbnail() if</span>
+<span class="sd">                the sample format is  not supported by generate_thumbnail</span>
+<span class="sd">            thumbnail (ProcessedImageField): url to the thumbnail. See</span>
+<span class="sd">                django-imagekit for details on saving a new thumbnail. This</span>
+<span class="sd">                is set to null if 1) generate_thumbnail was not called or</span>
+<span class="sd">                has not finished running, or 2) thubnail_supported = False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">CustomQuerySet</span><span class="o">.</span><span class="n">as_manager</span><span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span><span class="n">null</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">blank</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span><span class="n">null</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">blank</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">collection</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Collection</span><span class="p">,</span><span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">thumbnail_supported</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">thumbnail</span> <span class="o">=</span> <span class="n">ProcessedImageField</span><span class="p">(</span><span class="n">upload_to</span><span class="o">=</span><span class="s1">&#39;collections/thumbnails&#39;</span><span class="p">,</span>
+                                       <span class="n">processors</span><span class="o">=</span><span class="p">[</span><span class="n">ResizeToFill</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)],</span>
+                                       <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;JPEG&#39;</span><span class="p">,</span>
+                                       <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;quality&#39;</span><span class="p">:</span> <span class="mi">60</span><span class="p">},</span>
+                                       <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">JSONField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<div class="viewcode-block" id="Sample.get"><a class="viewcode-back" href="../../../plantit.collection.html#plantit.collection.models.Sample.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Get the sample file/folder.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                A file like object containing the sample data.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">storage</span> <span class="o">=</span> <span class="n">permissions</span><span class="o">.</span><span class="n">open_folder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">storage_type</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">base_file_path</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">storage</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, CPS Lab
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
