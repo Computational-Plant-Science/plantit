@@ -7,6 +7,9 @@ The following must be installed to run PlantIT:
 * Python 3
 * A unix based shell
 
+# Documentation
+
+[Full Documentation](https://computational-plant-science.github.io/DIRT2_Webplatform/build/html/index.html)
 
 # Installation
 
@@ -104,7 +107,7 @@ then it
 See [ClusterSide README](https://github.com/Computational-Plant-Science/DIRT2_ClusterSide) for information
 on installation and configuration of required remote Plant IT code on cluster
 
-#### Adding Cluster to Plant IT backend. 
+#### Adding Cluster to Plant IT backend.
 Clusters are added via the admin interface `(/admin/)`. Choose Clusters->Add Cluster. Fill in the commands
 accordingly.
 
