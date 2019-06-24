@@ -302,7 +302,7 @@ class Status(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
     state = models.PositiveIntegerField(choices=State,default=CREATED)
     date = models.DateTimeField(default=timezone.now,blank=True)
-    description = models.CharField(max_length=280)
+    description = models.CharField(max_length=1000)
 
     def __str__(self):
         return self.State[self.state - 1][1]
