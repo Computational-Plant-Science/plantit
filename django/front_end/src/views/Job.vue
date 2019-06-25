@@ -39,7 +39,32 @@
                         style="padding: 20px 15% 10px 15%;"
                         :tasks="job.task_set"
                     ></DiscreteProgress>
-                    Current Status: {{ current_status }}
+
+                    <b-table
+                      id="error-log"
+                      striped
+                      borderless
+                      responsive="lg"
+                      :items="job.status_set"
+                      :fields="status_table.fields"
+                      :per-page="status_table.perPage"
+                      :sort-by.sync="status_table.sortBy"
+                      :sort-desc.sync="status_table.sortDesc"
+                      >
+                      <span
+                        slot="description"
+                        slot-scope="data"
+                        v-html="data.value"
+                        class="align-left"></span>
+                    </b-table>
+                    <div id="error-count" >
+                      <span v-if="error_count > 0">
+                        There are {{ error_count }} warning(s) / error(s):
+                      </span>
+                      <b-button @click="status_table.perPage = status_table.perPage ? null : 1">
+                         {{ status_table.perPage ? 'Show' : 'Hide'}} Log
+                      </b-button>
+                    </div>
                 </b-col>
             </b-row>
         </b-container>
@@ -70,6 +95,52 @@ export default {
                 remote_results_path: null,
                 task_set: [],
                 status_set: []
+            },
+            status_table: {
+              sortBy: 'date',
+              sortDesc: true,
+              perPage: 1,
+              fields: [
+                {
+                  key: 'date',
+                  label: 'Time',
+                  sortable: true,
+                  formatter: value => {
+                    return moment(value).format('MM/DD/YY HH:mm')
+                  }
+                },
+                {
+                  key: 'state',
+                  label: 'State',
+                  formatter: value => {
+                    switch(value){
+                      case 1:
+                        return "Completed"
+                        break;
+                      case 2:
+                        return "Failed"
+                        break;
+                      case 3:
+                        return "OK"
+                        break;
+                      case 4:
+                        return "Warning"
+                        break;
+                      case 5:
+                        return "Created"
+                        break;
+                    }
+                  }
+                },
+                {
+                  key: 'description',
+                  formatter: value => {
+                    return value.replace(/(?:\r\n|\r|\n)/g, '<br>')
+                  },
+                  tdClass: 'table-td'
+                }
+
+              ]
             }
         };
     },
@@ -85,15 +156,35 @@ export default {
             } else {
                 return '';
             }
+        },
+        error_count(){
+          return this.job.status_set.filter(status =>{
+            return status.state == 2 | status.state == 4
+          }).length
         }
     },
     filters: {
         format_date(value) {
-            return moment(value).format('MM/DD/YY hh:mm');
+            return moment(value).format('MM/DD/YY HH:mm');
         },
         resultsLink(job) {
             return JobApi.resultsLink(job.pk);
         }
     }
 };
-</script>
+</script scoped>
+
+<style>
+.table-td {
+  text-align: left;
+}
+
+#error-log > thead {
+    display:none !important;
+}
+
+#error-count {
+  padding-top: 10 px;
+  float: right;
+}
+</style>
