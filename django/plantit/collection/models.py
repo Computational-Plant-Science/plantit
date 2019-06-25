@@ -141,7 +141,7 @@ class Sample(models.Model):
 
         Sample objects only contain a link to the path to the files
         within the sample. :mod:`plantit.file_manager` is used to access
-        the files. 
+        the files.
 
         Attributes:
             collection (:class:`Collection`): the collection this sample

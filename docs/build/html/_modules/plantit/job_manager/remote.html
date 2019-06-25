@@ -351,12 +351,14 @@
         <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">job</span><span class="o">.</span><span class="n">status_set</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">Status</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span>
                         <span class="n">date</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
-                        <span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                        <span class="n">description</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Plant IT Internal IOError Error During&quot;</span>
+                                     <span class="s2">&quot; Submission, please contact admins&quot;</span><span class="p">))</span>
             <span class="k">return</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">job</span><span class="o">.</span><span class="n">status_set</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">Status</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span>
                         <span class="n">date</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
-                        <span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                        <span class="n">description</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Plant IT Internal Error During&quot;</span> <span class="o">+</span>
+                                     <span class="s2">&quot; Submission, please contact admins&quot;</span><span class="p">))</span>
             <span class="k">raise</span> <span class="n">e</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -446,11 +448,11 @@
             <span class="n">error</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">stderr</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
 
             <span class="k">if</span><span class="p">(</span><span class="n">error</span> <span class="o">!=</span> <span class="s2">&quot;[]&quot;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">200</span><span class="p">:</span>
-                    <span class="n">error</span> <span class="o">=</span> <span class="p">(</span><span class="n">error</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span> <span class="o">+</span> <span class="n">error</span><span class="p">[</span><span class="o">-</span><span class="mi">100</span><span class="p">:])</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">900</span><span class="p">:</span>
+                    <span class="n">error</span> <span class="o">=</span> <span class="p">(</span><span class="n">error</span><span class="p">[:</span><span class="mi">450</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span> <span class="o">+</span> <span class="n">error</span><span class="p">[</span><span class="o">-</span><span class="mi">450</span><span class="p">:])</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">job</span><span class="o">.</span><span class="n">status_set</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">Status</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span>
                             <span class="n">date</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
-                            <span class="n">description</span><span class="o">=</span><span class="n">error</span><span class="p">)</span>
+                            <span class="n">description</span><span class="o">=</span> <span class="s2">&quot;Plant IT Internal Error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="p">))</span>
                 <span class="k">return</span>
 
         <span class="k">except</span> <span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -484,18 +486,6 @@
         <span class="n">file_storage</span> <span class="o">=</span> <span class="n">permissions</span><span class="o">.</span><span class="n">open_folder</span><span class="p">(</span><span class="n">storage_type</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">storage_type</span><span class="p">,</span>
                                                <span class="n">path</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">base_file_path</span><span class="p">,</span>
                                                <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">job</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span> <span class="c1">#OSError raised if dir already exists</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sftp</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collection_dir</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">pass</span>
-
-        <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">collection</span><span class="o">.</span><span class="n">sample_set</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
-            <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_storage</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span>
-            <span class="n">fname</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collection_dir</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sftp</span><span class="o">.</span><span class="n">putfo</span><span class="p">(</span><span class="n">file_object</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
-
-
 
         <span class="bp">self</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span></div>
 

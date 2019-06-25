@@ -10,12 +10,11 @@
         <b-container>
             <b-row>
                 <b-col>
-                    <h1>Job ID: {{ this.$route.query.pk }}</h1>
-                    <h3>Collection: {{ this.job.collection }}</h3>
+                    <h3><b>Collection:</b> {{ this.job.collection }}</h3>
+                    <h3><b>Workflow:</b> {{ this.job.workflow_name }}</h3>
                 </b-col>
                 <b-col cols="5">
-                    <b>Current Status:</b> {{ job.current_status }}<br />
-                    <b>Submission ID:</b> {{ job.submission_id }}<br />
+                    <b>Job ID:</b> {{ this.$route.query.pk }}<br/>
                     <b>Work DIR:</b> {{ job.work_dir }}<br />
                     <b>Created:</b> {{ job.date_created | format_date }}<br />
                 </b-col>
@@ -161,7 +160,7 @@ export default {
           return this.job.status_set.filter(status =>{
             return status.state == 2 | status.state == 4
           }).length
-        }
+        },
     },
     filters: {
         format_date(value) {

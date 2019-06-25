@@ -24,6 +24,7 @@
             <b-table
                 selectable
                 hover
+                responsive="md"
                 :sort-by.sync="sortBy"
                 :sort-desc.sync="sortDesc"
                 :items="items"
@@ -39,9 +40,6 @@
                         :tasks="data.item.task_set"
                         :show-name="false"
                     ></DiscreteProgress>
-                </template>
-                <template slot="date_created" slot-scope="data">
-                    {{ data.item.date_created | format_date }}
                 </template>
                 <template slot="pinned" slot-scope="data">
                     <b-button
@@ -137,13 +135,21 @@ export default {
                     sortable: true
                 },
                 {
+                    key: 'workflow_name',
+                    label: 'Workflow',
+                    sortable: true
+                },
+                {
                     key: 'tasks',
                     label: 'Progress',
                     sortable: false
                 },
                 {
                     key: 'date_created',
-                    sortable: true
+                    sortable: true,
+                    formatter: value => {
+                      return moment(value).format('MM/DD/YY HH:mm')
+                    }
                 },
                 {
                     key: 'tools',

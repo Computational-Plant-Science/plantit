@@ -1,7 +1,7 @@
 from plantit.job_manager.job import Job, Status, Task
 from rest_framework import serializers
 from datetime import datetime
-
+from plantit.workflows import registrar
 from ..mixins import PinnedSerilizerMethodMixin
 
 class StatusSerializer(serializers.ModelSerializer):
@@ -21,11 +21,13 @@ class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMetho
     task_set = TaskSerializer(many=True)
     collection = serializers.StringRelatedField()
     pinned = serializers.SerializerMethodField('pinnedByUser', source='profile_pins')
+    workflow_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Job
-        fields = ('pk', 'pinned', 'collection',  'date_created', 'work_dir',
-                  'submission_id', 'remote_results_path',
+        fields = ('pk', 'pinned', 'collection', 'workflow', 'workflow_name',
+                  'date_created', 'work_dir',
+                  'remote_results_path',
                   'task_set',  'status_set')
 
     def create(self, validated_data):
@@ -59,3 +61,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMetho
 
         job.save()
         return job
+
+    def get_workflow_name(self, job):
+        if job.workflow:
+            return registrar.list[job.workflow]['name']

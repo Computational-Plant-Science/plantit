@@ -84,7 +84,8 @@ def submit(user,workflow,collection_pk,params):
     collection = Collection.objects.get(pk = collection_pk)
 
     job = Job(collection = collection,
-              user = user)
+              user = user,
+              workflow = workflow)
     job.save()
     job.status_set.create(description="Created")
 

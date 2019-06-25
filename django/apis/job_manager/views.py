@@ -31,6 +31,7 @@ class JobViewSet(viewsets.ModelViewSet, PinViewMixin):
                         "collection": "Test",
                         "date_created": "2019-06-19T15:09:26.609002-04:00",
                         "work_dir": "1560989366/",
+                        "workflow": "test_workflow",
                         "submission_id": null,
                         "remote_results_path": "/tempZone/home/rods/results_job10.csv",
                         "task_set": [

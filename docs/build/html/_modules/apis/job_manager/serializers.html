@@ -159,42 +159,44 @@
 <span></span><span class="kn">from</span> <span class="nn">plantit.job_manager.job</span> <span class="k">import</span> <span class="n">Job</span><span class="p">,</span> <span class="n">Status</span><span class="p">,</span> <span class="n">Task</span>
 <span class="kn">from</span> <span class="nn">rest_framework</span> <span class="k">import</span> <span class="n">serializers</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
-
+<span class="kn">from</span> <span class="nn">plantit.workflows</span> <span class="k">import</span> <span class="n">registrar</span>
 <span class="kn">from</span> <span class="nn">..mixins</span> <span class="k">import</span> <span class="n">PinnedSerilizerMethodMixin</span>
 
-<div class="viewcode-block" id="StatusSerializer"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.serializers.StatusSerializer">[docs]</a><span class="k">class</span> <span class="nc">StatusSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
-<div class="viewcode-block" id="StatusSerializer.Meta"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.serializers.StatusSerializer.Meta">[docs]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">StatusSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">Status</span>
-        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span> <span class="p">)</span></div></div>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span> <span class="p">)</span>
 
-<div class="viewcode-block" id="TaskSerializer"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.serializers.TaskSerializer">[docs]</a><span class="k">class</span> <span class="nc">TaskSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">TaskSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
     <span class="n">pk</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
 
-<div class="viewcode-block" id="TaskSerializer.Meta"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.serializers.TaskSerializer.Meta">[docs]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">Task</span>
-        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;pk&#39;</span><span class="p">,</span><span class="s1">&#39;complete&#39;</span><span class="p">,)</span></div></div>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;pk&#39;</span><span class="p">,</span><span class="s1">&#39;complete&#39;</span><span class="p">,)</span>
 
-<div class="viewcode-block" id="JobSerializer"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.serializers.JobSerializer">[docs]</a><span class="k">class</span> <span class="nc">JobSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">HyperlinkedModelSerializer</span><span class="p">,</span> <span class="n">PinnedSerilizerMethodMixin</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">JobSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">HyperlinkedModelSerializer</span><span class="p">,</span> <span class="n">PinnedSerilizerMethodMixin</span><span class="p">):</span>
     <span class="n">status_set</span> <span class="o">=</span> <span class="n">StatusSerializer</span><span class="p">(</span><span class="n">many</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">task_set</span> <span class="o">=</span> <span class="n">TaskSerializer</span><span class="p">(</span><span class="n">many</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">collection</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">StringRelatedField</span><span class="p">()</span>
     <span class="n">pinned</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">SerializerMethodField</span><span class="p">(</span><span class="s1">&#39;pinnedByUser&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s1">&#39;profile_pins&#39;</span><span class="p">)</span>
+    <span class="n">workflow_name</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">SerializerMethodField</span><span class="p">()</span>
 
-<div class="viewcode-block" id="JobSerializer.Meta"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.serializers.JobSerializer.Meta">[docs]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">Job</span>
-        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;pk&#39;</span><span class="p">,</span> <span class="s1">&#39;pinned&#39;</span><span class="p">,</span> <span class="s1">&#39;collection&#39;</span><span class="p">,</span>  <span class="s1">&#39;date_created&#39;</span><span class="p">,</span> <span class="s1">&#39;work_dir&#39;</span><span class="p">,</span>
-                  <span class="s1">&#39;submission_id&#39;</span><span class="p">,</span> <span class="s1">&#39;remote_results_path&#39;</span><span class="p">,</span>
-                  <span class="s1">&#39;task_set&#39;</span><span class="p">,</span>  <span class="s1">&#39;status_set&#39;</span><span class="p">)</span></div>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;pk&#39;</span><span class="p">,</span> <span class="s1">&#39;pinned&#39;</span><span class="p">,</span> <span class="s1">&#39;collection&#39;</span><span class="p">,</span> <span class="s1">&#39;workflow&#39;</span><span class="p">,</span> <span class="s1">&#39;workflow_name&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;date_created&#39;</span><span class="p">,</span> <span class="s1">&#39;work_dir&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;remote_results_path&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;task_set&#39;</span><span class="p">,</span>  <span class="s1">&#39;status_set&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JobSerializer.create"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.serializers.JobSerializer.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">validated_data</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">validated_data</span><span class="p">):</span>
         <span class="n">status_data</span> <span class="o">=</span> <span class="n">validated_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;status_set&#39;</span><span class="p">)</span>
         <span class="n">job</span> <span class="o">=</span> <span class="n">Job</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="o">**</span><span class="n">validated_data</span><span class="p">)</span>
         <span class="n">job</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">status_data</span><span class="p">:</span>
             <span class="n">Status</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">job</span> <span class="o">=</span> <span class="n">job</span><span class="p">,</span> <span class="o">**</span><span class="n">status_data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">job</span></div>
+        <span class="k">return</span> <span class="n">job</span>
 
-<div class="viewcode-block" id="JobSerializer.update"><a class="viewcode-back" href="../../../apis.job_manager.html#apis.job_manager.serializers.JobSerializer.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job</span><span class="p">,</span> <span class="n">validated_data</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job</span><span class="p">,</span> <span class="n">validated_data</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">validated_data</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;submission_id&#39;</span> <span class="ow">in</span> <span class="n">validated_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">job</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">validated_data</span><span class="p">[</span><span class="s1">&#39;submission_id&#39;</span><span class="p">]</span>
@@ -216,7 +218,11 @@
                     <span class="n">task</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
 
         <span class="n">job</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">job</span></div></div>
+        <span class="k">return</span> <span class="n">job</span>
+
+    <span class="k">def</span> <span class="nf">get_workflow_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">job</span><span class="o">.</span><span class="n">workflow</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">registrar</span><span class="o">.</span><span class="n">list</span><span class="p">[</span><span class="n">job</span><span class="o">.</span><span class="n">workflow</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
 </pre></div>
 
            </div>
