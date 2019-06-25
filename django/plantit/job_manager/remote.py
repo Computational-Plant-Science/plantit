@@ -193,12 +193,14 @@ class SSHTaskMixin(models.Model):
         except IOError as e:
             self.job.status_set.create(state=Status.FAILED,
                         date=timezone.now(),
-                        description=str(e))
+                        description=("Plant IT Internal IOError Error During"
+                                     " Submission, please contact admins"))
             return
         except Exception as e:
             self.job.status_set.create(state=Status.FAILED,
                         date=timezone.now(),
-                        description=str(e))
+                        description=("Plant IT Internal Error During" +
+                                     " Submission, please contact admins"))
             raise e
         finally:
             client.close()
@@ -288,11 +290,11 @@ class SubmissionTask(SSHTaskMixin, Task):
             error = str(stderr.readlines())
 
             if(error != "[]"):
-                if len(error) > 200:
-                    error = (error[:100] + "..." + error[-100:])
+                if len(error) > 900:
+                    error = (error[:450] + "..." + error[-450:])
                 self.job.status_set.create(state=Status.FAILED,
                             date=timezone.now(),
-                            description=error)
+                            description= "Plant IT Internal Error: %s"(error, ))
                 return
 
         except JSONDecodeError as e:
@@ -326,18 +328,6 @@ class UploadCollectionTask(SSHTaskMixin,Task):
         file_storage = permissions.open_folder(storage_type = collection.storage_type,
                                                path = collection.base_file_path,
                                                user = self.job.user)
-
-        try: #OSError raised if dir already exists
-            self.sftp.mkdir(self.collection_dir)
-        except OSError as e:
-            pass
-
-        for sample in collection.sample_set.all():
-            file_object = file_storage.open(sample.path.strip("/"))
-            fname = path.join(self.collection_dir,os.path.basename(sample.name))
-            self.sftp.putfo(file_object, fname)
-
-
 
         self.finish()
 
