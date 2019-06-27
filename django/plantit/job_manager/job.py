@@ -114,7 +114,7 @@ class Job(models.Model):
 
                 submission_id is currently not set by Clusterside. submission_id
                 is planned to be used for canceling jobs running on the server.
-                Job cancleing is not yet implemented. 
+                Job cancleing is not yet implemented.
             workflow (str): app_name of workflow that submitted the job.
             work_dir (str): the directory on the cluster to perform the task in.
                  This path is relative to the clusters work_dir path.
