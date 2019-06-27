@@ -189,6 +189,7 @@ class SSHTaskMixin(models.Model):
 
         #Run task
         try:
+            print(self.ssh)
             self.ssh()
         except IOError as e:
             self.job.status_set.create(state=Status.FAILED,
@@ -287,14 +288,16 @@ class SubmissionTask(SSHTaskMixin, Task):
             #Submit job to cluster queue
             cmds = "cd " + self.workdir + "; " + self.cluster.submit_commands
             stdin, stdout, stderr = self.client.exec_command(cmds)
-            error = str(stderr.readlines())
 
-            if(error != "[]"):
+            if stdout.channel.recv_exit_status():
+                error = "stderr: " + str(stderr.readlines())
+                error = error + " stdout: " + str(stdout.readlines())
                 if len(error) > 900:
-                    error = (error[:450] + "..." + error[-450:])
+                    error = error[:450] + "..." + error[-450:]
+                print(error)
                 self.job.status_set.create(state=Status.FAILED,
                             date=timezone.now(),
-                            description= "Plant IT Internal Error: %s"(error, ))
+                            description= "Plant IT Internal Error: " + error)
                 return
 
         except JSONDecodeError as e:
