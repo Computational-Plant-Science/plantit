@@ -26,5 +26,8 @@ pillow
 #CAS logins
 django-cas-ng
 
+#Sentry io
+sentry-sdk
+
 # Production requirements
 gunicorn
