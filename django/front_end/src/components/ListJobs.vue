@@ -140,6 +140,10 @@ export default {
                     sortable: true
                 },
                 {
+                    key: 'cluster',
+                    sortable: true
+                },
+                {
                     key: 'tasks',
                     label: 'Progress',
                     sortable: false

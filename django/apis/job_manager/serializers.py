@@ -16,16 +16,18 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('pk','complete',)
 
-class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMethodMixin):
+class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
     status_set = StatusSerializer(many=True)
     task_set = TaskSerializer(many=True)
     collection = serializers.StringRelatedField()
+    cluster = serializers.SerializerMethodField()
     pinned = serializers.SerializerMethodField('pinnedByUser', source='profile_pins')
     workflow_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Job
-        fields = ('pk', 'pinned', 'collection', 'workflow', 'workflow_name',
+        fields = ('pk', 'pinned', 'collection', 'workflow',
+                  'cluster', 'workflow_name',
                   'date_created', 'work_dir',
                   'remote_results_path',
                   'task_set',  'status_set')
@@ -65,3 +67,9 @@ class JobSerializer(serializers.HyperlinkedModelSerializer, PinnedSerilizerMetho
     def get_workflow_name(self, job):
         if job.workflow:
             return registrar.list[job.workflow]['name']
+
+    def get_cluster(self, job):
+        if job.cluster:
+            return job.cluster.name
+        else:
+            return None

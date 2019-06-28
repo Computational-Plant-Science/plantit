@@ -2,7 +2,8 @@
     Methods for submitting workflow jobs.
 '''
 import json
-from ..job_manager.remote import UploadCollectionTask, SubmissionTask, Cluster
+from ..job_manager.remote import UploadCollectionTask, SubmissionTask
+from ..job_manager.job import Cluster
 from ..collection.models import Collection
 from ..job_manager.job import Job, Status
 
@@ -85,7 +86,8 @@ def submit(user,workflow,collection_pk,params):
 
     job = Job(collection = collection,
               user = user,
-              workflow = workflow)
+              workflow = workflow,
+              cluster=cluster)
     job.save()
     job.status_set.create(description="Created")
 

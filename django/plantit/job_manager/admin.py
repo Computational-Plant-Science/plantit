@@ -2,8 +2,8 @@ from django.contrib import admin
 from django.utils import timezone
 from django.forms import ModelForm, PasswordInput
 
-from .job import Status, Job, Task
-from .remote import Cluster, SubmissionTask, File, UploadFileTask
+from .job import Status, Job, Task, Cluster
+from .remote import SubmissionTask, File, UploadFileTask
 
 class StatusInline(admin.StackedInline):
     readonly_fields = ['state', 'date', 'description']

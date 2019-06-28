@@ -12,6 +12,7 @@
                 <b-col>
                     <h3><b>Collection:</b> {{ this.job.collection }}</h3>
                     <h3><b>Workflow:</b> {{ this.job.workflow_name }}</h3>
+                    <h5><b>Cluster:</b> {{ this.job.cluster }}</h5>
                 </b-col>
                 <b-col cols="5">
                     <b>Job ID:</b> {{ this.$route.query.pk }}<br/>

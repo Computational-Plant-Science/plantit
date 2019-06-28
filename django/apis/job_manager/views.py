@@ -33,6 +33,7 @@ class JobViewSet(viewsets.ModelViewSet, PinViewMixin):
                         "work_dir": "1560989366/",
                         "workflow": "test_workflow",
                         "submission_id": null,
+                        "cluster": "Sapelo2",
                         "remote_results_path": "/tempZone/home/rods/results_job10.csv",
                         "task_set": [
                             {

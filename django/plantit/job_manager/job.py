@@ -12,6 +12,9 @@ from django.utils import timezone
 from django.conf import settings
 from model_utils.managers import InheritanceManager
 
+from encrypted_model_fields.fields import EncryptedCharField
+
+
 from ..collection.models import Collection
 
 @shared_task
@@ -90,6 +93,61 @@ def __cancel_job__(pk):
                                    description="Job Canceled")
         client.close()
 
+class Cluster(models.Model):
+    """
+        Contains information needed to login in to the cluster and submit
+        or cancel jobs. Clusters must support ssh via password authentication
+        or support ssh key authentication.
+
+        **Key Authentication**
+
+        If :attr:`~Cluster.password` is left blank, ssh will be attempted
+        using ssh keys. The private key must be placed in
+        <repository_root>/config/ssh/id_rsa and the server must be included
+        in the known hosts file at <repository_root>/config/ssh/known_hosts.
+
+        Attributes:
+            name (str): The name of the cluster (max_length=20)
+            description (str):
+                A short description providing notes and information related to
+                this cluster
+            workdir (str): Directory on the cluster in which tasks are run
+            username (str): username used to log into the cluster
+            password (str): password used to log into the cluster
+            port (int): Cluster ssh server ssh port (default=22)
+            hostname (str): Cluster hostname
+            submit_commands (str): The command(s) to be run via an ssh terminal
+                submit_commands has access to variables set by either some tasks
+                or jobs. When available, they are automatically instered in place
+                of the following text (default='clusterside submit')
+            cancel_commands (str): The coammnds(s) to be executed to cancel
+                a job on the cluster. (default='# clusterside cancel #<- cancel
+                commands are not implemented by clusterside.')
+
+            Note:
+                Cancel commands are not currently implemented by clusterside.
+    """
+    name = models.CharField(max_length=20,
+            help_text="Human-readable name of cluster.")
+    description = models.TextField(blank=True,
+            help_text="Human-readable description of cluster.")
+    workdir = models.CharField(max_length=250,
+            help_text="Where (full path) to put folders for workflow analysis jobs on the cluster.")
+    username = models.CharField(max_length=100,
+            help_text="ssh username")
+    password = EncryptedCharField(max_length=100,blank=True,null=True,default=None,
+            help_text="ssh password. Leave blank for public-key auth. See README for setup.")
+    port = models.PositiveIntegerField(default=22,
+            help_text="ssh port")
+    hostname = models.CharField(max_length=250,
+            help_text="ssh hostname")
+    submit_commands = models.TextField(default="clusterside submit",
+            help_text="Commands to run on the cluster to submit a job.")
+    cancel_commands = models.TextField(default="# clusterside cancel #<- cancel commands are not implemented by clusterside.",
+            help_text="NOT IMPLEMENTED.")
+
+    def __str__(self):
+        return self.name
 
 class Job(models.Model):
     """
@@ -150,6 +208,10 @@ class Job(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     submission_id = models.CharField(max_length=100,null=True,blank=True)
     workflow = models.CharField(max_length=280,null=True,blank=True)
+    cluster = models.ForeignKey(Cluster,
+                                null=True,
+                                blank=True,
+                                on_delete=models.SET_NULL)
     work_dir = models.CharField(max_length=100,
                                 null=True,
                                 blank=True,
@@ -160,7 +222,11 @@ class Job(models.Model):
                                 default=None)
 
     def __str__(self):
-         return "Status: %s, Cluster: %s" (self.current_status().description,self.cluster)
+         return "Job: %s, User %s, Workflow: %s, Status: %s, Cluster: %s" % (self.pk,
+                                                    self.user,
+                                                    self.workflow, 
+                                                    self.current_status().state,
+                                                    self.cluster)
 
     def current_status(self):
         """
