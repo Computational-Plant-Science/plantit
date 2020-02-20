@@ -15,8 +15,11 @@
 
 DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f compose-dev.yml"
 
-#Delete all docker containers and volumes
-$DOCKER_COMPOSE rm -v -f -s
+# Stop containers
+$DOCKER_COMPOSE stop
+
+# Prune containers
+docker container prune -f
 
 # Remove all previous django migrations
 find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
