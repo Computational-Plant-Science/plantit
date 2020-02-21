@@ -7,7 +7,7 @@
 #  For Production mode:
 #    docker-compose -f docker-compose.yml -f compose-production.yml up
 #
-version: '3'
+version: '3.7'
 
 services:
   djangoapp:
@@ -15,14 +15,10 @@ services:
     working_dir: /code/django
     volumes:
       - .:/code
-    networks:
-      - database
 
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
-    networks:
-      - database
 
   celery:
     build: ./dockerfiles/djangoapp
@@ -32,11 +28,4 @@ services:
     depends_on:
       - rabbitmq
     command: celery -A plantit worker --loglevel=info
-    networks:
-      - database
 
-networks:
-  database:
-    #The database container is set
-    #  in prod/dev compose files
-    driver: bridge

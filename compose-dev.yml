@@ -15,33 +15,34 @@
 #   A "test cluster" for submitting workflow jobs to
 #
 # See docker-compose.yml for usage.
-version: '3'
+version: '3.7'
 
 services:
   djangoapp:
     command: python3 manage.py runserver 0.0.0.0:80
     environment:
       - DJANGO_SETTINGS_MODULE=plantit.settings_dev
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "80:80"
     depends_on:
       - db-dev
-    networks:
-      - dev
 
   celery:
     environment:
       - DJANGO_SETTINGS_MODULE=plantit.settings_dev
-    networks:
-      - dev
 
   db-dev:
     image: postgres
     hostname: db
-    networks:
-      database:
-        aliases:
-          - db
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: /usr/bin/pg_isready -U ${POSTGRES_USER}
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
 
   adminer:
     image: adminer
@@ -49,26 +50,15 @@ services:
       - "8081:8080"
     depends_on:
       - db-dev
-    networks:
-      - database
 
   ssh:
     build: ./dev/dockerfiles/test_cluster
     privileged: true
     depends_on:
       - irods
-    networks:
-      - dev
 
   irods:
     image: mjstealey/irods-provider-postgres:4.2.3
     ports:
       - "1247:1247"
-    networks:
-      - dev
 
-networks:
-  dev:
-    # Bridges the "test" servers. Such as the fake cluster (ssh) and
-    # test irods server (irods)
-    driver: bridge

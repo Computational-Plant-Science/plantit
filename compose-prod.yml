@@ -20,7 +20,6 @@ services:
       - DJANGO_SETTINGS_MODULE=plantit.settings_prod
     networks:
       - ngnix_network
-      - database
     restart: always
     depends_on:
       - db-prod
@@ -42,10 +41,6 @@ services:
   db-prod:
     image: postgres
     hostname: db
-    networks:
-      database:
-        aliases:
-          - db
     volumes:
       - ./db:/var/lib/postgresql/data
     restart: always
