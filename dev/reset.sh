@@ -15,30 +15,27 @@
 
 DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f compose-dev.yml"
 
-# Stop containers
-$DOCKER_COMPOSE stop
+# Bring down containers
+$DOCKER_COMPOSE down
 
-# Prune containers
-docker container prune -f
-
-# Remove all previous django migrations
+# Remove Django migrations
 find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
 
-# Remove all files saved to the server
+# Remove Django files
 rm -rf django/files/*
 mkdir -p django/files/public
 mkdir -p django/files/tmp
 
-#recreate images
+# Build containers
 $DOCKER_COMPOSE build "$@"
 
-#start the databse container, it needs some time to initilize before
-# starting the webserver
+# Start database container
 $DOCKER_COMPOSE up -d db-dev
-echo "Waiting 30s for db to warm up..."
+
+# Wait for database to come online
 sleep 30s
 
-#Reinstall databases
+# Run Django migrations
 $DOCKER_COMPOSE run djangoapp python manage.py makemigrations
 $DOCKER_COMPOSE run djangoapp python manage.py migrate
 

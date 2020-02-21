@@ -31,10 +31,12 @@ services:
   celery:
     environment:
       - DJANGO_SETTINGS_MODULE=plantit.settings_dev
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
   db-dev:
     image: postgres
-    hostname: db
+    ports:
+      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     healthcheck:

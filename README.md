@@ -13,19 +13,28 @@ The following must be installed to run PlantIT:
 
 # Installation
 
+First, clone the repository:
+
 ```bash
 git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 
-The processes are contained within docker containers, the full website can be run using docker-compose from the root of the repository:
+Then run `dev/reset.sh`. This script restores the repository to a "fresh" state by:
+
+   - stopping project containers
+   - pruning **all** stopped containers
+   - removing Django migrations and stored files
+   - rebuilding containers
+   - running Django migrations
+   - creating a Django admin user with `/django/files` permissions
+   - creating a mock cluster (`ssh` container)
+   - building the Vue front end
+
+he full website can be run using docker-compose from the root of the repository:
 
 ```bash
-dev/reset.sh #Initialize databases, builds front end, and some other default values
-
 docker-compose -f docker-compose.yml -f compose-dev.yml up
 ```
-
-**ATTENTION:** By default, dev/reset.sh deletes ALL local docker containers and volumes.   
 
 Once the containers have started, the website is available at http://localhost
 
@@ -34,7 +43,6 @@ To bypass CAS login, instead logging directly into django, use: `http://localhos
 reset.sh adds the __user__: _admin_ with __password:__ _admin_
 
 The default django interface is at http://localhost/admin/
-
 
 ### Adding filesystems
 PlantIT looks for file-system configurations in django/filesystems.py. The development environment includes a test irods server in a docker container to use for testing. To add it as a filesystem, create `django/filesystems.py` and add:
@@ -81,25 +89,17 @@ as the workflow app_name set in the workflow's WORKFLOW_CONFIG.
 
 
 # Resetting an installation
-```bash
-dev/reset.sh
-```
 
-dev/reset.sh can also be used to resets everything back to a "Fresh" install. Running dev/reset.sh does the following:
+`dev/reset.sh` restores the repository to a "fresh" state by:
 
-   - rebuilds all docker images
-   - deletes all docker volumes
-   - removes all Django migrations
-
-then it
-
-   - rebuilds the images
-   - runs initial Django migration
-   - creates an admin user
-      - gives admin user file access permissions to ./django/files
-   - adds test cluster
-
-**ATTENTION:** By default, dev/reset.sh deletes ALL local docker containers and volumes.   
+   - stopping containers
+   - pruning stopped containers
+   - removing Django migrations and stored files
+   - rebuilding containers
+   - running Django migrations
+   - creating a Django admin user with `/django/files` permissions
+   - creating a mock cluster (`ssh` container)
+   - building the Vue front end
 
 ### Adding Clusters
 
