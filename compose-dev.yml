@@ -16,7 +16,15 @@ services:
   djangoapp:
     command: python3 manage.py runserver 0.0.0.0:80
     environment:
-      - DJANGO_SETTINGS_MODULE=plantit.settings_dev
+      - DJANGO_SETTINGS_MODULE=plantit.settings
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG}
+      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
+      - DJANGO_API_URL=${DJANGO_API_URL}
+      - DJANGO_ALLOWED_HOSTS=*
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "80:80"
@@ -31,7 +39,15 @@ services:
 
   celery:
     environment:
-      - DJANGO_SETTINGS_MODULE=plantit.settings_dev
+      - DJANGO_SETTINGS_MODULE=plantit.settings
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG}
+      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
+      - DJANGO_API_URL=${DJANGO_API_URL}
+      - DJANGO_ALLOWED_HOSTS=*
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
   db-dev:
@@ -39,6 +55,9 @@ services:
     ports:
       - 5432:5432
     environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     healthcheck:
       test: /usr/bin/pg_isready -U ${POSTGRES_USER}

@@ -52,7 +52,7 @@ The default Django interface is at `http://localhost/admin/`.
 
 ### Object storage
 
-PlantIT looks for storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
+`plantit` looks for storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
 
 ```
 from plantit.file_manager.filesystems.irods import IRods
@@ -67,7 +67,7 @@ registrar.register(IRODS(name = "irods",
                     lambda user: "/tempZone/home/rods/")
 ```  
 
-If you change filesystem configuration while containers are running, note that `djangoapp` and `celery` will need to be restarted.
+If you edit this file while `plantit` is running, restart `djangoapp` and `celery` with:
 
 ```
 docker-compose -f docker-compose.yml -f compose-dev.yml restart djangoapp
@@ -76,9 +76,27 @@ docker-compose -f docker-compose.yml -f compose-dev.yml restart celery
 
 ### Configuration
 
-Settings are loaded from `django/settings.py`. This file can be used for environment-specific configuration and **should not** be committed to the repository.
+`plantit` requires the following environment variables:
 
-Values set in `django/settings.py` override any `plantit` default settings.
+```
+DJANGO_SECRET_KEY
+DJANGO_DEBUG
+DJANGO_FIELD_ENCRYPTION_KEY
+DJANGO_API_URL
+DJANGO_ALLOWED_HOSTS
+POSTGRES_USER
+POSTGRES_NAME
+POSTGRES_HOST
+POSTGRES_PASSWORD
+```
+
+These are configured in TeamCity for staging and production. In a development environment, Docker will read variables in the following format from a file named `.env` in the `plantit` root directory:
+
+```
+DJANGO_SECRET_KEY=value
+DJANGO_DEBUG=value
+...
+```
 
 ### Installing Workflows
 Workflows created using the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be integrated into the web platform by cloning the repository (or copying the code) into the django/workflows directory.
@@ -93,20 +111,6 @@ The web server and celery processes must be restarted to load new workflows.
 
 __NOTE:__ The workflow folder name (inside django/workflows/) must be the same
 as the workflow app_name set in the workflow's WORKFLOW_CONFIG.
-
-
-# Resetting an installation
-
-`dev/reset.sh` restores the repository to a "fresh" state by:
-
-   - stopping containers
-   - pruning stopped containers
-   - removing Django migrations and stored files
-   - rebuilding containers
-   - running Django migrations
-   - creating a Django admin user with `/django/files` permissions
-   - creating a mock cluster (`ssh` container)
-   - building the Vue front end
 
 ### Adding Clusters
 

@@ -17,7 +17,16 @@ services:
   djangoapp:
     command: ["gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
     environment:
-      - DJANGO_SETTINGS_MODULE=plantit.settings_prod
+      - DJANGO_SETTINGS_MODULE=plantit.settings
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG}
+      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
+      - DJANGO_API_URL=${DJANGO_API_URL}
+      - DJANGO_ALLOWED_HOSTS=*
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     networks:
       - ngnix_network
     restart: always
@@ -31,7 +40,16 @@ services:
 
   celery:
     environment:
-      - DJANGO_SETTINGS_MODULE=plantit.settings_prod
+      - DJANGO_SETTINGS_MODULE=plantit.settings
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG}
+      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
+      - DJANGO_API_URL=${DJANGO_API_URL}
+      - DJANGO_ALLOWED_HOSTS=*
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     logging:
       driver: gelf
       options:
@@ -41,6 +59,11 @@ services:
   db-prod:
     image: postgres
     hostname: db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - ./db:/var/lib/postgresql/data
     restart: always
@@ -61,7 +84,7 @@ services:
       - ./django/static/:/opt/django/static/:ro
       - ./django/files/public/:/opt/django/public/:ro
 
-    depends_on:  # <-- wait for djangoapp to be "ready" before starting this service
+    depends_on:
       - djangoapp
 
     networks:

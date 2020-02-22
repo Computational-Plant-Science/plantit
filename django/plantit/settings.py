@@ -1,29 +1,24 @@
-"""
-Constant django settings for the Plant IT project.
-
-Should not be loaded directly. Instead, load either `settings_dev.py` (for development) or
-`settings_prod.py` (for production). These have environment specific settings and
-automatically load `settings.py`.
-
-**Settings File Structure**
-
-- `django/plantit/settings.py`: Settings common to all environments
-- `django/plantit/settings_dev.py`: Settings for development environments
-- `django/plantit/settings_prod.py`: Settings for production environments
-- `django/settings.py`: Settings specific to local configuration, not required.
-
-Note:
-    For local settings that should not be included in the git repository,
-    Plant IT will load settings in `django/settings.py` if presnet.
-    Settings in `django/settings.py` override all other settings files.
-
-
-"""
-
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+NO_ENV_VAR = 'Environment variable not configured'
+
+assert 'DJANGO_SECRET_KEY' in os.environ, '{NO_ENV_VAR}: DJANGO_SECRET_KEY'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+
+assert 'DJANGO_DEBUG' in os.environ, '{NO_ENV_VAR}: DJANGO_DEBUG'
+DEBUG = os.environ.get('DJANGO_DEBUG')
+
+assert 'DJANGO_FIELD_ENCRYPTION_KEY' in os.environ, '{NO_ENV_VAR}: DJANGO_FIELD_ENCRYPTION_KEY'
+FIELD_ENCRYPTION_KEY = os.environ.get('DJANGO_FIELD_ENCRYPTION_KEY')
+
+assert 'DJANGO_ALLOWED_HOSTS' in os.environ, '{NO_ENV_VAR}: DJANGO_ALLOWED_HOSTS'
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(',')
+
+assert 'DJANGO_API_URL' in os.environ, '{NO_ENV_VAR}: DJANGO_API_URL'
+API_URL = os.environ.get('DJANGO_API_URL')
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "/assets/"
@@ -107,9 +102,9 @@ WSGI_APPLICATION = 'plantit.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'HOST': 'db-dev',
+        'NAME': os.environ.get('POSTGRES_NAME'),
+        'USER': os.environ.get('POSTGRES_USER'),
+        'HOST': os.environ.get('POSTGRES_HOST'),
         'PORT': 5432,
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
     }
