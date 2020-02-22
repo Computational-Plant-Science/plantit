@@ -46,13 +46,11 @@ This will build and start the following containers:
 - `db-dev`: PostgreSQL database
 - `adminer`: Database admin UI at `http://localhost:8081`
 
-Once the containers come up, the website will be available at `http://localhost`.
-
 To bypass CAS login and log directly into Django: `http://localhost/accounts/login/` with `username: admin` and `password: admin`.
 
 The default Django interface is at `http://localhost/admin/`.
 
-### Configuring object storage
+### Object storage
 
 PlantIT looks for storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
 
@@ -76,11 +74,11 @@ docker-compose -f docker-compose.yml -f compose-dev.yml restart djangoapp
 docker-compose -f docker-compose.yml -f compose-dev.yml restart celery
 ```
 
-### Environment specific configuration
+### Configuration
 
-`plantit` loads `django/settings.py` as part of django's settings.py file. This can be used for any environment specific configuration that should not be committed to the repository.
+Settings are loaded from `django/settings.py`. This file can be used for environment-specific configuration and **should not** be committed to the repository.
 
-Values set in `django/settings.py` override any PlantIT default settings.
+Values set in `django/settings.py` override any `plantit` default settings.
 
 ### Installing Workflows
 Workflows created using the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be integrated into the web platform by cloning the repository (or copying the code) into the django/workflows directory.
