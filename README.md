@@ -90,7 +90,7 @@ POSTGRES_HOST
 POSTGRES_PASSWORD
 ```
 
-These are configured in TeamCity for staging and production. In a development environment, Docker will read variables in the following format from a file named `.env` in the `plantit` root directory:
+In a development environment, Docker will read variables in the following format from a file named `.env` in the `plantit` root directory:
 
 ```
 DJANGO_SECRET_KEY=value
