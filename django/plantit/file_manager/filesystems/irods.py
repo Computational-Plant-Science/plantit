@@ -7,7 +7,7 @@ from irods.exception import CollectionDoesNotExist
 
 from .storage import AbstractStorageType
 
-class IRodsFileSystem(Storage):
+class IRODSFileSystem(Storage):
     """
         Implements basic file stroage on a iRODS_ filesystem. It inherits from
         Storage and provides implementations for all the public methods thereof.
@@ -38,7 +38,7 @@ class IRodsFileSystem(Storage):
             return self.path + "/" + name
 
     def delete(self,name):
-        raise NotImplmeentedError
+        raise NotImplementedError
 
     def exists(self,name):
         path = self._mkpath(name)
@@ -71,7 +71,7 @@ class IRodsFileSystem(Storage):
         obj = self.session.data_objects.get(self._mkpath(name))
         return obj.size
 
-class IRods(AbstractStorageType):
+class IRODS(AbstractStorageType):
     """
         Implementes an AbstractStorageType for the IRodsFileSystem storage type,
         which provides access to an iRODS_ server file system.
@@ -96,7 +96,7 @@ class IRods(AbstractStorageType):
         self.zone = zone
 
     def open(self,path):
-        return IRodsFileSystem(host=self.hostname,
+        return IRODSFileSystem(host=self.hostname,
                                port=self.port,
                                user=self.username,
                                password=self.password,

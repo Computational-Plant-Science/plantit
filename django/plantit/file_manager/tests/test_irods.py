@@ -6,7 +6,7 @@ from irods.session import iRODSSession
 
 from ..test.test_models import create_user
 
-from plantit.file_manager.filesystems.irods import IRodsFileSystem
+from plantit.file_manager.filesystems.irods import IRODSFileSystem
 
 
 # Create your tests here.
@@ -31,7 +31,7 @@ class TestIRodsFileSystem(TestCase):
                                 password=cls.password,
                                 zone=cls.zone)
 
-        cls.filesystem = IRodsFileSystem(host = cls.host,
+        cls.filesystem = IRODSFileSystem(host = cls.host,
                                 port = cls.port,
                                 user = cls.user,
                                 password = cls.password,

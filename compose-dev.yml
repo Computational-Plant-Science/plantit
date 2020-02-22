@@ -1,23 +1,18 @@
-# Runs PlantIT in devloper mode
+# Runs `plantit` in developer mode.
 #
-# Uses django's `manage.py runserver` to host PlantIT locally on port 80
-# instead of booting up ngnix and gunicorn
+# Django's `manage.py runserver` hosts `plantit` at `localhost:80`.
 #
 # Also provides:
-#
-# irods:
-#    A test irods server
-#
-# adminer:
-#    A database admin interface
-#
-# ssh:
-#   A "test cluster" for submitting workflow jobs to
+#   irods: mock IRODS server object store
+#   adminer:  database admin UI
+#   ssh: mock cluster
+#   flower: celery admin UI
 #
 # See docker-compose.yml for usage.
 version: '3.7'
 
 services:
+
   djangoapp:
     command: python3 manage.py runserver 0.0.0.0:80
     environment:
@@ -69,4 +64,3 @@ services:
     image: mjstealey/irods-provider-postgres:4.2.3
     ports:
       - "1247:1247"
-

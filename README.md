@@ -1,15 +1,17 @@
 # Requirements
 
-The following must be installed to run PlantIT:
+The following must be installed to run `plantit`:
 
-* [Docker](https://www.docker.com/)
-* [npm](https://www.npmjs.com/get-npm)
-* Python 3
-* A unix based shell
+- A Unix shell
+- [Docker](https://www.docker.com/)
+
+To develop the project, you'll also need:
+- Python 3
+- [npm](https://www.npmjs.com/get-npm)
 
 # Documentation
 
-[Full Documentation](https://computational-plant-science.github.io/DIRT2_Webplatform/build/html/index.html)
+Documentation can be found [here](https://computational-plant-science.github.io/DIRT2_Webplatform/build/html/index.html).
 
 # Installation
 
@@ -19,40 +21,46 @@ First, clone the repository:
 git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 
-Then run `dev/reset.sh`. This script restores the repository to a "fresh" state by:
+Then run `dev/reset.sh` from the root directory. This script restores the repository to a fresh state by:
 
-   - stopping project containers
-   - pruning **all** stopped containers
+   - stopping and removing containers and networks
    - removing Django migrations and stored files
    - rebuilding containers
    - running Django migrations
    - creating a Django admin user with `/django/files` permissions
-   - creating a mock cluster (`ssh` container)
+   - configuring a mock IRODS server
    - building the Vue front end
 
-he full website can be run using docker-compose from the root of the repository:
+Run `plantit` from the repository root:
 
 ```bash
 docker-compose -f docker-compose.yml -f compose-dev.yml up
 ```
 
-Once the containers have started, the website is available at http://localhost
+This will build and start the following containers:
 
-To bypass CAS login, instead logging directly into django, use: `http://localhost/accounts/login/`
+- `djangoapp`: Django web application at `http://localhost:80`
+- `celery`: Celery worker
+- `flower`: Celery monitoring UI at `http://localhost:5555`
+- `rabbitmq`: RabbitMQ message broker
+- `db-dev`: PostgreSQL database
+- `adminer`: Database admin UI at `http://localhost:8081`
 
-reset.sh adds the __user__: _admin_ with __password:__ _admin_
+Once the containers come up, the website will be available at `http://localhost`.
 
-The default django interface is at http://localhost/admin/
+To bypass CAS login and log directly into Django: `http://localhost/accounts/login/` with `username: admin` and `password: admin`.
 
-### Adding filesystems
-PlantIT looks for file-system configurations in django/filesystems.py. The development environment includes a test irods server in a docker container to use for testing. To add it as a filesystem, create `django/filesystems.py` and add:
+The default Django interface is at `http://localhost/admin/`.
 
-__django/filesystems.py__:
+### Configuring object storage
+
+PlantIT looks for storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
+
 ```
 from plantit.file_manager.filesystems.irods import IRods
 from plantit.file_manager.filesystems import registrar
 
-registrar.register(IRods(name = "irods",
+registrar.register(IRODS(name = "irods",
                          username = "rods",
                          password = "rods",
                          port = 1247,
@@ -61,7 +69,7 @@ registrar.register(IRods(name = "irods",
                     lambda user: "/tempZone/home/rods/")
 ```  
 
-The web server and celery process will need to be restarted after adding a new filesystem.
+If you change filesystem configuration while containers are running, note that `djangoapp` and `celery` will need to be restarted.
 
 ```
 docker-compose -f docker-compose.yml -f compose-dev.yml restart djangoapp
@@ -69,7 +77,8 @@ docker-compose -f docker-compose.yml -f compose-dev.yml restart celery
 ```
 
 ### Environment specific configuration
-If present, PlantIT loads `django/settings.py` as part of django's settings.py file. This can be used for any environment specific configuration that should not be committed to the repository.
+
+`plantit` loads `django/settings.py` as part of django's settings.py file. This can be used for any environment specific configuration that should not be committed to the repository.
 
 Values set in `django/settings.py` override any PlantIT default settings.
 
