@@ -21,60 +21,7 @@ First, clone the repository:
 git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 
-Then run `dev/reset.sh` from the root directory. This script restores the repository to a fresh state by:
-
-   - stopping and removing containers and networks
-   - removing Django migrations and stored files
-   - rebuilding containers
-   - running Django migrations
-   - creating a Django admin user with `/django/files` permissions
-   - configuring a mock IRODS server
-   - building the Vue front end
-
-Run `plantit` from the repository root:
-
-```bash
-docker-compose -f docker-compose.yml -f compose-dev.yml up
-```
-
-This will build and start the following containers:
-
-- `djangoapp`: Django web application at `http://localhost:80`
-- `celery`: Celery worker
-- `flower`: Celery monitoring UI at `http://localhost:5555`
-- `rabbitmq`: RabbitMQ message broker
-- `db-dev`: PostgreSQL database
-- `adminer`: Database admin UI at `http://localhost:8081`
-
-To bypass CAS login and log directly into Django: `http://localhost/accounts/login/` with `username: admin` and `password: admin`.
-
-The default Django interface is at `http://localhost/admin/`.
-
-### Object storage
-
-`plantit` looks for storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
-
-```
-from plantit.file_manager.filesystems.irods import IRods
-from plantit.file_manager.filesystems import registrar
-
-registrar.register(IRODS(name = "irods",
-                         username = "rods",
-                         password = "rods",
-                         port = 1247,
-                         hostname = "irods",
-                         zone = "tempZone"),
-                    lambda user: "/tempZone/home/rods/")
-```  
-
-If you edit this file while `plantit` is running, restart `djangoapp` and `celery` with:
-
-```
-docker-compose -f docker-compose.yml -f compose-dev.yml restart djangoapp
-docker-compose -f docker-compose.yml -f compose-dev.yml restart celery
-```
-
-### Configuration
+### Configuring environment variables
 
 `plantit` requires the following environment variables:
 
@@ -97,6 +44,54 @@ DJANGO_SECRET_KEY=value
 DJANGO_DEBUG=value
 ...
 ```
+
+### Configuring an object store
+
+`plantit` looks for storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
+
+```
+from plantit.file_manager.filesystems.irods import IRODS
+from plantit.file_manager.filesystems import registrar
+
+registrar.register(IRODS(name = "irods",
+                         username = "rods",
+                         password = "rods",
+                         port = 1247,
+                         hostname = "irods",
+                         zone = "tempZone"),
+                    lambda user: "/tempZone/home/rods/")
+```
+
+### Running `plantit`
+
+Before running the project, execute `dev/reset.sh` from the root directory. This script restores the repository to a fresh state by:
+
+   - stopping and removing containers and networks
+   - removing Django migrations and stored files
+   - rebuilding containers
+   - running Django migrations
+   - creating a Django admin user with `/django/files` permissions
+   - configuring a mock IRODS server
+   - building the Vue front end
+
+You should now be able to run `plantit` from the repository root:
+
+```bash
+docker-compose -f docker-compose.yml -f compose-dev.yml up
+```
+
+This will build and start the following containers:
+
+- `djangoapp`: Django web application at `http://localhost:80`
+- `celery`: Celery worker
+- `flower`: Celery monitoring UI at `http://localhost:5555`
+- `rabbitmq`: RabbitMQ message broker
+- `db-dev`: PostgreSQL database
+- `adminer`: Database admin UI at `http://localhost:8081`
+
+To bypass CAS login and log directly into Django: `http://localhost/accounts/login/` with `username: admin` and `password: admin`.
+
+The default Django interface is at `http://localhost/admin/`.
 
 ### Installing Workflows
 Workflows created using the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be integrated into the web platform by cloning the repository (or copying the code) into the django/workflows directory.
