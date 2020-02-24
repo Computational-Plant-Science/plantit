@@ -21,7 +21,7 @@ First, clone the repository:
 git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 
-### Configuring environment variables
+### Configure environment variables
 
 `plantit` requires the following environment variables:
 
@@ -45,9 +45,21 @@ DJANGO_DEBUG=value
 ...
 ```
 
-### Configuring an object store
+Keys can be generated in any Python 3 environment with the following code:
 
-`plantit` looks for storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
+```python
+# DJANGO_SECRET_KEY
+import random
+print("DJANGO_SECRET_KEY: %s" % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)))
+
+# DJANGO_FIELD_ENCRYPTION_KEY
+import cryptography.fernet
+print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_key())
+```
+
+### Configure an object store
+
+`plantit` looks for object storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
 
 ```
 from plantit.file_manager.filesystems.irods import IRODS
@@ -62,7 +74,7 @@ registrar.register(IRODS(name = "irods",
                     lambda user: "/tempZone/home/rods/")
 ```
 
-### Running `plantit`
+### Run `plantit`
 
 Before running the project, execute `dev/reset.sh` from the root directory. This script restores the repository to a fresh state by:
 
@@ -93,27 +105,23 @@ To bypass CAS login and log directly into Django: `http://localhost/accounts/log
 
 The default Django interface is at `http://localhost/admin/`.
 
-### Installing Workflows
-Workflows created using the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be integrated into the web platform by cloning the repository (or copying the code) into the django/workflows directory.
+### Install workflows
+Workflows created with the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be plugged into the web platform by placing workflow repositories in the `django/workflows` directory.
 
-The web server and celery processes must be restarted to load new workflows.
+Note that the `djangoapp` and `celery` containers must be restarted to load newly added workflows:
 
-#### Workflow install example:
+```bash
+docker-compose -f docker-compose.yml -f compose-dev.yml restart djangoapp
+docker-compose -f docker-compose.yml -f compose-dev.yml restart celery
 ```
-  cd django/workflows/
-  git clone git@github.com:Computational-Plant-Science/DIRT2D_Workflow.git dirt2d #<- see note below
-```
 
-__NOTE:__ The workflow folder name (inside django/workflows/) must be the same
-as the workflow app_name set in the workflow's WORKFLOW_CONFIG.
+Note also that the workflow directory name must be identical to the `app_name` configured when the workflow was created (this can also be edited later in the `WORKFLOW_CONFIG` dictionary in `workflow.py`.
 
-### Adding Clusters
+### Configure clusters
 
-#### Installation
 See [ClusterSide README](https://github.com/Computational-Plant-Science/DIRT2_ClusterSide) for information
-on installation and configuration of required remote Plant IT code on cluster
+on installation and configuration of required remote Plant IT code on cluster.
 
-#### Adding Cluster to Plant IT backend.
 Clusters are added via the admin interface `(/admin/)`. Choose Clusters->Add Cluster. Fill in the commands
 accordingly.
 
@@ -125,8 +133,7 @@ For Sapelo2 (UGA's cluster), the submit command is:
 ml Python/3.6.4-foss-2018a; /home/cotter/.local/bin/clusterside submit
 ```
 
-##### Note:
-On some types of ssh connections, installation does not put clusterside in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
+Note that on some types of ssh connections, installation does not put clusterside in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
 
 #### Cluster ssh login configuration.
 Plant IT supports both ssh password and public-key based
@@ -137,26 +144,15 @@ login. To use public-key login, leave the Password field blank. Public-key login
 
 The easiest way to setup public-key logins is to configure the keys for login from the web server, then copy the configured `id_rsa` and `known_hosts` files from the web server user (typically in `$HOME/.ssh/`) to `config/ssh/`
 
-# Front End Code
-The front end code is in django/front_end. It is built atop Vue.js. In development mode, it can be built using:
+### Develop with Vue
 
-```
-cd django/front_end
-npm run build
-```
-
-Or to continually watch for changes and rebuild as needed:
-
-```
-cd django/front_end
-npm run watch
-```
+Front-end code lives in `django/front_end`. It can be built from that directory with `npm run build` (or instructed to rebuild whenever a change is detected with `npm run watch`).
 
 When in django's development mode, django will automatically load the new front_end after running `npm run build` or `npm run watch`.
 
 See README-PRODUCTION.md for information on building the front end for production use.
 
-# Production
+### Deploy to production
 The website can be run in production mode using a different docker-compose config:
 
 ```bash

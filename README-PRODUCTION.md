@@ -9,18 +9,16 @@ mkdir db
 ```
 
 ## 2) Set Secret Keys
-`django/plantit/settings_prod.py` requires the secret and foreign keys be set.
+Keys can be generated with the following code:
 
-New keys can be generated using the following code:
-
-__SECRET_KEY__:
+`SECRET_KEY`:
 ```python
 import random
 key = ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50))
 print("SECRET_KEY: %s"%(key,))
 ```
 
-__FIELD_ENCRYPTION_KEY__:
+`FIELD_ENCRYPTION_KEY`:
 ```python
 import cryptography.fernet
 key = cryptography.fernet.Fernet.generate_key()
