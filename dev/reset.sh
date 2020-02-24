@@ -31,8 +31,8 @@ $DOCKER_COMPOSE build "$@"
 
 # Start database and wait for it to come online
 $DOCKER_COMPOSE up -d db-dev
-echo "Waiting for database to warm up..."
-./dev/wait-for-it.sh localhost:5432
+echo "Waiting 30s for database to warm up..."
+sleep 30
 
 # Run Django migrations
 $DOCKER_COMPOSE run djangoapp python manage.py makemigrations
@@ -44,8 +44,8 @@ $DOCKER_COMPOSE run djangoapp python manage.py migrate
 # Start mock irods and cluster and wait for them to come online
 $DOCKER_COMPOSE up -d irods
 $DOCKER_COMPOSE up -d ssh
-echo "Waiting for irods to warm up..."
-./dev/wait-for-it.sh localhost:1247
+echo "Waiting 30s for irods to warm up..."
+sleep 30
 
 # Configure irods
 $DOCKER_COMPOSE exec ssh /bin/bash /root/irods_setup.sh
