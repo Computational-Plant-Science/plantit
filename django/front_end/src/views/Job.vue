@@ -15,7 +15,7 @@
                     <h5><b>Cluster:</b> {{ this.job.cluster }}</h5>
                 </b-col>
                 <b-col cols="5">
-                    <b>Job ID:</b> {{ this.$route.query.pk }}<br/>
+                    <b>Job ID:</b> {{ this.$route.query.pk }}<br />
                     <b>Work DIR:</b> {{ job.work_dir }}<br />
                     <b>Created:</b> {{ job.date_created | format_date }}<br />
                 </b-col>
@@ -41,29 +41,36 @@
                     ></DiscreteProgress>
 
                     <b-table
-                      id="error-log"
-                      striped
-                      borderless
-                      responsive="lg"
-                      :items="job.status_set"
-                      :fields="status_table.fields"
-                      :per-page="status_table.perPage"
-                      :sort-by.sync="status_table.sortBy"
-                      :sort-desc.sync="status_table.sortDesc"
-                      >
-                      <span
-                        slot="description"
-                        slot-scope="data"
-                        v-html="data.value"
-                        class="align-left"></span>
+                        id="error-log"
+                        striped
+                        borderless
+                        responsive="lg"
+                        :items="job.status_set"
+                        :fields="status_table.fields"
+                        :per-page="status_table.perPage"
+                        :sort-by.sync="status_table.sortBy"
+                        :sort-desc.sync="status_table.sortDesc"
+                    >
+                        <span
+                            slot="description"
+                            slot-scope="data"
+                            v-html="data.value"
+                            class="align-left"
+                        ></span>
                     </b-table>
-                    <div id="error-count" >
-                      <span v-if="error_count > 0">
-                        There are {{ error_count }} warning(s) / error(s):
-                      </span>
-                      <b-button @click="status_table.perPage = status_table.perPage ? null : 1">
-                         {{ status_table.perPage ? 'Show' : 'Hide'}} Log
-                      </b-button>
+                    <div id="error-count">
+                        <span v-if="error_count > 0">
+                            There are {{ error_count }} warning(s) / error(s):
+                        </span>
+                        <b-button
+                            @click="
+                                status_table.perPage = status_table.perPage
+                                    ? null
+                                    : 1
+                            "
+                        >
+                            {{ status_table.perPage ? 'Show' : 'Hide' }} Log
+                        </b-button>
                     </div>
                 </b-col>
             </b-row>
@@ -97,50 +104,39 @@ export default {
                 status_set: []
             },
             status_table: {
-              sortBy: 'date',
-              sortDesc: true,
-              perPage: 1,
-              fields: [
-                {
-                  key: 'date',
-                  label: 'Time',
-                  sortable: true,
-                  formatter: value => {
-                    return moment(value).format('MM/DD/YY HH:mm')
-                  }
-                },
-                {
-                  key: 'state',
-                  label: 'State',
-                  formatter: value => {
-                    switch(value){
-                      case 1:
-                        return "Completed"
-                        break;
-                      case 2:
-                        return "Failed"
-                        break;
-                      case 3:
-                        return "OK"
-                        break;
-                      case 4:
-                        return "Warning"
-                        break;
-                      case 5:
-                        return "Created"
-                        break;
+                sortBy: 'date',
+                sortDesc: true,
+                perPage: 1,
+                fields: [
+                    {
+                        key: 'date',
+                        label: 'Time',
+                        sortable: true,
+                        formatter: value => {
+                            return moment(value).format('MM/DD/YY HH:mm');
+                        }
+                    },
+                    {
+                        key: 'state',
+                        label: 'State',
+                        formatter: value => {
+                            switch (value) {
+                                case 1: return 'Completed';
+                                case 2: return 'Failed';
+                                case 3: return 'OK';
+                                case 4: return 'Warning';
+                                case 5: return 'Created';
+                            }
+                        }
+                    },
+                    {
+                        key: 'description',
+                        formatter: value => {
+                            return value.replace(/(?:\r\n|\r|\n)/g, '<br>');
+                        },
+                        tdClass: 'table-td'
                     }
-                  }
-                },
-                {
-                  key: 'description',
-                  formatter: value => {
-                    return value.replace(/(?:\r\n|\r|\n)/g, '<br>')
-                  },
-                  tdClass: 'table-td'
-                }
-
-              ]
+                ]
             }
         };
     },
@@ -157,11 +153,11 @@ export default {
                 return '';
             }
         },
-        error_count(){
-          return this.job.status_set.filter(status =>{
-            return status.state == 2 | status.state == 4
-          }).length
-        },
+        error_count() {
+            return this.job.status_set.filter(status => {
+                return (status.state === 2) | (status.state === 4);
+            }).length;
+        }
     },
     filters: {
         format_date(value) {
@@ -172,19 +168,19 @@ export default {
         }
     }
 };
-</script scoped>
+</script>
 
 <style>
 .table-td {
-  text-align: left;
+    text-align: left;
 }
 
 #error-log > thead {
-    display:none !important;
+    display: none !important;
 }
 
 #error-count {
-  padding-top: 10 px;
-  float: right;
+    padding-top: 10px;
+    float: right;
 }
 </style>
