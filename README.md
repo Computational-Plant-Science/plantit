@@ -74,7 +74,7 @@ registrar.register(IRODS(name = "irods",
                     lambda user: "/tempZone/home/rods/")
 ```
 
-### Run `plantit`
+### Run `plantit` in development mode
 
 Before running the project, execute `dev/reset.sh` from the root directory. This script restores the repository to a fresh state by:
 
@@ -100,6 +100,10 @@ This will build and start the following containers:
 - `rabbitmq`: RabbitMQ message broker
 - `db-dev`: PostgreSQL database
 - `adminer`: Database admin UI at `http://localhost:8081`
+- `graylog`: Graylog server
+- `mongo`: MongoDB instance (for Graylog)
+- `express`: Mongo Express admin UI
+- `elasticsearch`: Elasticsearch node (for Graylog)
 
 To bypass CAS login and log directly into Django: `http://localhost/accounts/login/` with `username: admin` and `password: admin`.
 
@@ -152,7 +156,7 @@ When in django's development mode, django will automatically load the new front_
 
 See README-PRODUCTION.md for information on building the front end for production use.
 
-### Deploy to production
+### Run `plantit` in production
 The website can be run in production mode using a different docker-compose config:
 
 ```bash

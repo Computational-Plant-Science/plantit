@@ -78,19 +78,15 @@ services:
     #command: [nginx-debug, '-g', 'daemon off;']
     ports:
       - 80:80
-
     volumes:
       - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./django/static/:/opt/django/static/:ro
       - ./django/files/public/:/opt/django/public/:ro
-
     depends_on:
       - djangoapp
-
     networks:
       - ngnix_network
     restart: always
-
     logging:
       driver: gelf
       options:
