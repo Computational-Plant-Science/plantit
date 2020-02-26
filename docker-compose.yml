@@ -51,8 +51,6 @@ services:
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
-    ports:
-      - 15672:15672
 
   celery:
     build:
@@ -76,12 +74,3 @@ services:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
-  flower:
-    image: mher/flower
-    volumes:
-      - .:/code
-    depends_on:
-      - celery
-    command: flower --broker=amqp://rabbitmq --port=5555
-    ports:
-      - 5555:5555
