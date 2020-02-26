@@ -20,7 +20,7 @@ $DOCKER_COMPOSE build "$@"
 $DOCKER_COMPOSE up -d postgres
 
 # Run Django migrations
-$DOCKER_COMPOSE run djangoapp python manage.py makemigrations
+$DOCKER_COMPOSE run djangoapp /code/dev/wait-for-postgres.sh postgres python manage.py makemigrations
 $DOCKER_COMPOSE run djangoapp python manage.py migrate
 
 # Configure Django
