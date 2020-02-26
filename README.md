@@ -64,6 +64,7 @@ POSTGRES_USER=postgres
 POSTGRES_NAME=postgres
 POSTGRES_HOST=postgres
 POSTGRES_PASSWORD=<your POSTGRES_PASSWORD>
+EXPRESS_MONGO_HOST=127.0.0.1
 GRAYLOG_PASSWORD_SECRET=<your GRAYLOG_PASSWORD_SECRET>
 GRAYLOG_ROOT_PASSWORD_SHA2=<your GRAYLOG_ROOT_PASSWORD_SHA2>
 GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
@@ -128,15 +129,11 @@ This will build and start a number of containers. Some are shared between develo
 - `celery`: Celery worker
 - `rabbitmq`: RabbitMQ message broker
 - `postgres`: PostgreSQL database
-- `graylog`: Graylog server
-- `mongo`: MongoDB database (for Graylog)
-- `elasticsearch`: Elasticsearch node (for Graylog)
 
 Some run only in development mode:
 
 - `flower`: Celery monitoring UI at `http://localhost:5555`
 - `adminer`: PostgreSQL admin UI at `http://localhost:8080`
-- `express`: MongoDB admin UI at `http://localhost:8081`
 - `irods`: mock IRODS server
 - `ssh`: mock SSH connection (e.g., to cluster)
 
@@ -198,12 +195,17 @@ The website can be run in production mode using a different docker-compose confi
 docker-compose -f docker-compose.yml -f compose-prod.yml up
 ```
 
+This will start the shared containers (listed above), as well as:
+
+- `nginx`: NGINX server
+- `graylog`: Graylog server
+- `mongo`: MongoDB database (for Graylog)
+- `elasticsearch`: Elasticsearch node (for Graylog)
+
 The production configuration:
-- Uses the nginx web server and gunicorn for wsgi to django
-- Saves the database files outside the docker container.
+- Uses gunicorn for WSGI to Django
+- Saves PostgreSQL database files to a persistent volume
+- Configures Graylog logging
 
-For more info on setting up the production enviroment, see README-PRODUCTION.md
+For more info on setting up the production enviroment, see `README-PRODUCTION.md`.
 
-__NOTE:__ Production environments and dev environments use different
-containers for the database server. This will cause problems if you try to
-to run both environments on the same code base. The django database migrations will not be synced. See README-PRODUCTION.md for more details.

@@ -24,16 +24,11 @@ services:
       - DJANGO_DEBUG=${DJANGO_DEBUG}
       - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
       - DJANGO_API_URL=${DJANGO_API_URL}
-      - DJANGO_ALLOWED_HOSTS=*
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_NAME=${POSTGRES_NAME}
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://localhost:12201
-        tag: "djangoapp"
 
   postgres:
     image: postgres
@@ -50,22 +45,12 @@ services:
       timeout: 20s
       retries: 2
       start_period: 20s
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://localhost:12201
-        tag: "postgres"
 
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
     ports:
       - 15672:15672
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://localhost:12201
-        tag: "rabbitmq"
 
   celery:
     build: ./dockerfiles/djangoapp
@@ -86,11 +71,6 @@ services:
       - POSTGRES_NAME=${POSTGRES_NAME}
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://localhost:12201
-        tag: "celery"
 
   flower:
     image: mher/flower
@@ -101,82 +81,3 @@ services:
     command: flower --broker=amqp://rabbitmq --port=5555
     ports:
       - 5555:5555
-
-  mongo:
-    image: mongo:3
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - default
-      - graylog
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.5
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    environment:
-      - http.host=0.0.0.0
-      - transport.host=localhost
-      - network.host=0.0.0.0
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    deploy:
-      resources:
-        limits:
-          memory: 1g
-    networks:
-      - graylog
-    ports:
-      - 9200:9200
-    healthcheck:
-      test: curl -f http://localhost:9200/
-      interval: 20s
-      timeout: 20s
-      retries: 2
-      start_period: 20s
-
-  graylog:
-    image: graylog/graylog:3.2
-    volumes:
-      - graylog_journal:/usr/share/graylog/data/journal
-    environment:
-      - GRAYLOG_PASSWORD_SECRET=${GRAYLOG_PASSWORD_SECRET}
-      - GRAYLOG_ROOT_PASSWORD_SHA2=${GRAYLOG_ROOT_PASSWORD_SHA2}
-      - GRAYLOG_HTTP_EXTERNAL_URI=${GRAYLOG_HTTP_EXTERNAL_URI}
-    networks:
-      - graylog
-    depends_on:
-      - mongo
-      - elasticsearch
-    ports:
-      # Graylog web interface and REST API
-      - 9000:9000
-      # Syslog TCP
-      - 1514:1514
-      # Syslog UDP
-      - 1514:1514/udp
-      # GELF TCP
-      - 12201:12201
-      # GELF UDP
-      - 12201:12201/udp
-    healthcheck:
-      test: curl -f ${GRAYLOG_HTTP_EXTERNAL_URI}
-      interval: 20s
-      timeout: 20s
-      retries: 2
-      start_period: 20s
-
-networks:
-  graylog:
-    driver: bridge
-
-volumes:
-  mongo_data:
-    driver: local
-  es_data:
-    driver: local
-  graylog_journal:
-    driver: local

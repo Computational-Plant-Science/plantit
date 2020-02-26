@@ -51,7 +51,7 @@ sleep 30
 $DOCKER_COMPOSE exec ssh /bin/bash /root/irods_setup.sh
 
 # Bring containers down
-$DOCKER_COMPOSE down
+$DOCKER_COMPOSE stop
 
 # Build front end
 cd django/front_end
