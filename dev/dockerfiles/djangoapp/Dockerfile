@@ -8,8 +8,6 @@ RUN apt-get -y update \
 
 RUN mkdir /code
 WORKDIR /code
-COPY ./requirements.txt /code/
-COPY ./wait-for-postgres.sh /code/
-RUN chmod +x wait-for-postgres.sh
+COPY ./dockerfiles/djangoapp/requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/

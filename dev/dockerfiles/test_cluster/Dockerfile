@@ -22,7 +22,7 @@ RUN apt-get install -y curl vim
 
 RUN apt-get install -y singularity-container
 
-COPY qsub /usr/bin
+COPY ./dockerfiles/test_cluster/qsub /usr/bin
 
 RUN apt-get update; apt-get install -y git python3 python3-pip
 RUN mkdir -p /opt/; \
@@ -35,4 +35,5 @@ RUN apt-get install libfuse2
 RUN wget https://files.renci.org/pub/irods/releases/4.1.12/ubuntu14/irods-icommands-4.1.12-ubuntu14-x86_64.deb
 RUN dpkg -i irods-icommands-4.1.12-ubuntu14-x86_64.deb
 RUN rm irods-icommands-4.1.12-ubuntu14-x86_64.deb
-COPY irods_setup.sh /root/
+COPY ./wait-for-it.sh /root/
+COPY ./dockerfiles/test_cluster/irods_setup.sh /root/

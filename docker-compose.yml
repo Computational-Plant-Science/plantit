@@ -2,17 +2,19 @@
 #
 # Usage:
 #  For Developer mode:
-#    docker-compose -f docker-compose.yml -f compose-dev.yml up
+#    docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 #
 #  For Production mode:
-#    docker-compose -f docker-compose.yml -f compose-production.yml up
+#    docker-compose -f docker-compose.yml -f docker-compose.production.yml up
 #
 version: '3.7'
 
 services:
 
   djangoapp:
-    build: ./dockerfiles/djangoapp
+    build:
+      context: ./dev
+      dockerfile: ./dockerfiles/djangoapp/Dockerfile
     working_dir: /code/django
     depends_on:
       - postgres
@@ -53,7 +55,9 @@ services:
       - 15672:15672
 
   celery:
-    build: ./dockerfiles/djangoapp
+    build:
+      context: ./dev
+      dockerfile: ./dockerfiles/djangoapp/Dockerfile
     volumes:
       - .:/code
     working_dir: /code/django

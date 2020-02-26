@@ -8,7 +8,7 @@ DOIT_CONFIG = {
                 'reporter': 'console'
               }
 
-COMPOSE_CONFIG = '-f docker-compose.yml -f compose-prod.yml'
+COMPOSE_CONFIG = '-f docker-compose.yml -f docker-compose.prod.yml'
 
 def task_rebuildContainers():
     '''

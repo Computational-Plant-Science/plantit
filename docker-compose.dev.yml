@@ -14,7 +14,7 @@ version: '3.7'
 services:
 
   djangoapp:
-    command: ["../wait-for-postgres.sh", "postgres", "python3", "manage.py", "runserver", "0.0.0.0:80"]
+    command: ["/code/dev/wait-for-postgres.sh", "postgres", "python3", "manage.py", "runserver", "0.0.0.0:80"]
     ports:
       - "80:80"
     healthcheck:
@@ -38,7 +38,9 @@ services:
       start_period: 20s
 
   ssh:
-    build: ./dev/dockerfiles/test_cluster
+    build:
+      context: ./dev
+      dockerfile: ./dockerfiles/test_cluster/Dockerfile
     privileged: true
     depends_on:
       - irods

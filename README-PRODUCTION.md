@@ -46,13 +46,13 @@ npm run build
 To build containers from the docker images run:
 
 ```bash
-docker-compose -f docker-compose.yml -f compose-prod.yml build
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
 ```
 
 ## 7) Collect static files
 Static files must be manually collected so that the nginx web server can serve them:
 ```bash
-docker-compose -f docker-compose.yml -f compose-prod.yml run djangoapp ./manage.py collectstatic --no-input
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py collectstatic --no-input
 ```
 
 
@@ -60,8 +60,8 @@ docker-compose -f docker-compose.yml -f compose-prod.yml run djangoapp ./manage.
 The production environment uses a separate database container from that of the the dev env. It must be manually setup by running:  
 
 ```bash
-docker-compose -f docker-compose.yml -f compose-prod.yml run djangoapp ./manage.py makemigrations
-docker-compose -f docker-compose.yml -f compose-prod.yml run djangoapp ./manage.py migrate
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py makemigrations
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py migrate
 ```
 
 __NOTE:__ If previous migrations were created on the code base (such as by using the development setup then running the production setup) you will need to remove the already created migrations:
@@ -75,7 +75,7 @@ find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
 To add a user to a newly setup system
 
 ```bash
-docker-compose -f docker-compose.yml -f compose-prod.yml run djangoapp ./manage.py createsuperuser
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py createsuperuser
 ```
 
 # Google analytics
@@ -108,5 +108,5 @@ VUE_APP_SENTRY_IO_PROJECT=12345...
 The website can be run in production mode using a different docker-compose config:
 
 ```bash
-docker-compose -f docker-compose.yml -f compose-prod.yml up
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```

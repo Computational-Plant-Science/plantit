@@ -119,7 +119,7 @@ Before running the project, execute `dev/reset.sh` from the root directory. This
 You should now be able to run `plantit` from the repository root:
 
 ```bash
-docker-compose -f docker-compose.yml -f compose-dev.yml up
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
 This will build and start a number of containers. Some are shared between development and production configurations:
@@ -146,8 +146,8 @@ Workflows created with the [Plant IT workflow template](https://github.com/Compu
 Note that the `djangoapp` and `celery` containers must be restarted to load newly added workflows:
 
 ```bash
-docker-compose -f docker-compose.yml -f compose-dev.yml restart djangoapp
-docker-compose -f docker-compose.yml -f compose-dev.yml restart celery
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart djangoapp
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart celery
 ```
 
 Note also that the workflow directory name must be identical to the `app_name` configured when the workflow was created (this can also be edited later in the `WORKFLOW_CONFIG` dictionary in `workflow.py`.
@@ -191,7 +191,7 @@ See README-PRODUCTION.md for information on building the front end for productio
 The website can be run in production mode using a different docker-compose config:
 
 ```bash
-docker-compose -f docker-compose.yml -f compose-prod.yml up
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```
 
 This will start the shared containers (listed above), as well as:
