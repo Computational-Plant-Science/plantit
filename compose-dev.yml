@@ -31,11 +31,11 @@ services:
       start_period: 20s
 
   djangoapp:
-    command: python3 manage.py runserver 0.0.0.0:8000
+    command: python3 manage.py runserver 0.0.0.0:80
     ports:
-      - "8000:8000"
+      - "80:80"
     healthcheck:
-      test: curl -f http://localhost:8000/
+      test: curl -f http://localhost:80/
       interval: 20s
       timeout: 20s
       retries: 2
