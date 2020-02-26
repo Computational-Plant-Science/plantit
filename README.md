@@ -26,6 +26,7 @@ git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 `plantit` requires the following environment variables:
 
 ```
+VUE_APP_TITLE
 DJANGO_SECRET_KEY
 DJANGO_DEBUG
 DJANGO_FIELD_ENCRYPTION_KEY
@@ -47,6 +48,8 @@ DJANGO_SECRET_KEY=value
 DJANGO_DEBUG=value
 ...
 ```
+
+`VUE_APP_TITLE`: should be set to `PlantIT`.
 
 Django keys can be generated in any Python 3 environment with the following code:
 
