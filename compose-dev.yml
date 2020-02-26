@@ -14,7 +14,7 @@ version: '3.7'
 services:
 
   djangoapp:
-    command: python3 manage.py runserver 0.0.0.0:80
+    command: ["../wait-for-postgres.sh", "postgres", "python3", "manage.py", "runserver", "0.0.0.0:80"]
     ports:
       - "80:80"
     healthcheck:
