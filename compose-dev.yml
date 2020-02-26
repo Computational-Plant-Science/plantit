@@ -13,18 +13,10 @@ version: '3.7'
 
 services:
 
-  mongo:
-    image: mongo:3
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - default
-      - graylog
-
   express:
     image: mongo-express:0.54
     environment:
-      - ME_CONFIG_MONGODB_SERVER=${EXPRESS_ME_CONFIG_MONGODB_SERVER}
+      - ME_CONFIG_MONGODB_SERVER=mongo
     ports:
       - 8081:8081
     networks:
@@ -38,78 +30,8 @@ services:
       retries: 2
       start_period: 20s
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.5
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    environment:
-      - http.host=0.0.0.0
-      - transport.host=localhost
-      - network.host=0.0.0.0
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    deploy:
-      resources:
-        limits:
-          memory: 1g
-    networks:
-      - graylog
-    healthcheck:
-      test: curl -f http://localhost:9200/
-      interval: 20s
-      timeout: 20s
-      retries: 2
-      start_period: 20s
-
-  graylog:
-    image: graylog/graylog:3.2
-    volumes:
-      - graylog_journal:/usr/share/graylog/data/journal
-    environment:
-      # CHANGE ME (must be at least 16 characters)!
-      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
-      # Password: admin
-      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
-    networks:
-      - graylog
-    depends_on:
-      - mongo
-      - elasticsearch
-    ports:
-      # Graylog web interface and REST API
-      - 9000:9000
-      # Syslog TCP
-      - 1514:1514
-      # Syslog UDP
-      - 1514:1514/udp
-      # GELF TCP
-      - 12201:12201
-      # GELF UDP
-      - 12201:12201/udp
-    healthcheck:
-      test: curl -f http://localhost:9000/
-      interval: 20s
-      timeout: 20s
-      retries: 2
-      start_period: 20s
-
   djangoapp:
     command: python3 manage.py runserver 0.0.0.0:80
-    environment:
-      - DJANGO_SETTINGS_MODULE=plantit.settings
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG}
-      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
-      - DJANGO_API_URL=${DJANGO_API_URL}
-      - DJANGO_ALLOWED_HOSTS=*
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "80:80"
     depends_on:
@@ -143,8 +65,8 @@ services:
       - POSTGRES_NAME=${POSTGRES_NAME}
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - ./db:/var/lib/postgresql/data
+    #volumes:
+    #  - ./db:/var/lib/postgresql/data
     healthcheck:
       test: /usr/bin/pg_isready -U ${POSTGRES_USER}
       interval: 20s
@@ -176,14 +98,3 @@ services:
     ports:
       - "1247:1247"
 
-networks:
-  graylog:
-    driver: bridge
-
-volumes:
-  mongo_data:
-    driver: local
-  es_data:
-    driver: local
-  graylog_journal:
-    driver: local

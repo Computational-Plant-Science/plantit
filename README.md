@@ -35,6 +35,9 @@ POSTGRES_USER
 POSTGRES_NAME
 POSTGRES_HOST
 POSTGRES_PASSWORD
+GRAYLOG_PASSWORD_SECRET
+GRAYLOG_ROOT_PASSWORD_SHA2
+GRAYLOG_HTTP_EXTERNAL_URI
 ```
 
 In a development environment, Docker will read variables in the following format from a file named `.env` in the `plantit` root directory:
@@ -45,7 +48,7 @@ DJANGO_DEBUG=value
 ...
 ```
 
-Keys can be generated in any Python 3 environment with the following code:
+Django keys can be generated in any Python 3 environment with the following code:
 
 ```python
 # DJANGO_SECRET_KEY
@@ -56,6 +59,14 @@ print("DJANGO_SECRET_KEY: %s" % ''.join(random.SystemRandom().choice('abcdefghij
 import cryptography.fernet
 print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_key())
 ```
+
+`GRAYLOG_PASSWORD_SECRET` must be 16 characters or longer, and `GRAYLOG_ROOT_PASSWORD_SHA2` (the hash of the admin user password, which can be any non-empty value) can be generated with the following:
+
+```bash
+echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
+````
+
+In a development environment, `GRAYLOG_HTTP_EXTERNAL_URI` should be set to `http://127.0.0.1:9000/`.
 
 ### Configure an object store
 
