@@ -14,64 +14,17 @@
 version: '3'
 
 services:
+
   djangoapp:
     command: ["gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
-    environment:
-      - DJANGO_SETTINGS_MODULE=plantit.settings
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG}
-      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
-      - DJANGO_API_URL=${DJANGO_API_URL}
-      - DJANGO_ALLOWED_HOSTS=*
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     networks:
       - ngnix_network
     restart: always
-    depends_on:
-      - db-prod
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://localhost:12201
-        tag: "django"
 
-  celery:
-    environment:
-      - DJANGO_SETTINGS_MODULE=plantit.settings
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG}
-      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
-      - DJANGO_API_URL=${DJANGO_API_URL}
-      - DJANGO_ALLOWED_HOSTS=*
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://localhost:12201
-        tag: "celery"
-
-  db-prod:
-    image: postgres
-    hostname: db
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  postgres:
     volumes:
       - ./db:/var/lib/postgresql/data
     restart: always
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://localhost:12201
-        tag: "django-db"
 
   nginx:
     image: nginx:1.15.12
@@ -92,13 +45,6 @@ services:
       options:
         gelf-address: udp://localhost:12201
         tag: "ngnix"
-
-  rabbitmq:
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://localhost:12201
-        tag: "rabbitmq"
 
 networks:
   ngnix_network:

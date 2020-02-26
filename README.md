@@ -49,7 +49,7 @@ DJANGO_DEBUG=value
 ...
 ```
 
-`VUE_APP_TITLE`: should be set to `PlantIT`.
+`VUE_APP_TITLE`: should be set to `plantit`.
 
 Django keys can be generated in any Python 3 environment with the following code:
 
@@ -106,20 +106,25 @@ You should now be able to run `plantit` from the repository root:
 docker-compose -f docker-compose.yml -f compose-dev.yml up
 ```
 
-This will build and start the following containers:
+This will build and start a number of containers. Some are shared between development and production configurations:
 
-- `djangoapp`: Django web application at `http://localhost:80`
+- `djangoapp`: Django web application at `http://localhost:8000`
 - `celery`: Celery worker
-- `flower`: Celery monitoring UI at `http://localhost:5555`
 - `rabbitmq`: RabbitMQ message broker
-- `db-dev`: PostgreSQL database
-- `adminer`: Database admin UI at `http://localhost:8081`
+- `postgres`: PostgreSQL database
 - `graylog`: Graylog server
-- `mongo`: MongoDB instance (for Graylog)
-- `express`: Mongo Express admin UI
+- `mongo`: MongoDB database (for Graylog)
 - `elasticsearch`: Elasticsearch node (for Graylog)
 
-To bypass CAS login and log directly into Django: `http://localhost/accounts/login/` with `username: admin` and `password: admin`.
+Some run only in development mode:
+
+- `flower`: Celery monitoring UI at `http://localhost:5555`
+- `adminer`: PostgreSQL admin UI at `http://localhost:8080`
+- `express`: MongoDB admin UI at `http://localhost:8081`
+- `irods`: mock IRODS server
+- `ssh`: mock SSH connection (e.g., to cluster)
+
+To bypass CAS login and log directly into Django, browse to `http://localhost/accounts/login/` and use `username: admin` and `password: admin`.
 
 The default Django interface is at `http://localhost/admin/`.
 

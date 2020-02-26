@@ -29,6 +29,11 @@ services:
       - POSTGRES_NAME=${POSTGRES_NAME}
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "djangoapp"
 
   postgres:
     image: postgres
@@ -45,12 +50,22 @@ services:
       timeout: 20s
       retries: 2
       start_period: 20s
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "postgres"
 
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
     ports:
       - 15672:15672
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "rabbitmq"
 
   celery:
     build: ./dockerfiles/djangoapp
@@ -71,6 +86,11 @@ services:
       - POSTGRES_NAME=${POSTGRES_NAME}
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "celery"
 
   flower:
     image: mher/flower
@@ -109,6 +129,8 @@ services:
           memory: 1g
     networks:
       - graylog
+    ports:
+      - 9200:9200
     healthcheck:
       test: curl -f http://localhost:9200/
       interval: 20s
