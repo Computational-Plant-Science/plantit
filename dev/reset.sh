@@ -30,7 +30,7 @@ mkdir -p django/files/tmp
 $DOCKER_COMPOSE build "$@"
 
 # Start database and wait for it to come online
-$DOCKER_COMPOSE up -d db-dev
+$DOCKER_COMPOSE up -d postgres
 echo "Waiting 30s for database to warm up..."
 sleep 30
 
