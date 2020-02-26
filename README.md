@@ -64,9 +64,6 @@ POSTGRES_USER=postgres
 POSTGRES_NAME=postgres
 POSTGRES_HOST=postgres
 POSTGRES_PASSWORD=<your POSTGRES_PASSWORD>
-GRAYLOG_PASSWORD_SECRET=<your GRAYLOG_PASSWORD_SECRET>
-GRAYLOG_ROOT_PASSWORD_SHA2=<your GRAYLOG_ROOT_PASSWORD_SHA2>
-GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
 ```
 
 Django keys can be generated in any Python 3 environment:
@@ -80,12 +77,6 @@ print("DJANGO_SECRET_KEY: %s" % ''.join(random.SystemRandom().choice('abcdefghij
 import cryptography.fernet
 print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_key())
 ```
-
-`GRAYLOG_PASSWORD_SECRET` must be 16 characters or longer, and `GRAYLOG_ROOT_PASSWORD_SHA2` (the hash of the admin user password, which can be any non-empty value) can be generated with the following:
-
-```bash
-echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
-````
 
 ### Configure an object store
 
