@@ -140,7 +140,7 @@ Some run only in development mode:
 - `irods`: mock IRODS server
 - `ssh`: mock SSH connection (e.g., to cluster)
 
-To bypass CAS login and log directly into Django, browse to `http://localhost/accounts/login/` and use `username: admin` and `password: admin`.
+To bypass CAS login and log directly into Django, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin`.
 
 The default Django interface is at `http://localhost/admin/`.
 
