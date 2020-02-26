@@ -27,6 +27,7 @@ git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 
 ```
 VUE_APP_TITLE
+NODE_ENV
 DJANGO_SECRET_KEY
 DJANGO_DEBUG
 DJANGO_FIELD_ENCRYPTION_KEY
@@ -44,14 +45,31 @@ GRAYLOG_HTTP_EXTERNAL_URI
 In a development environment, Docker will read variables in the following format from a file named `.env` in the `plantit` root directory:
 
 ```
-DJANGO_SECRET_KEY=value
-DJANGO_DEBUG=value
+key=value
+key=value
 ...
 ```
 
-`VUE_APP_TITLE`: should be set to `plantit`.
+Here is a sample `.env` file:
 
-Django keys can be generated in any Python 3 environment with the following code:
+```
+VUE_APP_TITLE=plantit
+NODE_ENV=development
+DJANGO_SECRET_KEY=<your DJANGO_SECRET_KEY>
+DJANGO_DEBUG=True
+DJANGO_FIELD_ENCRYPTION_KEY=<your DJANGO_FIELD_ENCRYPTION_KEY
+DJANGO_API_URL=http://djangoapp/apis/v1/
+DJANGO_ALLOWED_HOSTS=*
+POSTGRES_USER=postgres
+POSTGRES_NAME=postgres
+POSTGRES_HOST=postgres
+POSTGRES_PASSWORD=<your POSTGRES_PASSWORD>
+GRAYLOG_PASSWORD_SECRET=<your GRAYLOG_PASSWORD_SECRET>
+GRAYLOG_ROOT_PASSWORD_SHA2=<your GRALOG_ROOT_PASSWORD_SHA2>
+GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+```
+
+Django keys can be generated in any Python 3 environment:
 
 ```python
 # DJANGO_SECRET_KEY
@@ -68,8 +86,6 @@ print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_ke
 ```bash
 echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
 ````
-
-In a development environment, `GRAYLOG_HTTP_EXTERNAL_URI` should be set to `http://127.0.0.1:9000/`.
 
 ### Configure an object store
 
