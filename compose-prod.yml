@@ -11,7 +11,7 @@
 #    3) Allow easier changes of systems later (aka, use a different web server)
 #
 # See docker-compose.yml for usage.
-version: '3'
+version: '3.7'
 
 services:
 

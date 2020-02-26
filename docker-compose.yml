@@ -143,11 +143,9 @@ services:
     volumes:
       - graylog_journal:/usr/share/graylog/data/journal
     environment:
-      # CHANGE ME (must be at least 16 characters)!
-      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
-      # Password: admin
-      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+      - GRAYLOG_PASSWORD_SECRET=${GRAYLOG_PASSWORD_SECRET}
+      - GRAYLOG_ROOT_PASSWORD_SHA2=${GRAYLOG_ROOT_PASSWORD_SHA2}
+      - GRAYLOG_HTTP_EXTERNAL_URI=${GRAYLOG_HTTP_EXTERNAL_URI}
     networks:
       - graylog
     depends_on:
@@ -165,7 +163,7 @@ services:
       # GELF UDP
       - 12201:12201/udp
     healthcheck:
-      test: curl -f http://localhost:9000/
+      test: curl -f ${GRAYLOG_HTTP_EXTERNAL_URI}
       interval: 20s
       timeout: 20s
       retries: 2
