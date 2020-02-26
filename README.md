@@ -91,7 +91,7 @@ echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut
 
 `plantit` looks for object storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
 
-```
+```python
 from plantit.file_manager.filesystems.irods import IRODS
 from plantit.file_manager.filesystems import registrar
 
@@ -164,7 +164,7 @@ Typically, the submit commands will include `clusterside submit`. They may also 
 
 For Sapelo2 (UGA's cluster), the submit command is:
 
-```
+```bash
 ml Python/3.6.4-foss-2018a; /home/cotter/.local/bin/clusterside submit
 ```
 
