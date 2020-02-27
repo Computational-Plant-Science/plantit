@@ -28,17 +28,18 @@ git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 VUE_APP_TITLE
 NODE_ENV
+DJANGO_SETTINGS_MODULE
 DJANGO_SECRET_KEY
 DJANGO_DEBUG
 DJANGO_FIELD_ENCRYPTION_KEY
 DJANGO_API_URL
 DJANGO_ALLOWED_HOSTS
 SQL_ENGINE
+SQL_HOST
+SQL_PORT
 SQL_NAME
 SQL_USER
 SQL_PASSWORD
-SQL_HOST
-SQL_PORT
 ```
 
 In a development environment, Docker will read variables in the following format from a file named `.env` in the `plantit` root directory:
@@ -54,17 +55,18 @@ Here is a sample `.env` file:
 ```
 VUE_APP_TITLE=plantit
 NODE_ENV=development
+DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=<your DJANGO_SECRET_KEY>
 DJANGO_DEBUG=True
 DJANGO_FIELD_ENCRYPTION_KEY=<your DJANGO_FIELD_ENCRYPTION_KEY
 DJANGO_API_URL=http://djangoapp/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
 SQL_ENGINE=django.db.backends.postgresql
+SQL_HOST=postgres
+SQL_PORT=5432
 SQL_NAME=postgres
 SQL_USER=postgres
 SQL_PASSWORD=<your SQL_PASSWORD>
-SQL_HOST=postgres
-SQL_PORT=5432
 ```
 
 Django keys can be generated in any Python 3 environment:

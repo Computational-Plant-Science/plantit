@@ -11,3 +11,4 @@ WORKDIR /code
 COPY ./dockerfiles/djangoapp/requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
+

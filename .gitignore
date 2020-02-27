@@ -69,6 +69,7 @@ coverage.xml
 
 # Django stuff:
 *.log
+*.sqlite3
 
 # Sphinx documentation
 docs/_build/
@@ -83,7 +84,7 @@ target/
 celerybeat-schedule
 
 # Environments
-.env
+*.env
 .venv
 env/
 venv/

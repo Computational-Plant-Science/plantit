@@ -60,7 +60,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./
 The production environment uses a separate database container from that of the the dev env. It must be manually setup by running:  
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py makemigrations
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py migrate
 ```
 

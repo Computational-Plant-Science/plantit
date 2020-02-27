@@ -19,6 +19,7 @@ services:
     command: ["gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
     networks:
       - ngnix_network
+      - default
     restart: always
     logging:
       driver: gelf
@@ -28,7 +29,7 @@ services:
 
   postgres:
     volumes:
-      - ./db:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     restart: always
     logging:
       driver: gelf
@@ -143,6 +144,8 @@ networks:
     driver: bridge
 
 volumes:
+  postgres_data:
+    driver: local
   mongo_data:
     driver: local
   es_data:

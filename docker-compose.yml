@@ -21,28 +21,31 @@ services:
     volumes:
       - .:/code
     environment:
-      - DJANGO_SETTINGS_MODULE=plantit.settings
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_DEBUG=${DJANGO_DEBUG}
       - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
       - DJANGO_API_URL=${DJANGO_API_URL}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SQL_ENGINE=${SQL_ENGINE}
+      - SQL_HOST=${SQL_HOST}
+      - SQL_PORT=${SQL_PORT}
+      - SQL_NAME=${SQL_NAME}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
 
   postgres:
     image: postgres
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${SQL_HOST}
+      - POSTGRES_PORT=${SQL_PORT}
+      - POSTGRES_NAME=${SQL_NAME}
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
     healthcheck:
-      test: /usr/bin/pg_isready -U ${POSTGRES_USER}
+      test: /usr/bin/pg_isready -U "postgres"
       interval: 20s
       timeout: 20s
       retries: 2
@@ -61,16 +64,17 @@ services:
     working_dir: /code/django
     depends_on:
       - rabbitmq
-    command: celery -A plantit worker --loglevel=info
     environment:
-      - DJANGO_SETTINGS_MODULE=plantit.settings
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_DEBUG=${DJANGO_DEBUG}
       - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
       - DJANGO_API_URL=${DJANGO_API_URL}
       - DJANGO_ALLOWED_HOSTS=*
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SQL_ENGINE=${SQL_ENGINE}
+      - SQL_HOST=${SQL_HOST}
+      - SQL_PORT=${SQL_PORT}
+      - SQL_NAME=${SQL_NAME}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
 
