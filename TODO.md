@@ -4,4 +4,3 @@
 - add gzip to nginx
 - Make thumbnails private to the user
 - Move cluster ssh authentication from password to key based
-- 

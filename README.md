@@ -2,12 +2,10 @@
 
 The following must be installed to run `plantit`:
 
-- A Unix shell
-- [Docker](https://www.docker.com/)
-
-To develop the project, you'll also need:
+- Unix shell
+- Docker
 - Python 3
-- [npm](https://www.npmjs.com/get-npm)
+- npm
 
 # Documentation
 
@@ -21,9 +19,19 @@ First, clone the repository:
 git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 
+## Development
+
 ### Configure environment variables
 
-`plantit` requires the following environment variables:
+In a development environment, Docker will read environment variables in the following format from a file named `.env` in the `plantit` root directory:
+
+```
+key=value
+key=value
+...
+```
+
+The following variables are required in development configuration:
 
 ```
 VUE_APP_TITLE
@@ -42,14 +50,6 @@ SQL_USER
 SQL_PASSWORD
 ```
 
-In a development environment, Docker will read variables in the following format from a file named `.env` in the `plantit` root directory:
-
-```
-key=value
-key=value
-...
-```
-
 Here is a sample `.env` file:
 
 ```
@@ -59,7 +59,7 @@ DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=<your DJANGO_SECRET_KEY>
 DJANGO_DEBUG=True
 DJANGO_FIELD_ENCRYPTION_KEY=<your DJANGO_FIELD_ENCRYPTION_KEY
-DJANGO_API_URL=http://djangoapp/apis/v1/
+DJANGO_API_URL=http://localhost/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
 SQL_ENGINE=django.db.backends.postgresql
 SQL_HOST=postgres
@@ -102,13 +102,13 @@ registrar.register(IRODS(name = "irods",
 
 Before running the project, execute `dev/reset.sh` from the root directory. This script restores the repository to a fresh state by:
 
-   - stopping and removing containers and networks
-   - removing Django migrations and stored files
-   - rebuilding containers
-   - running Django migrations
-   - creating a Django admin user with `/django/files` permissions
-   - configuring a mock IRODS server
-   - building the Vue front end
+- stopping and removing containers and networks
+- removing Django migrations and stored files
+- rebuilding containers
+- running Django migrations
+- creating a Django admin user with `/django/files` permissions
+- configuring a mock IRODS server
+- building the Vue front end
 
 You should now be able to run `plantit` from the repository root:
 
@@ -118,7 +118,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 This will build and start a number of containers. Some are shared between development and production configurations:
 
-- `djangoapp`: Django web application at `http://localhost:8000`
+- `djangoapp`: Django web application at `http://localhost:80`
 - `celery`: Celery worker
 - `rabbitmq`: RabbitMQ message broker
 - `postgres`: PostgreSQL database
@@ -164,7 +164,8 @@ ml Python/3.6.4-foss-2018a; /home/cotter/.local/bin/clusterside submit
 
 Note that on some types of ssh connections, installation does not put clusterside in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
 
-#### Cluster ssh login configuration.
+#### Cluster login configuration
+
 Plant IT supports both ssh password and public-key based
 login. To use public-key login, leave the Password field blank. Public-key login requires the private key and a known_hosts list to be available. Plant IT expects this data to be in the following two files:
 
@@ -173,32 +174,95 @@ login. To use public-key login, leave the Password field blank. Public-key login
 
 The easiest way to setup public-key logins is to configure the keys for login from the web server, then copy the configured `id_rsa` and `known_hosts` files from the web server user (typically in `$HOME/.ssh/`) to `config/ssh/`
 
-### Develop with Vue
+### Develop Vue UI
 
 Front-end code lives in `django/front_end`. It can be built from that directory with `npm run build` (or instructed to rebuild whenever a change is detected with `npm run watch`).
 
-When in django's development mode, django will automatically load the new front_end after running `npm run build` or `npm run watch`.
+## Production
 
-See README-PRODUCTION.md for information on building the front end for production use.
+`plantit` is configured somewhat differently in production mode:
 
-### Run `plantit` in production
-The website can be run in production mode using a different docker-compose config:
+- Django runs behind Gunicorn, which runs behind NGINX
+- NGINX serves static assets and acts as a reverse proxy
+- Postgres stores data in a persistent volume
+- Graylog consumes and stores application logs
+- Google Analytics are enabled by [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
+- [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
+
+### Configure environment variables
+
+In addition to those listed above, the following environment variable are required to run `plantit` in production configuration:
+
+- `VUE_APP_ANALYTICS_ID`: provided by Google Analytics
+- `VUE_APP_SENTRY_IO_KEY`: provided by Sentry
+- `VUE_APP_SENTRY_IO_PROJECT`: provided by Sentry
+- `GRAYLOG_PASSWORD_SECRET`: you provide (at least 16 characters)
+- `GRAYLOG_ROOT_PASSWORD_SHA2`: see below
+- `GRAYLOG_HTTP_EXTERNAL_URI`: location of the Graylog REST API (`<host>:9000`)
+
+Once you have chosen a password for the Graylog admin user (note that this is *not* the same as `GRAYLOG_PASSWORD_SECRET`), `GRAYLOG_ROOT_PASSWORD_SHA2` can be generated with the following:
+
+```bash
+echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
+```
+
+Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `False`, and `DJANGO_API_URL` to `http://<host>/apis/v1/`.
+
+### Configure NGINX
+
+Set `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN (when set to `localhost`, NGINX will refuse to serve non-local clients).
+
+### Build Vue UI
+
+Make sure you've run `npm run build` from the `django/front_end` directory.
+
+### Build containers
+
+To build containers from the docker images run:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
+```
+
+### Collect static files
+
+Static files must be collected before NGINX can serve them:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py collectstatic --no-input
+```
+
+### Run database migrations
+
+```bash
+find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py migrate
+```
+
+### Configure Django superuser
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py createsuperuser
+```
+
+### Run `plantit` in production mode
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```
 
-This will start the shared containers (listed above), as well as:
+This will start shared containers:
+
+- `djangoapp`: Django web application at `http://<host>:80`
+- `celery`: Celery worker
+- `rabbitmq`: RabbitMQ message broker
+- `postgres`: PostgreSQL database
+
+As well as production-only containers:
 
 - `nginx`: NGINX server
-- `graylog`: Graylog server
+- `graylog`: Graylog server at `http://<host>:9000`
 - `mongo`: MongoDB database (for Graylog)
 - `elasticsearch`: Elasticsearch node (for Graylog)
-
-The production configuration:
-- Uses gunicorn for WSGI to Django
-- Saves PostgreSQL database files to a persistent volume
-- Configures Graylog logging
-
-For more info on setting up the production enviroment, see `README-PRODUCTION.md`.
 
