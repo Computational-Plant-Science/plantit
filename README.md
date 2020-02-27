@@ -37,9 +37,6 @@ POSTGRES_USER
 POSTGRES_NAME
 POSTGRES_HOST
 POSTGRES_PASSWORD
-GRAYLOG_PASSWORD_SECRET
-GRAYLOG_ROOT_PASSWORD_SHA2
-GRAYLOG_HTTP_EXTERNAL_URI
 ```
 
 In a development environment, Docker will read variables in the following format from a file named `.env` in the `plantit` root directory:
