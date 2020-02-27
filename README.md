@@ -33,10 +33,12 @@ DJANGO_DEBUG
 DJANGO_FIELD_ENCRYPTION_KEY
 DJANGO_API_URL
 DJANGO_ALLOWED_HOSTS
-POSTGRES_USER
-POSTGRES_NAME
-POSTGRES_HOST
-POSTGRES_PASSWORD
+SQL_ENGINE
+SQL_NAME
+SQL_USER
+SQL_PASSWORD
+SQL_HOST
+SQL_PORT
 ```
 
 In a development environment, Docker will read variables in the following format from a file named `.env` in the `plantit` root directory:
@@ -57,10 +59,12 @@ DJANGO_DEBUG=True
 DJANGO_FIELD_ENCRYPTION_KEY=<your DJANGO_FIELD_ENCRYPTION_KEY
 DJANGO_API_URL=http://djangoapp/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
-POSTGRES_USER=postgres
-POSTGRES_NAME=postgres
-POSTGRES_HOST=postgres
-POSTGRES_PASSWORD=<your POSTGRES_PASSWORD>
+SQL_ENGINE=django.db.backends.postgresql
+SQL_NAME=postgres
+SQL_USER=postgres
+SQL_PASSWORD=<your SQL_PASSWORD>
+SQL_HOST=postgres
+SQL_PORT=5432
 ```
 
 Django keys can be generated in any Python 3 environment:

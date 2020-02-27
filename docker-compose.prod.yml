@@ -51,8 +51,7 @@ services:
         tag: "celery"
 
   nginx:
-    image: nginx:1.15.12
-    #command: [nginx-debug, '-g', 'daemon off;']
+    image: nginx
     ports:
       - 80:80
     volumes:
