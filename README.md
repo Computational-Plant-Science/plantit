@@ -26,7 +26,7 @@ git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 To set up a `plantit` development environment, you'll need to:
 
 1. configure environment variables with `.env`; then
-2. bootstrap with `dev/bootstrap.sh`.
+2. bootstrap with `dev/bootstrap.dev.sh`.
 
 ### Configure environment variables
 
@@ -71,7 +71,7 @@ print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_ke
 
 ### Bootstrap `plantit`
 
-Before running the project, execute `dev/bootstrap.sh` from the root directory. This script initializes (and can also be used to restore) the repository to a fresh state by:
+Before running the project, execute `dev/bootstrap.dev.sh` from the root directory. This script initializes (and can also be used to restore) the repository to a fresh state by:
 
 - Stopping and removing containers and networks
 - Removing Django migrations and stored files
@@ -156,10 +156,15 @@ Collect static files so NGINX can serve them:
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py collectstatic --no-input
 ```
 
-Run database migrations:
+Remove migrations:
 
 ```bash
 find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
+```
+
+Run migrations:
+
+```bash
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py migrate
 ```
