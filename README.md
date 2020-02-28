@@ -1,6 +1,6 @@
 # Requirements
 
-The following must be installed to run `plantit`:
+The following must be installed to develop/run `plantit`:
 
 - Unix shell
 - Docker
@@ -9,7 +9,7 @@ The following must be installed to run `plantit`:
 
 # Documentation
 
-Documentation can be found [here](https://computational-plant-science.github.io/DIRT2_Webplatform/build/html/index.html).
+Full documentation can be found [here](https://computational-plant-science.github.io/DIRT2_Webplatform/build/html/index.html).
 
 # Installation
 
@@ -19,11 +19,18 @@ First, clone the repository:
 git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 
-## Development
+
+
+## Configure `plantit` for development
+
+To set up a `plantit` development environment, you'll need to:
+
+1. configure environment variables with `.env`; then
+2. bootstrap with `dev/bootstrap.sh`.
 
 ### Configure environment variables
 
-In a development environment, Docker will read environment variables in the following format from a file named `.env` in the `plantit` root directory:
+Docker reads environment variables in the following format from a file named `.env` in the `plantit` root directory:
 
 ```
 key=value
@@ -31,26 +38,7 @@ key=value
 ...
 ```
 
-The following variables are required in development configuration:
-
-```
-VUE_APP_TITLE
-NODE_ENV
-DJANGO_SETTINGS_MODULE
-DJANGO_SECRET_KEY
-DJANGO_DEBUG
-DJANGO_FIELD_ENCRYPTION_KEY
-DJANGO_API_URL
-DJANGO_ALLOWED_HOSTS
-SQL_ENGINE
-SQL_HOST
-SQL_PORT
-SQL_NAME
-SQL_USER
-SQL_PASSWORD
-```
-
-Here is a sample `.env` file:
+Here is a sample `.env` file containing all variables required to develop `plantit`:
 
 ```
 VUE_APP_TITLE=plantit
@@ -81,58 +69,127 @@ import cryptography.fernet
 print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_key())
 ```
 
-### Configure an object store
+### Bootstrap `plantit`
 
-`plantit` looks for object storage configurations in `django/filesystems.py`. The development environment includes a mock IRODS server. To plug it in, create `django/filesystems.py` and add:
+Before running the project, execute `dev/bootstrap.sh` from the root directory. This script initializes (and can also be used to restore) the repository to a fresh state by:
 
-```python
-from plantit.file_manager.filesystems.irods import IRODS
-from plantit.file_manager.filesystems import registrar
+- Stopping and removing containers and networks
+- Removing Django migrations and stored files
+- Rebuilding containers
+- Running Django migrations
+- Creating a Django admin user with `/django/files` permissions
+- Configuring a mock IRODS server and cluster
+- Building the Vue front end
 
-registrar.register(IRODS(name = "irods",
-                         username = "rods",
-                         password = "rods",
-                         port = 1247,
-                         hostname = "irods",
-                         zone = "tempZone"),
-                    lambda user: "/tempZone/home/rods/")
-```
+### Run `plantit`
 
-### Run `plantit` in development mode
-
-Before running the project, execute `dev/reset.sh` from the root directory. This script restores the repository to a fresh state by:
-
-- stopping and removing containers and networks
-- removing Django migrations and stored files
-- rebuilding containers
-- running Django migrations
-- creating a Django admin user with `/django/files` permissions
-- configuring a mock IRODS server
-- building the Vue front end
-
-You should now be able to run `plantit` from the repository root:
+Run `plantit` from the repository root with:
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
-This will build and start a number of containers. Some are shared between development and production configurations:
+This will build and start a number of containers.
 
-- `djangoapp`: Django web application at `http://localhost:80`
+- `djangoapp`: Django web application (`http://localhost:80`)
 - `celery`: Celery worker
 - `rabbitmq`: RabbitMQ message broker
 - `postgres`: PostgreSQL database
-
-Some run only in development mode:
-
-- `flower`: Celery monitoring UI at `http://localhost:5555`
-- `adminer`: PostgreSQL admin UI at `http://localhost:8080`
+- `flower`: Celery monitoring UI (`http://localhost:5555`)
+- `adminer`: PostgreSQL admin UI (`http://localhost:8080`)
 - `irods`: mock IRODS server
 - `ssh`: mock SSH connection (e.g., to cluster)
 
-To bypass CAS login and log directly into Django, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin`.
+To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin` (superuser access is configured in `dev/setup_defaults.py`).
 
 The default Django interface is at `http://localhost/admin/`.
+
+### Vue UI
+
+Front-end code lives in `django/front_end`. It can be built from that directory with `npm run build` (or instructed to rebuild whenever a change is detected with `npm run watch`).
+
+## Configure `plantit` for production
+
+`plantit` runs somewhat differently in production:
+
+- Django runs behind Gunicorn, which sits behind NGINX
+- NGINX serves static assets and acts as a reverse proxy
+- Postgres stores data in a persistent volume
+- Graylog consumes and stores application logs
+- Google Analytics are enabled by [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
+- [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
+
+### Configure environment variables
+
+In addition to the environment variables listed for development, the following are required to run `plantit` in production:
+
+- `VUE_APP_ANALYTICS_ID`: provided by Google Analytics
+- `VUE_APP_SENTRY_IO_KEY`: provided by Sentry
+- `VUE_APP_SENTRY_IO_PROJECT`: provided by Sentry
+- `GRAYLOG_PASSWORD_SECRET`: you provide (at least 16 characters)
+- `GRAYLOG_ROOT_PASSWORD_SHA2`: see below
+- `GRAYLOG_HTTP_EXTERNAL_URI`: location of the Graylog REST API (`<host>:9000`)
+
+Once you have chosen a password for the Graylog admin user (note that this is *not* the same as `GRAYLOG_PASSWORD_SECRET`), `GRAYLOG_ROOT_PASSWORD_SHA2` can be generated with the following:
+
+```bash
+echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
+```
+
+Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `False`, and `DJANGO_API_URL` to `http://<host>/apis/v1/`.
+
+### Configure NGINX
+
+Set `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN (when set to `localhost`, NGINX will refuse to serve non-local clients).
+
+### Suggested build procedure
+
+First, build the Vue UI with `npm run build` from the `django/front_end` directory. Then build containers:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
+```
+
+Collect static files so NGINX can serve them:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py collectstatic --no-input
+```
+
+Run database migrations:
+
+```bash
+find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py migrate
+```
+
+Configure Django superuser:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py createsuperuser
+```
+
+Run `plantit` in production mode:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+```
+
+This will start the following containers:
+
+- `djangoapp`: Django web application (`http://<host>:80`)
+- `celery`: Celery worker
+- `rabbitmq`: RabbitMQ message broker
+- `postgres`: PostgreSQL database
+- `nginx`: NGINX server
+- `graylog`: Graylog server (`http://<host>:9000`)
+- `mongo`: MongoDB database (for Graylog)
+- `elasticsearch`: Elasticsearch node (for Graylog)
+
+## Shared steps
+
+You'll want to do the following no matter whether you're configuring a development environment or production deployment.
 
 ### Install workflows
 Workflows created with the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be plugged into the web platform by placing workflow repositories in the `django/workflows` directory.
@@ -173,96 +230,3 @@ login. To use public-key login, leave the Password field blank. Public-key login
 - `config/ssh/known_hosts`: The known_hosts file.
 
 The easiest way to setup public-key logins is to configure the keys for login from the web server, then copy the configured `id_rsa` and `known_hosts` files from the web server user (typically in `$HOME/.ssh/`) to `config/ssh/`
-
-### Develop Vue UI
-
-Front-end code lives in `django/front_end`. It can be built from that directory with `npm run build` (or instructed to rebuild whenever a change is detected with `npm run watch`).
-
-## Production
-
-`plantit` is configured somewhat differently in production mode:
-
-- Django runs behind Gunicorn, which runs behind NGINX
-- NGINX serves static assets and acts as a reverse proxy
-- Postgres stores data in a persistent volume
-- Graylog consumes and stores application logs
-- Google Analytics are enabled by [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
-- [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
-
-### Configure environment variables
-
-In addition to those listed above, the following environment variable are required to run `plantit` in production configuration:
-
-- `VUE_APP_ANALYTICS_ID`: provided by Google Analytics
-- `VUE_APP_SENTRY_IO_KEY`: provided by Sentry
-- `VUE_APP_SENTRY_IO_PROJECT`: provided by Sentry
-- `GRAYLOG_PASSWORD_SECRET`: you provide (at least 16 characters)
-- `GRAYLOG_ROOT_PASSWORD_SHA2`: see below
-- `GRAYLOG_HTTP_EXTERNAL_URI`: location of the Graylog REST API (`<host>:9000`)
-
-Once you have chosen a password for the Graylog admin user (note that this is *not* the same as `GRAYLOG_PASSWORD_SECRET`), `GRAYLOG_ROOT_PASSWORD_SHA2` can be generated with the following:
-
-```bash
-echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
-```
-
-Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `False`, and `DJANGO_API_URL` to `http://<host>/apis/v1/`.
-
-### Configure NGINX
-
-Set `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN (when set to `localhost`, NGINX will refuse to serve non-local clients).
-
-### Build Vue UI
-
-Make sure you've run `npm run build` from the `django/front_end` directory.
-
-### Build containers
-
-To build containers from the docker images run:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
-```
-
-### Collect static files
-
-Static files must be collected before NGINX can serve them:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py collectstatic --no-input
-```
-
-### Run database migrations
-
-```bash
-find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py migrate
-```
-
-### Configure Django superuser
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py createsuperuser
-```
-
-### Run `plantit` in production mode
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
-```
-
-This will start shared containers:
-
-- `djangoapp`: Django web application at `http://<host>:80`
-- `celery`: Celery worker
-- `rabbitmq`: RabbitMQ message broker
-- `postgres`: PostgreSQL database
-
-As well as production-only containers:
-
-- `nginx`: NGINX server
-- `graylog`: Graylog server at `http://<host>:9000`
-- `mongo`: MongoDB database (for Graylog)
-- `elasticsearch`: Elasticsearch node (for Graylog)
-
