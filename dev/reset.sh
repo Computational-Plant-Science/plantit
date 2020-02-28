@@ -5,10 +5,10 @@ DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f docker-compose.dev.yml"
 # Bring containers down
 $DOCKER_COMPOSE down
 
-# Remove Django migrations
+# Remove migrations
 find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
 
-# Remove Django files
+# Remove files
 rm -rf django/files/*
 mkdir -p django/files/public
 mkdir -p django/files/tmp
@@ -19,11 +19,11 @@ $DOCKER_COMPOSE build "$@"
 # Start Postgres
 $DOCKER_COMPOSE up -d postgres
 
-# Run Django migrations
+# Run migrations
 $DOCKER_COMPOSE run djangoapp /code/dev/wait-for-postgres.sh postgres python manage.py makemigrations
 $DOCKER_COMPOSE run djangoapp python manage.py migrate
 
-# Configure Django
+# Configure defaults
 < dev/setup_defaults.py $DOCKER_COMPOSE run djangoapp python manage.py shell
 
 # Start mock IRODS server and cluster
