@@ -1,11 +1,11 @@
 # Requirements
 
-The following must be installed to develop/run `plantit`:
+The following are required to run `plantit`:
 
-- Unix shell
-- Docker
+- A Unix shell
+- [Docker](https://www.docker.com/)
+- [npm](https://www.npmjs.com/get-npm)
 - Python 3
-- npm
 
 # Documentation
 
@@ -19,77 +19,22 @@ First, clone the repository:
 git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 
+## Development
 
+To set up a new (or restore a clean) development environment, run `dev/bootstrap.dev.sh` from the project root (you may need to use `chmod +x` first). This will:
 
-## Configure `plantit` for development
+- Stop and remove project containers and networks
+- If an `.env` file (to configure environment variables) does not exist, generate one with default values
+- Remove migrations and stored files
+- Rebuild containers
+- Run migrations
+- Create a Django admin user
+- Configure a mock IRODS server and cluster
+- Build the Vue front end
 
-To set up a `plantit` development environment, you'll need to:
+Then bring the project up with `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up`.
 
-1. configure environment variables with `.env`; then
-2. bootstrap with `dev/bootstrap.dev.sh`.
-
-### Configure environment variables
-
-Docker reads environment variables in the following format from a file named `.env` in the `plantit` root directory:
-
-```
-key=value
-key=value
-...
-```
-
-Here is a sample `.env` file containing all variables required to develop `plantit`:
-
-```
-VUE_APP_TITLE=plantit
-NODE_ENV=development
-DJANGO_SETTINGS_MODULE=plantit.settings
-DJANGO_SECRET_KEY=<your DJANGO_SECRET_KEY>
-DJANGO_DEBUG=True
-DJANGO_FIELD_ENCRYPTION_KEY=<your DJANGO_FIELD_ENCRYPTION_KEY
-DJANGO_API_URL=http://localhost/apis/v1/
-DJANGO_ALLOWED_HOSTS=*
-SQL_ENGINE=django.db.backends.postgresql
-SQL_HOST=postgres
-SQL_PORT=5432
-SQL_NAME=postgres
-SQL_USER=postgres
-SQL_PASSWORD=<your SQL_PASSWORD>
-```
-
-Django keys can be generated in any Python 3 environment:
-
-```python
-# DJANGO_SECRET_KEY
-import random
-print("DJANGO_SECRET_KEY: %s" % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)))
-
-# DJANGO_FIELD_ENCRYPTION_KEY
-import cryptography.fernet
-print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_key())
-```
-
-### Bootstrap `plantit`
-
-Before running the project, execute `dev/bootstrap.dev.sh` from the root directory. This script initializes (and can also be used to restore) the repository to a fresh state by:
-
-- Stopping and removing containers and networks
-- Removing Django migrations and stored files
-- Rebuilding containers
-- Running Django migrations
-- Creating a Django admin user with `/django/files` permissions
-- Configuring a mock IRODS server and cluster
-- Building the Vue front end
-
-### Run `plantit`
-
-Run `plantit` from the repository root with:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-```
-
-This will build and start a number of containers.
+This will start a number of containers:
 
 - `djangoapp`: Django web application (`http://localhost:80`)
 - `celery`: Celery worker
@@ -104,22 +49,61 @@ To bypass CAS login and log directly into Django as superuser, browse to `http:/
 
 The default Django interface is at `http://localhost/admin/`.
 
+### Environment variables
+
+Docker reads environment variables in the following format from a file named `.env` in the `plantit` root directory:
+
+```
+key=value
+key=value
+...
+```
+
+`bootstrap.dev.sh` will generate an `.env` file like the following if one does not exist, with all variables required to run `plantit` in development configuration:
+
+```
+VUE_APP_TITLE=plantit
+NODE_ENV=development
+DJANGO_SETTINGS_MODULE=plantit.settings
+DJANGO_SECRET_KEY=some_secret_key
+DJANGO_DEBUG=True
+DJANGO_FIELD_ENCRYPTION_KEY=some_encryption_key
+DJANGO_API_URL=http://localhost/apis/v1/
+DJANGO_ALLOWED_HOSTS=*
+SQL_ENGINE=django.db.backends.postgresql
+SQL_HOST=postgres
+SQL_PORT=5432
+SQL_NAME=postgres
+SQL_USER=postgres
+SQL_PASSWORD=some_password
+```
+
+You can generate Django keys with:
+
+```python
+import random
+print("DJANGO_SECRET_KEY: %s" % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)))
+
+import cryptography.fernet
+print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_key())
+```
+
 ### Vue UI
 
 Front-end code lives in `django/front_end`. It can be built from that directory with `npm run build` (or instructed to rebuild whenever a change is detected with `npm run watch`).
 
-## Configure `plantit` for production
+## Production
 
-`plantit` runs somewhat differently in production:
+The production configuration is somewhat different:
 
-- Django runs behind Gunicorn, which sits behind NGINX
+- Django runs behind Gunicorn which runs behind NGINX
 - NGINX serves static assets and acts as a reverse proxy
 - Postgres stores data in a persistent volume
-- Graylog consumes and stores application logs
-- Google Analytics are enabled by [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
+- Graylog consumes and stores container logs
+- Google Analytics are enabled via [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
 - [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
 
-### Configure environment variables
+### Environment variables
 
 In addition to the environment variables listed for development, the following are required to run `plantit` in production:
 
@@ -136,11 +120,11 @@ Once you have chosen a password for the Graylog admin user (note that this is *n
 echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
 ```
 
-Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `False`, and `DJANGO_API_URL` to `http://<host>/apis/v1/`.
+Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `False`, and `DJANGO_API_URL` should point to the host's IP or FQDN.
 
-### Configure NGINX
+### NGINX
 
-Set `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN (when set to `localhost`, NGINX will refuse to serve non-local clients).
+Set `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN.
 
 ### Suggested build procedure
 
@@ -192,14 +176,11 @@ This will start the following containers:
 - `mongo`: MongoDB database (for Graylog)
 - `elasticsearch`: Elasticsearch node (for Graylog)
 
-## Shared steps
+## Workflows
 
-You'll want to do the following no matter whether you're configuring a development environment or production deployment.
-
-### Install workflows
 Workflows created with the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be plugged into the web platform by placing workflow repositories in the `django/workflows` directory.
 
-Note that the `djangoapp` and `celery` containers must be restarted to load newly added workflows:
+Note that the `djangoapp` and `celery` containers must be restarted to reload workflows:
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart djangoapp
@@ -208,10 +189,9 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart celery
 
 Note also that the workflow directory name must be identical to the `app_name` configured when the workflow was created (this can also be edited later in the `WORKFLOW_CONFIG` dictionary in `workflow.py`.
 
-### Configure clusters
+## Clusters
 
-See [ClusterSide README](https://github.com/Computational-Plant-Science/DIRT2_ClusterSide) for information
-on installation and configuration of required remote Plant IT code on cluster.
+See [ClusterSide README](https://github.com/Computational-Plant-Science/DIRT2_ClusterSide) for information on installation and configuration of required remote Plant IT code on cluster.
 
 Clusters are added via the admin interface `(/admin/)`. Choose Clusters->Add Cluster. Fill in the commands
 accordingly.
@@ -224,7 +204,7 @@ For Sapelo2 (UGA's cluster), the submit command is:
 ml Python/3.6.4-foss-2018a; /home/cotter/.local/bin/clusterside submit
 ```
 
-Note that on some types of ssh connections, installation does not put clusterside in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
+Note that on some types of ssh connections, installation does not put DIRT2_Clusterside in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
 
 #### Cluster login configuration
 
