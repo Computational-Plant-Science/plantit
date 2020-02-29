@@ -1,15 +1,15 @@
 # DIRT Specific
-django/files/
-django/public/
+plantit/files/
+plantit/public/
 **/migrations/*.py
 !**/migrations/__init__.py
-django/plantit/secret.py
-django/front_end/node_modules
-django/front_end/dist
-django/static/
-django/workflows/
-django/settings.py
-django/plantit/static/workflow_icons/*.png
+plantit/plantit/secret.py
+plantit/front_end/node_modules
+plantit/front_end/dist
+plantit/static/
+plantit/workflows/
+plantit/settings.py
+plantit/plantit/static/workflow_icons/*.png
 config/ssh/*
 
 #Documentation

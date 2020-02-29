@@ -5,7 +5,7 @@
 
     Registering a file system
     ^^^^^^^^^^^^^^^^^^^^^^^^^
-    Plant IT looks for file-system configurations in `django/filesystems.py`.
+    Plant IT looks for file-system configurations in `plantit/filesystems.py`.
     All file systems subclass :class:`filesystems.AbstractStorageType`, which
     provides methods for connecting to the file system.
 
@@ -19,7 +19,7 @@
     Example:
 
         .. code-block:: python
-            :caption: django/filesystems.py:
+            :caption: plantit/filesystems.py:
 
             from plantit.file_manager.filesystems.irods import IRods
             from plantit.file_manager.filesystems import registrar

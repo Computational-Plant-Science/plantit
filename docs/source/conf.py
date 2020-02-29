@@ -14,7 +14,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../django'))
+sys.path.insert(0, os.path.abspath('../../plantit'))
 
 # -- djanog Setup  -----------------------------------------------------------
 

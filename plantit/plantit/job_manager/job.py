@@ -14,8 +14,8 @@ from model_utils.managers import InheritanceManager
 
 from encrypted_model_fields.fields import EncryptedCharField
 
-
 from ..collection.models import Collection
+
 
 @shared_task
 def __run_task__(task_pk):
@@ -29,6 +29,7 @@ def __run_task__(task_pk):
     task = Task.objects.get_subclass(pk=task_pk)
     task.run()
 
+
 @shared_task
 def __run_next__(pk):
     """
@@ -39,17 +40,18 @@ def __run_next__(pk):
     """
     job = Job.objects.get(pk=pk)
 
-    if(job.current_status().state == Status.FAILED):
+    if (job.current_status().state == Status.FAILED):
         return
 
-    queued_tasks = job.task_set.filter(complete = False).order_by('order_pos').select_subclasses()
-    if(len(queued_tasks) > 0):
+    queued_tasks = job.task_set.filter(complete=False).order_by('order_pos').select_subclasses()
+    if (len(queued_tasks) > 0):
         task = queued_tasks[0]
         task.run()
     else:
         job.status_set.create(state=Status.COMPLETED,
-                    date=timezone.now(),
-                    description=str("All Tasks Finished"))
+                              date=timezone.now(),
+                              description=str("All Tasks Finished"))
+
 
 @shared_task
 def __cancel_job__(pk):
@@ -64,16 +66,16 @@ def __cancel_job__(pk):
 
     status = job.current_status().state
 
-    if(status < Status.OK):
-        return #Job already done.
-    elif(status == Status.CREATED):
+    if (status < Status.OK):
+        return  # Job already done.
+    elif (status == Status.CREATED):
         # Job never actucally submitted to a cluster
         job.status_set.create(state=Status.FAILED,
-                               date=timezone.now(),
-                               description="Job Canceled")
+                              date=timezone.now(),
+                              description="Job Canceled")
     else:
         cmds = format_cluster_cmds(self.cancel_commands)
-        #Connect to server
+        # Connect to server
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(cluster.hostname,
@@ -83,15 +85,16 @@ def __cancel_job__(pk):
 
         stdin, stdout, stderr = client.exec_command(cmds)
         errors = stderr.readlines()
-        if(errors != []):
+        if (errors != []):
             self.status_set.create(state=Status.FAILED,
-                        date=timezone.now(),
-                        description=str(errors))
+                                   date=timezone.now(),
+                                   description=str(errors))
         else:
             self.status_set.create(state=Status.FAILED,
                                    date=timezone.now(),
                                    description="Job Canceled")
         client.close()
+
 
 class Cluster(models.Model):
     """
@@ -128,26 +131,28 @@ class Cluster(models.Model):
                 Cancel commands are not currently implemented by clusterside.
     """
     name = models.CharField(max_length=20,
-            help_text="Human-readable name of cluster.")
+                            help_text="Human-readable name of cluster.")
     description = models.TextField(blank=True,
-            help_text="Human-readable description of cluster.")
+                                   help_text="Human-readable description of cluster.")
     workdir = models.CharField(max_length=250,
-            help_text="Where (full path) to put folders for workflow analysis jobs on the cluster.")
+                               help_text="Where (full path) to put folders for workflow analysis jobs on the cluster.")
     username = models.CharField(max_length=100,
-            help_text="ssh username")
-    password = EncryptedCharField(max_length=100,blank=True,null=True,default=None,
-            help_text="ssh password. Leave blank for public-key auth. See README for setup.")
+                                help_text="ssh username")
+    password = EncryptedCharField(max_length=100, blank=True, null=True, default=None,
+                                  help_text="ssh password. Leave blank for public-key auth. See README for setup.")
     port = models.PositiveIntegerField(default=22,
-            help_text="ssh port")
+                                       help_text="ssh port")
     hostname = models.CharField(max_length=250,
-            help_text="ssh hostname")
+                                help_text="ssh hostname")
     submit_commands = models.TextField(default="clusterside submit",
-            help_text="Commands to run on the cluster to submit a job.")
-    cancel_commands = models.TextField(default="# clusterside cancel #<- cancel commands are not implemented by clusterside.",
-            help_text="NOT IMPLEMENTED.")
+                                       help_text="Commands to run on the cluster to submit a job.")
+    cancel_commands = models.TextField(
+        default="# clusterside cancel #<- cancel commands are not implemented by clusterside.",
+        help_text="NOT IMPLEMENTED.")
 
     def __str__(self):
         return self.name
+
 
 class Job(models.Model):
     """
@@ -202,12 +207,12 @@ class Job(models.Model):
         """
         return binascii.hexlify(os.urandom(20)).decode()
 
-    collection = models.ForeignKey(Collection,on_delete=models.CASCADE)
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
     date_created = models.DateTimeField(default=timezone.now)
-    auth_token = models.CharField(max_length=40,default=generate_token)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
-    submission_id = models.CharField(max_length=100,null=True,blank=True)
-    workflow = models.CharField(max_length=280,null=True,blank=True)
+    auth_token = models.CharField(max_length=40, default=generate_token)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    submission_id = models.CharField(max_length=100, null=True, blank=True)
+    workflow = models.CharField(max_length=280, null=True, blank=True)
     cluster = models.ForeignKey(Cluster,
                                 null=True,
                                 blank=True,
@@ -217,16 +222,16 @@ class Job(models.Model):
                                 blank=True,
                                 default=generate_work_dir)
     remote_results_path = models.CharField(max_length=100,
-                                null=True,
-                                blank=True,
-                                default=None)
+                                           null=True,
+                                           blank=True,
+                                           default=None)
 
     def __str__(self):
-         return "Job: %s, User %s, Workflow: %s, Status: %s, Cluster: %s" % (self.pk,
-                                                    self.user,
-                                                    self.workflow, 
-                                                    self.current_status().state,
-                                                    self.cluster)
+        return "Job: %s, User %s, Workflow: %s, Status: %s, Cluster: %s" % (self.pk,
+                                                                            self.user,
+                                                                            self.workflow,
+                                                                            self.current_status().state,
+                                                                            self.cluster)
 
     def current_status(self):
         """
@@ -262,6 +267,7 @@ class Job(models.Model):
                 the :class:`Celery` worker object
         """
         return __cancel_job__.delay(pk)
+
 
 class Task(models.Model):
     """
@@ -308,12 +314,12 @@ class Task(models.Model):
                 changed when the task is created or marked as complete.
     """
     objects = InheritanceManager()
-    name = models.CharField(max_length=20,blank=False,null=False)
+    name = models.CharField(max_length=20, blank=False, null=False)
     description = models.TextField(blank=True)
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
     order_pos = models.PositiveIntegerField(default=1)
     complete = models.BooleanField(default=False)
-    last_updated = models.DateTimeField(default=None,blank=True,null=True)
+    last_updated = models.DateTimeField(default=None, blank=True, null=True)
 
     class Meta:
         ordering = ['order_pos']
@@ -325,7 +331,7 @@ class Task(models.Model):
         raise NotImplmentedError
 
     def __str__(self):
-        return "%s (%d)"%(self.name,self.pk)
+        return "%s (%d)" % (self.name, self.pk)
 
     def finish(self):
         """
@@ -336,6 +342,7 @@ class Task(models.Model):
         self.last_updated = timezone.now()
         self.save()
         return Job.run_next(self.job.pk)
+
 
 class Status(models.Model):
     """
@@ -358,12 +365,12 @@ class Status(models.Model):
                 was added to the job
     """
 
-    #Possible states
-    COMPLETED  = 1 # Job completed
-    FAILED     = 2 # Job failed
-    OK         = 3 # Status update, everything is OK
-    WARN       = 4 # Status update, warning: recoverable error
-    CREATED    = 5 # Job was crated but not yet started
+    # Possible states
+    COMPLETED = 1  # Job completed
+    FAILED = 2  # Job failed
+    OK = 3  # Status update, everything is OK
+    WARN = 4  # Status update, warning: recoverable error
+    CREATED = 5  # Job was crated but not yet started
 
     class Meta:
         ordering = ['-date']
@@ -377,12 +384,13 @@ class Status(models.Model):
     )
 
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    state = models.PositiveIntegerField(choices=State,default=CREATED)
-    date = models.DateTimeField(default=timezone.now,blank=True)
+    state = models.PositiveIntegerField(choices=State, default=CREATED)
+    date = models.DateTimeField(default=timezone.now, blank=True)
     description = models.CharField(max_length=1000)
 
     def __str__(self):
         return self.State[self.state - 1][1]
+
 
 class DummyTask(Task):
     """

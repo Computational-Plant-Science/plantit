@@ -23,7 +23,7 @@ class TestFileBrowseView(TestCase):
 
         self.storage = 'local'
 
-        self.tempParentDir = tempfile.TemporaryDirectory(dir="/code/django/files/tmp/")
+        self.tempParentDir = tempfile.TemporaryDirectory(dir="/code/plantit/files/tmp/")
         self.tempFile = tempfile.NamedTemporaryFile(dir=self.tempParentDir.name)
         self.tempDir = tempfile.TemporaryDirectory(dir=self.tempParentDir.name)
 
@@ -35,7 +35,7 @@ class TestFileBrowseView(TestCase):
         Permissions.allow(self.user, self.storage, self.tempParentDir.name)
 
     def test_upload_file(self):
-        with tempfile.NamedTemporaryFile(dir="/code/django/files/tmp/") as file:
+        with tempfile.NamedTemporaryFile(dir="/code/plantit/files/tmp/") as file:
             request = self.factory.post(
                 reverse('file_manager:ajax', kwargs={ 'command':'browse'}),
                 {

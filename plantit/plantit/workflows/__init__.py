@@ -8,12 +8,12 @@
 
     Workflows created using the Plant IT workflow cookiecutter template can be
     integrated into the web platform by cloning the repository (
-    or copying the code) into the django/workflows directory.
+    or copying the code) into the plantit/workflows directory.
 
     On initialization of django, plant it automatically initializes an instance
     of the workflow registrar (:class:`plantit.workflows.Registrar`) at
     :attr:`plantit.workflows.registrar` and searches attempts to register
-    each folder in `django/workflows` as a Plant IT workflow. Assert checks
+    each folder in `plantit/workflows` as a Plant IT workflow. Assert checks
     are performed for typical workflow errors. These asserts will stop
     the web server from starting correctly if they fail.
 
@@ -29,11 +29,11 @@
 
     .. code-block:: bash
 
-        cd django/workflows/
+        cd plantit/workflows/
         git clone git@github.com:Computational-Plant-Science/DIRT2D_Workflow.git dirt2d #<- see note below
 
     Note:
-        The workflow folder name (inside django/workflows/) must be the same
+        The workflow folder name (inside plantit/workflows/) must be the same
         as the workflow app_name set in the workflow's WORKFLOW_CONFIG.
 
 '''
@@ -47,7 +47,7 @@ class Registrar():
     """
         Workflows are register with the server via this class.
 
-        Registration is automatically performed for workflows in `django/workflows`
+        Registration is automatically performed for workflows in `plantit/workflows`
 
         Manual registration is not recommended or supported.
 

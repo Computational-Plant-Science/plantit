@@ -28,7 +28,7 @@ To set up a new (or restore a clean) development environment, run `dev/bootstrap
 - Remove migrations and stored files
 - Rebuild containers
 - Run migrations
-- Create a Django admin user
+- Create a Django superuser (username `admin`, password `admin`)
 - Configure a mock IRODS server and cluster
 - Build the Vue front end
 
@@ -36,7 +36,7 @@ Then bring the project up with `docker-compose -f docker-compose.yml -f docker-c
 
 This will start a number of containers:
 
-- `djangoapp`: Django web application (`http://localhost:80`)
+- `plantit`: Django web application (`http://localhost:80`)
 - `celery`: Celery worker
 - `rabbitmq`: RabbitMQ message broker
 - `postgres`: PostgreSQL database
@@ -45,13 +45,13 @@ This will start a number of containers:
 - `irods`: mock IRODS server
 - `ssh`: mock SSH connection (e.g., to cluster)
 
-To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin` (superuser access is configured in `dev/setup_defaults.py`).
+To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin`.
 
 The default Django interface is at `http://localhost/admin/`.
 
 ### Environment variables
 
-Docker reads environment variables in the following format from a file named `.env` in the `plantit` root directory:
+In a development environment, Docker reads environment variables in the following format from a file named `.env` in the `plantit` root directory:
 
 ```
 key=value
@@ -59,7 +59,7 @@ key=value
 ...
 ```
 
-`bootstrap.dev.sh` will generate an `.env` file like the following if one does not exist, with all variables required to run `plantit` in development configuration:
+`bootstrap.dev.sh` will generate an `.env` file like the following if one does not exist:
 
 ```
 VUE_APP_TITLE=plantit
@@ -88,10 +88,6 @@ import cryptography.fernet
 print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_key())
 ```
 
-### Vue UI
-
-Front-end code lives in `django/front_end`. It can be built from that directory with `npm run build` (or instructed to rebuild whenever a change is detected with `npm run watch`).
-
 ## Production
 
 The production configuration is somewhat different:
@@ -102,6 +98,17 @@ The production configuration is somewhat different:
 - Graylog consumes and stores container logs
 - Google Analytics are enabled via [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
 - [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
+
+Before running `plantit` in production, you must:
+
+1) Configure production-specific environment variables
+2) Build the Vue front end
+3) Collect static files and configure NGINX to serve them
+4) Run migrations
+5) Create a Django superuser, if one does not exist
+6) If deploying for the first time, Graylog must be configured to consume input from other containers once they have all been brought up
+
+Executing `dev/bootstrap.prod.sh` from the project root will run steps 2-5.
 
 ### Environment variables
 
@@ -120,54 +127,62 @@ Once you have chosen a password for the Graylog admin user (note that this is *n
 echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
 ```
 
-Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `False`, and `DJANGO_API_URL` should point to the host's IP or FQDN.
+Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `False`, `DJANGO_API_URL` should point to the host's IP or FQDN, and various key/password/secret fields should be configured appropriately.
 
-### NGINX
+### Vue
 
-Set `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN.
+Front-end code lives in `plantit/front_end`. It can be built from that directory with `npm run build`.
 
-### Suggested build procedure
+#### Static files
 
-First, build the Vue UI with `npm run build` from the `django/front_end` directory. Then build containers:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
-```
-
-Collect static files so NGINX can serve them:
+Static files can be collected with 
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py collectstatic --no-input
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py collectstatic --no-input
 ```
 
-Remove migrations:
+### Configure NGINX
+
+Set `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN, and make sure NGINX knows where to find the files to serve:
+
+```
+location /assets/ {
+  alias /opt/plantit/static/;
+}
+
+location /public/ {
+  alias /opt/plantit/public/;
+}
+```
+
+### Run migrations
+
+Run migrations with:
 
 ```bash
-find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py migrate
 ```
 
-Run migrations:
+### Create superuser
+
+Create a superuser (substitute your own values for username, password, and email address):
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py migrate
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/create-django-superuser.sh -u "<username>" -p "<password>" -e "<email address>"
 ```
 
-Configure Django superuser:
+### Running in production
 
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py createsuperuser
-```
-
-Run `plantit` in production mode:
+Containers can be brought up with:
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```
 
-This will start the following containers:
+This will start the following:
 
-- `djangoapp`: Django web application (`http://<host>:80`)
+- `plantit`: Django web application (`http://<host>:80`)
 - `celery`: Celery worker
 - `rabbitmq`: RabbitMQ message broker
 - `postgres`: PostgreSQL database

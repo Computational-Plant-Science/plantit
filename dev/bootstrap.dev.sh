@@ -2,13 +2,14 @@
 
 DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f docker-compose.dev.yml"
 
-# Bring containers down
+echo "Bringing containers down..."
 $DOCKER_COMPOSE down
 
-# Create `.env` if it doesn't exist
-if [ ! -f .env ]; then
-  echo "Environment variable file '.env' does not exist; creating it..."
-  cat <<EOT >>.env
+env_file=".env"
+echo "Checking for environment variable file '$env_file'..."
+if [ ! -f $env_file ]; then
+  echo "Environment variable file '$env_file' does not exist. Creating it..."
+  cat <<EOT >>$env_file
 VUE_APP_TITLE=plantit
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
@@ -24,41 +25,40 @@ SQL_NAME=postgres
 SQL_USER=postgres
 SQL_PASSWORD=some_password
 EOT
+else
+  echo "Environment variable file '$env_file' already exists. Continuing..."
 fi
 
-# Remove migrations
-find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
-
-# Remove files
-rm -rf django/files/*
-mkdir -p django/files/public
-mkdir -p django/files/tmp
-
-# Build containers
-$DOCKER_COMPOSE build "$@"
-
-# Start Postgres
-$DOCKER_COMPOSE up -d postgres
-
-# Run migrations
-$DOCKER_COMPOSE run djangoapp /code/dev/wait-for-postgres.sh postgres python manage.py makemigrations
-$DOCKER_COMPOSE run djangoapp python manage.py migrate
-
-# Configure defaults
-$DOCKER_COMPOSE <dev/setup_defaults.py run djangoapp python manage.py shell
-
-# Start mock IRODS server and cluster
-$DOCKER_COMPOSE up -d irods
-$DOCKER_COMPOSE up -d ssh
-
-# Configure mock IRODS server
-$DOCKER_COMPOSE exec ssh /bin/bash /root/wait-for-it.sh irods:1247 -- /root/irods_setup.sh
-
-# Stop containers
-$DOCKER_COMPOSE stop
-
-# Build front end
-cd django/front_end || exit
+echo "Building front end..."
+cd plantit/front_end || exit
 npm install
 npm run build
 cd ../..
+
+echo "Removing migrations..."
+find . -path "./plantit/**/migrations/*.py" -not -name "__init__.py" -delete
+
+echo "Removing files..."
+rm -rf plantit/files/*
+mkdir -p plantit/files/public
+mkdir -p plantit/files/tmp
+
+echo "Building containers..."
+$DOCKER_COMPOSE build "$@"
+
+echo "Running migrations..."
+$DOCKER_COMPOSE up -d --remove-orphans postgres
+$DOCKER_COMPOSE run plantit /code/dev/wait-for-postgres.sh postgres python manage.py makemigrations
+$DOCKER_COMPOSE run plantit python manage.py migrate
+
+echo "Creating superuser..."
+$DOCKER_COMPOSE run plantit /code/dev/create-django-superuser.sh -u "admin" -p "admin" -e "admin@example.com" -v
+
+echo "Configuring mock IRODS..."
+$DOCKER_COMPOSE up -d irods
+$DOCKER_COMPOSE up -d ssh
+$DOCKER_COMPOSE exec ssh /bin/bash /root/wait-for-it.sh irods:1247 -- /root/configure-irods.sh
+
+echo "Stopping containers..."
+$DOCKER_COMPOSE stop
+

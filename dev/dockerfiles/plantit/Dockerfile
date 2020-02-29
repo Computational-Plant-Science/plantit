@@ -8,7 +8,7 @@ RUN apt-get -y update \
 
 RUN mkdir /code
 WORKDIR /code
-COPY ./dockerfiles/djangoapp/requirements.txt /code/
+COPY ./dockerfiles/plantit/requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
 

@@ -2,24 +2,24 @@
 
 DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f docker-compose.prod.yml"
 
-# Build front end
-cd django/front_end || exit
+echo "Bringing containers down..."
+$DOCKER_COMPOSE down
+
+echo "Building front end..."
+cd plantit/front_end || exit
 npm install
 npm run build
 cd ../..
 
-# Collect static files
-$DOCKER_COMPOSE run djangoapp ./manage.py collectstatic --no-input
+echo "Collecting static files..."
+$DOCKER_COMPOSE run plantit ./manage.py collectstatic --no-input
 
-# Remove migrations
-find . -path "./django/**/migrations/*.py" -not -name "__init__.py" -delete
+echo "Running migrations..."
+$DOCKER_COMPOSE run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
+$DOCKER_COMPOSE run plantit ./manage.py migrate
 
-# Run migrations
-$DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.prod.yml run djangoapp /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
-$DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py migrate
+echo "Creating superuser (default values should be changed before deploying to production!)..."
+$DOCKER_COMPOSE run plantit /code/dev/create-django-superuser.sh -u "admin" -p "admin" -e "admin@example.com"
 
-# Create Django superuser
-$DOCKER_COMPOSE -f docker-compose.yml -f docker-compose.prod.yml run djangoapp ./manage.py createsuperuser
-
-# Stop containers
+echo "Stopping containers..."
 $DOCKER_COMPOSE stop

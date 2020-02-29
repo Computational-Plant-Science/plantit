@@ -13,7 +13,7 @@ version: '3.7'
 
 services:
 
-  djangoapp:
+  plantit:
     command: ["/code/dev/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:80"]
     ports:
       - "80:80"
@@ -57,7 +57,7 @@ services:
   ssh:
     build:
       context: ./dev
-      dockerfile: ./dockerfiles/test_cluster/Dockerfile
+      dockerfile: dockerfiles/ssh/Dockerfile
     privileged: true
     depends_on:
       - irods
