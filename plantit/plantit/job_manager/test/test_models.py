@@ -8,15 +8,13 @@ from django.test import TestCase
 from django.utils import timezone
 import django.core.files as files
 from django.contrib.auth.models import User;
-from django.core.exceptions import SuspiciousFileOperation
 
-from ..job import Status, Job, Task, DummyTask
+from ..job import Status, Job, DummyTask
 from ..remote import Cluster, SubmissionTask, File, UploadFileTask
 from ..job import __cancel_job__, __run_next__
 
 from plantit.collection.models import Collection
 
-from plantit.file_manager.filesystems import registrar
 
 import paramiko
 
@@ -42,7 +40,7 @@ def create_script(file=None):
     return script
 
 def create_collection(user = None):
-    if(not user):
+    if not user:
         user = create_user()
 
     c = Collection(name="Test Collection",
@@ -55,9 +53,9 @@ def create_collection(user = None):
     return c
 
 def create_cluster(submit_commands=None,uname=None):
-    if(not submit_commands):
+    if not submit_commands:
         submit_commands = "./{sub_script}"
-    if(not uname):
+    if not uname:
         uname="root"
     c = Cluster(name="Test",
                 port=22,
