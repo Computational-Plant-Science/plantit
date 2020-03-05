@@ -23,7 +23,7 @@ configuration files.
 Development (dev)
 ^^^^^^^^^^^^^^^^^
 
-Configuration file: `./compose-dev.yml`
+Configuration file: `./docker-compose.dev.yml`
 
 The development configuration runs django in development mode (debug on,
 auto restart on file changes, etc.) and includes docker containers for
@@ -37,12 +37,12 @@ The development environment can be started using:
 
 .. code-block:: bash
 
-  docker-compose -f docker-compose.yml -f compose-dev.yml up
+  docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 Production (prod)
 ^^^^^^^^^^^^^^^^^^^
 
-Configuration file: `./compose-prod.yml`
+Configuration file: `./docker-compose.prod.yml`
 
 The production configuration runs django in production mode within, utilizing
 `gunicorn <https://gunicorn.org/>`_ as a WSGI HTTP server
@@ -59,7 +59,7 @@ The production environment can be started using:
 
 .. code-block:: bash
 
-  docker-compose -f docker-compose.yml -f compose-prod.yml up -d
+  docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 .. _configuration-filesystems:
 
@@ -114,8 +114,8 @@ the dev systems can then be restarted using:
 
 .. code-block:: bash
 
-  docker-compose -f docker-compose.yml -f compose-dev.yml restart djangoapp
-  docker-compose -f docker-compose.yml -f compose-dev.yml restart celery
+  docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart djangoapp
+  docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart celery
 
 .. _configuration-installing-workflows:
 

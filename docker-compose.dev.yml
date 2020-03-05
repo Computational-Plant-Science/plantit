@@ -1,0 +1,75 @@
+# Runs `plantit` in developer mode.
+#
+# Django's `manage.py runserver` hosts `plantit` at `localhost:80`.
+#
+# Also provides:
+#   irods: mock IRODS server object store
+#   adminer:  database admin UI
+#   ssh: mock cluster
+#   flower: celery admin UI
+#
+# See docker-compose.yml for usage.
+version: '3.7'
+
+services:
+
+  plantit:
+    command: ["/code/dev/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:80"]
+    ports:
+      - "80:80"
+    healthcheck:
+      test: curl -f http://localhost:80/
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
+
+  rabbitmq:
+    ports:
+      - 15672:15672
+
+  celery:
+    command: ["/code/dev/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "--loglevel=info"]
+
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    healthcheck:
+      test: curl -f http://localhost:8080/
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
+
+  flower:
+    image: mher/flower
+    volumes:
+      - .:/code
+    depends_on:
+      - celery
+    command: flower --broker=amqp://rabbitmq --port=5555
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:5555').getcode());" | grep "200"
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
+
+  ssh:
+    build:
+      context: ./dev
+      dockerfile: dockerfiles/ssh/Dockerfile
+    privileged: true
+    depends_on:
+      - irods
+
+  irods:
+    image: mjstealey/irods-provider-postgres:4.2.3
+    ports:
+      - "1247:1247"
+

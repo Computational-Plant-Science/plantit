@@ -1,0 +1,154 @@
+# Runs PlantIT in production mode. That is:
+#    1) Starts plantit by running gunicorn
+#    2) Runs the nginx webserver in a seprate container
+#    3) Connects gunicorn to nginx
+#    4) Saves database data to ./db
+#
+# For production the wsgi server is run on the plantit container with django
+# I chose to place the nginx server in its own container to:
+#    1) Allow me to use the prepackaged ngnix containers
+#    2) Not have it installed in the web container
+#    3) Allow easier changes of systems later (aka, use a different web server)
+#
+# See docker-compose.yml for usage.
+version: '3.7'
+
+services:
+
+  plantit:
+    command: ["gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
+    networks:
+      - ngnix_network
+      - default
+    restart: always
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "plantit"
+
+  postgres:
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "postgres"
+
+  rabbitmq:
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "rabbitmq"
+
+  celery:
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "celery"
+
+  nginx:
+    image: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./plantit/static/:/opt/plantit/static/:ro
+      - ./plantit/files/public/:/opt/plantit/public/:ro
+    depends_on:
+      - plantit
+    networks:
+      - ngnix_network
+    restart: always
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "ngnix"
+
+  mongo:
+    image: mongo:3
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - default
+      - graylog
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.5
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    environment:
+      - http.host=0.0.0.0
+      - transport.host=localhost
+      - network.host=0.0.0.0
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    networks:
+      - graylog
+    ports:
+      - 9200:9200
+    healthcheck:
+      test: curl -f http://localhost:9200/
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
+
+  graylog:
+    image: graylog/graylog:3.2
+    volumes:
+      - graylog_journal:/usr/share/graylog/data/journal
+    environment:
+      - GRAYLOG_PASSWORD_SECRET=${GRAYLOG_PASSWORD_SECRET}
+      - GRAYLOG_ROOT_PASSWORD_SHA2=${GRAYLOG_ROOT_PASSWORD_SHA2}
+      - GRAYLOG_HTTP_EXTERNAL_URI=${GRAYLOG_HTTP_EXTERNAL_URI}
+    networks:
+      - graylog
+    depends_on:
+      - mongo
+      - elasticsearch
+    ports:
+      # Graylog web interface and REST API
+      - 9000:9000
+      # Syslog TCP
+      - 1514:1514
+      # Syslog UDP
+      - 1514:1514/udp
+      # GELF TCP
+      - 12201:12201
+      # GELF UDP
+      - 12201:12201/udp
+    healthcheck:
+      test: curl -f ${GRAYLOG_HTTP_EXTERNAL_URI}
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
+
+networks:
+  ngnix_network:
+    driver: bridge
+  graylog:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  mongo_data:
+    driver: local
+  es_data:
+    driver: local
+  graylog_journal:
+    driver: local
