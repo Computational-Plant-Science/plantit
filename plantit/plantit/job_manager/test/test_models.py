@@ -86,9 +86,9 @@ def create_user():
     return User.objects.create_user(uname,email,'test')
 
 def create_job(user = None, collection = None):
-    if(not user):
+    if not user:
         user = create_user()
-    if(not collection):
+    if not collection:
         collection = create_collection(user)
 
     j = Job(date_created=timezone.now(),

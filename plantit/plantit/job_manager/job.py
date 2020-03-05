@@ -188,7 +188,7 @@ class Job(models.Model):
     class Meta:
         ordering = ['-date_created']
 
-    def generate_work_dir(self):
+    def generate_work_dir():
         """
             Generate a string to use as the the working directory for a job
 
@@ -197,7 +197,7 @@ class Job(models.Model):
         """
         return timezone.now().strftime('%s') + "/"
 
-    def generate_token(self):
+    def generate_token():
         """
             Generate a valid auth_token
 
