@@ -1,25 +1,23 @@
-'''
+"""
     Tasks for working with remove servers.
-'''
-
-import os
-from os import path
-import stat
-import errno
+"""
 
 import json
+import os
+import stat
 from json.decoder import JSONDecodeError
-
-from django.db import models
-from django.utils import timezone
+from os import path
 
 import paramiko
+from django.conf import settings
+from django.db import models
+from django.utils import timezone
 from paramiko.ssh_exception import AuthenticationException
 
-from .job import Task, Job, Status, Cluster
+from .job import Task, Status, Cluster
 from ..file_manager import permissions
 from ..workflows import registrar
-from django.conf import settings
+
 
 class SSHTaskMixin(models.Model):
     """
@@ -75,77 +73,79 @@ class SSHTaskMixin(models.Model):
                             cluster. The connection is chdir'd into self.workdir
             workdir (str): full path of the job's working directory on the cluster
     """
+
     class Meta:
         abstract = True
 
-    cluster = models.ForeignKey(Cluster,on_delete=models.CASCADE)
+    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE)
 
     def run(self):
-        #Open Connection
+        # Open Connection
         try:
             client = paramiko.SSHClient()
-            if getattr(settings,'DEBUG',False):
+            if getattr(settings, 'DEBUG', False):
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             else:
                 client.load_system_host_keys("../config/ssh/known_hosts")
                 client.set_missing_host_key_policy(paramiko.RejectPolicy())
             if self.cluster.password is None:
-                #Use ssh key
+                # Use ssh key
                 k = paramiko.RSAKey.from_private_key_file('../config/ssh/id_rsa')
                 client.connect(self.cluster.hostname,
                                self.cluster.port,
                                self.cluster.username,
-                               pkey= k)
+                               pkey=k)
             else:
-                #Use password
+                # Use password
                 client.connect(self.cluster.hostname,
                                self.cluster.port,
                                self.cluster.username,
                                self.cluster.password)
-        except (AuthenticationException) as e:
+        except AuthenticationException as e:
             self.job.status_set.create(state=Status.FAILED,
-                        date=timezone.now(),
-                        description=str(e))
+                                       date=timezone.now(),
+                                       description=str(e))
             return
 
         self.client = client
         self.sftp = self.client.open_sftp()
         self.workdir = self.cluster.workdir + "/" + self.job.work_dir
 
-        #Chdir into working directory
+        # Chdir into working directory
         try:
             self.sftp.chdir(self.cluster.workdir)
         except OSError:
             self.job.status_set.create(state=Status.FAILED,
-                        date=timezone.now(),
-                        description="Cluster Workdir does not exist")
+                                       date=timezone.now(),
+                                       description="Cluster Workdir does not exist")
             client.close()
             return
-        try: #OSError raised if dir already exists
+        try:  # OSError raised if dir already exists
             self.sftp.mkdir(self.job.work_dir)
         except OSError as e:
             pass
         self.sftp.chdir(self.job.work_dir)
 
-        #Run task
+        # Run task
         try:
             print(self.ssh)
             self.ssh()
         except IOError as e:
             self.job.status_set.create(state=Status.FAILED,
-                        date=timezone.now(),
-                        description=("Plant IT Internal IOError Error During"
-                                     " Submission, please contact admins"))
+                                       date=timezone.now(),
+                                       description=("Plant IT Internal IOError Error During"
+                                                    " Submission, please contact admins"))
             return
         except Exception as e:
             self.job.status_set.create(state=Status.FAILED,
-                        date=timezone.now(),
-                        description=("Plant IT Internal Error During" +
-                                     " Submission, please contact admins"))
+                                       date=timezone.now(),
+                                       description=("Plant IT Internal Error During" +
+                                                    " Submission, please contact admins"))
             raise e
         finally:
             client.close()
             self.sftp.close()
+
 
 class File(models.Model):
     """
@@ -160,6 +160,7 @@ class File(models.Model):
 
     def __str__(self):
         return str(self.file_name)
+
 
 class SubmissionTask(SSHTaskMixin, Task):
     """
@@ -178,7 +179,7 @@ class SubmissionTask(SSHTaskMixin, Task):
             app_name (str): The app_name of the workflow to run (Required)
     """
 
-    parameters = models.TextField(null=True,blank=True)
+    parameters = models.TextField(null=True, blank=True)
     app_name = models.CharField(max_length=40)
 
     def get_params(self):
@@ -191,7 +192,7 @@ class SubmissionTask(SSHTaskMixin, Task):
                 JSON Object containing workflow parameters for this job.
         """
 
-        #Workflow specific configuration in workflow.WORKFLOW dictionary
+        # Workflow specific configuration in workflow.WORKFLOW dictionary
         config = registrar.list[self.app_name]
 
         params = {
@@ -201,7 +202,7 @@ class SubmissionTask(SSHTaskMixin, Task):
             "task_pk": self.pk,
             "parameters": json.loads(self.parameters)
         }
-        params.update(config) #Add config from workflow.WORKFLOW
+        params.update(config)  # Add config from workflow.WORKFLOW
 
         return json.dumps(params)
 
@@ -214,18 +215,18 @@ class SubmissionTask(SSHTaskMixin, Task):
                 IOError: thrown during copying of files
         """
 
-        #Copy run scripts to cluster
+        # Copy run scripts to cluster
         FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
 
-        with open(path.join('workflows', str(self.app_name) ,'process.py'),'r') as file:
+        with open(path.join('workflows', str(self.app_name), 'process.py'), 'r') as file:
             fname = os.path.basename(file.name)
             self.sftp.putfo(file, fname)
 
-        with self.sftp.open('workflow.json','w') as file:
+        with self.sftp.open('workflow.json', 'w') as file:
             file.write(self.get_params())
 
         try:
-            #Submit job to cluster queue
+            # Submit job to cluster queue
             cmds = "cd " + self.workdir + "; " + self.cluster.submit_commands
             stdin, stdout, stderr = self.client.exec_command(cmds)
 
@@ -236,17 +237,18 @@ class SubmissionTask(SSHTaskMixin, Task):
                     error = error[:450] + "..." + error[-450:]
                 print(error)
                 self.job.status_set.create(state=Status.FAILED,
-                            date=timezone.now(),
-                            description= "Plant IT Internal Error: " + error)
+                                           date=timezone.now(),
+                                           description="Plant IT Internal Error: " + error)
                 return
 
         except JSONDecodeError as e:
             msg = "Paramater Decode Error: " + str(e)
             self.job.status_set.create(state=Status.FAILED,
-                        date=timezone.now(),
-                        description=msg)
+                                       date=timezone.now(),
+                                       description=msg)
 
-class UploadCollectionTask(SSHTaskMixin,Task):
+
+class UploadCollectionTask(SSHTaskMixin, Task):
     """
         Uploads all the files in a collection to the server to the files folder
         in the job wok directory.
@@ -263,18 +265,19 @@ class UploadCollectionTask(SSHTaskMixin,Task):
     collection_dir = "samples/"
 
     def ssh(self):
-        collection = self.job.collection.cast() #Cast down to access the files attribute
+        collection = self.job.collection.cast()  # Cast down to access the files attribute
 
-        with self.sftp.open('samples.json','w') as file:
+        with self.sftp.open('samples.json', 'w') as file:
             file.write(collection.to_json())
 
-        file_storage = permissions.open_folder(storage_type = collection.storage_type,
-                                               path = collection.base_file_path,
-                                               user = self.job.user)
+        file_storage = permissions.open_folder(storage_type=collection.storage_type,
+                                               path=collection.base_file_path,
+                                               user=self.job.user)
 
         self.finish()
 
-class UploadFileTask(SSHTaskMixin,Task):
+
+class UploadFileTask(SSHTaskMixin, Task):
     """
         Uploads a list of files to the job work directory on the server.
 
@@ -284,7 +287,7 @@ class UploadFileTask(SSHTaskMixin,Task):
             delete (bool): delete local file after upload
     """
 
-    files = models.TextField(blank=False,null=False)
+    files = models.TextField(blank=False, null=False)
     delete = models.BooleanField(default=False)
 
     def ssh(self):
@@ -294,7 +297,7 @@ class UploadFileTask(SSHTaskMixin,Task):
             file = open(file_name)
             fname = os.path.basename(file.name)
             self.sftp.putfo(file, fname)
-            if(self.delete):
+            if (self.delete):
                 os.remove(file_name)
 
         self.finish()

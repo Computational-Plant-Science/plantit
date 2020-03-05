@@ -1,11 +1,10 @@
-from django.db import models
 from django.core.files.storage import Storage
-from encrypted_model_fields.fields import EncryptedCharField
 
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
 
 from .storage import AbstractStorageType
+
 
 class IRODSFileSystem(Storage):
     """
@@ -14,7 +13,8 @@ class IRODSFileSystem(Storage):
 
         .. _iRODS: https://irods.org/
     """
-    def __init__(self, host, port, user, password, zone, path = '/'):
+
+    def __init__(self, host, port, user, password, zone, path='/'):
         self.session = iRODSSession(host=host, port=port, user=user, password=password, zone=zone)
 
         self.path = "/" + path.strip('./')
@@ -28,48 +28,49 @@ class IRODSFileSystem(Storage):
     def close(self):
         self.session.cleanup()
 
-    def _mkpath(self,name):
+    def _mkpath(self, name):
         name = name.strip('./')
-        if(name == ""):
+        if (name == ""):
             return self.path
-        elif(self.path == "/"):
+        elif (self.path == "/"):
             return "/" + name
         else:
             return self.path + "/" + name
 
-    def delete(self,name):
+    def delete(self, name):
         raise NotImplementedError
 
-    def exists(self,name):
+    def exists(self, name):
         path = self._mkpath(name)
-        if(self.session.data_objects.exists(path)):
+        if (self.session.data_objects.exists(path)):
             return True
-        else: #see if there is a collection by that name
+        else:  # see if there is a collection by that name
             try:
                 self.session.collections.get(path)
                 return True
             except CollectionDoesNotExist:
                 return False
 
-    def listdir(self,path):
+    def listdir(self, path):
         coll = self.session.collections.get(self._mkpath(path))
         files = [obj.name for obj in coll.data_objects]
         dirs = [obj.name for obj in coll.subcollections]
         return (dirs, files)
 
-    def _open(self,name,mode):
+    def _open(self, name, mode):
         obj = self.session.data_objects.get(self._mkpath(name))
-        return obj.open(mode.replace("b",""))
+        return obj.open(mode.replace("b", ""))
 
-    def _save(self,name,content):
+    def _save(self, name, content):
         obj = self.session.data_objects.create(self._mkpath(name))
         with obj.open('r+') as f:
             f.write(content.read())
         return obj.name
 
-    def size(self,name):
+    def size(self, name):
         obj = self.session.data_objects.get(self._mkpath(name))
         return obj.size
+
 
 class IRODS(AbstractStorageType):
     """
@@ -87,7 +88,7 @@ class IRODS(AbstractStorageType):
         .. _iRODS: https://irods.org/
     """
 
-    def __init__(self, name, username, password, hostname, zone, port = 1247):
+    def __init__(self, name, username, password, hostname, zone, port=1247):
         self.name = name
         self.username = username
         self.password = password
@@ -95,10 +96,10 @@ class IRODS(AbstractStorageType):
         self.hostname = hostname
         self.zone = zone
 
-    def open(self,path):
+    def open(self, path):
         return IRODSFileSystem(host=self.hostname,
                                port=self.port,
                                user=self.username,
                                password=self.password,
                                zone=self.zone,
-                               path = path)
+                               path=path)

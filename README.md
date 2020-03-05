@@ -1,6 +1,6 @@
 # Requirements
 
-The following are required to run `plantit`:
+The following are required to run `DIRT2_Webplatform`:
 
 - A Unix shell
 - [Docker](https://www.docker.com/)
@@ -51,7 +51,7 @@ The default Django interface is at `http://localhost/admin/`.
 
 ### Environment variables
 
-In a development environment, Docker reads environment variables in the following format from a file named `.env` in the `plantit` root directory:
+In a development environment, Docker reads environment variables in the following format from a file named `.env` in the `DIRT2_Webplatform` root directory:
 
 ```
 key=value
@@ -99,7 +99,7 @@ The production configuration is somewhat different:
 - Google Analytics are enabled via [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
 - [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
 
-Before running `plantit` in production, you must:
+Before running `DIRT2_Webplatform` in production, you must:
 
 1) Configure production-specific environment variables
 2) Build the Vue front end
@@ -112,7 +112,7 @@ Executing `dev/bootstrap.prod.sh` from the project root will run steps 2-5.
 
 ### Environment variables
 
-In addition to the environment variables listed for development, the following are required to run `plantit` in production:
+In addition to the environment variables listed for development, the following are required to run `DIRT2_Webplatform` in production:
 
 - `VUE_APP_ANALYTICS_ID`: provided by Google Analytics
 - `VUE_APP_SENTRY_IO_KEY`: provided by Sentry
@@ -135,7 +135,7 @@ Front-end code lives in `plantit/front_end`. It can be built from that directory
 
 #### Static files
 
-Static files can be collected with 
+Static files can be collected with:
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py collectstatic --no-input
@@ -195,10 +195,10 @@ This will start the following:
 
 Workflows created with the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be plugged into the web platform by placing workflow repositories in the `django/workflows` directory.
 
-Note that the `djangoapp` and `celery` containers must be restarted to reload workflows:
+Note that the `plantit` and `celery` containers must be restarted to reload workflows:
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart djangoapp
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart plantit
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart celery
 ```
 

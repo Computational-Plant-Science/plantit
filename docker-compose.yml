@@ -33,6 +33,12 @@ services:
       - SQL_NAME=${SQL_NAME}
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
+    healthcheck:
+      test: curl -f http://localhost:80/
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
 
   postgres:
     image: postgres
@@ -54,6 +60,12 @@ services:
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
+    healthcheck:
+      test: python -c "import urllib2; print urllib2.urlopen('http://localhost:15672').getcode();" | grep "200"
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
 
   celery:
     build:
@@ -77,4 +89,10 @@ services:
       - SQL_NAME=${SQL_NAME}
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
+    healthcheck:
+      test: celery -A plantit status | grep "OK"
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
 

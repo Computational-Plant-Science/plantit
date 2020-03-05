@@ -28,6 +28,6 @@ urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ s
         re_path(r'^login/', views.LoginView.as_view(), name="cas_ng_login"),
         re_path(r'^logout/', views.LogoutView.as_view(), name="cas_ng_logout"),
         re_path(r'^apis/v1/', include('apis.urls')),
-        #Send all other urls (besides what is listed above) to the vue router
+        # Send all other urls (besides what is listed above) to the vue router
         re_path(r'^.*$',  TemplateView.as_view(template_name='index.html')),
     ]

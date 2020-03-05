@@ -19,7 +19,7 @@ $DOCKER_COMPOSE run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py 
 $DOCKER_COMPOSE run plantit ./manage.py migrate
 
 echo "Creating superuser (default values should be changed before deploying to production!)..."
-$DOCKER_COMPOSE run plantit /code/dev/create-django-superuser.sh -u "admin" -p "admin" -e "admin@example.com"
+$DOCKER_COMPOSE run plantit /code/dev/configure-superuser.sh -u "admin" -p "admin" -e "admin@example.com"
 
 echo "Stopping containers..."
 $DOCKER_COMPOSE stop

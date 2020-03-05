@@ -1,4 +1,4 @@
-'''
+"""
     The job manager provides a system for running ordered tasks asynchronously
     on the server side. Tasks are run on a `celery task queue <http://www.celeryproject.org>`_.
     This queue is run inside the celery docker container.
@@ -23,4 +23,4 @@
     how to add tasks to a job and start the job.
 
     Workflow jobs are started by :class:`workflows.classes.Workflow`
-'''
+"""

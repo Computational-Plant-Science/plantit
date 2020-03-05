@@ -1,6 +1,6 @@
-'''
+"""
     The main job manager framework.
-'''
+"""
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 
@@ -40,11 +40,11 @@ def __run_next__(pk):
     """
     job = Job.objects.get(pk=pk)
 
-    if (job.current_status().state == Status.FAILED):
+    if job.current_status().state == Status.FAILED:
         return
 
     queued_tasks = job.task_set.filter(complete=False).order_by('order_pos').select_subclasses()
-    if (len(queued_tasks) > 0):
+    if len(queued_tasks) > 0:
         task = queued_tasks[0]
         task.run()
     else:
@@ -66,9 +66,9 @@ def __cancel_job__(pk):
 
     status = job.current_status().state
 
-    if (status < Status.OK):
+    if status < Status.OK:
         return  # Job already done.
-    elif (status == Status.CREATED):
+    elif status == Status.CREATED:
         # Job never actucally submitted to a cluster
         job.status_set.create(state=Status.FAILED,
                               date=timezone.now(),
@@ -85,7 +85,7 @@ def __cancel_job__(pk):
 
         stdin, stdout, stderr = client.exec_command(cmds)
         errors = stderr.readlines()
-        if (errors != []):
+        if errors:
             self.status_set.create(state=Status.FAILED,
                                    date=timezone.now(),
                                    description=str(errors))
@@ -188,7 +188,7 @@ class Job(models.Model):
     class Meta:
         ordering = ['-date_created']
 
-    def generate_work_dir():
+    def generate_work_dir(self):
         """
             Generate a string to use as the the working directory for a job
 
@@ -197,7 +197,7 @@ class Job(models.Model):
         """
         return timezone.now().strftime('%s') + "/"
 
-    def generate_token():
+    def generate_token(self):
         """
             Generate a valid auth_token
 
@@ -328,7 +328,7 @@ class Task(models.Model):
         """
             Command called to run the task
         """
-        raise NotImplmentedError
+        raise NotImplementedError
 
     def __str__(self):
         return "%s (%d)" % (self.name, self.pk)

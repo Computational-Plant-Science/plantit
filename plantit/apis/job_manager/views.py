@@ -1,10 +1,11 @@
 from rest_framework import viewsets
 from .serializers import JobSerializer
-from plantit.job_manager.job import Job, Task
-from plantit.job_manager.authentication import JobTokenAuthentication
+from plantit.job_manager.job import Job
 from rest_framework.permissions import IsAuthenticated
 from ..mixins import PinViewMixin
 from django.contrib.auth.decorators import login_required
+from plantit.file_manager.services import download_stream
+
 
 class JobViewSet(viewsets.ModelViewSet, PinViewMixin):
     """
@@ -81,7 +82,7 @@ class JobViewSet(viewsets.ModelViewSet, PinViewMixin):
     serializer_class = JobSerializer
 
     def get_queryset(self):
-        if(not self.request.user.is_anonymous):
+        if not self.request.user.is_anonymous:
             user = self.request.user
             return self.queryset.filter(user=user)
         else:
@@ -90,7 +91,6 @@ class JobViewSet(viewsets.ModelViewSet, PinViewMixin):
             # TODO: restrict to job with given token.
             return self.queryset
 
-from plantit.file_manager.services import  download_stream
 
 @login_required
 def download_results(request, pk):

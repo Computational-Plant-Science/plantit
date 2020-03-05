@@ -52,7 +52,7 @@ $DOCKER_COMPOSE run plantit /code/dev/wait-for-postgres.sh postgres python manag
 $DOCKER_COMPOSE run plantit python manage.py migrate
 
 echo "Creating superuser..."
-$DOCKER_COMPOSE run plantit /code/dev/create-django-superuser.sh -u "admin" -p "admin" -e "admin@example.com" -v
+$DOCKER_COMPOSE run plantit /code/dev/configure-superuser.sh -u "admin" -p "admin" -e "admin@example.com" -v
 
 echo "Configuring mock IRODS..."
 $DOCKER_COMPOSE up -d irods

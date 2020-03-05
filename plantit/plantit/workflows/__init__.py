@@ -1,4 +1,4 @@
-'''
+"""
     Workflows are modular code provided by 3rd parties to analyze
     samples within collections. Plant IT automatically
     applies the workflow's analysis code to all samples withing a collection.
@@ -36,28 +36,27 @@
         The workflow folder name (inside plantit/workflows/) must be the same
         as the workflow app_name set in the workflow's WORKFLOW_CONFIG.
 
-'''
+"""
 from os import listdir
 from os.path import isdir, isfile, join
 from shutil import copyfile
 from django.conf import settings
 import importlib
 
-class Registrar():
-    """
-        Workflows are register with the server via this class.
 
-        Registration is automatically performed for workflows in `plantit/workflows`
+class Registrar:
+    """
+        Registers Cookiecutter workflow directories in `plantit/workflows`.
 
         Manual registration is not recommended or supported.
 
         An instance of this class is automatically created by Plant IT
-        at :attr:`plantit.workflows.registrar`. You should not need to use
-        the :class:`plantit.workflows.Registrar` class directly.
+        at :attr:`plantit.workflows.registrar`. You should not use
+        this class directly.
     """
     list = {}
 
-    def register(self,config):
+    def register(self, config):
         """
             Register a workflow with the server
 
@@ -82,36 +81,38 @@ class Registrar():
         """
         config['app_url_pattern'] = "workflows:%s:analyze" % (config['app_name'],)
 
-        icon_path = join(folder_path,'static','icon.png')
-        if(isfile(icon_path)):
-            copyfile(icon_path,join(settings.BASE_DIR,
-                                    'plantit/static/workflow_icons/',
-                                    config['app_name'] + '.png'))
+        icon_path = join(folder_path, 'static', 'icon.png')
+        if (isfile(icon_path)):
+            copyfile(icon_path, join(settings.BASE_DIR,
+                                     'plantit/static/workflow_icons/',
+                                     config['app_name'] + '.png'))
             config['icon_url'] = '/assets/workflow_icons/' + config['app_name'] + '.png'
 
         self.list[config['app_name']] = config
 
+
 registrar = Registrar()
 
 basepath = settings.WORKFLOW_DIR
-folders = [f for f in listdir(basepath) if isdir(join(basepath,f))]
+folders = [f for f in listdir(basepath) if isdir(join(basepath, f))]
 
 for folder in folders:
     if folder == "__pycache__":
         continue
 
-    folder_path = join(basepath,folder)
-    files = [f for f in listdir(folder_path) if isfile(join(folder_path,f))]
+    folder_path = join(basepath, folder)
+    files = [f for f in listdir(folder_path) if isfile(join(folder_path, f))]
 
-    assert "process.py" in files, "No process.py file in workflow %s"%(folder_path)
-    assert "workflow.py" in files, "No workflow.py file in workflow %s"%(folder_path)
+    assert "process.py" in files, "No process.py file in workflow %s" % (folder_path)
+    assert "workflow.py" in files, "No workflow.py file in workflow %s" % (folder_path)
     assert "__init__.py" in files, "Workflow folder must be a module, add __init__.py to %s" % (folder)
 
     WORKFLOW_CONFIG = importlib.import_module('workflows.' + folder + '.workflow',
-                                            package=None).WORKFLOW_CONFIG
+                                              package=None).WORKFLOW_CONFIG
 
     assert WORKFLOW_CONFIG['app_name'] == folder, ("Workflow folder name (\"%s\")"
-        " must be the same as the workflow app name (\"%s\"). "
-        "Change folder name to \"%s\"") % (WORKFLOW_CONFIG['app_name'],folder, WORKFLOW_CONFIG['app_name'])
+                                                   " must be the same as the workflow app name (\"%s\"). "
+                                                   "Change folder name to \"%s\"") % (
+                                                  WORKFLOW_CONFIG['app_name'], folder, WORKFLOW_CONFIG['app_name'])
 
     registrar.register(WORKFLOW_CONFIG)

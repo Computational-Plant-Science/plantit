@@ -11,5 +11,5 @@ job_pk=${1}
 task_pk=${2}
 token=${3}
 
-./server_update sub_id $job_pk "$RANDOM" "$token"
-./server_update task_complete $job_pk $task_pk "$token"
+./server-update.sh sub_id $job_pk "$RANDOM" "$token"
+./server-update.sh task_complete $job_pk $task_pk "$token"

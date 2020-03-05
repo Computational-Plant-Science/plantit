@@ -1,4 +1,4 @@
-class Registrar():
+class Registrar:
     """
         A registry of file systems registered with Plant IT.
 
@@ -15,11 +15,12 @@ class Registrar():
                 base file path given a django user object.
 
     """
+
     def __init__(self):
         self.list = {}
         self.default_basename = {}
 
-    def register(self,storage_type, default_path):
+    def register(self, storage_type, default_path):
         """
             Register a storage type
 
@@ -45,7 +46,7 @@ class Registrar():
         self.list[storage_type.name] = storage_type
         self.default_basename[storage_type.name] = default_path
 
-    def default_path(self,storage_type, user):
+    def default_path(self, storage_type, user):
         """
             Get the default path for a user on a storage type.
 
@@ -58,7 +59,9 @@ class Registrar():
         """
         return self.default_basename[storage_type](user)
 
+
 registrar = Registrar()
+
 
 try:
     from filesystems import *
