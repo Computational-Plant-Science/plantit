@@ -117,23 +117,31 @@ In addition to the environment variables listed for development, the following a
 - `VUE_APP_ANALYTICS_ID`: provided by Google Analytics
 - `VUE_APP_SENTRY_IO_KEY`: provided by Sentry
 - `VUE_APP_SENTRY_IO_PROJECT`: provided by Sentry
-- `GRAYLOG_PASSWORD_SECRET`: you provide (at least 16 characters)
-- `GRAYLOG_ROOT_PASSWORD_SHA2`: see below
-- `GRAYLOG_HTTP_EXTERNAL_URI`: location of the Graylog REST API (`<host>:9000`)
-
-Once you have chosen a password for the Graylog admin user (note that this is *not* the same as `GRAYLOG_PASSWORD_SECRET`), `GRAYLOG_ROOT_PASSWORD_SHA2` can be generated with the following:
-
-```bash
-echo -n "Enter Password: " && head -1 </dev/stdin | tr -d '\n' | sha256sum | cut -d" " -f1
-```
 
 Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `False`, `DJANGO_API_URL` should point to the host's IP or FQDN, and various key/password/secret fields should be configured appropriately.
+
+### Configure Graylog endpoint
+
+`DIRT2_Webplatform` channels all logging to Graylog in production (see [`DIRT2_Logging`](https://github.com/Computational-Plant-Science/DIRT2_Logging)).
+
+Services in `docker-compose.prod.yml` should point to `http://<GRAYLOG_EXTERNAL_API_URL>:12201`, for instance:
+
+```yml
+  plantit:
+    ...
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://<GRAYLOG_EXTERNAL_API_URL>:12201
+        tag: "plantit"
+    ...
+```
 
 ### Vue
 
 Front-end code lives in `plantit/front_end`. It can be built from that directory with `npm run build`.
 
-#### Static files
+### Static files
 
 Static files can be collected with:
 
@@ -187,9 +195,6 @@ This will start the following:
 - `rabbitmq`: RabbitMQ message broker
 - `postgres`: PostgreSQL database
 - `nginx`: NGINX server
-- `graylog`: Graylog server (`http://<host>:9000`)
-- `mongo`: MongoDB database (for Graylog)
-- `elasticsearch`: Elasticsearch node (for Graylog)
 
 ## Workflows
 
