@@ -124,7 +124,7 @@ Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `Fals
 
 `DIRT2_Webplatform` channels all logging to Graylog in production (see [`DIRT2_Logging`](https://github.com/Computational-Plant-Science/DIRT2_Logging)).
 
-Services in `docker-compose.prod.yml` should point to `http://<GRAYLOG_EXTERNAL_API_URL>:12201`, for instance:
+Services in `docker-compose.prod.yml` should point to `http://<host>:12201`. If running `DIRT2_Logging` alongside `DIRT2_Webplatform`, the host is `DIRT2_Logging_graylog`. Substitute the appropriate hostname to connect from a different host.
 
 ```yml
   plantit:
@@ -132,7 +132,7 @@ Services in `docker-compose.prod.yml` should point to `http://<GRAYLOG_EXTERNAL_
     logging:
       driver: gelf
       options:
-        gelf-address: udp://<GRAYLOG_EXTERNAL_API_URL>:12201
+        gelf-address: udp://<host>:12201
         tag: "plantit"
     ...
 ```
