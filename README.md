@@ -162,6 +162,7 @@ print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_ke
 In addition to the environment variables listed above, the following is required to run `DIRT2_Webplatform` in staging or production:
 
 - `GRAYLOG_GELF_URI`: the endpoint to route log messages to (e.g., `udp://localhost:12201` if Graylog server is running on the same host as `DIRT2_Webplatform`; alternatively, adjacent containers can connect over the Docker network by referencing the network `DIRT2_Logging_graylog` network)
+- `GRAYLOG_HTTP_EXTERNAL_URI`: the Graylog server HTTP API endpoint (e.g., `http://localhost:9000/`)
 - `NODE_ENV` should be set to `production`i
 - `DJANGO_DEBUG` should be set to `False`
 - `DJANGO_API_URL` should point to the host's IP or FQDN
