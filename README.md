@@ -1,4 +1,21 @@
-# Requirements
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Contents**
+
+- [Requirements](#requirements)
+- [Documentation](#documentation)
+- [Installation](#installation)
+  - [Development](#development)
+  - [Staging](#staging)
+  - [Production](#production)
+- [Environment variables](#environment-variables)
+- [Workflows](#workflows)
+- [Clusters](#clusters)
+  - [Cluster login configuration](#cluster-login-configuration)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Requirements
 
 The following are required to run `DIRT2_Webplatform`:
 
@@ -7,11 +24,11 @@ The following are required to run `DIRT2_Webplatform`:
 - [npm](https://www.npmjs.com/get-npm)
 - Python 3
 
-# Documentation
+## Documentation
 
 Full documentation can be found [here](https://computational-plant-science.github.io/DIRT2_Webplatform/build/html/index.html).
 
-# Installation
+## Installation
 
 First, clone the repository:
 
@@ -19,7 +36,7 @@ First, clone the repository:
 git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 ```
 
-## Development
+### Development
 
 To set up a new (or restore a clean) development environment, run `dev/bootstrap.dev.sh` from the project root (you may need to use `chmod +x` first). This will:
 
@@ -38,7 +55,7 @@ This will start a number of containers:
 
 - `plantit`: Django web application (`http://localhost:80`)
 - `celery`: Celery worker
-- `rabbitmq`: RabbitMQ message broker
+- `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `postgres`: PostgreSQL database
 - `flower`: Celery monitoring UI (`http://localhost:5555`)
 - `adminer`: PostgreSQL admin UI (`http://localhost:8080`)
@@ -49,9 +66,63 @@ To bypass CAS login and log directly into Django as superuser, browse to `http:/
 
 The default Django interface is at `http://localhost/admin/`.
 
-### Environment variables
+### Production
 
-In a development environment, Docker reads environment variables in the following format from a file named `.env` in the `DIRT2_Webplatform` root directory:
+The production configurations look somewhat different than development:
+
+- Django runs behind Gunicorn (both in the same container) which runs behind NGINX (in a separate container)
+- NGINX serves static assets and acts as a reverse proxy
+- Postgres stores data in a persistent volume
+- Graylog consumes and stores container logs
+- Google Analytics are enabled via [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
+- [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
+- Monitoring tools (Adminer and RabbitMQ dashboard)
+
+Before running `DIRT2_Webplatform` in a production environment, you must:
+
+- Configure environment variables
+- Build the Vue front end with `npm run build` from the `plantit/front_end` directory
+- Collect static files:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py collectstatic --no-input
+```
+
+- Run migrations:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py migrate
+```
+
+- Create a Django superuser (if one does not exist):
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/create-django-superuser.sh -u "<username>" -p "<password>" -e "<email address>"
+```
+
+- Configure NGINX `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN
+- If deploying for the first time, Graylog must be configured to consume input from other containers once they have all been brought up
+
+Containers can then be brought up with:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+```
+
+This will start the following:
+
+- `plantit`: Django web application (`http://<host>:80`)
+- `celery`: Celery worker
+- `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
+- `postgres`: PostgreSQL database
+- `flower`: Celery monitoring UI (`http://localhost:5555`)
+- `adminer`: PostgreSQL admin UI (`http://localhost:8080`)
+- `nginx`: NGINX server
+
+## Environment variables
+
+Docker will read environment variables in the following format from a file named `.env` in the `DIRT2_Webplatform` root directory (if the file exists):
 
 ```
 key=value
@@ -78,7 +149,7 @@ SQL_USER=postgres
 SQL_PASSWORD=some_password
 ```
 
-You can generate Django keys with:
+Note that `DJANGO_SECRET_KEY`, `DJANGO_FIELD_ENCRYPTION_KEY`, and `SQL_PASSWORD` are given dummy values above and should be configured appropriately in staging or production environments.
 
 ```python
 import random
@@ -88,113 +159,19 @@ import cryptography.fernet
 print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_key())
 ```
 
-## Production
+In addition to the environment variables listed above, the following is required to run `DIRT2_Webplatform` in staging or production:
 
-The production configuration is somewhat different:
+- `GRAYLOG_GELF_URI`: the endpoint to route log messages to (e.g., `udp://localhost:12201` if Graylog server is running on the same host as `DIRT2_Webplatform`; alternatively, adjacent containers can connect over the Docker network by referencing the network `DIRT2_Logging_graylog` network)
+- `NODE_ENV` should be set to `production`i
+- `DJANGO_DEBUG` should be set to `False`
+- `DJANGO_API_URL` should point to the host's IP or FQDN
+- key/password/secret fields should be configured appropriately.
 
-- Django runs behind Gunicorn which runs behind NGINX
-- NGINX serves static assets and acts as a reverse proxy
-- Postgres stores data in a persistent volume
-- Graylog consumes and stores container logs
-- Google Analytics are enabled via [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
-- [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
-
-Before running `DIRT2_Webplatform` in production, you must:
-
-1) Configure production-specific environment variables
-2) Build the Vue front end
-3) Collect static files and configure NGINX to serve them
-4) Run migrations
-5) Create a Django superuser, if one does not exist
-6) If deploying for the first time, Graylog must be configured to consume input from other containers once they have all been brought up
-
-Executing `dev/bootstrap.prod.sh` from the project root will run steps 2-5.
-
-### Environment variables
-
-In addition to the environment variables listed for development, the following are required to run `DIRT2_Webplatform` in production:
+The following variables are required only in production:
 
 - `VUE_APP_ANALYTICS_ID`: provided by Google Analytics
 - `VUE_APP_SENTRY_IO_KEY`: provided by Sentry
 - `VUE_APP_SENTRY_IO_PROJECT`: provided by Sentry
-
-Note also that `NODE_ENV` should be set to `production`, `DJANGO_DEBUG` to `False`, `DJANGO_API_URL` should point to the host's IP or FQDN, and various key/password/secret fields should be configured appropriately.
-
-### Configure Graylog endpoint
-
-`DIRT2_Webplatform` channels all logging to Graylog in production (see [`DIRT2_Logging`](https://github.com/Computational-Plant-Science/DIRT2_Logging)).
-
-Services in `docker-compose.prod.yml` should point to `http://<host>:12201`. If running `DIRT2_Logging` alongside `DIRT2_Webplatform`, the host is `DIRT2_Logging_graylog`. Substitute the appropriate hostname to connect from a different host.
-
-```yml
-  plantit:
-    ...
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://<host>:12201
-        tag: "plantit"
-    ...
-```
-
-### Vue
-
-Front-end code lives in `plantit/front_end`. It can be built from that directory with `npm run build`.
-
-### Static files
-
-Static files can be collected with:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py collectstatic --no-input
-```
-
-### Configure NGINX
-
-Set `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN, and make sure NGINX knows where to find the files to serve:
-
-```
-location /assets/ {
-  alias /opt/plantit/static/;
-}
-
-location /public/ {
-  alias /opt/plantit/public/;
-}
-```
-
-### Run migrations
-
-Run migrations with:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py migrate
-```
-
-### Create superuser
-
-Create a superuser (substitute your own values for username, password, and email address):
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/create-django-superuser.sh -u "<username>" -p "<password>" -e "<email address>"
-```
-
-### Running in production
-
-Containers can be brought up with:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
-```
-
-This will start the following:
-
-- `plantit`: Django web application (`http://<host>:80`)
-- `celery`: Celery worker
-- `rabbitmq`: RabbitMQ message broker
-- `postgres`: PostgreSQL database
-- `nginx`: NGINX server
 
 ## Workflows
 
@@ -226,7 +203,7 @@ ml Python/3.6.4-foss-2018a; /home/cotter/.local/bin/clusterside submit
 
 Note that on some types of ssh connections, installation does not put DIRT2_Clusterside in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
 
-#### Cluster login configuration
+### Cluster login configuration
 
 Plant IT supports both ssh password and public-key based
 login. To use public-key login, leave the Password field blank. Public-key login requires the private key and a known_hosts list to be available. Plant IT expects this data to be in the following two files:

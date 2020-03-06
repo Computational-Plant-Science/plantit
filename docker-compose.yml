@@ -1,12 +1,12 @@
 # Base docker-compose file.
 #
 # Usage:
-#  For Developer mode:
-#    docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+#   Development:
+#     docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 #
-#  For Production mode:
-#    docker-compose -f docker-compose.yml -f docker-compose.production.yml up
-#
+#   Production:
+#     docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
 version: '3.7'
 
 services:
@@ -57,9 +57,24 @@ services:
       retries: 2
       start_period: 20s
 
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    healthcheck:
+      test: curl -f http://localhost:8080/
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
+
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
+    ports:
+      - 15672:15672
     healthcheck:
       test: python -c "import urllib2; print urllib2.urlopen('http://localhost:15672').getcode();" | grep "200"
       interval: 20s
@@ -71,6 +86,7 @@ services:
     build:
       context: ./dev
       dockerfile: dockerfiles/plantit/Dockerfile
+    command: ["/code/dev/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "--loglevel=info"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -96,3 +112,18 @@ services:
       retries: 2
       start_period: 20s
 
+  flower:
+    image: mher/flower
+    volumes:
+      - .:/code
+    depends_on:
+      - celery
+    command: flower --broker=amqp://rabbitmq --port=5555
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:5555').getcode());" | grep "200"
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s

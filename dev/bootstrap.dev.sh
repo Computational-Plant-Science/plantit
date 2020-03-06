@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Bootstrapping [DEVELOPMENT] environment..."
+
 DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f docker-compose.dev.yml"
 
 echo "Bringing containers down..."

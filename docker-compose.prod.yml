@@ -1,16 +1,7 @@
-# Runs PlantIT in production mode. That is:
-#    1) Starts plantit by running gunicorn
-#    2) Runs the nginx webserver in a seprate container
-#    3) Connects gunicorn to nginx
-#    4) Saves database data to ./db
+# Runs `DIRT2_Webplatform` in production mode.
 #
-# For production the wsgi server is run on the plantit container with django
-# I chose to place the nginx server in its own container to:
-#    1) Allow me to use the prepackaged ngnix containers
-#    2) Not have it installed in the web container
-#    3) Allow easier changes of systems later (aka, use a different web server)
-#
-# See docker-compose.yml for usage.
+# See README for information and usage.
+
 version: '3.7'
 
 services:
@@ -24,7 +15,7 @@ services:
     logging:
       driver: gelf
       options:
-        gelf-address: udp://localhost:12201
+        gelf-address: ${GRAYLOG_GELF_URI}
         tag: "plantit"
 
   postgres:
@@ -36,22 +27,36 @@ services:
     logging:
       driver: gelf
       options:
-        gelf-address: udp://localhost:12201
+        gelf-address: ${GRAYLOG_GELF_URI}
         tag: "postgres"
+
+  adminer:
+    logging:
+      driver: gelf
+      options:
+        gelf-address: ${GRAYLOG_GELF_URI}
+        tag: "adminer"
 
   rabbitmq:
     logging:
       driver: gelf
       options:
-        gelf-address: udp://localhost:12201
+        gelf-address: ${GRAYLOG_GELF_URI}
         tag: "rabbitmq"
 
   celery:
     logging:
       driver: gelf
       options:
-        gelf-address: udp://localhost:12201
+        gelf-address: ${GRAYLOG_GELF_URI}
         tag: "celery"
+
+  flower:
+    logging:
+      driver: gelf
+      options:
+        gelf-address: ${GRAYLOG_GELF_URI}
+        tag: "flower"
 
   nginx:
     image: nginx
@@ -69,7 +74,7 @@ services:
     logging:
       driver: gelf
       options:
-        gelf-address: udp://localhost:12201
+        gelf-address: ${GRAYLOG_GELF_URI}
         tag: "ngnix"
 
 networks:
