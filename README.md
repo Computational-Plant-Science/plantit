@@ -6,7 +6,6 @@
 - [Documentation](#documentation)
 - [Installation](#installation)
   - [Development](#development)
-  - [Staging](#staging)
   - [Production](#production)
 - [Environment variables](#environment-variables)
 - [Workflows](#workflows)
