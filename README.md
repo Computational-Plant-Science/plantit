@@ -37,7 +37,7 @@ git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
 
 ### Development
 
-To set up a new (or restore a clean) development environment, run `dev/bootstrap.dev.sh` from the project root (you may need to use `chmod +x` first). This will:
+To set up a new (or restore a clean) development environment, run `dev/bootstrap.sh` from the project root (you may need to use `chmod +x` first). This will:
 
 - Stop and remove project containers and networks
 - If an `.env` file (to configure environment variables) does not exist, generate one with default values
@@ -129,7 +129,7 @@ key=value
 ...
 ```
 
-`bootstrap.dev.sh` will generate an `.env` file like the following if one does not exist:
+`bootstrap.sh` will generate an `.env` file like the following if one does not exist:
 
 ```
 VUE_APP_TITLE=plantit
