@@ -11,7 +11,7 @@
         <b-container>
             <b-row>
                 <b-col class="content-box">
-                    User Stuff
+                    <UserInfo></UserInfo>
                 </b-col>
                 <b-col md="8">
                     <b-row class="table-responsive content-box">
@@ -32,10 +32,12 @@
 import ListJobs from '@/components/ListJobs.vue';
 import ListCollections from '@/components/collections/ListCollections.vue';
 import PageNavigation from '@/components/PageNavigation.vue';
+import UserInfo from "../components/UserInfo";
 
 export default {
     name: 'Jobs',
     components: {
+        UserInfo,
         ListJobs,
         ListCollections,
         PageNavigation
