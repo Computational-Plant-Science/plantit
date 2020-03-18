@@ -3,12 +3,14 @@ from rest_framework import routers
 
 from .collection.views import CollectionViewSet, SampleViewSet
 from .job_manager.views import JobViewSet, download_results
+from .profile.views import ProfileViewSet
 from .auth.views import login_view, logout_view
 
 router = routers.DefaultRouter()
 router.register('jobs', JobViewSet)
 router.register('collections', CollectionViewSet)
 router.register('samples', SampleViewSet)
+router.register('profiles', ProfileViewSet)
 urlpatterns = [
     url('files/', include("apis.file_manager.urls")),
     url('workflows/', include("apis.workflows.urls")),
