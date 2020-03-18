@@ -121,11 +121,16 @@ export default {
                         label: 'State',
                         formatter: value => {
                             switch (value) {
-                                case 1: return 'Completed';
-                                case 2: return 'Failed';
-                                case 3: return 'OK';
-                                case 4: return 'Warning';
-                                case 5: return 'Created';
+                                case 1:
+                                    return 'Completed';
+                                case 2:
+                                    return 'Failed';
+                                case 3:
+                                    return 'OK';
+                                case 4:
+                                    return 'Warning';
+                                case 5:
+                                    return 'Created';
                             }
                         }
                     },

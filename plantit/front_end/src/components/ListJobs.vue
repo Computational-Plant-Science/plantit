@@ -152,7 +152,7 @@ export default {
                     key: 'date_created',
                     sortable: true,
                     formatter: value => {
-                      return moment(value).format('MM/DD/YY HH:mm')
+                        return moment(value).format('MM/DD/YY HH:mm');
                     }
                 },
                 {

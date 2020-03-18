@@ -5,8 +5,12 @@
         }}</label>
         <b-form-input
             class="mb-2 mr-sm-2 mb-sm-0"
-            v-if="field.type == 'int' || field.type == 'float' || field.type == 'str'"
-            :type=" (field.type == 'str') ? 'text' : 'number'"
+            v-if="
+                field.type == 'int' ||
+                    field.type == 'float' ||
+                    field.type == 'str'
+            "
+            :type="field.type == 'str' ? 'text' : 'number'"
             :step="numberStep"
             v-model="value"
         >

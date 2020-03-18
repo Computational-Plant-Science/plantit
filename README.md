@@ -65,6 +65,10 @@ To bypass CAS login and log directly into Django as superuser, browse to `http:/
 
 The default Django interface is at `http://localhost/admin/`.
 
+#### Tests
+
+Tests can be run with `docker-compose -f docker-compose.yml -f docker-compose.dev.yml run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py test`.
+
 ### Production
 
 The production configurations look somewhat different than development:
