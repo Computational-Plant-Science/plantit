@@ -3,7 +3,7 @@ from rest_framework import routers
 
 from .collection.views import CollectionViewSet, SampleViewSet
 from .job_manager.views import JobViewSet, download_results
-from .profile.views import ProfileViewSet
+from .user.views import ProfileViewSet
 from .auth.views import login_view, logout_view
 
 router = routers.DefaultRouter()

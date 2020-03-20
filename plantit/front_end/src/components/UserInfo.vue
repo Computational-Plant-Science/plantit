@@ -1,7 +1,23 @@
 <template>
-    <b-container>
-        {{ this.info }}
-    </b-container>
+        <div class="w-100 p-2">
+          <b-card
+            :title="this.info['username']"
+            img-src="https://picsum.photos/600/300/?image=25"
+            img-alt="Image"
+            img-top
+            tag="profile"
+            style="max-width: 20rem;">
+              <hr>
+            <b-card-text>
+                <p><b>Email Address:</b> {{ this.info['email'] }}</p>
+                <p><b>First Name:</b> {{ this.info['first_name'] }}</p>
+                <p><b>Last Name:</b> {{ this.info['last_name'] }}</p>
+                <p><b>City:</b> {{ this.info['city'] }}</p>
+                <p><b>Country:</b> {{ this.info['country'] }}</p>
+                <p><b>Affiliation:</b> {{ this.info['affiliation'] }}</p>
+            </b-card-text>
+          </b-card>
+            </div>
 </template>
 
 <script>

@@ -9,21 +9,21 @@
         </PageNavigation>
 
         <b-container>
-            <b-row>
-                <b-col class="content-box">
-                    <UserInfo></UserInfo>
+            <b-row class="justify-content-md-center">
+                <b-col md="auto">
+                    <b-row>
+                        <UserInfo></UserInfo>
+                    </b-row>
                 </b-col>
-                <b-col md="8">
-                    <b-row class="table-responsive content-box">
-                        <h2 class="text-center">Recent Jobs</h2>
+                <b-col>
+                    <b-row>
                         <ListJobs per-page="4"></ListJobs>
                     </b-row>
-                    <b-row class="table-responsive content-box">
-                        <h2 class="text-center">Recent Collections</h2>
+                    <b-row>
                         <ListCollections per-page="4"></ListCollections>
                     </b-row>
                 </b-col>
-            </b-row>
+                </b-row>
         </b-container>
     </div>
 </template>

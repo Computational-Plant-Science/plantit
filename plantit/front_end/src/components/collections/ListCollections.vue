@@ -1,6 +1,9 @@
 <template>
-    <div>
-        <b-container>
+    <div class="w-100 p-2">
+        <b-card
+            title="Recent Collections"
+            tag="jobs">
+            <hr>
             <b-row v-if="filterable">
                 <b-col md="8" class="my-1">
                     <b-form-group label-cols-sm="2" label="Filter">
@@ -32,6 +35,7 @@
                 :borderless="true"
                 select-mode="single"
                 :filter="filter"
+                class="table-responsive"
                 @row-selected="rowSelected"
             >
                 <template slot="analyze" slot-scope="data">
@@ -74,7 +78,7 @@
                     </b-button>
                 </template>
             </b-table>
-        </b-container>
+        </b-card>
     </div>
 </template>
 
