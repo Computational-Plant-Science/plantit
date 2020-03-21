@@ -3,60 +3,62 @@
         <b-container>
             <b-row class="justify-content-md-center">
                 <b-col>
-                    <b-row>
-                        <b-col>
-                            <h4>Collection
-                                <b-badge class="collection-id">{{pk}}</b-badge>
-                                <b-badge class="collection-name">{{ this.collection.name }}</b-badge>
-                            </h4>
-                        </b-col>
-                        <b-col md="auto">
-                            <b-button
-                                    id="edit-btn"
-                                    @click="$bvModal.show('editCollectionMeta')"
-                                    class="plantit-btn"
-                                    v-b-tooltip.hover
-                                    title="Edit collection name, description, and metadata.">
-                                <i class="far fa-edit"></i>
-                            </b-button>
-                        </b-col>
-                    </b-row>
-                    <b-row>
-                        <b-col>
-                            <b-card>
-                                <b-card-text>
-                                    <b>Description</b>
-                                    <br>
-                                    <br>
-                                    {{ collection.description }}
-                                    <br>
-                                    <br>
-                                    <b>Metadata</b>
-                                    <br>
-                                    <br>
-                                    <b-table
-                                            show-empty
-                                            selectable
-                                            hover
-                                            striped responsive="sm"
-                                            :items="collection.metadata"
-                                            :fields="fields"
-                                            :borderless="true"
-                                            select-mode="single"
-                                            class="table-responsive"
-                                    ></b-table>
-                                </b-card-text>
-                            </b-card>
-                        </b-col>
-                    </b-row>
+                    <b-card>
+                        <b-row>
+                            <b-col>
+                                <h4>Collection
+                                    <b-badge class="collection-id">{{pk}}</b-badge>
+                                    <b-badge class="collection-name">{{ this.collection.name }}</b-badge>
+                                </h4>
+                            </b-col>
+                            <b-col md="auto">
+                                <b-button
+                                        id="edit-btn"
+                                        @click="$bvModal.show('editCollectionMeta')"
+                                        class="plantit-btn"
+                                        v-b-tooltip.hover
+                                        title="Edit collection name, description, and metadata.">
+                                    <i class="far fa-edit"></i>
+                                </b-button>
+                            </b-col>
+                                                            <hr>
+
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                <b-card class="m-2" sub-title="Description">
+                                    <b-card-text>
+                                        {{ collection.description }}
+                                    </b-card-text>
+                                </b-card>
+                                <b-card class="m-2" sub-title="Metadata">
+                                    <b-card-text>
+                                        <b-table
+                                                show-empty
+                                                selectable
+                                                hover
+                                                striped responsive="sm"
+                                                :items="collection.metadata"
+                                                :fields="fields"
+                                                :borderless="true"
+                                                select-mode="single"
+                                                class="table-responsive"
+                                        ></b-table>
+                                    </b-card-text>
+                                </b-card>
+                            </b-col>
+                        </b-row>
+                    </b-card>
                 </b-col>
                 <b-col>
-                    <b-spinner
-                            v-if="this.collection.sample_set === undefined"
-                            label="Loading..."
-                    >
-                    </b-spinner>
-                    <span v-else>
+                    <b-card>
+                        <h4>Samples</h4>
+                        <hr>
+                        <b-spinner
+                                v-if="this.collection.sample_set === undefined"
+                                label="Loading...">
+                        </b-spinner>
+                        <span v-else>
                         <span v-if="this.collection.sample_set == 0">
                             Add files to the collection by clicking
                             <b-link
@@ -74,6 +76,7 @@
                                 :samples="collection.sample_set"
                         ></CollectionThumbnails>
                     </span>
+                    </b-card>
                 </b-col>
             </b-row>
         </b-container>

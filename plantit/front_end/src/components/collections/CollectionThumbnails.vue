@@ -5,8 +5,7 @@
                 id="thumbnails"
                 class="p-2 thumbnail"
                 v-for="(sample, idx) in displayedSamples"
-                :key="sample.pk"
-            >
+                :key="sample.pk">
                 <div
                     style="position: relative; min-width: 100px"
                     @mouseover="selectedRow(idx)"
@@ -25,8 +24,7 @@
                         class="plantit-btn thumbnail-btn"
                         v-b-tooltip.hover
                         title="Edit sample name and metadata."
-                        @click="$bvModal.show('editSampleMeta')"
-                    >
+                        @click="$bvModal.show('editSampleMeta')">
                         <i class="far fa-edit"></i>
                     </b-button>
 
