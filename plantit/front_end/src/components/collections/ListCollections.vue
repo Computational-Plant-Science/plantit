@@ -5,18 +5,12 @@
                 <b-col>
                     <h4>Collections</h4>
                 </b-col>
-                <b-col md="auto">
-                    <b-button variant="primary" to="collection/new">New</b-button>
-                </b-col>
-            </b-row>
-            <hr>
-            <b-row v-if="filterable">
-                <b-col md="8" class="my-1">
-                    <b-form-group label-cols-sm="2" label="Filter">
+                <b-col v-if="filterable">
+                    <b-form-group label-cols-sm="2">
                         <b-input-group>
                             <b-form-input
                                     v-model="filter"
-                                    placeholder="Type to Filter"
+                                    placeholder="Filter..."
                             ></b-form-input>
                             <b-input-group-append>
                                 <b-button
@@ -29,8 +23,11 @@
                         </b-input-group>
                     </b-form-group>
                 </b-col>
+                <b-col md="auto">
+                    <b-button variant="primary" to="collection/new">New</b-button>
+                </b-col>
             </b-row>
-
+            <hr>
             <b-table
                     selectable
                     hover

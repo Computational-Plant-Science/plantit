@@ -10,10 +10,10 @@
                 </b-col>
                 <b-col>
                     <b-row>
-                        <ListCollections per-page="4"></ListCollections>
+                        <ListCollections filterable="true" per-page="4"></ListCollections>
                     </b-row>
                     <b-row>
-                        <ListJobs per-page="4"></ListJobs>
+                        <ListJobs filterable="true" per-page="4"></ListJobs>
                     </b-row>
                 </b-col>
             </b-row>
