@@ -14,7 +14,6 @@
             <b-collapse class="border-bottom" is-nav>
                 <b-navbar-nav>
                     <b-nav-item to="/">Home</b-nav-item>
-                    <b-nav-item to="about">About</b-nav-item>
                     <b-nav-item>Contact</b-nav-item>
                     <b-nav-item>Public Datasets</b-nav-item>
                     <b-nav-item>FAQ</b-nav-item>
@@ -22,7 +21,7 @@
                     <b-nav-item v-else href="/login/?next=/user/dashboard">Login</b-nav-item>
                 </b-navbar-nav>
                 <b-navbar-nav class="ml-auto">
-                    <b-nav-item class="ml-auto" to="/user/dashboard">Dashboard</b-nav-item>
+                    <b-nav-item class="ml-auto" v-bind:class="{ dashboard:(routeName === 'dashboard')}" to="/user/dashboard">Dashboard</b-nav-item>
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
@@ -37,6 +36,9 @@
         computed: {
             isLoggedIn() {
                 return Auth.isLoggedIn();
+            },
+            routeName() {
+                return this.$route.name;
             }
         }
     };

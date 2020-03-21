@@ -1,10 +1,14 @@
 <template>
-    <div class="home">
-        <HomeAbout></HomeAbout>
-        <HomeResearchers></HomeResearchers>
-        <HomeDevelopers></HomeDevelopers>
-        <HomeSponsors id="HomeSponsors"></HomeSponsors>
-    </div>
+    <b-container fluid>
+        <b-row no-gutters="true">
+            <b-col>
+                <HomeAbout></HomeAbout>
+                <HomeResearchers></HomeResearchers>
+                <HomeDevelopers></HomeDevelopers>
+                <HomeSponsors></HomeSponsors>
+            </b-col>
+        </b-row>
+    </b-container>
 </template>
 
 <script>
@@ -28,9 +32,5 @@ export default {
 <style>
 html {
     scroll-behavior: smooth;
-}
-
-#HomeSponsors {
-    border-top: 3px solid black;
 }
 </style>

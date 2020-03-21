@@ -6,29 +6,22 @@
                     <b-img
                         :src="require('@/assets/logo.png')"
                         width="100px"
-                        alt="Plant IT"
-                    ></b-img>
-                    <h1>PLANT IT</h1>
-                    <b-jumbotron id="message">
-                        Plant IT empowers computational researchers to make
-                        their algorithms available to a broad community, and
-                        provides biological researchers with an easy-to-use
-                        interface to apply the algorithms to their own data.
-                    </b-jumbotron>
+                        alt="Plant IT"></b-img>
+                    <h1>Plant IT</h1>
                 </b-col>
             </b-row>
-            <b-row>
-                <b-col>
-                    <b-nav class="mx-auto " id="main-nav">
-                        <b-navbar toggleable="lg" class="mx-auto">
-                            <b-nav-item>Contact</b-nav-item>
-                            <b-nav-item>Datasets</b-nav-item>
-                            <b-nav-item>FAQ</b-nav-item>
-                            <b-nav-item href="/user/dashboard"
-                                >Login</b-nav-item
-                            >
+            <b-row align-v="center">
+                <b-col align="center">
+                        <b-navbar toggleable="sm">
+                            <b-collapse class="justify-content-center" is-nav>
+                                <b-navbar-nav align="center">
+                                    <b-nav-item>Contact</b-nav-item>
+                                    <b-nav-item>Datasets</b-nav-item>
+                                    <b-nav-item>FAQ</b-nav-item>
+                                    <b-nav-item href="/user/dashboard">Login</b-nav-item>
+                                </b-navbar-nav>
+                            </b-collapse>
                         </b-navbar>
-                    </b-nav>
                 </b-col>
             </b-row>
         </b-container>
@@ -56,6 +49,8 @@ export default {
 
 #background
   background-image: url('../../assets/frontpage/index_bg.png')
+  background-blend-mode: overlay;
+  background-color: hsla(0,0%,100%,0.80)
   background-repeat: no-repeat
   background-position: bottom
   background-size: 100%
@@ -63,6 +58,9 @@ export default {
   white-space: nowrap
   position: relative
   text-align: center
+
+#background:after
+    opacity: 0.5
 
 #main
   text-align: center

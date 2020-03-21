@@ -2,11 +2,11 @@
         <div class="w-100 p-2">
           <b-card
             :title="this.info['username']"
-            img-src="https://picsum.photos/600/300/?image=25"
+            :img-src="require('../assets/icons/default_user.png')"
             img-alt="Image"
             img-top
             tag="profile"
-            style="max-width: 20rem;">
+            style="max-width: 15rem;">
               <hr>
             <b-card-text>
                 <p><b>Email Address:</b> {{ this.info['email'] }}</p>

@@ -1,5 +1,5 @@
 <template>
-    <div id="home-about-researchers">
+    <div>
         <b-container fluid class="m-0 p-4">
             <b-row>
                 <b-col>
@@ -26,9 +26,6 @@ export default {
 
 <style scoped lang="sass">
 @import '../../scss/_colors.sass'
-
-#home-about-researchers
-  background-color: $color-box-background
 
 h1
   color: $color-highlight
