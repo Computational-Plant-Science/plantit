@@ -3,8 +3,8 @@
         <b-row no-gutters="true">
             <b-col>
                 <HomeAbout></HomeAbout>
-                <HomeResearchers></HomeResearchers>
                 <HomeDevelopers></HomeDevelopers>
+                <HomeResearchers></HomeResearchers>
                 <HomeSponsors></HomeSponsors>
             </b-col>
         </b-row>

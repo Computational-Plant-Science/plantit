@@ -17,7 +17,6 @@
         name: 'NewCollection',
         components: {
             NewCollectionForm,
-            PageNavigation
         }
     };
 </script>

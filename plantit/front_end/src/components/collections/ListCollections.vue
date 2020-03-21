@@ -138,6 +138,10 @@
                 sortDesc: true,
                 fields: [
                     {
+                        key: 'pk',
+                        sortable: true
+                    },
+                    {
                         key: 'name',
                         sortable: true
                     },

@@ -1,20 +1,15 @@
 <template>
     <div>
-        <b-container fluid class="m-0 p-4">
-            <b-row>
-                <b-col>
-                    <h1>RESEARCHERS</h1>
-                    <h4>You focus on the data.</h4>
-                    <h4>We take care of everything else.</h4>
-                    <b-img
-                        center
-                        fluid
-                        :src="require('@/assets/frontpage/icons/hex1.png')"
-                        alt="Plant IT"
-                    ></b-img>
-                </b-col>
-            </b-row>
-        </b-container>
+        <b-card title="Explore...">
+            <b-card-text>
+                        ...data and reproduce analyses without wrangling infrastructure.
+                        <b-img
+                            center
+                            fluid
+                            :src="require('@/assets/frontpage/icons/hex1.png')"
+                            alt="Plant IT"></b-img>
+                </b-card-text>
+        </b-card>
     </div>
 </template>
 

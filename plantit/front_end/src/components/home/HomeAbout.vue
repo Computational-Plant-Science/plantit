@@ -16,9 +16,8 @@
                             <b-collapse class="justify-content-center" is-nav>
                                 <b-navbar-nav align="center">
                                     <b-nav-item>Contact</b-nav-item>
-                                    <b-nav-item>Datasets</b-nav-item>
                                     <b-nav-item>FAQ</b-nav-item>
-                                    <b-nav-item href="/user/dashboard">Login</b-nav-item>
+                                    <b-nav-item href="/user/dashboard" class="bold">Dashboard</b-nav-item>
                                 </b-navbar-nav>
                             </b-collapse>
                         </b-navbar>

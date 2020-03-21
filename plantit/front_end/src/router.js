@@ -42,17 +42,6 @@ let router = new Router({
             }
         },
         {
-            path: '/user/collections',
-            name: 'collections',
-            component: () =>
-                import(
-                    /* webpackChunkName: "about" */ './views/Collections.vue'
-                ),
-            meta: {
-                requiresAuth: true
-            }
-        },
-        {
             path: '/user/collection',
             name: 'collection',
             component: () =>

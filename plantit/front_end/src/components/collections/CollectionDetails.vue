@@ -9,9 +9,9 @@
         >
             <i class="far fa-edit"></i>
         </b-button>
-        {{ collection.name }}
+        <b>Name:</b> {{ collection.name }}
         <br />
-        {{ collection.description }}
+        <b>Description:</b> {{ collection.description }}
         <br />
         <table width="100%">
             <tr

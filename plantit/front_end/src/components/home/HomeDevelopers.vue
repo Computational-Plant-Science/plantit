@@ -1,117 +1,70 @@
 <template>
-    <b-container fluid class="m-0 p-4 center-container">
-        <h1>DEVELOPERS</h1>
-        <h4>We have made it so easy for you.</h4>
-
-        <b-row class="m-5">
-            <b-col lg="6">
-                <b-row class="mb-5">
-                    <b-col md="3" class="text-center">
-                        <b-img
-                            :src="
+    <div>
+        <b-card title="Develop...">
+            <b-card-text>
+                ...against a powerful PaaS (<i>Phenotyping</i>-as-a-Service) data science platform. Plug in your storage and
+                compute resources or share time on the Computational Plant Science lab's own infrastructure free of charge.
+                <b-container fluid class="m-0 p-4">
+                    <b-row class="mb-5">
+                        <b-col md="auto" class="text-center">
+                            <b-img
+                                    :src="
                                 require('../../assets/frontpage/icons/algorithm.png')
                             "
-                            width="100px"
-                            alt="Algorithms"
-                        ></b-img>
-                    </b-col>
-                    <b-col>
-                        <h3>Focus on your algorithm.</h3>
-                        Plant IT automatically parallelizes the analysis across
-                        all samples, allowing you to focus on your algorithms,
-                        not logistics.
-                    </b-col>
-                </b-row>
-
-                <b-row class="mb-5">
-                    <b-col md="3" class="text-center">
-                        <b-img
-                            :src="
+                                    width="100px"
+                                    alt="Algorithms"
+                            ></b-img>
+                        </b-col>
+                        <b-col>
+                            <b-card title="Workflow orchestration">
+                                <b-card-text>
+                                    Bootstrap your analyses with the following batteries-included frameworks:
+                                    <br>
+                                    <br>
+                                    <b-list-group>
+                                        <b-list-group-item>CookieCutter</b-list-group-item>
+                                        <b-list-group-item>Dagster</b-list-group-item>
+                                    </b-list-group>
+                                    <br>
+                                    Or build bespoke workflows: pipelines run in Singularity containers over
+                                    which you have full control. If your code runs on Linux, it will run on
+                                    PlantIT!
+                                </b-card-text>
+                            </b-card>
+                        </b-col>
+                        <b-col md="auto" class="text-center">
+                            <b-img
+                                    :src="
                                 require('../../assets/frontpage/icons/UI.png')
                             "
-                            width="100px"
-                            alt="Algorithms"
-                        ></b-img>
-                    </b-col>
-                    <b-col>
-                        <h3>UI included.</h3>
-                        Plant IT provides a UI to help users run the algorithms
-                        and set algorithm parameters. Parameters are
-                        automatically validated and passed to your algorithm.
-                    </b-col>
-                </b-row>
-
-                <b-row>
-                    <b-col md="3" class="text-center">
-                        <b-img
-                            :src="
-                                require('../../assets/frontpage/icons/code.png')
-                            "
-                            width="100px"
-                            alt="Algorithms"
-                        ></b-img>
-                    </b-col>
-                    <b-col>
-                        <h3>No need to rewrite your existing code.</h3>
-                        You can import libraries and run the analysis as python
-                        code inside the PlantIT framework, or call an external
-                        program.
-                    </b-col>
-                </b-row>
-            </b-col>
-
-            <b-col class="mt-5">
-                <b-row class="mb-5">
-                    <b-col md="3" class="text-center">
-                        <b-img
-                            :src="
-                                require('../../assets/frontpage/icons/format.png')
-                            "
-                            width="100%"
-                            alt="Algorithms"
-                        ></b-img>
-                    </b-col>
-                    <b-col>
-                        <h3>Autoformatted results.</h3>
-                        You choose what data to return to the user, then Plant
-                        IT automatically collates the results across all
-                        samples. Key-value pairs are return as a CSV, output
-                        files are organized by sample.
-                    </b-col>
-                </b-row>
-
-                <b-row>
-                    <b-col md="3" class="text-center">
-                        <b-img
-                            :src="
-                                require('../../assets/frontpage/icons/documentation.png')
-                            "
-                            width="100%"
-                            alt="Algorithms"
-                        ></b-img>
-                    </b-col>
-                    <b-col>
-                        <h3>You control the enviroment.</h3>
-                        You do not have to worry about if the system your code
-                        is running on has all the right libraries. All your
-                        algorithm code is run inside a Singularity container you
-                        provide.
-                    </b-col>
-                </b-row>
-            </b-col>
-        </b-row>
-    </b-container>
+                                    width="100px"
+                                    alt="Algorithms"
+                            ></b-img>
+                        </b-col>
+                        <b-col>
+                            <b-card title="Execution and monitoring">
+                                <b-card-text>
+                                    Schedule pipelines or run them in real time from the web portal or RESTful
+                                    API.
+                                </b-card-text>
+                            </b-card>
+                        </b-col>
+                    </b-row>
+                </b-container>
+            </b-card-text>
+        </b-card>
+    </div>
 </template>
 
 <script>
-export default {
-    name: 'HomeDevelopers'
-};
+    export default {
+        name: 'HomeDevelopers'
+    };
 </script>
 
 <style scoped lang="sass">
-@import '../../scss/_colors.sass'
+    @import '../../scss/_colors.sass'
 
-h1
-  color: $color-highlight
+    h1
+        color: $color-highlight
 </style>
