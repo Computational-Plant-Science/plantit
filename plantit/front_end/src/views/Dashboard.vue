@@ -23,7 +23,6 @@
 <script>
     import ListJobs from '@/components/ListJobs.vue';
     import ListCollections from '@/components/collections/ListCollections.vue';
-    import PageNavigation from '@/components/PageNavigation.vue';
     import UserInfo from "../components/UserInfo";
 
     export default {
@@ -32,7 +31,6 @@
             UserInfo,
             ListJobs,
             ListCollections,
-            PageNavigation
         },
         data() {
             return {};

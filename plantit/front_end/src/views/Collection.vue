@@ -3,19 +3,60 @@
         <b-container>
             <b-row class="justify-content-md-center">
                 <b-col>
-                    <h4>Collection <u style="color: #669800">{{pk}}</u></h4>
-                        <hr>
-                        <CollectionDetails
-                                :collection="collection"
-                        ></CollectionDetails>
+                    <b-row>
+                        <b-col>
+                            <h4>Collection
+                                <b-badge class="collection-id">{{pk}}</b-badge>
+                                <b-badge class="collection-name">{{ this.collection.name }}</b-badge>
+                            </h4>
+                        </b-col>
+                        <b-col md="auto">
+                            <b-button
+                                    id="edit-btn"
+                                    @click="$bvModal.show('editCollectionMeta')"
+                                    class="plantit-btn"
+                                    v-b-tooltip.hover
+                                    title="Edit collection name, description, and metadata.">
+                                <i class="far fa-edit"></i>
+                            </b-button>
+                        </b-col>
+                    </b-row>
+                    <b-row>
+                        <b-col>
+                            <b-card>
+                                <b-card-text>
+                                    <b>Description</b>
+                                    <br>
+                                    <br>
+                                    {{ collection.description }}
+                                    <br>
+                                    <br>
+                                    <b>Metadata</b>
+                                    <br>
+                                    <br>
+                                    <b-table
+                                            show-empty
+                                            selectable
+                                            hover
+                                            striped responsive="sm"
+                                            :items="collection.metadata"
+                                            :fields="fields"
+                                            :borderless="true"
+                                            select-mode="single"
+                                            class="table-responsive"
+                                    ></b-table>
+                                </b-card-text>
+                            </b-card>
+                        </b-col>
+                    </b-row>
                 </b-col>
                 <b-col>
-                        <b-spinner
-                                v-if="this.collection.sample_set === undefined"
-                                label="Loading..."
-                        >
-                        </b-spinner>
-                        <span v-else>
+                    <b-spinner
+                            v-if="this.collection.sample_set === undefined"
+                            label="Loading..."
+                    >
+                    </b-spinner>
+                    <span v-else>
                         <span v-if="this.collection.sample_set == 0">
                             Add files to the collection by clicking
                             <b-link
@@ -36,22 +77,30 @@
                 </b-col>
             </b-row>
         </b-container>
+        <EditMetadataModal
+                modal-id="editCollectionMeta"
+                :metadata="collection.metadata"
+                :name="collection.name"
+                :description="collection.description"
+                @save="saveDetails"
+                @cancel="cancelEdit"
+        >
+        </EditMetadataModal>
+
     </div>
 </template>
 
 <script>
     import router from '../router';
-    import PageNavigation from '@/components/PageNavigation.vue';
     import CollectionThumbnails from '@/components/collections/CollectionThumbnails.vue';
-    import CollectionDetails from '@/components/collections/CollectionDetails.vue';
     import CollectionApi from '@/services/apiV1/CollectionManager';
+    import EditMetadataModal from '@/components/collections/EditMetadataModal';
 
     export default {
         name: 'Collection',
         components: {
-            PageNavigation,
             CollectionThumbnails,
-            CollectionDetails
+            EditMetadataModal
         },
         props: {
             pk: {
@@ -63,7 +112,16 @@
             return {
                 collection: {
                     metadata: [] //Must be defined for EditMetadata component.
-                }
+                },
+                fields: [
+                    {
+                        key: 'name',
+                        sortable: true
+                    },
+                    {
+                        key: 'value',
+                    }
+                ]
             };
         },
         mounted: function () {
@@ -103,6 +161,25 @@
                             );
                         }
                     });
+            },
+            // eslint-disable-next-line no-unused-vars
+            saveDetails(name, description, metadata) {
+                CollectionApi.updateMetadata(
+                    name,
+                    description,
+                    this.collection.metadata,
+                    this.collection.pk
+                ).then(() => {
+                    this.collection.description = description;
+                    this.collection.name = name;
+                });
+            },
+            cancelEdit() {
+                CollectionApi.getCollection(this.collection.pk).then(collection => {
+                    this.collection.metadata = collection.metadata;
+                    this.collection.name = collection.name;
+                    this.collection.description = collection.description;
+                });
             }
         }
     };

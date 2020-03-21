@@ -29,46 +29,43 @@
             </b-row>
             <hr>
             <b-table
+                    show-empty
                     selectable
                     hover
-                    :sort-by.sync="sortBy"
-                    :sort-desc.sync="sortDesc"
                     :items="items"
                     :fields="fields"
+                    striped responsive="sm"
                     :per-page="perPage"
                     :borderless="true"
                     select-mode="single"
                     :filter="filter"
                     class="table-responsive"
                     @row-selected="rowSelected"
-            >
-                <template slot="analyze" slot-scope="data">
-                    <b-link
-                            :to="{
-                            name: 'analyze',
-                            query: { pk: data.item.pk }
-                        }"
-                    >
+                    :sort-by.sync="sortBy"
+                    :sort-desc.sync="sortDesc">
+                <template v-slot:cell(actions)="row">
+                    <b-button size="sm" @click="view(row.item.pk)" class="mr-2 plantit-btn">
+                        View
+                    </b-button>
+                    <b-button size="sm" @click="analyze(row.item.pk)" class="mr-2 plantit-btn">
                         Analyze
-                    </b-link>
+                    </b-button>
                 </template>
+
                 <template slot="pinned" slot-scope="data">
                     <b-button
                             size="sm"
                             @click="togglePin(data.item.pk, data.item)"
-                            class="plantit-btn"
-                    >
+                            class="plantit-btn">
                         <b-img
                                 v-if="data.item.pinned"
                                 :src="require('@/assets/icons/pin icons/pin2.svg')"
-                                width="30px"
-                        >
+                                width="30px">
                         </b-img>
                         <b-img
                                 v-else
                                 :src="require('@/assets/icons/pin icons/pin.svg')"
-                                width="30px"
-                        >
+                                width="30px">
                         </b-img>
                     </b-button>
                 </template>
@@ -129,7 +126,13 @@
                             });
                         }
                     });
-            }
+            },
+            view(pk) {
+                router.push({name: 'collection', query: {pk: pk}});
+            },
+            analyze(pk) {
+                router.push({name: 'analyze', query: {pk: pk}});
+            },
         },
         data() {
             return {
@@ -139,23 +142,20 @@
                 fields: [
                     {
                         key: 'pk',
-                        sortable: true
+                        label: 'Id',
+                        sortable: true,
                     },
                     {
                         key: 'name',
                         sortable: true
                     },
                     {
-                        key: 'analyze',
-                        label: ''
-                    },
-                    {
-                        key: 'tools',
-                        label: ''
-                    },
-                    {
                         key: 'pinned',
                         sortable: true
+                    },
+                    {
+                        key: 'actions',
+                        label: 'Actions'
                     }
                 ],
                 items: []
