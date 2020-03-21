@@ -4,7 +4,6 @@
             <b-col>
                 <HomeAbout></HomeAbout>
                 <HomeDevelopers></HomeDevelopers>
-                <HomeResearchers></HomeResearchers>
                 <HomeSponsors></HomeSponsors>
             </b-col>
         </b-row>
@@ -14,7 +13,6 @@
 <script>
 // @ is an alias to /src
 import HomeAbout from '@/components/home/HomeAbout.vue';
-import HomeResearchers from '@/components/home/HomeResearchers.vue';
 import HomeDevelopers from '@/components/home/HomeDevelopers.vue';
 import HomeSponsors from '@/components/home/HomeSponsors.vue';
 
@@ -22,7 +20,6 @@ export default {
     name: 'home',
     components: {
         HomeAbout,
-        HomeResearchers,
         HomeDevelopers,
         HomeSponsors
     }

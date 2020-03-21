@@ -1,11 +1,10 @@
 <template>
     <div>
-        <b-card title="Develop...">
+        <b-card title="What is PlantIT?">
             <b-card-text>
-                ...against a powerful PaaS (<i>Phenotyping</i>-as-a-Service) data science platform. Plug in your storage and
-                compute resources or share time on the Computational Plant Science lab's own infrastructure free of charge.
-                <b-container fluid class="m-0 p-4">
-                    <b-row class="mb-5">
+                PlantIT is a PaaS (<b>Phenotyping</b>-as-a-Service) data science platform for computational plant biologists.
+                <b-container fluid class="p-2">
+                    <b-row class="mt-4">
                         <b-col md="auto" class="text-center">
                             <b-img
                                     :src="
@@ -16,9 +15,28 @@
                             ></b-img>
                         </b-col>
                         <b-col>
+                            <b-card title="Batteries-included (but not required)">
+                                <b-card-text>
+                                    Plug in your storage and compute resources or share time on the Computational Plant
+                                    Science lab's own infrastructure, free of charge.
+                                </b-card-text>
+                            </b-card>
+                        </b-col>
+                    </b-row>
+                    <b-row class="mt-4">
+                        <b-col md="auto" class="text-center">
+                            <b-img
+                                    :src="
+                                require('../../assets/frontpage/icons/code.png')
+                            "
+                                    width="100px"
+                                    alt="Algorithms"
+                            ></b-img>
+                        </b-col>
+                        <b-col>
                             <b-card title="Workflow orchestration">
                                 <b-card-text>
-                                    Bootstrap your analyses with the following batteries-included frameworks:
+                                    Develop your analyses with the following supported frameworks:
                                     <br>
                                     <br>
                                     <b-list-group>
@@ -48,6 +66,15 @@
                                     API.
                                 </b-card-text>
                             </b-card>
+                        </b-col>
+                    </b-row>
+                    <b-row>
+                        <b-col>
+                            <b-img
+                            center
+                            fluid
+                            :src="require('@/assets/frontpage/icons/hex1.png')"
+                            alt="Plant IT"></b-img>
                         </b-col>
                     </b-row>
                 </b-container>

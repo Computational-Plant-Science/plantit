@@ -1,7 +1,7 @@
 <template>
     <b-modal
         :id="modalId"
-        title="Edit Metadata"
+        title="Edit Details"
         ok-title="Save"
         @cancel="cancel"
         @close="cancel"
