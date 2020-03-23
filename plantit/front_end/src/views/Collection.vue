@@ -3,13 +3,18 @@
         <b-container>
             <b-row class="justify-content-md-center">
                 <b-col>
-                    <b-card>
+                    <h3>Collection
+                        <b-badge class="collection-id">{{pk}}</b-badge>
+                        <b-badge class="collection-name">{{ this.collection.name }}</b-badge>
+                    </h3>
+                </b-col>
+            </b-row>
+            <b-row class="justify-content-md-center">
+                <b-col>
+                    <b-card class="mt-2 mb-2">
                         <b-row>
                             <b-col>
-                                <h4>Collection
-                                    <b-badge class="collection-id">{{pk}}</b-badge>
-                                    <b-badge class="collection-name">{{ this.collection.name }}</b-badge>
-                                </h4>
+                                <h4>Details</h4>
                             </b-col>
                             <b-col md="auto">
                                 <b-button
@@ -21,37 +26,39 @@
                                     <i class="far fa-edit"></i>
                                 </b-button>
                             </b-col>
-                                                            <hr>
-
                         </b-row>
+                        <hr>
                         <b-row>
                             <b-col>
-                                <b-card class="m-2" sub-title="Description">
-                                    <b-card-text>
-                                        {{ collection.description }}
-                                    </b-card-text>
-                                </b-card>
-                                <b-card class="m-2" sub-title="Metadata">
-                                    <b-card-text>
+                                <b-form class="form-horizontal">
+                                    <b-form-group label="Description:" class="lb">
+                                        <b-form-textarea
+                                                disabled
+                                                :placeholder="collection.description"
+                                        plaintext>
+                                        </b-form-textarea>
+                                    </b-form-group>
+                                    <b-form-group label="Metadata:">
                                         <b-table
                                                 show-empty
                                                 selectable
                                                 hover
-                                                striped responsive="sm"
+                                                striped responsive="md"
                                                 :items="collection.metadata"
                                                 :fields="fields"
                                                 :borderless="true"
                                                 select-mode="single"
-                                                class="table-responsive"
-                                        ></b-table>
-                                    </b-card-text>
-                                </b-card>
+                                                class="table-responsive"></b-table>
+                                    </b-form-group>
+                                </b-form>
                             </b-col>
                         </b-row>
                     </b-card>
                 </b-col>
+            </b-row>
+            <b-row>
                 <b-col>
-                    <b-card>
+                    <b-card class="mt-2 mb-2">
                         <h4>Samples</h4>
                         <hr>
                         <b-spinner
@@ -59,22 +66,21 @@
                                 label="Loading...">
                         </b-spinner>
                         <span v-else>
-                        <span v-if="this.collection.sample_set == 0">
+                        <span v-if="this.collection.sample_set === 0">
                             Add files to the collection by clicking
                             <b-link
                                     :to="{
                                     name: 'addFiles',
                                     query: { pk: this.pk }
-                                }"
-                            >
+                                }">
                                 "Add Files"
                             </b-link>
                         </span>
                         <CollectionThumbnails
                                 v-if="this.collection.sample_set.length > 0"
                                 :pk="pk"
-                                :samples="collection.sample_set"
-                        ></CollectionThumbnails>
+                                :samples="collection.sample_set">
+                        </CollectionThumbnails>
                     </span>
                     </b-card>
                 </b-col>
@@ -86,8 +92,7 @@
                 :name="collection.name"
                 :description="collection.description"
                 @save="saveDetails"
-                @cancel="cancelEdit"
-        >
+                @cancel="cancelEdit">
         </EditMetadataModal>
 
     </div>
