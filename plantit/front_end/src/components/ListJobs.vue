@@ -12,17 +12,27 @@
                             placeholder="Filter..."
                         ></b-form-input>
                         <b-input-group-append>
-                            <b-button :disabled="!filter" @click="filter = ''"
+                            <b-button
+                                :disabled="!filter"
+                                @click="filter = ''"
+                                v-b-tooltip.hover
+                                title="Clear filter."
                                 >Clear
                             </b-button>
                         </b-input-group-append>
                     </b-input-group>
                 </b-col>
                 <b-col md="auto">
-                    <b-button class="plantit-btn">New</b-button>
+                    <b-button
+                        class="plantit-btn"
+                        v-b-tooltip.hover
+                        title="Start new job."
+                    >
+                        New
+                    </b-button>
                 </b-col>
             </b-row>
-            <br>
+            <br />
             <b-row>
                 <b-col>
                     <b-table

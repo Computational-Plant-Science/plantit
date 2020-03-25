@@ -1,6 +1,7 @@
 from django.db import models
 
 from django.contrib.auth.models import User
+from django.db.models import Manager
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -14,23 +15,24 @@ class Profile(models.Model):
         include a user Profile.
 
         Attributes:
-            user (:class:`~django.contrib.auth.models.User`): The user
-                this profile belongs
-            city (str): The city the user is located
-            affiliation (str): The user's institution or company affiliation.
-            country (str): The user's country
-            pinned_jobs (ManyToManyField): The jobs the user has pinned
-                in the front end user interface
-            pinned_collections (ManyToManyField): The collections the user has
-                pinned in the front end user interface.
+            user (:class:`~django.contrib.auth.models.User`): The user this profile belongs to.
+            affiliated_institution (str): The user's institution or company.
+            affiliated_institution_type (str): The user's institution type.
+            country (str): The user's institution's host country.
+            continent(str): The user's institution's continent.
+            field_of_study(str): The user's field of study.
+            pinned_jobs (ManyToManyField): The user's pinned jobs.
+            pinned_collections (ManyToManyField): The user's pinned collections.
     """
     # See https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    city = models.CharField(max_length=30, blank=True)
-    affiliation = models.CharField(max_length=50, blank=True)
-    country = models.CharField(max_length=50, blank=True)
-    pinned_jobs = models.ManyToManyField(Job, related_name='profile_pins', blank=True)
-    pinned_collections = models.ManyToManyField(Collection, related_name='profile_pins', blank=True)
+    user: User = models.OneToOneField(User, on_delete=models.CASCADE)
+    affiliated_institution: str = models.CharField(max_length=256, blank=False)
+    affiliated_institution_type: str = models.CharField(max_length=256, blank=False)
+    country: str = models.CharField(max_length=256, blank=False)
+    continent: str = models.CharField(max_length=256, blank=False)
+    field_of_study: str = models.CharField(max_length=256, blank=False)
+    pinned_jobs: Manager = models.ManyToManyField(Job, related_name='profile_pins', blank=True)
+    pinned_collections: Manager = models.ManyToManyField(Collection, related_name='profile_pins', blank=True)
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

@@ -28,9 +28,11 @@
                     <p><b>Email Address:</b> {{ this.info['email'] }}</p>
                     <p><b>First Name:</b> {{ this.info['first_name'] }}</p>
                     <p><b>Last Name:</b> {{ this.info['last_name'] }}</p>
-                    <p><b>City:</b> {{ this.info['city'] }}</p>
                     <p><b>Country:</b> {{ this.info['country'] }}</p>
-                    <p><b>Affiliation:</b> {{ this.info['affiliation'] }}</p>
+                    <p><b>Continent:</b> {{ this.info['continent'] }}</p>
+                    <p><b>Affiliated Institution:</b> {{ this.info['affiliated_institution'] }}</p>
+                    <p><b>Affiliated Institution Type:</b> {{ this.info['affiliated_institution_type'] }}</p>
+                    <p><b>Field of Study:</b> {{ this.info['field_of_study'] }}</p>
                 </b-card-text>
             </b-card>
         </b-container>

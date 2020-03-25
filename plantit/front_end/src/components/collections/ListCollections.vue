@@ -12,17 +12,28 @@
                             placeholder="Filter..."
                         ></b-form-input>
                         <b-input-group-append>
-                            <b-button :disabled="!filter" @click="filter = ''"
+                            <b-button
+                                :disabled="!filter"
+                                @click="filter = ''"
+                                v-b-tooltip.hover
+                                title="Clear filter."
                                 >Clear
                             </b-button>
                         </b-input-group-append>
                     </b-input-group>
                 </b-col>
                 <b-col md="auto">
-                    <b-button class="plantit-btn" to="collection/new">New</b-button>
+                    <b-button
+                        class="plantit-btn"
+                        to="collection/new"
+                        v-b-tooltip.hover
+                        title="Create new collection."
+                    >
+                        New
+                    </b-button>
                 </b-col>
             </b-row>
-            <br>
+            <br />
             <b-row>
                 <b-col>
                     <b-table

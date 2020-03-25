@@ -65,16 +65,6 @@ let router = new Router({
             }
         },
         {
-            path: '/user/collection/add',
-            name: 'addFiles',
-            component: () =>
-                import(/* webpackChunkName: "about" */ './views/AddFiles.vue'),
-            props: route => ({ pk: parseInt(route.query.pk) }),
-            meta: {
-                requiresAuth: true
-            }
-        },
-        {
             path: '/user/workflow/choose',
             name: 'analyze',
             component: () =>

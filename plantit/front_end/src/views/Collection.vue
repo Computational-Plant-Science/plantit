@@ -106,6 +106,9 @@
                                     show-empty
                                     selectable
                                     hover
+                                    small
+                                    sticky-header="true"
+                                    head-variant="light"
                                     responsive="sm"
                                     :items="collection.metadata"
                                     :fields="fields"
