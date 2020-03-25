@@ -1,27 +1,5 @@
 <template>
     <div>
-        <button @click="$refs['uploadModal'].show()">Upload Files</button>
-
-        <b-form-group label="Sample Type">
-            <b-form-radio v-model="selectFiles" name="some-radios" :value="true"
-                >Indivudal Files</b-form-radio
-            >
-            <b-form-radio
-                v-model="selectFiles"
-                name="some-radios"
-                :value="false"
-                >Whole Folder</b-form-radio
-            >
-        </b-form-group>
-
-        <b-modal size="xl" ref="uploadModal">
-            <FileUpload
-                @fileUploaded="fileUploaded"
-                :storageType="storageType"
-                :path="basePath"
-            ></FileUpload>
-        </b-modal>
-
         <v-jstree
             :data="treeData"
             @item-click="changed"
@@ -38,14 +16,12 @@
 
 <script>
 import VJstree from 'vue-jstree';
-import FileUpload from './FileUpload';
 import FileManagerApi from '@/services/apiV1/FileManager';
 
 export default {
     name: 'BrowseFiles',
     components: {
         VJstree,
-        FileUpload
     },
     props: {
         selectedFiles: {

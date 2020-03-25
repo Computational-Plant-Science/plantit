@@ -2,7 +2,7 @@
     <div>
         <b-container class="justify-content-md-center">
             <b-card title="New Collection">
-                <hr>
+                <hr />
                 <NewCollectionForm></NewCollectionForm>
             </b-card>
         </b-container>
@@ -10,13 +10,12 @@
 </template>
 
 <script>
-    import NewCollectionForm from '@/components/collections/NewCollectionForm.vue';
-    import PageNavigation from '@/components/PageNavigation.vue';
+import NewCollectionForm from '@/components/collections/NewCollectionForm.vue';
 
-    export default {
-        name: 'NewCollection',
-        components: {
-            NewCollectionForm,
-        }
-    };
+export default {
+    name: 'NewCollection',
+    components: {
+        NewCollectionForm
+    }
+};
 </script>

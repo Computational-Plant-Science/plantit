@@ -1,135 +1,120 @@
 <template>
-    <div>
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Thumb</th>
-                    <th>Name</th>
-                    <th>Size</th>
-                    <th>Speed</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-if="!files.length">
-                    <td colspan="7">
-                        <div class="text-center p-5">
-                            <h4>Drop files anywhere to upload<br />or</h4>
-                            <label :for="name" class="btn btn-lg btn-primary"
-                                >Select Files</label
-                            >
-                        </div>
-                    </td>
-                </tr>
-
-                <tr v-for="(file, index) in files" :key="file.id">
-                    <td>{{ index }}</td>
-
-                    <td>
-                        <img
-                            v-if="file.thumb"
-                            :src="file.thumb"
-                            width="40"
-                            height="auto"
-                        />
-                        <span v-else>No Image</span>
-                    </td>
-
-                    <td>
-                        <div class="filename">
-                            {{ file.name }}
-                        </div>
-                        <div
-                            class="progress"
-                            v-if="file.active || file.progress !== '0.00'"
-                        >
-                            <div
-                                :class="{
-                                    'progress-bar': true,
-                                    'progress-bar-striped': true,
-                                    'bg-danger': file.error,
-                                    'progress-bar-animated': file.active
-                                }"
-                                role="progressbar"
-                                :style="{ width: file.progress + '%' }"
-                            >
-                                {{ file.progress }}%
-                            </div>
-                        </div>
-                    </td>
-
-                    <td>{{ file.size }}</td>
-
-                    <td>{{ file.speed }}</td>
-
-                    <td v-if="file.error">{{ file.error }}</td>
-                    <td v-else-if="file.success">success</td>
-                    <td v-else-if="file.active">active</td>
-                    <td v-else></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <vue-upload
-            class="btn btn-primary"
-            v-model="files"
-            :multiple="true"
-            :headers="headers"
-            postAction="/apis/v1/files/upload/"
-            :data="{ storage_type: storageType, path: path }"
-            ref="upload"
-            @input-file="inputFile"
+    <div class="container">
+        <!--UPLOAD-->
+        <form
+            enctype="multipart/form-data"
+            novalidate
+            v-if="isInitial || isSaving"
         >
-            Add Files
-        </vue-upload>
-        <button
-            type="button"
-            class="btn btn-success ml-2"
-            v-if="!$refs.upload || !$refs.upload.active"
-            @click.prevent="$refs.upload.active = true"
-        >
-            Start Upload
-        </button>
+            <h1>Upload images</h1>
+            <div class="dropbox">
+                <input
+                    type="file"
+                    multiple
+                    :name="uploadFieldName"
+                    :disabled="isSaving"
+                    @change="
+                        filesChange($event.target.name, $event.target.files)
+                    "
+                    class="input-file"
+                />
+                <p v-if="isInitial">
+                    Drag your file(s) here to begin<br />
+                    or click to browse
+                </p>
+                <p v-if="isSaving">Uploading {{ fileCount }} files...</p>
+            </div>
+        </form>
+        <!--SUCCESS-->
+        <div v-if="isSuccess">
+            <h2>Uploaded {{ uploadedFiles.length }} file(s) successfully.</h2>
+            <p>
+                <a href="javascript:void(0)" @click="reset()">Upload again</a>
+            </p>
+        </div>
+        <!--FAILED-->
+        <div v-if="isFailed">
+            <h2>Uploaded failed.</h2>
+            <p>
+                <a href="javascript:void(0)" @click="reset()">Try again</a>
+            </p>
+            <pre>{{ uploadError }}</pre>
+        </div>
     </div>
 </template>
 
 <script>
-import VueUpload from 'vue-upload-component';
 import Auth from '@/services/apiV1/Auth';
+import FileApi from '@/services/apiV1/FileManager';
+
+const STATUS_INITIAL = 0,
+    STATUS_SAVING = 1,
+    STATUS_SUCCESS = 2,
+    STATUS_FAILED = 3;
 
 export default {
     name: 'FileUpload',
-    components: {
-        VueUpload
-    },
+    components: [FileApi],
     props: ['storageType', 'path'],
     data() {
         return {
-            files: [],
-            name: 'file',
+            uploadedFiles: [],
+            uploadError: null,
+            currentStatus: null,
+            uploadFieldName: 'samples',
+            fileCount: 0,
             headers: {
                 'X-CSRFTOKEN': Auth.getCSRFToken()
             }
         };
     },
-    methods: {
-        inputFile: function(newFile, oldFile) {
-            /**
-             * Called whenever the this.files list is
-             * modified (files added, files uploaded, etc)
-             *
-             * Used here to set the upload location of files and to add files to the
-             * file tree after uploading
-             **/
-
-            // if File uploaded
-            if (newFile && oldFile && !newFile.active && oldFile.active) {
-                //Emit to parent
-                this.$emit('fileUploaded', newFile.response);
-            }
+    computed: {
+        isInitial() {
+            return this.currentStatus === STATUS_INITIAL;
+        },
+        isSaving() {
+            return this.currentStatus === STATUS_SAVING;
+        },
+        isSuccess() {
+            return this.currentStatus === STATUS_SUCCESS;
+        },
+        isFailed() {
+            return this.currentStatus === STATUS_FAILED;
         }
+    },
+    methods: {
+        reset() {
+            // reset form to initial state
+            this.currentStatus = STATUS_INITIAL;
+            this.uploadedFiles = [];
+            this.uploadError = null;
+        },
+        save(formData) {
+            this.currentStatus = STATUS_SAVING;
+            formData.set('storage_type', this.storageType);
+            formData.set('path', this.path);
+            FileApi.upload(formData)
+                .then(x => {
+                    this.uploadedFiles = [].concat(x);
+                    this.currentStatus = STATUS_SUCCESS;
+                })
+                .catch(err => {
+                    this.uploadError = err.response;
+                    this.currentStatus = STATUS_FAILED;
+                });
+        },
+        filesChange(fieldName, fileList) {
+            const formData = new FormData();
+            if (!fileList.length) return;
+            Array.from(Array(fileList.length).keys()).map(x => {
+                formData.append(fieldName, fileList[x], fileList[x].name);
+            });
+            this.save(formData);
+            this.fileCount = fileList.length;
+        }
+    },
+    mounted() {
+        this.reset();
     }
 };
 </script>

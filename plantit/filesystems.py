@@ -8,3 +8,4 @@ registrar.register(IRODS(name = "irods",
                          hostname = "irods",
                          zone = "tempZone"),
                     lambda user: "/tempZone/home/rods/")
+

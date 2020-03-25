@@ -33,7 +33,6 @@ export default {
                 Sentry.captureException(err);
             });
     },
-
     listDir(dir, storage_type) {
         /**
          * List folder contents in the format required by
@@ -61,7 +60,6 @@ export default {
                 Sentry.captureException(err);
             });
     },
-
     listDirBase(basePath, dir, storage_type) {
         /**
          * List folder contents in the format required by

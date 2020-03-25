@@ -9,7 +9,10 @@
                 </b-col>
                 <b-col>
                     <b-row>
-                        <ListCollections filterable="true" per-page="4"></ListCollections>
+                        <ListCollections
+                            filterable="true"
+                            per-page="4"
+                        ></ListCollections>
                     </b-row>
                     <b-row>
                         <ListJobs filterable="true" per-page="4"></ListJobs>
@@ -21,19 +24,19 @@
 </template>
 
 <script>
-    import ListJobs from '@/components/ListJobs.vue';
-    import ListCollections from '@/components/collections/ListCollections.vue';
-    import UserInfo from "../components/UserInfo";
+import ListJobs from '@/components/ListJobs.vue';
+import ListCollections from '@/components/collections/ListCollections.vue';
+import UserInfo from '../components/UserInfo';
 
-    export default {
-        name: 'Jobs',
-        components: {
-            UserInfo,
-            ListJobs,
-            ListCollections,
-        },
-        data() {
-            return {};
-        }
-    };
+export default {
+    name: 'Jobs',
+    components: {
+        UserInfo,
+        ListJobs,
+        ListCollections
+    },
+    data() {
+        return {};
+    }
+};
 </script>
