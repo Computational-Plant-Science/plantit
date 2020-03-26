@@ -21,4 +21,31 @@ export default {
                 Sentry.captureException(err);
             });
     },
-}
+    updateUserInfo(
+        userName,
+        firstName,
+        lastName,
+        country,
+        continent,
+        institution,
+        institutionType,
+        fieldOfStudy
+    ) {
+        const data = {
+            first_name: firstName,
+            last_name: lastName,
+            profile: {
+                country: country,
+                continent: continent,
+                institution: institution,
+                institution_type: institutionType,
+                field_of_study: fieldOfStudy
+            }
+        };
+        return axios
+            .patch(`/apis/v1/profiles/${userName}/`, data)
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    }
+};

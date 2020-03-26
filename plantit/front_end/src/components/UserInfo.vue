@@ -9,12 +9,12 @@
             >
                 <b-row>
                     <b-col>
-                        <h3>{{ this.info['username'] }}</h3>
+                        <h3>{{ this.info.username }}</h3>
                     </b-col>
                     <b-col md="auto">
                         <b-button
                             id="edit-btn"
-                            @click="$bvModal.show('editUserInfo')"
+                            @click="$bvModal.show('editUserInfoModal')"
                             class="plantit-btn"
                             v-b-tooltip.hover
                             title="Edit user information."
@@ -24,33 +24,94 @@
                     </b-col>
                 </b-row>
                 <hr />
-                <b-card-text>
-                    <p><b>Email Address:</b> {{ this.info['email'] }}</p>
-                    <p><b>First Name:</b> {{ this.info['first_name'] }}</p>
-                    <p><b>Last Name:</b> {{ this.info['last_name'] }}</p>
-                    <p><b>Country:</b> {{ this.info['country'] }}</p>
-                    <p><b>Continent:</b> {{ this.info['continent'] }}</p>
-                    <p><b>Affiliated Institution:</b> {{ this.info['affiliated_institution'] }}</p>
-                    <p><b>Affiliated Institution Type:</b> {{ this.info['affiliated_institution_type'] }}</p>
-                    <p><b>Field of Study:</b> {{ this.info['field_of_study'] }}</p>
+                <b-card-text v-if="!loading">
+                    <p><b>Email Address:</b> {{ this.info.email }}</p>
+                    <p><b>First Name:</b> {{ this.info.first_name }}</p>
+                    <p><b>Last Name:</b> {{ this.info.last_name }}</p>
+                    <p><b>Country:</b> {{ this.info.profile.country }}</p>
+                    <p><b>Continent:</b> {{ this.info.profile.continent }}</p>
+                    <p>
+                        <b>Institution:</b>
+                        {{ this.info.profile.institution }}
+                    </p>
+                    <p>
+                        <b>Institution Type:</b>
+                        {{ this.info.profile.institution_type }}
+                    </p>
+                    <p>
+                        <b>Field of Study:</b> {{ this.info.profile.field_of_study }}
+                    </p>
                 </b-card-text>
             </b-card>
         </b-container>
+        <EditUserInfoModal
+            modal-id="editUserInfoModal"
+            :username="this.info.username"
+            :first_name="this.info.first_name"
+            :last_name="this.info.last_name"
+            :country="this.info.profile.country"
+            :continent="this.info.profile.continent"
+            :institution="this.info.profile.institution"
+            :institution_type="this.info.profile.institution_type"
+            :field_of_study="this.info.profile.field_of_study"
+            @saveUserInfo="saveUserInfo"
+            @cancel="cancel"
+        >
+        </EditUserInfoModal>
     </div>
 </template>
 
 <script>
 import UserApi from '@/services/apiV1/UserManager.js';
+import EditUserInfoModal from '@/components/collections/EditUserInfoModal';
 
 export default {
     name: 'UserInfo',
+    components: {
+        EditUserInfoModal
+    },
     data() {
         return {
-            info: {}
+            info: {},
+            loading: true,
         };
     },
-    mounted: function() {
-        UserApi.getCurrentUser().then(info => (this.info = info));
+    methods: {
+        reload() {
+            UserApi.getCurrentUser().then(info => {
+                this.info = info;
+            });
+        },
+        saveUserInfo(
+            userName,
+            firstName,
+            lastName,
+            country,
+            continent,
+            institution,
+            institutionType,
+            fieldOfStudy
+        ) {
+            UserApi.updateUserInfo(
+                userName,
+                firstName,
+                lastName,
+                country,
+                continent,
+                institution,
+                institutionType,
+                fieldOfStudy
+            ).then(() => {
+                this.reload();
+            });
+        },
+        cancel() {
+            this.reload();
+        }
+    },
+    created: function() {
+        this.reload();
+        this.loading = false;
     }
 };
 </script>

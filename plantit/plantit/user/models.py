@@ -26,13 +26,22 @@ class Profile(models.Model):
     """
     # See https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
     user: User = models.OneToOneField(User, on_delete=models.CASCADE)
-    affiliated_institution: str = models.CharField(max_length=256, blank=False)
-    affiliated_institution_type: str = models.CharField(max_length=256, blank=False)
     country: str = models.CharField(max_length=256, blank=False)
     continent: str = models.CharField(max_length=256, blank=False)
+    institution: str = models.CharField(max_length=256, blank=False)
+    institution_type: str = models.CharField(max_length=256, blank=False)
     field_of_study: str = models.CharField(max_length=256, blank=False)
     pinned_jobs: Manager = models.ManyToManyField(Job, related_name='profile_pins', blank=True)
     pinned_collections: Manager = models.ManyToManyField(Collection, related_name='profile_pins', blank=True)
+
+    def asdict(self):
+        return {
+            'country': self.country,
+            'continent': self.continent,
+            'institution': self.institution,
+            'institution_type': self.institution_type,
+            'field_of_study': self.field_of_study
+        }
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
