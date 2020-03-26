@@ -26,7 +26,6 @@
                 </b-input-group-append>
             </b-input-group>
         </b-form-group>
-
         <div
             class="d-flex flex-wrap justify-content-center align-items-stretch row-eq-height"
         >
@@ -69,16 +68,12 @@ export default {
     },
     props: {
         pk: {
-            // the pk of the collection to analyze
             required: true
         }
     },
     data: function() {
         return {
-            // The text to filter the shown workflow by.
             filter_query: '',
-
-            //Available workflows.
             workflows: []
         };
     },
@@ -89,17 +84,10 @@ export default {
     },
     computed: {
         filter_text: function() {
-            /*
-          returns (str): filter_query converted to all lower case
-        */
             return this.filter_query.toLowerCase();
         },
         filtered: function() {
-            /*
-          returns: An array of workflow objects that include the f
-            ilter_query text in their name or description
-        */
-            if (this.filter_text == '') {
+            if (this.filter_text === '') {
                 return this.workflows;
             } else {
                 return this.workflows.filter(w => {

@@ -20,7 +20,6 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
-
         if validated_data.get('first_name'):
             instance.first_name = validated_data.get('first_name')
 

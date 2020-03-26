@@ -54,6 +54,12 @@
                         :sort-by.sync="sortBy"
                         :sort-desc.sync="sortDesc"
                     >
+                        <template v-slot:cell(pk)="row">
+                            <b class="text-info">{{ row.item.pk }}</b>
+                        </template>
+                        <template v-slot:cell(samples)="row">
+                            <b>{{ row.item.sample_set.length }}</b>
+                        </template>
                         <template v-slot:cell(actions)="row">
                             <b-button
                                 size="sm"
@@ -176,6 +182,10 @@ export default {
                 },
                 {
                     key: 'name',
+                    sortable: true
+                },
+                {
+                    key: 'samples',
                     sortable: true
                 },
                 {
