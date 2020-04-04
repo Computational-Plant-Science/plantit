@@ -68,6 +68,7 @@ services:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
     ports:
+      - 5672:5672
       - 15672:15672
     healthcheck:
       test: python -c "import urllib2; print urllib2.urlopen('http://localhost:15672').getcode();" | grep "200"
@@ -80,7 +81,8 @@ services:
     build:
       context: ./dev
       dockerfile: dockerfiles/plantit/Dockerfile
-    command: ["/code/dev/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "--loglevel=info"]
+    #command: ["/code/dev/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "--loglevel=info"]
+    command: ["dagster-celery", "worker", "start", "-n", "plantit", "-y", "/code/celery_config.yaml"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -100,7 +102,8 @@ services:
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
     healthcheck:
-      test: celery -A plantit status | grep "OK"
+      #test: celery -A plantit status | grep "OK"
+      test: dagster-celery worker list -y /code/celery_config.yaml | grep "plantit"
       interval: 20s
       timeout: 20s
       retries: 2

@@ -12,9 +12,9 @@ WORKDIR /code
 COPY ./dockerfiles/plantit/requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
-RUN chmod +x /code/dev/configure-irods.sh
-RUN chmod +x /code/dev/configure-superuser.sh
-RUN chmod +x /code/dev/start-dagit.sh
-RUN chmod +x /code/dev/wait-for-it.sh
-RUN chmod +x /code/dev/wait-for-postgres.sh
+RUN chmod +x /code/configure-irods.sh
+RUN chmod +x /code/configure-superuser.sh
+RUN chmod +x /code/start-dagit.sh
+RUN chmod +x /code/wait-for-it.sh
+RUN chmod +x /code/wait-for-postgres.sh
 
