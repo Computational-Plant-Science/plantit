@@ -1,0 +1,3 @@
+repository:
+    file: plantit/plantit/jobs/repository.py
+    fn: define_repo

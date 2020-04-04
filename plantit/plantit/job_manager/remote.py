@@ -297,7 +297,7 @@ class UploadFileTask(SSHTaskMixin, Task):
             file = open(file_name)
             fname = os.path.basename(file.name)
             self.sftp.putfo(file, fname)
-            if (self.delete):
+            if self.delete:
                 os.remove(file_name)
 
         self.finish()

@@ -106,6 +106,22 @@ services:
       retries: 2
       start_period: 20s
 
+  dagit:
+    build:
+      context: ./dev
+      dockerfile: dockerfiles/plantit/Dockerfile
+    command: ["/code/dev/start-dagit.sh"]
+    volumes:
+      - .:/code
+    ports:
+    - "3000:3000"
+    healthcheck:
+      test: curl -f http://localhost:3000/dagit_info/
+      interval: 20s
+      timeout: 20s
+      retries: 2
+      start_period: 20s
+
   flower:
     image: mher/flower
     volumes:

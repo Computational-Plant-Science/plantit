@@ -5,7 +5,6 @@ from irods.exception import CollectionDoesNotExist
 
 from .storage import AbstractStorageType
 
-
 class IRODSFileSystem(Storage):
     """
         Implements basic file stroage on a iRODS_ filesystem. It inherits from
