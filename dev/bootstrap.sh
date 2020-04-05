@@ -11,13 +11,16 @@ env_file=".env"
 echo "Checking for environment variable file '$env_file'..."
 if [ ! -f $env_file ]; then
   echo "Environment variable file '$env_file' does not exist. Creating it..."
+  secret_key=($(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)))\")"))
+  sql_password=($(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)))\")"))
+  field_encryption_key=($(python2 -c "exec(\"import cryptography.fernet\nprint('%s' % cryptography.fernet.Fernet.generate_key())\")"))
   cat <<EOT >>$env_file
 VUE_APP_TITLE=plantit
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
-DJANGO_SECRET_KEY=some_secret_key
+DJANGO_SECRET_KEY=$secret_key
 DJANGO_DEBUG=True
-DJANGO_FIELD_ENCRYPTION_KEY=some_encryption_key
+DJANGO_FIELD_ENCRYPTION_KEY=$field_encryption_key
 DJANGO_API_URL=http://localhost/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
 SQL_ENGINE=django.db.backends.postgresql
@@ -25,7 +28,7 @@ SQL_HOST=postgres
 SQL_PORT=5432
 SQL_NAME=postgres
 SQL_USER=postgres
-SQL_PASSWORD=some_password
+SQL_PASSWORD=$sql_password
 EOT
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."
