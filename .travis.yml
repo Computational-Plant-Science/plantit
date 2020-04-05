@@ -8,7 +8,5 @@ services:
   - docker
 
 before_install:
-  - pwd
-  - ls
-  - chmod +x /dev/bootstrap.sh
+  - chmod +x dev/bootstrap.sh
   - ./dev/bootstrap.sh
