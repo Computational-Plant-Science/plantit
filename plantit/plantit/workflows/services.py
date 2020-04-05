@@ -7,6 +7,7 @@ from ..job_manager.job import Cluster
 from ..collection.models import Collection
 from ..job_manager.job import Job, Status
 
+
 def default_params():
     '''
         Generates the user configurable parameters required by Plant IT
@@ -33,8 +34,9 @@ def default_params():
 
     return param_group
 
-def add_tasks(job,cluster,params,app_name):
-    '''
+
+def add_tasks(job, cluster, params, app_name):
+    """
         Populates the given job with the tasks required to submit a workflow job
         to the a cluster to perform the analysis.
 
@@ -45,27 +47,30 @@ def add_tasks(job,cluster,params,app_name):
             params (dict): workflow user-configurable parameters in the
                 format accepted by the Plant IT cookiecutter process function.
                 (i.e. params are passed into process as the args variable).
-    '''
+            app_name:
 
-    #Copy collection task
+    """
+
+    # Copy collection task
     copy_task = UploadCollectionTask(name="File Upload",
-                  description="Upload files to cluster",
-                  job=job,
-                  cluster=cluster,
-                  order_pos=10)
+                                     description="Upload files to cluster",
+                                     job=job,
+                                     cluster=cluster,
+                                     order_pos=10)
     copy_task.save()
 
-    #Submission task
+    # Submission task
     submit_task = SubmissionTask(name="Analysis",
-                    description="Starts the analysis on the cluster",
-                    app_name=app_name,
-                    parameters=json.dumps(params),
-                    order_pos=20,
-                    job=job,
-                    cluster=cluster)
+                                 description="Starts the analysis on the cluster",
+                                 app_name=app_name,
+                                 parameters=json.dumps(params),
+                                 order_pos=20,
+                                 job=job,
+                                 cluster=cluster)
     submit_task.save()
 
-def submit(user,workflow,collection_pk,params):
+
+def submit(user, workflow, collection_pk, params):
     '''
         Submit a workflow for analysis.
 
@@ -81,23 +86,23 @@ def submit(user,workflow,collection_pk,params):
                 (i.e. params are passed into process as the args variable).
     '''
 
-    cluster = Cluster.objects.get(name = params['submission_settings']['params']['cluster'])
-    collection = Collection.objects.get(pk = collection_pk)
+    cluster = Cluster.objects.get(name=params['submission_settings']['params']['cluster'])
+    collection = Collection.objects.get(pk=collection_pk)
 
-    job = Job(collection = collection,
-              user = user,
-              workflow = workflow,
+    job = Job(collection=collection,
+              user=user,
+              workflow=workflow,
               cluster=cluster)
     job.save()
     job.status_set.create(description="Created")
 
     try:
         add_tasks(job, cluster, params, workflow)
-        job.status_set.create(state=Status.OK,description="Submitted")
+        job.status_set.create(state=Status.OK, description="Submitted")
         Job.run_next(job.pk)
     except Exception as e:
         job.delete()
-        #TODO: Do something here to indicate to the user the job failed.
+        # TODO: Do something here to indicate to the user the job failed.
         raise e
 
     return job.pk

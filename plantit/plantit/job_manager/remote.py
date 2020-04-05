@@ -111,16 +111,15 @@ class SSHTaskMixin(models.Model):
         self.sftp = self.client.open_sftp()
         self.workdir = self.cluster.workdir + "/" + self.job.work_dir
 
-        # Chdir into working directory
         try:
             self.sftp.chdir(self.cluster.workdir)
         except OSError:
             self.job.status_set.create(state=Status.FAILED,
                                        date=timezone.now(),
-                                       description="Cluster Workdir does not exist")
+                                       description="Cluster workdir does not exist")
             client.close()
             return
-        try:  # OSError raised if dir already exists
+        try:
             self.sftp.mkdir(self.job.work_dir)
         except OSError as e:
             pass
@@ -250,8 +249,7 @@ class SubmissionTask(SSHTaskMixin, Task):
 
 class UploadCollectionTask(SSHTaskMixin, Task):
     """
-        Uploads all the files in a collection to the server to the files folder
-        in the job wok directory.
+        Uploads a JSON document describing a collection to the compute cluster's job work directory.
 
         Note:
             This was, and could be, used in conjunction with a
@@ -265,14 +263,14 @@ class UploadCollectionTask(SSHTaskMixin, Task):
     collection_dir = "samples/"
 
     def ssh(self):
-        collection = self.job.collection.cast()  # Cast down to access the files attribute
+        collection = self.job.collection.cast() # Cast down to access the files attribute
 
         with self.sftp.open('samples.json', 'w') as file:
             file.write(collection.to_json())
 
-        file_storage = permissions.open_folder(storage_type=collection.storage_type,
-                                               path=collection.base_file_path,
-                                               user=self.job.user)
+        # file_storage = permissions.open_folder(storage_type=collection.storage_type,
+        #                                        path=collection.base_file_path,
+        #                                        user=self.job.user)
 
         self.finish()
 
