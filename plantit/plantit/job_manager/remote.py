@@ -61,7 +61,7 @@ class SSHClientMixin(models.Model):
                         # files via sftp.
                         # the workdirectory of the job can be
                         # found in
-                        # self.workdir.
+                        # self.working_directory.
 
         See :class:`SubmissionTask` for a full example of using this mixin.
 
@@ -70,7 +70,7 @@ class SSHClientMixin(models.Model):
                 The cluster used to run the task
             client (:class:`paramako.SSHClient`): ssh connection to the cluster
             sftp (:class:`paramiko.sft_client.SFTPClient`): sftp connection to the
-                            cluster. The connection is chdir'd into self.workdir
+                            cluster. The connection is chdir'd into self.working_directory
             workdir (str): full path of the job's working directory on the cluster
     """
 
@@ -116,7 +116,7 @@ class SSHClientMixin(models.Model):
         except OSError:
             self.job.status_set.create(state=Status.FAILED,
                                        date=timezone.now(),
-                                       description="Cluster workdir does not exist")
+                                       description="Cluster working_directory does not exist")
             client.close()
             return
         try:

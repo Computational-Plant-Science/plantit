@@ -1,8 +1,8 @@
 from dagster import pipeline, ModeDefinition, default_executors
 from dagster_celery import celery_executor
 
-from plantit.jobs.repository import ssh_client_resource
-from plantit.jobs.solids import not_much, upload, prerun, run, postrun, download
+from plantit.jobs.resources import test_ssh_client_resource
+from plantit.jobs.solids import not_much, upload_workflow, setup_workflow, run_workflow, download_results, cleanup
 
 
 @pipeline(mode_defs=[
@@ -18,14 +18,14 @@ def parallel_pipeline():
 
 @pipeline(mode_defs=[
     ModeDefinition(
-        name='default',
-        resource_defs={'ssh_client': ssh_client_resource},
+        name='test',
+        resource_defs={'ssh_client': test_ssh_client_resource},
         executor_defs=default_executors + [celery_executor]
     )
 ])
 def workflow():
-    upload()
-    prerun()
-    run()
-    postrun()
-    download()
+    upload_workflow()
+    setup_workflow()
+    run_workflow()
+    download_results()
+    cleanup()

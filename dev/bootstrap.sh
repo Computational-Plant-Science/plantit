@@ -34,7 +34,7 @@ else
   echo "Environment variable file '$env_file' already exists. Continuing..."
 fi
 
-dagster_config_file="dagster.yaml"
+dagster_config_file="plantit/dagster.yaml"
 echo "Checking for dagster config file '$dagster_config_file'..."
 if [ ! -f $dagster_config_file ]; then
   echo "Dagster config file '$dagster_config_file' does not exist. Creating it..."

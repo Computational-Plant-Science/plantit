@@ -17,4 +17,5 @@ dagster schedule up
 dagster schedule restart --restart-all-running
 ####################################################################################################
 
-DAGSTER_HOME=/opt/dagster/dagster_home dagit -h 0.0.0.0 -p 3000
+cd plantit
+DAGSTER_HOME=/opt/dagster/dagster_home dagit -y plantit/jobs/repository.yaml -h 0.0.0.0 -p 3000
