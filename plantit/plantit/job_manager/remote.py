@@ -19,7 +19,7 @@ from ..file_manager import permissions
 from ..workflows import registrar
 
 
-class SSHClient(models.Model):
+class SSHClientMixin(models.Model):
     """
         Implements a run() method for :class:`job_manager.job.Task`
         that opens an ssh connection client and sftp to the job's cluster when
@@ -161,7 +161,7 @@ class File(models.Model):
         return str(self.file_name)
 
 
-class SubmissionTask(SSHClient, Task):
+class SubmissionTask(SSHClientMixin, Task):
     """
         A job task for submitting jobs to a Cluster.
 
@@ -247,7 +247,7 @@ class SubmissionTask(SSHClient, Task):
                                        description=msg)
 
 
-class UploadCollectionTask(SSHClient, Task):
+class UploadCollectionTask(SSHClientMixin, Task):
     """
         Uploads a JSON document describing a collection to the compute cluster's job work directory.
 
@@ -275,7 +275,7 @@ class UploadCollectionTask(SSHClient, Task):
         self.finish()
 
 
-class UploadFileTask(SSHClient, Task):
+class UploadFileTask(SSHClientMixin, Task):
     """
         Uploads a list of files to the job work directory on the server.
 

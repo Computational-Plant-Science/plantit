@@ -7,4 +7,6 @@ services:
 
 before_install:
   - chmod +x dev/bootstrap.sh
+
+script:
   - ./dev/bootstrap.sh
