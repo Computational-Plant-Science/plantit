@@ -250,3 +250,4 @@ db/
 
 *.xcf
 
+dagster.yaml

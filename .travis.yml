@@ -1,6 +1,6 @@
-language: python
-python:
-  - "3.6.10"
+#language: python
+#python:
+#  - "3.6.10"
 
 services:
   - docker
