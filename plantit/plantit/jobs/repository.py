@@ -69,7 +69,8 @@ def not_much(_):
 
 @pipeline(mode_defs=[
     ModeDefinition(
-        resource_defs={'ssh_client', ssh_client_resource},
+        name='default',
+        resource_defs={'ssh_client': ssh_client_resource},
         executor_defs=default_executors + [celery_executor]
     )
 ])
