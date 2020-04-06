@@ -3,8 +3,8 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS      =
-SPHINXBUILD     = docker-compose -f docker-compose.yml -f docker-compose.dev.yml run djangoapp sphinx-build
-SPHINXAPIDOC    = docker-compose -f docker-compose.yml -f docker-compose.dev.yml run djangoapp sphinx-apidoc
+SPHINXBUILD     = docker-compose -f docker-compose.yml -f docker-compose.dev.yml run plantit sphinx-build
+SPHINXAPIDOC    = docker-compose -f docker-compose.yml -f docker-compose.dev.yml run plantit sphinx-apidoc
 SPHINXPROJ      = DIRT2Web
 SOURCEDIR       = ../docs/source
 BUILDDIR        = ../docs/build
