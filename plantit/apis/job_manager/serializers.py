@@ -1,3 +1,4 @@
+import plantit.jobs.pipelines
 from plantit.job_manager.job import Job, Status, Task
 from rest_framework import serializers
 from datetime import datetime
@@ -65,8 +66,8 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
         return job
 
     def get_workflow_name(self, job):
-        if job.workflow:
-            return registrar.list[job.workflow]['name']
+        if plantit.jobs.pipelines.workflow:
+            return registrar.list[plantit.jobs.pipelines.workflow]['name']
 
     def get_cluster(self, job):
         if job.cluster:

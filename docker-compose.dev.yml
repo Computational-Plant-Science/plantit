@@ -8,6 +8,8 @@ services:
 
   plantit:
     command: ["/code/dev/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:80"]
+    depends_on:
+      - ssh
     ports:
       - "80:80"
     healthcheck:

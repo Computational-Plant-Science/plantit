@@ -14,6 +14,7 @@ from model_utils.managers import InheritanceManager
 
 from encrypted_model_fields.fields import EncryptedCharField
 
+import plantit.jobs.solids
 from ..collection.models import Collection
 
 
@@ -27,7 +28,7 @@ def __run_task__(task_pk):
             task_pk: pk of the task to run
     """
     task = Task.objects.get_subclass(pk=task_pk)
-    task.run()
+    plantit.jobs.solids.run()
 
 
 @shared_task
@@ -46,7 +47,7 @@ def __run_next__(pk):
     queued_tasks = job.task_set.filter(complete=False).order_by('order_pos').select_subclasses()
     if len(queued_tasks) > 0:
         task = queued_tasks[0]
-        task.run()
+        plantit.jobs.solids.run()
     else:
         job.status_set.create(state=Status.COMPLETED,
                               date=timezone.now(),
