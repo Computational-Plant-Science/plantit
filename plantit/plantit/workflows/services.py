@@ -1,6 +1,6 @@
-'''
+"""
     Methods for submitting workflow jobs.
-'''
+"""
 import json
 from ..job_manager.remote import UploadCollectionTask, SubmissionTask
 from ..job_manager.job import Cluster
@@ -9,14 +9,14 @@ from ..job_manager.job import Job, Status
 
 
 def default_params():
-    '''
+    """
         Generates the user configurable parameters required by Plant IT
         that are general to all workflow submissions
 
         Returns:
             A dictionary of default parameters in the cookiecutter
             Plant IT workflow parameter format.
-    '''
+    """
     clusters = Cluster.objects.all()
 
     param_group = {
@@ -25,7 +25,7 @@ def default_params():
         "params": [{
             "id": "cluster",
             "type": "select",
-            "initial": clusters.first().name,
+            "initial": clusters.first().name if clusters.count() is not 0 else "",
             "options": [cluster.name for cluster in clusters],
             "name": "Cluster",
             "description": "Compute cluster to run the analysis on."
@@ -71,7 +71,7 @@ def add_tasks(job, cluster, params, app_name):
 
 
 def submit(user, workflow, collection_pk, params):
-    '''
+    """
         Submit a workflow for analysis.
 
         Creates a :class:`plantit.job_manager.job.Job`, populates it with tasks to
@@ -84,7 +84,7 @@ def submit(user, workflow, collection_pk, params):
             params (dict): workflow user-configurable parameters in the
                 format accepted by the Plant IT cookiecutter process function.
                 (i.e. params are passed into process as the args variable).
-    '''
+    """
 
     cluster = Cluster.objects.get(name=params['submission_settings']['params']['cluster'])
     collection = Collection.objects.get(pk=collection_pk)

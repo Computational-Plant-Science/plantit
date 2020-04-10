@@ -81,8 +81,7 @@ services:
     build:
       context: ./dev
       dockerfile: dockerfiles/plantit/Dockerfile
-    #command: ["/code/dev/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "--loglevel=info"]
-    command: ["dagster-celery", "worker", "start", "-n", "plantit", "-y", "/code/plantit/celery_config.yaml"]
+    command: ["celery", "-A", "plantit", "worker", "--loglevel=info"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -102,41 +101,72 @@ services:
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
     healthcheck:
-      #test: celery -A plantit status | grep "OK"
-      test: dagster-celery worker list -y /code/plantit/celery_config.yaml | grep "plantit"
+      test: celery -A plantit status | grep "OK"
       interval: 20s
       timeout: 20s
       retries: 2
       start_period: 20s
 
-  dagit:
-    build:
-      context: ./dev
-      dockerfile: dockerfiles/plantit/Dockerfile
-    command: ["/code/dev/start-dagit.sh"]
-    environment:
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG}
-      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
-      - DJANGO_API_URL=${DJANGO_API_URL}
-      - DJANGO_ALLOWED_HOSTS=*
-      - SQL_ENGINE=${SQL_ENGINE}
-      - SQL_HOST=${SQL_HOST}
-      - SQL_PORT=${SQL_PORT}
-      - SQL_NAME=${SQL_NAME}
-      - SQL_USER=${SQL_USER}
-      - SQL_PASSWORD=${SQL_PASSWORD}
-    volumes:
-      - .:/code
-    ports:
-    - "3000:3000"
-    healthcheck:
-      test: curl -f http://localhost:3000/dagit_info/
-      interval: 20s
-      timeout: 20s
-      retries: 2
-      start_period: 20s
+  #dagster-celery:
+  #  build:
+  #    context: ./dev
+  #    dockerfile: dockerfiles/plantit/Dockerfile
+  #  command: ["dagster-celery", "worker", "start", "-n", "plantit-dagster", "-y", "/code/plantit/celery_config.yaml"]
+  #  volumes:
+  #    - .:/code
+  #  working_dir: /code/plantit
+  #  depends_on:
+  #    - rabbitmq
+  #  environment:
+  #    - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+  #    - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+  #    - DJANGO_DEBUG=${DJANGO_DEBUG}
+  #    - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
+  #    - DJANGO_API_URL=${DJANGO_API_URL}
+  #    - DJANGO_ALLOWED_HOSTS=*
+  #    - SQL_ENGINE=${SQL_ENGINE}
+  #    - SQL_HOST=${SQL_HOST}
+  #    - SQL_PORT=${SQL_PORT}
+  #    - SQL_NAME=${SQL_NAME}
+  #    - SQL_USER=${SQL_USER}
+  #    - SQL_PASSWORD=${SQL_PASSWORD}
+  #    - DAGSTER_HOME=${DAGSTER_HOME}
+  #  healthcheck:
+  #    test: dagster-celery worker list -y /code/plantit/celery_config.yaml | grep "plantit-dagster"
+  #    interval: 20s
+  #    timeout: 20s
+  #    retries: 2
+  #    start_period: 20s
+
+  #dagit:
+  #  build:
+  #    context: ./dev
+  #    dockerfile: dockerfiles/plantit/Dockerfile
+  #  command: ["/code/dev/start-dagit.sh"]
+  #  environment:
+  #    - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+  #    - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+  #    - DJANGO_DEBUG=${DJANGO_DEBUG}
+  #    - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
+  #    - DJANGO_API_URL=${DJANGO_API_URL}
+  #    - DJANGO_ALLOWED_HOSTS=*
+  #    - SQL_ENGINE=${SQL_ENGINE}
+  #    - SQL_HOST=${SQL_HOST}
+  #    - SQL_PORT=${SQL_PORT}
+  #    - SQL_NAME=${SQL_NAME}
+  #    - SQL_USER=${SQL_USER}
+  #    - SQL_PASSWORD=${SQL_PASSWORD}
+  #    - DAGSTER_HOME=${DAGSTER_HOME}
+  #  volumes:
+  #    - .:/code
+  #  ports:
+  #  - "3000:3000"
+  #  healthcheck:
+  #    test: curl -f http://localhost:3000/dagit_info/
+  #    interval: 20s
+  #    timeout: 20s
+  #    retries: 2
+  #    start_period: 20s
 
   flower:
     image: mher/flower

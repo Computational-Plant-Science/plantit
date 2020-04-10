@@ -27,6 +27,7 @@ django-cas-ng
 sentry-sdk
 gunicorn
 dagster
+dagster-postgres
 dagster-celery
 dagster-cron
 dagit

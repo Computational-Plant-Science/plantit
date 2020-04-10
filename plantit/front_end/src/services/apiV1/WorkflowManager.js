@@ -40,13 +40,13 @@ export default {
     },
 
     submitJob(workflow, pk, params) {
-        return axios
-            .post(`/apis/v1/workflows/${workflow}/submit/${pk}/`, params)
-            .then(response => {
-                return response;
-            })
-            .catch(err => {
-                Sentry.captureException(err);
-            });
+        return axios({
+            method: 'post',
+            url: `/apis/v1/workflows/${workflow}/submit/${pk}/`,
+            data: params,
+            headers: { 'Content-Type': 'application/json' }
+        }).catch(err => {
+            Sentry.captureException(err);
+        });
     }
 };

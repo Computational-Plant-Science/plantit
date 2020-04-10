@@ -47,8 +47,10 @@ def __run_next__(pk):
     queued_tasks = job.task_set.filter(complete=False).order_by('order_pos').select_subclasses()
     if len(queued_tasks) > 0:
         task = queued_tasks[0]
-        plantit.jobs.solids.run_workflow()
+        print(f"Starting job {pk}")
+        task.run()
     else:
+        print(f"Task {pk} completed")
         job.status_set.create(state=Status.COMPLETED,
                               date=timezone.now(),
                               description=str("All Tasks Finished"))

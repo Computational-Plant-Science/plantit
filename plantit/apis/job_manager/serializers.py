@@ -66,8 +66,8 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
         return job
 
     def get_workflow_name(self, job):
-        if plantit.jobs.pipelines.workflow:
-            return registrar.list[plantit.jobs.pipelines.workflow]['name']
+        if job.workflow:
+            return registrar.list[job.workflow]['name']
 
     def get_cluster(self, job):
         if job.cluster:

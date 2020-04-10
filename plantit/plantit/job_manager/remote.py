@@ -225,19 +225,17 @@ class SubmissionTask(SSHClientMixin, Task):
             file.write(self.get_params())
 
         try:
-            # Submit job to cluster queue
+            print(f"Submitting job {self.job.pk} in directory '{self.workdir}'")
             cmds = "cd " + self.workdir + "; " + self.cluster.submit_commands
             stdin, stdout, stderr = self.client.exec_command(cmds)
 
             if stdout.channel.recv_exit_status():
                 error = "stderr: " + str(stderr.readlines())
                 error = error + " stdout: " + str(stdout.readlines())
-                if len(error) > 900:
-                    error = error[:450] + "..." + error[-450:]
-                print(error)
+                print(f"Job {self.job.pk} failed: {error}")
                 self.job.status_set.create(state=Status.FAILED,
                                            date=timezone.now(),
-                                           description="Plant IT Internal Error: " + error)
+                                           description="Plant IT Internal Error: " + (error[:450] + "..." + error[-450:] if len(error) > 900 else error))
                 return
 
         except JSONDecodeError as e:

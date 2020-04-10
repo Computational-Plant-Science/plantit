@@ -83,7 +83,7 @@ export default {
                 this.collection_pk,
                 this.values
             ).then(result => {
-                if (result.status == 200) {
+                if (result.status === 200) {
                     router.push({
                         name: 'job',
                         query: { pk: result.data.job_id }
