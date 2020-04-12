@@ -1,71 +1,72 @@
 <template>
-    <div style="text-align:center">
-        <PageNavigation>
-            <template v-slot:page-nav>
-                <b-nav-item to="/user/collections">Collections</b-nav-item>
-                <b-nav-item to="/user/dashboard">Dashboard</b-nav-item>
-                <b-nav-item to="/user/jobs">Jobs</b-nav-item>
-            </template>
-            <template v-slot:buttons> </template>
-        </PageNavigation>
-
-        <h1>Choose a Workflow</h1>
-
-        <b-form-group label-cols-sm="2" label="Filter" style="width: 400px">
-            <b-input-group>
-                <b-form-input
-                    v-model="filter_query"
-                    placeholder="Type to Filter"
-                ></b-form-input>
-                <b-input-group-append>
-                    <b-button
-                        :disabled="!filter_query"
-                        @click="filter_query = ''"
-                        >Clear</b-button
-                    >
-                </b-input-group-append>
-            </b-input-group>
-        </b-form-group>
-        <div
-            class="d-flex flex-wrap justify-content-center align-items-stretch row-eq-height"
-        >
-            <div
-                v-for="workflow in filtered"
-                :key="workflow.name"
-                class="p-3 m-3 workflow"
-            >
-                <div class="workflow-icon">
-                    <b-img :src="workflow.icon_url"> </b-img>
-                </div>
-                <div class="workflow-text">
-                    <b-link
-                        :to="{
-                            name: 'submit_workflow',
-                            query: {
-                                collection_pk: pk,
-                                workflow_name: workflow.app_name
-                            }
-                        }"
-                    >
-                        {{ workflow.name }}
-                    </b-link>
-                    <hr />
-                    {{ workflow.description }}
-                </div>
-            </div>
-        </div>
+    <div class="w-100 p-2 pb-4">
+        <b-container class="justify-content-md-center">
+            <b-card>
+                <b-row>
+                    <b-col>
+                        <h3>Select Workflow</h3>
+                    </b-col>
+                    <b-col md="auto">
+                        <b-form-group label-cols-sm="2" style="width: 400px">
+                            <b-input-group>
+                                <b-form-input
+                                    v-model="filter_query"
+                                    placeholder="Type to Filter"
+                                ></b-form-input>
+                                <b-input-group-append>
+                                    <b-button
+                                        :disabled="!filter_query"
+                                        @click="filter_query = ''"
+                                        >Clear
+                                    </b-button>
+                                </b-input-group-append>
+                            </b-input-group>
+                        </b-form-group>
+                    </b-col>
+                </b-row>
+                <b-row>
+                    <b-col>
+                        <div
+                            class="d-flex flex-wrap justify-content-center align-items-stretch row-eq-height"
+                        >
+                            <div
+                                v-for="workflow in filtered"
+                                :key="workflow.name"
+                                class="p-3 m-3 workflow"
+                            >
+                                <div class="workflow-icon">
+                                    <b-img :src="workflow.icon_url"></b-img>
+                                </div>
+                                <div>
+                                    <b-link
+                                        :to="{
+                                            name: 'submit_workflow',
+                                            query: {
+                                                collection_pk: pk,
+                                                workflow_name: workflow.app_name
+                                            }
+                                        }"
+                                    >
+                                        {{ workflow.name }}
+                                    </b-link>
+                                    <hr />
+                                    {{ workflow.description }}
+                                </div>
+                            </div>
+                        </div>
+                    </b-col>
+                </b-row>
+            </b-card>
+        </b-container>
     </div>
 </template>
 
 <script>
-import PageNavigation from '@/components/PageNavigation';
 import WorkflowAPI from '@/services/apiV1/WorkflowManager';
 
 export default {
     name: 'Analyze',
-    components: {
-        PageNavigation
-    },
+    components: {},
     props: {
         pk: {
             required: true
@@ -106,23 +107,23 @@ export default {
 @import "../scss/_colors.sass"
 
 .workflow
-  width: 300px
+    width: 300px
 
 .workflow-icon
-  width: 200px
-  height: 200px
-  margin: 0 auto
-  margin-bottom: -10px
-  background-color: $color-disabled
-  border-radius: 50%
-  padding: 10px
+    width: 200px
+    height: 200px
+    margin: 0 auto
+    margin-bottom: -10px
+    background-color: $color-disabled
+    border-radius: 50%
+    padding: 25px
 
-  img
-    margin-top: 20px
-    max-width: 140px
-    max-height: 190px
+    img
+        margin-top: 20px
+        max-width: 140px
+        max-height: 190px
 
 .workflow-text
-  background-color: $color-box-background
-  padding: 10px
+    background-color: $color-box-background
+    padding: 10px
 </style>

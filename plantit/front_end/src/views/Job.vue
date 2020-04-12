@@ -1,12 +1,5 @@
 <template>
     <div>
-        <PageNavigation>
-            <template v-slot:page-nav>
-                <b-nav-item to="/user/jobs">Jobs</b-nav-item>
-                <b-nav-item to="/user/collections">Collections</b-nav-item>
-                <b-nav-item to="/user/dashboard">Dashboard</b-nav-item>
-            </template>
-        </PageNavigation>
         <b-container>
             <b-row>
                 <b-col>
@@ -79,7 +72,6 @@
 </template>
 
 <script>
-import PageNavigation from '@/components/PageNavigation.vue';
 import DiscreteProgress from '@/components/DiscreteProgress.vue';
 import JobApi from '@/services/apiV1/JobManager.js';
 import moment from 'moment';
@@ -87,7 +79,6 @@ import moment from 'moment';
 export default {
     name: 'Job',
     components: {
-        PageNavigation,
         DiscreteProgress
     },
     data() {

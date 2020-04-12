@@ -173,12 +173,12 @@ class Sample(models.Model):
         return self.name
 
     def get(self):
-        '''
+        """
             Get the sample file/folder.
 
             Returns:
                 A file like object containing the sample data.
-        '''
+        """
         storage = permissions.open_folder(self.collection.storage_type,
                                           self.collection.base_file_path,
                                           self.collection.user)

@@ -2,8 +2,7 @@
     <div>
         <b-card title="What is PlantIT?">
             <b-card-text>
-                PlantIT is a PaaS (<b>Phenotyping</b>-as-a-Service) data science
-                platform for computational plant biologists.
+                PlantIT is a <b>Phenotyping</b>-as-a-Service platform for computational plant biologists.
                 <b-container fluid class="p-2">
                     <b-row class="mt-4">
                         <b-col md="auto" class="text-center">
@@ -17,13 +16,10 @@
                         </b-col>
                         <b-col>
                             <b-card
-                                title="Batteries-included (but not required)"
+                                title="Access data and run code where *you* want to."
                             >
                                 <b-card-text>
-                                    Plug in your storage and compute resources
-                                    or share time on the Computational Plant
-                                    Science lab's own infrastructure, free of
-                                    charge.
+                                    Plug in your own storage and compute resources or share time on the Computational Plant Science lab's own infrastructure, free of charge.
                                 </b-card-text>
                             </b-card>
                         </b-col>
@@ -39,25 +35,9 @@
                             ></b-img>
                         </b-col>
                         <b-col>
-                            <b-card title="Workflow orchestration">
+                            <b-card title="Deploy, version, and reproduce existing workflows.">
                                 <b-card-text>
-                                    Develop your analyses with the following
-                                    supported frameworks:
-                                    <br />
-                                    <br />
-                                    <b-list-group>
-                                        <b-list-group-item
-                                            >CookieCutter</b-list-group-item
-                                        >
-                                        <!--<b-list-group-item
-                                            >Dagster</b-list-group-item
-                                        >-->
-                                    </b-list-group>
-                                    <br />
-                                    Or build bespoke workflows: pipelines run in
-                                    Singularity containers over which you have
-                                    full control. If your code runs on Linux, it
-                                    will run on PlantIT!
+                                    PlantIT pipelines run in Singularity containers. There's no need to rewrite existing code: if it can run in a container, it will run on PlantIT!
                                 </b-card-text>
                             </b-card>
                         </b-col>
@@ -71,10 +51,9 @@
                             ></b-img>
                         </b-col>
                         <b-col>
-                            <b-card title="Execution and monitoring">
+                            <b-card title="Orchestrate analyses from your browser.">
                                 <b-card-text>
-                                    Schedule pipelines or run them in real time
-                                    from the web portal or RESTful API.
+                                    Run and introspect pipelines from the PlantIT portal (or RESTful API).
                                 </b-card-text>
                             </b-card>
                         </b-col>
