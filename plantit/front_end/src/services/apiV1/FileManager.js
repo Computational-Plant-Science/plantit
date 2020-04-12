@@ -25,7 +25,7 @@ export default {
          *    Axios promise containing returning an array of storage types
          **/
         return axios
-            .post('/apis/v1/files/')
+            .post('/apis/v1/files/storage_types')
             .then(response => {
                 return response.data.storage_types;
             })
@@ -33,7 +33,6 @@ export default {
                 Sentry.captureException(err);
             });
     },
-
     listDir(dir, storage_type) {
         /**
          * List folder contents in the format required by
@@ -61,7 +60,6 @@ export default {
                 Sentry.captureException(err);
             });
     },
-
     listDirBase(basePath, dir, storage_type) {
         /**
          * List folder contents in the format required by

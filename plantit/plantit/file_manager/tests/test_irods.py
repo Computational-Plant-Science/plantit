@@ -4,8 +4,6 @@ from django.test import TestCase
 
 from irods.session import iRODSSession
 
-from ..test.test_models import create_user
-
 from plantit.file_manager.filesystems.irods import IRODSFileSystem
 
 

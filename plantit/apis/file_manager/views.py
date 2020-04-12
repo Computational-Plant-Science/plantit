@@ -1,4 +1,3 @@
-import json
 import posixpath
 
 from django.http import JsonResponse, Http404, HttpResponse
@@ -136,11 +135,11 @@ def upload(request):
 
     files = request.FILES.getlist('file')
 
-    if(not files):
+    if not files:
         raise Http404
 
     file_names = []
     for f in files:
         file_names.append(file_storage.save(f.name,f))
 
-    return JsonResponse(file_names,safe=False)
+    return JsonResponse(file_names, safe=False)

@@ -23,11 +23,11 @@ sphinx_rtd_theme
 django-imagekit
 pillow
 
-#CAS logins
 django-cas-ng
-
-#Sentry io
 sentry-sdk
-
-# Production requirements
 gunicorn
+dagster
+dagster-postgres
+dagster-celery
+dagster-cron
+dagit

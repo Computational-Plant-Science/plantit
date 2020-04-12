@@ -5,7 +5,6 @@ from irods.exception import CollectionDoesNotExist
 
 from .storage import AbstractStorageType
 
-
 class IRODSFileSystem(Storage):
     """
         Implements basic file stroage on a iRODS_ filesystem. It inherits from
@@ -30,21 +29,22 @@ class IRODSFileSystem(Storage):
 
     def _mkpath(self, name):
         name = name.strip('./')
-        if (name == ""):
+        if name == "":
             return self.path
-        elif (self.path == "/"):
+        elif self.path == "/":
             return "/" + name
         else:
             return self.path + "/" + name
 
-    def delete(self, name):
-        raise NotImplementedError
+    #def delete(self, name):
+    #    path = self._mkpath(name)
+    #    self.session.data_objects.
 
     def exists(self, name):
         path = self._mkpath(name)
-        if (self.session.data_objects.exists(path)):
+        if self.session.data_objects.exists(path):
             return True
-        else:  # see if there is a collection by that name
+        else:
             try:
                 self.session.collections.get(path)
                 return True
@@ -55,7 +55,7 @@ class IRODSFileSystem(Storage):
         coll = self.session.collections.get(self._mkpath(path))
         files = [obj.name for obj in coll.data_objects]
         dirs = [obj.name for obj in coll.subcollections]
-        return (dirs, files)
+        return dirs, files
 
     def _open(self, name, mode):
         obj = self.session.data_objects.get(self._mkpath(name))
@@ -74,7 +74,7 @@ class IRODSFileSystem(Storage):
 
 class IRODS(AbstractStorageType):
     """
-        Implementes an AbstractStorageType for the IRodsFileSystem storage type,
+        Implements an AbstractStorageType for the IRodsFileSystem storage type,
         which provides access to an iRODS_ server file system.
 
         Attributes:

@@ -1,41 +1,48 @@
 <template>
-    <div style="text-align:center">
-        <PageNavigation>
-            <template v-slot:page-nav>
-                <b-nav-item to="/user/collections">Collections</b-nav-item>
-                <b-nav-item to="/user/dashboard">Dashboard</b-nav-item>
-                <b-nav-item to="/user/jobs">Jobs</b-nav-item>
-            </template>
-            <template v-slot:buttons> </template>
-        </PageNavigation>
-
-        <b-container class="content-box center-container">
-            <h1>Workflow Parameters</h1>
-            <b-form
-                @submit="onSubmit"
-                style="text-align: left;"
-                ref="form"
-                id="my-form"
-            >
-                <FormGroup
-                    v-for="group in params"
-                    :key="group.id"
-                    :group="group"
-                    @onChange="onChange"
-                >
-                </FormGroup>
-                <b-button type="submit" variant="primary" class="m-2"
-                    >Submit</b-button
-                >
-                <b-button variant="danger" class="m-2">Cancel</b-button>
-            </b-form>
+    <div class="w-100 p-2 pb-4">
+        <b-container>
+            <b-card>
+                <b-row>
+                    <b-col>
+                        <h3>Workflow Parameters</h3>
+                    </b-col>
+                </b-row>
+                <hr />
+                <b-row>
+                    <b-col>
+                        <b-form
+                            @submit="onSubmit"
+                            style="text-align: left;"
+                            ref="form"
+                            id="my-form"
+                        >
+                            <FormGroup
+                                v-for="group in params"
+                                :key="group.id"
+                                :group="group"
+                                @onChange="onChange"
+                            >
+                            </FormGroup>
+                            <hr>
+                            <b-button
+                                type="submit"
+                                variant="primary"
+                                class="m-2"
+                                >Submit</b-button
+                            >
+                            <b-button variant="danger" class="m-2"
+                                >Cancel</b-button
+                            >
+                        </b-form>
+                    </b-col>
+                </b-row>
+            </b-card>
         </b-container>
     </div>
 </template>
 
 <script>
 import router from '../router';
-import PageNavigation from '@/components/PageNavigation.vue';
 import FormGroup from '@/components/FormGroup';
 import WorkflowAPI from '@/services/apiV1/WorkflowManager';
 import * as Sentry from '@sentry/browser';
@@ -43,7 +50,6 @@ import * as Sentry from '@sentry/browser';
 export default {
     name: 'SubmitWorkflow',
     components: {
-        PageNavigation,
         FormGroup
     },
     props: {
@@ -83,7 +89,7 @@ export default {
                 this.collection_pk,
                 this.values
             ).then(result => {
-                if (result.status == 200) {
+                if (result.status === 200) {
                     router.push({
                         name: 'job',
                         query: { pk: result.data.job_id }

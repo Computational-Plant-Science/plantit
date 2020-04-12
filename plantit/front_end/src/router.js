@@ -15,15 +15,6 @@ let router = new Router({
             component: Home
         },
         {
-            path: '/about',
-            name: 'about',
-            // route level code-splitting
-            // this generates a separate chunk (about.[hash].js) for this route
-            // which is lazy-loaded when the route is visited.
-            component: () =>
-                import(/* webpackChunkName: "about" */ './views/About.vue')
-        },
-        {
             path: '/user/jobs',
             name: 'jobs',
             component: () =>
@@ -51,19 +42,12 @@ let router = new Router({
             }
         },
         {
-            path: '/user/collections',
-            name: 'collections',
-            component: () =>
-                import(/* webpackChunkName: "about" */ './views/Collections.vue'),
-            meta: {
-                requiresAuth: true
-            }
-        },
-        {
             path: '/user/collection',
             name: 'collection',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/Collection.vue'),
+                import(
+                    /* webpackChunkName: "about" */ './views/Collection.vue'
+                ),
             props: route => ({ pk: parseInt(route.query.pk) }),
             meta: {
                 requiresAuth: true
@@ -73,17 +57,9 @@ let router = new Router({
             path: '/user/collection/new',
             name: 'newCollection',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/NewCollection.vue'),
-            meta: {
-                requiresAuth: true
-            }
-        },
-        {
-            path: '/user/collection/add',
-            name: 'addFiles',
-            component: () =>
-                import(/* webpackChunkName: "about" */ './views/AddFiles.vue'),
-            props: route => ({ pk: parseInt(route.query.pk) }),
+                import(
+                    /* webpackChunkName: "about" */ './views/NewCollection.vue'
+                ),
             meta: {
                 requiresAuth: true
             }
@@ -102,7 +78,9 @@ let router = new Router({
             path: '/user/workflow/submit',
             name: 'submit_workflow',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/SubmitWorkflow.vue'),
+                import(
+                    /* webpackChunkName: "about" */ './views/SubmitWorkflow.vue'
+                ),
             props: route => ({
                 collection_pk: parseInt(route.query.collection_pk),
                 workflow_name: route.query.workflow_name
@@ -114,7 +92,9 @@ let router = new Router({
         {
             path: '*',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/PageNotFound.vue')
+                import(
+                    /* webpackChunkName: "about" */ './views/PageNotFound.vue'
+                )
         }
     ]
 });

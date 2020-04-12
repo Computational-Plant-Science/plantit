@@ -5,8 +5,7 @@
                 id="thumbnails"
                 class="p-2 thumbnail"
                 v-for="(sample, idx) in displayedSamples"
-                :key="sample.pk"
-            >
+                :key="sample.pk">
                 <div
                     style="position: relative; min-width: 100px"
                     @mouseover="selectedRow(idx)"
@@ -18,25 +17,25 @@
 
                     <b-button
                         v-show="
-                            selectedSample.hover == true &&
+                            selectedSample.hover === true &&
                                 selectedSample.index === idx
                         "
                         style="position: absolute; right:0; top:0"
                         class="plantit-btn thumbnail-btn"
                         v-b-tooltip.hover
-                        title="Edit sample name and metadata."
-                        @click="$bvModal.show('editSampleMeta')"
-                    >
+                        title="Edit sample metadata."
+                        @click="$bvModal.show('editSampleMeta')">
                         <i class="far fa-edit"></i>
                     </b-button>
 
                     <b-button
                         v-show="
-                            selectedSample.hover == true &&
+                            selectedSample.hover === true &&
                                 selectedSample.index === idx
                         "
                         style="position: absolute; left:0; top:0"
-                        class="plantit-btn thumbnail-btn"
+                        class="thumbnail-btn"
+                        variant="danger"
                         v-b-tooltip.hover
                         title="Delete sample."
                         @click="deleteSample(idx)"
@@ -161,9 +160,9 @@ export default {
         deleteSample() {
             this.$bvModal
                 .msgBoxConfirm(
-                    `Delete sample ${this.selectedSample.sample.name}?`,
+                    `Are you sure you want to delete sample '${this.selectedSample.sample.name}'?`,
                     {
-                        title: 'Delete Confirmation',
+                        title: 'Delete Sample',
                         centered: true
                     }
                 )

@@ -247,3 +247,7 @@ pip-selfcheck.json
 .pytest_cache/
 
 db/
+
+*.xcf
+
+dagster.yaml

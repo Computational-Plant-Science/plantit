@@ -14,6 +14,7 @@ from model_utils.managers import InheritanceManager
 
 from encrypted_model_fields.fields import EncryptedCharField
 
+import plantit.jobs.solids
 from ..collection.models import Collection
 
 
@@ -27,7 +28,7 @@ def __run_task__(task_pk):
             task_pk: pk of the task to run
     """
     task = Task.objects.get_subclass(pk=task_pk)
-    task.run()
+    plantit.jobs.solids.run_workflow()
 
 
 @shared_task
@@ -46,8 +47,10 @@ def __run_next__(pk):
     queued_tasks = job.task_set.filter(complete=False).order_by('order_pos').select_subclasses()
     if len(queued_tasks) > 0:
         task = queued_tasks[0]
+        print(f"Starting job {pk}")
         task.run()
     else:
+        print(f"Task {pk} completed")
         job.status_set.create(state=Status.COMPLETED,
                               date=timezone.now(),
                               description=str("All Tasks Finished"))
@@ -114,7 +117,7 @@ class Cluster(models.Model):
             description (str):
                 A short description providing notes and information related to
                 this cluster
-            workdir (str): Directory on the cluster in which tasks are run
+            working_directory (str): Directory on the cluster in which tasks are run
             username (str): username used to log into the cluster
             password (str): password used to log into the cluster
             port (int): Cluster ssh server ssh port (default=22)

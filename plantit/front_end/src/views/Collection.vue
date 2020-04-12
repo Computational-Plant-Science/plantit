@@ -1,86 +1,329 @@
 <template>
-    <div style="text-align:center">
-        <PageNavigation>
-            <template v-slot:page-nav>
-                <b-nav-item to="/user/collections">Collections</b-nav-item>
-                <b-nav-item to="/user/dashboard">Dashboard</b-nav-item>
-            </template>
-            <template v-slot:buttons>
-                <b-button @click="addFiles">
-                    Add Files
-                </b-button>
-
-                <b-button @click="analyze">
-                    Analyze
-                </b-button>
-
-                <b-button @click="deleteCollection">
-                    Delete
-                </b-button>
-            </template>
-        </PageNavigation>
-
+    <div>
         <b-container>
-            <b-row>
-                <b-col class="content-box">
-                    <b-spinner
-                        v-if="this.collection.sample_set === undefined"
-                        label="Loading..."
-                    >
-                    </b-spinner>
-                    <span v-else>
-                        <span v-if="this.collection.sample_set == 0">
-                            Add files to the collection by clicking
-                            <b-link
-                                :to="{
-                                    name: 'addFiles',
-                                    query: { pk: this.pk }
-                                }"
-                            >
-                                "Add Files"
-                            </b-link>
-                        </span>
-                        <CollectionThumbnails
-                            v-if="this.collection.sample_set.length > 0"
-                            :pk="pk"
-                            :samples="collection.sample_set"
-                        ></CollectionThumbnails>
-                    </span>
+            <b-row class="justify-content-md-center">
+                <b-col>
+                    <h3>
+                        Collection
+                        <b-badge class="collection-id">{{ pk }}</b-badge>
+                        <b-badge class="collection-name">{{
+                            this.collection.name
+                        }}</b-badge>
+                    </h3>
                 </b-col>
-                <b-col class="content-box" md="5">
-                    <CollectionDetails
-                        :collection="collection"
-                    ></CollectionDetails>
+                <b-col md="auto">
+                    <b-button
+                        id="edit-name-btn"
+                        @click="$bvModal.show('editNameModal')"
+                        class="mr-2 plantit-btn"
+                        v-b-tooltip.hover
+                        title="Edit collection name."
+                    >
+                        <i class="far fa-edit"></i>
+                    </b-button>
+                    <b-button
+                        size="md"
+                        @click="analyze()"
+                        class="mr-2 plantit-btn"
+                        v-b-tooltip.hover
+                        title="Analyze collection."
+                    >
+                        Analyze
+                    </b-button>
+                    <b-button
+                        size="md"
+                        variant="danger"
+                        @click="remove()"
+                        v-b-tooltip.hover
+                        title="Delete collection."
+                    >
+                        Delete
+                    </b-button>
+                </b-col>
+            </b-row>
+            <b-row class="justify-content-md-center">
+                <b-col>
+                    <b-card class="mt-2 mb-2">
+                        <b-row>
+                            <b-col>
+                                <h4>Description</h4>
+                            </b-col>
+                            <b-col md="auto">
+                                <b-button
+                                    id="edit-description-btn"
+                                    @click="
+                                        $bvModal.show('editDescriptionModal')
+                                    "
+                                    class="plantit-btn"
+                                    v-b-tooltip.hover
+                                    title="Edit description."
+                                >
+                                    <i class="far fa-edit"></i>
+                                </b-button>
+                            </b-col>
+                        </b-row>
+                        <br />
+                        <b-row>
+                            <b-col>
+                                <b-form class="form-horizontal">
+                                    <b-form-group class="lb">
+                                        <b-form-textarea
+                                            disabled
+                                            :placeholder="
+                                                collection.description
+                                            "
+                                            plaintext
+                                        >
+                                        </b-form-textarea>
+                                    </b-form-group>
+                                </b-form>
+                            </b-col>
+                        </b-row>
+                    </b-card>
+                </b-col>
+                <b-col>
+                    <b-card class="mt-2 mb-2">
+                        <b-row>
+                            <b-col>
+                                <h4>Metadata</h4>
+                            </b-col>
+                            <b-col md="auto">
+                                <b-button
+                                    id="edit-metadata-btn"
+                                    @click="$bvModal.show('editMetadataModal')"
+                                    class="plantit-btn"
+                                    v-b-tooltip.hover
+                                    title="Edit metadata."
+                                >
+                                    <i class="far fa-edit"></i>
+                                </b-button>
+                            </b-col>
+                        </b-row>
+                        <br />
+                        <b-row>
+                            <b-col>
+                                <b-table
+                                    show-empty
+                                    selectable
+                                    hover
+                                    small
+                                    sticky-header="true"
+                                    head-variant="light"
+                                    responsive="sm"
+                                    :items="collection.metadata"
+                                    :fields="fields"
+                                    class="table-responsive"
+                                ></b-table>
+                            </b-col>
+                        </b-row>
+                    </b-card>
+                </b-col>
+            </b-row>
+            <b-row>
+                <b-col>
+                    <b-overlay
+                        :show="show"
+                        rounded="sm"
+                        @shown="onShown"
+                        @hidden="onHidden"
+                    >
+                        <template v-slot:overlay>
+                            <div class="text-center">
+                                <!--<ul v-if="files.length">
+                                    <li v-for="file in files" :key="file.id">
+                                        <span>{{ file.name }}</span> - -
+                                        <span v-if="file.error">{{
+                                            file.error
+                                        }}</span>
+                                        <span v-else-if="file.success"
+                                            >success</span
+                                        >
+                                        <span v-else-if="file.active"
+                                            >active</span
+                                        >
+                                        <span v-else></span>
+                                    </li>
+                                </ul>-->
+                                <p
+                                    v-if="
+                                        $refs.upload && !$refs.upload.uploaded
+                                    "
+                                >
+                                    Upload in progress...
+                                </p>
+                                <p
+                                    v-if="
+                                        $refs.upload && $refs.upload.uploaded
+                                    "
+                                >
+                                    Upload complete.
+                                </p>
+                                <b-button
+                                    v-if="
+                                        $refs.upload && !$refs.upload.uploaded
+                                    "
+                                    ref="cancel"
+                                    size="sm"
+                                    variant="outline-danger"
+                                    aria-describedby="cancel-label"
+                                    @click="show = false"
+                                >
+                                    Cancel
+                                </b-button>
+                                <b-button
+                                    v-else-if="
+                                        $refs.upload && $refs.upload.uploaded
+                                    "
+                                    class="plantit-btn"
+                                    size="sm"
+                                    aria-describedby="ok-label"
+                                    @click="show = false"
+                                >
+                                    Ok
+                                </b-button>
+                            </div>
+                        </template>
+                        <b-card
+                            class="mt-4 mb-2"
+                            :aria-hidden="show ? 'true' : null"
+                        >
+                            <div
+                                v-show="$refs.upload && $refs.upload.dropActive"
+                                class="drop-active"
+                            >
+                                <h3>Drop files to upload</h3>
+                            </div>
+                            <b-row>
+                                <b-col>
+                                    <h4>Samples</h4>
+                                </b-col>
+                                <b-col md="auto">
+                                    <vue-upload
+                                        class="btn plantit-btn"
+                                        v-model="files"
+                                        :multiple="true"
+                                        :drop="true"
+                                        :drop-directory="true"
+                                        :headers="headers"
+                                        postAction="/apis/v1/files/upload/"
+                                        :data="{
+                                            storage_type: this.collection
+                                                .storage_type,
+                                            path: this.collection.base_file_path
+                                        }"
+                                        ref="upload"
+                                        @input-file="inputFile"
+                                        v-b-tooltip.hover
+                                        title="Upload samples."
+                                    >
+                                        <i class="fas fa-plus"></i>
+                                    </vue-upload>
+                                </b-col>
+                            </b-row>
+                            <br />
+                            <b-row>
+                                <b-col>
+                                    <b-spinner
+                                        v-if="
+                                            this.collection.sample_set ===
+                                                undefined
+                                        "
+                                        label="Loading..."
+                                    >
+                                    </b-spinner>
+                                    <span v-else>
+                                        <span
+                                            v-if="
+                                                this.collection.sample_set
+                                                    .length === 0
+                                            "
+                                        >
+                                            Drop files anywhere or click the '+'
+                                            button to upload samples.
+                                        </span>
+                                        <CollectionThumbnails
+                                            v-if="
+                                                this.collection.sample_set
+                                                    .length > 0
+                                            "
+                                            :pk="pk"
+                                            :samples="collection.sample_set"
+                                        >
+                                        </CollectionThumbnails>
+                                    </span>
+                                </b-col>
+                            </b-row>
+                        </b-card>
+                    </b-overlay>
                 </b-col>
             </b-row>
         </b-container>
+        <EditNameModal
+            modal-id="editNameModal"
+            :name="collection.name"
+            @saveName="saveName"
+            @cancel="cancelEdit"
+        >
+        </EditNameModal>
+        <EditDescriptionModal
+            modal-id="editDescriptionModal"
+            :description="collection.description"
+            @saveDescription="saveDescription"
+            @cancel="cancelEdit"
+        >
+        </EditDescriptionModal>
+        <EditMetadataModal
+            modal-id="editMetadataModal"
+            :metadata="collection.metadata"
+            @saveMetadata="saveMetadata"
+            @cancel="cancelEdit"
+        >
+        </EditMetadataModal>
     </div>
 </template>
 
 <script>
 import router from '../router';
-import PageNavigation from '@/components/PageNavigation.vue';
+import VueUpload from 'vue-upload-component';
+import Auth from '@/services/apiV1/Auth';
 import CollectionThumbnails from '@/components/collections/CollectionThumbnails.vue';
-import CollectionDetails from '@/components/collections/CollectionDetails.vue';
 import CollectionApi from '@/services/apiV1/CollectionManager';
+import EditNameModal from '@/components/collections/EditNameModal';
+import EditDescriptionModal from '@/components/collections/EditDescriptionModal';
+import EditMetadataModal from '@/components/collections/EditMetadataModal';
 
 export default {
     name: 'Collection',
     components: {
-        PageNavigation,
+        VueUpload,
         CollectionThumbnails,
-        CollectionDetails
+        EditNameModal,
+        EditDescriptionModal,
+        EditMetadataModal
     },
     props: {
         pk: {
-            //Pk of the collection to show
             required: true
         }
     },
     data() {
         return {
+            show: false,
             collection: {
-                metadata: [] //Must be defined for EditMetadata component.
+                metadata: []
+            },
+            fields: [
+                {
+                    key: 'name',
+                    sortable: true
+                },
+                {
+                    key: 'value'
+                }
+            ],
+            files: [],
+            headers: {
+                'X-CSRFTOKEN': Auth.getCSRFToken()
             }
         };
     },
@@ -93,34 +336,161 @@ export default {
         hasSamples() {
             return !(
                 this.collection.sample_set === undefined ||
-                this.collection.sample_set == 0
+                this.collection.sample_set === 0
             );
         }
     },
     methods: {
-        addFiles() {
-            router.push({ name: 'addFiles', query: { pk: this.pk } });
+        inputFile(newFile, oldFile) {
+            if (newFile && oldFile) {
+                // update
+                if (newFile.active && !oldFile.active) {
+                    // beforeSend
+                    // min size
+                    if (
+                        newFile.size >= 0 &&
+                        this.minSize > 0 &&
+                        newFile.size < this.minSize
+                    ) {
+                        this.$refs.upload.update(newFile, { error: 'size' });
+                    }
+                }
+                if (newFile.progress !== oldFile.progress) {
+                    // progress
+                }
+                if (newFile.error && !oldFile.error) {
+                    // error
+                }
+                if (newFile.success && !oldFile.success) {
+                    // success
+                }
+            }
+            if (!newFile && oldFile) {
+                // remove
+                if (oldFile.success && oldFile.response.id) {
+                    // $.ajax({
+                    //   type: 'DELETE',
+                    //   url: '/upload/delete?id=' + oldFile.response.id,
+                    // })
+                }
+            }
+            // Automatically activate upload
+            if (
+                Boolean(newFile) !== Boolean(oldFile) ||
+                oldFile.error !== newFile.error
+            ) {
+                this.show = true;
+                this.$refs.upload.active = true;
+                CollectionApi.addSamples(
+                    Object.values(
+                        [newFile].reduce((result, item) => {
+                            result[item.name] = item;
+                            return result;
+                        }, {})
+                    ).map(item => {
+                        return {
+                            name: item.name,
+                            path: this.collection.base_file_path
+                        };
+                    }),
+                    this.pk
+                ).then(() => {
+                    CollectionApi.getCollection(this.pk).then(data => {
+                        this.collection = data;
+                    });
+                });
+            }
         },
+        onFileInput() {
+            if (!this.$refs.upload.active) {
+                this.show = true;
+                this.$refs.upload.active = true;
+                let samples = Object.values(
+                    this.files.reduce((result, item) => {
+                        result[item.name] = item;
+                        return result;
+                    }, {})
+                ).map(item => {
+                    return {
+                        name: item.name,
+                        path: this.collection.base_file_path
+                    };
+                });
+                CollectionApi.addSamples(samples, this.pk).then(() => {
+                    CollectionApi.getCollection(this.pk).then(data => {
+                        this.collection = data;
+                        this.$refs.upload.active = false;
+                    });
+                });
+            }
+        },
+        onShown() {
+            this.$refs.cancel.focus();
+        },
+        onHidden() {},
         analyze() {
             router.push({ name: 'analyze', query: { pk: this.pk } });
         },
-        deleteCollection() {
+        remove() {
             this.$bvModal
-                .msgBoxConfirm(`Delete collection ${this.collection.name}?`, {
-                    title: 'Delete Confirmation',
-                    centered: true
-                })
-                .then(value => {
-                    if (value == true) {
-                        CollectionApi.deleteCollection(this.collection.pk).then(
-                            value => {
-                                if (value == true) {
-                                    router.push({ name: 'collections' });
-                                }
-                            }
-                        );
+                .msgBoxConfirm(
+                    `Are you sure you want to delete collection '${this.collection.name}?'`,
+                    {
+                        title: 'Delete Collection',
+                        centered: true,
+                        okVariant: 'danger',
+                        okTitle: 'Delete'
                     }
+                )
+                .then(value => {
+                    if (value === true) {
+                        CollectionApi.deleteCollection(this.pk).then(value => {
+                            if (value === true) {
+                                this.items = this.items.filter(obj => {
+                                    return obj.pk !== this.pk;
+                                });
+                            }
+                        });
+                    }
+                    router.push({ name: 'dashboard' });
                 });
+        },
+        saveName(name) {
+            CollectionApi.updateMetadata(
+                name,
+                this.collection.description,
+                this.collection.metadata,
+                this.collection.pk
+            ).then(() => {
+                this.collection.name = name;
+            });
+        },
+        saveDescription(description) {
+            CollectionApi.updateMetadata(
+                this.collection.name,
+                description,
+                this.collection.metadata,
+                this.collection.pk
+            ).then(() => {
+                this.collection.description = description;
+            });
+        },
+        saveMetadata(metadata) {
+            CollectionApi.updateMetadata(
+                this.collection.name,
+                this.collection.description,
+                metadata,
+                this.collection.pk
+            ).then(() => {
+                this.collection.metadata = metadata;
+            });
+        },
+        cancelEdit() {
+            CollectionApi.getCollection(this.collection.pk).then(collection => {
+                this.collection.metadata = collection.metadata;
+                this.collection.name = collection.name;
+                this.collection.description = collection.description;
+            });
         }
     }
 };

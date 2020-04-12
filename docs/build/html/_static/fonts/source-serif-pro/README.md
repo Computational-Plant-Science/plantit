@@ -1,3 +1,14 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Contents**
+
+- [Source Serif Pro](#source-serif-pro)
+  - [Installation instructions](#installation-instructions)
+  - [Getting Involved](#getting-involved)
+  - [Further information](#further-information)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Source Serif Pro
 
 Source Serif Pro is a set of OpenType fonts to complement the [Source Sans Pro](https://github.com/adobe-fonts/source-sans-pro) family. 

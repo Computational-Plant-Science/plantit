@@ -1,3 +1,4 @@
+import plantit.jobs.pipelines
 from plantit.job_manager.job import Job, Status, Task
 from rest_framework import serializers
 from datetime import datetime
@@ -36,7 +37,7 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
         status_data = validated_data.pop('status_set')
         job = Job.objects.create(**validated_data)
         job.save()
-        for status in status_data:
+        for _ in status_data:
             Status.objects.create(job = job, **status_data)
         return job
 
@@ -49,16 +50,16 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
             job.remote_results_path = validated_data['remote_results_path']
 
         status_data = validated_data.get('status_set',None)
-        if(status_data):
+        if status_data:
             for status in status_data:
                 status['date'] = datetime.now()
                 Status.objects.create(job = job, **status)
 
         task_list = validated_data.get('task_set',None)
-        if(task_list):
+        if task_list:
             for task_data in task_list:
                 task = job.task_set.get(pk=task_data['pk'])
-                if(task.complete == False and task_data['complete'] == True):
+                if task.complete == False and task_data['complete'] == True:
                     task.finish()
 
         job.save()

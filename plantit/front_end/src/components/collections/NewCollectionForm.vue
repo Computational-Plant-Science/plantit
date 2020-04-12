@@ -1,12 +1,12 @@
 <template>
     <div>
         <b-form @submit="onSubmit">
-            <b-form-group label="Collection Name:" label-for="input-name">
+            <b-form-group label="Name:" label-for="input-name">
                 <b-form-input
                     id="input-name"
                     v-model="form.name"
                     required
-                    placeholder="Enter Name"
+                    placeholder="Enter name..."
                 ></b-form-input>
             </b-form-group>
 
@@ -100,7 +100,7 @@ export default {
             }
         },
         cancel() {
-            router.push({ name: 'collections' });
+            router.push({ name: 'dashboard' });
         },
         saveCollection() {
             CollectionApi.newCollection(

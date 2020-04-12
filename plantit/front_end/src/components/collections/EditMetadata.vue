@@ -4,28 +4,25 @@
         <th>Value</th>
         <tr
             v-for="(field, index) in metadata"
-            v-bind:key="field.name + field.value"
-        >
+            v-bind:key="field.name + field.value">
             <td>
                 <ClickToEdit
                     v-model="field.name"
                     v-b-tooltip.hover
-                    title="Click on text to edit."
-                >
+                    title="Click on text to edit.">
                 </ClickToEdit>
             </td>
             <td>
                 <ClickToEdit
                     v-model="field.value"
                     v-b-tooltip.hover
-                    title="Click on text to edit."
-                >
+                    title="Click on text to edit.">
                 </ClickToEdit>
             </td>
             <td>
-                <b-button @click="deleteField(index)"
-                    ><i class="fas fa-trash-alt"></i
-                ></b-button>
+                <b-button @click="deleteField(index)">
+                    <i class="fas fa-trash-alt"></i>
+                </b-button>
             </td>
         </tr>
         <tr>
@@ -36,8 +33,7 @@
                     v-model="newField.name"
                     v-on:keyup="edited"
                     placeholder="E.g. Date Collected"
-                    v-on:keyup.enter="addField"
-                />
+                    v-on:keyup.enter="addField"/>
             </td>
             <td>
                 <input
@@ -46,13 +42,12 @@
                     placeholder="E.g. 12/20/1998"
                     v-model="newField.value"
                     v-on:keyup="edited"
-                    v-on:keyup.enter="addField"
-                />
+                    v-on:keyup.enter="addField"/>
             </td>
             <td>
-                <b-button @click="addField"
-                    ><i class="fas fa-plus"></i
-                ></b-button>
+                <b-button @click="addField">
+                    <i class="fas fa-plus"></i>
+                </b-button>
             </td>
         </tr>
     </table>

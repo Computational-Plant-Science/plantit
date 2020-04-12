@@ -1,77 +1,102 @@
 <template>
-    <div>
-        <b-container>
-            <b-row v-if="filterable">
-                <b-col md="8" class="my-1">
-                    <b-form-group label-cols-sm="2" label="Filter">
-                        <b-input-group>
-                            <b-form-input
-                                v-model="filter"
-                                placeholder="Type to Filter"
-                            ></b-form-input>
-                            <b-input-group-append>
-                                <b-button
-                                    :disabled="!filter"
-                                    @click="filter = ''"
-                                    >Clear</b-button
-                                >
-                            </b-input-group-append>
-                        </b-input-group>
-                    </b-form-group>
+    <div class="w-100 p-2 pb-4">
+        <b-card>
+            <b-row>
+                <b-col>
+                    <h4>Jobs</h4>
+                </b-col>
+                <b-col md="auto" v-if="filterable">
+                    <b-input-group>
+                        <b-form-input
+                            v-model="filter"
+                            placeholder="Filter..."
+                        ></b-form-input>
+                        <b-input-group-append>
+                            <b-button
+                                :disabled="!filter"
+                                @click="filter = ''"
+                                v-b-tooltip.hover
+                                title="Clear filter."
+                                >Clear
+                            </b-button>
+                        </b-input-group-append>
+                    </b-input-group>
+                </b-col>
+                <b-col md="auto">
+                    <b-button
+                        class="plantit-btn"
+                        v-b-tooltip.hover
+                        title="Start new job."
+                    >
+                        New
+                    </b-button>
                 </b-col>
             </b-row>
-
-            <b-table
-                selectable
-                hover
-                responsive="md"
-                :sort-by.sync="sortBy"
-                :sort-desc.sync="sortDesc"
-                :items="items"
-                :fields="fields"
-                :per-page="perPage"
-                :borderless="true"
-                select-mode="single"
-                :filter="filter"
-                @row-selected="rowSelected"
-            >
-                <template slot="tasks" slot-scope="data">
-                    <DiscreteProgress
-                        :tasks="data.item.task_set"
-                        :show-name="false"
-                    ></DiscreteProgress>
-                </template>
-                <template slot="pinned" slot-scope="data">
-                    <b-button
-                        class="plantit-btn"
-                        size="sm"
-                        @click="togglePin(data.item.pk, data.item)"
+            <br />
+            <b-row>
+                <b-col>
+                    <b-table
+                        show-empty
+                        small
+                        sticky-header="true"
+                        head-variant="light"
+                        selectable
+                        hover
+                        responsive="sm"
+                        :sort-by.sync="sortBy"
+                        :sort-desc.sync="sortDesc"
+                        :items="items"
+                        :fields="fields"
+                        :per-page="perPage"
+                        :borderless="true"
+                        select-mode="single"
+                        :filter="filter"
+                        class="table-responsive"
+                        @row-selected="rowSelected"
                     >
-                        <b-img
-                            v-if="data.item.pinned"
-                            :src="require('@/assets/icons/pin icons/pin2.svg')"
-                            width="30px"
-                        >
-                        </b-img>
-                        <b-img
-                            v-else
-                            :src="require('@/assets/icons/pin icons/pin.svg')"
-                            width="30px"
-                        >
-                        </b-img>
-                    </b-button>
-                </template>
-                <template slot="tools" slot-scope="data">
-                    <b-button
-                        class="plantit-btn"
-                        size="sm"
-                        @click="deleteJob(data.item.pk)"
-                    >
-                        <i class="fas fa-trash-alt fa-2x"></i>
-                    </b-button>
-                </template>
-            </b-table>
-        </b-container>
+                        <template slot="tasks" slot-scope="data">
+                            <DiscreteProgress
+                                :tasks="data.item.task_set"
+                                :show-name="false"
+                            ></DiscreteProgress>
+                        </template>
+                        <template slot="pinned" slot-scope="data">
+                            <b-button
+                                class="plantit-btn"
+                                size="sm"
+                                @click="togglePin(data.item.pk, data.item)"
+                            >
+                                <b-img
+                                    v-if="data.item.pinned"
+                                    :src="
+                                        require('@/assets/icons/pin icons/pin2.svg')
+                                    "
+                                    width="30px"
+                                >
+                                </b-img>
+                                <b-img
+                                    v-else
+                                    :src="
+                                        require('@/assets/icons/pin icons/pin.svg')
+                                    "
+                                    width="30px"
+                                >
+                                </b-img>
+                            </b-button>
+                        </template>
+                        <template slot="tools" slot-scope="data">
+                            <b-button
+                                class="plantit-btn"
+                                size="sm"
+                                @click="deleteJob(data.item.pk)"
+                            >
+                                <i class="fas fa-trash-alt fa-2x"></i>
+                            </b-button>
+                        </template>
+                    </b-table>
+                </b-col>
+            </b-row>
+        </b-card>
     </div>
 </template>
 
@@ -112,11 +137,11 @@ export default {
                     centered: true
                 })
                 .then(value => {
-                    if (value == true) {
+                    if (value === true) {
                         JobApi.deleteJob(pk).then(value => {
-                            if (value == true) {
+                            if (value === true) {
                                 this.items = this.items.filter(obj => {
-                                    return obj.pk != pk;
+                                    return obj.pk !== pk;
                                 });
                             }
                         });
@@ -152,7 +177,7 @@ export default {
                     key: 'date_created',
                     sortable: true,
                     formatter: value => {
-                      return moment(value).format('MM/DD/YY HH:mm')
+                        return moment(value).format('MM/DD/YY HH:mm');
                     }
                 },
                 {

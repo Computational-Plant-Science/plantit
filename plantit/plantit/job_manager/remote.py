@@ -19,7 +19,7 @@ from ..file_manager import permissions
 from ..workflows import registrar
 
 
-class SSHTaskMixin(models.Model):
+class SSHClientMixin(models.Model):
     """
         Implements a run() method for :class:`job_manager.job.Task`
         that opens an ssh connection client and sftp to the job's cluster when
@@ -61,7 +61,7 @@ class SSHTaskMixin(models.Model):
                         # files via sftp.
                         # the workdirectory of the job can be
                         # found in
-                        # self.workdir.
+                        # self.working_directory.
 
         See :class:`SubmissionTask` for a full example of using this mixin.
 
@@ -70,7 +70,7 @@ class SSHTaskMixin(models.Model):
                 The cluster used to run the task
             client (:class:`paramako.SSHClient`): ssh connection to the cluster
             sftp (:class:`paramiko.sft_client.SFTPClient`): sftp connection to the
-                            cluster. The connection is chdir'd into self.workdir
+                            cluster. The connection is chdir'd into self.working_directory
             workdir (str): full path of the job's working directory on the cluster
     """
 
@@ -111,16 +111,15 @@ class SSHTaskMixin(models.Model):
         self.sftp = self.client.open_sftp()
         self.workdir = self.cluster.workdir + "/" + self.job.work_dir
 
-        # Chdir into working directory
         try:
             self.sftp.chdir(self.cluster.workdir)
         except OSError:
             self.job.status_set.create(state=Status.FAILED,
                                        date=timezone.now(),
-                                       description="Cluster Workdir does not exist")
+                                       description="Cluster working_directory does not exist")
             client.close()
             return
-        try:  # OSError raised if dir already exists
+        try:
             self.sftp.mkdir(self.job.work_dir)
         except OSError as e:
             pass
@@ -162,7 +161,7 @@ class File(models.Model):
         return str(self.file_name)
 
 
-class SubmissionTask(SSHTaskMixin, Task):
+class SubmissionTask(SSHClientMixin, Task):
     """
         A job task for submitting jobs to a Cluster.
 
@@ -226,19 +225,17 @@ class SubmissionTask(SSHTaskMixin, Task):
             file.write(self.get_params())
 
         try:
-            # Submit job to cluster queue
+            print(f"Submitting job {self.job.pk} in directory '{self.workdir}'")
             cmds = "cd " + self.workdir + "; " + self.cluster.submit_commands
             stdin, stdout, stderr = self.client.exec_command(cmds)
 
             if stdout.channel.recv_exit_status():
                 error = "stderr: " + str(stderr.readlines())
                 error = error + " stdout: " + str(stdout.readlines())
-                if len(error) > 900:
-                    error = error[:450] + "..." + error[-450:]
-                print(error)
+                print(f"Job {self.job.pk} failed: {error}")
                 self.job.status_set.create(state=Status.FAILED,
                                            date=timezone.now(),
-                                           description="Plant IT Internal Error: " + error)
+                                           description="Plant IT Internal Error: " + (error[:450] + "..." + error[-450:] if len(error) > 900 else error))
                 return
 
         except JSONDecodeError as e:
@@ -248,10 +245,9 @@ class SubmissionTask(SSHTaskMixin, Task):
                                        description=msg)
 
 
-class UploadCollectionTask(SSHTaskMixin, Task):
+class UploadCollectionTask(SSHClientMixin, Task):
     """
-        Uploads all the files in a collection to the server to the files folder
-        in the job wok directory.
+        Uploads a JSON document describing a collection to the compute cluster's job work directory.
 
         Note:
             This was, and could be, used in conjunction with a
@@ -265,19 +261,19 @@ class UploadCollectionTask(SSHTaskMixin, Task):
     collection_dir = "samples/"
 
     def ssh(self):
-        collection = self.job.collection.cast()  # Cast down to access the files attribute
+        collection = self.job.collection.cast() # Cast down to access the files attribute
 
         with self.sftp.open('samples.json', 'w') as file:
             file.write(collection.to_json())
 
-        file_storage = permissions.open_folder(storage_type=collection.storage_type,
-                                               path=collection.base_file_path,
-                                               user=self.job.user)
+        # file_storage = permissions.open_folder(storage_type=collection.storage_type,
+        #                                        path=collection.base_file_path,
+        #                                        user=self.job.user)
 
         self.finish()
 
 
-class UploadFileTask(SSHTaskMixin, Task):
+class UploadFileTask(SSHClientMixin, Task):
     """
         Uploads a list of files to the job work directory on the server.
 
@@ -297,7 +293,7 @@ class UploadFileTask(SSHTaskMixin, Task):
             file = open(file_name)
             fname = os.path.basename(file.name)
             self.sftp.putfo(file, fname)
-            if (self.delete):
+            if self.delete:
                 os.remove(file_name)
 
         self.finish()
