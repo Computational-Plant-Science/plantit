@@ -2,7 +2,7 @@
     <div>
         <b-card title="What is PlantIT?">
             <b-card-text>
-                PlantIT is a <b>Phenotyping</b>-as-a-Service platform for computational plant biologists.
+                PlantIT is a <b>Phenomics</b>-as-a-Service platform for computational plant biologists.
                 <b-container fluid class="p-2">
                     <b-row class="mt-4">
                         <b-col md="auto" class="text-center">
@@ -16,16 +16,16 @@
                         </b-col>
                         <b-col>
                             <b-card
-                                title="Access data and run code where *you* want to."
+                                title="Batteries included, but not required"
                             >
                                 <b-card-text>
-                                    Plug in your own storage and compute resources or share time on the Computational Plant Science lab's own infrastructure, free of charge.
+                                    To get up and running quickly, store and publish data with <b-link to="https://www.cyverse.org/">CyVerse</b-link> and run your workflows on the University of Georgia's <b-link to="https://gacrc.uga.edu/systems/">HPC cluster</b-link> (for free). Alternatively, plug in your own storage and compute resources.
                                 </b-card-text>
                             </b-card>
                         </b-col>
                     </b-row>
                     <b-row class="mt-4">
-                        <b-col md="auto" class="text-center">
+                        <b-col md="auto">
                             <b-img
                                 :src="
                                     require('../../assets/frontpage/icons/code.png')
@@ -35,9 +35,9 @@
                             ></b-img>
                         </b-col>
                         <b-col>
-                            <b-card title="Deploy, version, and reproduce existing workflows.">
+                            <b-card title="Deploy reproducible code at scale">
                                 <b-card-text>
-                                    PlantIT pipelines run in Singularity containers. There's no need to rewrite existing code: if it can run in a container, it will run on PlantIT!
+                                    Developers are free to use the tools and environments of their choice. Pipelines run in Singularity containers: if your code can be packaged with Docker, it will run on PlantIT.
                                 </b-card-text>
                             </b-card>
                         </b-col>
@@ -51,9 +51,9 @@
                             ></b-img>
                         </b-col>
                         <b-col>
-                            <b-card title="Orchestrate analyses from your browser.">
+                            <b-card title="Orchestrate workflows from the browser">
                                 <b-card-text>
-                                    Run and introspect pipelines from the PlantIT portal (or RESTful API).
+                                    Run and inspect the results of pipelines from the PlantIT portal (or develop against the API).
                                 </b-card-text>
                             </b-card>
                         </b-col>
