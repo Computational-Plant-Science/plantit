@@ -21,6 +21,7 @@
                                     <b-nav-item to="/Guide"
                                         >User Guide</b-nav-item
                                     >
+                                    <b-nav-item to="/Documentation">Developer Docs</b-nav-item>
                                     <b-nav-item
                                         to="https://github.com/Computational-Plant-Science/DIRT2_Webplatform/issues/new"
                                     >

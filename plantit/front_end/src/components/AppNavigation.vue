@@ -15,6 +15,7 @@
                 <b-navbar-nav>
                     <b-nav-item to="/About">About</b-nav-item>
                     <b-nav-item to="/Guide">User Guide</b-nav-item>
+                    <b-nav-item to="/Documentation">Developer Docs</b-nav-item>
                     <b-nav-item href="https://github.com/Computational-Plant-Science/DIRT2_Webplatform/issues/new">Report an Issue</b-nav-item>
                 </b-navbar-nav>
                 <b-navbar-nav class="ml-auto">
