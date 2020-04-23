@@ -1,11 +1,9 @@
 <template>
     <div class="m-0 p-0">
         <b-container>
-            <h3><i class="fas fa-layer-group"></i> Collections</h3>
-            <hr />
             <p>
-                A <i>collection</i> is a group of <i>samples</i>. A sample can
-                be any data file. PlantIT workflows operate on the samples in a
+                A <i>collection</i> is a group of samples. A sample can
+                be any data object. PlantIT workflows operate on the samples in a
                 collection.
             </p>
             <p>

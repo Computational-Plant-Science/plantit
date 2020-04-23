@@ -1,8 +1,6 @@
 <template>
     <div class="w-100">
         <b-container>
-            <h3><i class="fas fa-play"></i> Start Workflow</h3>
-            <hr />
             <div class="mb-4 pt-4">
                 <div class="workflow-icon">
                     <b-img :src="workflow.workflow.icon_url"> </b-img>
@@ -92,15 +90,17 @@ export default {
 
 <style scoped lang="sass">
 @import "../scss/_colors.sass"
+@import "../scss/main.sass"
 
 .workflow-icon
     width: 200px
     height: 200px
     margin: 0 auto
     margin-bottom: -10px
-    background-color: #343a40
+    background-color: $secondary
     border-radius: 50%
-    padding: 25px
+    border: 4px solid $dark
+    padding: 24px
 
     img
         margin-top: 20px
@@ -108,6 +108,6 @@ export default {
         max-height: 190px
 
 .workflow-text
-    background-color: $color-box-background
+    background-color: $dark
     padding: 10px
 </style>

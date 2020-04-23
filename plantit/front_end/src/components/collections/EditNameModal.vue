@@ -8,6 +8,7 @@
         @ok="save"
         no-close-on-backdrop
         centered
+        ok-variant="dark"
     >
         <b-form-group v-if="name !== null" label="Name:" label-for="name">
             <b-form-input id="name" v-model="name_internal"> </b-form-input>

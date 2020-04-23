@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import Home from './views/Home.vue';
 import People from './views/People.vue';
+import UserInfo from './views/UserInfo.vue';
 import Auth from '@/services/apiV1/Auth.js';
 
 Vue.use(Router);
@@ -19,6 +20,14 @@ let router = new Router({
             path: '/people',
             name: 'people',
             component: People
+        },
+        {
+            path: '/user/profile',
+            name: 'profile',
+            component: UserInfo,
+            meta: {
+                requiresAuth: true
+            }
         },
         {
             path: '/user/jobs',

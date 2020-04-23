@@ -13,25 +13,19 @@
 
             <b-collapse class="logo" is-nav>
                 <b-navbar-nav>
-                    <b-nav-item
-                            to="/Guide"
-                    class="m-0 p-0">
+                    <b-nav-item to="/Guide" class="m-0 p-0">
                         <b-button variant="outline-dark">
                             <i class="fas fa-map-signs"></i>
                             Guide
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item
-                            to="/Documentation"
-                    class="m-0 p-0">
+                    <b-nav-item to="/Documentation" class="m-0 p-0">
                         <b-button variant="outline-dark">
                             <i class="fas fa-book"></i>
                             Docs
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item
-                            to="/People"
-                    class="m-0 p-0">
+                    <b-nav-item to="/People" class="m-0 p-0">
                         <b-button variant="outline-dark">
                             <i class="fas fa-users fa-1x"></i>
                             People
@@ -39,7 +33,8 @@
                     </b-nav-item>
                     <b-nav-item
                         href="https://github.com/Computational-Plant-Science/DIRT2_Webplatform/issues/new"
-                    class="m-0 p-0">
+                        class="m-0 p-0"
+                    >
                         <b-button variant="outline-dark">
                             <i class="fab fa-github fa-1x"></i>
                             Report Issue
@@ -54,7 +49,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                                                        <i class="fas fa-layer-group"></i>
+                            <i class="fas fa-layer-group"></i>
                             Collections
                         </b-button>
                     </b-nav-item>
@@ -65,7 +60,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                                                        <i class="fas fa-stream"></i>
+                            <i class="fas fa-stream"></i>
 
                             Workflows
                         </b-button>
@@ -77,7 +72,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                                                        <i class="fas fa-terminal"></i>
+                            <i class="fas fa-terminal"></i>
                             Jobs
                         </b-button>
                     </b-nav-item>
@@ -86,17 +81,10 @@
                         :title="this.info['username']"
                         class="m-0 p-0"
                     >
-                        <b-dropdown
-                            variant="outline-dark"
-                            class="p-0 m-0 dropdown-menu-left"
-                            data-toggle="dropdown"
-                        >
-                            <template class="p-0 m-0" v-slot:button-content>
-                                                                <i class="fas fa-user fa-1x"></i>
-                                Profile
-                            </template>
-                            <UserInfo></UserInfo>
-                        </b-dropdown>
+                        <b-button variant="outline-dark" to="/user/profile">
+                            <i class="fas fa-user fa-1x"></i>
+                            Profile
+                        </b-button>
                     </b-nav-item>
                     <b-nav-item
                         v-if="isLoggedIn"
@@ -105,7 +93,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                                                        <i class="fas fa-door-closed"></i>
+                            <i class="fas fa-door-closed"></i>
                             Log Out
                         </b-button>
                     </b-nav-item>
@@ -115,7 +103,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                                                        <i class="fas fa-door-open"></i>
+                            <i class="fas fa-door-open"></i>
                             Log In
                         </b-button>
                     </b-nav-item>
@@ -128,13 +116,10 @@
 <script>
 import UserApi from '@/services/apiV1/UserManager.js';
 import Auth from '@/services/apiV1/Auth.js';
-import UserInfo from './UserInfo';
 
 export default {
     name: 'AppNavigation',
-    components: {
-        UserInfo
-    },
+    components: {},
     computed: {
         isLoggedIn() {
             return Auth.isLoggedIn();

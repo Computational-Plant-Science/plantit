@@ -129,7 +129,7 @@ export default {
             }
         },
         cancel() {
-            router.push({ name: 'dashboard' });
+            router.push({ name: 'collections' });
         },
         saveCollection() {
             CollectionApi.newCollection(

@@ -1,10 +1,16 @@
 <template>
     <div class="w-100">
-        <b-card header-bg-variant="dark" border-variant="dark">
+        <b-card
+            header-bg-variant="dark"
+            footer-bg-variant="light"
+            border-variant="dark"
+        >
             <template v-slot:header style="background-color: white">
                 <b-row>
                     <b-col class="mt-2" style="color: white">
-                        <h5>Set Parameters...</h5>
+                        <h5>
+                            <i class="fas fa-list-ul green"></i> Set Parameters
+                        </h5>
                     </b-col>
                 </b-row>
             </template>
@@ -23,14 +29,23 @@
                             @onChange="onChange"
                         >
                         </FormGroup>
-                        <hr />
-                        <b-button type="submit" variant="primary" class="m-2"
-                            >Submit</b-button
-                        >
-                        <b-button variant="danger" class="m-2">Cancel</b-button>
                     </b-form>
                 </b-col>
             </b-row>
+            <template v-slot:footer>
+                <b-row>
+                    <b-col>
+                        <b-button block variant="outline-danger"
+                            >Cancel</b-button
+                        >
+                    </b-col>
+                    <b-col>
+                        <b-button block type="submit" variant="outline-dark" @click="onSubmit"
+                            >Submit</b-button
+                        >
+                    </b-col>
+                </b-row>
+            </template>
         </b-card>
     </div>
 </template>
@@ -73,4 +88,10 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped lang="sass">
+@import "../../scss/_colors.sass"
+@import "../../scss/main.sass"
+
+.green
+    color: $color-button
+</style>

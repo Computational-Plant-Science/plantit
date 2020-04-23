@@ -4,7 +4,9 @@
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h5>Select Job...</h5>
+                        <h5>
+                            <i class="fas fa-terminal green"></i> Select Job
+                        </h5>
                     </b-col>
                     <b-col md="auto" v-if="filterable">
                         <b-input-group class="b-form-input">
@@ -35,7 +37,9 @@
                             <template v-slot:button-content>
                                 <i class="fas fa-plus"></i>
                             </template>
-                            <b-dropdown-header>Select Workflow...</b-dropdown-header>
+                            <b-dropdown-header
+                                >Select Workflow...</b-dropdown-header
+                            >
                             <b-dropdown-item
                                 v-for="workflow in workflows"
                                 :key="workflow.name"
@@ -47,7 +51,7 @@
                                     }
                                 }"
                             >
-                                {{workflow.name}}
+                                {{ workflow.name }}
                             </b-dropdown-item>
                         </b-dropdown>
                     </b-col>
@@ -176,13 +180,19 @@ export default {
             filter: '',
             fields: [
                 {
+                    key: 'tasks',
+                    label: 'Status',
+                    sortable: false
+                },
+                {
                     key: 'pk',
                     label: 'Id',
                     sortable: true
                 },
                 {
-                    key: 'collection',
-                    sortable: true
+                    key: 'tasks',
+                    label: 'Status',
+                    sortable: false
                 },
                 {
                     key: 'workflow_name',
@@ -190,13 +200,12 @@ export default {
                     sortable: true
                 },
                 {
-                    key: 'cluster',
+                    key: 'collection',
                     sortable: true
                 },
                 {
-                    key: 'tasks',
-                    label: 'Status',
-                    sortable: false
+                    key: 'cluster',
+                    sortable: true
                 },
                 {
                     key: 'date_created',
@@ -208,7 +217,7 @@ export default {
                 {
                     key: 'tools',
                     label: ''
-                },
+                }
             ],
             items: [],
             workflows: []
@@ -231,6 +240,9 @@ export default {
 </script>
 
 <style scoped lang="sass">
-@import '../scss/_colors.sass'
+@import "../scss/_colors.sass"
+@import "../scss/main.sass"
 
+.green
+    color: $color-button
 </style>

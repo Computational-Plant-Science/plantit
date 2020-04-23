@@ -5,14 +5,58 @@
   **/
 @import '_colors'
 
+// Base grayscale colors definitions
+$white: #fff !default
+$gray-100: #f8f9fa !default
+$gray-200: #e9ecef !default
+$gray-300: #dee2e6 !default
+$gray-400: #ced4da !default
+$gray-500: #adb5bd !default
+$gray-600: #6c757d !default
+$gray-700: #495057 !default
+$gray-800: #343a40 !default
+$gray-900: #212529 !default
+$black: #000 !default
+
+// Base colors definitions
+$blue: #007bff !default
+$indigo: #6610f2 !default
+$purple: #6f42c1 !default
+$pink: #e83e8c !default
+$red: #ff7272 // #dc3545 !default
+$orange: #fd7e14 !default
+$yellow: #ffc107 !default
+$green: #28a745 !default
+$teal: #20c997 !default
+$cyan: #17a2b8 !default
+
+// Theme color default definitions
+$primary: $blue !default
+$secondary: $color-box-background
+$success: $green !default
+$info: $cyan !default
+$warning: $yellow !default
+$danger: $red !default
+$light: $gray-100 !default
+$dark: $color-disabled
+
+// This table defines the theme colors (variant names)
+$theme-colors: () !default
+$theme-colors: map-merge(('primary': $primary, 'secondary': $secondary, 'success': $success, 'info': $info, 'warning': $warning, 'danger': $danger, 'light': $light, 'dark': $dark ), $theme-colors)
+
+// Bootstrap and its default variables
+@import '../../node_modules/bootstrap/scss/bootstrap'
+// BootstrapVue and its default variables
+@import '../../node_modules/bootstrap-vue/src/index.scss'
+
 .dashboard
   font-weight: 500
 
 .icon
-  color: #343a40
+  color: $dark
 
 .logo
-  border-bottom: 2px solid #343a40 // $color-button
+  border-bottom: 2px solid $dark // $color-button
   border-top: 2px solid transparent
   border-left: 2px solid transparent
   border-right: 2px solid transparent
@@ -29,17 +73,17 @@
     border: 1px solid transparent !important
 
 .btn-outline-danger:hover
-  color: #dc3545
-  background-color: transparent
-  border: 1px solid #dc3545 !important
+  color: $white
+  background-color: $red
+  border: 1px solid $red !important
 
 .btn-outline-dark
     border: 1px solid transparent !important
 
 .btn-outline-dark:hover
-  color: #343a40
-  background-color: transparent
-  border: 1px solid #343a40 !important
+  color: $color-highlight
+  background-color: $dark
+  border: 1px solid $dark !important
 
 .btn-outline-dark:after
   color: $color-highlight !important
@@ -56,17 +100,17 @@
   box-shadow: none
 
 .b-form-input
-  background-color: #343a40
+  background-color: $dark
   box-shadow: none
-  border: 2px solid #343a40
+  border: 2px solid $dark
 
 .b-form-input:focus
   color: $color-button
-  background-color: #343a40
+  background-color: $dark
   border-bottom: 2px solid $color-button
-  border-top: 2px solid #343a40
-  border-left: 2px solid #343a40
-  border-right: 2px solid #343a40
+  border-top: 2px solid $dark
+  border-left: 2px solid $dark
+  border-right: 2px solid $dark
   box-shadow: none
 
 .navbar-nav > li
@@ -109,14 +153,14 @@ h1
   margin: 0 auto
 
 .collection-id
-  background-color: white
-  color: $color-text-green-on-white
+  background-color: $dark
+  color: $color-button
   border: 1px solid $color-box-background
   margin: 5px
 
 .collection-name
-  background-color: white
-  color: $color-box-background
+  background-color: $dark
+  color: $color-button
   border: 1px solid $color-box-background
   margin: 5px
 
