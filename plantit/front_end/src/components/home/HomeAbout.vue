@@ -1,7 +1,13 @@
 <template>
-    <div id="background" class="vertical-center">
+    <div id="background" class="vertical-center m-0 p-0">
         <b-container id="main">
-            <b-card align="center" fluid>
+            <b-card
+                align="center"
+                bg-variant="default"
+                footer-bg-variant="dark"
+                border-variant="dark"
+                style="max-width: 575px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px;"
+            >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
                         <b-img
@@ -9,46 +15,81 @@
                             width="100px"
                             alt="Plant IT"
                         ></b-img>
-                        <h1>Plant IT</h1>
+                        <h3>PlantIT</h3>
                     </b-col>
                 </b-row>
-                <b-row align-v="center" class="mb-2">
-                    <b-col align="center">
-                        <b-navbar toggleable="lg">
-                            <b-collapse class="justify-content-center" is-nav>
-                                <b-navbar-nav align="center">
-                                    <b-nav-item to="/About">About</b-nav-item>
-                                    <b-nav-item to="/Guide"
-                                        >User Guide</b-nav-item
-                                    >
-                                    <b-nav-item to="/Documentation">Developer Docs</b-nav-item>
-                                    <b-nav-item
-                                        to="https://github.com/Computational-Plant-Science/DIRT2_Webplatform/issues/new"
-                                    >
-                                        Report an Issue
-                                    </b-nav-item>
-                                </b-navbar-nav>
-                            </b-collapse>
-                        </b-navbar>
-                    </b-col>
-                </b-row>
-                <b-row align-v="center" class="mb-4">
-                    <b-col align="right">
-                        <b-button
-                            href="/user/dashboard"
-                            class="plantit-btn-alternate"
-                            >Sign Up
+                <b-navbar toggleable="sm">
+                    <b-collapse class="justify-content-center" is-nav>
+                        <b-navbar-nav class="logo">
+                            <b-nav-item
+                            to="/Guide"
+                    class="m-0 p-0">
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-map-signs"></i>
+                            Guide
                         </b-button>
-                    </b-col>
-                    or
-                    <b-col align="left">
-                        <b-button
-                            href="/user/dashboard"
-                            class="bold plantit-btn"
-                            >Log In
+                    </b-nav-item>
+                    <b-nav-item
+                            to="/Documentation"
+                    class="m-0 p-0">
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-book"></i>
+                            Docs
                         </b-button>
-                    </b-col>
-                </b-row>
+                    </b-nav-item>
+                    <b-nav-item
+                            to="/People"
+                    class="m-0 p-0">
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-users fa-1x"></i>
+                            People
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item
+                        href="https://github.com/Computational-Plant-Science/DIRT2_Webplatform/issues/new"
+                    class="m-0 p-0">
+                        <b-button variant="outline-dark">
+                            <i class="fab fa-github fa-1x"></i>
+                            Report Issue
+                        </b-button>
+                    </b-nav-item>
+                        </b-navbar-nav>
+                    </b-collapse>
+                </b-navbar>
+                <b-card-body align="left" class="mt-2">
+                    PlantIT is a web gateway for accessible, reproducible plant phenomics.
+                    <br />
+                    <br />
+                    PlantIT is for plant biologists, phenomics researchers, crop
+                    scientists, and algorithm developers alike &mdash; free of
+                    charge and no code required!
+                    <br />
+                    <br />
+                    Read the <b-link to="/Guide">User Guide</b-link> to learn how
+                    to upload data and run community-contributed workflows, or see
+                    the <b-link to="/Docs">Developer Docs</b-link> to create
+                    your own.
+                </b-card-body>
+                <template v-slot:footer style="background-color: white">
+                    <b-row>
+                        <b-col>
+                            <b-button
+                                block
+                                href="/user/dashboard"
+                                variant="dark"
+                                >Sign Up
+                            </b-button>
+                        </b-col>
+                        <b-col>
+                            <b-button
+                                block
+                                href="/user/dashboard"
+                                variant="dark"
+                                >Log In
+                            </b-button>
+                        </b-col>
+                    </b-row>
+                </template>
             </b-card>
         </b-container>
         <i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i>
@@ -76,11 +117,12 @@ export default {
 #background
     background-image: url('../../assets/frontpage/index_bg.png')
     background-blend-mode: overlay
-    background-color: hsla(0, 0%, 100%, 0.80)
+    background-color: hsla(0, 0%, 100%, 0.10)
     background-repeat: no-repeat
-    background-position: bottom
-    background-size: 100%
+    background-position: center
+    background-size: cover
     min-height: 100vh
+    width: 100%
     white-space: nowrap
     position: relative
     text-align: center

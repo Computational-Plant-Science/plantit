@@ -9,7 +9,8 @@ services:
   plantit:
     command: ["/code/dev/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:80"]
     depends_on:
-      - ssh
+      - cluster
+      - irods
     ports:
       - "80:80"
     healthcheck:
@@ -19,7 +20,7 @@ services:
       retries: 2
       start_period: 20s
 
-  ssh:
+  cluster:
     build:
       context: ./dev
       dockerfile: dockerfiles/ssh/Dockerfile

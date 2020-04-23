@@ -49,7 +49,7 @@ To set up a new (or restore a clean) development environment, run `dev/bootstrap
 - Rebuild containers
 - Run migrations
 - Create a Django superuser (username `admin`, password `admin`)
-- Configure a mock IRODS server and cluster
+- Configure a mock IRODS server and compute cluster
 - Build the Vue front end
 
 Then bring the project up with `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up`.
@@ -61,13 +61,13 @@ This will start a number of containers:
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `postgres`: PostgreSQL database
 - `flower`: Celery monitoring UI (`http://localhost:5555`)
-- `adminer`: PostgreSQL admin UI (`http://localhost:8080`)
+- `adminer`: DB admin UI (`http://localhost:8080`)
 - `irods`: mock IRODS server
-- `ssh`: mock SSH connection (e.g., to cluster)
+- `cluster`: mock compute cluster
 
 To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin`.
 
-The default Django interface is at `http://localhost/admin/`.
+The Django admin interface is at `http://localhost/admin/`.
 
 #### Tests
 

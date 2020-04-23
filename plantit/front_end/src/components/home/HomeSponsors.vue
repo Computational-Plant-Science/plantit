@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-card title="Sponsors">
+                <b-card class="text-center rounded-0" bg-variant="dark" text-variant="white" style="border:none">
             <b-container fluid class="m-2 p-4">
                 <b-row>
                     <b-card align="center" class="mr-4 mb-4">

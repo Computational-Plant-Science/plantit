@@ -1,45 +1,64 @@
 <template>
-    <div class="w-100 p-2 pb-4">
-        <b-card>
-            <b-row>
-                <b-col>
-                    <h4>Jobs</h4>
-                </b-col>
-                <b-col md="auto" v-if="filterable">
-                    <b-input-group>
-                        <b-form-input
-                            v-model="filter"
-                            placeholder="Filter..."
-                        ></b-form-input>
-                        <b-input-group-append>
-                            <b-button
-                                :disabled="!filter"
-                                @click="filter = ''"
-                                v-b-tooltip.hover
-                                title="Clear filter."
-                                >Clear
-                            </b-button>
-                        </b-input-group-append>
-                    </b-input-group>
-                </b-col>
-                <b-col md="auto">
-                    <b-button
-                        class="plantit-btn"
-                        v-b-tooltip.hover
-                        title="Start new job."
-                    >
-                        New
-                    </b-button>
-                </b-col>
-            </b-row>
-            <br />
+    <div class="w-100 pb-4">
+        <b-card header-bg-variant="dark" border-variant="dark">
+            <template v-slot:header style="background-color: white">
+                <b-row align-v="center">
+                    <b-col class="mt-2" style="color: white">
+                        <h5>Select Job...</h5>
+                    </b-col>
+                    <b-col md="auto" v-if="filterable">
+                        <b-input-group class="b-form-input">
+                            <b-form-input
+                                v-model="filter"
+                                placeholder="Filter..."
+                                class="b-form-input"
+                            ></b-form-input>
+                            <b-input-group-append>
+                                <b-button
+                                    :disabled="!filter"
+                                    @click="filter = ''"
+                                    variant="dark"
+                                    >Clear
+                                </b-button>
+                            </b-input-group-append>
+                        </b-input-group>
+                    </b-col>
+                    <b-col md="auto">
+                        <b-dropdown
+                            variant="dark"
+                            to="workflow/new"
+                            v-b-tooltip.hover
+                            title="Start a new job"
+                            right
+                            data-toggle="dropdown"
+                        >
+                            <template v-slot:button-content>
+                                <i class="fas fa-plus"></i>
+                            </template>
+                            <b-dropdown-header>Select Workflow...</b-dropdown-header>
+                            <b-dropdown-item
+                                v-for="workflow in workflows"
+                                :key="workflow.name"
+                                :to="{
+                                    name: 'submit_workflow',
+                                    query: {
+                                        collection_pk: workflow.pk,
+                                        workflow_name: workflow.app_name
+                                    }
+                                }"
+                            >
+                                {{workflow.name}}
+                            </b-dropdown-item>
+                        </b-dropdown>
+                    </b-col>
+                </b-row>
+            </template>
             <b-row>
                 <b-col>
                     <b-table
                         show-empty
                         small
                         sticky-header="true"
-                        head-variant="light"
                         selectable
                         hover
                         responsive="sm"
@@ -104,6 +123,7 @@
 import router from '../router';
 import DiscreteProgress from './DiscreteProgress.vue';
 import JobApi from '@/services/apiV1/JobManager.js';
+import WorkflowAPI from '@/services/apiV1/WorkflowManager';
 import moment from 'moment';
 
 export default {
@@ -156,6 +176,11 @@ export default {
             filter: '',
             fields: [
                 {
+                    key: 'pk',
+                    label: 'Id',
+                    sortable: true
+                },
+                {
                     key: 'collection',
                     sortable: true
                 },
@@ -170,7 +195,7 @@ export default {
                 },
                 {
                     key: 'tasks',
-                    label: 'Progress',
+                    label: 'Status',
                     sortable: false
                 },
                 {
@@ -184,17 +209,17 @@ export default {
                     key: 'tools',
                     label: ''
                 },
-                {
-                    key: 'pinned',
-                    sortable: true
-                }
             ],
-            items: []
+            items: [],
+            workflows: []
         };
     },
     mounted: function() {
         JobApi.getJobList().then(list => {
             this.items = list;
+        });
+        WorkflowAPI.getWorkflows().then(workflows => {
+            this.workflows = workflows;
         });
     },
     filters: {
@@ -204,3 +229,8 @@ export default {
     }
 };
 </script>
+
+<style scoped lang="sass">
+@import '../scss/_colors.sass'
+
+</style>

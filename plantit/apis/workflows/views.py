@@ -47,15 +47,9 @@ def workflows(request):
 
     return JsonResponse(context)
 
-def parameters(request,workflow):
+def workflow(request, workflow):
     """
-        Lists the user settable parameters for a workflow. Parameters are
-        in the format defined for the `parameters` variable in a workflow's
-        workflow.py config file.
-
         **url:** `/apis/v1/workflows/<workflow app_name>/`
-
-        **Response Data:**  A json array .
 
         **Requires:** User must be logged in.
 
@@ -87,9 +81,14 @@ def parameters(request,workflow):
 
     """
     params = importlib.import_module('workflows.' + workflow + '.workflow').parameters.copy()
-    params.insert(0,services.default_params())
+    params.insert(0, services.default_params())
 
-    return JsonResponse({"parameters": params})
+    context = {
+        "workflow": registrar.list[workflow],
+        "parameters": params
+    }
+
+    return JsonResponse(context)
 
 def submit(request,workflow,pk):
     """

@@ -1,27 +1,29 @@
 <template>
-    <div>
-        <PageNavigation>
-            <template v-slot:page-nav>
-                <b-nav-item to="/user/collections">Collections</b-nav-item>
-                <b-nav-item to="/user/dashboard">Dashboard</b-nav-item>
-            </template>
-        </PageNavigation>
-        <b-container class="content-box p-4 center-container">
-            <h2>Your Jobs</h2>
-            <ListJobs filterable="true" class="text-center"></ListJobs>
+    <div class="m-0 p-0">
+        <b-container>
+            <h3>
+                <i class="fas fa-terminal"></i> Jobs
+            </h3>
+            <hr>
+            <p>
+                The <i>job</i> is PlantIT's fundamental unit of execution. Each job is associated with a data <i>collection</i>,
+                an analysis <i>workflow</i>, and a resource <i>cluster</i>.
+            </p>
+            <p>
+                To start a new job, go to the <b-link href="/user/workflows">workflows</b-link> page. Alternatively, click the <i class="fas fa-plus"></i>  icon below and select a workflow. Select an existing job to view logs and results.
+            </p>
+            <SelectJob filterable="true"></SelectJob>
         </b-container>
     </div>
 </template>
 
 <script>
-import ListJobs from '@/components/ListJobs.vue';
-import PageNavigation from '@/components/PageNavigation.vue';
+    import SelectJob from '@/components/SelectJob.vue';
 
-export default {
-    name: 'Jobs',
-    components: {
-        ListJobs,
-        PageNavigation
-    }
-};
+    export default {
+        name: 'Jobs',
+        components: {
+            SelectJob,
+        }
+    };
 </script>

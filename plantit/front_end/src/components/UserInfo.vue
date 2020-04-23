@@ -1,29 +1,35 @@
 <template>
-    <div class="w-100 p-2">
-        <b-container>
+    <div class="w-150 p-0 m-0">
+        <b-container class="p-0 m-0">
             <b-card
                 :img-src="require('../assets/icons/default-user-small.png')"
                 img-alt="Image"
                 img-top
-                style="max-width: 20rem;"
+                style="max-width: 20rem; border: none"
+                header-bg-variant="dark"
+                class="p-0 m-0"
             >
-                <b-row>
-                    <b-col>
-                        <h3>{{ this.info.username }}</h3>
-                    </b-col>
-                    <b-col md="auto">
-                        <b-button
-                            id="edit-btn"
-                            @click="$bvModal.show('editUserInfoModal')"
-                            class="plantit-btn"
-                            v-b-tooltip.hover
-                            title="Edit user information."
-                        >
-                            <i class="far fa-edit"></i>
-                        </b-button>
-                    </b-col>
-                </b-row>
-                <hr />
+                <template
+                    v-slot:header
+                    style="background-color: white"
+                    v-bind:info="this.info"
+                >
+                    <b-row>
+                        <b-col class="mt-2 color">
+                            <h5>{{ info.username }}</h5>
+                        </b-col>
+                        <b-col md="auto">
+                            <b-button
+                                @click="$bvModal.show('editUserInfoModal')"
+                                variant="dark"
+                                v-b-tooltip.hover
+                                title="Edit user information."
+                            >
+                                <i class="far fa-edit"></i>
+                            </b-button>
+                        </b-col>
+                    </b-row>
+                </template>
                 <b-card-text v-if="!loading">
                     <p><b>Email Address:</b> {{ this.info.email }}</p>
                     <p><b>First Name:</b> {{ this.info.first_name }}</p>
@@ -39,7 +45,8 @@
                         {{ this.info.profile.institution_type }}
                     </p>
                     <p>
-                        <b>Field of Study:</b> {{ this.info.profile.field_of_study }}
+                        <b>Field of Study:</b>
+                        {{ this.info.profile.field_of_study }}
                     </p>
                 </b-card-text>
             </b-card>
@@ -73,7 +80,7 @@ export default {
     data() {
         return {
             info: {},
-            loading: true,
+            loading: true
         };
     },
     methods: {
@@ -115,3 +122,11 @@ export default {
     }
 };
 </script>
+
+<style scoped lang="sass">
+@import '../scss/_colors.sass'
+.color
+    color: $color-button
+    //border-left: 5px solid $color-button
+    vertical-align: middle
+</style>

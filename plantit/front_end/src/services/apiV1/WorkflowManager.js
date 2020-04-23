@@ -18,27 +18,25 @@ export default {
                 Sentry.captureException(err);
             });
     },
-
-    getParameters(workflow) {
+    getWorkflow(workflow) {
         /**
-         * Get workflow paramaters
+         * Get workflow info and parameters
          *
          * Args:
          *   workflow (str): app_name of workflow
          *
          * Returns:
-         *    Axios promise containing returning the parameters
+         *    Axios promise containing returning the workflow info and parameters
          **/
         return axios
             .get(`/apis/v1/workflows/${workflow}/`)
             .then(response => {
-                return response.data.parameters;
+                return response.data;
             })
             .catch(err => {
                 Sentry.captureException(err);
             });
     },
-
     submitJob(workflow, pk, params) {
         return axios({
             method: 'post',

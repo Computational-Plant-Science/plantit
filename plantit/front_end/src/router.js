@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import Home from './views/Home.vue';
-import About from './views/About.vue';
+import People from './views/People.vue';
 import Auth from '@/services/apiV1/Auth.js';
 
 Vue.use(Router);
@@ -16,9 +16,9 @@ let router = new Router({
             component: Home
         },
         {
-            path: '/about',
-            name: 'about',
-            component: About
+            path: '/people',
+            name: 'people',
+            component: People
         },
         {
             path: '/user/jobs',
@@ -30,19 +30,19 @@ let router = new Router({
             }
         },
         {
-            path: '/user/job',
-            name: 'job',
+            path: '/user/workflows',
+            name: 'workflows',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/Job.vue'),
+                import(/* webpackChunkName: "about" */ './views/Workflows.vue'),
             meta: {
                 requiresAuth: true
             }
         },
         {
-            path: '/user/dashboard',
-            name: 'dashboard',
+            path: '/user/job',
+            name: 'job',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/Dashboard.vue'),
+                import(/* webpackChunkName: "about" */ './views/Job.vue'),
             meta: {
                 requiresAuth: true
             }
@@ -60,22 +60,23 @@ let router = new Router({
             }
         },
         {
-            path: '/user/collection/new',
-            name: 'newCollection',
+            path: '/user/collections',
+            name: 'collections',
             component: () =>
                 import(
-                    /* webpackChunkName: "about" */ './views/NewCollection.vue'
+                    /* webpackChunkName: "about" */ './views/Collections.vue'
                 ),
             meta: {
                 requiresAuth: true
             }
         },
         {
-            path: '/user/workflow/choose',
-            name: 'analyze',
+            path: '/user/collection/new',
+            name: 'newCollection',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/Analyze.vue'),
-            props: route => ({ pk: parseInt(route.query.pk) }),
+                import(
+                    /* webpackChunkName: "about" */ './views/NewCollection.vue'
+                ),
             meta: {
                 requiresAuth: true
             }

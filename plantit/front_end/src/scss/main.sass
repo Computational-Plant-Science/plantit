@@ -8,18 +8,74 @@
 .dashboard
   font-weight: 500
 
-.btn-primary
-  border: none
-  background-color: $color-button !important
-  color: white !important
+.icon
+  color: #343a40
 
-.btn-primary:hover
-  background-color: $color-highlight !important
+.logo
+  border-bottom: 2px solid #343a40 // $color-button
+  border-top: 2px solid transparent
+  border-left: 2px solid transparent
+  border-right: 2px solid transparent
+
+.dropdown-toggle:after
+    display: none
+
+.dropdown-menu
+  right: 0
+  left: auto
+  width: 300px !important
+
+.btn-outline-danger
+    border: 1px solid transparent !important
+
+.btn-outline-danger:hover
+  color: #dc3545
+  background-color: transparent
+  border: 1px solid #dc3545 !important
+
+.btn-outline-dark
+    border: 1px solid transparent !important
+
+.btn-outline-dark:hover
+  color: #343a40
+  background-color: transparent
+  border: 1px solid #343a40 !important
+
+.btn-outline-dark:after
+  color: $color-highlight !important
+  box-shadow: none
+
+.btn-dark
+    border: 2px solid transparent !important
+
+.btn-dark:hover
+  color: $color-highlight !important
+
+.bold-btn:hover
+  border: 2px solid $color-highlight !important
+  box-shadow: none
+
+.b-form-input
+  background-color: #343a40
+  box-shadow: none
+  border: 2px solid #343a40
+
+.b-form-input:focus
+  color: $color-button
+  background-color: #343a40
+  border-bottom: 2px solid $color-button
+  border-top: 2px solid #343a40
+  border-left: 2px solid #343a40
+  border-right: 2px solid #343a40
+  box-shadow: none
 
 .navbar-nav > li
   padding-left: 10px
   padding-right: 10px
   font-size: 16pt
+
+.dark-card
+  background-color: $color-disabled
 
 b-card
   background-color: $color-box-background

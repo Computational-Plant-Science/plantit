@@ -1,21 +1,157 @@
 <template>
     <div>
         <b-container class="justify-content-md-center">
-            <b-card title="New Collection">
-                <hr />
-                <NewCollectionForm></NewCollectionForm>
+            <b-card
+                    header-bg-variant="dark"
+                    footer-bg-variant="white"
+                    border-variant="dark">
+                <template v-slot:header style="background-color: white">
+                    <b-row align-v="center">
+                        <b-col class="mt-1 color">
+                            <h5>New Collection</h5>
+                        </b-col>
+                    </b-row>
+                </template>
+                <div>
+                    <b-form @submit="onSubmit">
+                        <b-form-group label="Name:" label-for="input-name">
+                            <b-form-input
+                                id="input-name"
+                                v-model="form.name"
+                                required
+                                placeholder="Enter name..."
+                            ></b-form-input>
+                        </b-form-group>
+
+                        <b-form-group
+                            label="Description:"
+                            label-for="input-desc"
+                        >
+                            <b-form-textarea
+                                id="input-desc"
+                                v-model="form.description"
+                                required
+                                placeholder="Enter description...."
+                            ></b-form-textarea>
+                        </b-form-group>
+
+                        <b-form-group label="Metadata:" label-for="input-desc">
+                            <EditMetadata
+                                v-model="form.metadata"
+                                @unsaved="
+                                    e => {
+                                        unsavedMetadata = e;
+                                    }
+                                "
+                            ></EditMetadata>
+                        </b-form-group>
+
+                        <b-form-group
+                            label="Location:"
+                            label-for="input-storageType"
+                        >
+                            <b-form-select
+                                v-model="form.storageType"
+                                :options="options"
+                            ></b-form-select>
+                        </b-form-group>
+                    </b-form>
+                </div>
+                <template v-slot:footer style="background-color: white">
+                    <b-row align-v="center">
+                        <b-col class="mr-1 pr-1">
+                            <b-button @click="cancel" variant="outline-danger"
+                                >Cancel</b-button
+                            >
+                        </b-col>
+                        <b-col class="ml-1 pl-1 pr-2" md="auto">
+                            <b-button type="submit" variant="outline-dark" @click="onSubmit"
+                                >Submit</b-button
+                            >
+                        </b-col>
+                    </b-row>
+                </template>
             </b-card>
         </b-container>
     </div>
 </template>
 
 <script>
-import NewCollectionForm from '@/components/collections/NewCollectionForm.vue';
+import router from '@/router';
+import FileManagerApi from '@/services/apiV1/FileManager';
+import CollectionApi from '@/services/apiV1/CollectionManager';
+import EditMetadata from '@/components/collections/EditMetadata';
 
 export default {
     name: 'NewCollection',
     components: {
-        NewCollectionForm
+        EditMetadata
+    },
+    data() {
+        return {
+            form: {
+                name: '',
+                description: '',
+                storageType: 'irods',
+                metadata: []
+            },
+            unsavedMetadata: false,
+            options: []
+        };
+    },
+    mounted: function() {
+        FileManagerApi.getStorageTypes().then(data => {
+            this.options = data.map(item => {
+                return { value: item, text: item };
+            });
+        });
+    },
+    methods: {
+        onSubmit(evt) {
+            evt.preventDefault();
+            if (this.unsavedMetadata) {
+                this.$bvModal
+                    .msgBoxConfirm(
+                        `The metadata key/value left in the input box will not be saved,
+                 continue anyways? (Click the "plus" next to the value to save it)`,
+                        {
+                            title: 'Unsaved Metadata',
+                            centered: true
+                        }
+                    )
+                    .then(value => {
+                        if (value == true) {
+                            this.saveCollection();
+                        }
+                    });
+            } else {
+                this.saveCollection();
+            }
+        },
+        cancel() {
+            router.push({ name: 'dashboard' });
+        },
+        saveCollection() {
+            CollectionApi.newCollection(
+                this.form.name,
+                this.form.description,
+                this.form.storageType,
+                this.form.metadata
+            ).then(response => {
+                router.push({
+                    name: 'collection',
+                    query: { pk: response.data.pk }
+                });
+            });
+        }
     }
 };
 </script>
+
+<style scoped lang="sass">
+@import '../scss/_colors.sass'
+.color
+    color: $color-button
+    //border-left: 5px solid $color-button
+    vertical-align: middle
+</style>
