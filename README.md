@@ -2,7 +2,7 @@
 
 # DIRT2_Webplatform
 
-**This project i``s under active development and is not yet stable**.
+**This project is under active development and is not yet stable**.
 
 [![Build Status](https://travis-ci.com/w-bonelli/DIRT2_Webplatform.svg?token=8SgKppiotCz5BKibbN5Q&branch=master)](https://travis-ci.com/w-bonelli/DIRT2_Webplatform)
 
