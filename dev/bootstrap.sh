@@ -129,8 +129,8 @@ $DOCKER_COMPOSE run plantit /code/dev/configure-superuser.sh -u "admin" -p "admi
 
 echo "Configuring mock IRODS..."
 $DOCKER_COMPOSE up -d irods
-$DOCKER_COMPOSE up -d ssh
-$DOCKER_COMPOSE exec ssh /bin/bash /root/wait-for-it.sh irods:1247 -- /root/configure-irods.sh
+$DOCKER_COMPOSE up -d cluster
+$DOCKER_COMPOSE exec cluster /bin/bash /root/wait-for-it.sh irods:1247 -- /root/configure-irods.sh
 
 echo "Stopping containers..."
 $DOCKER_COMPOSE stop

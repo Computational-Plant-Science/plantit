@@ -1,37 +1,32 @@
 <template>
-    <div>
-        <PageNavigation>
-            <template v-slot:page-nav>
-                <b-nav-item to="/user/jobs">Jobs</b-nav-item>
-                <b-nav-item to="/user/dashboard">Dashboard</b-nav-item>
-            </template>
-            <template v-slot:buttons>
-                <b-button @click="createNew">
-                    New Collection
-                </b-button>
-            </template>
-        </PageNavigation>
-
-        <b-container class="content-box text-left p-4 center-container">
-            <h2>Your Collections</h2>
-            <ListCollections
+    <div class="m-0 p-0">
+        <b-container>
+            <p>
+                A <i>collection</i> is a group of samples. A sample can
+                be any data object. PlantIT workflows operate on the samples in a
+                collection.
+            </p>
+            <p>
+                To create a new collection , click the
+                <i class="fas fa-plus"></i> icon below. Select an existing
+                collection to edit metadata and upload samples.
+            </p>
+            <SelectCollection
                 filterable="true"
-                class="text-center"
-            ></ListCollections>
+                v-on:selected="onSelected"
+            ></SelectCollection>
         </b-container>
     </div>
 </template>
 
 <script>
-import ListCollections from '@/components/collections/ListCollections.vue';
-import PageNavigation from '@/components/PageNavigation.vue';
+import SelectCollection from '@/components/collections/SelectCollection.vue';
 import router from '../router';
 
 export default {
     name: 'Collections',
     components: {
-        ListCollections,
-        PageNavigation
+        SelectCollection
     },
     data() {
         return {
@@ -48,6 +43,9 @@ export default {
         };
     },
     methods: {
+        onSelected(collection) {
+            router.push({ name: 'collection', query: { pk: collection.pk } });
+        },
         createNew: function() {
             router.push({ name: 'newCollection' });
         }

@@ -8,6 +8,7 @@
         @ok="save"
         no-close-on-backdrop
         centered
+        ok-variant="dark"
     >
         <b-form-group
             v-if="description !== null"

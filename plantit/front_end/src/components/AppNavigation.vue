@@ -3,7 +3,7 @@
         <b-navbar toggleable="lg">
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
-            <b-navbar-brand href="#">
+            <b-navbar-brand href="#" to="/">
                 <b-img
                     :src="require('../assets/logo.png')"
                     width="50px"
@@ -11,48 +11,102 @@
                 ></b-img>
             </b-navbar-brand>
 
-            <b-collapse class="border-bottom" is-nav>
+            <b-collapse class="logo" is-nav>
                 <b-navbar-nav>
-                    <b-nav-item to="/">Home</b-nav-item>
-                    <b-nav-item>Contact</b-nav-item>
-                    <b-nav-item>FAQ</b-nav-item>
+                    <b-nav-item to="/Guide" class="m-0 p-0">
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-map-signs"></i>
+                            Guide
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item to="/Documentation" class="m-0 p-0">
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-book"></i>
+                            Docs
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item to="/People" class="m-0 p-0">
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-users fa-1x"></i>
+                            People
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item
+                        href="https://github.com/Computational-Plant-Science/DIRT2_Webplatform/issues/new"
+                        class="m-0 p-0"
+                    >
+                        <b-button variant="outline-dark">
+                            <i class="fab fa-github fa-1x"></i>
+                            Report Issue
+                        </b-button>
+                    </b-nav-item>
                 </b-navbar-nav>
-                <b-navbar-nav class="ml-auto">
-                    <b-button
+                <b-navbar-nav class="ml-auto m-0 p-0">
+                    <b-nav-item
                         v-if="isLoggedIn"
-                        size="md"
+                        title="Collections"
+                        to="/user/collections"
+                        class="m-0 p-0"
+                    >
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-layer-group"></i>
+                            Collections
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item
+                        v-if="isLoggedIn"
+                        title="Workflows"
+                        to="/user/workflows"
+                        class="m-0 p-0"
+                    >
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-stream"></i>
+
+                            Workflows
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item
+                        v-if="isLoggedIn"
+                        title="Jobs"
+                        to="/user/jobs"
+                        class="m-0 p-0"
+                    >
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-terminal"></i>
+                            Jobs
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item
+                        v-if="isLoggedIn"
                         :title="this.info['username']"
-                        class="user-profile"
-                        to="/user/dashboard"
+                        class="m-0 p-0"
                     >
-                        <span
-                            class="align-middle"
-                            style="vertical-align: middle"
-                            >Dashboard</span
-                        >
-                        <i
-                            class="fas fa-user-circle d-inline-block align-middle"
-                        ></i>
-                    </b-button>
-                    <b-button
+                        <b-button variant="outline-dark" to="/user/profile">
+                            <i class="fas fa-user fa-1x"></i>
+                            Profile
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item
                         v-if="isLoggedIn"
-                        size="md"
                         title="Log Out"
-                        class="user-profile"
                         to="/logout/?next=/"
+                        class="m-0 p-0"
                     >
-                        <span
-                            class="align-middle"
-                            style="vertical-align: middle"
-                            >Log Out</span
-                        >
-                        <i
-                            class="fas fa-sign-out-alt d-inline-block align-middle"
-                        ></i>
-                    </b-button>
-                    <b-nav-item v-else href="/login/?next=/user/dashboard"
-                        >Login</b-nav-item
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-door-closed"></i>
+                            Log Out
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item
+                        v-else
+                        href="/login/?next=/user/dashboard"
+                        class="m-0 p-0"
                     >
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-door-open"></i>
+                            Log In
+                        </b-button>
+                    </b-nav-item>
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
@@ -65,6 +119,7 @@ import Auth from '@/services/apiV1/Auth.js';
 
 export default {
     name: 'AppNavigation',
+    components: {},
     computed: {
         isLoggedIn() {
             return Auth.isLoggedIn();

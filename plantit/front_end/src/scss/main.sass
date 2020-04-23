@@ -5,21 +5,121 @@
   **/
 @import '_colors'
 
+// Base grayscale colors definitions
+$white: #fff !default
+$gray-100: #f8f9fa !default
+$gray-200: #e9ecef !default
+$gray-300: #dee2e6 !default
+$gray-400: #ced4da !default
+$gray-500: #adb5bd !default
+$gray-600: #6c757d !default
+$gray-700: #495057 !default
+$gray-800: #343a40 !default
+$gray-900: #212529 !default
+$black: #000 !default
+
+// Base colors definitions
+$blue: #007bff !default
+$indigo: #6610f2 !default
+$purple: #6f42c1 !default
+$pink: #e83e8c !default
+$red: #ff7272 // #dc3545 !default
+$orange: #fd7e14 !default
+$yellow: #ffc107 !default
+$green: #28a745 !default
+$teal: #20c997 !default
+$cyan: #17a2b8 !default
+
+// Theme color default definitions
+$primary: $blue !default
+$secondary: $color-box-background
+$success: $green !default
+$info: $cyan !default
+$warning: $yellow !default
+$danger: $red !default
+$light: $gray-100 !default
+$dark: $color-disabled
+
+// This table defines the theme colors (variant names)
+$theme-colors: () !default
+$theme-colors: map-merge(('primary': $primary, 'secondary': $secondary, 'success': $success, 'info': $info, 'warning': $warning, 'danger': $danger, 'light': $light, 'dark': $dark ), $theme-colors)
+
+// Bootstrap and its default variables
+@import '../../node_modules/bootstrap/scss/bootstrap'
+// BootstrapVue and its default variables
+@import '../../node_modules/bootstrap-vue/src/index.scss'
+
 .dashboard
   font-weight: 500
 
-.btn-primary
-  border: none
-  background-color: $color-button !important
-  color: white !important
+.icon
+  color: $dark
 
-.btn-primary:hover
-  background-color: $color-highlight !important
+.logo
+  border-bottom: 2px solid $dark // $color-button
+  border-top: 2px solid transparent
+  border-left: 2px solid transparent
+  border-right: 2px solid transparent
+
+.dropdown-toggle:after
+    display: none
+
+.dropdown-menu
+  right: 0
+  left: auto
+  width: 300px !important
+
+.btn-outline-danger
+    border: 1px solid transparent !important
+
+.btn-outline-danger:hover
+  color: $white
+  background-color: $red
+  border: 1px solid $red !important
+
+.btn-outline-dark
+    border: 1px solid transparent !important
+
+.btn-outline-dark:hover
+  color: $color-highlight
+  background-color: $dark
+  border: 1px solid $dark !important
+
+.btn-outline-dark:after
+  color: $color-highlight !important
+  box-shadow: none
+
+.btn-dark
+    border: 2px solid transparent !important
+
+.btn-dark:hover
+  color: $color-highlight !important
+
+.bold-btn:hover
+  border: 2px solid $color-highlight !important
+  box-shadow: none
+
+.b-form-input
+  background-color: $dark
+  box-shadow: none
+  border: 2px solid $dark
+
+.b-form-input:focus
+  color: $color-button
+  background-color: $dark
+  border-bottom: 2px solid $color-button
+  border-top: 2px solid $dark
+  border-left: 2px solid $dark
+  border-right: 2px solid $dark
+  box-shadow: none
 
 .navbar-nav > li
   padding-left: 10px
   padding-right: 10px
   font-size: 16pt
+
+.dark-card
+  background-color: $color-disabled
 
 b-card
   background-color: $color-box-background
@@ -53,14 +153,14 @@ h1
   margin: 0 auto
 
 .collection-id
-  background-color: white
-  color: $color-text-green-on-white
+  background-color: $dark
+  color: $color-button
   border: 1px solid $color-box-background
   margin: 5px
 
 .collection-name
-  background-color: white
-  color: $color-box-background
+  background-color: $dark
+  color: $color-button
   border: 1px solid $color-box-background
   margin: 5px
 
@@ -82,6 +182,16 @@ h1
   border: 1px solid $color-button
 
 .plantit-btn:hover
+  color: white
+  background-color: $color-highlight
+  border: 1px solid $color-highlight
+
+.plantit-btn-alternate
+  color: $color-button
+  background-color: white
+  border: 1px solid $color-button
+
+.plantit-btn-alternate:hover
   color: white
   background-color: $color-highlight
   border: 1px solid $color-highlight

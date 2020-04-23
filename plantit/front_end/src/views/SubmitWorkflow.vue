@@ -1,80 +1,62 @@
 <template>
-    <div class="w-100 p-2 pb-4">
+    <div class="w-100">
         <b-container>
-            <b-card>
-                <b-row>
-                    <b-col>
-                        <h3>Workflow Parameters</h3>
-                    </b-col>
-                </b-row>
-                <hr />
-                <b-row>
-                    <b-col>
-                        <b-form
-                            @submit="onSubmit"
-                            style="text-align: left;"
-                            ref="form"
-                            id="my-form"
-                        >
-                            <FormGroup
-                                v-for="group in params"
-                                :key="group.id"
-                                :group="group"
-                                @onChange="onChange"
-                            >
-                            </FormGroup>
-                            <hr>
-                            <b-button
-                                type="submit"
-                                variant="primary"
-                                class="m-2"
-                                >Submit</b-button
-                            >
-                            <b-button variant="danger" class="m-2"
-                                >Cancel</b-button
-                            >
-                        </b-form>
-                    </b-col>
-                </b-row>
-            </b-card>
+            <div class="mb-4 pt-4">
+                <div class="workflow-icon">
+                    <b-img :src="workflow.workflow.icon_url"> </b-img>
+                </div>
+                <br />
+                <h4>{{ workflow.workflow.name }}</h4>
+                <p>
+                    {{ workflow.workflow.description }}
+                </p>
+            </div>
+            <SelectCollection
+                class="pb-4"
+                selectable="true"
+                filterable="true"
+                per-page="4"
+                v-on:selected="onSelected"
+            ></SelectCollection>
+            <SetParameters
+                class="pb-4"
+                :workflow_name="this.workflow_name"
+                v-on:submit="onSubmit"
+            ></SetParameters>
         </b-container>
     </div>
 </template>
 
 <script>
 import router from '../router';
-import FormGroup from '@/components/FormGroup';
 import WorkflowAPI from '@/services/apiV1/WorkflowManager';
+import SelectCollection from '@/components/collections/SelectCollection.vue';
 import * as Sentry from '@sentry/browser';
+import SetParameters from '../components/collections/SetParameters';
 
 export default {
     name: 'SubmitWorkflow',
     components: {
-        FormGroup
+        SetParameters,
+        SelectCollection
     },
     props: {
-        collection_pk: {
-            // the pk of the collection to analyze
-            required: true
-        },
         workflow_name: {
-            // the app_name of the selected workflow
             required: true
         }
     },
     data: function() {
         return {
-            // Paramaters for the workflow
+            collection_pk: null,
+            workflow: null,
             params: [],
-            // The values of the paramaters
-            // values is automatically updated as users select options, and
-            // is reactive.
             values: {}
         };
     },
     mounted: function() {
-        WorkflowAPI.getParameters(this.workflow_name).then(params => {
-            this.params = params;
+        WorkflowAPI.getWorkflow(this.workflow_name).then(wf => {
+            this.workflow = wf;
+            this.params = wf.parameters;
         });
     },
     methods: {
@@ -82,12 +64,14 @@ export default {
             // Make values reactive
             this.values[group] = values;
         },
-        onSubmit(evt) {
-            evt.preventDefault();
+        onSelected(collection) {
+            this.collection_pk = collection.pk;
+        },
+        onSubmit(values) {
             WorkflowAPI.submitJob(
                 this.workflow_name,
                 this.collection_pk,
-                this.values
+                values
             ).then(result => {
                 if (result.status === 200) {
                     router.push({
@@ -103,3 +87,27 @@ export default {
     }
 };
 </script>
+
+<style scoped lang="sass">
+@import "../scss/_colors.sass"
+@import "../scss/main.sass"
+
+.workflow-icon
+    width: 200px
+    height: 200px
+    margin: 0 auto
+    margin-bottom: -10px
+    background-color: $secondary
+    border-radius: 50%
+    border: 4px solid $dark
+    padding: 24px
+
+    img
+        margin-top: 20px
+        max-width: 140px
+        max-height: 190px
+
+.workflow-text
+    background-color: $dark
+    padding: 10px
+</style>
