@@ -109,7 +109,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./ma
 - Create a Django superuser (if one does not exist):
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/create-django-superuser.sh -u "<username>" -p "<password>" -e "<email address>"
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/configure-superuser.sh -u "<username>" -p "<password>" -e "<email address>"
 ```
 
 - Configure NGINX `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN
