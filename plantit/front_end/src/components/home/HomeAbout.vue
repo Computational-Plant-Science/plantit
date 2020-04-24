@@ -53,7 +53,6 @@
                 </b-navbar>
                 <b-card-body align="left" class="mt-2">
                     PlantIT allows computational researchers to make their algorithms available to a broad community, and provides biological researchers with an easy-to-use interface to apply algorithms to their own data.
-                    PlantIT is for everyone: free to use and no programming required!
                     <br />
                     <br />
                     Read the <b-link to="/Guide">User Guide</b-link> to learn

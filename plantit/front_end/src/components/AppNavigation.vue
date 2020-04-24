@@ -6,7 +6,7 @@
             <b-navbar-brand href="#" to="/">
                 <b-img
                     :src="require('../assets/logo.png')"
-                    width="50px"
+                    width="35px"
                     alt="Plant IT"
                 ></b-img>
             </b-navbar-brand>
