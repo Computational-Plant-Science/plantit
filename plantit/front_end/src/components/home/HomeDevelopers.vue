@@ -1,19 +1,27 @@
 <template>
     <b-card
         class="rounded-0"
-        bg-variant="light"
-        sub-title-text-variant="secondary"
-        title="Developers"
-        sub-title="Share pipelines with a broad audience and advance reproducible science."
+        bg-variant="secondary"
+        border-variant="secondary"
+        text-variant="black"
+        header-bg-variant="secondary"
+        header-border-variant="secondary"
     >
-        <b-container class="p-0 m-0" fluid="true">
-            <b-row align-v="center" align-content="center" class="mt-4">
-                <b-col md="auto">
+        <template slot="header" style="border: none">
+            <h2>Developers</h2>
+            <p>
+                Share pipelines with a broad audience and advance reproducible
+                science.
+            </p>
+        </template>
+        <b-container>
+            <b-row align-content="center" align-h="center">
+                <b-col align-h="center">
                     <b-card
                         title="Batteries included (but not required)"
                         class="text-left rounded-0 overflow-hidden"
-                        bg-variant="light"
-                        text-variant="dark"
+                        bg-variant="secondary"
+                        text-variant="white"
                         :img-src="
                             require('../../assets/frontpage/icons/algorithm.png')
                         "
@@ -27,9 +35,9 @@
                             <b-link href="https://www.cyverse.org/"
                                 >CyVerse</b-link
                             >
-                            or plug in alternative data stores. Then deploy on
-                            your own HPC/HTC infrastructure or request time on
-                            XSEDE resources (like the University of Georgia's
+                            or plug in alternate data stores. Then deploy on
+                            your own HPC/HTC cluster or request XSEDE resources
+                            (like the University of Georgia's
                             <b-link href="https://gacrc.uga.edu/systems/"
                                 >Sapelo2</b-link
                             >
@@ -47,8 +55,8 @@
                     <b-card
                         title="Workflow orchestration on the web"
                         class="text-left rounded-0 overflow-hidden"
-                        bg-variant="light"
-                        text-variant="dark"
+                        bg-variant="secondary"
+                        text-variant="white"
                         :img-src="
                             require('../../assets/frontpage/icons/UI.png')
                         "
@@ -71,8 +79,8 @@
                     <b-card
                         title="Full control over your environment"
                         class="text-left rounded-0 overflow-hidden"
-                        bg-variant="light"
-                        text-variant="dark"
+                        bg-variant="secondary"
+                        text-variant="white"
                         :img-src="
                             require('../../assets/frontpage/icons/code.png')
                         "
@@ -97,8 +105,8 @@
                     <b-card
                         title="Phenotyping-as-a-Service"
                         class="text-left rounded-0 overflow-hidden"
-                        bg-variant="light"
-                        text-variant="dark"
+                        bg-variant="secondary"
+                        text-variant="white"
                         :img-src="
                             require('../../assets/frontpage/icons/documentation.png')
                         "
