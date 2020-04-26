@@ -27,6 +27,9 @@
                                             border-variant="default"
                                             footer-bg-variant="dark"
                                         >
+                                            <b-card-text>
+                                                <small>Assistant Professor, Dept. of Plant Biology, Inst. of Bioinformatics, Warnell School of Forestry</small>
+                                            </b-card-text>
                                             <template
                                                 v-slot:footer
                                                 style="background-color: white"
@@ -55,6 +58,9 @@
                                             border-variant="default"
                                             footer-bg-variant="dark"
                                         >
+                                            <b-card-text>
+                                                <small>Scientific Computing Specialist, Dept. of Plant Biology</small>
+                                            </b-card-text>
                                             <template
                                                 v-slot:footer
                                                 style="background-color: white"
@@ -87,6 +93,9 @@
                                             border-variant="default"
                                             footer-bg-variant="dark"
                                         >
+                                            <b-card-text>
+                                                <small>Postdoctoral Researcher, Dept. of Plant Biology</small>
+                                            </b-card-text>
                                             <template
                                                 v-slot:footer
                                                 style="background-color: white"
