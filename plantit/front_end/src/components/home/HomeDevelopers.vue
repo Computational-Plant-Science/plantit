@@ -1,11 +1,11 @@
 <template>
     <b-card
         class="rounded-0"
-        bg-variant="secondary"
-        border-variant="secondary"
-        text-variant="black"
-        header-bg-variant="secondary"
-        header-border-variant="secondary"
+        bg-variant="dark"
+        border-variant="dark"
+        text-variant="white"
+        header-bg-variant="dark"
+        header-border-variant="dark"
     >
         <template slot="header" style="border: none">
             <h2>Developers</h2>
@@ -20,7 +20,7 @@
                     <b-card
                         title="Batteries included (but not required)"
                         class="text-left rounded-0 overflow-hidden"
-                        bg-variant="secondary"
+                        bg-variant="dark"
                         text-variant="white"
                         :img-src="
                             require('../../assets/frontpage/icons/algorithm.png')
@@ -55,7 +55,7 @@
                     <b-card
                         title="Workflow orchestration on the web"
                         class="text-left rounded-0 overflow-hidden"
-                        bg-variant="secondary"
+                        bg-variant="dark"
                         text-variant="white"
                         :img-src="
                             require('../../assets/frontpage/icons/UI.png')
@@ -79,7 +79,7 @@
                     <b-card
                         title="Full control over your environment"
                         class="text-left rounded-0 overflow-hidden"
-                        bg-variant="secondary"
+                        bg-variant="dark"
                         text-variant="white"
                         :img-src="
                             require('../../assets/frontpage/icons/code.png')
@@ -105,7 +105,7 @@
                     <b-card
                         title="Phenotyping-as-a-Service"
                         class="text-left rounded-0 overflow-hidden"
-                        bg-variant="secondary"
+                        bg-variant="dark"
                         text-variant="white"
                         :img-src="
                             require('../../assets/frontpage/icons/documentation.png')
