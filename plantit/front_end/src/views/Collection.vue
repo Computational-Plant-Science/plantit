@@ -121,8 +121,8 @@
                                             hover
                                             small
                                             sticky-header="true"
-                                            head-variant="light"
                                             responsive="sm"
+                                                                    :borderless="true"
                                             :items="collection.metadata"
                                             :fields="fields"
                                             class="table-responsive"

@@ -5,7 +5,7 @@
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
                         <h5>
-                            <i class="fas fa-terminal green"></i> Select Job
+                            <i class="fas fa-terminal green"></i>
                         </h5>
                     </b-col>
                     <b-col md="auto" v-if="filterable">

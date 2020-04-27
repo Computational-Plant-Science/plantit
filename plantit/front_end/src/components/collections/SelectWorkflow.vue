@@ -4,7 +4,9 @@
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h5><i class="fas fa-stream green"></i> Select Workflow</h5>
+                        <h5>
+                            <i class="fas fa-stream green"></i>
+                        </h5>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -30,38 +32,54 @@
                     <div
                         class="d-flex flex-wrap align-items-stretch row-eq-height"
                     >
-                        <b-card
-                            v-for="workflow in filtered"
-                            :key="workflow.name"
-                            border-variant="white"
-                            footer-bg-variant="dark"
-                            class="workflow"
-                        >
-                            <div class="workflow-icon">
-                                <b-img :src="workflow.icon_url"> </b-img>
-                            </div>
-                            <br />
-                            <b-card-body class="m-1 p-1" :title="workflow.name">
-                                {{ workflow.description }}
+                        <b-card-group deck columns>
+                            <b-card
+                                v-for="workflow in filtered"
+                                :key="workflow.name"
+                                border-variant="white"
+                                footer-bg-variant="dark"
+                                class="workflow"
+                                style="min-width: 20rem; max-width: 20rem"
+                            >
+                                <div class="workflow-icon text-center">
+                                    <b-img
+                                        v-if="workflow.icon_url"
+                                        style="max-width: 8rem"
+                                        :src="workflow.icon_url"
+                                    >
+                                    </b-img>
+                                    <b-img
+                                        v-else
+                                        style="max-width: 5rem"
+                                        :src="require('../../assets/logo.png')"
+                                    ></b-img>
+                                </div>
                                 <br />
-                                <br />
-                                <b-button
-                                    block
-                                    variant="outline-dark"
-                                    title="Start a new job"
-                                    v-b-tooltip.hover
-                                    :to="{
-                                        name: 'submit_workflow',
-                                        query: {
-                                            collection_pk: workflow.pk,
-                                            workflow_name: workflow.app_name
-                                        }
-                                    }"
+                                <b-card-body
+                                    class="m-1 p-1"
+                                    :title="workflow.name"
                                 >
-                                    <i class="fas fa-terminal"></i>
-                                </b-button>
-                            </b-card-body>
-                        </b-card>
+                                    {{ workflow.description }}
+                                    <br />
+                                    <br />
+                                    <b-button
+                                        block
+                                        variant="outline-dark"
+                                        title="Start a new job"
+                                        v-b-tooltip.hover
+                                        :to="{
+                                            name: 'submit_workflow',
+                                            query: {
+                                                collection_pk: workflow.pk,
+                                                workflow_name: workflow.app_name
+                                            }
+                                        }"
+                                    >
+                                        <i class="fas fa-terminal"></i>
+                                    </b-button>
+                                </b-card-body>
+                            </b-card>
+                        </b-card-group>
                     </div>
                 </b-col>
             </b-row>

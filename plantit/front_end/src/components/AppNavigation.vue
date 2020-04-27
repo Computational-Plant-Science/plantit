@@ -1,17 +1,17 @@
 <template>
-    <div>
-        <b-navbar toggleable="lg">
+    <div class="m-0 p-0">
+        <b-navbar toggleable="lg" class="p-0 m-0">
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
-
-            <b-navbar-brand href="#" to="/">
-                <b-img
-                    :src="require('../assets/logo.png')"
-                    width="35px"
-                    alt="Plant IT"
-                ></b-img>
-            </b-navbar-brand>
-
-            <b-collapse class="logo" is-nav>
+            <b-collapse class="logo m-0 p-0" is-nav>
+                <b-navbar-brand href="/" to="/" class="mr-0 ml-0 pr-0 pl-0">
+                    <b-img
+                        href="/"
+                        width="60px"
+                        :src="require('../assets/logo-right.png')"
+                        alt="Plant IT"
+                        style=""
+                    ></b-img>
+                </b-navbar-brand>
                 <b-navbar-nav>
                     <b-nav-item to="/About" class="m-0 p-0">
                         <b-button variant="outline-dark">
@@ -87,7 +87,7 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
-        <br>
+        <br />
     </div>
 </template>
 
@@ -116,3 +116,16 @@ export default {
     }
 };
 </script>
+
+<style scoped lang="sass">
+@import '../scss/_colors.sass'
+
+img
+  border-radius: 50%
+  -webkit-transition: -webkit-transform .25s ease-in-out
+          transition:         transform .25s ease-in-out
+
+img:hover
+  -webkit-transform: rotate(-180deg)
+          transform: rotate(-180deg)
+</style>

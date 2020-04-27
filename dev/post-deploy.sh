@@ -12,4 +12,4 @@ $compose run plantit ./manage.py collectstatic --no-input
 $compose run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
 $compose run plantit ./manage.py migrate
 find config/nginx/conf.d/local.conf -type f -exec sed -i "s/localhost/$host/g" {} \;
-$compose up
+$compose up -d

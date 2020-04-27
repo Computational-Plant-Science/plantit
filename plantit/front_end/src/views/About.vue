@@ -87,7 +87,7 @@
                                         </b-card>
                                         <b-card
                                             title="Wes Bonelli"
-                                            sub-title="Lead Developer (PlantIT)"
+                                            sub-title="Developer (PlantIT)"
                                             border-variant="dark"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
@@ -132,7 +132,7 @@
                                     <b-card-group columns>
                                         <b-card
                                             title="Chris Cotter"
-                                            sub-title="Lead Developer (PlantIT)"
+                                            sub-title="Developer (PlantIT)"
                                             border-variant="dark"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
@@ -162,7 +162,7 @@
                                         </b-card>
                                         <b-card
                                             title="Abhiram Das"
-                                            sub-title="Lead Developer (DIRT)"
+                                            sub-title="Developer (DIRT)"
                                             border-variant="dark"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"

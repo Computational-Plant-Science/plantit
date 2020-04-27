@@ -7,13 +7,16 @@
                         <br />
                         <b-tab title="Collections" active>
                             <template v-slot:title class="m-0 p-0">
-                                <b class="dark"><i class="fas fa-layer-group dark mr-1"></i>Collections</b>
+                                <b class="dark"
+                                    ><i class="fas fa-layer-group dark mr-1"></i
+                                    >Collections</b
+                                >
                             </template>
                             <p>
                                 To create a new collection , click the
-                                <i class="fas fa-plus"></i> icon below. Select
-                                an existing collection to edit metadata and
-                                upload samples.
+                                <i class="fas fa-plus"></i> icon. Select an
+                                existing collection to edit metadata and upload
+                                samples.
                             </p>
                             <SelectCollection
                                 filterable="true"
@@ -22,17 +25,22 @@
                         </b-tab>
                         <b-tab title="Workflows">
                             <template v-slot:title class="m-0 p-0">
-                                <b class="dark"><i class="fas fa-stream dark mr-1"></i>Workflows</b>
+                                <b class="dark"
+                                    ><i class="fas fa-stream dark mr-1"></i
+                                    >Workflows</b
+                                >
                             </template>
                             <p>
-                                Select a workflow below to
-                                start analyzing data.
+                                Select a workflow to start analyzing data.
                             </p>
                             <SelectWorkflow filterable="true"></SelectWorkflow>
                         </b-tab>
                         <b-tab title="Jobs">
                             <template v-slot:title class="m-0 p-0">
-                                <b class="dark"><i class="fas fa-terminal dark mr-1"></i>Jobs</b>
+                                <b class="dark"
+                                    ><i class="fas fa-terminal dark mr-1"></i
+                                    >Jobs</b
+                                >
                             </template>
                             <p>
                                 To start a new job, go to the
@@ -40,8 +48,8 @@
                                     >workflows</b-link
                                 >
                                 page or click the
-                                <i class="fas fa-plus"></i> icon below to select
-                                a workflow. Select an existing job to view logs
+                                <i class="fas fa-plus"></i> icon to select a
+                                workflow. Select an existing job to view logs
                                 and results.
                             </p>
                             <SelectJob filterable="true"></SelectJob>

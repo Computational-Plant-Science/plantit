@@ -8,7 +8,7 @@
             <template v-slot:header style="background-color: white">
                 <b-row>
                     <b-col class="mt-2" style="color: white">
-                        <h5><i class="fas fa-layer-group green"></i> Select Collection</h5>
+                        <h5><i class="fas fa-layer-group green"></i></h5>
                     </b-col>
                     <b-col md="auto" v-if="filterable" class="b-form-col">
                         <b-input-group>
