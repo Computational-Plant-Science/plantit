@@ -3,8 +3,6 @@
 host="$1"
 compose="docker-compose -f docker-compose.yml -f docker-compose.prod.yml"
 
-$compose down
-git pull
 cd plantit/front_end || exit
 npm install
 npm run build
