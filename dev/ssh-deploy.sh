@@ -15,5 +15,6 @@ git push deploy master
 
 ssh -o StrictHostKeyChecking=no -p $SSH_PORT "$SSH_USER@$SSH_HOST" <<EOF
   cd $SSH_DIRECTORY
+  chmod +x ./dev/post-deploy.ssh
   ./dev/post-deploy.sh $SSH_HOST
 EOF
