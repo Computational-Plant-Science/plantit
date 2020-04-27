@@ -87,6 +87,7 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
+        <br>
     </div>
 </template>
 

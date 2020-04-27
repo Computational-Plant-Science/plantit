@@ -4,7 +4,7 @@
             <h3>
                 What is PlantIT?
             </h3>
-            <hr />
+            <br />
             <b-row class="justify-content-md-center mb-4">
                 <b-col>
                     PlantIT is a workflow automation platform for the phenomics
@@ -18,7 +18,7 @@
                     <b-link
                         href="https://arpa-e.energy.gov/?q=arpa-e-programs/roots"
                         >ARPA-E ROOTS project</b-link
-                    >. It allows users to upload or access data in-place, run
+                    >. It allows users to upload or access existing data, run
                     bespoke analyses on high-performance and high-throughput
                     computing systems, and retrieve results &mdash; all from the
                     browser, no programming required.
@@ -27,7 +27,7 @@
             <h3>
                 People
             </h3>
-            <hr />
+            <br />
             <b-row class="justify-content-md-center mb-4">
                 <b-col>
                     <b-tabs justified active-nav-item-class="bg-success" pills>
