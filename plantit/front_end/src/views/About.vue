@@ -202,10 +202,18 @@
                                                         class="fab fa-github fa-2x success"
                                                     ></i>
                                                 </a>
+                                                <a
+                                                    href="https://www.linkedin.com/in/meganflory13/"
+                                                    class="card-link"
+                                                >
+                                                    <i
+                                                        class="fab fa-linkedin fa-2x success"
+                                                    ></i>
+                                                </a>
                                             </template>
                                         </b-card>
                                         <b-card
-                                            title="Maria Pedrosa"
+                                            title="Maria Luck"
                                             sub-title="Developer"
                                             border-variant="dark"
                                             footer-bg-variant="dark"
