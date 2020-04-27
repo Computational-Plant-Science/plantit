@@ -15,12 +15,18 @@
                             width="100px"
                             alt="Plant IT"
                         ></b-img>
-                        <h3>PlantIT</h3>
+                        <h2>PlantIT</h2>
                     </b-col>
                 </b-row>
                 <b-navbar toggleable="sm">
                     <b-collapse class="justify-content-center" is-nav>
                         <b-navbar-nav class="logo">
+                            <b-nav-item to="/About" class="m-0 p-0">
+                                <b-button variant="outline-dark">
+                                    <i class="fas fa-users fa-1x"></i>
+                                    About
+                                </b-button>
+                            </b-nav-item>
                             <b-nav-item to="/Guide" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-map-signs"></i>
@@ -31,12 +37,6 @@
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-book"></i>
                                     Docs
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item to="/People" class="m-0 p-0">
-                                <b-button variant="outline-dark">
-                                    <i class="fas fa-users fa-1x"></i>
-                                    People
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item
@@ -51,8 +51,11 @@
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <b-card-body align="left" class="mt-2">
-                    PlantIT allows computational researchers to make their algorithms available to a broad community, and provides biological researchers with an easy-to-use interface to apply algorithms to their own data.
+                <b-card-body align="left">
+                    PlantIT allows computational researchers to make their
+                    algorithms available to a broad community, and provides
+                    biological researchers with an easy-to-use interface to
+                    apply algorithms to their own data.
                     <br />
                     <br />
                     Read the <b-link to="/Guide">User Guide</b-link> to learn

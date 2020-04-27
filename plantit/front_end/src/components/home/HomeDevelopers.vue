@@ -1,6 +1,6 @@
 <template>
     <b-card
-        class="rounded-0"
+        class="rounded-0 text-center"
         bg-variant="dark"
         border-variant="dark"
         text-variant="white"

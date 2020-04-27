@@ -1,8 +1,10 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import Home from './views/Home.vue';
-import People from './views/People.vue';
+import About from './views/About.vue';
 import UserInfo from './views/UserInfo.vue';
+import Dashboard from './views/Dashboard.vue';
+import Guide from './views/Guide.vue';
 import Auth from '@/services/apiV1/Auth.js';
 
 Vue.use(Router);
@@ -17,9 +19,19 @@ let router = new Router({
             component: Home
         },
         {
-            path: '/people',
-            name: 'people',
-            component: People
+            path: '/guide',
+            name: 'guide',
+            component: Guide
+        },
+        {
+            path: '/user/dashboard',
+            name: 'dashboard',
+            component: Dashboard
+        },
+        {
+            path: '/about',
+            name: 'about',
+            component: About
         },
         {
             path: '/user/profile',

@@ -13,6 +13,12 @@
 
             <b-collapse class="logo" is-nav>
                 <b-navbar-nav>
+                    <b-nav-item to="/About" class="m-0 p-0">
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-users fa-1x"></i>
+                            About
+                        </b-button>
+                    </b-nav-item>
                     <b-nav-item to="/Guide" class="m-0 p-0">
                         <b-button variant="outline-dark">
                             <i class="fas fa-map-signs"></i>
@@ -23,12 +29,6 @@
                         <b-button variant="outline-dark">
                             <i class="fas fa-book"></i>
                             Docs
-                        </b-button>
-                    </b-nav-item>
-                    <b-nav-item to="/People" class="m-0 p-0">
-                        <b-button variant="outline-dark">
-                            <i class="fas fa-users fa-1x"></i>
-                            People
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -44,36 +44,13 @@
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
                         v-if="isLoggedIn"
-                        title="Collections"
-                        to="/user/collections"
+                        title="Dashboard"
+                        to="/user/dashboard"
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                            <i class="fas fa-layer-group"></i>
-                            Collections
-                        </b-button>
-                    </b-nav-item>
-                    <b-nav-item
-                        v-if="isLoggedIn"
-                        title="Workflows"
-                        to="/user/workflows"
-                        class="m-0 p-0"
-                    >
-                        <b-button variant="outline-dark">
-                            <i class="fas fa-stream"></i>
-
-                            Workflows
-                        </b-button>
-                    </b-nav-item>
-                    <b-nav-item
-                        v-if="isLoggedIn"
-                        title="Jobs"
-                        to="/user/jobs"
-                        class="m-0 p-0"
-                    >
-                        <b-button variant="outline-dark">
-                            <i class="fas fa-terminal"></i>
-                            Jobs
+                            <i class="fas fa-home"></i>
+                            Dashboard
                         </b-button>
                     </b-nav-item>
                     <b-nav-item

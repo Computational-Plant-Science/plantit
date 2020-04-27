@@ -82,7 +82,7 @@ class Registrar:
         config['app_url_pattern'] = "workflows:%s:analyze" % (config['app_name'],)
 
         icon_path = join(folder_path, 'static', 'icon.png')
-        if (isfile(icon_path)):
+        if isfile(icon_path):
             copyfile(icon_path, join(settings.BASE_DIR,
                                      'plantit/static/workflow_icons/',
                                      config['app_name'] + '.png'))

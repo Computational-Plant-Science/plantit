@@ -3,7 +3,7 @@
         <b-row>
             <b-col class="pl-10">
                 <b-card
-                    class="rounded-0"
+                    class="rounded-0 text-center"
                     bg-variant="secondary"
                     border-variant="secondary"
                     text-variant="white"

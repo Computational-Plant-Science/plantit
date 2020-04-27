@@ -1,7 +1,7 @@
 <template>
     <div>
         <b-card
-            class="rounded-0"
+            class="rounded-0 text-center"
             bg-variant="white"
             border-variant="white"
             style="border:none"
