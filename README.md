@@ -4,7 +4,7 @@
 
 **This project is under active development and is not yet stable**.
 
-[![Build Status](https://travis-ci.com/w-bonelli/DIRT2_Webplatform.svg?token=8SgKppiotCz5BKibbN5Q&branch=master)](https://travis-ci.com/w-bonelli/DIRT2_Webplatform)
+[![Build Status](https://travis-ci.com/Computational-Plant-Science/DIRT2_Webplatform.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/DIRT2_Webplatform)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
