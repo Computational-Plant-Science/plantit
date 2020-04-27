@@ -8,7 +8,7 @@ before_install:
 script:
 - "./dev/bootstrap.sh"
 deploy:
-  - provider: script
-    script: bash dev/deploy-ssh.sh
-    on:
-      branch: master
+- provider: script
+  script: bash dev/ssh-deploy.sh
+  on:
+    branch: master
