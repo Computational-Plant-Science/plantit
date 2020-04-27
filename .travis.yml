@@ -9,6 +9,6 @@ script:
 - "./dev/bootstrap.sh"
 deploy:
   - provider: script
-    script: bash dev/deploy.sh portnoy.cyverse.org
+    script: bash dev/deploy-ssh.sh
     on:
       branch: master
