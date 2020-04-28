@@ -97,7 +97,7 @@ export default {
     height: 200px
     margin: 0 auto
     margin-bottom: -10px
-    background-color: $secondary
+    background-color: white
     border-radius: 50%
     border: 4px solid $dark
     padding: 24px

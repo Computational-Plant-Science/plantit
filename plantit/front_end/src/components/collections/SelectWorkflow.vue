@@ -1,11 +1,11 @@
 <template>
     <div class="w-100 pb-4">
-        <b-card header-bg-variant="dark" border-variant="dark">
+        <b-card header-bg-variant="dark" border-variant="white">
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
                         <h5>
-                            <i class="fas fa-stream green"></i>
+                            <i class="fas fa-stream green"></i> Workflows
                         </h5>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
@@ -27,57 +27,82 @@
                     </b-col>
                 </b-row>
             </template>
+            <p>
+                Select a workflow to start analyzing data.
+            </p>
             <b-row>
                 <b-col>
                     <div
                         class="d-flex flex-wrap align-items-stretch row-eq-height"
                     >
-                        <b-card-group deck columns>
+                        <b-card-group>
                             <b-card
                                 v-for="workflow in filtered"
                                 :key="workflow.name"
                                 border-variant="white"
                                 footer-bg-variant="dark"
-                                class="workflow"
-                                style="min-width: 20rem; max-width: 20rem"
+                                header-bg-variant="white"
+                                header-border-variant="dark"
+                                class="overflow-hidden p-2 m-2"
+                                style="min-width: 30rem"
                             >
-                                <div class="workflow-icon text-center">
-                                    <b-img
-                                        v-if="workflow.icon_url"
-                                        style="max-width: 8rem"
-                                        :src="workflow.icon_url"
+                                <template slot="header">
+                                    <b-row>
+                                        <b-col>
+                                            <h3>{{ workflow.name }}</h3>
+                                        </b-col>
+                                        <b-col md="auto">
+                                            <b-button
+                                                block
+                                                variant="outline-dark"
+                                                title="Start a new job"
+                                                v-b-tooltip.hover
+                                                :to="{
+                                                    name: 'submit_workflow',
+                                                    query: {
+                                                        collection_pk:
+                                                            workflow.pk,
+                                                        workflow_name:
+                                                            workflow.app_name
+                                                    }
+                                                }"
+                                            >
+                                                <i class="fas fa-terminal"></i>
+                                            </b-button>
+                                        </b-col>
+                                    </b-row>
+                                </template>
+                                <b-row no-gutters>
+                                    <b-col
+                                        md="auto"
+                                        style="min-width: 8em; max-width: 8rem; min-height: 8rem; max-height: 8rem"
                                     >
-                                    </b-img>
-                                    <b-img
-                                        v-else
-                                        style="max-width: 5rem"
-                                        :src="require('../../assets/logo.png')"
-                                    ></b-img>
-                                </div>
-                                <br />
-                                <b-card-body
-                                    class="m-1 p-1"
-                                    :title="workflow.name"
-                                >
-                                    {{ workflow.description }}
-                                    <br />
-                                    <br />
-                                    <b-button
-                                        block
-                                        variant="outline-dark"
-                                        title="Start a new job"
-                                        v-b-tooltip.hover
-                                        :to="{
-                                            name: 'submit_workflow',
-                                            query: {
-                                                collection_pk: workflow.pk,
-                                                workflow_name: workflow.app_name
-                                            }
-                                        }"
-                                    >
-                                        <i class="fas fa-terminal"></i>
-                                    </b-button>
-                                </b-card-body>
+                                        <b-img
+                                            v-if="workflow.icon_url"
+                                            style="max-width: 8rem"
+                                            :src="workflow.icon_url"
+                                            right
+                                        >
+                                        </b-img>
+                                        <b-img
+                                            v-else
+                                            style="max-width: 8rem"
+                                            :src="
+                                                require('../../assets/logo.png')
+                                            "
+                                            right
+                                        ></b-img>
+                                    </b-col>
+                                    <b-col>
+                                        <b-row>
+                                            <b-col>
+                                                <b-card-body>
+                                                    {{ workflow.description }}
+                                                </b-card-body>
+                                            </b-col>
+                                        </b-row>
+                                    </b-col>
+                                </b-row>
                             </b-card>
                         </b-card-group>
                     </div>
@@ -133,21 +158,6 @@ export default {
 
 .workflow
     width: 300px
-
-.workflow-icon
-    width: 200px
-    height: 200px
-    margin: 0 auto
-    margin-bottom: -10px
-    background-color: $secondary
-    border-radius: 50%
-    border: 4px solid $dark
-    padding: 24px
-
-    img
-        margin-top: 20px
-        max-width: 140px
-        max-height: 190px
 
 .workflow-text
     background-color: $color-box-background

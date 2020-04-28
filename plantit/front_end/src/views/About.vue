@@ -18,10 +18,13 @@
                     <b-link
                         href="https://arpa-e.energy.gov/?q=arpa-e-programs/roots"
                         >ARPA-E ROOTS project</b-link
-                    >. It allows users to upload or access existing data, run
-                    bespoke analyses on high-performance and high-throughput
-                    computing systems, and retrieve results &mdash; all from the
-                    browser, no programming required.
+                    >. Users can upload data, run pipelines on high-performance
+                    and high-throughput computing resources, and retrieve
+                    results &mdash; all from the browser, no programming
+                    required. PlantIT allows computational researchers to make
+                    their algorithms available to a broad community, and
+                    provides biological researchers with an easy-to-use
+                    interface to apply algorithms in their own work.
                 </b-col>
             </b-row>
             <h3>
@@ -50,7 +53,7 @@
                                         <b-card
                                             title="Alexander Bucksch"
                                             sub-title="Principal Investigator"
-                                            border-variant="dark"
+                                            border-variant="white"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
                                             style="min-width: 20rem"
@@ -88,7 +91,7 @@
                                         <b-card
                                             title="Wes Bonelli"
                                             sub-title="Developer (PlantIT)"
-                                            border-variant="dark"
+                                            border-variant="white"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
                                             style="min-width: 20rem"
@@ -133,7 +136,7 @@
                                         <b-card
                                             title="Chris Cotter"
                                             sub-title="Developer (PlantIT)"
-                                            border-variant="dark"
+                                            border-variant="white"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
                                             style="min-width: 20rem;"
@@ -163,7 +166,7 @@
                                         <b-card
                                             title="Abhiram Das"
                                             sub-title="Developer (DIRT)"
-                                            border-variant="dark"
+                                            border-variant="white"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
                                             style="min-width: 20rem"
@@ -185,7 +188,7 @@
                                         <b-card
                                             title="Megan Flory"
                                             sub-title="Graphic Designer"
-                                            border-variant="dark"
+                                            border-variant="white"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
                                             style="min-width: 20rem"
@@ -215,7 +218,7 @@
                                         <b-card
                                             title="Maria Luck"
                                             sub-title="Developer"
-                                            border-variant="dark"
+                                            border-variant="white"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
                                             style="min-width: 20rem"

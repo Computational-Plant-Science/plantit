@@ -6,7 +6,7 @@
                 bg-variant="default"
                 footer-bg-variant="dark"
                 border-variant="dark"
-                style="max-width: 575px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.95"
+                style="max-width: 600px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.95"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -52,10 +52,7 @@
                     </b-collapse>
                 </b-navbar>
                 <b-card-body align="left">
-                    PlantIT allows computational researchers to make their
-                    algorithms available to a broad community, and provides
-                    biological researchers with an easy-to-use interface to
-                    apply algorithms to their own data.
+                    Welcome to PlantIT, a PaaS (<b>Phenomics</b>-as-a-Service) science gateway!
                     <br />
                     <br />
                     Read the <b-link to="/Guide">User Guide</b-link> to learn

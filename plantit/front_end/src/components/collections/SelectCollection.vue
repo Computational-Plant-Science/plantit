@@ -2,13 +2,14 @@
     <div class="w-100">
         <b-card
             header-bg-variant="dark"
+            header-border-variant="white"
             footer-bg-variant="white"
-            border-variant="dark"
+            border-variant="white"
         >
             <template v-slot:header style="background-color: white">
                 <b-row>
                     <b-col class="mt-2" style="color: white">
-                        <h5><i class="fas fa-layer-group green"></i></h5>
+                        <h5><i class="fas fa-layer-group green"></i> Collections</h5>
                     </b-col>
                     <b-col md="auto" v-if="filterable" class="b-form-col">
                         <b-input-group>
@@ -39,6 +40,14 @@
                     </b-col>
                 </b-row>
             </template>
+            <p                 v-if="selectable">
+                Select a collection.
+            </p>
+            <p v-else>
+                To create a new collection , click
+                <i class="fas fa-plus"></i>. Select an existing collection to
+                edit metadata and upload samples.
+            </p>
             <b-table
                 show-empty
                 small
@@ -93,7 +102,11 @@
                     </b-button>
                 </template>
             </b-table>
-            <template v-slot:footer style="background-color: white" v-if="selectable">
+            <template
+                v-slot:footer
+                style="background-color: white"
+                v-if="selectable"
+            >
                 <b-row align-v="center">
                     <b-col>
                         Selected:
@@ -113,7 +126,7 @@ export default {
     components: {},
     props: {
         selectable: {
-            default: false,
+            default: false
         },
         perPage: {
             default: 0
@@ -130,7 +143,7 @@ export default {
     methods: {
         rowSelected: function(items) {
             this.selected = items[0];
-            this.$emit('selected', this.selected)
+            this.$emit('selected', this.selected);
         },
         remove(item) {
             this.$bvModal
@@ -181,10 +194,6 @@ export default {
                 },
                 {
                     key: 'samples',
-                    sortable: true
-                },
-                {
-                    key: 'pinned',
                     sortable: true
                 },
                 {

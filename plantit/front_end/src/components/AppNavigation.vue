@@ -1,13 +1,13 @@
 <template>
     <div class="m-0 p-0">
-        <b-navbar toggleable="lg" class="p-0 m-0">
+        <b-navbar toggleable="lg" class="">
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
             <b-collapse class="logo m-0 p-0" is-nav>
                 <b-navbar-brand href="/" to="/" class="mr-0 ml-0 pr-0 pl-0">
                     <b-img
                         href="/"
                         width="60px"
-                        :src="require('../assets/logo-right.png')"
+                        :src="require('../assets/logo-left.png')"
                         alt="Plant IT"
                         style=""
                     ></b-img>
@@ -126,6 +126,6 @@ img
           transition:         transform .25s ease-in-out
 
 img:hover
-  -webkit-transform: rotate(-180deg)
-          transform: rotate(-180deg)
+  -webkit-transform: rotate(-270deg)
+          transform: rotate(-270deg)
 </style>

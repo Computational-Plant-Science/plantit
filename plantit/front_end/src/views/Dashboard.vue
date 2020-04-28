@@ -3,8 +3,12 @@
         <b-container>
             <b-row class="justify-content-md-center mb-4">
                 <b-col>
-                    <b-tabs justified active-nav-item-class="bg-success" pills>
-                        <br />
+                    <b-tabs
+                        justified
+                        active-nav-item-class="bg-success"
+                        pills
+                        vertical
+                    >
                         <b-tab title="Collections" active>
                             <template v-slot:title class="m-0 p-0">
                                 <b class="dark"
@@ -12,12 +16,6 @@
                                     >Collections</b
                                 >
                             </template>
-                            <p>
-                                To create a new collection , click the
-                                <i class="fas fa-plus"></i> icon. Select an
-                                existing collection to edit metadata and upload
-                                samples.
-                            </p>
                             <SelectCollection
                                 filterable="true"
                                 v-on:selected="onSelected"
@@ -30,9 +28,6 @@
                                     >Workflows</b
                                 >
                             </template>
-                            <p>
-                                Select a workflow to start analyzing data.
-                            </p>
                             <SelectWorkflow filterable="true"></SelectWorkflow>
                         </b-tab>
                         <b-tab title="Jobs">
@@ -42,16 +37,6 @@
                                     >Jobs</b
                                 >
                             </template>
-                            <p>
-                                To start a new job, go to the
-                                <b-link href="/user/workflows"
-                                    >workflows</b-link
-                                >
-                                page or click the
-                                <i class="fas fa-plus"></i> icon to select a
-                                workflow. Select an existing job to view logs
-                                and results.
-                            </p>
                             <SelectJob filterable="true"></SelectJob>
                         </b-tab>
                     </b-tabs>

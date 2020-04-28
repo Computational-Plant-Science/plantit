@@ -2,14 +2,14 @@
     <div class="w-100">
         <b-card
             header-bg-variant="dark"
-            footer-bg-variant="light"
-            border-variant="dark"
+            footer-bg-variant="white"
+            border-variant="white"
         >
             <template v-slot:header style="background-color: white">
                 <b-row>
                     <b-col class="mt-2" style="color: white">
                         <h5>
-                            <i class="fas fa-list-ul green"></i> Set Parameters
+                            <i class="fas fa-list-ul green"></i> Parameters
                         </h5>
                     </b-col>
                 </b-row>
