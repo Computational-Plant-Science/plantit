@@ -8,6 +8,6 @@ script:
 - "./dev/bootstrap.sh"
 deploy:
 - provider: script
-  script: bash dev/ssh-deploy.sh
+  script: bash dev/deploy-ssh.sh
   on:
     branch: master
