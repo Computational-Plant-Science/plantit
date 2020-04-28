@@ -3,16 +3,23 @@
         :id="modalId"
         title="Edit User Info"
         ok-title="Save"
+        ok-variant="dark"
+        :ok-disabled="invalid"
         @cancel="cancel"
         @close="cancel"
         @ok="save"
         no-close-on-backdrop
         centered
     >
+        <p v-if="prompt">
+            Please enter your personal information. PlantIT relies on accurate
+            demographic reporting to insure funding continuity.
+        </p>
         <b-form-group
             label="First Name"
             label-for="first-name"
-            description="Enter your first name."
+            invalid-feedback="Please enter your first name."
+            :state="valid(first_name_internal)"
         >
             <b-form-input id="first-name" v-model="first_name_internal" trim>
             </b-form-input>
@@ -20,7 +27,8 @@
         <b-form-group
             label="Last Name"
             label-for="last-name"
-            description="Enter your last name."
+            invalid-feedback="Please enter your last name."
+            :state="valid(last_name_internal)"
         >
             <b-form-input id="last-name" v-model="last_name_internal" trim>
             </b-form-input>
@@ -28,7 +36,8 @@
         <b-form-group
             label="Country"
             label-for="country"
-            description="Enter your institution's country of origin."
+            invalid-feedback="Please enter your institution's country of origin."
+            :state="valid(country_internal)"
         >
             <b-form-input id="country" v-model="country_internal" trim>
             </b-form-input>
@@ -36,7 +45,8 @@
         <b-form-group
             label="Continent"
             label-for="continent"
-            description="Enter your institution's continent of origin."
+            invalid-feedback="Please enter your institution's continent of origin."
+            :state="valid(continent_internal)"
         >
             <b-form-input id="continent" v-model="continent_internal" trim>
             </b-form-input>
@@ -44,7 +54,8 @@
         <b-form-group
             label="Institution"
             label-for="institution"
-            description="Enter your institution or organization."
+            invalid-feedback="Please enter your institution or organization."
+            :state="valid(institution_internal)"
         >
             <b-form-input id="institution" v-model="institution_internal" trim>
             </b-form-input>
@@ -52,7 +63,8 @@
         <b-form-group
             label="Institution Type"
             label-for="institution-type"
-            description="Enter your institution type (e.g., private company, research university, public organization)."
+            invalid-feedback="Please enter your institution type (e.g., private company, research university, public organization)."
+            :state="valid(institution_type_internal)"
         >
             <b-form-input
                 id="institution-type"
@@ -64,7 +76,8 @@
         <b-form-group
             label="Field of Study"
             label-for="field-of-study"
-            description="Enter your field of study."
+            invalid-feedback="Please enter your field of study."
+            :state="valid(field_of_study_internal)"
         >
             <b-form-input
                 id="field-of-study"
@@ -80,6 +93,10 @@
 export default {
     name: 'EditUserInfoModal',
     props: {
+        prompt: {
+            type: Boolean,
+            default: false
+        },
         username: {
             type: String,
             default: function() {
@@ -162,6 +179,22 @@ export default {
         },
         cancel() {
             this.$emit('cancel');
+        },
+        valid(str) {
+            return str !== null && str !== undefined && str.length > 0;
+        }
+    },
+    computed: {
+        invalid: function() {
+            return !(
+                this.valid(this.first_name_internal) &&
+                this.valid(this.last_name_internal) &&
+                this.valid(this.country_internal) &&
+                this.valid(this.continent_internal) &&
+                this.valid(this.institution_internal) &&
+                this.valid(this.institution_type_internal) &&
+                this.valid(this.field_of_study_internal)
+            );
         }
     },
     watch: {

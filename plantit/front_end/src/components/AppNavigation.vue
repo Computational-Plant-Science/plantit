@@ -88,16 +88,52 @@
             </b-collapse>
         </b-navbar>
         <br />
+        <EditUserInfoModal
+            :prompt="true"
+            modal-id="editUserInfoModalNav"
+            :username="this.info.username"
+            :first_name="this.info.first_name"
+            :last_name="this.info.last_name"
+            :country="
+                this.info.profile === undefined ? '' : this.info.profile.country
+            "
+            :continent="
+                this.info.profile === undefined
+                    ? ''
+                    : this.info.profile.continent
+            "
+            :institution="
+                this.info.profile === undefined
+                    ? ''
+                    : this.info.profile.institution
+            "
+            :institution_type="
+                this.info.profile === undefined
+                    ? ''
+                    : this.info.profile.institution_type
+            "
+            :field_of_study="
+                this.info.profile === undefined
+                    ? ''
+                    : this.info.profile.field_of_study
+            "
+            @saveUserInfo="saveUserInfo"
+            @cancel="cancel"
+        >
+        </EditUserInfoModal>
     </div>
 </template>
 
 <script>
 import UserApi from '@/services/apiV1/UserManager.js';
 import Auth from '@/services/apiV1/Auth.js';
+import EditUserInfoModal from '@/components/collections/EditUserInfoModal';
 
 export default {
     name: 'AppNavigation',
-    components: {},
+    components: {
+        EditUserInfoModal
+    },
     computed: {
         isLoggedIn() {
             return Auth.isLoggedIn();
@@ -108,11 +144,49 @@ export default {
     },
     data() {
         return {
+            loading: true,
             info: {}
         };
     },
     mounted: function() {
-        UserApi.getCurrentUser().then(info => (this.info = info));
+        this.reload();
+    },
+    methods: {
+        reload() {
+            UserApi.getCurrentUser().then(info => {
+                this.info = info;
+                this.loading = false;
+                if (this.info.profile === undefined) {
+                    this.$bvModal.show('editUserInfoModalNav');
+                }
+            });
+        },
+        saveUserInfo(
+            userName,
+            firstName,
+            lastName,
+            country,
+            continent,
+            institution,
+            institutionType,
+            fieldOfStudy
+        ) {
+            UserApi.updateUserInfo(
+                userName,
+                firstName,
+                lastName,
+                country,
+                continent,
+                institution,
+                institutionType,
+                fieldOfStudy
+            ).then(() => {
+                this.reload();
+            });
+        },
+        cancel() {
+            this.reload();
+        }
     }
 };
 </script>
