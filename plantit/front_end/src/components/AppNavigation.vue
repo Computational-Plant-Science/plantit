@@ -118,7 +118,6 @@
                     : this.info.profile.field_of_study
             "
             @saveUserInfo="saveUserInfo"
-            @cancel="cancel"
         >
         </EditUserInfoModal>
     </div>
@@ -140,6 +139,18 @@ export default {
         },
         routeName() {
             return this.$route.name;
+        },
+        profileIncomplete() {
+            return (
+                !this.loading &&
+                !(
+                    this.info.profile.country &&
+                    this.info.profile.continent &&
+                    this.info.profile.institution &&
+                    this.info.profile.institution_type &&
+                    this.info.profile.field_of_study
+                )
+            );
         }
     },
     data() {
@@ -156,7 +167,7 @@ export default {
             UserApi.getCurrentUser().then(info => {
                 this.info = info;
                 this.loading = false;
-                if (this.info.profile === undefined) {
+                if (this.profileIncomplete) {
                     this.$bvModal.show('editUserInfoModalNav');
                 }
             });
@@ -183,9 +194,6 @@ export default {
             ).then(() => {
                 this.reload();
             });
-        },
-        cancel() {
-            this.reload();
         }
     }
 };

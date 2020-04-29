@@ -26,11 +26,11 @@ class Profile(models.Model):
     """
     # See https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
     user: User = models.OneToOneField(User, on_delete=models.CASCADE)
-    country: str = models.CharField(max_length=256, blank=False)
-    continent: str = models.CharField(max_length=256, blank=False)
-    institution: str = models.CharField(max_length=256, blank=False)
-    institution_type: str = models.CharField(max_length=256, blank=False)
-    field_of_study: str = models.CharField(max_length=256, blank=False)
+    country: str = models.CharField(max_length=256, default='')
+    continent: str = models.CharField(max_length=256, default='')
+    institution: str = models.CharField(max_length=256, default='')
+    institution_type: str = models.CharField(max_length=256, default='')
+    field_of_study: str = models.CharField(max_length=256, default='')
     pinned_jobs: Manager = models.ManyToManyField(Job, related_name='profile_pins', blank=True)
     pinned_collections: Manager = models.ManyToManyField(Collection, related_name='profile_pins', blank=True)
 

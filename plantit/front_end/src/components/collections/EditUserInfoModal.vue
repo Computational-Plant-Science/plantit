@@ -1,19 +1,25 @@
 <template>
     <b-modal
         :id="modalId"
-        title="Edit User Info"
+        :title="
+            prompt ? 'Update Profile Information' : 'Edit Profile Information'
+        "
         ok-title="Save"
         ok-variant="dark"
-        :ok-disabled="invalid"
-        @cancel="cancel"
-        @close="cancel"
+        header-bg-variant="dark"
+        header-border-variant="dark"
+        header-text-variant="white"
+        footer-bg-variant="dark"
+        footer-border-variant="dark"
+        ok-only
+        no-close-on-esc
         @ok="save"
         no-close-on-backdrop
+        hide-header-close
         centered
     >
         <p v-if="prompt">
-            Please enter your personal information. PlantIT relies on accurate
-            demographic reporting to insure funding continuity.
+            PlantIT must collect user information to insure funding continuity. Please enter your information below.
         </p>
         <b-form-group
             label="First Name"
@@ -176,9 +182,6 @@ export default {
                 this.field_of_study_internal
             );
             this.$bvModal.hide(bvModalEvent.componentId);
-        },
-        cancel() {
-            this.$emit('cancel');
         },
         valid(str) {
             return str !== null && str !== undefined && str.length > 0;
