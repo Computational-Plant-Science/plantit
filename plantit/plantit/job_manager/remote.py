@@ -96,6 +96,8 @@ class SSHClientMixin(models.Model):
                                self.cluster.username,
                                pkey=k)
             else:
+                if getattr(settings, 'DEBUG', False):
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 # Use password
                 client.connect(self.cluster.hostname,
                                self.cluster.port,

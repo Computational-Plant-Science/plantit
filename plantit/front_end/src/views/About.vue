@@ -18,13 +18,13 @@
                     <b-link
                         href="https://arpa-e.energy.gov/?q=arpa-e-programs/roots"
                         >ARPA-E ROOTS project</b-link
-                    >. Users can upload data, run pipelines on high-performance
-                    and high-throughput computing resources, and retrieve
-                    results &mdash; all from the browser, no programming
-                    required. PlantIT allows computational researchers to make
-                    their algorithms available to a broad community, and
-                    provides biological researchers with an easy-to-use
-                    interface to apply algorithms in their own work.
+                    >. Users can upload or access data, run or schedule
+                    pipelines on high-performance and high-throughput computing
+                    resources, and retrieve or store results &mdash; all from
+                    the browser, no programming required. PlantIT allows
+                    computational researchers to make their algorithms available
+                    to a broad community and offers biological researchers an
+                    easy-to-use interface to apply algorithms in their own work.
                 </b-col>
             </b-row>
             <h3>

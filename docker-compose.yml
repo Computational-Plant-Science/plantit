@@ -18,6 +18,7 @@ services:
     working_dir: /code/plantit
     depends_on:
       - postgres
+      - celery
     volumes:
       - .:/code
     environment:

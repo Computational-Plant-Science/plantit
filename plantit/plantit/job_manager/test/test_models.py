@@ -3,13 +3,14 @@ from os import path
 import random
 import string
 import tempfile
+import subprocess
 
 from django.test import TestCase
 from django.utils import timezone
 import django.core.files as files
 from django.contrib.auth.models import User;
 
-from ..job import Status, Job, DummyTask
+from ..job import Status, Job, DummyTask, Cluster
 from ..remote import Cluster, SubmissionTask, File, UploadFileTask
 from ..job import __cancel_job__, __run_next__
 
@@ -28,7 +29,7 @@ def create_script(file=None):
             name (str): file name
     """
     if not file:
-        file = tempfile.NamedTemporaryFile(mode="w",dir='./files/tmp/',delete=False)
+        file = tempfile.NamedTemporaryFile(mode="w", dir='./files/public', delete=False)
         file.write("echo 'Test' > test.file")
         file.close()
 
@@ -49,7 +50,6 @@ def create_collection(user = None):
                    storage_type="Local",
                    base_file_path="files/")
     c.save()
-
     return c
 
 def create_cluster(submit_commands=None,uname=None):
@@ -62,11 +62,12 @@ def create_cluster(submit_commands=None,uname=None):
                 description="Connects to docker ssh container",
                 username=uname,
                 password="root",
-                hostname="ssh",
+                hostname="cluster",
                 workdir="/root/",
                 submit_commands=submit_commands,
                 cancel_commands="ls /")
     c.save()
+    subprocess.Popen("ssh-keyscan -H cluster >> ../config/ssh/known_hosts", shell=True).wait()
     return c
 
 def add_task(job,name = None):
@@ -217,64 +218,60 @@ class RemoteTests(TestCase):
         t.run()
         self.assertEqual(j.current_status().state,Status.FAILED)
 
-    def test_submission_format_cluster_cmds(self):
-        j = create_job()
-        c = create_cluster()
-        submission_script = create_script()
-        file1 = create_script()
-        task = SubmissionTask(name="Task 2",
-                     description="should run Second",
-                     job = j,
-                     cluster = c,
-                     order_pos = 1,
-                     submission_script=submission_script,
-                     parameters="""{
-                                    "-p": null,
-                                    "--task":"test"
-                                }""")
+    #def test_submission_format_cluster_cmds(self):
+    #    job: Job = create_job()
+    #    submission_script: File = create_script()
+    #    cluster: Cluster = create_cluster(submission_script)
+    #    task: SubmissionTask = SubmissionTask(name="Task 2",
+    #                 description="should run Second",
+    #                 job = job,
+    #                 cluster = cluster,
+    #                 order_pos = 1,
+    #                 parameters="""{
+    #                                "-p": null,
+    #                                "--task":"test"
+    #                            }""")
 
-        res = task.format_cluster_cmds("{job_pk}")
-        self.assertEqual(str(j.pk),res)
+    #    res = task.format_cluster_cmds("{job_pk}")
+    #    self.assertEqual(str(job.pk),res)
 
-        res = task.format_cluster_cmds("{auth_token}")
-        self.assertEqual(str(j.auth_token),res)
+    #    res = task.format_cluster_cmds("{auth_token}")
+    #    self.assertEqual(str(job.auth_token),res)
 
-        res = task.format_cluster_cmds("{task_pk}")
-        self.assertEqual(str(task.pk),res)
+    #    res = task.format_cluster_cmds("{task_pk}")
+    #    self.assertEqual(str(task.pk),res)
 
-        res = task.format_cluster_cmds("{params}")
-        self.assertEqual(" -p --task \"test\"",res)
+    #    res = task.format_cluster_cmds("{params}")
+    #    self.assertEqual(" -p --task \"test\"",res)
 
-        j.submission_id = 10
-        res = task.format_cluster_cmds("{sub_id}")
-        self.assertEqual(str(j.submission_id),res)
+    #    job.submission_id = 10
+    #    res = task.format_cluster_cmds("{sub_id}")
+    #    self.assertEqual(str(job.submission_id),res)
 
     def test_submission_task(self):
-        j = create_job()
-        c = create_cluster()
+        job = create_job()
         submission_script = create_script()
-        file1 = create_script()
+        cluster = create_cluster(submission_script)
         task = SubmissionTask(name="Task 2",
                      description="should run Second",
-                     job = j,
-                     cluster = c,
-                     order_pos = 1,
-                     submission_script=submission_script)
+                     job = job,
+                     cluster = cluster,
+                     order_pos = 1)
+
         task.save()
-        task.files.add(file1)
         task.run()
 
         #The submission task catches most errors raised during the sftp/ssh calls,
         # and sets the job status to Status.FAILED
-        job_status = j.current_status()
+        job_status = job.current_status()
         self.assertEqual(job_status.state,
                          Status.CREATED,
                          msg="WORKDIR: %s, MESSAGE: %s"%
-                                (j.work_dir,job_status.description))
+                                (job.work_dir,job_status.description))
 
-        sftp = RemoteTests.open_sftp(c,j)
+        sftp = RemoteTests.open_sftp(cluster,job)
         uploaded_files = sftp.listdir()
-        self.assertTrue(file1.file_name in uploaded_files)
+        #self.assertTrue(file.file_name in uploaded_files)
         self.assertTrue(submission_script.file_name in uploaded_files)
         self.assertTrue('test.file' in uploaded_files) #Created by the submission script
         self.assertFalse(task.complete) #Task must be marked complete by the cluster

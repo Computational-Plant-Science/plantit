@@ -6,6 +6,7 @@ before_install:
 - chmod +x dev/bootstrap.sh
 script:
 - "./dev/bootstrap.sh"
+- docker-compose -f docker-compose.yml -f docker-compose.dev.yml run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py test
 deploy:
 - provider: script
   script: bash dev/deploy-ssh.sh
