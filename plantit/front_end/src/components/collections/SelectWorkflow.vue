@@ -4,9 +4,7 @@
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h5>
-                            <i class="fas fa-stream green"></i> Workflows
-                        </h5>
+                        <h5><i class="fas fa-stream green"></i> Workflows</h5>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -57,15 +55,9 @@
                                                 variant="outline-dark"
                                                 title="Start a new job"
                                                 v-b-tooltip.hover
-                                                :to="{
-                                                    name: 'submit_workflow',
-                                                    query: {
-                                                        collection_pk:
-                                                            workflow.pk,
-                                                        workflow_name:
-                                                            workflow.app_name
-                                                    }
-                                                }"
+                                                @click="
+                                                    workflowSelected(workflow)
+                                                "
                                             >
                                                 <i class="fas fa-terminal"></i>
                                             </b-button>
@@ -144,6 +136,11 @@ export default {
                     );
                 });
             }
+        }
+    },
+    methods: {
+        workflowSelected: function(workflow) {
+            this.$emit('workflowSelected', workflow);
         }
     }
 };

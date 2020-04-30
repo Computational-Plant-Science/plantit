@@ -2,14 +2,14 @@
     <div class="w-100 pb-4">
         <b-card header-bg-variant="dark" border-variant="white">
             <template v-slot:header style="background-color: white">
-                <b-row align-v="center">
+                <b-row>
                     <b-col class="mt-2" style="color: white">
                         <h5>
                             <i class="fas fa-terminal green"></i> Jobs
                         </h5>
                     </b-col>
-                    <b-col md="auto" v-if="filterable">
-                        <b-input-group class="b-form-input">
+                    <b-col md="auto" v-if="filterable" class="b-form-col">
+                        <b-input-group>
                             <b-form-input
                                 v-model="filter"
                                 placeholder="Filter..."
@@ -43,13 +43,7 @@
                             <b-dropdown-item
                                 v-for="workflow in workflows"
                                 :key="workflow.name"
-                                :to="{
-                                    name: 'submit_workflow',
-                                    query: {
-                                        collection_pk: workflow.pk,
-                                        workflow_name: workflow.app_name
-                                    }
-                                }"
+                                @click="workflowSelected"
                             >
                                 {{ workflow.name }}
                             </b-dropdown-item>
@@ -131,7 +125,6 @@
 </template>
 
 <script>
-import router from '../router';
 import DiscreteProgress from './DiscreteProgress.vue';
 import JobApi from '@/services/apiV1/JobManager.js';
 import WorkflowAPI from '@/services/apiV1/WorkflowManager';
@@ -151,8 +144,12 @@ export default {
         }
     },
     methods: {
+        workflowSelected(workflow) {
+            this.$emit('workflowSelected', workflow);
+        },
         rowSelected: function(items) {
-            router.push({ path: 'job', query: { pk: items[0].pk } });
+            //router.push({ path: 'job', query: { pk: items[0].pk } });
+            this.$emit('jobSelected', items[0].pk);
         },
         togglePin(pk, item) {
             JobApi.pin(pk, !item.pinned).then(success => {

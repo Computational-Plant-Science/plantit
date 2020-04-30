@@ -7,6 +7,7 @@ import os
 import stat
 from json.decoder import JSONDecodeError
 from os import path
+import subprocess
 
 import paramiko
 from django.conf import settings
@@ -134,8 +135,7 @@ class SSHClientMixin(models.Model):
         except IOError as e:
             self.job.status_set.create(state=Status.FAILED,
                                        date=timezone.now(),
-                                       description=("Plant IT Internal IOError Error During"
-                                                    " Submission, please contact admins"))
+                                       description=f"Plant IT Internal Error Error: {e}")
             return
         except Exception as e:
             self.job.status_set.create(state=Status.FAILED,
@@ -167,7 +167,7 @@ class SubmissionTask(SSHClientMixin, Task):
     """
         A job task for submitting jobs to a Cluster.
 
-        The submission task sshes into the cluster, copies its submission script
+        The submission task ssh's into the cluster, copies its submission script
         and files into the Job's working directory, the executes the cluster's
         :attr:`job_manager.remote.Cluster.submit_commands`.
 
@@ -218,7 +218,7 @@ class SubmissionTask(SSHClientMixin, Task):
 
         # Copy run scripts to cluster
         FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IXUSR
-
+        print(subprocess.Popen('pwd', shell=True))
         with open(path.join('workflows', str(self.app_name), 'process.py'), 'r') as file:
             fname = os.path.basename(file.name)
             self.sftp.putfo(file, fname)

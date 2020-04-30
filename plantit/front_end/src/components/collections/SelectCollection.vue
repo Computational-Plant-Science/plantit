@@ -2,14 +2,17 @@
     <div class="w-100">
         <b-card
             header-bg-variant="dark"
-            header-border-variant="white"
             footer-bg-variant="white"
             border-variant="white"
         >
-            <template v-slot:header style="background-color: white">
+            <template
+                    v-slot:header
+                  style="background-color: white">
                 <b-row>
                     <b-col class="mt-2" style="color: white">
-                        <h5><i class="fas fa-layer-group green"></i> Collections</h5>
+                        <h5>
+                            <i class="fas fa-layer-group green"></i> Collections
+                        </h5>
                     </b-col>
                     <b-col md="auto" v-if="filterable" class="b-form-col">
                         <b-input-group>
@@ -40,7 +43,7 @@
                     </b-col>
                 </b-row>
             </template>
-            <p                 v-if="selectable">
+            <p v-if="selectable">
                 Select a collection.
             </p>
             <p v-else>

@@ -90,7 +90,7 @@ def workflow(request, workflow):
 
     return JsonResponse(context)
 
-def submit(request,workflow,pk):
+def submit(request, workflow, pk):
     """
         Submit a collection for analysis by a workflow.
 

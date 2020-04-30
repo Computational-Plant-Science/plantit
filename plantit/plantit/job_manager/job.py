@@ -2,6 +2,8 @@
     The main job manager framework.
 """
 from __future__ import absolute_import, unicode_literals
+
+import paramiko
 from celery import shared_task
 
 import binascii
@@ -39,6 +41,7 @@ def __run_next__(pk):
         This function is run in a Celery worker to make the job run
         asynchronous with the webserver
     """
+    print(pk)
     job = Job.objects.get(pk=pk)
 
     if job.current_status().state == Status.FAILED:
@@ -77,25 +80,25 @@ def __cancel_job__(pk):
                               date=timezone.now(),
                               description="Job Canceled")
     else:
-        cmds = format_cluster_cmds(self.cancel_commands)
-        # Connect to server
+        #cmds = format_cluster_cmds(self.cancel_commands)
+        ## Connect to server
         client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(cluster.hostname,
-                       cluster.port,
-                       cluster.username,
-                       cluster.password)
+        #client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        #client.connect(cluster.hostname,
+        #               cluster.port,
+        #               cluster.username,
+        #               cluster.password)
 
-        stdin, stdout, stderr = client.exec_command(cmds)
-        errors = stderr.readlines()
-        if errors:
-            self.status_set.create(state=Status.FAILED,
-                                   date=timezone.now(),
-                                   description=str(errors))
-        else:
-            self.status_set.create(state=Status.FAILED,
-                                   date=timezone.now(),
-                                   description="Job Canceled")
+        #stdin, stdout, stderr = client.exec_command(cmds)
+        #errors = stderr.readlines()
+        #if errors:
+        #    self.status_set.create(state=Status.FAILED,
+        #                           date=timezone.now(),
+        #                           description=str(errors))
+        #else:
+        #    self.status_set.create(state=Status.FAILED,
+        #                           date=timezone.now(),
+        #                           description="Job Canceled")
         client.close()
 
 
@@ -191,28 +194,9 @@ class Job(models.Model):
     class Meta:
         ordering = ['-date_created']
 
-    def generate_work_dir():
-        """
-            Generate a string to use as the the working directory for a job
-
-            Returns:
-                timezone.now().strftime('%s') + "/" as the directory string
-        """
-        return timezone.now().strftime('%s') + "/"
-
-    def generate_token():
-        """
-            Generate a valid auth_token
-
-            Returns:
-                a binary ascii token compatible with
-                :class:`~plantit.job_manager.authentication.JobTokenAuthentication`
-        """
-        return binascii.hexlify(os.urandom(20)).decode()
-
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
     date_created = models.DateTimeField(default=timezone.now)
-    auth_token = models.CharField(max_length=40, default=generate_token)
+    auth_token = models.CharField(max_length=40, default=binascii.hexlify(os.urandom(20)).decode())
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     submission_id = models.CharField(max_length=100, null=True, blank=True)
     workflow = models.CharField(max_length=280, null=True, blank=True)
@@ -223,7 +207,7 @@ class Job(models.Model):
     work_dir = models.CharField(max_length=100,
                                 null=True,
                                 blank=True,
-                                default=generate_work_dir)
+                                default=timezone.now().strftime('%s') + "/")
     remote_results_path = models.CharField(max_length=100,
                                            null=True,
                                            blank=True,

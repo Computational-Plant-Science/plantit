@@ -16,10 +16,9 @@ from ..job import __cancel_job__, __run_next__
 
 from plantit.collection.models import Collection
 
-
 import paramiko
 
-# Create your tests here.
+
 def create_script(file=None):
     """
         Create a script file.
@@ -30,17 +29,17 @@ def create_script(file=None):
     """
     if not file:
         file = tempfile.NamedTemporaryFile(mode="w", dir='./files/public', delete=False)
-        file.write("echo 'Test' > test.file")
+        file.write("echo 'Test' > process.py")
         file.close()
 
-    script = File(content=files.File(open(file.name,'r')))
+    script = File(content=files.File(open(file.name, 'r')))
     script.file_name = path.basename(file.name)
-
     script.save()
 
     return script
 
-def create_collection(user = None):
+
+def create_collection(user=None):
     if not user:
         user = create_user()
 
@@ -52,14 +51,15 @@ def create_collection(user = None):
     c.save()
     return c
 
-def create_cluster(submit_commands=None,uname=None):
+
+def create_cluster(submit_commands=None, uname=None):
     if not submit_commands:
-        submit_commands = "./{sub_script}"
+        submit_commands = "clusterside submit"
     if not uname:
-        uname="root"
+        uname = "root"
     c = Cluster(name="Test",
                 port=22,
-                description="Connects to docker ssh container",
+                description="Connects to cluster container",
                 username=uname,
                 password="root",
                 hostname="cluster",
@@ -70,21 +70,24 @@ def create_cluster(submit_commands=None,uname=None):
     subprocess.Popen("ssh-keyscan -H cluster >> ../config/ssh/known_hosts", shell=True).wait()
     return c
 
-def add_task(job,name = None):
+
+def add_task(job, name=None):
     if not name:
         name = "Test Task"
     e = DummyTask(name=name,
-                 description="Does not do anything",
-                 job=job)
+                  description="Does not do anything",
+                  job=job)
     e.save()
     return e
+
 
 def create_user():
     uname = 'test_' + ''.join(random.choice(string.ascii_letters) for x in range(5))
     email = 'email_' + ''.join(random.choice(string.ascii_letters) for x in range(5))
-    return User.objects.create_user(uname,email,'test')
+    return User.objects.create_user(uname, email, 'test')
 
-def create_job(user = None, collection = None):
+
+def create_job(user=None, collection=None):
     if not user:
         user = create_user()
     if not collection:
@@ -96,8 +99,9 @@ def create_job(user = None, collection = None):
             )
 
     j.save()
-    j.status_set.create(state=Status.CREATED,date=timezone.now(),description="Created")
+    j.status_set.create(state=Status.CREATED, date=timezone.now(), description="Created")
     return j
+
 
 class JobTests(TestCase):
     def test_current_status(self):
@@ -107,8 +111,8 @@ class JobTests(TestCase):
         """
         j = create_job()
         time = timezone.now() + datetime.timedelta(days=1)
-        j.status_set.create(state=Status.OK,date=time,description="Updated")
-        self.assertEqual(j.current_status().date,time)
+        j.status_set.create(state=Status.OK, date=time, description="Updated")
+        self.assertEqual(j.current_status().date, time)
 
     def test_run_job(self):
         c = create_cluster()
@@ -118,42 +122,41 @@ class JobTests(TestCase):
         try:
             __run_next__(j.pk)
         except:
-            self.assertIs(False,True)
+            self.assertIs(False, True)
 
         t.refresh_from_db()
         self.assertTrue(t.ran)
 
-
     def test_cancel_job(self):
         j = create_job()
         __cancel_job__(j.pk)
-        self.assertEqual(j.current_status().state,Status.FAILED)
+        self.assertEqual(j.current_status().state, Status.FAILED)
 
     def test_multi_task_job(self):
         j = create_job()
 
         t2 = DummyTask(name="Task 2",
-                     description="should run Second",
-                     job = j,
-                     order_pos = 2)
+                       description="should run Second",
+                       job=j,
+                       order_pos=2)
         t2.save()
         t1 = DummyTask(name="Task 1",
-                     description="should run first",
-                     job = j,
-                     order_pos = 1)
+                       description="should run first",
+                       job=j,
+                       order_pos=1)
         t1.save()
 
         __run_next__(j.pk)
         t1.refresh_from_db()
         t2.refresh_from_db()
-        self.assertIs(t1.ran,True)
-        self.assertIs(t2.ran,False)
+        self.assertIs(t1.ran, True)
+        self.assertIs(t2.ran, False)
         t1.finish()
-        __run_next__(j.pk) # HACK to get around celery not working durning tests
+        __run_next__(j.pk)  # HACK to get around celery not working durning tests
         t1.refresh_from_db()
         t2.refresh_from_db()
-        self.assertIs(t1.ran,True)
-        self.assertIs(t2.ran,True)
+        self.assertIs(t1.ran, True)
+        self.assertIs(t2.ran, True)
 
     def test_cancel_submitted_job(self):
         pass
@@ -161,14 +164,16 @@ class JobTests(TestCase):
     def test_cancel_failed(self):
         pass
 
+
 from plantit.file_manager.filesystems.local import Local
+
 
 class RemoteTests(TestCase):
     def setUp(self):
         self.storage_type = 'local'
         self.user = create_user()
 
-    def open_sftp(cluster,job):
+    def open_sftp(cluster, job):
         """
             Opens an sftp connection to the job's cluster and cds into
             the jobs work directory
@@ -184,17 +189,17 @@ class RemoteTests(TestCase):
         sftp.chdir(path=cluster.workdir + "/" + job.work_dir)
         return sftp
 
-    def create_submission_task(cluster = None, job = None, order_pos = 1):
+    def create_submission_task(cluster=None, job=None, order_pos=1):
         if not cluster:
             cluster = create_cluster()
         if not job:
             job = create_job()
 
         t = SubmissionTask(name="TestTask",
-                    description="Test Submission Task",
-                    job = job,
-                    order_pos = order_pos,
-                    cluster = cluster)
+                           description="Test Submission Task",
+                           job=job,
+                           order_pos=order_pos,
+                           cluster=cluster)
         t.save()
         return t
 
@@ -203,9 +208,9 @@ class RemoteTests(TestCase):
             Test that job state is set to FAILED if server login fails
         """
         j = create_job()
-        t = RemoteTests.create_submission_task(job = j)
+        t = RemoteTests.create_submission_task(job=j)
         t.run()
-        self.assertEqual(j.current_status().state,Status.FAILED)
+        self.assertEqual(j.current_status().state, Status.FAILED)
 
     def test_submit_failed(self):
         """
@@ -214,11 +219,11 @@ class RemoteTests(TestCase):
         """
         c = create_cluster(submit_commands="cat a_file_that_does_not_exist.sh")
         j = create_job()
-        t = RemoteTests.create_submission_task(cluster = c, job = j)
+        t = RemoteTests.create_submission_task(cluster=c, job=j)
         t.run()
-        self.assertEqual(j.current_status().state,Status.FAILED)
+        self.assertEqual(j.current_status().state, Status.FAILED)
 
-    #def test_submission_format_cluster_cmds(self):
+    # def test_submission_format_cluster_cmds(self):
     #    job: Job = create_job()
     #    submission_script: File = create_script()
     #    cluster: Cluster = create_cluster(submission_script)
@@ -251,85 +256,91 @@ class RemoteTests(TestCase):
     def test_submission_task(self):
         job = create_job()
         submission_script = create_script()
-        cluster = create_cluster(submission_script)
-        task = SubmissionTask(name="Task 2",
-                     description="should run Second",
-                     job = job,
-                     cluster = cluster,
-                     order_pos = 1)
+        cluster = create_cluster()
+        task = SubmissionTask(
+            app_name="dirt2d",
+            name="Task 2",
+            description="should run Second",
+            job=job,
+            cluster=cluster,
+            order_pos=1,
+            parameters="""{
+                "-p": null,
+                "--task":"test"
+            }""")
 
         task.save()
         task.run()
 
-        #The submission task catches most errors raised during the sftp/ssh calls,
+        # The submission task catches most errors raised during the sftp/ssh calls,
         # and sets the job status to Status.FAILED
         job_status = job.current_status()
         self.assertEqual(job_status.state,
                          Status.CREATED,
-                         msg="WORKDIR: %s, MESSAGE: %s"%
-                                (job.work_dir,job_status.description))
+                         msg="WORKDIR: %s, MESSAGE: %s" %
+                             (job.work_dir, job_status.description))
 
-        sftp = RemoteTests.open_sftp(cluster,job)
+        sftp = RemoteTests.open_sftp(cluster, job)
         uploaded_files = sftp.listdir()
-        #self.assertTrue(file.file_name in uploaded_files)
-        self.assertTrue(submission_script.file_name in uploaded_files)
-        self.assertTrue('test.file' in uploaded_files) #Created by the submission script
-        self.assertFalse(task.complete) #Task must be marked complete by the cluster
+        # self.assertTrue(file.file_name in uploaded_files)
+        # self.assertTrue(submission_script.file_name in uploaded_files)
+        self.assertTrue('test.file' in uploaded_files)  # Created by the submission script
+        self.assertFalse(task.complete)  # Task must be marked complete by the cluster
 
     def test_upload_file_task(self):
         j = create_job(user=self.user)
         c = create_cluster()
-        file1 = tempfile.NamedTemporaryFile(mode="w",dir='./files/tmp/',delete=False)
-        file2 = tempfile.NamedTemporaryFile(mode="w",dir='./files/tmp/',delete=False)
+        file1 = tempfile.NamedTemporaryFile(mode="w", dir='./files/tmp/', delete=False)
+        file2 = tempfile.NamedTemporaryFile(mode="w", dir='./files/tmp/', delete=False)
         file1.close()
         file2.close()
-        files = "%s,%s"%(file1.name,file2.name)
+        files = "%s,%s" % (file1.name, file2.name)
         task = UploadFileTask(name="Task",
-             description="Uploads some files",
-             job = j,
-             order_pos = 1,
-             cluster = c,
-             files = files,
-             delete = True)
+                              description="Uploads some files",
+                              job=j,
+                              order_pos=1,
+                              cluster=c,
+                              files=files,
+                              delete=True)
         task.save()
         task.run()
 
-        #The task catches most errors raised during the sftp calls,
+        # The task catches most errors raised during the sftp calls,
         # and sets the job status to Status.FAILED
         job_status = j.current_status()
         self.assertEqual(job_status.state,
                          Status.CREATED,
                          msg=job_status.description)
 
-        sftp = RemoteTests.open_sftp(c,j)
+        sftp = RemoteTests.open_sftp(c, j)
         uploaded_files = sftp.listdir()
         for file in files.split(","):
             self.assertTrue(path.basename(file) in uploaded_files)
 
-        #This job should have marked itself complete
+        # This job should have marked itself complete
         self.assertTrue(task.complete)
 
     def test_upload_file_task_file_not_exist(self):
         j = create_job(user=self.user)
-        file1 = tempfile.NamedTemporaryFile(mode="w",dir='./files/tmp/',delete=False)
+        file1 = tempfile.NamedTemporaryFile(mode="w", dir='./files/tmp/', delete=False)
         file1.close()
-        files = "%s,non_existant_file"%(file1.name)
+        files = "%s,non_existant_file" % (file1.name)
         task = UploadFileTask(name="Task",
-                     cluster = create_cluster(),
-                     description="Uploads some files",
-                     job = j,
-                     order_pos = 1,
-                     files = files,
-                     delete = True)
+                              cluster=create_cluster(),
+                              description="Uploads some files",
+                              job=j,
+                              order_pos=1,
+                              files=files,
+                              delete=True)
         task.save()
         task.run()
 
-        #The task catches the IOError associated with a nonexistant file
+        # The task catches the IOError associated with a nonexistant file
         #  and sets the job status to failed
         job_status = j.current_status()
         self.assertEqual(job_status.state,
                          Status.FAILED,
                          msg=job_status.description)
 
-        #This job should have not marked itself complete since it failed
+        # This job should have not marked itself complete since it failed
         self.assertFalse(task.complete)

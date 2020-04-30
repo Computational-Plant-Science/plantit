@@ -6,7 +6,7 @@
                 bg-variant="default"
                 footer-bg-variant="dark"
                 border-variant="dark"
-                style="max-width: 600px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.95"
+                style="max-width: 540px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.95"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -18,9 +18,9 @@
                         <h2>PlantIT</h2>
                     </b-col>
                 </b-row>
-                <b-navbar toggleable="sm">
+                <b-navbar toggleable="lg">
                     <b-collapse class="justify-content-center" is-nav>
-                        <b-navbar-nav class="logo">
+                        <b-navbar-nav>
                             <b-nav-item to="/About" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-users fa-1x"></i>
@@ -51,14 +51,15 @@
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <b-card-body align="left">
-                    Welcome to PlantIT, a PaaS (<b>Phenomics</b>-as-a-Service) science gateway!
+                <b-card-body class="text-left">
+                    Welcome to PlantIT, a <b>Phenomics</b>-as-a-Service science
+                    gateway!
                     <br />
                     <br />
                     Read the <b-link to="/Guide">User Guide</b-link> to learn
-                    how to upload data and run community-contributed workflows,
-                    or see the <b-link to="/Docs">Developer Docs</b-link> to
-                    create your own.
+                    how to use workflows contributed by the community, or see
+                    the <b-link to="/Docs">Developer Docs</b-link> to submit
+                    your own.
                 </b-card-body>
                 <template v-slot:footer style="background-color: white">
                     <b-row>
