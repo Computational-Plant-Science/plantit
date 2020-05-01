@@ -171,9 +171,6 @@ export default {
     mounted: function() {
         this.reloadJob();
     },
-    updated: function() {
-        this.reloadJob();
-    },
     computed: {
         current_status() {
             if (this.job.status_set.length > 0) {

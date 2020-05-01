@@ -14,7 +14,7 @@
                             <b-badge
                                 pill
                                 variant="dark"
-                                class="secondary p-0 m-0 ml-1 mr-1"
+                                class="green p-0 m-0 ml-1 mr-1"
                                 >{{ collection.pk }}</b-badge
                             >
                             <b-badge
