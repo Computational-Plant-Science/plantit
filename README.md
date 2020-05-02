@@ -1,10 +1,8 @@
 ![alt text](https://github.com/Computational-Plant-Science/DIRT2_Webplatform/blob/master/plantit/front_end/src/assets/logo.png?raw=true)
 
-# DIRT2_Webplatform
+# plantit [![Build Status](https://travis-ci.com/Computational-Plant-Science/DIRT2_Webplatform.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/DIRT2_Webplatform)
 
 **This project is under active development and is not yet stable**.
-
-[![Build Status](https://travis-ci.com/Computational-Plant-Science/DIRT2_Webplatform.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/DIRT2_Webplatform)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
