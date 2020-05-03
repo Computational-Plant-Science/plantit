@@ -6,8 +6,16 @@
         @cancel="cancel"
         @close="cancel"
         @ok="save"
+        hide-header-close
+        cancel-variant="outline-danger"
+        ok-variant="outline-dark"
         no-close-on-backdrop
         centered
+        header-bg-variant="dark"
+        header-border-variant="dark"
+        footer-bg-variant="white"
+        footer-border-variant="white"
+        header-text-variant="white"
     >
         <EditMetadata
             v-model="metadata"

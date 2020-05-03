@@ -8,11 +8,17 @@
         @ok="save"
         no-close-on-backdrop
         centered
-        ok-variant="dark"
+        ok-variant="outline-dark"
+        cancel-variant="outline-danger"
+        hide-header-close
+        header-bg-variant="dark"
+        header-border-variant="dark"
+        footer-bg-variant="white"
+        footer-border-variant="white"
+        header-text-variant="white"
     >
         <b-form-group
             v-if="description !== null"
-            label="Description:"
             label-for="description"
         >
             <b-form-textarea

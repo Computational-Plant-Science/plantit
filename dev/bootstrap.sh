@@ -134,4 +134,3 @@ $DOCKER_COMPOSE exec cluster /bin/bash /root/wait-for-it.sh irods:1247 -- /root/
 
 echo "Stopping containers..."
 $DOCKER_COMPOSE stop
-

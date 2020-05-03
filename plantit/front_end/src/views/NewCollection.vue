@@ -2,13 +2,17 @@
     <div>
         <b-container class="justify-content-md-center">
             <b-card
-                    header-bg-variant="dark"
-                    footer-bg-variant="white"
-                    border-variant="dark">
+                header-bg-variant="dark"
+                footer-bg-variant="dark"
+                border-variant="white"
+            >
                 <template v-slot:header style="background-color: white">
                     <b-row align-v="center">
-                        <b-col class="mt-1 color">
-                            <h5>New Collection</h5>
+                        <b-col class="mt-2" style="color: white">
+                            <h5>
+                                <i class="fas fa-layer-group green"></i> New
+                                Collection
+                            </h5>
                         </b-col>
                     </b-row>
                 </template>
@@ -65,7 +69,10 @@
                             >
                         </b-col>
                         <b-col class="ml-1 pl-1 pr-2" md="auto">
-                            <b-button type="submit" variant="outline-dark" @click="onSubmit"
+                            <b-button
+                                type="submit"
+                                variant="dark"
+                                @click="onSubmit"
                                 >Submit</b-button
                             >
                         </b-col>
@@ -120,7 +127,7 @@ export default {
                         }
                     )
                     .then(value => {
-                        if (value == true) {
+                        if (value === true) {
                             this.saveCollection();
                         }
                     });
@@ -129,7 +136,7 @@ export default {
             }
         },
         cancel() {
-            router.push({ name: 'collections' });
+            this.$emit('back');
         },
         saveCollection() {
             CollectionApi.newCollection(
@@ -138,10 +145,11 @@ export default {
                 this.form.storageType,
                 this.form.metadata
             ).then(response => {
-                router.push({
-                    name: 'collection',
-                    query: { pk: response.data.pk }
-                });
+                this.$emit('view', response.data);
+                // router.push({
+                //     name: 'collection',
+                //     query: { pk: response.data.pk }
+                // });
             });
         }
     }
@@ -149,9 +157,14 @@ export default {
 </script>
 
 <style scoped lang="sass">
-@import '../scss/_colors.sass'
+@import "../scss/_colors.sass"
+@import "../scss/main.sass"
+
 .color
     color: $color-button
     //border-left: 5px solid $color-button
     vertical-align: middle
+
+.green
+    color: $color-button
 </style>

@@ -25,18 +25,28 @@
                                 <SelectCollection
                                     filterable="true"
                                     v-on:selected="onViewCollection"
+                                    v-on:new="onNewCollection"
                                     v-if="
                                         collection_state ===
                                             CollectionState.List
                                     "
                                 ></SelectCollection>
                                 <Collection
-                                    v-else-if="
+                                    v-if="
                                         collection_state ===
                                             CollectionState.View
                                     "
                                     :pk="collection_pk"
                                 ></Collection>
+                                <NewCollection
+                                    v-if="
+                                        collection_state ===
+                                            CollectionState.New
+                                    "
+                                    v-on:back="onListCollections"
+                                    v-on:view="onViewCollection"
+                                >
+                                </NewCollection>
                             </b-tab>
                             <b-tab title="Workflows">
                                 <template v-slot:title class="m-0 p-0">
@@ -51,7 +61,7 @@
                                     v-on:workflowSelected="onConfigureWorkflow"
                                 ></SelectWorkflow>
                                 <SubmitWorkflow
-                                    v-else-if="
+                                    v-if="
                                         workflow_state === WorkflowState.Submit
                                     "
                                     :workflow_name="workflow_name"
@@ -74,7 +84,7 @@
                                     v-on:jobSelected="onViewJob"
                                 ></SelectJob>
                                 <Job
-                                    v-else-if="job_state === JobState.View"
+                                    v-if="job_state === JobState.View"
                                     :pk="job_pk"
                                 ></Job>
                             </b-tab>
@@ -92,6 +102,7 @@ import Job from '@/views/Job.vue';
 import SelectCollection from '@/components/collections/SelectCollection.vue';
 import SelectWorkflow from '@/components/collections/SelectWorkflow.vue';
 import SelectJob from '@/components/SelectJob.vue';
+import NewCollection from "./NewCollection";
 
 const State = Object.freeze({ Collections: 1, Workflows: 2, Jobs: 3 });
 const CollectionState = Object.freeze({ List: 1, View: 2, New: 3 });
@@ -101,6 +112,7 @@ const JobState = Object.freeze({ List: 1, View: 2 });
 export default {
     name: 'Dashboard',
     components: {
+        NewCollection,
         Collection,
         SubmitWorkflow,
         Job,

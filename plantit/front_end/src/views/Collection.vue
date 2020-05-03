@@ -51,7 +51,7 @@
                     <b-card class="mb-2" border-variant="white">
                         <b-row>
                             <b-col>
-                                <h4>Description</h4>
+                                <h5>Description</h5>
                             </b-col>
                             <b-col md="auto">
                                 <b-button
@@ -67,7 +67,7 @@
                                 </b-button>
                             </b-col>
                         </b-row>
-                        <br />
+                        <hr />
                         <b-row>
                             <b-col>
                                 <b-form class="form-horizontal">
@@ -90,7 +90,7 @@
                     <b-card class="mb-2" border-variant="white">
                         <b-row>
                             <b-col>
-                                <h4>Metadata</h4>
+                                <h5>Metadata</h5>
                             </b-col>
                             <b-col md="auto">
                                 <b-button
@@ -104,7 +104,7 @@
                                 </b-button>
                             </b-col>
                         </b-row>
-                        <br />
+                        <hr />
                         <b-row>
                             <b-col>
                                 <b-table
@@ -187,6 +187,7 @@
                         <b-card
                             class="mt-4 mb-2"
                             :aria-hidden="show ? 'true' : null"
+                            border-variant="white"
                         >
                             <div
                                 v-show="$refs.upload && $refs.upload.dropActive"
@@ -196,7 +197,7 @@
                             </div>
                             <b-row>
                                 <b-col>
-                                    <h4>Samples</h4>
+                                    <h5>Samples</h5>
                                 </b-col>
                                 <b-col md="auto">
                                     <vue-upload
@@ -221,7 +222,7 @@
                                     </vue-upload>
                                 </b-col>
                             </b-row>
-                            <br />
+                            <hr />
                             <b-row>
                                 <b-col>
                                     <b-spinner

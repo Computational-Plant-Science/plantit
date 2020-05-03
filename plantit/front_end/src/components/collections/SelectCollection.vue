@@ -34,9 +34,9 @@
                     <b-col md="auto">
                         <b-button
                             variant="dark"
-                            to="/user/collection/new"
                             v-b-tooltip.hover
                             title="Create a new collection"
+                            @click="newCollection"
                         >
                             <i class="fas fa-plus"></i>
                         </b-button>
@@ -144,6 +144,9 @@ export default {
         }
     },
     methods: {
+        newCollection() {
+            this.$emit('new');
+        },
         rowSelected: function(items) {
             this.selected = items[0];
             this.$emit('selected', this.selected);
@@ -183,7 +186,7 @@ export default {
     data() {
         return {
             filter: '',
-            sortBy: 'date',
+            sortBy: 'pk',
             sortDesc: true,
             fields: [
                 {

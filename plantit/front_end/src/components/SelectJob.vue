@@ -4,9 +4,7 @@
             <template v-slot:header style="background-color: white">
                 <b-row>
                     <b-col class="mt-2" style="color: white">
-                        <h5>
-                            <i class="fas fa-terminal green"></i> Jobs
-                        </h5>
+                        <h5><i class="fas fa-terminal green"></i> Jobs</h5>
                     </b-col>
                     <b-col md="auto" v-if="filterable" class="b-form-col">
                         <b-input-group>
@@ -78,44 +76,8 @@
                         class="table-responsive"
                         @row-selected="rowSelected"
                     >
-                        <template slot="tasks" slot-scope="data">
-                            <DiscreteProgress
-                                :tasks="data.item.task_set"
-                                :show-name="false"
-                            ></DiscreteProgress>
-                        </template>
-                        <template slot="pinned" slot-scope="data">
-                            <b-button
-                                class="plantit-btn"
-                                size="sm"
-                                @click="togglePin(data.item.pk, data.item)"
-                            >
-                                <b-img
-                                    v-if="data.item.pinned"
-                                    :src="
-                                        require('@/assets/icons/pin icons/pin2.svg')
-                                    "
-                                    width="30px"
-                                >
-                                </b-img>
-                                <b-img
-                                    v-else
-                                    :src="
-                                        require('@/assets/icons/pin icons/pin.svg')
-                                    "
-                                    width="30px"
-                                >
-                                </b-img>
-                            </b-button>
-                        </template>
-                        <template slot="tools" slot-scope="data">
-                            <b-button
-                                class="plantit-btn"
-                                size="sm"
-                                @click="deleteJob(data.item.pk)"
-                            >
-                                <i class="fas fa-trash-alt fa-2x"></i>
-                            </b-button>
+                        <template v-slot:cell(status_set[0].state)="data">
+                            <b>{{ data.value }}</b>
                         </template>
                     </b-table>
                 </b-col>
@@ -125,16 +87,13 @@
 </template>
 
 <script>
-import DiscreteProgress from './DiscreteProgress.vue';
 import JobApi from '@/services/apiV1/JobManager.js';
 import WorkflowAPI from '@/services/apiV1/WorkflowManager';
 import moment from 'moment';
 
 export default {
     name: 'ListJobs',
-    components: {
-        DiscreteProgress
-    },
+    components: {},
     props: {
         perPage: {
             default: 0
@@ -144,6 +103,21 @@ export default {
         }
     },
     methods: {
+        statusToString(job) {
+            let status = job.status_set[0].state;
+            switch (status) {
+                case 1:
+                    return 'Completed';
+                case 2:
+                    return 'Failed';
+                case 3:
+                    return 'OK';
+                case 4:
+                    return 'Warning';
+                case 5:
+                    return 'Created';
+            }
+        },
         workflowSelected(workflow) {
             this.$emit('workflowSelected', workflow);
         },
@@ -184,19 +158,27 @@ export default {
             filter: '',
             fields: [
                 {
-                    key: 'tasks',
-                    label: 'Status',
-                    sortable: false
-                },
-                {
                     key: 'pk',
                     label: 'Id',
                     sortable: true
                 },
                 {
-                    key: 'tasks',
+                    key: 'status_set[0].state',
                     label: 'Status',
-                    sortable: false
+                    formatter: status => {
+                        switch (status) {
+                            case 1:
+                                return 'Completed';
+                            case 2:
+                                return 'Failed';
+                            case 3:
+                                return 'OK';
+                            case 4:
+                                return 'Warning';
+                            case 5:
+                                return 'Created';
+                        }
+                    }
                 },
                 {
                     key: 'workflow_name',
@@ -217,10 +199,6 @@ export default {
                     formatter: value => {
                         return moment(value).format('MM/DD/YY HH:mm');
                     }
-                },
-                {
-                    key: 'tools',
-                    label: ''
                 }
             ],
             items: [],

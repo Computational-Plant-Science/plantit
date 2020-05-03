@@ -55,7 +55,7 @@
                     </b-nav-item>
                     <b-nav-item
                         v-if="isLoggedIn"
-                        :title="this.info['username']"
+                        :title="loading ? 'Loading...' : this.info['username']"
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark" to="/user/profile">
@@ -90,31 +90,32 @@
         <br />
         <EditUserInfoModal
             :prompt="true"
+            v-if="!loading"
             modal-id="editUserInfoModalNav"
-            :username="this.info.username"
-            :first_name="this.info.first_name"
-            :last_name="this.info.last_name"
+            :username="this.loading ? 'Loading...' : this.info.username"
+            :first_name="this.loading ? 'Loading...' : this.info.first_name"
+            :last_name="this.loading ? 'Loading...' : this.info.last_name"
             :country="
-                this.info.profile === undefined ? '' : this.info.profile.country
+                this.loading ? 'Loading...' : this.info.profile.country
             "
             :continent="
-                this.info.profile === undefined
-                    ? ''
+               this.loading
+                    ? 'Loading...'
                     : this.info.profile.continent
             "
             :institution="
-                this.info.profile === undefined
-                    ? ''
+                this.loading
+                    ? 'Loading...'
                     : this.info.profile.institution
             "
             :institution_type="
-                this.info.profile === undefined
-                    ? ''
+                this.loading
+                    ? 'Loading...'
                     : this.info.profile.institution_type
             "
             :field_of_study="
-                this.info.profile === undefined
-                    ? ''
+                this.loading
+                    ? 'Loading...'
                     : this.info.profile.field_of_study
             "
             @saveUserInfo="saveUserInfo"
