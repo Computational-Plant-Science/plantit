@@ -20,6 +20,7 @@
                             <b-badge
                                 pill
                                 class="ml-1 mr-1"
+                                style="color: white"
                                 :variant="
                                     job_status === 2
                                         ? 'danger'

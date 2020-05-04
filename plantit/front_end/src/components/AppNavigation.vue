@@ -90,33 +90,22 @@
         <br />
         <EditUserInfoModal
             :prompt="true"
-            v-if="!loading"
             modal-id="editUserInfoModalNav"
             :username="this.loading ? 'Loading...' : this.info.username"
             :first_name="this.loading ? 'Loading...' : this.info.first_name"
             :last_name="this.loading ? 'Loading...' : this.info.last_name"
-            :country="
-                this.loading ? 'Loading...' : this.info.profile.country
-            "
+            :country="this.loading ? 'Loading...' : this.info.profile.country"
             :continent="
-               this.loading
-                    ? 'Loading...'
-                    : this.info.profile.continent
+                this.loading ? 'Loading...' : this.info.profile.continent
             "
             :institution="
-                this.loading
-                    ? 'Loading...'
-                    : this.info.profile.institution
+                this.loading ? 'Loading...' : this.info.profile.institution
             "
             :institution_type="
-                this.loading
-                    ? 'Loading...'
-                    : this.info.profile.institution_type
+                this.loading ? 'Loading...' : this.info.profile.institution_type
             "
             :field_of_study="
-                this.loading
-                    ? 'Loading...'
-                    : this.info.profile.field_of_study
+                this.loading ? 'Loading...' : this.info.profile.field_of_study
             "
             @saveUserInfo="saveUserInfo"
         >
