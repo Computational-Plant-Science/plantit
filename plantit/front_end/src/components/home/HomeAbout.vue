@@ -23,12 +23,6 @@
                     <p>
                         Welcome to PlantIT: <b>Phenomics</b>-as-a-Service for
                         plant science!
-                        <br />
-                        <br />
-                        PlantIT allows computational researchers to make their
-                        algorithms available to a broad community, and offers
-                        biological researchers an easy-to-use interface to apply
-                        algorithms in their own work.
                     </p>
                 </b-card-body>
                 <b-navbar toggleable="sm" class="m-0 p-0">

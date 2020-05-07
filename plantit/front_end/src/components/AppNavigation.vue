@@ -83,7 +83,7 @@
                                             : 'Profile: ' + info['username']
                                     "
                                     class="m-0 p-0"
-                                    to="/profile"
+                                    href="/profile"
                                 >
                                     <b-button
                                         variant="outline-dark"
@@ -231,7 +231,7 @@
         >
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
             <b-collapse class="m-0 p-0" is-nav>
-                <b-navbar-nav class="m-0 p-0 pl-3">
+                <b-navbar-nav class="m-0 p-0 pl-3 mr-3">
                     <b-nav-item
                         class="m-0 p-0"
                         v-b-toggle.sidebar-left
@@ -257,14 +257,21 @@
                     class="m-o p-0 ml-2"
                     style="background-color: transparent"
                 >
-                    <b-navbar-nav
+                    <b-breadcrumb-item
+                        v-for="crumb in crumbs"
+                        :key="crumb.text"
+                        class="background-transparent title mr-1"
+                        :to="crumb.href">
+                        {{ crumb.text }}
+                    </b-breadcrumb-item>
+                    <!--<b-navbar-nav
                         v-for="crumb in crumbs"
                         :key="crumb.text"
                         class="mt-3 background-transparent"
                     >
                         <b-nav-item class="m-0 p-0 mt-1" disabled>
                             <i
-                                class="fas fa-slash fa-1x text-success mirror"
+                                class="fas fa-slash fa-1x text-dark mirror"
                             ></i>
                         </b-nav-item>
                         <b-nav-item
@@ -274,7 +281,7 @@
                             <b v-html="crumb.icon"></b>
                             <span class="ml-2 title">{{ crumb.text }}</span>
                         </b-nav-item>
-                    </b-navbar-nav>
+                    </b-navbar-nav>-->
                 </b-breadcrumb>
 
                 <!--<b-navbar-brand
@@ -345,10 +352,7 @@
                             <i class="fas fa-book fa-1x fa-fw"></i>
                         </b-button>
                     </b-nav-item>-->
-                    <b-nav-item v-if="isLoggedIn" class="m-0 p-0 mt-1" disabled>
-                        <i class="fas fa-slash fa-1x text-success"></i>
-                    </b-nav-item>
-                    <!--<b-nav-item
+                    <b-nav-item
                         v-if="isLoggedIn"
                         title="Dashboard"
                         to="/dashboard"
@@ -357,7 +361,7 @@
                         <b-button variant="outline-dark">
                             <i class="fas fa-desktop fa-2x"></i>
                         </b-button>
-                    </b-nav-item>-->
+                    </b-nav-item>
                     <b-nav-item
                         v-if="isLoggedIn"
                         :title="
@@ -368,8 +372,9 @@
                                 : ''
                         "
                         class="m-0 p-0"
+                        to="/profile"
                     >
-                        <b-button variant="outline-dark" to="/profile">
+                        <b-button variant="outline-dark">
                             <i class="fas fa-user fa-2x"></i>
                         </b-button>
                     </b-nav-item>
@@ -566,18 +571,13 @@ export default {
     -webkit-transform: rotate(90deg)
         transform: rotate(90deg)
 
-
-.title
-    font-size: 18pt !important
-    vertical-align: middle
-    font-weight: 200
+a
     color: $dark !important
-    border: none
-    border-bottom: 1px solid transparent
+    border: none !important
 
-.title:hover
+a:hover
     color: $dark !important
-    border-bottom: 1px solid $color-highlight
+    border: none !important
 
 .mirror
     -moz-transform: scale(-1, 1)
@@ -585,4 +585,25 @@ export default {
     -o-transform: scale(-1, 1)
     -ms-transform: scale(-1, 1)
     transform: scale(-1, 1)
+
+.breadcrumb > li
+    text-align: end
+    color: $dark !important
+    margin-top: 13px !important
+    font-size: 25pt !important
+    font-weight: 200
+    content: " /"
+
+.breadcrumb > li + li::marker
+    color: $dark !important
+    margin-top: 13px !important
+    font-size: 25pt !important
+    font-weight: 200
+
+.breadcrumb > li + li:before + li::marker
+    color: $dark !important
+    margin-top: 13px !important
+    font-size: 25pt !important
+    font-weight: 200
+    content: " /"
 </style>

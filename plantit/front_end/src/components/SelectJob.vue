@@ -1,10 +1,10 @@
 <template>
     <div class="w-100 pb-4">
-        <b-card header-bg-variant="dark" border-variant="white">
+        <b-card header-bg-variant="light" border-variant="default" header-border-variant="default">
             <template v-slot:header style="background-color: white">
                 <b-row>
                     <b-col class="mt-2" style="color: white">
-                        <h5><i class="fas fa-terminal green"></i> Jobs</h5>
+                        <h5><i class="fas fa-terminal text-dark"></i> Jobs</h5>
                     </b-col>
                     <b-col md="auto" v-if="filterable" class="b-form-col">
                         <b-input-group>
@@ -17,7 +17,7 @@
                                 <b-button
                                     :disabled="!filter"
                                     @click="filter = ''"
-                                    variant="dark"
+                                    variant="white"
                                     >Clear
                                 </b-button>
                             </b-input-group-append>
@@ -25,7 +25,7 @@
                     </b-col>
                     <b-col md="auto">
                         <b-dropdown
-                            variant="dark"
+                            variant="outline-dark"
                             to="workflow/new"
                             v-b-tooltip.hover
                             title="Start a new job"

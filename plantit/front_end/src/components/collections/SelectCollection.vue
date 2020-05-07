@@ -1,9 +1,9 @@
 <template>
     <div class="w-100">
         <b-card
-            header-bg-variant="dark"
+            header-bg-variant="light"
             footer-bg-variant="white"
-            border-variant="white"
+            border-variant="default"
         >
             <template
                     v-slot:header
@@ -11,7 +11,7 @@
                 <b-row>
                     <b-col class="mt-2" style="color: white">
                         <h5>
-                            <i class="fas fa-layer-group green"></i> Collections
+                            <i class="fas fa-layer-group text-dark"></i> Collections
                         </h5>
                     </b-col>
                     <b-col md="auto" v-if="filterable" class="b-form-col">
@@ -25,7 +25,7 @@
                                 <b-button
                                     :disabled="!filter"
                                     @click="filter = ''"
-                                    variant="dark"
+                                    variant="white"
                                     >Clear
                                 </b-button>
                             </b-input-group-append>
@@ -33,7 +33,7 @@
                     </b-col>
                     <b-col md="auto">
                         <b-button
-                            variant="dark"
+                            variant="outline-dark"
                             v-b-tooltip.hover
                             title="Create a new collection"
                             @click="newCollection"

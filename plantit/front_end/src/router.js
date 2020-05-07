@@ -60,7 +60,7 @@ let router = new Router({
                         icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
                     },
                     {
-                        text: 'Guide',
+                        text: 'User Guide',
                         href: '/guide',
                         icon: '<i class="fas fa-map-signs fa-1x text-dark align-middle"></i>'
                     }

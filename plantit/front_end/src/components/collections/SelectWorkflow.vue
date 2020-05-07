@@ -1,10 +1,10 @@
 <template>
     <div class="w-100 pb-4">
-        <b-card header-bg-variant="dark" border-variant="white">
+        <b-card header-bg-variant="light" border-variant="default">
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h5><i class="fas fa-stream green"></i> Workflows</h5>
+                        <h5><i class="fas fa-stream text-dark"></i> Workflows</h5>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -17,7 +17,7 @@
                                 <b-button
                                     :disabled="!filter_query"
                                     @click="filter_query = ''"
-                                    variant="dark"
+                                    variant="white"
                                     >Clear
                                 </b-button>
                             </b-input-group-append>
@@ -31,17 +31,16 @@
             <b-row>
                 <b-col>
                     <div
-                        class="d-flex flex-wrap align-items-stretch row-eq-height"
                     >
-                        <b-card-group>
+                        <b-card-group deck>
                             <b-card
                                 v-for="workflow in filtered"
                                 :key="workflow.name"
-                                border-variant="white"
-                                footer-bg-variant="dark"
-                                header-bg-variant="white"
-                                header-border-variant="dark"
-                                class="overflow-hidden p-2 m-2"
+                                border-variant="default"
+                                footer-bg-variant="white"
+                                header-bg-variant="light"
+                                header-border-variant="default"
+                                class="overflow-hidden p-0 m-2"
                                 style="min-width: 30rem"
                             >
                                 <template slot="header">

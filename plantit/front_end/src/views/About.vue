@@ -48,196 +48,208 @@
                                 pills
                             >
                                 <br />
-                                <b-tab title="Active" active>
+                                <b-tab title="Active Contributors" active>
                                     <template v-slot:title class="m-0 p-0">
-                                        <b class="dark">Active</b>
+                                        <b class="dark">Active Contributors</b>
                                     </template>
                                     <b-card-group deck columns>
                                         <b-card
                                             title="Alexander Bucksch"
                                             sub-title="Principal Investigator"
-                                            border-variant="white"
-                                            footer-bg-variant="dark"
-                                            footer-border-variant="dark"
+                                            border-variant="default"
+                                            footer-bg-variant="light"
+                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template
                                                 v-slot:footer
                                                 style="background-color: white"
                                             >
-                                                <a
+                                                <b-button
+                                                    variant="outline-dark"
                                                     href="https://github.com/koalaspirit"
-                                                    class="card-link"
+                                                    class="mr-2 p-2"
                                                 >
                                                     <i
-                                                        class="fab fa-github fa-2x success"
+                                                        class="fab fa-github fa-2x"
                                                     ></i>
-                                                </a>
-                                                <a
+                                                </b-button>
+                                                <b-button
+                                                    variant="outline-dark"
                                                     href="https://www.researchgate.net/profile/Alexander_Bucksch"
-                                                    class="card-link"
+                                                    class="mr-2 p-2"
                                                 >
                                                     <i
-                                                        class="fab fa-researchgate fa-2x success"
+                                                        class="fab fa-researchgate fa-2x"
                                                     ></i>
-                                                </a>
-                                                <a
+                                                </b-button>
+                                                <b-button
+                                                    variant="outline-dark"
                                                     href="https://www.linkedin.com/in/abucksch/"
-                                                    class="card-link"
+                                                    class="mr-2 p-2"
                                                 >
                                                     <i
-                                                        class="fab fa-linkedin fa-2x success"
+                                                        class="fab fa-linkedin fa-2x"
                                                     ></i>
-                                                </a>
+                                                </b-button>
                                             </template>
                                         </b-card>
                                         <b-card
                                             title="Wes Bonelli"
                                             sub-title="Developer"
-                                            border-variant="white"
-                                            footer-bg-variant="dark"
-                                            footer-border-variant="dark"
+                                            border-variant="default"
+                                            footer-bg-variant="light"
+                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template
                                                 v-slot:footer
                                                 style="background-color: white"
                                             >
-                                                <a
+                                                <b-button
+                                                    class="mr-2 p-2"
+                                                    variant="outline-dark"
                                                     href="https://github.com/w-bonelli"
-                                                    class="card-link"
                                                 >
                                                     <i
-                                                        class="fab fa-github fa-2x success"
+                                                        class="fab fa-github fa-2x"
                                                     ></i>
-                                                </a>
-                                                <a
+                                                </b-button>
+                                                <b-button
+                                                    variant="outline-dark"
+                                                    class="mr-2 p-2"
                                                     href="https://www.researchgate.net/profile/Wes_Bonelli"
-                                                    class="card-link"
                                                 >
                                                     <i
-                                                        class="fab fa-researchgate fa-2x success"
+                                                        class="fab fa-researchgate fa-2x"
                                                     ></i>
-                                                </a>
-                                                <a
+                                                </b-button>
+                                                <b-button
+                                                    class="mr-2 p-2"
+                                                    variant="outline-dark"
                                                     href="https://www.linkedin.com/in/wesley-bonelli/"
-                                                    class="card-link"
                                                 >
                                                     <i
-                                                        class="fab fa-linkedin fa-2x success"
+                                                        class="fab fa-linkedin fa-2x"
                                                     ></i>
-                                                </a>
+                                                </b-button>
                                             </template>
                                         </b-card>
                                     </b-card-group>
                                 </b-tab>
-                                <b-tab title="Former">
+                                <b-tab title="Former Contributors">
                                     <template v-slot:title class="m-0 p-0">
-                                        <b class="dark">Former</b>
+                                        <b class="dark">Former Contributors</b>
                                     </template>
                                     <b-card-group columns>
                                         <b-card
                                             title="Chris Cotter"
                                             sub-title="Developer"
-                                            border-variant="white"
-                                            footer-bg-variant="dark"
-                                            footer-border-variant="dark"
+                                            border-variant="default"
+                                            footer-bg-variant="light"
+                                            footer-border-variant="default"
                                             style="min-width: 20rem;"
                                         >
                                             <template
                                                 v-slot:footer
                                                 style="background-color: white"
                                             >
-                                                <a
+                                                <b-button
+                                                    class="mr-2 p-2"
+                                                    variant="outline-dark"
                                                     href="https://github.com/cottersci"
-                                                    class="card-link"
                                                 >
                                                     <i
-                                                        class="fab fa-github fa-2x success"
+                                                        class="fab fa-github fa-2x"
                                                     ></i>
-                                                </a>
-                                                <a
+                                                </b-button>
+                                                <b-button
+                                                    variant="outline-dark"
                                                     href="https://www.linkedin.com/in/crcotter/"
-                                                    class="card-link"
+                                                    class="mr-2 p-2"
                                                 >
                                                     <i
-                                                        class="fab fa-linkedin fa-2x success"
+                                                        class="fab fa-linkedin fa-2x"
                                                     ></i>
-                                                </a>
+                                                </b-button>
                                             </template>
                                         </b-card>
                                         <b-card
                                             title="Abhiram Das"
                                             sub-title="Developer"
-                                            border-variant="white"
-                                            footer-bg-variant="dark"
-                                            footer-border-variant="dark"
+                                            border-variant="default"
+                                            footer-bg-variant="light"
+                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template
                                                 v-slot:footer
                                                 style="background-color: white"
                                             >
-                                                <a
+                                                <b-button
+                                                    variant="outline-dark"
                                                     href="https://www.linkedin.com/in/abhiram-das-7a8b382/"
                                                     class="card-link"
                                                 >
                                                     <i
-                                                        class="fab fa-linkedin fa-2x success"
+                                                        class="fab fa-linkedin fa-2x"
                                                     ></i>
-                                                </a>
+                                                </b-button>
                                             </template>
                                         </b-card>
                                         <b-card
                                             title="Megan Flory"
                                             sub-title="Graphic Designer"
-                                            border-variant="white"
-                                            footer-bg-variant="dark"
-                                            footer-border-variant="dark"
+                                            border-variant="default"
+                                            footer-bg-variant="light"
+                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template
                                                 v-slot:footer
                                                 style="background-color: white"
                                             >
-                                                <a
+                                                <b-button
+                                                    variant="outline-dark"
                                                     href="https://github.com/meganflory"
-                                                    class="card-link"
+                                                    class="mr-2 p-2"
                                                 >
                                                     <i
-                                                        class="fab fa-github fa-2x success"
+                                                        class="fab fa-github fa-2x"
                                                     ></i>
-                                                </a>
-                                                <a
+                                                </b-button>
+                                                <b-button
+                                                    variant="outline-dark"
                                                     href="https://www.linkedin.com/in/meganflory13/"
-                                                    class="card-link"
+                                                    class="mr-2 p-2"
                                                 >
                                                     <i
-                                                        class="fab fa-linkedin fa-2x success"
+                                                        class="fab fa-linkedin fa-2x"
                                                     ></i>
-                                                </a>
+                                                </b-button>
                                             </template>
                                         </b-card>
                                         <b-card
                                             title="Maria Luck"
                                             sub-title="Developer"
-                                            border-variant="white"
-                                            footer-bg-variant="dark"
-                                            footer-border-variant="dark"
+                                            border-variant="default"
+                                            footer-bg-variant="light"
+                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template
                                                 v-slot:footer
                                                 style="background-color: white"
                                             >
-                                                <a
+                                                <b-button
+                                                    variant="outline-dark"
                                                     href="https://www.linkedin.com/in/mariacpedrosa/"
-                                                    class="card-link"
+                                                    class="mr-2 p-2"
                                                 >
                                                     <i
-                                                        class="fab fa-linkedin fa-2x success"
+                                                        class="fab fa-linkedin fa-2x"
                                                     ></i>
-                                                </a>
+                                                </b-button>
                                             </template>
                                         </b-card>
                                     </b-card-group>
@@ -272,6 +284,8 @@ export default {
 @import '../scss/main.sass'
 .dark
     color: $dark
+    padding: 0px
+    margin: 0px
 
 .success
     color: $success
