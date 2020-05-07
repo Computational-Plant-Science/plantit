@@ -2,8 +2,9 @@
     <div>
         <div class="mb-4 pt-4">
             <div class="workflow-icon">
-                <b-img :src="workflow ? workflow.workflow.icon_url : require('../assets/logo.png')"> </b-img>
+                <b-img :src="workflow ? workflow.workflow.icon_url ? workflow.workflow.icon_url : require('../assets/logo.png') : require('../assets/logo.png')"> </b-img>
             </div>
+            <br />
             <br />
             <h4>{{ workflow ? workflow.workflow.name : 'Loading...' }}</h4>
             <p>

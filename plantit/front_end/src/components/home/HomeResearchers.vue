@@ -5,14 +5,15 @@
                 <b-card
                     class="rounded-0 text-center"
                     bg-variant="secondary"
-                    border-variant="secondary"
+                    border-variant="success"
                     text-variant="white"
+                    sub-title-text-variant="dark"
                     header-bg-variant="secondary"
                     header-border-variant="secondary"
                 >
                     <template slot="header" style="border: none">
-                        <h2>Researchers</h2>
-                        <p>
+                        <h2 class="text-success">Researchers</h2>
+                        <p class="text-white">
                             PlantIT takes care of infrastructure details so you
                             can focus on your data.
                         </p>

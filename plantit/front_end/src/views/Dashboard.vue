@@ -85,6 +85,7 @@
                                 ></SelectJob>
                                 <Job
                                     v-if="job_state === JobState.View"
+                                    :key="job_pk"
                                     :pk="job_pk"
                                 ></Job>
                             </b-tab>

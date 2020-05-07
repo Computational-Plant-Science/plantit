@@ -8,7 +8,7 @@
                     img-top
                     style="max-width: 30rem;margin: 0 auto;"
                     header-bg-variant="dark"
-                    border-variant="dark"
+                    border-variant="white"
                 >
                     <template
                         v-slot:header

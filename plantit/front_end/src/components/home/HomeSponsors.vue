@@ -3,7 +3,7 @@
         <b-card
             class="rounded-0 text-center"
             bg-variant="white"
-            border-variant="white"
+            border-variant="success"
             style="border:none"
             header-bg-variant="white"
             header-border-variant="white"

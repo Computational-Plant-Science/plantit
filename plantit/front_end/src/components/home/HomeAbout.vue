@@ -4,9 +4,10 @@
             <b-card
                 align="center"
                 bg-variant="default"
-                footer-bg-variant="dark"
-                border-variant="dark"
-                style="max-width: 540px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.95"
+                footer-bg-variant="white"
+                footer-border-variant="white"
+                border-variant="success"
+                style="max-width: 550px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -15,59 +16,55 @@
                             width="100px"
                             alt="Plant IT"
                         ></b-img>
-                        <h2>PlantIT</h2>
+                        <h1>PlantIT</h1>
                     </b-col>
                 </b-row>
-                <b-navbar toggleable="lg">
-                    <b-collapse class="justify-content-center" is-nav>
-                        <b-navbar-nav>
+                <b-card-body class="text-center">
+                    <p>
+                        Welcome to PlantIT, a <b>Phenomics</b>-as-a-Service
+                        science gateway!
+                        <br>
+                        <br>
+                        PlantIT allows computational researchers to make their
+                        algorithms available to a broad community, and offers
+                        biological researchers an easy-to-use interface to apply
+                        algorithms in their own work.
+                    </p>
+                </b-card-body>
+                <b-navbar toggleable="sm" class="m-0 p-0">
+                    <b-collapse class="justify-content-center m-0 p-0" is-nav>
+                        <b-navbar-nav class="m-0 p-0">
                             <b-nav-item to="/About" class="m-0 p-0">
                                 <b-button variant="outline-dark">
-                                    <i class="fas fa-users fa-1x"></i>
-                                    About
+                                    <i class="fas fa-question fa-2x"></i>
+                                    <br />
+                                    About PlantIT
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/Guide" class="m-0 p-0">
                                 <b-button variant="outline-dark">
-                                    <i class="fas fa-map-signs"></i>
-                                    Guide
+                                    <i class="fas fa-map-signs fa-2x"></i>
+                                    <br />
+                                    User Guide
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/Documentation" class="m-0 p-0">
                                 <b-button variant="outline-dark">
-                                    <i class="fas fa-book"></i>
-                                    Docs
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item
-                                href="https://github.com/Computational-Plant-Science/DIRT2_Webplatform/issues/new"
-                                class="m-0 p-0"
-                            >
-                                <b-button variant="outline-dark">
-                                    <i class="fab fa-github fa-1x"></i>
-                                    Report Issue
+                                    <i class="fas fa-book fa-2x"></i>
+                                    <br />
+                                    Developer Docs
                                 </b-button>
                             </b-nav-item>
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <b-card-body class="text-left">
-                    Welcome to PlantIT, a <b>Phenomics</b>-as-a-Service science
-                    gateway!
-                    <br />
-                    <br />
-                    Read the <b-link to="/Guide">User Guide</b-link> to learn
-                    how to use workflows contributed by the community, or see
-                    the <b-link to="/Docs">Developer Docs</b-link> to submit
-                    your own.
-                </b-card-body>
                 <template v-slot:footer style="background-color: white">
-                    <b-row>
+                    <b-row class="mb-2">
                         <b-col>
                             <b-button
                                 block
                                 href="/user/dashboard"
-                                variant="dark"
+                                variant="success"
                                 >Sign Up
                             </b-button>
                         </b-col>
@@ -75,7 +72,7 @@
                             <b-button
                                 block
                                 href="/user/dashboard"
-                                variant="dark"
+                                variant="outline-dark"
                                 >Log In
                             </b-button>
                         </b-col>

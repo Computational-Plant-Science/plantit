@@ -4,33 +4,36 @@
             <h3>
                 What is PlantIT?
             </h3>
-            <br />
+            <hr />
             <b-row class="justify-content-md-center mb-4">
                 <b-col>
-                    PlantIT is a workflow automation platform for the phenomics
-                    community, developed and maintained by the University of
-                    Georgia's
-                    <b-link
-                        href="https://www.computational-plant-science.org/joomla30/"
-                        >Computational Plant Science lab
-                    </b-link>
-                    and funded by the
-                    <b-link
-                        href="https://arpa-e.energy.gov/?q=arpa-e-programs/roots"
-                        >ARPA-E ROOTS project</b-link
-                    >. Users can upload or access data, run or schedule
-                    pipelines on high-performance and high-throughput computing
-                    resources, and retrieve or store results &mdash; all from
-                    the browser, no programming required. PlantIT allows
-                    computational researchers to make their algorithms available
-                    to a broad community and offers biological researchers an
-                    easy-to-use interface to apply algorithms in their own work.
+                    <p>
+                        PlantIT is a workflow automation platform for the
+                        phenomics community, developed and maintained by the
+                        University of Georgia's
+                        <b-link
+                            href="https://www.computational-plant-science.org/joomla30/"
+                            >Computational Plant Science lab
+                        </b-link>
+                        and funded by the
+                        <b-link
+                            href="https://arpa-e.energy.gov/?q=arpa-e-programs/roots"
+                            >ARPA-E ROOTS project</b-link
+                        >. Users can upload or access data, run or schedule
+                        pipelines on high-performance and high-throughput
+                        computing resources, and retrieve or store results
+                        &mdash; all from the browser, no programming required.
+                        PlantIT allows computational researchers to make their
+                        algorithms available to a broad community, and offers
+                        biological researchers an easy-to-use interface to apply
+                        algorithms in their own work.
+                    </p>
                 </b-col>
             </b-row>
             <h3>
                 People
             </h3>
-            <br />
+            <hr />
             <b-row class="justify-content-md-center mb-4">
                 <b-col>
                     <b-tabs justified active-nav-item-class="bg-success" pills>

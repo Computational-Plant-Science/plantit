@@ -2,14 +2,14 @@
     <b-card
         class="rounded-0 text-center"
         bg-variant="dark"
-        border-variant="dark"
+        border-variant="success"
         text-variant="white"
         header-bg-variant="dark"
         header-border-variant="dark"
     >
         <template slot="header" style="border: none">
-            <h2>Developers</h2>
-            <p>
+            <h2 class="text-success">Developers</h2>
+            <p class="text-white">
                 Share pipelines with a broad audience and advance reproducible
                 science.
             </p>
@@ -18,7 +18,8 @@
             <b-row align-content="center" align-h="center">
                 <b-col align-h="center">
                     <b-card
-                        title="Batteries included (but not required)"
+                        sub-title="Batteries included (but not required)"
+                        sub-title-text-variant="success"
                         class="text-left rounded-0 overflow-hidden"
                         bg-variant="dark"
                         text-variant="white"
@@ -32,17 +33,22 @@
                     >
                         <b-card-text>
                             Store and publish data with
-                            <b-link href="https://www.cyverse.org/"
+                            <b-link
+                                class="text-white"
+                                href="https://www.cyverse.org/"
                                 >CyVerse</b-link
                             >
                             or plug in alternate data stores. Then deploy on
                             your own HPC/HTC cluster or request XSEDE resources
                             (like the University of Georgia's
-                            <b-link href="https://gacrc.uga.edu/systems/"
+                            <b-link
+                                class="text-white"
+                                href="https://gacrc.uga.edu/systems/"
                                 >Sapelo2</b-link
                             >
                             or TACC's
                             <b-link
+                                class="text-white"
                                 href="https://www.tacc.utexas.edu/systems/stampede2"
                                 >Stampede</b-link
                             >).
@@ -53,7 +59,8 @@
             <b-row class="mt-4">
                 <b-col md="auto">
                     <b-card
-                        title="Workflow orchestration on the web"
+                        sub-title="Workflow orchestration on the web"
+                        sub-title-text-variant="success"
                         class="text-left rounded-0 overflow-hidden"
                         bg-variant="dark"
                         text-variant="white"
@@ -77,7 +84,8 @@
             <b-row class="mt-4">
                 <b-col>
                     <b-card
-                        title="Full control over your environment"
+                        sub-title="Full control over your environment"
+                        sub-title-text-variant="success"
                         class="text-left rounded-0 overflow-hidden"
                         bg-variant="dark"
                         text-variant="white"
@@ -93,7 +101,9 @@
                             Containerize existing code or develop custom
                             pipelines with your tools of choice. If it can run
                             in
-                            <b-link href="https://sylabs.io/docs/"
+                            <b-link
+                                class="text-white"
+                                href="https://sylabs.io/docs/"
                                 >Singularity</b-link
                             >, it will run on PlantIT.
                         </b-card-text>
@@ -103,10 +113,11 @@
             <b-row class="mt-4">
                 <b-col>
                     <b-card
-                        title="Phenotyping-as-a-Service"
+                        sub-title="Phenotyping-as-a-Service"
                         class="text-left rounded-0 overflow-hidden"
                         bg-variant="dark"
                         text-variant="white"
+                        sub-title-text-variant="success"
                         :img-src="
                             require('../../assets/frontpage/icons/documentation.png')
                         "

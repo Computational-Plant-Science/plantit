@@ -22,22 +22,23 @@
                                 class="ml-1 mr-1"
                                 style="color: white"
                                 :variant="
-                                    job_status === 2
+                                    error_count !== 0
                                         ? 'danger'
-                                        : job_status === 4
+                                        : warning_error_count !== 0
                                         ? 'warning'
                                         : 'success'
                                 "
-                                >{{ statusToString(job_status) }}<span v-if="warning_error_count > 0">
-                            with {{ warning_count }} warning(s) and {{ error_count }} error(s)
-                        </span>
-                            </b-badge
-                            >
+                                >{{ statusToString(job_status)
+                                }}<span v-if="warning_error_count > 0">
+                                    with {{ warning_count }} warning(s) and
+                                    {{ error_count }} error(s)
+                                </span>
+                            </b-badge>
                         </h5>
                     </b-col>
                     <b-col md="auto" class="mr-0 pr-1">
                         <b-button
-                                variant="dark"
+                            variant="dark"
                             @click="
                                 status_table.perPage = status_table.perPage
                                     ? null
@@ -98,7 +99,10 @@
                         width="250%"
                         alt="Plant IT"
                     ></b-img>
-                    <b-link v-else-if="job_status === 1" :href="job | resultsLink">
+                    <b-link
+                        v-else-if="job_status === 1"
+                        :href="job | resultsLink"
+                    >
                         <b-img
                             :src="require('../assets/icons/download.png')"
                             width="250%"
@@ -106,6 +110,10 @@
                         ></b-img>
                     </b-link>
                     <i v-else class="fas fa-bug fa-6x red"></i>
+                </b-col>
+            </b-row>
+            <b-row>
+                <b-col>
                     <b-table
                         id="error-log"
                         striped
@@ -136,8 +144,7 @@ import moment from 'moment';
 
 export default {
     name: 'Job',
-    components: {
-    },
+    components: {},
     props: {
         pk: {
             required: true

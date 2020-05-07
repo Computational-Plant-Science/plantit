@@ -2,24 +2,27 @@
     <b-modal
         :id="modalId"
         :title="
-            prompt ? 'Update Profile Information' : 'Edit Profile Information'
+            prompt ? 'Update User Information' : 'Edit User Information'
         "
         ok-title="Save"
         ok-variant="dark"
+        cancel-variant="outline-danger"
         header-bg-variant="dark"
         header-border-variant="dark"
         header-text-variant="white"
         footer-bg-variant="dark"
         footer-border-variant="dark"
-        ok-only
+        :ok-only="prompt"
         no-close-on-esc
         @ok="save"
+        :ok-disabled="invalid"
         no-close-on-backdrop
         hide-header-close
         centered
     >
         <p v-if="prompt">
-            PlantIT must collect user information to insure funding continuity. Please enter your information below.
+            PlantIT collects user information to report to funding organizations.
+            Please enter your information below.
         </p>
         <b-form-group
             label="First Name"
@@ -63,7 +66,7 @@
             invalid-feedback="Please enter your institution or organization."
             :state="valid(institution_internal)"
         >
-            <b-form-input id="institution" v-model="institution_internal" trim>
+            <b-form-input id="institution" v-model="institution_internal" trim @input="searchInstitution(institution_internal)">
             </b-form-input>
         </b-form-group>
         <b-form-group
@@ -96,6 +99,8 @@
 </template>
 
 <script>
+import PlaceManager from "../../services/apiV1/PlaceManager";
+
 export default {
     name: 'EditUserInfoModal',
     props: {
@@ -158,6 +163,7 @@ export default {
     },
     data() {
         return {
+            institutions: [],
             username_internal: this.username,
             first_name_internal: this.first_name,
             last_name_internal: this.last_name,
@@ -185,6 +191,9 @@ export default {
         },
         valid(str) {
             return str !== null && str !== undefined && str.length > 0;
+        },
+        searchInstitution(name) {
+            this.institutions = PlaceManager.searchInstitution(name);
         }
     },
     computed: {
@@ -199,6 +208,15 @@ export default {
                 this.valid(this.field_of_study_internal)
             );
         }
+    },
+    mounted() {
+        const plugin = document.createElement('script');
+        plugin.setAttribute(
+            'src',
+            'https://maps.googleapis.com/maps/api/js?key=AIzaSyChHaZfwFcVigXg_T8DfDI5tqUP8QQJE88&libraries=places'
+        );
+        plugin.async = true;
+        document.head.appendChild(plugin);
     },
     watch: {
         username: function(val) {
