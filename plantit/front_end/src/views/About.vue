@@ -19,14 +19,14 @@
                         <b-link
                             href="https://arpa-e.energy.gov/?q=arpa-e-programs/roots"
                             >ARPA-E ROOTS project</b-link
-                        >. Users can upload or access data, run or schedule
-                        pipelines on high-performance and high-throughput
-                        computing resources, and retrieve or store results
-                        &mdash; all from the browser, no programming required.
-                        PlantIT allows computational researchers to make their
-                        algorithms available to a broad community, and offers
-                        biological researchers an easy-to-use interface to apply
-                        algorithms in their own work.
+                        >. PlantIT allows computational researchers to make
+                        their algorithms available to a broad community, and
+                        offers biological researchers an easy-to-use interface
+                        to apply algorithms in their own work. Users can
+                        schedule reproducible pipelines in high-performance and
+                        high-throughput computing environments, then get
+                        notified when results are available &mdash; all from the
+                        browser, no programming required.
                     </p>
                 </b-col>
             </b-row>
@@ -93,7 +93,7 @@
                                         </b-card>
                                         <b-card
                                             title="Wes Bonelli"
-                                            sub-title="Developer (PlantIT)"
+                                            sub-title="Developer"
                                             border-variant="white"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
@@ -138,7 +138,7 @@
                                     <b-card-group columns>
                                         <b-card
                                             title="Chris Cotter"
-                                            sub-title="Developer (PlantIT)"
+                                            sub-title="Developer"
                                             border-variant="white"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"
@@ -168,7 +168,7 @@
                                         </b-card>
                                         <b-card
                                             title="Abhiram Das"
-                                            sub-title="Developer (DIRT)"
+                                            sub-title="Developer"
                                             border-variant="white"
                                             footer-bg-variant="dark"
                                             footer-border-variant="dark"

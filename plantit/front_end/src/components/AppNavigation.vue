@@ -16,15 +16,15 @@
                                 @click="hide"
                                 title="Hide Sidebar"
                             >
-                                <i class="fas fa-arrow-left fa-2x"></i>
+                                <i class="fas fa-arrow-left fa-1x"></i>
                             </b-button>
                         </b-col>
-                        <b-col md="auto" class="pr-0 mr-1">
+                        <b-col md="auto" class="pr-0 mr-1 pt-0.5">
                             <h1>
                                 PlantIT
                             </h1>
                         </b-col>
-                        <b-col md="auto" class="pl-0 ml-1">
+                        <b-col md="auto" class="pl-0 ml-1 pt-1">
                             <b-badge variant="dark" class="text-success">{{
                                 version
                             }}</b-badge>
@@ -33,21 +33,100 @@
                     <b-row>
                         <b-col>
                             <p class="m-3">
-                                Welcome,
-                                <b
-                                    >{{
-                                        info.profile
+                                Welcome<i v-if="loading">
+                                    <b-spinner
+                                        variant="secondary"
+                                        type="grow"
+                                        label="Loading..."
+                                    ></b-spinner>
+                                    ...
+                                </i>
+                                <span v-else-if="!info"
+                                    >! Sign up or log in to start using
+                                    PlantIT.</span
+                                >
+                                <b v-else
+                                    >,
+                                    {{
+                                        info.first_name
                                             ? info.first_name
                                             : info.username
                                     }}.</b
                                 >
-                                <br />
-                                <br />
+                            </p>
+                        </b-col>
+                    </b-row>
+                    <b-row class="ml-0 mr-0 pl-0 pr-0">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0">
+                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
+                                <b-nav-item
+                                    v-if="isLoggedIn"
+                                    title="Dashboard"
+                                    to="/user/dashboard"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button variant="outline-dark" block class="text-left">
+                                        <i
+                                            class="fas fa-desktop fa-1x fa-fw"
+                                        ></i>
+                                        Dashboard
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    v-if="isLoggedIn"
+                                    :title="
+                                        loading
+                                            ? 'Loading...'
+                                            : 'Profile: ' + info['username']
+                                    "
+                                    class="m-0 p-0"
+                                    to="/user/profile"
+                                >
+                                    <b-button variant="outline-dark" block class="text-left">
+                                        <i class="fas fa-user fa-1x fa-fw"></i>
+                                        Profile
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    v-if="isLoggedIn"
+                                    title="Log Out"
+                                    to="/logout/?next=/"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button variant="outline-danger" class="text-left" block>
+                                        <i
+                                            class="fas fa-door-closed fa-1x fa-fw"
+                                        ></i>
+                                        Log Out
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    v-else
+                                    href="/login/?next=/user/dashboard"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button
+                                        variant="success"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i
+                                            class="fas fa-door-open fa-1x fa-fw"
+                                        ></i>
+                                        Sign Up / Log In
+                                    </b-button>
+                                </b-nav-item>
+                            </b-nav>
+                        </b-col>
+                    </b-row>
+                    <b-row>
+                        <b-col>
+                            <p class="m-3">
                                 See the
                                 <b-link to="/Guide">User Guide</b-link> to learn
-                                how to run workflows, or the
+                                how to run workflows, or check out the
                                 <b-link to="/Docs">Developer Docs</b-link> to
-                                create and host your own.
+                                create your own.
                             </p>
                         </b-col>
                     </b-row>
@@ -71,7 +150,7 @@
                                         class="text-left"
                                     >
                                         <i
-                                            class="fas fa-question fa-1x fa-fw"
+                                            class="fas fa-seedling fa-1x fa-fw"
                                         ></i>
                                         About PlantIT
                                     </b-button>
@@ -101,66 +180,6 @@
                             </b-nav>
                         </b-col>
                     </b-row>
-                    <hr />
-                    <b-row class="ml-0 mr-0 pl-0 pr-0">
-                        <b-col class="ml-0 mr-0 pl-0 pr-0">
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    title="Dashboard"
-                                    to="/user/dashboard"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button variant="outline-dark">
-                                        <i
-                                            class="fas fa-desktop fa-1x fa-fw"
-                                        ></i>
-                                        Dashboard
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    :title="
-                                        loading
-                                            ? 'Loading...'
-                                            : 'Profile: ' + info['username']
-                                    "
-                                    class="m-0 p-0"
-                                    to="/user/profile"
-                                >
-                                    <b-button variant="outline-dark">
-                                        <i class="fas fa-user fa-1x fa-fw"></i>
-                                        Profile
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    title="Log Out"
-                                    to="/logout/?next=/"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button variant="outline-dark">
-                                        <i
-                                            class="fas fa-door-closed fa-1x fa-fw"
-                                        ></i>
-                                        Log Out
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-else
-                                    href="/login/?next=/user/dashboard"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button variant="outline-dark">
-                                        <i
-                                            class="fas fa-door-open fa-2x fa-fw"
-                                        ></i>
-                                        Log In
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                        </b-col>
-                    </b-row>
                 </b-container>
             </template>
             <template slot="footer">
@@ -180,7 +199,7 @@
         </b-sidebar>
         <b-navbar
             toggleable="lg"
-            class="logo m-0 p-0 pl-2 pr-2"
+            class="logo m-0 p-0 pl-3 pr-3"
             variant="white"
         >
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
@@ -193,10 +212,12 @@
                     >
                         <b-button
                             class="brand-img m-0 p-0"
+                            v-bind:class="{ 'not-found': not_found }"
                             variant="white"
                             style="color: white"
                         >
                             <b-img
+                                    class="m-0 p-0"
                                 center
                                 width="32px"
                                 :src="require('../assets/logo.png')"
@@ -205,25 +226,57 @@
                         </b-button>
                     </b-nav-item>
                 </b-navbar-nav>
-                <b-navbar-brand
+                <b-breadcrumb
+                    class="m-o p-0 ml-2"
+                    style="background-color: white"
+                >
+                    <b-navbar-nav
+                        v-for="crumb in crumbs"
+                        :key="crumb.text"
+                        class="mt-3"
+                    >
+                        <b-nav-item
+                            class="m-0 p-0 mt-1"
+                            disabled
+                            style="background-color: white"
+                        >
+                            <i
+                                class="fas fa-slash fa-1x text-success mirror"
+                            ></i>
+                        </b-nav-item>
+                        <b-nav-item
+                            class="m-0 p-0 align-middle"
+                            :href="crumb.href"
+                        >
+                            <b v-html="crumb.icon"></b>
+                            <span class="ml-2 title">{{ crumb.text }}</span>
+                        </b-nav-item>
+                    </b-navbar-nav>
+                </b-breadcrumb>
+
+                <!--<b-navbar-brand
                     href="/"
                     class="align-middle ml-3 title"
                     title="PlantIT Home"
                     >PlantIT</b-navbar-brand
-                >
+                >-->
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item class="m-0 p-0" title="Slack">
                         <b-button variant="outline-dark">
-                            <i class="fab fa-slack fa-2x"></i>
+                            <i class="fab fa-slack fa-1x"></i>
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item class="m-0 p-0" title="Github" to="https://github.com/Computational-Plant-Science/plantit">
+                    <b-nav-item
+                        class="m-0 p-0"
+                        title="Github"
+                        to="https://github.com/Computational-Plant-Science/plantit"
+                    >
                         <b-button variant="outline-dark">
-                            <i class="fab fa-github fa-2x"></i>
+                            <i class="fab fa-github fa-1x"></i>
                         </b-button>
                     </b-nav-item>
                     <!--<b-nav-item class="m-0 p-0" disabled>
-                        <i class="fas fa-slash fa-2x text-success"></i>
+                        <i class="fas fa-slash fa-1x text-success"></i>
                     </b-nav-item>
                     <b-nav-item to="/" class="m-0 p-0" title="PlantIT Home">
                         <b-button
@@ -231,7 +284,7 @@
                             block
                             class="text-left"
                         >
-                            <i class="fas fa-home fa-2x fa-fw"></i>
+                            <i class="fas fa-home fa-1x fa-fw"></i>
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -244,7 +297,7 @@
                             block
                             class="text-left"
                         >
-                            <i class="fas fa-question fa-2x fa-fw"></i>
+                            <i class="fas fa-seedling fa-1x fa-fw"></i>
                         </b-button>
                     </b-nav-item>
                     <b-nav-item to="/Guide" class="m-0 p-0" title="User Guide">
@@ -253,7 +306,7 @@
                             block
                             class="text-left"
                         >
-                            <i class="fas fa-map-signs fa-2x fa-fw"></i>
+                            <i class="fas fa-map-signs fa-1x fa-fw"></i>
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -266,11 +319,11 @@
                             block
                             class="text-left"
                         >
-                            <i class="fas fa-book fa-2x fa-fw"></i>
+                            <i class="fas fa-book fa-1x fa-fw"></i>
                         </b-button>
                     </b-nav-item>-->
-                    <b-nav-item class="m-0 p-0" disabled>
-                        <i class="fas fa-slash fa-2x text-success"></i>
+                    <b-nav-item class="m-0 p-0 mt-1" disabled>
+                        <i class="fas fa-slash fa-1x text-success"></i>
                     </b-nav-item>
                     <b-nav-item
                         v-if="isLoggedIn"
@@ -279,7 +332,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                            <i class="fas fa-desktop fa-2x"></i>
+                            <i class="fas fa-desktop fa-1x"></i>
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -292,7 +345,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark" to="/user/profile">
-                            <i class="fas fa-user fa-2x"></i>
+                            <i class="fas fa-user fa-1x"></i>
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -302,17 +355,17 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                            <i class="fas fa-door-closed fa-2x"></i>
+                            <i class="fas fa-door-closed fa-1x"></i>
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
                         v-else
                         href="/login/?next=/user/dashboard"
                         class="m-0 p-0"
-                        title="Log In"
+                        title="Sign Up / Log In"
                     >
-                        <b-button variant="outline-dark">
-                            <i class="fas fa-door-open fa-2x"></i>
+                        <b-button variant="success">
+                            <i class="fas fa-door-open fa-1x"></i>
                         </b-button>
                     </b-nav-item>
                 </b-navbar-nav>
@@ -323,21 +376,61 @@
         <EditUserInfoModal
             :prompt="true"
             modal-id="editUserInfoModalNav"
-            :username="this.loading ? 'Loading...' : this.info.username"
-            :first_name="this.loading ? 'Loading...' : this.info.first_name"
-            :last_name="this.loading ? 'Loading...' : this.info.last_name"
-            :country="this.loading ? 'Loading...' : this.info.profile.country"
+            :username="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.username
+                    : ''
+            "
+            :first_name="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.first_name
+                    : ''
+            "
+            :last_name="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.last_name
+                    : ''
+            "
+            :country="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.country
+                    : ''
+            "
             :continent="
-                this.loading ? 'Loading...' : this.info.profile.continent
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.continent
+                    : ''
             "
             :institution="
-                this.loading ? 'Loading...' : this.info.profile.institution
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.institution
+                    : ''
             "
             :institution_type="
-                this.loading ? 'Loading...' : this.info.profile.institution_type
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.institution_type
+                    : ''
             "
             :field_of_study="
-                this.loading ? 'Loading...' : this.info.profile.field_of_study
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.field_of_study
+                    : ''
             "
             @saveUserInfo="saveUserInfo"
         >
@@ -365,6 +458,7 @@ export default {
         profileIncomplete() {
             return (
                 !this.loading &&
+                this.info &&
                 !(
                     this.info.profile.country &&
                     this.info.profile.continent &&
@@ -379,11 +473,20 @@ export default {
         return {
             loading: true,
             version: 'alpha',
-            info: {}
+            info: {},
+            crumbs: [],
+            not_found: false
         };
     },
     mounted: function() {
         this.reload();
+        this.crumbs = this.$route.meta.crumb;
+        // this.not_found = this.$route.name === '404';
+    },
+    watch: {
+        $route() {
+            this.crumbs = this.$route.meta.crumb;
+        }
     },
     methods: {
         reload() {
@@ -436,13 +539,35 @@ export default {
     -webkit-transform: rotate(90deg)
         transform: rotate(90deg)
 
+.not-found
+    color: $red
+    border: 2px solid $red
+    -webkit-transform: rotate(180deg)
+        transform: rotate(180deg)
+
+.not-found:hover
+    color: $dark
+    border: 2px solid $white
+    -webkit-transform: rotate(90deg)
+        transform: rotate(90deg)
+
+
 .title
-    font-size: 26pt !important
+    font-size: 14pt !important
+    vertical-align: middle
     font-weight: 200
     color: $dark !important
+    background-color: white
     border: none
     border-bottom: 1px solid transparent
 
 .title:hover
     color: $secondary !important
+
+.mirror
+    -moz-transform: scale(-1, 1)
+    -webkit-transform: scale(-1, 1)
+    -o-transform: scale(-1, 1)
+    -ms-transform: scale(-1, 1)
+    transform: scale(-1, 1)
 </style>

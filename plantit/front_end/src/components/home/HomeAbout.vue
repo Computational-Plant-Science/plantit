@@ -6,8 +6,8 @@
                 bg-variant="default"
                 footer-bg-variant="white"
                 footer-border-variant="white"
-                border-variant="success"
-                style="max-width: 550px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
+                border-variant="dark"
+                style="max-width: 540px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -21,8 +21,7 @@
                 </b-row>
                 <b-card-body class="text-center">
                     <p>
-                        Welcome to PlantIT, a <b>Phenomics</b>-as-a-Service
-                        science gateway!
+                        Welcome to PlantIT: <b>Phenomics</b>-as-a-Service for plant science!
                         <br>
                         <br>
                         PlantIT allows computational researchers to make their
@@ -36,7 +35,7 @@
                         <b-navbar-nav class="m-0 p-0">
                             <b-nav-item to="/About" class="m-0 p-0">
                                 <b-button variant="outline-dark">
-                                    <i class="fas fa-question fa-2x"></i>
+                                    <i class="fas fa-seedling fa-2x"></i>
                                     <br />
                                     About PlantIT
                                 </b-button>
@@ -65,15 +64,7 @@
                                 block
                                 href="/user/dashboard"
                                 variant="success"
-                                >Sign Up
-                            </b-button>
-                        </b-col>
-                        <b-col>
-                            <b-button
-                                block
-                                href="/user/dashboard"
-                                variant="outline-dark"
-                                >Log In
+                                >Sign Up / Log In
                             </b-button>
                         </b-col>
                     </b-row>

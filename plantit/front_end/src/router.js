@@ -16,37 +16,114 @@ let router = new Router({
         {
             path: '/',
             name: 'home',
-            component: Home
+            component: Home,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
+                    }
+                ]
+            }
         },
         {
             path: '/about',
             name: 'about',
-            component: About
+            component: About,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
+                    },
+                    {
+                        text: 'About',
+                        href: '/about',
+                        icon: '<i class="fas fa-seedling fa-1x text-dark align-middle"></i>'
+                    }
+                ]
+            }
         },
         {
             path: '/guide',
             name: 'guide',
-            component: Guide
+            component: Guide,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
+                    },
+                    {
+                        text: 'Guide',
+                        href: '/guide',
+                        icon: '<i class="fas fa-map-signs fa-1x text-dark align-middle"></i>'
+                    }
+                ]
+            }
         },
         {
             path: '/user/dashboard',
             name: 'dashboard',
-            component: Dashboard
+            component: Dashboard,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
+                    },
+                    {
+                        text: 'Dashboard',
+                        href: '/user/dashboard',
+                        icon: '<i class="fas fa-desktop fa-1x text-dark align-middle"></i>'
+                    }
+                ]
+            }
         },
         {
             path: '/user/profile',
             name: 'profile',
             component: Profile,
             meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
+                    },
+                    {
+                        text: 'Profile',
+                        href: '/user/profile',
+                        icon: '<i class="fas fa-user fa-1x text-dark align-middle"></i>'
+                    }
+                ],
                 requiresAuth: true
             }
         },
         {
             path: '*',
+            name: '404',
             component: () =>
                 import(
                     /* webpackChunkName: "about" */ './views/PageNotFound.vue'
-                )
+                ),
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
+                    },
+                    {
+                        text: '404',
+                        icon: '<i class="fas fa-question fa-1x text-dark align-middle"></i>'
+                    }
+                ]
+            }
         }
     ]
 });

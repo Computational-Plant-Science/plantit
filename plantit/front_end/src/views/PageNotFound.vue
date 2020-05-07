@@ -1,7 +1,15 @@
 <template>
-    <div>
-        <b-container class="content-box text-center">
-            Nope, that's not a page (Sorry?).
+    <div class="mb-4">
+        <b-container>
+            <div>
+                <b-row align-content="center">
+                    <b-col>
+                        <h5 class="text-center">
+                            Page not found.
+                        </h5>
+                    </b-col>
+                </b-row>
+            </div>
         </b-container>
     </div>
 </template>
