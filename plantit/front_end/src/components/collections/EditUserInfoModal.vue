@@ -209,15 +209,6 @@ export default {
             );
         }
     },
-    mounted() {
-        const plugin = document.createElement('script');
-        plugin.setAttribute(
-            'src',
-            'https://maps.googleapis.com/maps/api/js?key=AIzaSyChHaZfwFcVigXg_T8DfDI5tqUP8QQJE88&libraries=places'
-        );
-        plugin.async = true;
-        document.head.appendChild(plugin);
-    },
     watch: {
         username: function(val) {
             this.username_internal = val;
