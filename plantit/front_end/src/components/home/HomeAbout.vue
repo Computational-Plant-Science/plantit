@@ -21,9 +21,10 @@
                 </b-row>
                 <b-card-body class="text-center">
                     <p>
-                        Welcome to PlantIT: <b>Phenomics</b>-as-a-Service for plant science!
-                        <br>
-                        <br>
+                        Welcome to PlantIT: <b>Phenomics</b>-as-a-Service for
+                        plant science!
+                        <br />
+                        <br />
                         PlantIT allows computational researchers to make their
                         algorithms available to a broad community, and offers
                         biological researchers an easy-to-use interface to apply
@@ -60,11 +61,21 @@
                 <template v-slot:footer style="background-color: white">
                     <b-row class="mb-2">
                         <b-col>
-                            <b-button
-                                block
-                                href="/user/dashboard"
-                                variant="success"
-                                >Sign Up / Log In
+                            <b-button variant="white" block class="text-center">
+                                <b-img
+                                    :src="
+                                        require('@/assets/sponsors/cyversebw-notext.png')
+                                    "
+                                    height="17px"
+                                    alt="Cyverse"
+                                ></b-img>
+                                Log In with CyVerse
+                            </b-button>
+                        </b-col>
+                        <b-col>
+                            <b-button variant="white" block class="text-center">
+                                <i class="fab fa-github fa-1x fa-fw"></i>
+                                Log In with GitHub
                             </b-button>
                         </b-col>
                     </b-row>

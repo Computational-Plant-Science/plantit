@@ -5,6 +5,7 @@ import About from './views/About.vue';
 import Profile from './views/Profile.vue';
 import Dashboard from './views/Dashboard.vue';
 import Guide from './views/Guide.vue';
+import Login from './views/Login.vue';
 import Auth from '@/services/apiV1/Auth.js';
 
 Vue.use(Router);
@@ -66,7 +67,21 @@ let router = new Router({
             }
         },
         {
-            path: '/user/dashboard',
+            path: '/login/?next=/dashboard/',
+            name: 'login',
+            component: Login,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/login/?next=/dashboard/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
+                    }
+                ]
+            }
+        },
+        {
+            path: '/dashboard',
             name: 'dashboard',
             component: Dashboard,
             meta: {
@@ -78,14 +93,14 @@ let router = new Router({
                     },
                     {
                         text: 'Dashboard',
-                        href: '/user/dashboard',
+                        href: '/dashboard',
                         icon: '<i class="fas fa-desktop fa-1x text-dark align-middle"></i>'
                     }
                 ]
             }
         },
         {
-            path: '/user/profile',
+            path: '/profile',
             name: 'profile',
             component: Profile,
             meta: {
@@ -97,7 +112,7 @@ let router = new Router({
                     },
                     {
                         text: 'Profile',
-                        href: '/user/profile',
+                        href: '/profile',
                         icon: '<i class="fas fa-user fa-1x text-dark align-middle"></i>'
                     }
                 ],

@@ -42,8 +42,7 @@
                                     ...
                                 </i>
                                 <span v-else-if="!info"
-                                    >! Sign up or log in to start using
-                                    PlantIT.</span
+                                    >! Log in to use PlantIT.</span
                                 >
                                 <b v-else
                                     >,
@@ -65,7 +64,11 @@
                                     to="/user/dashboard"
                                     class="m-0 p-0"
                                 >
-                                    <b-button variant="outline-dark" block class="text-left">
+                                    <b-button
+                                        variant="outline-dark"
+                                        block
+                                        class="text-left"
+                                    >
                                         <i
                                             class="fas fa-desktop fa-1x fa-fw"
                                         ></i>
@@ -82,7 +85,11 @@
                                     class="m-0 p-0"
                                     to="/user/profile"
                                 >
-                                    <b-button variant="outline-dark" block class="text-left">
+                                    <b-button
+                                        variant="outline-dark"
+                                        block
+                                        class="text-left"
+                                    >
                                         <i class="fas fa-user fa-1x fa-fw"></i>
                                         Profile
                                     </b-button>
@@ -93,7 +100,11 @@
                                     to="/logout/?next=/"
                                     class="m-0 p-0"
                                 >
-                                    <b-button variant="outline-danger" class="text-left" block>
+                                    <b-button
+                                        variant="outline-danger"
+                                        class="text-left"
+                                        block
+                                    >
                                         <i
                                             class="fas fa-door-closed fa-1x fa-fw"
                                         ></i>
@@ -101,19 +112,38 @@
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
-                                    v-else
-                                    href="/login/?next=/user/dashboard"
+                                    v-if="!isLoggedIn"
+                                    href="/login/?next=/user/dashboard/"
                                     class="m-0 p-0"
                                 >
                                     <b-button
-                                        variant="success"
+                                        variant="white"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <b-img
+                                            :src="
+                                                require('@/assets/sponsors/cyversebw-notext.png')
+                                            "
+                                            height="17px"
+                                            alt="Cyverse"
+                                        ></b-img>
+                                        Log In with CyVerse
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    v-if="!isLoggedIn"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button
+                                        variant="white"
                                         block
                                         class="text-left"
                                     >
                                         <i
-                                            class="fas fa-door-open fa-1x fa-fw"
+                                            class="fab fa-github fa-1x fa-fw"
                                         ></i>
-                                        Sign Up / Log In
+                                        Log In with GitHub
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -213,11 +243,11 @@
                         <b-button
                             class="brand-img m-0 p-0"
                             v-bind:class="{ 'not-found': not_found }"
-                            variant="white"
+                            variant="outline-white"
                             style="color: white"
                         >
                             <b-img
-                                    class="m-0 p-0"
+                                class="m-0 p-0"
                                 center
                                 width="32px"
                                 :src="require('../assets/logo.png')"
@@ -263,7 +293,7 @@
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item class="m-0 p-0" title="Slack">
                         <b-button variant="outline-dark">
-                            <i class="fab fa-slack fa-1x"></i>
+                            <i class="fab fa-slack fa-2x"></i>
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -272,7 +302,7 @@
                         to="https://github.com/Computational-Plant-Science/plantit"
                     >
                         <b-button variant="outline-dark">
-                            <i class="fab fa-github fa-1x"></i>
+                            <i class="fab fa-github fa-2x"></i>
                         </b-button>
                     </b-nav-item>
                     <!--<b-nav-item class="m-0 p-0" disabled>
@@ -322,7 +352,7 @@
                             <i class="fas fa-book fa-1x fa-fw"></i>
                         </b-button>
                     </b-nav-item>-->
-                    <b-nav-item class="m-0 p-0 mt-1" disabled>
+                    <b-nav-item v-if="isLoggedIn" class="m-0 p-0 mt-1" disabled>
                         <i class="fas fa-slash fa-1x text-success"></i>
                     </b-nav-item>
                     <b-nav-item
@@ -332,7 +362,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                            <i class="fas fa-desktop fa-1x"></i>
+                            <i class="fas fa-desktop fa-2x"></i>
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -345,7 +375,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark" to="/user/profile">
-                            <i class="fas fa-user fa-1x"></i>
+                            <i class="fas fa-user fa-2x"></i>
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -355,17 +385,7 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                            <i class="fas fa-door-closed fa-1x"></i>
-                        </b-button>
-                    </b-nav-item>
-                    <b-nav-item
-                        v-else
-                        href="/login/?next=/user/dashboard"
-                        class="m-0 p-0"
-                        title="Sign Up / Log In"
-                    >
-                        <b-button variant="success">
-                            <i class="fas fa-door-open fa-1x"></i>
+                            <i class="fas fa-door-closed fa-2x"></i>
                         </b-button>
                     </b-nav-item>
                 </b-navbar-nav>
