@@ -1,6 +1,6 @@
-![alt text](https://github.com/Computational-Plant-Science/DIRT2_Webplatform/blob/master/plantit/front_end/src/assets/logo.png?raw=true)
+![alt text](https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true)
 
-# plantit [![Build Status](https://travis-ci.com/Computational-Plant-Science/DIRT2_Webplatform.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/DIRT2_Webplatform)
+# PlantIT [![Build Status](https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/plantit)
 
 **This project is under active development and is not yet stable**.
 
@@ -22,7 +22,7 @@
 
 ## Requirements
 
-The following are required to run `DIRT2_Webplatform`:
+The following are required to run `PlantIT`:
 
 - A Unix shell
 - [Docker](https://www.docker.com/)
