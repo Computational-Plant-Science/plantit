@@ -10,7 +10,7 @@
             <template v-slot:default="{ hide }">
                 <b-container class="p-3">
                     <b-row>
-                        <b-col>
+                        <b-col class="mt-2">
                             <b-button
                                 variant="outline-dark"
                                 @click="hide"
