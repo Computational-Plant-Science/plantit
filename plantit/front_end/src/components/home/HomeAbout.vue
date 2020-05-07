@@ -61,7 +61,7 @@
                 <template v-slot:footer style="background-color: white">
                     <b-row class="mb-2">
                         <b-col>
-                            <b-button variant="white" block class="text-center">
+                            <b-button variant="white" block class="text-center" href="/login/?next=/dashboard/">
                                 <b-img
                                     :src="
                                         require('@/assets/sponsors/cyversebw-notext.png')
