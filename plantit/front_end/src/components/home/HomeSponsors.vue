@@ -9,7 +9,7 @@
             header-border-variant="white"
         >
             <template slot="header" style="border: none">
-                <h2>Sponsors</h2>
+                <h1>Sponsors</h1>
                 <p>PlantIT is supported by the following organizations.</p>
             </template>
             <b-card-group columns>

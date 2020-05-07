@@ -12,7 +12,7 @@
                     header-border-variant="secondary"
                 >
                     <template slot="header" style="border: none">
-                        <h2 class="text-success">Researchers</h2>
+                        <h1 class="text-success">Researchers</h1>
                         <p class="text-white">
                             PlantIT takes care of infrastructure details so you
                             can focus on your data.

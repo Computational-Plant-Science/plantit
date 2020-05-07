@@ -212,12 +212,12 @@
                     >PlantIT</b-navbar-brand
                 >
                 <b-navbar-nav class="ml-auto m-0 p-0">
-                    <b-nav-item class="m-0 p-0">
+                    <b-nav-item class="m-0 p-0" title="Slack">
                         <b-button variant="outline-dark">
                             <i class="fab fa-slack fa-2x"></i>
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item class="m-0 p-0">
+                    <b-nav-item class="m-0 p-0" title="Github" to="https://github.com/Computational-Plant-Science/plantit">
                         <b-button variant="outline-dark">
                             <i class="fab fa-github fa-2x"></i>
                         </b-button>
@@ -309,6 +309,7 @@
                         v-else
                         href="/login/?next=/user/dashboard"
                         class="m-0 p-0"
+                        title="Log In"
                     >
                         <b-button variant="outline-dark">
                             <i class="fas fa-door-open fa-2x"></i>

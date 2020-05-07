@@ -1,9 +1,9 @@
 <template>
     <div>
         <b-container>
-            <h3>
+            <h2>
                 What is PlantIT?
-            </h3>
+            </h2>
             <hr />
             <b-row class="justify-content-md-center mb-4">
                 <b-col>
