@@ -5,13 +5,13 @@
             prompt ? 'Update User Information' : 'Edit User Information'
         "
         ok-title="Save"
-        ok-variant="dark"
+        ok-variant="success"
         cancel-variant="outline-danger"
-        header-bg-variant="dark"
-        header-border-variant="dark"
+        header-bg-variant="white"
+        header-border-variant="success"
         header-text-variant="white"
-        footer-bg-variant="dark"
-        footer-border-variant="dark"
+        footer-bg-variant="white"
+        footer-border-variant="success"
         :ok-only="prompt"
         no-close-on-esc
         @ok="save"

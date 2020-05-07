@@ -61,7 +61,7 @@
                                 <b-nav-item
                                     v-if="isLoggedIn"
                                     title="Dashboard"
-                                    to="/user/dashboard"
+                                    to="/dashboard"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -83,7 +83,7 @@
                                             : 'Profile: ' + info['username']
                                     "
                                     class="m-0 p-0"
-                                    to="/user/profile"
+                                    to="/profile"
                                 >
                                     <b-button
                                         variant="outline-dark"
@@ -113,7 +113,7 @@
                                 </b-nav-item>
                                 <b-nav-item
                                     v-if="!isLoggedIn"
-                                    href="/login/?next=/user/dashboard/"
+                                    href="/login/?next=/dashboard/"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -358,7 +358,7 @@
                     <b-nav-item
                         v-if="isLoggedIn"
                         title="Dashboard"
-                        to="/user/dashboard"
+                        to="/dashboard"
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
@@ -374,7 +374,7 @@
                         "
                         class="m-0 p-0"
                     >
-                        <b-button variant="outline-dark" to="/user/profile">
+                        <b-button variant="outline-dark" to="/profile">
                             <i class="fas fa-user fa-2x"></i>
                         </b-button>
                     </b-nav-item>

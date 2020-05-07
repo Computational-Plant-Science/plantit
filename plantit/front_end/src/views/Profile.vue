@@ -7,7 +7,8 @@
                     img-alt="Image"
                     img-top
                     style="max-width: 30rem;margin: 0 auto;"
-                    header-bg-variant="dark"
+                    header-bg-variant="white"
+                    header-border-variant="success"
                     border-variant="white"
                 >
                     <template
@@ -25,7 +26,7 @@
                             <b-col md="auto">
                                 <b-button
                                     @click="$bvModal.show('editUserInfoModal')"
-                                    variant="dark"
+                                    variant="outline-dark"
                                     v-b-tooltip.hover
                                     title="Edit user information."
                                 >
