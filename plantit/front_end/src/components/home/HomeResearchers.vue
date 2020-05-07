@@ -5,7 +5,7 @@
                 <b-card
                     class="rounded-0 text-center"
                     bg-variant="secondary"
-                    border-variant="success"
+                    border-variant="default"
                     text-variant="white"
                     sub-title-text-variant="dark"
                     header-bg-variant="secondary"

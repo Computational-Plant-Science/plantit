@@ -2,7 +2,7 @@
     <b-card
         class="rounded-0 text-center"
         bg-variant="dark"
-        border-variant="success"
+        border-variant="default"
         text-variant="white"
         header-bg-variant="dark"
         header-border-variant="dark"

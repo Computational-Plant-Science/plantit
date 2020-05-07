@@ -2,16 +2,16 @@
     <b-modal
         :id="modalId"
         :title="
-            prompt ? 'Update User Information' : 'Edit User Information'
+            prompt ? 'Please Provide User Information' : 'Edit User Information'
         "
         ok-title="Save"
         ok-variant="success"
         cancel-variant="outline-danger"
         header-bg-variant="white"
-        header-border-variant="success"
+        header-border-variant="default"
         header-text-variant="white"
         footer-bg-variant="white"
-        footer-border-variant="success"
+        footer-border-variant="default"
         :ok-only="prompt"
         no-close-on-esc
         @ok="save"

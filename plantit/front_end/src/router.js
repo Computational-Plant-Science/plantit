@@ -6,6 +6,7 @@ import Profile from './views/Profile.vue';
 import Dashboard from './views/Dashboard.vue';
 import Guide from './views/Guide.vue';
 import Login from './views/Login.vue';
+import Logout from './views/Logout.vue';
 import Auth from '@/services/apiV1/Auth.js';
 
 Vue.use(Router);
@@ -67,15 +68,39 @@ let router = new Router({
             }
         },
         {
-            path: '/login/?next=/dashboard/',
+            path: '/login?next=/dashboard/',
             name: 'login',
             component: Login,
             meta: {
                 crumb: [
                     {
                         text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
+                    },
+                    {
+                        text: 'Log In',
                         href: '/login/?next=/dashboard/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
+                        icon: '<i class="fas fa-door-open fa-1x text-dark align-middle"></i>'
+                    }
+                ]
+            }
+        },
+        {
+            path: '/logout',
+            name: 'logout',
+            component: Logout,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
+                    },
+                    {
+                        text: 'Log Out',
+                        href: '/logout',
+                        icon: '<i class="fas fa-door-closed fa-1x text-dark align-middle"></i>'
                     }
                 ]
             }

@@ -97,7 +97,7 @@
                                 <b-nav-item
                                     v-if="isLoggedIn"
                                     title="Log Out"
-                                    to="/logout/?next=/"
+                                    href="/logout"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -125,16 +125,13 @@
                                             :src="
                                                 require('@/assets/sponsors/cyversebw-notext.png')
                                             "
-                                            height="17px"
+                                            height="18px"
                                             alt="Cyverse"
                                         ></b-img>
                                         Log In with CyVerse
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item
-                                    v-if="!isLoggedIn"
-                                    class="m-0 p-0"
-                                >
+                                <b-nav-item v-if="!isLoggedIn" class="m-0 p-0">
                                     <b-button
                                         variant="white"
                                         block
@@ -170,7 +167,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-home fa-1x fa-fw"></i>
-                                        PlantIT Home
+                                        Home
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/About" class="m-0 p-0">
@@ -182,7 +179,7 @@
                                         <i
                                             class="fas fa-seedling fa-1x fa-fw"
                                         ></i>
-                                        About PlantIT
+                                        About
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/Guide" class="m-0 p-0">
@@ -229,8 +226,8 @@
         </b-sidebar>
         <b-navbar
             toggleable="lg"
-            class="logo m-0 p-0 pl-3 pr-3"
-            variant="white"
+            class="logo m-0 p-0 pl-2 pr-2"
+            variant="light"
         >
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
             <b-collapse class="m-0 p-0" is-nav>
@@ -258,24 +255,20 @@
                 </b-navbar-nav>
                 <b-breadcrumb
                     class="m-o p-0 ml-2"
-                    style="background-color: white"
+                    style="background-color: transparent"
                 >
                     <b-navbar-nav
                         v-for="crumb in crumbs"
                         :key="crumb.text"
-                        class="mt-3"
+                        class="mt-3 background-transparent"
                     >
-                        <b-nav-item
-                            class="m-0 p-0 mt-1"
-                            disabled
-                            style="background-color: white"
-                        >
+                        <b-nav-item class="m-0 p-0 mt-1" disabled>
                             <i
                                 class="fas fa-slash fa-1x text-success mirror"
                             ></i>
                         </b-nav-item>
                         <b-nav-item
-                            class="m-0 p-0 align-middle"
+                            class="m-0 p-0 align-middle background-transparent"
                             :href="crumb.href"
                         >
                             <b v-html="crumb.icon"></b>
@@ -287,7 +280,7 @@
                 <!--<b-navbar-brand
                     href="/"
                     class="align-middle ml-3 title"
-                    title="PlantIT Home"
+                    title="Home"
                     >PlantIT</b-navbar-brand
                 >-->
                 <b-navbar-nav class="ml-auto m-0 p-0">
@@ -308,7 +301,7 @@
                     <!--<b-nav-item class="m-0 p-0" disabled>
                         <i class="fas fa-slash fa-1x text-success"></i>
                     </b-nav-item>
-                    <b-nav-item to="/" class="m-0 p-0" title="PlantIT Home">
+                    <b-nav-item to="/" class="m-0 p-0" title="Home">
                         <b-button
                             variant="outline-dark"
                             block
@@ -320,7 +313,7 @@
                     <b-nav-item
                         to="/About"
                         class="m-0 p-0"
-                        title="About PlantIT"
+                        title="About"
                     >
                         <b-button
                             variant="outline-dark"
@@ -355,7 +348,7 @@
                     <b-nav-item v-if="isLoggedIn" class="m-0 p-0 mt-1" disabled>
                         <i class="fas fa-slash fa-1x text-success"></i>
                     </b-nav-item>
-                    <b-nav-item
+                    <!--<b-nav-item
                         v-if="isLoggedIn"
                         title="Dashboard"
                         to="/dashboard"
@@ -364,13 +357,15 @@
                         <b-button variant="outline-dark">
                             <i class="fas fa-desktop fa-2x"></i>
                         </b-button>
-                    </b-nav-item>
+                    </b-nav-item>-->
                     <b-nav-item
                         v-if="isLoggedIn"
                         :title="
                             loading
                                 ? 'Loading...'
-                                : 'Profile: ' + info['username']
+                                : info
+                                ? 'Profile: ' + info['username']
+                                : ''
                         "
                         class="m-0 p-0"
                     >
@@ -381,10 +376,10 @@
                     <b-nav-item
                         v-if="isLoggedIn"
                         title="Log Out"
-                        to="/logout/?next=/"
+                        href="/logout"
                         class="m-0 p-0"
                     >
-                        <b-button variant="outline-dark">
+                        <b-button variant="outline-danger">
                             <i class="fas fa-door-closed fa-2x"></i>
                         </b-button>
                     </b-nav-item>
@@ -470,7 +465,7 @@ export default {
     },
     computed: {
         isLoggedIn() {
-            return Auth.isLoggedIn();
+            return Auth.isLoggedIn() && this.info;
         },
         routeName() {
             return this.$route.name;
@@ -573,16 +568,16 @@ export default {
 
 
 .title
-    font-size: 14pt !important
+    font-size: 18pt !important
     vertical-align: middle
     font-weight: 200
     color: $dark !important
-    background-color: white
     border: none
     border-bottom: 1px solid transparent
 
 .title:hover
-    color: $secondary !important
+    color: $dark !important
+    border-bottom: 1px solid $color-highlight
 
 .mirror
     -moz-transform: scale(-1, 1)

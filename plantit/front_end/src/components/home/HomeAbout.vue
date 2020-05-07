@@ -3,10 +3,10 @@
         <b-container id="main">
             <b-card
                 align="center"
-                bg-variant="default"
+                bg-variant="light"
                 footer-bg-variant="white"
-                footer-border-variant="white"
-                border-variant="dark"
+                footer-border-variant="default"
+                border-variant="default"
                 style="max-width: 540px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
             >
                 <b-row align-v="center" class="justify-content-md-center">
@@ -58,22 +58,22 @@
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <template v-slot:footer style="background-color: white">
-                    <b-row class="mb-2">
-                        <b-col>
+                <template v-slot:footer>
+                    <b-row class="m-0 p-0 mb-1">
+                        <b-col class="m-0 p-0 mr-2">
                             <b-button variant="white" block class="text-center" href="/login/?next=/dashboard/">
                                 <b-img
                                     :src="
                                         require('@/assets/sponsors/cyversebw-notext.png')
                                     "
-                                    height="17px"
+                                    height="18px"
                                     alt="Cyverse"
                                 ></b-img>
                                 Log In with CyVerse
                             </b-button>
                         </b-col>
-                        <b-col>
-                            <b-button variant="white" block class="text-center">
+                        <b-col class="m-0 p-0 ml-2">
+                            <b-button variant="white" block class="text-center" href="/404/">
                                 <i class="fab fa-github fa-1x fa-fw"></i>
                                 Log In with GitHub
                             </b-button>
