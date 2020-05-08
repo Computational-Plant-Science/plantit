@@ -93,7 +93,7 @@
                                         </b-card>
                                         <b-card
                                             title="Wes Bonelli"
-                                            sub-title="Developer"
+                                            sub-title="Software Developer"
                                             style="min-width: 20rem"
                                         >
                                             <template
@@ -138,7 +138,7 @@
                                     <b-card-group columns>
                                         <b-card
                                             title="Chris Cotter"
-                                            sub-title="Developer"
+                                            sub-title="Software Developer"
                                             style="min-width: 20rem;"
                                         >
                                             <template
@@ -167,7 +167,7 @@
                                         </b-card>
                                         <b-card
                                             title="Abhiram Das"
-                                            sub-title="Developer"
+                                            sub-title="Software Developer"
                                             style="min-width: 20rem"
                                         >
                                             <template
@@ -216,7 +216,7 @@
                                         </b-card>
                                         <b-card
                                             title="Maria Luck"
-                                            sub-title="Developer"
+                                            sub-title="Software Developer"
                                             style="min-width: 20rem"
                                         >
                                             <template
@@ -238,9 +238,9 @@
                                 </b-tab>
                             </b-tabs>
                         </b-tab>
-                        <b-tab title="Workflow Contributors">
+                        <b-tab title="Workflow Developers">
                             <template v-slot:title class="m-0 p-0">
-                                <b class="dark">Workflow Contributors</b>
+                                <b class="dark">Workflow Developers</b>
                             </template>
                         </b-tab>
                         <b-tab title="User Community">

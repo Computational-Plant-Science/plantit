@@ -19,7 +19,7 @@
                         </p>
                     </template>
                     <b-img
-                        style="border: none"
+                        style="border: none; max-width: 70rem"
                         center
                         fluid
                         :src="require('@/assets/frontpage/icons/hex1.png')"

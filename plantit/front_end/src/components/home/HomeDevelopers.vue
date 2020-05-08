@@ -17,7 +17,7 @@
             <b-row class="mt-2">
                 <b-col md="auto">
                     <b-card
-                        sub-title="Reproducible science via code or click"
+                        sub-title="Reproducible pipelines with code or click"
                         sub-title-text-variant="success"
                         class="text-left rounded-0 overflow-hidden"
                         bg-variant="dark"

@@ -6,7 +6,7 @@
                 footer-bg-variant="white"
                 footer-border-variant="white"
                 border-variant="default"
-                style="max-width: 540px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
+                style="max-width: 475px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -20,8 +20,7 @@
                 </b-row>
                 <b-card-body class="text-center">
                     <p>
-                        PlantIT is <b>Phenomics</b>-as-a-Service software for
-                        plant science!
+                        <b>Phenomics</b>-as-a-Service for accessible plant science!
                     </p>
                 </b-card-body>
                 <b-navbar toggleable="sm" class="m-0 p-0">
@@ -51,9 +50,9 @@
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <template v-slot:footer>
-                    <b-row class="m-0 p-0 mb-1">
-                        <b-col class="m-0 p-0 mr-2">
+                <template v-slot:footer class="m-0 p-0">
+                    <b-row class="m-0 p-0">
+                        <b-col class="ml-4 mr-4 mb-4 mt-0 p-0">
                             <b-button variant="white" block class="text-center" href="/login/?next=/dashboard/">
                                 <b-img
                                     :src="
