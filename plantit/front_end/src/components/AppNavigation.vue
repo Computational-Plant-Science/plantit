@@ -532,6 +532,7 @@
 <script>
 import UserApi from '@/services/apiV1/UserManager.js';
 import Auth from '@/services/apiV1/Auth.js';
+import Version from '@/services/apiV1/VersionManager.js';
 import EditUserInfoModal from '@/components/collections/EditUserInfoModal';
 
 export default {
@@ -563,7 +564,7 @@ export default {
     data() {
         return {
             loading: true,
-            version: 'alpha',
+            version: null,
             info: {},
             crumbs: [],
             not_found: false,
@@ -575,6 +576,9 @@ export default {
     mounted: function() {
         this.reload();
         this.crumbs = this.$route.meta.crumb;
+        Version.getCurrentRelease().then(version => {
+            this.version = version;
+        });
         // this.not_found = this.$route.name === '404';
     },
     watch: {
