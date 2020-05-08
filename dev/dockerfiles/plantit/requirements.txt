@@ -3,7 +3,6 @@ psycopg2-binary
 
 #django rest framework requirements
 djangorestframework
-django-cors-headers
 
 markdown       # Markdown support for the browsable API.
 django-filter  # Filtering support

@@ -8,7 +8,7 @@
                             Logging out of PlantIT...
                         </h5>
                         <p class="text-center">
-                            Redirecting to <b-link href="https://auth.iplantcollaborative.org/cas4/logout">https://auth.iplantcollaborative.org/cas4/logout</b-link>...
+                            If you are not automatically redirected to <b-link href="https://auth.iplantcollaborative.org/cas4/logout">https://auth.iplantcollaborative.org/cas4/logout</b-link>, please click the link.
                         </p>
                     </b-col>
                 </b-row>

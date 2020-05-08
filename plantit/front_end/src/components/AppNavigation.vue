@@ -224,10 +224,7 @@
                 </b-container>
             </template>
         </b-sidebar>
-        <b-navbar
-            toggleable="lg"
-            class="logo m-0 p-0 pl-2 pr-2"
-        >
+        <b-navbar toggleable="lg" class="logo m-0 p-0 pl-2 pr-2">
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-3 mr-3">
@@ -260,7 +257,8 @@
                         v-for="crumb in crumbs"
                         :key="crumb.text"
                         class="background-transparent title mr-1"
-                        :to="crumb.href">
+                        :to="crumb.href"
+                    >
                         {{ crumb.text }}
                     </b-breadcrumb-item>
                     <!--<b-navbar-nav
@@ -454,6 +452,24 @@
             @saveUserInfo="saveUserInfo"
         >
         </EditUserInfoModal>
+        <b-alert
+            :show="reload_alert_dismiss_countdown"
+            dismissible
+            variant="success"
+            @dismissed="reload_alert_dismiss_countdown = 0"
+            @dismiss-count-down="countDownChanged"
+        >
+            <p>
+                User information updated. Thanks,
+                {{ this.info ? this.info.profile ? this.info.profile.first_name : '' : '' }}!
+            </p>
+            <b-progress
+                variant="dark"
+                :max="reload_alert_dismiss_seconds"
+                :value="reload_alert_dismiss_countdown"
+                height="2px"
+            ></b-progress>
+        </b-alert>
     </div>
 </template>
 
@@ -494,7 +510,10 @@ export default {
             version: 'alpha',
             info: {},
             crumbs: [],
-            not_found: false
+            not_found: false,
+            reload_alert_dismiss_seconds: 5,
+            reload_alert_dismiss_countdown: 0,
+            show_reload_alert: false
         };
     },
     mounted: function() {
@@ -508,14 +527,22 @@ export default {
         }
     },
     methods: {
-        reload() {
+        reload(toast) {
             UserApi.getCurrentUser().then(info => {
                 this.info = info;
                 this.loading = false;
                 if (this.profileIncomplete) {
                     this.$bvModal.show('editUserInfoModalNav');
+                } else if (toast) {
+                    this.showAlert();
                 }
             });
+        },
+        countDownChanged(dismissCountDown) {
+            this.reload_alert_dismiss_countdown = dismissCountDown;
+        },
+        showAlert() {
+            this.reload_alert_dismiss_countdown = this.reload_alert_dismiss_seconds;
         },
         saveUserInfo(
             userName,

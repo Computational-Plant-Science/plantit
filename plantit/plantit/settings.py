@@ -51,13 +51,11 @@ INSTALLED_APPS = [
     'plantit.apps.PlantITConfig',
     'front_end.apps.FrontEndConfig',
     'django_cas_ng',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -70,11 +68,6 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'django_cas_ng.backends.CASBackend',
 )
-
-CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:80',
-]
 
 CAS_SERVER_URL = "https://auth.iplantcollaborative.org/cas4/"
 # CAS_SERVER_URL = "https://auth.cyverse.org/cas5/login"

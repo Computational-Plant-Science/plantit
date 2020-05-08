@@ -1,6 +1,6 @@
 <template>
     <b-container fluid>
-        <b-row no-gutters="true">
+        <b-row no-gutters>
             <b-col>
                 <HomeAbout></HomeAbout>
                 <HomeResearchers></HomeResearchers>

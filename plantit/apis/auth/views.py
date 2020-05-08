@@ -29,4 +29,4 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('https://auth.iplantcollaborative.org/cas4/logout')
+    return redirect('https://auth.iplantcollaborative.org/cas4/logout', permanent=True)
