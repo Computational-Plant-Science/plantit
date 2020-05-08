@@ -22,7 +22,9 @@
                             </b-col>
                             <b-col md="auto">
                                 <b-button
-                                    @click="$bvModal.show('editUserInfoModal')"
+                                    @click="
+                                        $bvModal.show('editUserInfoModal')
+                                    "
                                     variant="outline-dark"
                                     v-b-tooltip.hover
                                     title="Edit user information."
@@ -80,7 +82,7 @@
                 </b-card>
             </div>
         </b-container>
-        <EditUserInfoModal
+        <!--<EditUserInfoModal
             :prompt="false"
             modal-id="editUserInfoModal"
             :username="this.info.username"
@@ -112,19 +114,16 @@
             @saveUserInfo="saveUserInfo"
             @cancel="cancel"
         >
-        </EditUserInfoModal>
+        </EditUserInfoModal>-->
     </div>
 </template>
 
 <script>
 import UserApi from '@/services/apiV1/UserManager.js';
-import EditUserInfoModal from '@/components/collections/EditUserInfoModal';
 
 export default {
     name: 'UserInfo',
-    components: {
-        EditUserInfoModal
-    },
+    components: {},
     data() {
         return {
             info: {},

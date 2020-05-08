@@ -2,7 +2,7 @@
     <b-modal
         :id="modalId"
         :title="
-            prompt ? 'Please Provide User Information' : 'Edit User Information'
+            prompt ? 'Provide User Information' : 'Edit User Information'
         "
         ok-title="Save"
         ok-variant="success"

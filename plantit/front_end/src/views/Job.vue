@@ -82,12 +82,6 @@
                         <p>
                             Job info reloaded.
                         </p>
-                        <b-progress
-                            variant="dark"
-                            :max="reloadAlertDismissSeconds"
-                            :value="reloadAlertDismissCountdown"
-                            height="2px"
-                        ></b-progress>
                     </b-alert>
                 </b-col>
             </b-row>
@@ -244,7 +238,7 @@ export default {
             if (this.job.status_set.length > 0) {
                 return this.job.status_set[0].state;
             } else {
-                return '';
+                return 0;
             }
         },
         warning_count() {

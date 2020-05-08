@@ -388,8 +388,82 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
+        <b-alert
+            :show="reload_alert_dismiss_countdown"
+            dismissible
+            variant="success"
+            @dismissed="reload_alert_dismiss_countdown < 0"
+            @dismiss-count-down="countDownChanged"
+        >
+            <p>
+                User information updated. Thanks,
+                {{ this.info ? this.info.first_name : '' }}!
+            </p>
+        </b-alert>
         <br />
         <br />
+        <EditUserInfoModal
+            :prompt="false"
+            modal-id="editUserInfoModal"
+            :username="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.username
+                    : ''
+            "
+            :first_name="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.first_name
+                    : ''
+            "
+            :last_name="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.last_name
+                    : ''
+            "
+            :country="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.country
+                    : ''
+            "
+            :continent="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.continent
+                    : ''
+            "
+            :institution="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.institution
+                    : ''
+            "
+            :institution_type="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.institution_type
+                    : ''
+            "
+            :field_of_study="
+                this.loading
+                    ? 'Loading...'
+                    : this.info
+                    ? this.info.profile.field_of_study
+                    : ''
+            "
+            @saveUserInfo="saveUserInfo"
+        >
+        </EditUserInfoModal>
         <EditUserInfoModal
             :prompt="true"
             modal-id="editUserInfoModalNav"
@@ -452,24 +526,6 @@
             @saveUserInfo="saveUserInfo"
         >
         </EditUserInfoModal>
-        <b-alert
-            :show="reload_alert_dismiss_countdown"
-            dismissible
-            variant="success"
-            @dismissed="reload_alert_dismiss_countdown = 0"
-            @dismiss-count-down="countDownChanged"
-        >
-            <p>
-                User information updated. Thanks,
-                {{ this.info ? this.info.profile ? this.info.profile.first_name : '' : '' }}!
-            </p>
-            <b-progress
-                variant="dark"
-                :max="reload_alert_dismiss_seconds"
-                :value="reload_alert_dismiss_countdown"
-                height="2px"
-            ></b-progress>
-        </b-alert>
     </div>
 </template>
 
@@ -527,14 +583,12 @@ export default {
         }
     },
     methods: {
-        reload(toast) {
+        reload() {
             UserApi.getCurrentUser().then(info => {
                 this.info = info;
                 this.loading = false;
                 if (this.profileIncomplete) {
                     this.$bvModal.show('editUserInfoModalNav');
-                } else if (toast) {
-                    this.showAlert();
                 }
             });
         },
@@ -565,6 +619,7 @@ export default {
                 fieldOfStudy
             ).then(() => {
                 this.reload();
+                this.showAlert();
             });
         }
     }
