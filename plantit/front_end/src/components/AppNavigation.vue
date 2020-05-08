@@ -131,7 +131,7 @@
                                         Log In with CyVerse
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item v-if="!isLoggedIn" class="m-0 p-0">
+                                <!--<b-nav-item v-if="!isLoggedIn" class="m-0 p-0">
                                     <b-button
                                         variant="white"
                                         block
@@ -142,7 +142,7 @@
                                         ></i>
                                         Log In with GitHub
                                     </b-button>
-                                </b-nav-item>
+                                </b-nav-item>-->
                             </b-nav>
                         </b-col>
                     </b-row>
@@ -590,20 +590,20 @@ a:hover
     text-align: end
     color: $dark !important
     margin-top: 14px !important
-    font-size: 14pt !important
+    font-size: 16pt !important
     font-weight: 200
     content: " /"
 
 .breadcrumb > li + li::marker
     color: $dark !important
     margin-top: 14px !important
-    font-size: 14pt !important
+    font-size: 16pt !important
     font-weight: 200
 
 .breadcrumb > li + li:before + li::marker
     color: $dark !important
     margin-top: 14px !important
-    font-size: 14pt !important
+    font-size: 16pt !important
     font-weight: 200
     content: " /"
 </style>

@@ -7,6 +7,9 @@
                         <h5 class="text-center">
                             Logging out of PlantIT...
                         </h5>
+                        <p class="text-center">
+                            Redirecting to <b-link href="https://auth.iplantcollaborative.org/cas4/logout">https://auth.iplantcollaborative.org/cas4/logout</b-link>...
+                        </p>
                     </b-col>
                 </b-row>
             </div>
@@ -27,7 +30,6 @@ export default {
     methods: {
         logout: function() {
             Auth.logout();
-            this.$router.push({ path: '/' })
         }
     },
     mounted() {

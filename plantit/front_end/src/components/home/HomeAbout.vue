@@ -4,7 +4,7 @@
             <b-card
                 align="center"
                 footer-bg-variant="white"
-                footer-border-variant="default"
+                footer-border-variant="white"
                 border-variant="default"
                 style="max-width: 540px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
             >
@@ -65,12 +65,12 @@
                                 Log In with CyVerse
                             </b-button>
                         </b-col>
-                        <b-col class="m-0 p-0 ml-2">
+                        <!--<b-col class="m-0 p-0 ml-2">
                             <b-button variant="white" block class="text-center" href="/404/">
                                 <i class="fab fa-github fa-1x fa-fw"></i>
                                 Log In with GitHub
                             </b-button>
-                        </b-col>
+                        </b-col>-->
                     </b-row>
                 </template>
             </b-card>
