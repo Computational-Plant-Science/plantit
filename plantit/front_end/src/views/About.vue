@@ -56,9 +56,6 @@
                                         <b-card
                                             title="Alexander Bucksch"
                                             sub-title="Principal Investigator"
-                                            border-variant="default"
-                                            footer-bg-variant="light"
-                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template
@@ -97,9 +94,6 @@
                                         <b-card
                                             title="Wes Bonelli"
                                             sub-title="Developer"
-                                            border-variant="default"
-                                            footer-bg-variant="light"
-                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template
@@ -145,9 +139,6 @@
                                         <b-card
                                             title="Chris Cotter"
                                             sub-title="Developer"
-                                            border-variant="default"
-                                            footer-bg-variant="light"
-                                            footer-border-variant="default"
                                             style="min-width: 20rem;"
                                         >
                                             <template
@@ -177,9 +168,6 @@
                                         <b-card
                                             title="Abhiram Das"
                                             sub-title="Developer"
-                                            border-variant="default"
-                                            footer-bg-variant="light"
-                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template
@@ -200,9 +188,6 @@
                                         <b-card
                                             title="Megan Flory"
                                             sub-title="Graphic Designer"
-                                            border-variant="default"
-                                            footer-bg-variant="light"
-                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template
@@ -232,9 +217,6 @@
                                         <b-card
                                             title="Maria Luck"
                                             sub-title="Developer"
-                                            border-variant="default"
-                                            footer-bg-variant="light"
-                                            footer-border-variant="default"
                                             style="min-width: 20rem"
                                         >
                                             <template

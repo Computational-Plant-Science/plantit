@@ -3,7 +3,6 @@
         <b-container id="main">
             <b-card
                 align="center"
-                bg-variant="light"
                 footer-bg-variant="white"
                 footer-border-variant="default"
                 border-variant="default"
@@ -21,7 +20,7 @@
                 </b-row>
                 <b-card-body class="text-center">
                     <p>
-                        Welcome to PlantIT: <b>Phenomics</b>-as-a-Service for
+                        PlantIT is <b>Phenomics</b>-as-a-Service software for
                         plant science!
                     </p>
                 </b-card-body>

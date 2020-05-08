@@ -10,15 +10,14 @@
         <template slot="header" style="border: none">
             <h1 class="text-success">Developers</h1>
             <p class="text-white">
-                Share pipelines with a broad audience and advance reproducible
-                science.
+                Share pipelines with a broad audience and democratize computational science.
             </p>
         </template>
         <b-container>
-            <b-row class="mt-4">
+            <b-row class="mt-2">
                 <b-col md="auto">
                     <b-card
-                        sub-title="Science via code or click"
+                        sub-title="Reproducible science via code or click"
                         sub-title-text-variant="success"
                         class="text-left rounded-0 overflow-hidden"
                         bg-variant="dark"

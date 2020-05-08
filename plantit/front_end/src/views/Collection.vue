@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-card header-bg-variant="dark" border-variant="white">
+        <b-card>
             <template
                 v-slot:header
                 v-bind:collection="this.collection"
@@ -13,14 +13,14 @@
                             Collection
                             <b-badge
                                 pill
-                                variant="dark"
-                                class="green p-0 m-0 ml-1 mr-1"
+                                variant="success"
+                                class="p-0 m-0 ml-1 mr-1"
                                 >{{ collection.pk }}</b-badge
                             >
                             <b-badge
                                 pill
-                                variant="dark"
-                                class="green p-0 m-0 ml-1 mr-1"
+                                variant="success"
+                                class="p-0 m-0 ml-1 mr-1"
                                 >{{ collection.name }}</b-badge
                             >
                         </h5>
@@ -28,13 +28,14 @@
                     <b-col md="auto">
                         <b-button
                             @click="$bvModal.show('editNameModal')"
-                            variant="dark"
+                            variant="outline-dark"
                             v-b-tooltip.hover
                             title="Edit collection name"
                         >
                             <i class="far fa-edit"></i>
                         </b-button>
                         <b-button
+                                class="ml-3"
                             size="md"
                             variant="outline-danger"
                             @click="remove()"

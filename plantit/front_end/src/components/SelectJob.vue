@@ -1,6 +1,6 @@
 <template>
     <div class="w-100 pb-4">
-        <b-card header-bg-variant="light" border-variant="default" header-border-variant="default">
+        <b-card>
             <template v-slot:header style="background-color: white">
                 <b-row>
                     <b-col class="mt-2" style="color: white">

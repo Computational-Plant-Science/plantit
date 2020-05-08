@@ -227,7 +227,6 @@
         <b-navbar
             toggleable="lg"
             class="logo m-0 p-0 pl-2 pr-2"
-            variant="light"
         >
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
             <b-collapse class="m-0 p-0" is-nav>
@@ -576,7 +575,8 @@ a
     border: none !important
 
 a:hover
-    color: $dark !important
+    // color: $color-highlight !important
+    text-decoration-color: $color-highlight
     border: none !important
 
 .mirror
@@ -589,21 +589,21 @@ a:hover
 .breadcrumb > li
     text-align: end
     color: $dark !important
-    margin-top: 13px !important
-    font-size: 25pt !important
+    margin-top: 14px !important
+    font-size: 14pt !important
     font-weight: 200
     content: " /"
 
 .breadcrumb > li + li::marker
     color: $dark !important
-    margin-top: 13px !important
-    font-size: 25pt !important
+    margin-top: 14px !important
+    font-size: 14pt !important
     font-weight: 200
 
 .breadcrumb > li + li:before + li::marker
     color: $dark !important
-    margin-top: 13px !important
-    font-size: 25pt !important
+    margin-top: 14px !important
+    font-size: 14pt !important
     font-weight: 200
     content: " /"
 </style>

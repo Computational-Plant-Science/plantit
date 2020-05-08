@@ -36,10 +36,6 @@
                             <b-card
                                 v-for="workflow in filtered"
                                 :key="workflow.name"
-                                border-variant="default"
-                                footer-bg-variant="white"
-                                header-bg-variant="light"
-                                header-border-variant="default"
                                 class="overflow-hidden p-0 m-2"
                                 style="min-width: 30rem"
                             >

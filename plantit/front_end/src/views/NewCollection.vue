@@ -1,11 +1,7 @@
 <template>
     <div>
         <b-container class="justify-content-md-center">
-            <b-card
-                header-bg-variant="dark"
-                footer-bg-variant="dark"
-                border-variant="white"
-            >
+            <b-card>
                 <template v-slot:header style="background-color: white">
                     <b-row align-v="center">
                         <b-col class="mt-2" style="color: white">
@@ -71,7 +67,7 @@
                         <b-col class="ml-1 pl-1 pr-2" md="auto">
                             <b-button
                                 type="submit"
-                                variant="dark"
+                                variant="outline-dark"
                                 @click="onSubmit"
                                 >Submit</b-button
                             >

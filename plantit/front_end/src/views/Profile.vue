@@ -7,9 +7,6 @@
                     img-alt="Image"
                     img-top
                     style="max-width: 30rem;margin: 0 auto;"
-                    header-bg-variant="light"
-                    header-border-variant="default"
-                    border-variant="default"
                 >
                     <template
                         v-slot:header

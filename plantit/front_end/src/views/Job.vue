@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-card header-bg-variant="dark" border-variant="white">
+        <b-card>
             <template
                 v-slot:header
                 v-bind:job="this.job"
@@ -13,8 +13,8 @@
                             Job
                             <b-badge
                                 pill
-                                variant="dark"
-                                class="green p-0 m-0 ml-1 mr-1"
+                                variant="success"
+                                class="dark p-0 m-0 ml-1 mr-1"
                                 >{{ job.pk }}</b-badge
                             >
                             <b-badge
@@ -38,7 +38,7 @@
                     </b-col>
                     <b-col md="auto" class="mr-0 pr-1">
                         <b-button
-                            variant="dark"
+                            variant="outline-dark"
                             @click="
                                 status_table.perPage = status_table.perPage
                                     ? null
@@ -51,7 +51,7 @@
                     </b-col>
                     <b-col md="auto" class="ml-0 pl-1">
                         <b-button
-                            variant="dark"
+                            variant="outline-dark"
                             v-b-tooltip.hover
                             title="Reload job info"
                             @click="reloadJob"
