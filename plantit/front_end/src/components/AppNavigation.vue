@@ -174,12 +174,13 @@
                                     <b-button
                                         variant="outline-dark"
                                         block
+                                        block
                                         class="text-left"
                                     >
                                         <i
                                             class="fas fa-seedling fa-1x fa-fw"
                                         ></i>
-                                        About
+                                        About PlantIT
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/Guide" class="m-0 p-0">
@@ -378,7 +379,7 @@
                     <b-nav-item
                         v-if="isLoggedIn"
                         title="Log Out"
-                        href="/logout"
+                        to="/logout"
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-danger">

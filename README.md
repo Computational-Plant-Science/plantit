@@ -2,6 +2,8 @@
 
 # PlantIT [![Build Status](https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/plantit)
 
+**Phenomics**-as-a-Service for accessible plant science! 
+
 **This project is under active development and is not yet stable**.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -38,7 +40,7 @@ Full documentation can be found [here](https://computational-plant-science.githu
 First, clone the repository:
 
 ```bash
-git clone git@github.com:Computational-Plant-Science/DIRT2_Webplatform.git
+git clone git@github.com:Computational-Plant-Science/plantit.git
 ```
 
 ### Development
@@ -87,7 +89,7 @@ The production configurations look somewhat different than development:
 - [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
 - Monitoring tools (Adminer and RabbitMQ dashboard)
 
-Before running `DIRT2_Webplatform` in a production environment, you must:
+Before running PlantIT in a production environment, you must:
 
 - Configure environment variables
 - Build the Vue front end with `npm run build` from the `plantit/front_end` directory
@@ -131,7 +133,7 @@ This will start the following:
 
 ## Environment variables
 
-Docker will read environment variables in the following format from a file named `.env` in the `DIRT2_Webplatform` root directory (if the file exists):
+Docker will read environment variables in the following format from a file named `.env` in the `plantit` root directory (if the file exists):
 
 ```
 key=value
@@ -168,9 +170,9 @@ import cryptography.fernet
 print("DJANGO_FIELD_ENCRYPTION_KEY: %s" % cryptography.fernet.Fernet.generate_key())
 ```
 
-In addition to the environment variables listed above, the following is required to run `DIRT2_Webplatform` in staging or production:
+In addition to the environment variables listed above, the following is required to run PlantIT in staging or production:
 
-- `GRAYLOG_GELF_URI`: the endpoint to route log messages to (e.g., `udp://localhost:12201` if Graylog server is running on the same host as `DIRT2_Webplatform`; alternatively, adjacent containers can connect over the Docker network by referencing the network `DIRT2_Logging_graylog` network)
+- `GRAYLOG_GELF_URI`: the endpoint to route log messages to (e.g., `udp://localhost:12201` if Graylog server is running on the same host as PlantIT; alternatively, adjacent containers can connect over the Docker network by referencing the network `plantit-logging_graylog` network)
 - `GRAYLOG_HTTP_EXTERNAL_URI`: the Graylog server HTTP API endpoint (e.g., `http://localhost:9000/`)
 - `NODE_ENV` should be set to `production`i
 - `DJANGO_DEBUG` should be set to `False`
@@ -198,7 +200,7 @@ Note also that the workflow directory name must be identical to the `app_name` c
 
 ## Clusters
 
-See [ClusterSide README](https://github.com/Computational-Plant-Science/DIRT2_ClusterSide) for information on installation and configuration of required remote Plant IT code on cluster.
+See [ClusterSide README](https://github.com/Computational-Plant-Science/plantit-clusterside) for information on installation and configuration of required remote Plant IT code on cluster.
 
 Clusters are added via the admin interface `(/admin/)`. Choose Clusters->Add Cluster. Fill in the commands
 accordingly.
@@ -211,7 +213,7 @@ For Sapelo2 (UGA's cluster), the submit command is:
 ml Python/3.6.4-foss-2018a; /home/cotter/.local/bin/clusterside submit
 ```
 
-Note that on some types of ssh connections, installation does not put DIRT2_Clusterside in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
+Note that on some types of ssh connections, installation does not put `plantit-clusterside` in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
 
 ### Cluster login configuration
 

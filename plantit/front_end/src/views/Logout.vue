@@ -8,7 +8,11 @@
                             Logging out of PlantIT...
                         </h5>
                         <p class="text-center">
-                            If you are not automatically redirected to <b-link href="https://auth.iplantcollaborative.org/cas4/logout">https://auth.iplantcollaborative.org/cas4/logout</b-link>, please click the link.
+                            If you are not automatically redirected to
+                            <b-link
+                                href="https://auth.iplantcollaborative.org/cas4/logout"
+                                >https://auth.iplantcollaborative.org/cas4/logout</b-link
+                            >, please click the link.
                         </p>
                     </b-col>
                 </b-row>
@@ -30,6 +34,9 @@ export default {
     methods: {
         logout: function() {
             Auth.logout();
+            window.location.replace(
+                'https://auth.iplantcollaborative.org/cas4/logout'
+            );
         }
     },
     mounted() {

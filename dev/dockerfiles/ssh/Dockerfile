@@ -27,8 +27,8 @@ COPY dockerfiles/ssh/qsub /usr/bin
 RUN apt-get update; apt-get install -y git python3 python3-pip
 RUN mkdir -p /opt/; \
     cd /opt; \
-    git clone https://github.com/Computational-Plant-Science/DIRT2_ClusterSide.git; \
-    cd DIRT2_ClusterSide; \
+    git clone https://github.com/Computational-Plant-Science/plantit-clusterside.git; \
+    cd plantit-clusterside; \
     pip3 install -e .
 
 RUN apt-get install libfuse2

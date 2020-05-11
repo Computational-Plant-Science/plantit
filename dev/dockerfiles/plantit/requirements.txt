@@ -30,5 +30,4 @@ dagster
 dagster-postgres
 dagster-celery
 dagster-cron
-dagster-k8s
 dagit
