@@ -29,6 +29,10 @@ SQL_PORT=5432
 SQL_NAME=postgres
 SQL_USER=postgres
 SQL_PASSWORD=$sql_password
+DAGSTER_HOME=/code/plantit
+DAGSTER_RUN_DB=run_storage
+DAGSTER_EVENT_DB=event_log_storage
+DAGSTER_SCHEDULE_DB=schedule_storage
 EOT
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."
@@ -38,33 +42,39 @@ dagster_config_file="plantit/dagster.yaml"
 echo "Checking for dagster config file '$dagster_config_file'..."
 if [ ! -f $dagster_config_file ]; then
   echo "Dagster config file '$dagster_config_file' does not exist. Creating it..."
+  sql_user=$(cut -d '=' -f 2 <<< "$(grep "SQL_USER" "$env_file")" )
+  sql_host=$(cut -d '=' -f 2 <<< "$(grep "SQL_HOST" "$env_file")" )
+  sql_port=$(cut -d '=' -f 2 <<< "$(grep "SQL_PORT" "$env_file")" )
   if [[ -n "$sql_password" ]]; then
-    password=$sql_password
+    sql_password=$sql_password
   else
-    password=$(cut -d '=' -f 2 <<< "$(grep "SQL_PASSWORD" "$env_file")" )
+    sql_password=$(cut -d '=' -f 2 <<< "$(grep "SQL_PASSWORD" "$env_file")" )
   fi
+  run_db=$(cut -d '=' -f 2 <<< "$(grep "DAGSTER_RUN_DB" "$env_file")" )
+  event_db=$(cut -d '=' -f 2 <<< "$(grep "DAGSTER_EVENT_DB" "$env_file")" )
+  schedule_db=$(cut -d '=' -f 2 <<< "$(grep "DAGSTER_SCHEDULE_DB" "$env_file")" )
   cat <<EOT >>$dagster_config_file
 run_storage:
   module: dagster_postgres.run_storage
   class: PostgresRunStorage
   config:
     postgres_db:
-      username: postgres
-      password: $password
-      hostname: postgres
-      db_name: run_storage
-      port: 5432
+      username: $sql_user
+      password: $sql_password
+      hostname: $sql_host
+      db_name: $run_db
+      port: $sql_port
 
 event_log_storage:
   module: dagster_postgres.event_log
   class: PostgresEventLogStorage
   config:
     postgres_db:
-      username: postgres
-        password: $password
-        hostname: postgres
-        db_name: event_log_storage
-        port: 5432
+      username: $sql_user
+      password: $sql_password
+      hostname: $sql_host
+      db_name: $event_db
+      port: $sql_port
 
 scheduler:
   module: dagster_cron.cron_scheduler
@@ -75,11 +85,11 @@ schedule_storage:
   class: PostgresScheduleStorage
   config:
     postgres_db:
-      username: postgres
-        password: $password
-        hostname: postgres
-        db_name: schedule_storage
-        port: 5432
+      username: $sql_user
+      password: $sql_password
+      hostname: $sql_host
+      db_name: $schedule_db
+      port: $sql_port
 
 local_artifact_storage:
   module: dagster.core.storage.root

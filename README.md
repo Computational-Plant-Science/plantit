@@ -158,6 +158,10 @@ SQL_PORT=5432
 SQL_NAME=postgres
 SQL_USER=postgres
 SQL_PASSWORD=some_password
+DAGSTER_HOME=/code/plantit
+DAGSTER_RUN_DB=run_storage
+DAGSTER_EVENT_DB=event_log_storage
+DAGSTER_SCHEDULE_DB=schedule_storage
 ```
 
 Note that `DJANGO_SECRET_KEY`, `DJANGO_FIELD_ENCRYPTION_KEY`, and `SQL_PASSWORD` are given dummy values above and should be configured appropriately in staging or production environments.
