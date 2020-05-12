@@ -8,14 +8,11 @@ touch /etc/crontab /etc/cron.*/*
 
 service cron start
 
-export DAGSTER_HOME=/opt/dagster/dagster_home
-
 # Add all schedules
-dagster schedule up
+dagster schedule up -y plantit/jobs/repository.yaml
 
 # Restart previously running schedules
-dagster schedule restart --restart-all-running
+dagster schedule restart -y plantit/jobs/repository.yaml --restart-all-running
 ####################################################################################################
 
-cd plantit
-DAGSTER_HOME=/opt/dagster/dagster_home dagit -y plantit/jobs/repository.yaml -h 0.0.0.0 -p 3000
+dagit -y plantit/jobs/repository.yaml -h 0.0.0.0 -p 3000

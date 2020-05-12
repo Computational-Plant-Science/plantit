@@ -144,6 +144,7 @@ services:
     build:
       context: .
       dockerfile: dev/dockerfiles/plantit/Dockerfile
+    working_dir: /code/plantit
     command: ["/code/dev/start-dagit.sh"]
     environment:
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
