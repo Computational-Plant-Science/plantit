@@ -132,5 +132,8 @@ $DOCKER_COMPOSE up -d irods
 $DOCKER_COMPOSE up -d cluster
 $DOCKER_COMPOSE exec cluster /bin/bash /root/wait-for-it.sh irods:1247 -- /root/configure-irods.sh
 
+echo "Creating Dagster databases..."
+$DOCKER_COMPOSE run plantit /code/dev/create-dagster-databases.sh run_storage event_log_storage schedule_storage
+
 echo "Stopping containers..."
 $DOCKER_COMPOSE stop

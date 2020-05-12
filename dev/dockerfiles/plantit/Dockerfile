@@ -9,12 +9,13 @@ RUN apt-get -y update \
 
 RUN mkdir /code
 WORKDIR /code
-COPY ./dockerfiles/plantit/requirements.txt /code/
-RUN pip install -r requirements.txt
-COPY . /code/
-RUN chmod +x /code/configure-irods.sh
-RUN chmod +x /code/configure-superuser.sh
-RUN chmod +x /code/start-dagit.sh
-RUN chmod +x /code/wait-for-it.sh
-RUN chmod +x /code/wait-for-postgres.sh
+COPY . ./
+RUN pip install -r dev/dockerfiles/plantit/requirements.txt
+RUN chmod +x dev/configure-irods.sh
+RUN chmod +x dev/configure-superuser.sh
+RUN chmod +x dev/start-dagit.sh
+RUN chmod +x dev/wait-for-it.sh
+RUN chmod +x dev/wait-for-postgres.sh
+RUN chmod +x dev/create-dagster-databases.sh
+
 
