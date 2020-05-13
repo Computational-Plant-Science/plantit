@@ -8,7 +8,7 @@ from plantit.jobs.solids import not_much, upload_workflow, setup_workflow, run_w
 @pipeline(mode_defs=[
     ModeDefinition(
         name='default',
-        executor_defs=default_executors + [celery_executor]
+        executor_defs=default_executors + [celery_executor],
     )
 ])
 def parallel_pipeline():

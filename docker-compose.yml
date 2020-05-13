@@ -22,6 +22,7 @@ services:
       - dagster-celery
     volumes:
       - .:/code
+      - dagster:/opt/dagster
     environment:
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
@@ -116,6 +117,7 @@ services:
     command: ["dagster-celery", "worker", "start", "-n", "plantit-dagster", "-y", "/code/plantit/celery_config.yaml"]
     volumes:
       - .:/code
+      - dagster:/opt/dagster
     working_dir: /code/plantit
     depends_on:
       - rabbitmq
@@ -162,6 +164,7 @@ services:
       - DAGSTER_HOME=${DAGSTER_HOME}
     volumes:
       - .:/code
+      - dagster:/opt/dagster
     ports:
     - "3000:3000"
     healthcheck:
@@ -187,3 +190,6 @@ services:
       timeout: 20s
       retries: 2
       start_period: 20s
+
+volumes:
+  dagster:

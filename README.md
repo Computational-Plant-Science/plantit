@@ -162,6 +162,9 @@ DAGSTER_HOME=/code/plantit
 DAGSTER_RUN_DB=run_storage
 DAGSTER_EVENT_DB=event_log_storage
 DAGSTER_SCHEDULE_DB=schedule_storage
+DAGSTER_FILESTORAGE_BASEDIR=/opt/dagster
+DAGSTER_CELERY_BACKEND=amqp://rabbitmq
+DAGSTER_CELERY_BROKER=amqp://rabbitmq
 ```
 
 Note that `DJANGO_SECRET_KEY`, `DJANGO_FIELD_ENCRYPTION_KEY`, and `SQL_PASSWORD` are given dummy values above and should be configured appropriately in staging or production environments.

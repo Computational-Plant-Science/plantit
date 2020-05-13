@@ -33,6 +33,9 @@ DAGSTER_HOME=/code/plantit
 DAGSTER_RUN_DB=run_storage
 DAGSTER_EVENT_DB=event_log_storage
 DAGSTER_SCHEDULE_DB=schedule_storage
+DAGSTER_FILESTORAGE_BASEDIR=/opt/dagster
+DAGSTER_CELERY_BACKEND=amqp://rabbitmq
+DAGSTER_CELERY_BROKER=amqp://rabbitmq
 EOT
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."

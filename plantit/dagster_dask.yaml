@@ -1,0 +1,5 @@
+storage:
+  filesystem:
+    config:
+      # TODO change later
+      base_dir: '/scratch/wpb36237'

@@ -1,28 +1,19 @@
 Django == 2.2.10
 psycopg2-binary
-
-#django rest framework requirements
 djangorestframework
-
-markdown       # Markdown support for the browsable API.
-django-filter  # Filtering support
-
-paramiko #python ssh support
-Celery   #job queue support
+markdown
+django-filter
+paramiko
+Celery
 django-encrypted-model-fields
 docutils
-django-model-utils # InheritanceManager used for Tasks
-humanize           # for formatting values in file manager
+django-model-utils
+humanize
 python-irodsclient
-
-# for documentation support
 Sphinx
 sphinx_rtd_theme
-
-#image caching/manipulation
 django-imagekit
 pillow
-
 django-cas-ng
 sentry-sdk
 gunicorn
@@ -31,3 +22,4 @@ dagster-postgres
 dagster-celery
 dagster-cron
 dagit
+gql

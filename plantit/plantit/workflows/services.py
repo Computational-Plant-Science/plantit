@@ -78,7 +78,7 @@ def submit(user, workflow, collection_pk, params):
         apply the given workflow to the given collection and starts the job.
 
         Args:
-            user (:class:`django.contrib.auth.models.User`): django user doing the analysis
+            user (django.contrib.auth.models.User): django user doing the analysis
             workflow (str): app_name of workflow
             collection_pk (int): pk of collection to analyze
             params (dict): workflow user-configurable parameters in the

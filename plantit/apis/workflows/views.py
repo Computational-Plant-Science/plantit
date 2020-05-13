@@ -7,9 +7,7 @@ from django.contrib.auth.decorators import login_required
 
 from plantit.workflows import registrar
 from plantit.workflows import services
-"""
-    Defines a RESTFUL API for interacting with the file manager
-"""
+
 
 @login_required
 def workflows(request):
@@ -47,6 +45,7 @@ def workflows(request):
 
     return JsonResponse(context)
 
+@login_required
 def workflow(request, workflow):
     """
         **url:** `/apis/v1/workflows/<workflow app_name>/`

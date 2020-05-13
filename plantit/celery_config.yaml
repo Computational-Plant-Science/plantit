@@ -1,4 +1,0 @@
-execution:
-  celery:
-    broker: 'amqp://rabbitmq'
-    backend: 'amqp://rabbitmq'
