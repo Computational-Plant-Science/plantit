@@ -39,13 +39,15 @@ fi
 
 script="
 from django.contrib.auth.models import User;
+from plantit.user.models import Profile
 
 username = '$username';
 password = '$password';
 email = '$email';
 
 if User.objects.filter(username=username).count()==0:
-    User.objects.create_superuser(username, email, password);
+    user = User.objects.create_superuser(username, email, password);
+    # profile = Profile.objects.create(user=user)
     print('Superuser created.');
 else:
     print('Superuser with that name already exists!');

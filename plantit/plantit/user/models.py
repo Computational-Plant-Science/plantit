@@ -2,13 +2,15 @@ from django.db import models
 
 from django.contrib.auth.models import User
 from django.db.models import Manager
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
-from plantit.job_manager.job import Job
 from plantit.collection.models import Collection
 
 # Create your models here.
+from plantit.jobs.models.job import Job
+
+
 class Profile(models.Model):
     """
         Extends the base :class:`django.contrib.auth.models.User` to
@@ -51,11 +53,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     """
     if created:
         Profile.objects.create(user=instance)
+    else:
+        instance.profile.save()
 
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    """
-        Post-Save hook for django User objects that updates the respective
-        profile object when the user object is saved.
-    """
-    instance.profile.save()
+post_save.connect(create_user_profile, sender=User)

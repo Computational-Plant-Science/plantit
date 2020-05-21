@@ -1,7 +1,6 @@
 import json
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import redirect
 
 def login_view(request):
     if request.method == 'POST':

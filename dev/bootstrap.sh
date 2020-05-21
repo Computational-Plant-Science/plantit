@@ -131,22 +131,29 @@ mkdir -p plantit/files/tmp
 
 echo "Building containers..."
 $DOCKER_COMPOSE build "$@"
+$DOCKER_COMPOSE up -d plantit
 
 echo "Running migrations..."
-$DOCKER_COMPOSE up -d --remove-orphans postgres
-$DOCKER_COMPOSE run plantit /code/dev/wait-for-postgres.sh postgres python manage.py makemigrations
-$DOCKER_COMPOSE run plantit python manage.py migrate
+$DOCKER_COMPOSE exec plantit /code/dev/wait-for-postgres.sh postgres python manage.py makemigrations
+$DOCKER_COMPOSE exec plantit python manage.py migrate
 
 echo "Creating superuser..."
-$DOCKER_COMPOSE run plantit /code/dev/configure-superuser.sh -u "admin" -p "admin" -e "admin@example.com" -v
+$DOCKER_COMPOSE exec plantit /code/dev/configure-superuser.sh -u "admin" -p "admin" -e "admin@example.com" -v
 
-echo "Configuring mock IRODS..."
+echo "Configuring mock cluster and IRODS..."
 $DOCKER_COMPOSE up -d irods
 $DOCKER_COMPOSE up -d cluster
 $DOCKER_COMPOSE exec cluster /bin/bash /root/wait-for-it.sh irods:1247 -- /root/configure-irods.sh
+if [ -f config/ssh/known_hosts ]; then
+  touch config/ssh/known_hosts
+fi
+$DOCKER_COMPOSE exec plantit bash -c "ssh-keyscan -H cluster >> /code/config/ssh/known_hosts"
+if [ ! -f config/ssh/id_rsa.pub ]; then
+  ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
+fi
 
 echo "Creating Dagster databases..."
-$DOCKER_COMPOSE run plantit /code/dev/create-dagster-databases.sh run_storage event_log_storage schedule_storage
+$DOCKER_COMPOSE exec plantit /code/dev/create-dagster-databases.sh run_storage event_log_storage schedule_storage
 
 echo "Stopping containers..."
 $DOCKER_COMPOSE stop

@@ -22,11 +22,9 @@ services:
 
   cluster:
     build:
-      context: ./dev
-      dockerfile: dockerfiles/ssh/Dockerfile
+      context: .
+      dockerfile: dev/dockerfiles/cluster/Dockerfile
     privileged: true
-    depends_on:
-      - irods
 
   irods:
     image: mjstealey/irods-provider-postgres:4.2.3

@@ -2,10 +2,11 @@
     Methods for submitting workflow jobs.
 """
 import json
-from ..job_manager.remote import UploadCollectionTask, SubmissionTask
-from ..job_manager.job import Cluster
-from ..collection.models import Collection
-from ..job_manager.job import Job, Status
+
+from plantit.collection.models import Collection
+from plantit.jobs.models.cluster import Cluster
+from plantit.jobs.models.job import Job
+from plantit.jobs.models.status import Status
 
 
 def default_params():
@@ -41,7 +42,7 @@ def add_tasks(job, cluster, params, app_name):
         to the a cluster to perform the analysis.
 
         Args:
-            job (:class:`plantit.job_manager.job.Job`): the job to add the tasks to
+            job (:class:`plantit.jobs.job.Job`): the job to add the tasks to
             cluster (:class:`plantit.job_manager.remote.Cluster`): cluster the job
                 will be submitted to
             params (dict): workflow user-configurable parameters in the
@@ -52,22 +53,22 @@ def add_tasks(job, cluster, params, app_name):
     """
 
     # Copy collection task
-    copy_task = UploadCollectionTask(name="File Upload",
-                                     description="Upload files to cluster",
-                                     job=job,
-                                     cluster=cluster,
-                                     order_pos=10)
-    copy_task.save()
+    # copy_task = UploadCollectionTask(name="File Upload",
+    #                                  description="Upload files to cluster",
+    #                                  job=job,
+    #                                  cluster=cluster,
+    #                                  order_pos=10)
+    # copy_task.save()
 
-    # Submission task
-    submit_task = SubmissionTask(name="Analysis",
-                                 description="Starts the analysis on the cluster",
-                                 app_name=app_name,
-                                 parameters=json.dumps(params),
-                                 order_pos=20,
-                                 job=job,
-                                 cluster=cluster)
-    submit_task.save()
+    # # Submission task
+    # submit_task = SubmissionTask(name="Analysis",
+    #                              description="Starts the analysis on the cluster",
+    #                              app_name=app_name,
+    #                              parameters=json.dumps(params),
+    #                              order_pos=20,
+    #                              job=job,
+    #                              cluster=cluster)
+    # submit_task.save()
 
 
 def submit(user, workflow, collection_pk, params):

@@ -1,3 +1,0 @@
-repository:
-    module: plantit.jobs.repository
-    fn: define_repo

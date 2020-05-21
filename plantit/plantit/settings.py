@@ -38,7 +38,7 @@ STATICFILES_FINDERS = [
 MEDIA_URL = "/public/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "files", "public")
 
-# Application definition
+# Application workflow
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -147,7 +147,7 @@ USE_TZ = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'plantit.job_manager.authentication.JobTokenAuthentication',
+        'plantit.jobs.authentication.JobTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
 }

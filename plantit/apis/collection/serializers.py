@@ -1,5 +1,5 @@
 from plantit.collection.models import Collection, Sample
-from plantit.file_manager import registrar
+from plantit.stores import registrar
 from rest_framework import serializers
 from ..mixins import PinnedSerilizerMethodMixin
 

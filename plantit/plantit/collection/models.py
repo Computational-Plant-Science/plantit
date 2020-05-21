@@ -1,22 +1,19 @@
 from __future__ import absolute_import, unicode_literals
-from celery import shared_task
+
+import os.path
 
 import json
-import os.path
-from django.db import models
-from django.urls import reverse
+from celery import shared_task
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-from model_utils.managers import InheritanceManager
-
-from .mixins import CastableModelMixin, CastableQuerySetMixin
-
+from django.db import models
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
 
-from .. import file_manager
-from plantit.file_manager.filesystems import registrar
-import plantit.file_manager.permissions as permissions
+import plantit.stores.permissions as permissions
+from .mixins import CastableModelMixin, CastableQuerySetMixin
+from .. import stores
+
 
 @shared_task
 def generate_thumbnail(sample_pk):
@@ -51,7 +48,7 @@ def generate_thumbnail(sample_pk):
     if(file_extension.lower() in ['.jpeg', '.jpg', '.png', '.tiff']):
         #Sample type is already a supported image type
         #Simply open the image and let the thumbnail field format the image
-        folder = file_manager.open(storage_type,base_file_path)
+        folder = stores.open(storage_type, base_file_path)
         file = folder.open(sample.path)
         sample.thumbnail.save(sample.name,file)
         sample.thumbnail_supported = True

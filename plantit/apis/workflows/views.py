@@ -1,9 +1,8 @@
-import json
-import posixpath
 import importlib
+import json
 
-from django.http import JsonResponse, Http404, HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 
 from plantit.workflows import registrar
 from plantit.workflows import services
@@ -89,6 +88,7 @@ def workflow(request, workflow):
 
     return JsonResponse(context)
 
+@login_required
 def submit(request, workflow, pk):
     """
         Submit a collection for analysis by a workflow.

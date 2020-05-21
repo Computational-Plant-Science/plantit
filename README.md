@@ -24,12 +24,10 @@
 
 ## Requirements
 
-The following are required to run `PlantIT`:
+The following are required to run `PlantIT` in a Unix environment:
 
-- A Unix shell
 - [Docker](https://www.docker.com/)
 - [npm](https://www.npmjs.com/get-npm)
-- Python 3
 
 ## Documentation
 
@@ -52,11 +50,11 @@ To set up a new (or restore a clean) development environment, run `dev/bootstrap
 - Remove migrations and stored files
 - Rebuild containers
 - Run migrations
-- Create a Django superuser (username `admin`, password `admin`)
-- Configure a mock IRODS server and compute cluster
+- Create a Django superuser (username `admin`, password `admin`) for the web application
+- Configure a mock IRODS server and compute cluster, populating a `known_hosts` file and creating a public/private keypair in `config/ssh`
 - Build the Vue front end
 
-Then bring the project up with `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up`.
+Then bring the project up with `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up` (`-d` for detached mode).
 
 This will start a number of containers:
 
@@ -68,6 +66,13 @@ This will start a number of containers:
 - `adminer`: DB admin UI (`http://localhost:8080`)
 - `irods`: mock IRODS server
 - `cluster`: mock compute cluster
+
+Next, configure `cluster` to allow key-authenticated SSH connections from `plantit`:
+
+- Grab `plantit`'s container ID from `docker ps`
+- Run `docker exec -it <ID> bash` to open a shell in `plantit`
+- Run `ssh-copy-id -i /code/config/ssh/id_rsa.pub root@cluster` with password `root`
+- Exit the `plantit` shell with `^d`
 
 To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin`.
 

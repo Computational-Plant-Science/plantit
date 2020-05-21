@@ -9,10 +9,10 @@ touch /etc/crontab /etc/cron.*/*
 service cron start
 
 # Add all schedules
-dagster schedule up -y plantit/jobs/repository.yaml
+dagster schedule up -y plantit/jobs/dagster/repository.yaml
 
 # Restart previously running schedules
-dagster schedule restart -y plantit/jobs/repository.yaml --restart-all-running
+dagster schedule restart -y plantit/jobs/dagster/repository.yaml --restart-all-running
 ####################################################################################################
 
-dagit -y plantit/jobs/repository.yaml -h 0.0.0.0 -p 3000
+dagit -y plantit/jobs/dagster/repository.yaml -h 0.0.0.0 -p 3000

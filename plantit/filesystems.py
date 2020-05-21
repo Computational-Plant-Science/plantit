@@ -1,5 +1,5 @@
-from plantit.file_manager.filesystems.irods import IRODS
-from plantit.file_manager.filesystems import registrar
+from plantit.stores.irods import IRODS
+from plantit.stores import registrar
 
 registrar.register(IRODS(name = "irods",
                          username = "rods",
