@@ -29,7 +29,7 @@ class JobTokenAuthentication(authentication.TokenAuthentication):
     def authenticate_credentials(self, key):
         model = self.get_model()
         try:
-            job = model.objects.get(auth_token=key)
+            job = model.objects.get(token=key)
         except model.DoesNotExist:
             raise exceptions.AuthenticationFailed('Invalid token.')
 

@@ -35,6 +35,7 @@ services:
       - SQL_NAME=${SQL_NAME}
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
+      - DAGIT_GRAPHQL_URL=${DAGIT_GRAPHQL_URL}
 
   postgres:
     image: postgres

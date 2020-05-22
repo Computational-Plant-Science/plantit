@@ -23,8 +23,7 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
         fields = ('pk', 'pinned', 'collection', 'workflow',
                   'cluster', 'workflow_name',
                   'created', 'work_dir',
-                  'remote_results_path',
-                  'task_set',  'status_set')
+                  'remote_results_path', 'status_set')
 
     def create(self, validated_data):
         status_data = validated_data.pop('status_set')
@@ -47,13 +46,6 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
             for status in status_data:
                 status['date'] = datetime.now()
                 Status.objects.create(job = job, **status)
-
-        task_list = validated_data.get('task_set',None)
-        if task_list:
-            for task_data in task_list:
-                task = job.task_set.get(pk=task_data['pk'])
-                if task.complete == False and task_data['complete'] == True:
-                    task.finish()
 
         job.save()
         return job

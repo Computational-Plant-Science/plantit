@@ -66,8 +66,7 @@ class Job(models.Model, AbstractJob):
         params = {
             "server_url": settings.API_URL,
             "job_pk": self.pk,
-            "auth_token": self.token,
-            "task_pk": self.pk,
+            "token": self.token,
             "parameters": json.loads(self.parameters)
         }
         params.update(registrar.list[self.workflow]) # workflow-specific parameters

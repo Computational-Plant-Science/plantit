@@ -112,6 +112,6 @@ def submit(request, workflow, pk):
     """
     params = json.loads(request.body.decode('utf-8'))
 
-    job_id = services.submit(request.user,workflow,pk,params)
+    job_id = services.submit(request.user, workflow, pk, params)
 
     return JsonResponse({"job_id": job_id})
