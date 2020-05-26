@@ -163,6 +163,13 @@ export default {
                     sortable: true
                 },
                 {
+                    key: 'created',
+                    sortable: true,
+                    formatter: value => {
+                        return moment(value).format('MM/DD/YY HH:mm');
+                    }
+                },
+                {
                     key: 'status_set[0].state',
                     label: 'Status',
                     formatter: status => {
@@ -181,16 +188,6 @@ export default {
                     }
                 },
                 {
-                    key: 'token',
-                    label: 'Token',
-                    sortable: true
-                },
-                {
-                    key: 'work_dir',
-                    label: 'Working Directory',
-                    sortable: true
-                },
-                {
                     key: 'workflow_name',
                     label: 'Workflow',
                     sortable: true
@@ -204,12 +201,10 @@ export default {
                     sortable: true
                 },
                 {
-                    key: 'date_created',
+                    key: 'work_dir',
+                    label: 'Directory',
                     sortable: true,
-                    formatter: value => {
-                        return moment(value).format('MM/DD/YY HH:mm');
-                    }
-                }
+                },
             ],
             items: [],
             workflows: []

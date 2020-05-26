@@ -9,11 +9,11 @@
                 <b-row>
                     <b-col class="mt-2" style="color:white">
                         <h5>
-                            <i class="fas fa-terminal green"></i>
+                            <i class="fas fa-terminal gray"></i>
                             Job
                             <b-badge
                                 pill
-                                variant="success"
+                                variant="transparent"
                                 class="dark p-0 m-0 ml-1 mr-1"
                                 >{{ job.pk }}</b-badge
                             >
@@ -70,6 +70,7 @@
                         <b>Created:</b> {{ job.date_created | format_date
                         }}<br />
                     </p>
+                    <p><b>Directory:</b> {{ job.work_dir }}</p>
                 </b-col>
                 <b-col>
                     <b-alert

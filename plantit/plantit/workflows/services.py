@@ -1,8 +1,11 @@
 """
     Methods for submitting workflow jobs.
 """
+import binascii
 import json
 import os
+
+from django.utils import timezone
 
 from plantit.collection.models import Collection
 from plantit.jobs.models.cluster import Cluster
@@ -58,14 +61,19 @@ def submit(user, workflow, collection_pk, params):
     cluster = Cluster.objects.get(name=params['submission_settings']['params']['cluster'])
     collection = Collection.objects.get(pk=collection_pk)
 
-    job = Job(collection=collection,
-              user=user,
-              workflow=workflow,
-              cluster=cluster,
-              parameters=json.dumps(params))
-    print(f"token: {job.token}")
-    print(f"work_dir: {job.work_dir}")
-    job.save()
+    now = timezone.now()
+
+    job = Job.objects.create(
+        collection=collection,
+        user=user,
+        workflow=workflow,
+        cluster=cluster,
+        parameters=json.dumps(params),
+        created=now,
+        token=binascii.hexlify(os.urandom(20)).decode(),
+        work_dir=now.strftime('%s') + "/"
+    )
+
     job.status_set.create(description="Created")
 
     try:
@@ -188,8 +196,8 @@ def submit(user, workflow, collection_pk, params):
             }
         }
         response = client.execute(query, params)
-        run_id = response['data']['startPipelineExecution']['run']['runId']
-        job.status_set.create(state=Status.OK, description=f"Submitted pipeline with run_id '{run_id}'")
+        # run_id = response['data']['startPipelineExecution']['run']['runId']
+        job.status_set.create(state=Status.OK, description=f"Submitted")
     except Exception as error:
         job.status_set.create(state=Status.FAILED, description=str(error))
         raise error

@@ -22,13 +22,12 @@ class JobAdmin(admin.ModelAdmin):
     inlines = [StatusInline]
 
     def save_model(self, request, obj, form, change):
-        super(JobAdmin, self).save_model(request, obj, form, change)
-
         if not obj.status_set.all():
             obj.status_set.create(job=obj,
                      state=Status.CREATED,
                      date=timezone.now(),
                      description="Job Created")
+        super(JobAdmin, self).save_model(request, obj, form, change)
 
 
 class ClusterForm(ModelForm):

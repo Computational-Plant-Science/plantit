@@ -64,7 +64,7 @@
             </template>
             <template slot="footer">
                 <b-container class="p-3">
-                    <b-row class="ml-0 mr-0 pl-0 pr-0">
+                    <b-row class="ml-0 mr-0 pl-0 pr-0 pb-3">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item to="/" class="m-0 p-0">

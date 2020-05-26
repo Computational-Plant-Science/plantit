@@ -18,8 +18,10 @@ class Job(models.Model, AbstractJob):
     class Meta:
         ordering = ['-created']
 
+    now = timezone.now()
+
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    created = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(default=now)
     token = models.CharField(max_length=40, default=binascii.hexlify(os.urandom(20)).decode())
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     submission_id = models.CharField(max_length=100, null=True, blank=True)
@@ -31,7 +33,7 @@ class Job(models.Model, AbstractJob):
     work_dir = models.CharField(max_length=100,
                                 null=True,
                                 blank=True,
-                                default=timezone.now().strftime('%s') + "/")
+                                default=now.strftime('%s') + "/")
     remote_results_path = models.CharField(max_length=100,
                                            null=True,
                                            blank=True,
@@ -42,7 +44,7 @@ class Job(models.Model, AbstractJob):
         return "Job: %s, User %s, Workflow: %s, Status: %s, Cluster: %s, Parameters: %s" % (self.pk,
                                                                                             self.user,
                                                                                             self.workflow,
-                                                                                            self.current_status().state,
+                                                                                            self.current_status().state if self.current_status() is not None else None,
                                                                                             self.cluster,
                                                                                             self.parameters)
 
@@ -53,7 +55,10 @@ class Job(models.Model, AbstractJob):
             Returns:
                 the most recent status of the job as a :class:`Status` object.
         """
-        return self.status_set.latest('date')
+        try:
+            return self.status_set.filter(date__isnull=False).latest('date')
+        except:
+            return None
 
     def get_params(self):
         """
