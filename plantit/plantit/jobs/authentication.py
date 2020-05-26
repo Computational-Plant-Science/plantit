@@ -30,6 +30,7 @@ class JobTokenAuthentication(authentication.TokenAuthentication):
         model = self.get_model()
         try:
             job = model.objects.get(token=key)
+            print(key)
         except model.DoesNotExist:
             raise exceptions.AuthenticationFailed('Invalid token.')
 

@@ -181,6 +181,16 @@ export default {
                     }
                 },
                 {
+                    key: 'token',
+                    label: 'Token',
+                    sortable: true
+                },
+                {
+                    key: 'work_dir',
+                    label: 'Working Directory',
+                    sortable: true
+                },
+                {
                     key: 'workflow_name',
                     label: 'Workflow',
                     sortable: true

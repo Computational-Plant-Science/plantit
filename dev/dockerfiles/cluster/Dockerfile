@@ -24,6 +24,7 @@ COPY dev/dockerfiles/cluster/qsub /usr/bin
 RUN apt-get update; apt-get install -y git python3 python3-pip
 RUN mkdir -p /opt/; \
     cd /opt; \
+    mkdir -p plantit-clusterside-home; \
     git clone https://github.com/Computational-Plant-Science/plantit-clusterside.git; \
     cd plantit-clusterside; \
     pip3 install -e .

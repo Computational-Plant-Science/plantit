@@ -25,9 +25,9 @@
                             </h1>
                         </b-col>
                         <b-col md="auto" class="pl-0 ml-1 pt-1">
-                            <b-badge variant="dark" class="text-success">{{
-                                version
-                            }}</b-badge>
+                            <b-badge variant="dark" class="text-success"
+                                >{{ version }}
+                            </b-badge>
                         </b-col>
                     </b-row>
                     <b-row>
@@ -52,111 +52,18 @@
                                             : info.username
                                     }}.</b
                                 >
+                                See the user
+                                <b-link to="/Guide">Guide</b-link>
+                                to learn how to run workflows, or the developer
+                                <b-link to="/Docs">Docs</b-link>
+                                to create your own.
                             </p>
                         </b-col>
                     </b-row>
-                    <b-row class="ml-0 mr-0 pl-0 pr-0">
-                        <b-col class="ml-0 mr-0 pl-0 pr-0">
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    title="Dashboard"
-                                    to="/dashboard"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-desktop fa-1x fa-fw"
-                                        ></i>
-                                        Dashboard
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    :title="
-                                        loading
-                                            ? 'Loading...'
-                                            : 'Profile: ' + info['username']
-                                    "
-                                    class="m-0 p-0"
-                                    href="/profile"
-                                >
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i class="fas fa-user fa-1x fa-fw"></i>
-                                        Profile
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    title="Log Out"
-                                    href="/logout"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="outline-danger"
-                                        class="text-left"
-                                        block
-                                    >
-                                        <i
-                                            class="fas fa-door-closed fa-1x fa-fw"
-                                        ></i>
-                                        Log Out
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-if="!isLoggedIn"
-                                    href="/login/?next=/dashboard/"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="white"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <b-img
-                                            :src="
-                                                require('@/assets/sponsors/cyversebw-notext.png')
-                                            "
-                                            height="18px"
-                                            alt="Cyverse"
-                                        ></b-img>
-                                        Log In with CyVerse
-                                    </b-button>
-                                </b-nav-item>
-                                <!--<b-nav-item v-if="!isLoggedIn" class="m-0 p-0">
-                                    <b-button
-                                        variant="white"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fab fa-github fa-1x fa-fw"
-                                        ></i>
-                                        Log In with GitHub
-                                    </b-button>
-                                </b-nav-item>-->
-                            </b-nav>
-                        </b-col>
-                    </b-row>
-                    <b-row>
-                        <b-col>
-                            <p class="m-3">
-                                See the
-                                <b-link to="/Guide">User Guide</b-link> to learn
-                                how to run workflows, or check out the
-                                <b-link to="/Docs">Developer Docs</b-link> to
-                                create your own.
-                            </p>
-                        </b-col>
-                    </b-row>
+                </b-container>
+            </template>
+            <template slot="footer">
+                <b-container class="p-3">
                     <b-row class="ml-0 mr-0 pl-0 pr-0">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
@@ -164,7 +71,7 @@
                                     <b-button
                                         variant="outline-dark"
                                         block
-                                        class="text-left"
+                                        class="text-center"
                                     >
                                         <i class="fas fa-home fa-1x fa-fw"></i>
                                         Home
@@ -174,49 +81,44 @@
                                     <b-button
                                         variant="outline-dark"
                                         block
-                                        block
-                                        class="text-left"
+                                        class="text-center"
                                     >
                                         <i
                                             class="fas fa-seedling fa-1x fa-fw"
                                         ></i>
-                                        About PlantIT
+                                        About
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/Guide" class="m-0 p-0">
                                     <b-button
                                         variant="outline-dark"
                                         block
-                                        class="text-left"
+                                        class="text-center"
                                     >
                                         <i
                                             class="fas fa-map-signs fa-1x fa-fw"
                                         ></i>
-                                        User Guide
+                                        Guide
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/Documentation" class="m-0 p-0">
                                     <b-button
                                         variant="outline-dark"
                                         block
-                                        class="text-left"
+                                        class="text-center"
                                     >
                                         <i class="fas fa-book fa-1x fa-fw"></i>
-                                        Developer Docs
+                                        Docs
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
                         </b-col>
                     </b-row>
-                </b-container>
-            </template>
-            <template slot="footer">
-                <b-container class="p-3">
                     <b-row>
                         <b-col align-self="center">
                             <b-img
                                 center
-                                width="100px"
+                                width="75px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -229,59 +131,50 @@
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-3 mr-3">
-                    <b-nav-item
-                        class="m-0 p-0"
-                        v-b-toggle.sidebar-left
-                        title="Show Sidebar"
-                    >
+                    <b-nav-item class="m-0 p-0" v-b-toggle.sidebar-left>
                         <b-button
                             class="brand-img m-0 p-0"
                             v-bind:class="{ 'not-found': not_found }"
                             variant="outline-white"
                             style="color: white"
+                            @mouseenter="titleContent = 'sidebar'"
+                            @mouseleave="titleContent = 'breadcrumb'"
                         >
                             <b-img
                                 class="m-0 p-0"
                                 center
-                                width="32px"
+                                width="30px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
                         </b-button>
                     </b-nav-item>
                 </b-navbar-nav>
-                <b-breadcrumb
-                    class="m-o p-0 ml-2"
-                    style="background-color: transparent"
-                >
-                    <b-breadcrumb-item
-                        v-for="crumb in crumbs"
-                        :key="crumb.text"
-                        class="background-transparent title mr-1"
-                        :to="crumb.href"
+                <transition name="component-fade" mode="out-in">
+                    <b-breadcrumb
+                        class="m-o p-0 ml-2"
+                        style="background-color: transparent"
+                        v-if="titleContent === 'sidebar'"
                     >
-                        {{ crumb.text }}
-                    </b-breadcrumb-item>
-                    <!--<b-navbar-nav
-                        v-for="crumb in crumbs"
-                        :key="crumb.text"
-                        class="mt-3 background-transparent"
+                        <b-breadcrumb-item disabled>
+                            Show Sidebar
+                        </b-breadcrumb-item>
+                    </b-breadcrumb>
+                    <b-breadcrumb
+                        class="m-o p-0 ml-2"
+                        style="background-color: transparent"
+                        v-if="titleContent === 'breadcrumb'"
                     >
-                        <b-nav-item class="m-0 p-0 mt-1" disabled>
-                            <i
-                                class="fas fa-slash fa-1x text-dark mirror"
-                            ></i>
-                        </b-nav-item>
-                        <b-nav-item
-                            class="m-0 p-0 align-middle background-transparent"
-                            :href="crumb.href"
+                        <b-breadcrumb-item
+                            v-for="crumb in crumbs"
+                            :key="crumb.text"
+                            class="background-transparent title mr-1"
+                            :to="crumb.href"
                         >
-                            <b v-html="crumb.icon"></b>
-                            <span class="ml-2 title">{{ crumb.text }}</span>
-                        </b-nav-item>
-                    </b-navbar-nav>-->
-                </b-breadcrumb>
-
+                            {{ crumb.text }}
+                        </b-breadcrumb-item>
+                    </b-breadcrumb>
+                </transition>
                 <!--<b-navbar-brand
                     href="/"
                     class="align-middle ml-3 title"
@@ -291,7 +184,8 @@
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item class="m-0 p-0" title="Slack">
                         <b-button variant="outline-dark">
-                            <i class="fab fa-slack fa-2x"></i>
+                            <i class="fab fa-slack fa-1x"></i>
+                            Slack
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -300,7 +194,8 @@
                         to="https://github.com/Computational-Plant-Science/plantit"
                     >
                         <b-button variant="outline-dark">
-                            <i class="fab fa-github fa-2x"></i>
+                            <i class="fab fa-github fa-1x"></i>
+                            GitHub
                         </b-button>
                     </b-nav-item>
                     <!--<b-nav-item class="m-0 p-0" disabled>
@@ -357,7 +252,8 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
-                            <i class="fas fa-desktop fa-2x"></i>
+                            <i class="fas fa-desktop fa-1x"></i>
+                            Dashboard
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -373,7 +269,8 @@
                         to="/profile"
                     >
                         <b-button variant="outline-dark">
-                            <i class="fas fa-user fa-2x"></i>
+                            <i class="fas fa-user fa-1x"></i>
+                            Profile
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -383,7 +280,8 @@
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-danger">
-                            <i class="fas fa-door-closed fa-2x"></i>
+                            <i class="fas fa-door-closed fa-1x"></i>
+                            Log Out
                         </b-button>
                     </b-nav-item>
                 </b-navbar-nav>
@@ -571,7 +469,8 @@ export default {
             not_found: false,
             reload_alert_dismiss_seconds: 5,
             reload_alert_dismiss_countdown: 0,
-            show_reload_alert: false
+            show_reload_alert: false,
+            titleContent: 'breadcrumb'
         };
     },
     mounted: function() {
@@ -677,7 +576,7 @@ a:hover
     text-align: end
     color: $dark !important
     margin-top: 14px !important
-    font-size: 16pt !important
+    font-size: 14pt !important
     font-weight: 200
     content: " /"
 
@@ -693,4 +592,10 @@ a:hover
     font-size: 16pt !important
     font-weight: 200
     content: " /"
+
+.component-fade-enter-active, .component-fade-leave-active
+  transition: opacity .3s ease
+
+.component-fade-enter, .component-fade-leave-to
+  opacity: 0
 </style>

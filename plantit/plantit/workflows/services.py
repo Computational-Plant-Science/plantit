@@ -63,6 +63,8 @@ def submit(user, workflow, collection_pk, params):
               workflow=workflow,
               cluster=cluster,
               parameters=json.dumps(params))
+    print(f"token: {job.token}")
+    print(f"work_dir: {job.work_dir}")
     job.save()
     job.status_set.create(description="Created")
 
@@ -155,7 +157,8 @@ def submit(user, workflow, collection_pk, params):
                                     "collection": {
                                         "name": collection.name,
                                         "storage_type": collection.storage_type,
-                                        "base_file_path": collection.base_file_path
+                                        "base_file_path": collection.base_file_path,
+                                        "sample_set": json.loads(collection.to_json())['sample_set']
                                     },
                                     "workflow": workflow,
                                     "work_dir": job.work_dir,
@@ -180,11 +183,15 @@ def submit(user, workflow, collection_pk, params):
                                 }
                             }
                         }
-                    }}}}
-        client.execute(query, params)
-        job.status_set.create(state=Status.OK, description="Submitted")
-    except Exception as e:
-        job.status_set.create(state=Status.FAILED, description=str(e))
-        raise e
+                    }
+                }
+            }
+        }
+        response = client.execute(query, params)
+        run_id = response['data']['startPipelineExecution']['run']['runId']
+        job.status_set.create(state=Status.OK, description=f"Submitted pipeline with run_id '{run_id}'")
+    except Exception as error:
+        job.status_set.create(state=Status.FAILED, description=str(error))
+        raise error
 
     return job.pk

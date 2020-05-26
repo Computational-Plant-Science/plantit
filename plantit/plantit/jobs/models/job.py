@@ -63,11 +63,21 @@ class Job(models.Model, AbstractJob):
             Returns:
                 JSON Object containing workflow parameters for this job.
         """
+
+        # self.api_version = params['api_version']
+        # self.singularity_url = params['singularity_url']
+        # self.token = params['token']
+        # self.job_pk = params['job_pk']
+        # self.server_url = params['server_url']
+        # self.pre_commands = params.get('pre_commands', None)
+        # self.singularity_flags = params.get('singularity_flags', [])
+        # self.key_order = params.get('key_order', None)
+        # self.args = params['parameters']
         params = {
             "server_url": settings.API_URL,
             "job_pk": self.pk,
             "token": self.token,
-            "parameters": json.loads(self.parameters)
+            "parameters": json.loads(self.parameters),
         }
         params.update(registrar.list[self.workflow]) # workflow-specific parameters
 

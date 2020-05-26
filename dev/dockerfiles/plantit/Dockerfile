@@ -7,6 +7,7 @@ RUN apt-get -y update \
     && apt-get install -yqq cron \
     && apt-get install -y openssh-client \
     && apt-get install -y sshpass \
+    && apt-get install -y curl vim \
     && apt-get autoclean
 
 RUN mkdir /code

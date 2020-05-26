@@ -36,11 +36,6 @@ let router = new Router({
             meta: {
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
-                    },
-                    {
                         text: 'About',
                         href: '/about',
                         icon: '<i class="fas fa-seedling fa-1x text-dark align-middle"></i>'
@@ -55,12 +50,7 @@ let router = new Router({
             meta: {
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
-                    },
-                    {
-                        text: 'User Guide',
+                        text: 'Guide',
                         href: '/guide',
                         icon: '<i class="fas fa-map-signs fa-1x text-dark align-middle"></i>'
                     }
@@ -73,11 +63,6 @@ let router = new Router({
             component: Login,
             meta: {
                 crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
-                    },
                     {
                         text: 'Log In',
                         href: '/login/?next=/dashboard/',
@@ -93,11 +78,6 @@ let router = new Router({
             meta: {
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
-                    },
-                    {
                         text: 'Log Out',
                         href: '/logout',
                         icon: '<i class="fas fa-door-closed fa-1x text-dark align-middle"></i>'
@@ -112,11 +92,6 @@ let router = new Router({
             meta: {
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
-                    },
-                    {
                         text: 'Dashboard',
                         href: '/dashboard',
                         icon: '<i class="fas fa-desktop fa-1x text-dark align-middle"></i>'
@@ -130,11 +105,6 @@ let router = new Router({
             component: Profile,
             meta: {
                 crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
-                    },
                     {
                         text: 'Profile',
                         href: '/profile',

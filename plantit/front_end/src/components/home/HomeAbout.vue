@@ -6,7 +6,7 @@
                 footer-bg-variant="white"
                 footer-border-variant="white"
                 border-variant="default"
-                style="max-width: 475px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
+                style="max-width: 400px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -19,9 +19,7 @@
                     </b-col>
                 </b-row>
                 <b-card-body class="text-center">
-                    <p>
-                        <b>Phenomics</b>-as-a-Service for accessible plant science!
-                    </p>
+                    <p><b>Phenomics</b>-as-a-Service for plant science!</p>
                 </b-card-body>
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
@@ -30,21 +28,21 @@
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-seedling fa-2x"></i>
                                     <br />
-                                    About PlantIT
+                                    About
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/Guide" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-map-signs fa-2x"></i>
                                     <br />
-                                    User Guide
+                                    Guide
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/Documentation" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-book fa-2x"></i>
                                     <br />
-                                    Developer Docs
+                                    Docs
                                 </b-button>
                             </b-nav-item>
                         </b-navbar-nav>
@@ -52,8 +50,13 @@
                 </b-navbar>
                 <template v-slot:footer class="m-0 p-0">
                     <b-row class="m-0 p-0">
-                        <b-col class="ml-4 mr-4 mb-4 mt-0 p-0">
-                            <b-button variant="white" block class="text-center" href="/login/?next=/dashboard/">
+                        <b-col class="ml-2 mr-2 mb-4 mt-0 p-0">
+                            <b-button
+                                variant="white"
+                                block
+                                class="text-center"
+                                href="/login/?next=/dashboard/"
+                            >
                                 <b-img
                                     :src="
                                         require('@/assets/sponsors/cyversebw-notext.png')
