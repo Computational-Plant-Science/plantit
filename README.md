@@ -59,7 +59,8 @@ Then bring the project up with `docker-compose -f docker-compose.yml -f docker-c
 This will start a number of containers:
 
 - `plantit`: Django web application (`http://localhost:80`)
-- `celery`: Celery worker
+- `dagit`: Dagster Dagit instance (`http://localhost:3000`)
+- `dagster-celery`: Celery worker for Dagster
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `postgres`: PostgreSQL database
 - `flower`: Celery monitoring UI (`http://localhost:5555`)
@@ -129,7 +130,8 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 This will start the following:
 
 - `plantit`: Django web application (`http://<host>:80`)
-- `celery`: Celery worker
+- `dagit`: Dagster Dagit instance (`http://<host>:3000`)
+- `dagster-celery`: Celery worker for Dagster
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `postgres`: PostgreSQL database
 - `flower`: Celery monitoring UI (`http://localhost:5555`)
@@ -201,11 +203,12 @@ The following variables are required only in production:
 
 Workflows created with the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be plugged into the web platform by placing workflow repositories in the `django/workflows` directory.
 
-Note that the `plantit` and `celery` containers must be restarted to reload workflows:
+Note that the  `dagit`, and `dagster-celery`, and `plantit` containers must be restarted to reload workflows:
 
 ```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart dagit
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart dagster-celery
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart plantit
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart celery
 ```
 
 Note also that the workflow directory name must be identical to the `app_name` configured when the workflow was created (this can also be edited later in the `WORKFLOW_CONFIG` dictionary in `workflow.py`.
