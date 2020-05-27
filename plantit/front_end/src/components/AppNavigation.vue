@@ -32,7 +32,7 @@
                     </b-row>
                     <b-row>
                         <b-col>
-                            <p class="m-3">
+                            <p class="mr-4 ml-4 pt-2">
                                 Welcome<i v-if="loading">
                                     <b-spinner
                                         variant="secondary"
@@ -52,26 +52,24 @@
                                             : info.username
                                     }}.</b
                                 >
-                                See the user
+                            </p>
+                            <p class="mr-4 ml-4">
+                                See the
                                 <b-link to="/Guide">Guide</b-link>
-                                to learn how to run workflows, or the developer
+                                to learn how to run workflows, or the
                                 <b-link to="/Docs">Docs</b-link>
                                 to create your own.
                             </p>
                         </b-col>
                     </b-row>
-                </b-container>
-            </template>
-            <template slot="footer">
-                <b-container class="p-3">
-                    <b-row class="ml-0 mr-0 pl-0 pr-0 pb-3">
+                    <b-row class="ml-0 mr-0 pl-0 pr-0">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item to="/" class="m-0 p-0">
                                     <b-button
                                         variant="outline-dark"
                                         block
-                                        class="text-center"
+                                        class="text-left"
                                     >
                                         <i class="fas fa-home fa-1x fa-fw"></i>
                                         Home
@@ -81,7 +79,7 @@
                                     <b-button
                                         variant="outline-dark"
                                         block
-                                        class="text-center"
+                                        class="text-left"
                                     >
                                         <i
                                             class="fas fa-seedling fa-1x fa-fw"
@@ -93,7 +91,7 @@
                                     <b-button
                                         variant="outline-dark"
                                         block
-                                        class="text-center"
+                                        class="text-left"
                                     >
                                         <i
                                             class="fas fa-map-signs fa-1x fa-fw"
@@ -105,10 +103,114 @@
                                     <b-button
                                         variant="outline-dark"
                                         block
-                                        class="text-center"
+                                        class="text-left"
                                     >
                                         <i class="fas fa-book fa-1x fa-fw"></i>
                                         Docs
+                                    </b-button>
+                                </b-nav-item>
+                            </b-nav>
+                        </b-col>
+                    </b-row>
+                    <b-row>
+                        <b-col>
+                            <p class="mr-4 ml-4 pt-2">
+                                Join the conversation on Slack or contribute on GitHub.
+                            </p>
+                        </b-col>
+                    </b-row>
+                    <b-row class="ml-0 mr-0 pl-0 pr-0">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0">
+                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
+                                <b-nav-item class="m-0 p-0" title="Slack">
+                                    <b-button
+                                        variant="outline-dark"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i class="fab fa-slack fa-1x fa-fw"></i>
+                                        Slack
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    class="m-0 p-0"
+                                    title="Github"
+                                    to="https://github.com/Computational-Plant-Science/plantit"
+                                >
+                                    <b-button
+                                        variant="outline-dark"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i
+                                            class="fab fa-github fa-1x fa-fw"
+                                        ></i>
+                                        GitHub
+                                    </b-button>
+                                </b-nav-item>
+                            </b-nav>
+                        </b-col>
+                    </b-row>
+                </b-container>
+            </template>
+            <template slot="footer">
+                <b-container class="p-3">
+                    <hr />
+                    <b-row class="ml-0 mr-0 pl-0 pr-0 pb-3">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0">
+                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
+                                <b-nav-item
+                                    v-if="isLoggedIn"
+                                    title="Dashboard"
+                                    to="/dashboard"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button
+                                        variant="outline-dark"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i
+                                            class="fas fa-desktop fa-1x fa-fw"
+                                        ></i>
+                                        Dashboard
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    v-if="isLoggedIn"
+                                    class="m-0 p-0"
+                                    to="/profile"
+                                >
+                                    <b-button
+                                        variant="outline-dark"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i class="fas fa-user fa-1x fa-fw"></i>
+                                        {{
+                                            loading
+                                                ? 'Loading...'
+                                                : info
+                                                ? 'Profile (' + info['username'] + ')'
+                                                : ''
+                                        }}
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    v-if="isLoggedIn"
+                                    title="Log Out"
+                                    to="/logout"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button
+                                        variant="outline-danger"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i
+                                            class="fas fa-door-closed fa-1x fa-fw"
+                                        ></i>
+                                        Log Out
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -182,22 +284,6 @@
                     >PlantIT</b-navbar-brand
                 >-->
                 <b-navbar-nav class="ml-auto m-0 p-0">
-                    <b-nav-item class="m-0 p-0" title="Slack">
-                        <b-button variant="outline-dark">
-                            <i class="fab fa-slack fa-1x"></i>
-                            Slack
-                        </b-button>
-                    </b-nav-item>
-                    <b-nav-item
-                        class="m-0 p-0"
-                        title="Github"
-                        to="https://github.com/Computational-Plant-Science/plantit"
-                    >
-                        <b-button variant="outline-dark">
-                            <i class="fab fa-github fa-1x"></i>
-                            GitHub
-                        </b-button>
-                    </b-nav-item>
                     <!--<b-nav-item class="m-0 p-0" disabled>
                         <i class="fas fa-slash fa-1x text-success"></i>
                     </b-nav-item>
@@ -594,8 +680,8 @@ a:hover
     content: " /"
 
 .component-fade-enter-active, .component-fade-leave-active
-  transition: opacity .3s ease
+    transition: opacity .3s ease
 
 .component-fade-enter, .component-fade-leave-to
-  opacity: 0
+    opacity: 0
 </style>

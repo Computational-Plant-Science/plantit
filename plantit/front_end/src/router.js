@@ -124,11 +124,6 @@ let router = new Router({
             meta: {
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle"></i>'
-                    },
-                    {
                         text: '404',
                         icon: '<i class="fas fa-question fa-1x text-dark align-middle"></i>'
                     }

@@ -61,6 +61,8 @@ def submit(user, workflow, collection_pk, params):
     cluster = Cluster.objects.get(name=params['submission_settings']['params']['cluster'])
     collection = Collection.objects.get(pk=collection_pk)
 
+    print(json.dumps(params))
+
     now = timezone.now()
 
     job = Job.objects.create(
@@ -180,14 +182,15 @@ def submit(user, workflow, collection_pk, params):
                                         "submit_commands": cluster.submit_commands,
                                         "workdir": cluster.workdir
                                     },
-                                    "parameters": {
-                                        "server_url": os.environ['DJANGO_API_URL'],
-                                        "job_pk": job.pk,
-                                        "token": job.token,
-                                        "parameters": job.get_params(),
-                                        "app_url_pattern": f"workflows:{workflow}:analyze",
-                                        "icon_url": f"/assets/workflow_icons/{workflow}.png"
-                                    }
+                                    "parameters": json.loads(job.get_params()),
+                                    # "parameters": {
+                                    #     "server_url": os.environ['DJANGO_API_URL'],
+                                    #     "job_pk": job.pk,
+                                    #     "token": job.token,
+                                    #     "parameters": job.get_params(),
+                                    #     "app_url_pattern": f"workflows:{workflow}:analyze",
+                                    #     "icon_url": f"/assets/workflow_icons/{workflow}.png"
+                                    # }
                                 }
                             }
                         }
