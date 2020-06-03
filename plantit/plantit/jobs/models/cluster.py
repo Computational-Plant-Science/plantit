@@ -18,8 +18,9 @@ class Cluster(models.Model):
                                        help_text="ssh port")
     hostname = models.CharField(max_length=250,
                                 help_text="ssh hostname")
+    pre_commands = models.TextField(help_text="Commands to run before starting jobs.")
     submit_commands = models.TextField(default="clusterside submit",
-                                       help_text="Commands to run on the cluster to submit a job.")
+                                       help_text="Commands to run to submit a job.")
 
     def __str__(self):
         return self.name

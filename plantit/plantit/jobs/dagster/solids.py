@@ -136,7 +136,7 @@ def upload_workflow(job: Dict) -> Dict:
 @solid
 def execute_workflow(context, job: Dict) -> Dict:
     try:
-        cmd = "cd " + path.join(job['cluster']['workdir'], job['work_dir']) + "; " + job['cluster']['submit_commands']
+        cmd = "ml load ; cd " + path.join(job['cluster']['workdir'], job['work_dir']) + "; " + job['cluster']['submit_commands']
         ssh = SSH(job['cluster']['hostname'], job['cluster']['port'], job['cluster']['username'], job['cluster']['password'])
         with ssh:
             stdin, stdout, stderr = ssh.client.exec_command(cmd)

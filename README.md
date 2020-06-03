@@ -2,7 +2,7 @@
 
 # PlantIT [![Build Status](https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/plantit)
 
-**Phenomics**-as-a-Service for accessible plant science! 
+**Phenomics**-as-a-Service software for accessible, reproducible plant science.
 
 **This project is under active development and is not yet stable**.
 
@@ -228,7 +228,7 @@ For Sapelo2 (UGA's cluster), the submit command is:
 ml Python/3.6.4-foss-2018a; /home/cotter/.local/bin/clusterside submit
 ```
 
-Note that on some types of ssh connections, installation does not put `plantit-clusterside` in the path. If the cluster throwing a "clusterside not found" error when submitting jobs. Try using the whole path of clusterside for submitting. This can be found by logging in to the cluster as the user PlantIT uses to submit the jobs and executing which clusterside
+Note that in some environments, [`plantit-clusterside`](https://github.com/Computational-Plant-Science/plantit-clusterside) may not automatically be added to `$PATH` upon installation; either update `$PATH` or use `plantit-clusterside`'s absolute path.
 
 ### Cluster login configuration
 

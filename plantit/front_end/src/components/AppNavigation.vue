@@ -42,8 +42,8 @@
                                     ...
                                 </i>
                                 <span v-else-if="!info"
-                                    >! Log in to use PlantIT.</span
-                                >
+                                    >! Log in to use PlantIT.
+                                </span>
                                 <b v-else
                                     >,
                                     {{
@@ -53,6 +53,33 @@
                                     }}.</b
                                 >
                             </p>
+                        </b-col>
+                    </b-row>
+                    <b-row class="m-0 p-0 pb-3" v-if="!info">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0">
+                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
+                                <b-nav-item to="/" class="m-0 p-0">
+                                    <b-button
+                                        variant="white"
+                                        block
+                                        class="text-left m-0"
+                                        href="/login/?next=/dashboard/"
+                                    >
+                                        <b-img
+                                            :src="
+                                                require('@/assets/sponsors/cyversebw-notext.png')
+                                            "
+                                            height="18px"
+                                            alt="Cyverse"
+                                        ></b-img>
+                                        Log In with CyVerse
+                                    </b-button>
+                                </b-nav-item>
+                            </b-nav>
+                        </b-col>
+                    </b-row>
+                    <b-row class="ml-0 mr-0 pl-0 pr-0">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <p class="mr-4 ml-4">
                                 See the
                                 <b-link to="/Guide">Guide</b-link>
@@ -60,10 +87,6 @@
                                 <b-link to="/Docs">Docs</b-link>
                                 to create your own.
                             </p>
-                        </b-col>
-                    </b-row>
-                    <b-row class="ml-0 mr-0 pl-0 pr-0">
-                        <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item to="/" class="m-0 p-0">
                                     <b-button
@@ -114,8 +137,9 @@
                     </b-row>
                     <b-row>
                         <b-col>
-                            <p class="mr-4 ml-4 pt-2">
-                                Join the conversation on Slack or contribute on GitHub.
+                            <p class="mr-4 ml-4 pt-3">
+                                Join the conversation on Slack or contribute on
+                                GitHub.
                             </p>
                         </b-col>
                     </b-row>
@@ -135,7 +159,7 @@
                                 <b-nav-item
                                     class="m-0 p-0"
                                     title="Github"
-                                    to="https://github.com/Computational-Plant-Science/plantit"
+                                    href="https://github.com/Computational-Plant-Science/plantit"
                                 >
                                     <b-button
                                         variant="outline-dark"
@@ -191,7 +215,9 @@
                                             loading
                                                 ? 'Loading...'
                                                 : info
-                                                ? 'Profile (' + info['username'] + ')'
+                                                ? 'Profile (' +
+                                                  info['username'] +
+                                                  ')'
                                                 : ''
                                         }}
                                     </b-button>

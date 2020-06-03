@@ -2,15 +2,15 @@
     <div>
         <b-container>
             <h2>
-                What is PlantIT?
+                About PlantIT
             </h2>
             <hr />
             <b-row class="justify-content-md-center mb-4">
                 <b-col>
                     <p>
-                        PlantIT is a workflow automation platform for the
-                        phenomics community, developed and maintained by the
-                        University of Georgia's
+                        PlantIT is a workflow automation platform for
+                        computational plant phenomics, developed and maintained
+                        by the University of Georgia's
                         <b-link
                             href="https://www.computational-plant-science.org/joomla30/"
                             >Computational Plant Science lab
@@ -19,11 +19,11 @@
                         <b-link
                             href="https://arpa-e.energy.gov/?q=arpa-e-programs/roots"
                             >ARPA-E ROOTS project</b-link
-                        >. PlantIT allows computational researchers to make
-                        their algorithms available to a broad community, and
-                        offers biological researchers an easy-to-use interface
-                        to apply algorithms in their own work. Users can
-                        schedule reproducible pipelines in high-performance and
+                        >. PlantIT lets developers share their algorithms with a
+                        broad research community, and offers researchers an
+                        easy-to-use interface to apply software analyses in
+                        their own work. Users can schedule or run reproducible
+                        pipelines on demand in high-performance and
                         high-throughput computing environments, then get
                         notified when results are available &mdash; all from the
                         browser, no programming required.

@@ -18,10 +18,8 @@ class Job(models.Model, AbstractJob):
     class Meta:
         ordering = ['-created']
 
-    now = timezone.now()
-
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    created = models.DateTimeField(default=now)
+    created = models.DateTimeField(default=timezone.now())
     token = models.CharField(max_length=40, default=binascii.hexlify(os.urandom(20)).decode())
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     submission_id = models.CharField(max_length=100, null=True, blank=True)

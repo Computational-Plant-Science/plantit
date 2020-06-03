@@ -19,7 +19,7 @@
                     </b-col>
                 </b-row>
                 <b-card-body class="text-center">
-                    <p><b>Phenomics</b>-as-a-Service for plant science!</p>
+                    <p><b>Phenomics</b>-as-a-Service software for accessible, reproducible plant science.</p>
                 </b-card-body>
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
@@ -50,7 +50,7 @@
                 </b-navbar>
                 <template v-slot:footer class="m-0 p-0">
                     <b-row class="m-0 p-0">
-                        <b-col class="ml-2 mr-2 mb-4 mt-0 p-0">
+                        <b-col class="ml-5 mr-5 mb-4 mt-0 p-0">
                             <b-button
                                 variant="white"
                                 block
