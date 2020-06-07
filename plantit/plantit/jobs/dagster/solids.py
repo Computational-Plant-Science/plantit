@@ -11,7 +11,10 @@ from ..ssh import SSH
 def upload_workflow_collection(context, job: Dict) -> Dict:
     try:
         remote_path = path.join(job['cluster']['workdir'], job['work_dir'], 'samples.json')
-        ssh = SSH(job['cluster']['hostname'], job['cluster']['port'], job['cluster']['username'], job['cluster']['password'])
+        ssh = SSH(job['cluster']['hostname'],
+                  job['cluster']['port'],
+                  job['cluster']['username'],
+                  job['cluster']['password'])
         with ssh:
             sftp = ssh.client.open_sftp()
             with sftp.open(remote_path, 'w') as file:
@@ -29,7 +32,10 @@ def upload_workflow_collection(context, job: Dict) -> Dict:
 def upload_workflow_definition(context, job: Dict) -> Dict:
     try:
         remote_path = path.join(job['cluster']['workdir'], job['work_dir'], 'process.py')
-        ssh = SSH(job['cluster']['hostname'], job['cluster']['port'], job['cluster']['username'], job['cluster']['password'])
+        ssh = SSH(job['cluster']['hostname'],
+                  job['cluster']['port'],
+                  job['cluster']['username'],
+                  job['cluster']['password'])
         with ssh:
             sftp = ssh.client.open_sftp()
             local_path = context.file_manager.copy_handle_to_local_temp(
@@ -50,7 +56,8 @@ def upload_workflow_definition(context, job: Dict) -> Dict:
 def upload_workflow_parameters(context, job: Dict) -> Dict:
     try:
         remote_path = path.join(job['cluster']['workdir'], job['work_dir'], 'workflow.json')
-        ssh = SSH(job['cluster']['hostname'], job['cluster']['port'], job['cluster']['username'], job['cluster']['password'])
+        ssh = SSH(job['cluster']['hostname'], job['cluster']['port'], job['cluster']['username'],
+                  job['cluster']['password'])
         with ssh:
             sftp = ssh.client.open_sftp()
             with sftp.open(remote_path, 'w') as file:
@@ -70,7 +77,8 @@ def create_directory(context, job: Dict) -> Dict:
     try:
         cmd = "cd " + path.join(job['cluster']['workdir']) + "; mkdir " + job['work_dir']
         context.log.info(cmd)
-        ssh = SSH(job['cluster']['hostname'], job['cluster']['port'], job['cluster']['username'], job['cluster']['password'])
+        ssh = SSH(job['cluster']['hostname'], job['cluster']['port'], job['cluster']['username'],
+                  job['cluster']['password'])
         with ssh:
             stdin, stdout, stderr = ssh.client.exec_command(cmd)
             output = stdout.readlines() + stderr.readlines()
@@ -95,8 +103,10 @@ def upload_workflow(job: Dict) -> Dict:
 @solid
 def execute_workflow(context, job: Dict) -> Dict:
     try:
-        cmd = "ml load ; cd " + path.join(job['cluster']['workdir'], job['work_dir']) + "; " + job['cluster']['submit_commands']
-        ssh = SSH(job['cluster']['hostname'], job['cluster']['port'], job['cluster']['username'], job['cluster']['password'])
+        cmd = "ml load ; cd " + path.join(job['cluster']['workdir'], job['work_dir']) + "; " + job['cluster'][
+            'submit_commands']
+        ssh = SSH(job['cluster']['hostname'], job['cluster']['port'], job['cluster']['username'],
+                  job['cluster']['password'])
         with ssh:
             stdin, stdout, stderr = ssh.client.exec_command(cmd)
             output = stdout.readlines() + stderr.readlines()

@@ -29,6 +29,7 @@ SQL_PORT=5432
 SQL_NAME=postgres
 SQL_USER=postgres
 SQL_PASSWORD=$sql_password
+DAGIT_GRAPHQL_URL=http://dagit:3000/graphql
 DAGSTER_HOME=/code/plantit
 DAGSTER_RUN_DB=run_storage
 DAGSTER_EVENT_DB=event_log_storage
@@ -130,7 +131,7 @@ mkdir -p plantit/files/public
 mkdir -p plantit/files/tmp
 
 echo "Building containers..."
-$DOCKER_COMPOSE build "$@"
+$DOCKER_COMPOSE build "$@" --no-cache
 $DOCKER_COMPOSE up -d plantit
 
 echo "Running migrations..."
@@ -151,6 +152,7 @@ $DOCKER_COMPOSE exec plantit bash -c "ssh-keyscan -H cluster >> /code/config/ssh
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
 fi
+$DOCKER_COMPOSE exec plantit bash -c "/code/dev/ssh-copy-id.expect"
 
 echo "Creating Dagster databases..."
 $DOCKER_COMPOSE exec plantit /code/dev/create-dagster-databases.sh run_storage event_log_storage schedule_storage
