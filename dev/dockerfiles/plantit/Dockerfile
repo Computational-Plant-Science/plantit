@@ -9,9 +9,8 @@ RUN apt-get -y update && apt-get install -y \
     cron \
     openssh-client \
     sshpass \
-    curl
+    curl \
     vim \
-    autoclean \
     expect
 
 RUN mkdir /code
