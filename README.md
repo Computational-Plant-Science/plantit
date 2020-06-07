@@ -68,13 +68,6 @@ This will start a number of containers:
 - `irods`: mock IRODS server
 - `cluster`: mock compute cluster
 
-Next, configure `cluster` to allow key-authenticated SSH connections from `plantit`:
-
-- Grab `plantit`'s container ID from `docker ps`
-- Run `docker exec -it <ID> bash` to open a shell in `plantit`
-- Run `ssh-copy-id -i /code/config/ssh/id_rsa.pub root@cluster` with password `root`
-- Exit the `plantit` shell with `^d`
-
 To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin`.
 
 The Django admin interface is at `http://localhost/admin/`.
