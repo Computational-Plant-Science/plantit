@@ -1,6 +1,6 @@
 from dagster import RepositoryDefinition
 
-from .pipelines import workflow
+from .pipelines import *
 
 import django
 django.setup()

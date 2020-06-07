@@ -31,7 +31,7 @@ class Job(models.Model, AbstractJob):
     work_dir = models.CharField(max_length=100,
                                 null=True,
                                 blank=True,
-                                default=now.strftime('%s') + "/")
+                                default=timezone.now().strftime('%s') + "/")
     remote_results_path = models.CharField(max_length=100,
                                            null=True,
                                            blank=True,

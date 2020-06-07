@@ -1,51 +1,10 @@
 import json
-import sys
-from os import path
 import traceback
+from os import path
 
-from dagster import solid, String, FileHandle, List, LocalFileHandle, composite_solid, Bool, Tuple, Dict
-from django.utils import timezone
+from dagster import solid, LocalFileHandle, composite_solid, Dict
 
-from .types import DagsterJob
-from ..models.abstract_status import AbstractStatus
-from ..ssh import SSH, DagsterSSHOptions
-
-
-@solid
-def sftp_upload_text(context, ssh_options: DagsterSSHOptions, text: str, remote_path: str):
-    ssh = SSH.from_options(ssh_options)
-    with ssh:
-        sftp = ssh.client.open_sftp()
-        with sftp.open(remote_path, 'w') as file:
-            file.write(text)
-
-    context.log.info(f"Uploaded text content to '{remote_path}' on '{ssh_options.host}'")
-
-
-@solid
-def sftp_upload_file(context, ssh_options: DagsterSSHOptions, file: FileHandle, remote_path: str):
-    ssh = SSH.from_options(ssh_options)
-    with ssh:
-        sftp = ssh.client.open_sftp()
-        local_path = context.file_manager.copy_handle_to_local_temp(file)
-        sftp.put(local_path, remote_path)
-        sftp.close()
-
-    context.log.info(f"Uploaded file '{local_path}' to '{remote_path}' on '{ssh_options.host}'")
-
-
-@solid
-def ssh_execute(context, ssh_options: DagsterSSHOptions, command: str) -> Tuple[Bool, List[String]]:
-    ssh = SSH.from_options(ssh_options)
-    with ssh:
-        stdin, stdout, stderr = ssh.client.exec_command(command)
-
-        if stdout.channel.recv_exit_status():
-            context.log.error(f"Executing '{command}' on '{ssh_options.host}' returned non-zero exit code")
-            return False, stdout.readlines() + stderr.readlines()
-        else:
-            context.log.info(f"Executing '{command}' on '{ssh_options.host}' returned successfully")
-            return True, stdout.readlines() + stderr.readlines()
+from ..ssh import SSH
 
 
 @solid

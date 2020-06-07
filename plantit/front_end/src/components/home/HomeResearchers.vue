@@ -6,7 +6,7 @@
                     class="rounded-0 text-center"
                     bg-variant="secondary"
                     border-variant="default"
-                    text-variant="white"
+                    text-variant="dark"
                     sub-title-text-variant="dark"
                     header-bg-variant="secondary"
                     header-border-variant="secondary"
