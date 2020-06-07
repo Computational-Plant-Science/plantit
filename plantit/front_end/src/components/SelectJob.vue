@@ -36,7 +36,7 @@
                                 <i class="fas fa-plus"></i>
                             </template>
                             <b-dropdown-header
-                                >Select Workflow...</b-dropdown-header
+                                >Select workflow...</b-dropdown-header
                             >
                             <b-dropdown-item
                                 v-for="workflow in workflows"

@@ -11,6 +11,9 @@
                 {{ workflow ? workflow.workflow.description : 'Loading...' }}
             </p>
         </div>
+        <NewCollection>
+
+        </NewCollection>
         <SelectCollection
             class="pb-4"
             selectable="true"
@@ -27,7 +30,7 @@
 </template>
 
 <script>
-import router from '../router';
+import NewCollection from '@/views/NewCollection.vue';
 import WorkflowAPI from '@/services/apiV1/WorkflowManager';
 import SelectCollection from '@/components/collections/SelectCollection.vue';
 import * as Sentry from '@sentry/browser';
@@ -36,8 +39,9 @@ import SetParameters from '../components/collections/SetParameters';
 export default {
     name: 'SubmitWorkflow',
     components: {
+        NewCollection,
         SetParameters,
-        SelectCollection
+        SelectCollection,
     },
     props: {
         workflow_name: {
@@ -79,6 +83,10 @@ export default {
                     Sentry.captureMessage('Submission Failed:' + result);
                 }
             });
+        },
+        saveMetadata() {
+            // TODO update job
+
         }
     }
 };

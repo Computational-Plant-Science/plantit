@@ -1,4 +1,8 @@
 <template>
+    <div></div>
+</template>
+
+<template>
     <div>
         <b-container class="justify-content-md-center">
             <b-card>
@@ -6,13 +10,19 @@
                     <b-row align-v="center">
                         <b-col class="mt-2" style="color: white">
                             <h5>
-                                <i class="fas fa-layer-group green"></i> New
-                                Collection
+                                <i class="fas fa-layer-group dark"></i> Sources
                             </h5>
                         </b-col>
                     </b-row>
                 </template>
                 <div>
+                    <h5>Existing</h5>
+                    <SelectCollection
+                        selectable="true"
+                        perPage="10"
+                        filterable="true"
+                    ></SelectCollection>
+                    <h5>New</h5>
                     <b-form @submit="onSubmit">
                         <b-form-group label="Name:" label-for="input-name">
                             <b-form-input
@@ -22,30 +32,6 @@
                                 placeholder="Enter name..."
                             ></b-form-input>
                         </b-form-group>
-
-                        <b-form-group
-                            label="Description:"
-                            label-for="input-desc"
-                        >
-                            <b-form-textarea
-                                id="input-desc"
-                                v-model="form.description"
-                                required
-                                placeholder="Enter description...."
-                            ></b-form-textarea>
-                        </b-form-group>
-
-                        <b-form-group label="Metadata:" label-for="input-desc">
-                            <EditMetadata
-                                v-model="form.metadata"
-                                @unsaved="
-                                    e => {
-                                        unsavedMetadata = e;
-                                    }
-                                "
-                            ></EditMetadata>
-                        </b-form-group>
-
                         <b-form-group
                             label="Location:"
                             label-for="input-storageType"
@@ -80,21 +66,18 @@
 </template>
 
 <script>
-import router from '@/router';
+import SelectCollection from '@/components/collections/SelectCollection';
 import FileManagerApi from '@/services/apiV1/FileManager';
 import CollectionApi from '@/services/apiV1/CollectionManager';
-import EditMetadata from '@/components/collections/EditMetadata';
 
 export default {
     name: 'NewCollection',
     components: {
-        EditMetadata
+        SelectCollection
     },
     data() {
         return {
             form: {
-                name: '',
-                description: '',
                 storageType: 'irods',
                 metadata: []
             },

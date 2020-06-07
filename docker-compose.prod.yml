@@ -11,6 +11,7 @@ services:
     networks:
       - ngnix_network
       - default
+      - plantit-logging_graylog
     restart: always
     healthcheck:
       test: curl -f http://localhost:8000/ping/
@@ -25,6 +26,8 @@ services:
         tag: "plantit"
 
   postgres:
+    networks:
+      - plantit-logging_graylog
     # volumes:
     #   - postgres_data:/var/lib/postgresql/data
     volumes:
@@ -37,6 +40,8 @@ services:
         tag: "postgres"
 
   adminer:
+    networks:
+      - plantit-logging_graylog
     logging:
       driver: gelf
       options:
@@ -44,6 +49,8 @@ services:
         tag: "adminer"
 
   rabbitmq:
+    networks:
+      - plantit-logging_graylog
     logging:
       driver: gelf
       options:
@@ -58,6 +65,8 @@ services:
   #       tag: "celery"
 
   dagster-celery:
+    networks:
+      - plantit-logging_graylog
     logging:
       driver: gelf
       options:
@@ -65,6 +74,8 @@ services:
         tag: "dagster-celery"
 
   dagit:
+    networks:
+      - plantit-logging_graylog
     logging:
       driver: gelf
       options:
@@ -72,6 +83,8 @@ services:
         tag: "dagit"
 
   flower:
+    networks:
+      - plantit-logging_graylog
     logging:
       driver: gelf
       options:
@@ -90,6 +103,7 @@ services:
       - plantit
     networks:
       - ngnix_network
+      - plantit-logging_graylog
     restart: always
     logging:
       driver: gelf
@@ -99,4 +113,6 @@ services:
 
 networks:
   ngnix_network:
+    driver: bridge
+  plantit-logging_graylog:
     driver: bridge
