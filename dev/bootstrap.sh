@@ -1,5 +1,16 @@
 #!/bin/bash
 
+nocache=0
+
+while getopts 'n' opt; do
+    case $opt in
+        n) nocache=1 ;;
+        *) echo 'Error in command line parsing' >&2
+           exit 1
+    esac
+done
+shift "$(( OPTIND - 1 ))"
+
 echo "Bootstrapping..."
 
 DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f docker-compose.dev.yml"
@@ -11,6 +22,7 @@ env_file=".env"
 echo "Checking for environment variable file '$env_file'..."
 if [ ! -f $env_file ]; then
   echo "Environment variable file '$env_file' does not exist. Creating it..."
+  admin_password=($(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@$%^&*(-_+)') for i in range(50)))\")"))
   secret_key=($(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@$%^&*(-_+)') for i in range(50)))\")"))
   sql_password=($(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@$%^&*(-_+)') for i in range(50)))\")"))
   field_encryption_key=($(python2 -c "exec(\"import cryptography.fernet\nprint('%s' % cryptography.fernet.Fernet.generate_key())\")"))
@@ -23,6 +35,8 @@ DJANGO_DEBUG=True
 DJANGO_FIELD_ENCRYPTION_KEY=$field_encryption_key
 DJANGO_API_URL=http://localhost/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
+DJANGO_ADMIN_USERNAME=admin
+DJANGO_ADMIN_PASSWORD=$admin_password
 SQL_ENGINE=django.db.backends.postgresql
 SQL_HOST=postgres
 SQL_PORT=5432
@@ -37,6 +51,8 @@ DAGSTER_SCHEDULE_DB=schedule_storage
 DAGSTER_FILESTORAGE_BASEDIR=/opt/dagster
 DAGSTER_CELERY_BACKEND=amqp://rabbitmq
 DAGSTER_CELERY_BROKER=amqp://rabbitmq
+GRAYLOG_GELF_URI=http://localhost:12201
+GRAYLOG_HTTP_EXTERNAL_URI=http://localhost:9000
 EOT
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."
@@ -130,8 +146,13 @@ rm -rf plantit/files/*
 mkdir -p plantit/files/public
 mkdir -p plantit/files/tmp
 
-echo "Building containers..."
-$DOCKER_COMPOSE build "$@" --no-cache
+if [[ "$nocache" -eq 0 ]]; then
+  echo "Building containers..."
+  $DOCKER_COMPOSE build "$@"
+else
+  echo "Building containers with option '--no-cache'..."
+  $DOCKER_COMPOSE build "$@" --no-cache
+fi
 $DOCKER_COMPOSE up -d plantit
 
 echo "Running migrations..."
@@ -139,7 +160,13 @@ $DOCKER_COMPOSE exec plantit /code/dev/wait-for-postgres.sh postgres python mana
 $DOCKER_COMPOSE exec plantit python manage.py migrate
 
 echo "Creating superuser..."
-$DOCKER_COMPOSE exec plantit /code/dev/configure-superuser.sh -u "admin" -p "admin" -e "admin@example.com" -v
+if [[ -n "$admin_password" ]]; then
+  admin_password=$admin_password
+else
+  admin_password=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_PASSWORD" "$env_file")" )
+fi
+admin_username=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_USERNAME" "$env_file")" )
+$DOCKER_COMPOSE exec plantit /code/dev/configure-superuser.sh -u "$admin_username" -p "$admin_password" -e "admin@example.com"
 
 echo "Configuring mock cluster and IRODS..."
 $DOCKER_COMPOSE up -d irods

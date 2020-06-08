@@ -23,12 +23,16 @@ services:
       - .:/code
       - dagster:/opt/dagster
     environment:
+      - VUE_APP_TITLE=${VUE_APP_TITLE}
+      - NODE_ENV=${NODE_ENV}
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_DEBUG=${DJANGO_DEBUG}
       - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
       - DJANGO_API_URL=${DJANGO_API_URL}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+      - DJANGO_ADMIN_USERNAME=${DJANGO_ADMIN_USERNAME}
+      - DJANGO_ADMIN_PASSWORD=${DJANGO_ADMIN_PASSWORD}
       - SQL_ENGINE=${SQL_ENGINE}
       - SQL_HOST=${SQL_HOST}
       - SQL_PORT=${SQL_PORT}
@@ -92,18 +96,6 @@ services:
     depends_on:
       - rabbitmq
     environment:
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG}
-      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
-      - DJANGO_API_URL=${DJANGO_API_URL}
-      - DJANGO_ALLOWED_HOSTS=*
-      - SQL_ENGINE=${SQL_ENGINE}
-      - SQL_HOST=${SQL_HOST}
-      - SQL_PORT=${SQL_PORT}
-      - SQL_NAME=${SQL_NAME}
-      - SQL_USER=${SQL_USER}
-      - SQL_PASSWORD=${SQL_PASSWORD}
       - DAGSTER_HOME=${DAGSTER_HOME}
     healthcheck:
       test: dagster-celery worker list -y /code/plantit/celery_config.yaml | grep "plantit-dagster"
@@ -119,18 +111,6 @@ services:
     working_dir: /code/plantit
     command: ["/code/dev/start-dagit.sh"]
     environment:
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG}
-      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
-      - DJANGO_API_URL=${DJANGO_API_URL}
-      - DJANGO_ALLOWED_HOSTS=*
-      - SQL_ENGINE=${SQL_ENGINE}
-      - SQL_HOST=${SQL_HOST}
-      - SQL_PORT=${SQL_PORT}
-      - SQL_NAME=${SQL_NAME}
-      - SQL_USER=${SQL_USER}
-      - SQL_PASSWORD=${SQL_PASSWORD}
       - DAGSTER_HOME=${DAGSTER_HOME}
     volumes:
       - .:/code
