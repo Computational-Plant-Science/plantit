@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 eval "$(ssh-agent -s)" # Start ssh-agent cache
 chmod 600 ~/.ssh/id_rsa # Allow read access to the private key

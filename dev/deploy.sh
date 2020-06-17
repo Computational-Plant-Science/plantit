@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 host="$1"
 compose="docker-compose -f docker-compose.yml -f docker-compose.prod.yml"
