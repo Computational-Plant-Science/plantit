@@ -11,7 +11,7 @@ while getopts 'n' opt; do
 done
 shift "$(( OPTIND - 1 ))"
 
-echo "Bootstrapping..."
+echo "Bootstrapping ${PWD##*/}..."
 
 DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f docker-compose.dev.yml"
 
@@ -22,38 +22,8 @@ env_file=".env"
 echo "Checking for environment variable file '$env_file'..."
 if [ ! -f $env_file ]; then
   echo "Environment variable file '$env_file' does not exist. Creating it..."
-  admin_password=($(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@$%^&*(-_+)') for i in range(50)))\")"))
-  secret_key=($(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@$%^&*(-_+)') for i in range(50)))\")"))
-  sql_password=($(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@$%^&*(-_+)') for i in range(50)))\")"))
-  field_encryption_key=($(python2 -c "exec(\"import cryptography.fernet\nprint('%s' % cryptography.fernet.Fernet.generate_key())\")"))
-  cat <<EOT >>$env_file
-VUE_APP_TITLE=plantit
-NODE_ENV=development
-DJANGO_SETTINGS_MODULE=plantit.settings
-DJANGO_SECRET_KEY=$secret_key
-DJANGO_DEBUG=True
-DJANGO_FIELD_ENCRYPTION_KEY=$field_encryption_key
-DJANGO_API_URL=http://localhost/apis/v1/
-DJANGO_ALLOWED_HOSTS=*
-DJANGO_ADMIN_USERNAME=admin
-DJANGO_ADMIN_PASSWORD=$admin_password
-SQL_ENGINE=django.db.backends.postgresql
-SQL_HOST=postgres
-SQL_PORT=5432
-SQL_NAME=postgres
-SQL_USER=postgres
-SQL_PASSWORD=$sql_password
-DAGIT_GRAPHQL_URL=http://dagit:3000/graphql
-DAGSTER_HOME=/code/plantit
-DAGSTER_RUN_DB=run_storage
-DAGSTER_EVENT_DB=event_log_storage
-DAGSTER_SCHEDULE_DB=schedule_storage
-DAGSTER_FILESTORAGE_BASEDIR=/opt/dagster
-DAGSTER_CELERY_BACKEND=amqp://rabbitmq
-DAGSTER_CELERY_BROKER=amqp://rabbitmq
-GRAYLOG_GELF_URI=http://localhost:12201
-GRAYLOG_HTTP_EXTERNAL_URI=http://localhost:9000
-EOT
+  chmod +x dev/create-env-file.sh
+  ./dev/create-env-file.sh
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."
 fi
@@ -65,11 +35,7 @@ if [ ! -f $dagster_config_file ]; then
   sql_user=$(cut -d '=' -f 2 <<< "$(grep "SQL_USER" "$env_file")" )
   sql_host=$(cut -d '=' -f 2 <<< "$(grep "SQL_HOST" "$env_file")" )
   sql_port=$(cut -d '=' -f 2 <<< "$(grep "SQL_PORT" "$env_file")" )
-  if [[ -n "$sql_password" ]]; then
-    sql_password=$sql_password
-  else
-    sql_password=$(cut -d '=' -f 2 <<< "$(grep "SQL_PASSWORD" "$env_file")" )
-  fi
+  sql_password=$(cut -d '=' -f 2 <<< "$(grep "SQL_PASSWORD" "$env_file")" )
   run_db=$(cut -d '=' -f 2 <<< "$(grep "DAGSTER_RUN_DB" "$env_file")" )
   event_db=$(cut -d '=' -f 2 <<< "$(grep "DAGSTER_EVENT_DB" "$env_file")" )
   schedule_db=$(cut -d '=' -f 2 <<< "$(grep "DAGSTER_SCHEDULE_DB" "$env_file")" )
@@ -160,11 +126,7 @@ $DOCKER_COMPOSE exec plantit /code/dev/wait-for-postgres.sh postgres python mana
 $DOCKER_COMPOSE exec plantit python manage.py migrate
 
 echo "Creating superuser..."
-if [[ -n "$admin_password" ]]; then
-  admin_password=$admin_password
-else
-  admin_password=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_PASSWORD" "$env_file")" )
-fi
+admin_password=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_PASSWORD" "$env_file")" )
 admin_username=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_USERNAME" "$env_file")" )
 $DOCKER_COMPOSE exec plantit /code/dev/configure-superuser.sh -u "$admin_username" -p "$admin_password" -e "admin@example.com"
 

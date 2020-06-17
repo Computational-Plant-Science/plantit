@@ -24,10 +24,11 @@
 
 ## Requirements
 
-The following are required to run `PlantIT` in a Unix environment:
+The following are required to build and run `PlantIT` in a Unix environment:
 
 - [Docker](https://www.docker.com/)
 - [npm](https://www.npmjs.com/get-npm)
+- Python 2
 
 ## Documentation
 
