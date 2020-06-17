@@ -3,6 +3,7 @@
 host="$1"
 compose="docker-compose -f docker-compose.yml -f docker-compose.prod.yml"
 env_file=".env"
+dagster_config_file="plantit/dagster.yaml"
 
 echo "Bringing containers down..."
 $compose down
@@ -18,6 +19,15 @@ if [ ! -f $env_file ]; then
   ./dev/create-env-file.sh
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."
+fi
+
+echo "Checking for dagster config file '$dagster_config_file'..."
+if [ ! -f $dagster_config_file ]; then
+  echo "Dagster config file '$dagster_config_file' does not exist. Creating it..."
+  chmod +x dev/create-dagster-config-file.sh
+  ./dev/create-dagster-config-file.sh
+else
+  echo "Dagster config file '$dagster_config_file' already exists. Continuing..."
 fi
 
 echo "Building front end..."
