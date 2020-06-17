@@ -16,7 +16,6 @@ if [ ! -f $env_file ]; then
   echo "Environment variable file '$env_file' does not exist. Creating it..."
   chmod +x dev/create-env-file.sh
   ./dev/create-env-file.sh
-EOT
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."
 fi
