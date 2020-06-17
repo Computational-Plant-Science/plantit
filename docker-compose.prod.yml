@@ -58,7 +58,6 @@ services:
   #       tag: "celery"
 
   dagster-celery:
-    restart: always
     logging:
       driver: gelf
       options:
@@ -66,7 +65,6 @@ services:
         tag: "dagster-celery"
 
   dagit:
-    restart: always
     logging:
       driver: gelf
       options:
@@ -74,7 +72,6 @@ services:
         tag: "dagit"
 
   flower:
-    restart: always
     logging:
       driver: gelf
       options:

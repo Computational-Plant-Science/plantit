@@ -38,7 +38,7 @@ cd ..
 cd ..
 
 echo "Building containers..."
-$compose build "$@"
+$compose build
 
 echo "Collecting static files..."
 $compose run plantit ./manage.py collectstatic --no-input
