@@ -30,6 +30,6 @@ DAGSTER_SCHEDULE_DB=schedule_storage
 DAGSTER_FILESTORAGE_BASEDIR=/opt/dagster
 DAGSTER_CELERY_BACKEND=amqp://rabbitmq
 DAGSTER_CELERY_BROKER=amqp://rabbitmq
-GRAYLOG_GELF_URI=http://localhost:12201
+GRAYLOG_GELF_URI=udp://localhost:12201
 GRAYLOG_HTTP_EXTERNAL_URI=http://localhost:9000
 EOT
