@@ -47,6 +47,9 @@ echo "Running migrations..."
 $compose run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
 $compose run plantit ./manage.py migrate
 
+echo "Creating Dagster databases..."
+$compose run plantit /code/dev/create-dagster-databases.sh run_storage event_log_storage schedule_storage
+
 echo "Configuring NGINX..."
 find config/nginx/conf.d/local.conf -type f -exec sed -i "s/localhost/$host/g" {} \;
 
