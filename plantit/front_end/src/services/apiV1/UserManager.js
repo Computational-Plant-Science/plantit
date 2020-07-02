@@ -21,6 +21,16 @@ export default {
                 Sentry.captureException(err);
             });
     },
+    getCurrentUserGithubRepos() {
+        return axios
+            .get('/apis/v1/profiles/github_repos/')
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
     updateUserInfo(
         userName,
         firstName,
@@ -47,5 +57,5 @@ export default {
             .catch(err => {
                 Sentry.captureException(err);
             });
-    }
+    },
 };

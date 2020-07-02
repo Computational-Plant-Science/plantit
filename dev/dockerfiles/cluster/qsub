@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Dummy qsub command for testing submitting jobs the cluster, jobs
+# Dummy qsub commands for testing submitting jobs the cluster, jobs
 # are simply run in the current bash process using nohup
 #
 # Returns a "submission id" like qsub would, but it is just a RANDOM

@@ -1,3 +1,0 @@
-repository:
-    module: plantit.jobs.dagster.repository
-    fn: define_repo

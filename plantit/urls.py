@@ -30,6 +30,7 @@ urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ s
         re_path(r'^logout/', views.LogoutView.as_view(), name="cas_ng_logout"),
         re_path(r'^apis/v1/', include('apis.urls')),
         re_path(r'^ping/', (lambda x:HttpResponse("pong"))),
+        re_path(r'^event_handler/', (lambda x:print(x))),
         # Send all other urls (besides what is listed above) to the vue router
-        re_path(r'^.*$',  TemplateView.as_view(template_name='index.html')),
+        re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
     ]

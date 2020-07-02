@@ -22,9 +22,7 @@
                             </b-col>
                             <b-col md="auto">
                                 <b-button
-                                    @click="
-                                        $bvModal.show('editUserInfoModal')
-                                    "
+                                    @click="$bvModal.show('editUserInfoModal')"
                                     variant="outline-dark"
                                     v-b-tooltip.hover
                                     title="Edit user information."
@@ -35,9 +33,43 @@
                         </b-row>
                     </template>
                     <b-card-text v-if="!loading">
+                        <h5>PlantIT</h5>
+                        <hr />
                         <p><b>Email Address:</b> {{ this.info.email }}</p>
                         <p><b>First Name:</b> {{ this.info.first_name }}</p>
                         <p><b>Last Name:</b> {{ this.info.last_name }}</p>
+                        <h5>Github</h5>
+                        <hr />
+                        <p>
+                            <b>Username:</b>
+                            {{
+                                this.info.profile === undefined
+                                    ? ''
+                                    : this.info.profile.github_username
+                            }}
+                        </p>
+                        <p>
+                            <b>Repos:</b>
+                            <b-list-group>
+                                <b-list-group-item
+                                    class="flex-column align-items-start"
+                                    v-for="repo in repos"
+                                    :key="repo.name"
+                                >
+                                    <div
+                                        class="d-flex justify-content-between"
+                                    >
+                                        <h5 class="mb-1">
+                                            {{ repo.name }}
+                                        </h5>
+                                        <small>Stars: {{ repo.stars }}</small>
+                                    </div>
+                                    {{ repo.description }}
+                                </b-list-group-item>
+                            </b-list-group>
+                        </p>
+                        <h5>Institution</h5>
+                        <hr />
                         <p>
                             <b>Country:</b>
                             {{
@@ -127,6 +159,7 @@ export default {
     data() {
         return {
             info: {},
+            repos: [],
             loading: true
         };
     },
@@ -134,6 +167,12 @@ export default {
         reload() {
             UserApi.getCurrentUser().then(info => {
                 this.info = info;
+            });
+            this.getRepos();
+        },
+        getRepos() {
+            UserApi.getCurrentUserGithubRepos().then(repos => {
+                this.repos = repos;
             });
         },
         saveUserInfo(

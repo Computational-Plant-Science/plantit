@@ -20,6 +20,18 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(',')
 assert 'DJANGO_API_URL' in os.environ, '{NO_ENV_VAR}: DJANGO_API_URL'
 API_URL = os.environ.get('DJANGO_API_URL')
 
+assert 'GITHUB_AUTH_URI' in os.environ, '{NO_ENV_VAR}: GITHUB_AUTH_URI'
+GITHUB_AUTH_URI = os.environ.get('GITHUB_AUTH_URI')
+
+assert 'GITHUB_REDIRECT_URI' in os.environ, '{NO_ENV_VAR}: GITHUB_REDIRECT_URI'
+GITHUB_REDIRECT_URI = os.environ.get('GITHUB_REDIRECT_URI')
+
+assert 'GITHUB_KEY' in os.environ, '{NO_ENV_VAR}: GITHUB_KEY'
+GITHUB_KEY = os.environ.get('GITHUB_KEY')
+
+assert 'GITHUB_SECRET' in os.environ, '{NO_ENV_VAR}: GITHUB_SECRET'
+GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
+
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "/assets/"
 STATICFILES_DIRS = (
@@ -51,6 +63,7 @@ INSTALLED_APPS = [
     'plantit.apps.PlantITConfig',
     'front_end.apps.FrontEndConfig',
     'django_cas_ng',
+    'taggit'
 ]
 
 MIDDLEWARE = [
@@ -61,7 +74,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django_cas_ng.middleware.CASMiddleware'
+    'django_cas_ng.middleware.CASMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -147,7 +160,9 @@ USE_TZ = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'plantit.jobs.authentication.JobTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
 }
+
+TAGGIT_CASE_INSENSITIVE = True
+

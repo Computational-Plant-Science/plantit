@@ -55,6 +55,15 @@
                                 variant="white"
                                 block
                                 class="text-center"
+                                href="/apis/v1/profiles/github_request_identity/"
+                            >
+                                <i class="fab fa-github fa-1x fa-fw"></i>
+                                Log In with Github
+                            </b-button>
+                            <b-button
+                                variant="white"
+                                block
+                                class="text-center"
                                 href="/login/?next=/dashboard/"
                             >
                                 <b-img
@@ -82,6 +91,7 @@
 </template>
 
 <script>
+
 export default {
     name: 'HomeAbout'
 };

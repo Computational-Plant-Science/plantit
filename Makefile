@@ -1,7 +1,7 @@
 # Minimal makefile for Sphinx documentation
 #
 
-# You can set these variables from the command line.
+# You can set these variables from the commands line.
 SPHINXOPTS      =
 SPHINXBUILD     = docker-compose -f docker-compose.yml -f docker-compose.dev.yml run plantit sphinx-build
 SPHINXAPIDOC    = docker-compose -f docker-compose.yml -f docker-compose.dev.yml run plantit sphinx-apidoc

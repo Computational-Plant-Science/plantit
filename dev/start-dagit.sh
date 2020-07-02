@@ -1,5 +1,6 @@
 #!/bin/sh
 
+export DAGSTER_HOME=/opt/dagster/dagster_home
 
 # This block may be omitted if not packaging a repository with cron schedules
 ####################################################################################################
@@ -8,11 +9,6 @@ touch /etc/crontab /etc/cron.*/*
 
 service cron start
 
-# Add all schedules
-dagster schedule up -y plantit/jobs/dagster/repository.yaml
+dagster schedule up
 
-# Restart previously running schedules
-dagster schedule restart -y plantit/jobs/dagster/repository.yaml --restart-all-running
-####################################################################################################
-
-dagit -y plantit/jobs/dagster/repository.yaml -h 0.0.0.0 -p 3000
+DAGSTER_HOME=/opt/dagster/dagster_home dagit -h 0.0.0.0 -p 3000 -w plantit/jobs/dagster/workspace.yaml

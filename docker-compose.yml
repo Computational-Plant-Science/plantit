@@ -40,6 +40,10 @@ services:
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
       - DAGIT_GRAPHQL_URL=${DAGIT_GRAPHQL_URL}
+      - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
+      - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
+      - GITHUB_KEY=${GITHUB_KEY}
+      - GITHUB_SECRET=${GITHUB_SECRET}
 
   postgres:
     image: postgres

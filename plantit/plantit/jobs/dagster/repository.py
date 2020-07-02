@@ -1,9 +1,8 @@
-from dagster import RepositoryDefinition
+from dagster import RepositoryDefinition, repository
 
 from .pipelines import *
 
 
-def define_repo():
-    return RepositoryDefinition(
-        name='jobs', pipeline_defs=[workflow]
-    )
+@repository
+def plantit_repository():
+    return [plantit_pipeline]

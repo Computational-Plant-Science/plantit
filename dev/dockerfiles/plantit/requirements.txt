@@ -1,20 +1,21 @@
 Django == 2.2.10
-psycopg2-binary
-djangorestframework
-markdown
+django-imagekit
+django-cas-ng
 django-filter
+django-model-utils
+django-encrypted-model-fields
+django-taggit
+djangorestframework
+psycopg2-binary
+markdown
 paramiko
 Celery
-django-encrypted-model-fields
 docutils
-django-model-utils
 humanize
 python-irodsclient
 Sphinx
 sphinx_rtd_theme
-django-imagekit
 pillow
-django-cas-ng
 sentry-sdk
 gunicorn
 dagster
@@ -24,3 +25,6 @@ dagster-cron
 dagit
 gql
 six>=1.12
+PyJWT
+PyGithub
+requests

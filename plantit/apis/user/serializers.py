@@ -7,7 +7,7 @@ from plantit.user.models import Profile
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('country', 'continent', 'institution', 'institution_type', 'field_of_study')
+        fields = ('github_username', 'country', 'continent', 'institution', 'institution_type', 'field_of_study')
 
 
 class UserSerializer(serializers.ModelSerializer):

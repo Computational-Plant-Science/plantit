@@ -35,7 +35,7 @@ from django.core.exceptions import PermissionDenied
 #    def test_upload_file(self):
 #        with tempfile.NamedTemporaryFile(dir="/code/plantit/files/tmp/") as file:
 #            request = self.factory.post(
-#                reverse('file_manager:ajax', kwargs={ 'command':'browse'}),
+#                reverse('file_manager:ajax', kwargs={ 'commands':'browse'}),
 #                {
 #                  'storage_type': self.storage,
 #                  'dir': self.tempParentDir.name
@@ -46,11 +46,11 @@ from django.core.exceptions import PermissionDenied
 #            file.name = file.name.split("/")[-1] #Uploaded do not include the path
 #            request.FILES['file'] = file
 #
-#            FileBrowserView.as_view()(request, command='upload')
+#            FileBrowserView.as_view()(request, commands='upload')
 #
 #    def test_access_denied(self):
 #        request = self.factory.post(
-#            reverse('file_manager:ajax', kwargs={ 'command':'browse'}),
+#            reverse('file_manager:ajax', kwargs={ 'commands':'browse'}),
 #            {
 #              'storage_type': self.storage,
 #              'dir': '/'
@@ -60,11 +60,11 @@ from django.core.exceptions import PermissionDenied
 #        request.user = self.user
 #
 #        with self.assertRaises(PermissionDenied):
-#            FileBrowserView.as_view()(request, command='browse')
+#            FileBrowserView.as_view()(request, commands='browse')
 #
 #    def test_browse(self):
 #        request = self.factory.post(
-#            reverse('file_manager:ajax', kwargs={ 'command':'browse'}),
+#            reverse('file_manager:ajax', kwargs={ 'commands':'browse'}),
 #            {
 #              'storage_type': self.storage,
 #              'dir': self.tempParentDir.name
@@ -73,7 +73,7 @@ from django.core.exceptions import PermissionDenied
 #        )
 #        request.user = self.user
 #
-#        result = FileBrowserView.as_view()(request, command='browse')
+#        result = FileBrowserView.as_view()(request, commands='browse')
 #        content = json.loads(result.content)
 #
 #        self.assertEqual(result.status_code,200)

@@ -40,7 +40,7 @@ def task_collect_static():
 
 def task_make_migrations():
     """
-        Run django's 'manage.py makemigrations" command
+        Run django's 'manage.py makemigrations" commands
     """
     return {
         'actions': ['docker-compose %s exec plantit ./manage.py makemigrations' % COMPOSE_CONFIG],
@@ -49,7 +49,7 @@ def task_make_migrations():
 
 def task_migrate():
     """
-        Run django's 'manage.py migrate" command
+        Run django's 'manage.py migrate" commands
     """
     return {
         'actions': ['docker-compose %s exec plantit ./manage.py migrate' % COMPOSE_CONFIG],

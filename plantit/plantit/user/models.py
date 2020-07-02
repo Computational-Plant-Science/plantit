@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.db.models import Manager
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from encrypted_model_fields.fields import EncryptedCharField
 
 from plantit.collection.models import Collection
 
@@ -28,8 +29,10 @@ class Profile(models.Model):
     """
     # See https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
     user: User = models.OneToOneField(User, on_delete=models.CASCADE)
+    github_username: str = models.CharField(max_length=100, default='', blank=True, null=True)
+    github_auth_token = EncryptedCharField(max_length=100, default='', blank=True, null=True)
     country: str = models.CharField(max_length=256, default='', blank=True)
-    continent: str = models.CharField(max_length=256, default='', blank=True)
+    continent: str = models.CharField(max_length=256, default=None, blank=True, null=True)
     institution: str = models.CharField(max_length=256, default='', blank=True)
     institution_type: str = models.CharField(max_length=256, default='', blank=True)
     field_of_study: str = models.CharField(max_length=256, default='', blank=True)
