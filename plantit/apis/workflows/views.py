@@ -1,8 +1,10 @@
 import importlib
 import json
 
+import requests
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from rest_framework.response import Response
 
 from plantit.workflows import registrar
 from plantit.workflows import services
@@ -10,39 +12,47 @@ from plantit.workflows import services
 
 @login_required
 def workflows(request):
-    """
-        Lists the available workflows.
+    response = requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+org:computational-plant-science")
+    hits = response.json()['items']
+    repos = [hit['repository'] for hit in hits]
+    return Response(repos)
 
-        **url:** `/apis/v1/workflows/`
 
-        **Response Data:**  A JSON object with the "workflows" attribute.
-            The workflow attribute contains a JSON array with
-            1 object per workflow.
-
-        **Requires:** User must be logged in.
-
-        Example:
-            .. code-block:: javascript
-
-                {"workflows": [
-                    {
-                        "name": "Test Workflow",
-                        "description": "asfd",
-                        "icon_loc": "workflows/test_workflow/icon.png",
-                        "api_version": 0.1,
-                        "app_name": "test_workflow",
-                        "singularity_url": "shub://frederic-michaud/python3",
-                        "app_url_pattern": "workflows:test_workflow:analyze"
-                     }
-                  ]
-                }
-    """
-
-    context = {
-        "workflows": list(registrar.list.values())
-    }
-
-    return JsonResponse(context)
+# @login_required
+# def workflows(request):
+#     """
+#         Lists the available workflows.
+#
+#         **url:** `/apis/v1/workflows/`
+#
+#         **Response Data:**  A JSON object with the "workflows" attribute.
+#             The workflow attribute contains a JSON array with
+#             1 object per workflow.
+#
+#         **Requires:** User must be logged in.
+#
+#         Example:
+#             .. code-block:: javascript
+#
+#                 {"workflows": [
+#                     {
+#                         "name": "Test Workflow",
+#                         "description": "asfd",
+#                         "icon_loc": "workflows/test_workflow/icon.png",
+#                         "api_version": 0.1,
+#                         "app_name": "test_workflow",
+#                         "singularity_url": "shub://frederic-michaud/python3",
+#                         "app_url_pattern": "workflows:test_workflow:analyze"
+#                      }
+#                   ]
+#                 }
+#     """
+#
+#     context = {
+#         "workflows": list(registrar.list.values())
+#     }
+#
+#     return JsonResponse(context)
 
 @login_required
 def workflow(request, workflow):

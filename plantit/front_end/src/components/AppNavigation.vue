@@ -2,7 +2,7 @@
     <div class="m-0 p-0">
         <b-sidebar
             id="sidebar-left"
-            title="Dashboard"
+            title="Sidebar"
             shadow="lg"
             bg-variant="white"
             no-header
@@ -63,7 +63,7 @@
                                         variant="white"
                                         block
                                         class="text-left m-0"
-                                        href="/login/?next=/dashboard/"
+                                        href="/login/?next=/workflows/"
                                     >
                                         <b-img
                                             :src="
@@ -185,8 +185,8 @@
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item
                                     v-if="isLoggedIn"
-                                    title="Dashboard"
-                                    to="/dashboard"
+                                    title="Workflows"
+                                    to="/workflows"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -195,9 +195,26 @@
                                         class="text-left"
                                     >
                                         <i
-                                            class="fas fa-desktop fa-1x fa-fw"
+                                            class="fas fa-stream fa-1x fa-fw"
                                         ></i>
-                                        Dashboard
+                                        Workflows
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    v-if="isLoggedIn"
+                                    title="Jobs"
+                                    to="/jobs"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button
+                                        variant="outline-dark"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i
+                                            class="fas fa-terminal fa-1x fa-fw"
+                                        ></i>
+                                        Jobs
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
@@ -209,15 +226,14 @@
                                         variant="outline-dark"
                                         block
                                         class="text-left"
+                                        title="Profile"
                                     >
                                         <i class="fas fa-user fa-1x fa-fw"></i>
                                         {{
                                             loading
                                                 ? 'Loading...'
                                                 : info
-                                                ? 'Profile (' +
-                                                  info['username'] +
-                                                  ')'
+                                                ? info.first_name
                                                 : ''
                                         }}
                                     </b-button>
@@ -271,7 +287,7 @@
                             <b-img
                                 class="m-0 p-0"
                                 center
-                                width="30px"
+                                width="25px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -359,30 +375,13 @@
                     </b-nav-item>-->
                     <b-nav-item
                         v-if="isLoggedIn"
-                        title="Dashboard"
-                        to="/dashboard"
-                        class="m-0 p-0"
-                    >
-                        <b-button variant="outline-dark">
-                            <i class="fas fa-desktop fa-1x"></i>
-                            Dashboard
-                        </b-button>
-                    </b-nav-item>
-                    <b-nav-item
-                        v-if="isLoggedIn"
-                        :title="
-                            loading
-                                ? 'Loading...'
-                                : info
-                                ? 'Profile: ' + info['username']
-                                : ''
-                        "
+                        title="Profile"
                         class="m-0 p-0"
                         to="/profile"
                     >
                         <b-button variant="outline-dark">
                             <i class="fas fa-user fa-1x"></i>
-                            Profile
+                            {{ info.first_name }}
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -411,8 +410,6 @@
                 {{ this.info ? this.info.first_name : '' }}!
             </p>
         </b-alert>
-        <br />
-        <br />
         <EditUserInfoModal
             :prompt="false"
             modal-id="editUserInfoModal"

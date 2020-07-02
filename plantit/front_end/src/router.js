@@ -2,9 +2,10 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import Home from './views/Home.vue';
 import About from './views/About.vue';
-import Profile from './views/Profile.vue';
-import Dashboard from './views/Dashboard.vue';
 import Guide from './views/Guide.vue';
+import Workflows from './views/Workflows.vue';
+import Jobs from './views/Jobs.vue';
+import Profile from './views/Profile.vue';
 import Login from './views/Login.vue';
 import Logout from './views/Logout.vue';
 import Auth from '@/services/apiV1/Auth.js';
@@ -36,6 +37,11 @@ let router = new Router({
             meta: {
                 crumb: [
                     {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
+                    },
+                    {
                         text: 'About',
                         href: '/about',
                         icon: '<i class="fas fa-seedling fa-1x text-dark align-middle"></i>'
@@ -49,6 +55,11 @@ let router = new Router({
             component: Guide,
             meta: {
                 crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
+                    },
                     {
                         text: 'Guide',
                         href: '/guide',
@@ -86,15 +97,39 @@ let router = new Router({
             }
         },
         {
-            path: '/dashboard',
-            name: 'dashboard',
-            component: Dashboard,
+            path: '/workflows',
+            name: 'workflows',
+            component: Workflows,
             meta: {
                 crumb: [
                     {
-                        text: 'Dashboard',
-                        href: '/dashboard',
-                        icon: '<i class="fas fa-desktop fa-1x text-dark align-middle"></i>'
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
+                    },
+                    {
+                        text: 'Workflows',
+                        href: '/workflows',
+                        icon: '<i class="fas fa-stream fa-1x text-dark align-middle"></i>'
+                    }
+                ]
+            }
+        },
+        {
+            path: '/jobs',
+            name: 'jobs',
+            component: Jobs,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
+                    },
+                    {
+                        text: 'Jobs',
+                        href: '/jobs',
+                        icon: '<i class="fas fa-terminal fa-1x text-dark align-middle"></i>'
                     }
                 ]
             }
@@ -105,6 +140,11 @@ let router = new Router({
             component: Profile,
             meta: {
                 crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
+                    },
                     {
                         text: 'Profile',
                         href: '/profile',

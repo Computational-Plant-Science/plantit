@@ -12,7 +12,7 @@ export default {
         return axios
             .get('/apis/v1/workflows/')
             .then(response => {
-                return response.data.workflows;
+                return response.data;
             })
             .catch(err => {
                 Sentry.captureException(err);

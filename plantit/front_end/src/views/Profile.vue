@@ -62,9 +62,8 @@
                                         <h5 class="mb-1">
                                             {{ repo.name }}
                                         </h5>
-                                        <small>Stars: {{ repo.stars }}</small>
                                     </div>
-                                    {{ repo.description }}
+                                    <small>{{ repo.description }}</small>
                                 </b-list-group-item>
                             </b-list-group>
                         </p>

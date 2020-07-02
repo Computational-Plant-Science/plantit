@@ -1,3 +1,4 @@
+import json
 from random import choice
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
@@ -67,13 +68,22 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     def github_repos(self, request):
         user = self.get_object()
         gh = Github(user.profile.github_auth_token)
-        repos = gh.get_user().get_repos()
-        return Response([{
-            'name' : repo.name,
-            'description': repo.description,
-            'url': repo.url,
-            'stars': repo.stargazers_count
-        } for repo in repos])
+        github_username = gh.get_user().login
+
+        response = requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{github_username}")
+        hits = response.json()['items']
+        repos = [hit['repository'] for hit in hits]
+
+        return Response(repos)
+
+        # code_hits = gh.search_code(query=f"filename:plantit.yaml+user:{gh.get_user().login}")
+        # repos = [code.repo]
+        #return Response([{
+        #    'name': repo.name,
+        #    'description': repo.description,
+        #    'url': repo.url,
+        #    'stars': repo.stargazers_count
+        #} for repo in repos])
 
 
 def csrf_token(request):
