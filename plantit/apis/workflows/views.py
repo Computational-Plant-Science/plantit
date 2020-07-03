@@ -15,7 +15,7 @@ def workflows(request):
     response = requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+org:computational-plant-science")
     hits = response.json()['items']
     repos = [hit['repository'] for hit in hits]
-    return Response(repos)
+    return JsonResponse({'workflows': repos})
 
 
 # @login_required

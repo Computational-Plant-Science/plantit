@@ -1,4 +1,5 @@
 import json
+import yaml
 from random import choice
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
@@ -57,6 +58,7 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             'code': code})
 
         token = parse_qs(response.text)['access_token'][0]
+        print(token)
         user = self.get_object()
         user.profile.github_username = Github(token).get_user().login
         user.profile.github_auth_token = token
@@ -72,18 +74,23 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         response = requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{github_username}")
         hits = response.json()['items']
-        repos = [hit['repository'] for hit in hits]
-
+        repos = [map_repo(hit['repository']) for hit in hits]
         return Response(repos)
 
-        # code_hits = gh.search_code(query=f"filename:plantit.yaml+user:{gh.get_user().login}")
-        # repos = [code.repo]
-        #return Response([{
-        #    'name': repo.name,
-        #    'description': repo.description,
-        #    'url': repo.url,
-        #    'stars': repo.stargazers_count
-        #} for repo in repos])
+
+def map_repo(repo):
+    name = repo['name']
+    user = repo['owner']['login']
+    url = f"https://api.github.com/repos/{user}/{name}/contents/plantit.yaml"
+    response = requests.get(url)
+    download_url = response.json()['download_url']
+    config = yaml.load(requests.get(download_url).text)
+    return {
+        'name': repo['name'],
+        'url': repo['html_url'],
+        'description': repo['description'],
+        'config': config
+    }
 
 
 def csrf_token(request):

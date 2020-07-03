@@ -28,3 +28,4 @@ six>=1.12
 PyJWT
 PyGithub
 requests
+pyaml
