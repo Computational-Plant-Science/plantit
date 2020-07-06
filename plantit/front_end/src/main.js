@@ -15,7 +15,7 @@ Axios.defaults.xsrfHeaderName = 'X-CSRFTOKEN';
 Vue.config.productionTip = false;
 
 //The plant IT object is set by django's template system.
-// You can find the workflow in public/index.html
+// You can find the pipeline in public/index.html
 if (process.env.VUE_APP_ANALYTICS_ID) {
     Vue.use(VueAnalytics, {
         id: process.env.VUE_APP_ANALYTICS_ID,

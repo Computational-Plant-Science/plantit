@@ -50,7 +50,7 @@ STATICFILES_FINDERS = [
 MEDIA_URL = "/public/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "files", "public")
 
-# Application workflow
+# Application pipeline
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

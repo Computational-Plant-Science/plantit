@@ -12,12 +12,12 @@
                         samples in a collection.
                     </p>
                     <p>
-                        A <i>workflow</i> represents a self-contained analysis
+                        A <i>pipeline</i> represents a self-contained analysis
                         pipeline.
                     </p>
                     <p>
                         The <i>job</i> is PlantIT's fundamental unit of
-                        execution. Each job submits a workflow and an associated
+                        execution. Each job submits a pipeline and an associated
                         collection to a cluster, then returns results.
                     </p>-->
                 </b-col>

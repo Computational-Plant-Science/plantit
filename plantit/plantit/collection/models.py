@@ -69,7 +69,7 @@ class CustomQuerySet(CastableQuerySetMixin, models.QuerySet):
 class Collection(models.Model, CastableModelMixin):
     """
         Collections are a set of samples hat are analyzed together by the
-        same Plant IT workflow. Typically representing one experiment or
+        same Plant IT pipeline. Typically representing one experiment or
         treatment.
 
         Attributes:
@@ -134,7 +134,7 @@ class Collection(models.Model, CastableModelMixin):
 class Sample(models.Model):
     """
         Represents one experimental sample. I.E. The unit of information that
-        is analyzed by the workflow.
+        is analyzed by the pipeline.
 
         Sample objects only contain a link to the path to the files
         within the sample. :mod:`plantit.file_manager` is used to access

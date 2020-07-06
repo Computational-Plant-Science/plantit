@@ -4,9 +4,9 @@ import Home from './views/Home.vue';
 import About from './views/About.vue';
 import Guide from './views/Guide.vue';
 import Docs from './views/Docs.vue';
-import Workflows from './views/Workflows.vue';
-import SubmitWorkflow from './views/SubmitWorkflow.vue';
-import Jobs from './views/Jobs.vue';
+import Pipelines from './views/Pipelines.vue';
+import StartPipeline from './views/StartPipeline.vue';
+import Runs from './views/Runs.vue';
 import Profile from './views/Profile.vue';
 import Login from './views/Login.vue';
 import Logout from './views/Logout.vue';
@@ -83,14 +83,14 @@ let router = new Router({
             }
         },
         {
-            path: '/login?next=/dashboard/',
+            path: '/login?next=/pipelines/',
             name: 'login',
             component: Login,
             meta: {
                 crumb: [
                     {
                         text: 'Log In',
-                        href: '/login/?next=/dashboard/',
+                        href: '/login/?next=/pipelines/',
                     }
                 ]
             }
@@ -109,9 +109,9 @@ let router = new Router({
             }
         },
         {
-            path: '/workflows',
-            name: 'workflows',
-            component: Workflows,
+            path: '/pipelines',
+            name: 'pipelines',
+            component: Pipelines,
             meta: {
                 crumb: [
                     {
@@ -119,17 +119,17 @@ let router = new Router({
                         href: '/',
                     },
                     {
-                        text: 'Workflows',
-                        href: '/workflows',
+                        text: 'Pipelines',
+                        href: '/pipelines',
                     }
                 ]
             }
         },
         {
-            path: '/workflows/submit/:owner/:name',
-            name: 'submit',
+            path: '/pipelines/start/:owner/:name',
+            name: 'start',
             props: true,
-            component: SubmitWorkflow,
+            component: StartPipeline,
             meta: {
                 crumb: [
                     {
@@ -137,16 +137,16 @@ let router = new Router({
                         href: '/',
                     },
                     {
-                        text: 'Workflows',
-                        href: '/workflows',
+                        text: 'Pipelines',
+                        href: '/pipelines',
                     }
                 ]
             }
         },
         {
-            path: '/jobs',
-            name: 'jobs',
-            component: Jobs,
+            path: '/runs',
+            name: 'runs',
+            component: Runs,
             meta: {
                 crumb: [
                     {
@@ -154,8 +154,8 @@ let router = new Router({
                         href: '/',
                     },
                     {
-                        text: 'Jobs',
-                        href: '/jobs',
+                        text: 'Runs',
+                        href: '/runs',
                     }
                 ]
             }
@@ -201,23 +201,23 @@ let router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
-    if (to.matched.some(record => record.name === 'submit') && to.meta.crumb[to.meta.crumb.length - 1].text !== 'Submit') {
+    if (to.matched.some(record => record.name === 'start') && to.meta.crumb[to.meta.crumb.length - 1].text !== 'Start') {
         to.meta.crumb.push(
             {
                 text: to.params.owner,
-                href: `/workflows/${to.params.owner}`,
+                href: `/pipelines/${to.params.owner}`,
             },
             {
                 text: to.params.name,
-                href: `/workflows/${to.params.owner}/${to.params.name}`,
+                href: `/pipelines/${to.params.owner}/${to.params.name}`,
             },
             {
-                text: 'Submit',
-                href: `/workflows/${to.params.owner}/${to.params.name}/submit`,
+                text: 'Start',
+                href: `/pipelines/${to.params.owner}/${to.params.name}/start`,
             }
         );
     }
-    if (from.matched.some(record => record.name === 'submit')) {
+    if (from.matched.some(record => record.name === 'start')) {
         to.meta.crumb = to.meta.crumb.slice(0, 2);
     }
     if (to.matched.some(record => record.meta.requiresAuth)) {

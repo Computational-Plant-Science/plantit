@@ -2,6 +2,16 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export default {
+    list() {
+        return axios
+            .get('/apis/v1/profiles/')
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
     getCurrentUser() {
         /**
          * Get the current user's information.

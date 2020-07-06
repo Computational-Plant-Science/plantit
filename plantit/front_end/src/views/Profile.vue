@@ -3,6 +3,8 @@
         <b-container>
             <div class="w-100 pb-4">
                 <b-card
+                        bg-variant="white"
+                        header-bg-variant="white"
                     :img-src="require('../assets/icons/default-user-small.png')"
                     img-alt="Image"
                     img-top
@@ -16,8 +18,7 @@
                         <b-row>
                             <b-col class="mt-2" style="color:white">
                                 <h5>
-                                    <i class="fas fa-user green"></i>
-                                    {{ info.username }}
+                                    Profile: {{ info.username }}
                                 </h5>
                             </b-col>
                             <b-col md="auto">
@@ -33,8 +34,6 @@
                         </b-row>
                     </template>
                     <b-card-text v-if="!loading">
-                        <h4>PlantIT</h4>
-                        <hr />
                         <p><b>Email Address:</b> {{ this.info.email }}</p>
                         <p><b>First Name:</b> {{ this.info.first_name }}</p>
                         <p><b>Last Name:</b> {{ this.info.last_name }}</p>
@@ -79,7 +78,7 @@
                             }}
                         </p>
                         <br>
-                        <h4>Github</h4>
+                        <h5>Github</h5>
                         <hr />
                         <p>
                             <b>Username:</b>

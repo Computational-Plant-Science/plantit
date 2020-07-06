@@ -18,9 +18,7 @@
                         <h1>PlantIT</h1>
                     </b-col>
                 </b-row>
-                <b-card-body class="text-center">
-                    Workflow automation for plant science.
-                </b-card-body>
+                <br>
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">

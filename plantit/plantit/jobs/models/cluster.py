@@ -9,7 +9,7 @@ class Cluster(models.Model):
     description = models.TextField(blank=True,
                                    help_text="Human-readable description of cluster.")
     workdir = models.CharField(max_length=250,
-                               help_text="Where (full path) to put folders for workflow analysis jobs on the cluster.")
+                               help_text="Where (full path) to put folders for pipeline analysis jobs on the cluster.")
     username = models.CharField(max_length=100,
                                 help_text="ssh username")
     password = EncryptedCharField(max_length=100, blank=True, null=True, default=None,

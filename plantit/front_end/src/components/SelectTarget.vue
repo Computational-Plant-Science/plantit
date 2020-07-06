@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import ClusterManager from '../services/apiV1/ClusterManager';
+import Clusters from '../services/apiV1/ClusterManager';
 export default {
     name: 'SelectTarget',
     props: {
@@ -48,7 +48,7 @@ export default {
         };
     },
     mounted: function() {
-        ClusterManager.getClusters().then(data => {
+        Clusters.getClusters().then(data => {
             this.clusters = data.clusters;
         });
     },

@@ -58,7 +58,7 @@ export default {
          **/
 
         //The plant IT object is set by django's template system.
-        // You can find the workflow in public/index.html
+        // You can find the pipeline in public/index.html
         return plantIT.is_authenticated; // eslint-disable-line no-undef
     },
 

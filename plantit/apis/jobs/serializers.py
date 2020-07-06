@@ -3,13 +3,14 @@ from datetime import datetime
 
 from plantit.jobs.models.job import Job
 from plantit.jobs.models.status import Status
-from plantit.workflows import registrar
 from ..mixins import PinnedSerilizerMethodMixin
+
 
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Status
-        fields = ('state', 'date', 'description' )
+        fields = ('state', 'date', 'description')
+
 
 class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
     status_set = StatusSerializer(many=True)
@@ -20,7 +21,7 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
 
     class Meta:
         model = Job
-        fields = ('pk', 'pinned', 'collection', 'workflow',
+        fields = ('pk', 'pinned', 'collection', 'pipeline',
                   'cluster', 'workflow_name',
                   'created', 'work_dir',
                   'remote_results_path', 'status_set')
@@ -30,7 +31,7 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
         job = Job.objects.create(**validated_data)
         job.save()
         for _ in status_data:
-            Status.objects.create(job = job, **status_data)
+            Status.objects.create(job=job, **status_data)
         return job
 
     def update(self, job, validated_data):
@@ -41,21 +42,11 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
         if 'remote_results_path' in validated_data.keys():
             job.remote_results_path = validated_data['remote_results_path']
 
-        status_data = validated_data.get('status_set',None)
+        status_data = validated_data.get('status_set', None)
         if status_data:
             for status in status_data:
                 status['date'] = datetime.now()
-                Status.objects.create(job = job, **status)
+                Status.objects.create(job=job, **status)
 
         job.save()
         return job
-
-    def get_workflow_name(self, job):
-        if job.plantit_pipeline:
-            return registrar.list[job.plantit_pipeline]['name']
-
-    def get_cluster(self, job):
-        if job.cluster:
-            return job.cluster.name
-        else:
-            return None

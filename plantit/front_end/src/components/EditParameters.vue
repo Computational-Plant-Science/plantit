@@ -9,16 +9,16 @@
         caption-top
     >
         <template v-slot:table-caption
-            >Enter values for workflow parameters.</template
+            >Configure workflow parameters.</template
         >
         <template v-slot:cell(name)="param">
-            {{ param.item.key }}
+            {{ param.item.key.toUpperCase() }}
         </template>
         <template v-slot:cell(value)="param">
             <b-form-input
                 size="sm"
                 v-model="param.item.value"
-                :placeholder="'Enter a value for \'' + param.item.key + '\''"
+                :placeholder="'Enter a value for \'' + param.item.key.toUpperCase() + '\''"
             ></b-form-input>
         </template>
     </b-table>

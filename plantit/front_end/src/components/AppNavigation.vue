@@ -63,7 +63,7 @@
                                         variant="white"
                                         block
                                         class="text-left m-0"
-                                        href="/login/?next=/workflows/"
+                                        href="/login/?next=/pipelines/"
                                     >
                                         <b-img
                                             :src="
@@ -83,7 +83,7 @@
                             <p class="mr-4 ml-4">
                                 See the
                                 <b-link to="/Guide">Guide</b-link>
-                                to learn how to run workflows, or the
+                                to learn how to run pipelines, or the
                                 <b-link to="/Docs">Docs</b-link>
                                 to create your own.
                             </p>
@@ -242,24 +242,24 @@
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
                         v-if="isLoggedIn"
-                        title="Workflows"
-                        to="/workflows"
+                        title="Pipelines"
+                        to="/pipelines"
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
                             <i class="fas fa-stream fa-1x fa-fw"></i>
-                            Workflows
+                            Pipelines
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
                         v-if="isLoggedIn"
-                        title="Jobs"
-                        to="/jobs"
+                        title="Runs"
+                        to="/runs"
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
                             <i class="fas fa-terminal fa-1x fa-fw"></i>
-                            Jobs
+                            Runs
                         </b-button>
                     </b-nav-item>
                     <b-nav-item

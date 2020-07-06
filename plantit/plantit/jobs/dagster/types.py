@@ -39,13 +39,15 @@ DagsterCluster = DagsterType(
 
 
 @input_hydration_config(Permissive({
-    'workflow': Field(String),
+    'pipeline_owner': Field(String),
+    'pipeline_name': Field(String),
     'cluster': Field(String),
     'work_dir': Field(String),
 }))
 def job_input_hydration_config(_, selector) -> AbstractJob:
     job = AbstractJob()
-    job.workflow = selector['workflow']
+    job.pipeline_owner = selector['pipeline_owner']
+    job.pipeline_owner = selector['pipeline_name']
     job.cluster = selector['cluster']
     job.work_dir = selector['work_dir']
     return job

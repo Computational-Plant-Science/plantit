@@ -33,7 +33,7 @@ class JobViewSet(viewsets.ModelViewSet, PinViewMixin):
                         "collection": "Test",
                         "created": "2019-06-19T15:09:26.609002-04:00",
                         "work_dir": "1560989366/",
-                        "workflow": "test_workflow",
+                        "pipeline": "test_workflow",
                         "submission_id": null,
                         "cluster": "Sapelo2",
                         "remote_results_path": "/tempZone/home/rods/results_job10.csv",
