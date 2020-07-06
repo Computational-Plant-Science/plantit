@@ -122,7 +122,7 @@
                                         Guide
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item to="/Documentation" class="m-0 p-0">
+                                <b-nav-item to="/Docs" class="m-0 p-0">
                                     <b-button
                                         variant="outline-dark"
                                         block
@@ -179,85 +179,6 @@
             </template>
             <template slot="footer">
                 <b-container class="p-3">
-                    <hr />
-                    <b-row class="ml-0 mr-0 pl-0 pr-0 pb-3">
-                        <b-col class="ml-0 mr-0 pl-0 pr-0">
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    title="Workflows"
-                                    to="/workflows"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-stream fa-1x fa-fw"
-                                        ></i>
-                                        Workflows
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    title="Jobs"
-                                    to="/jobs"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-terminal fa-1x fa-fw"
-                                        ></i>
-                                        Jobs
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    class="m-0 p-0"
-                                    to="/profile"
-                                >
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                        title="Profile"
-                                    >
-                                        <i class="fas fa-user fa-1x fa-fw"></i>
-                                        {{
-                                            loading
-                                                ? 'Loading...'
-                                                : info
-                                                ? info.first_name
-                                                : ''
-                                        }}
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-if="isLoggedIn"
-                                    title="Log Out"
-                                    to="/logout"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="outline-danger"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-door-closed fa-1x fa-fw"
-                                        ></i>
-                                        Log Out
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                        </b-col>
-                    </b-row>
                     <b-row>
                         <b-col align-self="center">
                             <b-img
@@ -271,8 +192,7 @@
                 </b-container>
             </template>
         </b-sidebar>
-        <b-navbar toggleable="lg" class="logo m-0 p-0 pl-2 pr-2">
-            <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+        <b-navbar toggleable="sm" class="logo p-3" style="max-height: 60px">
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-3 mr-3">
                     <b-nav-item class="m-0 p-0" v-b-toggle.sidebar-left>
@@ -280,14 +200,14 @@
                             class="brand-img m-0 p-0"
                             v-bind:class="{ 'not-found': not_found }"
                             variant="outline-white"
-                            style="color: white"
+                            style="color: white;-webkit-transform: rotate(90deg);transform: rotate(90deg)"
                             @mouseenter="titleContent = 'sidebar'"
                             @mouseleave="titleContent = 'breadcrumb'"
                         >
                             <b-img
                                 class="m-0 p-0"
                                 center
-                                width="25px"
+                                width="30px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -319,60 +239,29 @@
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                 </transition>
-                <!--<b-navbar-brand
-                    href="/"
-                    class="align-middle ml-3 title"
-                    title="Home"
-                    >PlantIT</b-navbar-brand
-                >-->
                 <b-navbar-nav class="ml-auto m-0 p-0">
-                    <!--<b-nav-item class="m-0 p-0" disabled>
-                        <i class="fas fa-slash fa-1x text-success"></i>
-                    </b-nav-item>
-                    <b-nav-item to="/" class="m-0 p-0" title="Home">
-                        <b-button
-                            variant="outline-dark"
-                            block
-                            class="text-left"
-                        >
-                            <i class="fas fa-home fa-1x fa-fw"></i>
+                    <b-nav-item
+                        v-if="isLoggedIn"
+                        title="Workflows"
+                        to="/workflows"
+                        class="m-0 p-0"
+                    >
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-stream fa-1x fa-fw"></i>
+                            Workflows
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
-                        to="/About"
+                        v-if="isLoggedIn"
+                        title="Jobs"
+                        to="/jobs"
                         class="m-0 p-0"
-                        title="About"
                     >
-                        <b-button
-                            variant="outline-dark"
-                            block
-                            class="text-left"
-                        >
-                            <i class="fas fa-seedling fa-1x fa-fw"></i>
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-terminal fa-1x fa-fw"></i>
+                            Jobs
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item to="/Guide" class="m-0 p-0" title="User Guide">
-                        <b-button
-                            variant="outline-dark"
-                            block
-                            class="text-left"
-                        >
-                            <i class="fas fa-map-signs fa-1x fa-fw"></i>
-                        </b-button>
-                    </b-nav-item>
-                    <b-nav-item
-                        to="/Documentation"
-                        class="m-0 p-0"
-                        title="Developer Docs"
-                    >
-                        <b-button
-                            variant="outline-dark"
-                            block
-                            class="text-left"
-                        >
-                            <i class="fas fa-book fa-1x fa-fw"></i>
-                        </b-button>
-                    </b-nav-item>-->
                     <b-nav-item
                         v-if="isLoggedIn"
                         title="Profile"
@@ -642,16 +531,6 @@ export default {
 <style scoped lang="sass">
 @import '../scss/main.sass'
 @import '../scss/_colors.sass'
-
-.brand-img
-    border-radius: 50%
-    -webkit-transition: -webkit-transform .2s ease-in-out
-        transition: transform .2s ease-in-out
-
-.brand-img:hover
-    color: $dark
-    -webkit-transform: rotate(90deg)
-        transform: rotate(90deg)
 
 .not-found
     color: $red

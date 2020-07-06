@@ -4,7 +4,7 @@
             <b-row align-content="center">
                 <b-col>
                     <h5 class="text-center">
-                        This page does not exist.
+                        This page is under construction.
                     </h5>
                 </b-col>
             </b-row>
@@ -13,7 +13,9 @@
 </template>
 
 <script>
-// @ is an alias to /src
-
-export default {};
+export default {
+    name: 'Docs'
+};
 </script>
+
+<style scoped></style>

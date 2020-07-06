@@ -14,6 +14,7 @@ router.register('profiles', ProfileViewSet)
 urlpatterns = [
     url('files/', include("apis.stores.urls")),
     url('workflows/', include("apis.workflows.urls")),
+    url('clusters/', include("apis.clusters.urls")),
     url('auth/login/', login_view),
     url('auth/logout/', logout_view),
     url(r'jobs/(?P<pk>\d+)/download_results/', download_results),

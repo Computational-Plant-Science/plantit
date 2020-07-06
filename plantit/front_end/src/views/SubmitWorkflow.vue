@@ -1,17 +1,61 @@
 <template>
-    <div>
-        <div class="mb-4 pt-4">
-            <div class="workflow-icon">
-                <b-img :src="workflow ? workflow.workflow.icon_url ? workflow.workflow.icon_url : require('../assets/logo.png') : require('../assets/logo.png')"> </b-img>
-            </div>
-            <br />
-            <br />
-            <h4>{{ workflow ? workflow.workflow.name : 'Loading...' }}</h4>
-            <p>
-                {{ workflow ? workflow.workflow.description : 'Loading...' }}
-            </p>
-        </div>
-        <NewCollection>
+    <div class="w-100 p-4">
+        <b-card header-bg-variant="light" border-variant="default" class="mb-4">
+            <template v-slot:header style="background-color: white">
+                <b-row align-v="center">
+                    <b-col class="mt-2" style="color: white">
+                        <h5>
+                            Description
+                        </h5>
+                    </b-col>
+                </b-row>
+            </template>
+            <b-card-body>
+                {{ workflow.repo.description }}
+            </b-card-body>
+        </b-card>
+        <b-card header-bg-variant="light" border-variant="default" class="mb-4">
+            <template v-slot:header style="background-color: white">
+                <b-row align-v="center">
+                    <b-col class="mt-2" style="color: white">
+                        <h5>
+                            Parameters
+                        </h5>
+                    </b-col>
+                </b-row>
+            </template>
+            <b-card-body>
+                <EditParameters :params="params"></EditParameters>
+            </b-card-body>
+            <!--<b-card-body>
+                <vue-json-editor v-model="params" :show-btns="true" :expandedOnStart="true" @json-change="onJsonChange"></vue-json-editor>
+            </b-card-body>-->
+        </b-card>
+        <b-card header-bg-variant="light" border-variant="default" class="mb-4">
+            <template v-slot:header style="background-color: white">
+                <b-row align-v="center">
+                    <b-col class="mt-2" style="color: white">
+                        <h5>
+                            Target
+                        </h5>
+                    </b-col>
+                </b-row>
+            </template>
+            <b-card-body>
+                <SelectTarget :selected="target" v-on:targetSelected="targetSelected"></SelectTarget>
+            </b-card-body>
+            <template v-slot:footer style="background-color: white">
+                <b-row align-v="center">
+                    <b-col class="mt-2" style="color: white">
+                        <h5>
+                            Selected: {{ target.name }}
+                        </h5>
+                    </b-col>
+                </b-row>
+            </template>
+        </b-card>
+    </div>
+    <!--<NewCollection>
 
         </NewCollection>
         <SelectCollection
@@ -23,28 +67,35 @@
         ></SelectCollection>
         <SetParameters
             class="pb-4"
-            :workflow_name="this.workflow_name"
+            :workflow_name="this.name"
             v-on:submit="onSubmit"
-        ></SetParameters>
-    </div>
+        ></SetParameters>-->
 </template>
 
 <script>
-import NewCollection from '@/views/NewCollection.vue';
+// import vueJsonEditor from 'vue-json-editor'
+import EditParameters from "../components/EditParameters";
+import SelectTarget from "../components/SelectTarget";
+// import NewCollection from '@/views/NewCollection.vue';
 import WorkflowAPI from '@/services/apiV1/WorkflowManager';
-import SelectCollection from '@/components/collections/SelectCollection.vue';
+// import SelectCollection from '@/components/collections/SelectCollection.vue';
 import * as Sentry from '@sentry/browser';
-import SetParameters from '../components/collections/SetParameters';
+// import SetParameters from '../components/collections/SetParameters';
 
 export default {
     name: 'SubmitWorkflow',
     components: {
-        NewCollection,
-        SetParameters,
-        SelectCollection,
+        // NewCollection,
+        // SetParameters,
+        // SelectCollection,
+        EditParameters,
+        SelectTarget
     },
     props: {
-        workflow_name: {
+        owner: {
+            required: true
+        },
+        name: {
             required: true
         }
     },
@@ -53,13 +104,21 @@ export default {
             collection_pk: null,
             workflow: null,
             params: [],
-            values: {}
+            values: {},
+            target: {
+                name: 'None'
+            }
         };
     },
     mounted: function() {
-        WorkflowAPI.getWorkflow(this.workflow_name).then(wf => {
-            this.workflow = wf;
-            this.params = wf.parameters;
+        WorkflowAPI.getWorkflow(this.owner, this.name).then(workflow => {
+            this.workflow = workflow;
+            this.params = workflow.config.params.map(function(param) {
+                return {
+                    key: param,
+                    value: ''
+                };
+            });
         });
     },
     methods: {
@@ -70,23 +129,23 @@ export default {
         onSelected(collection) {
             this.collection_pk = collection.pk;
         },
+        targetSelected(target) {
+            this.target = target;
+        },
         onSubmit(values) {
-            WorkflowAPI.submitJob(
-                this.workflow_name,
-                this.collection_pk,
-                values
-            ).then(result => {
-                if (result.status === 200) {
-                    this.$emit('workflowSubmitted', result.data.job_id);
-                } else {
-                    //TODO: Replace this with something to alerts the user.
-                    Sentry.captureMessage('Submission Failed:' + result);
+            WorkflowAPI.submitJob(this.name, this.collection_pk, values).then(
+                result => {
+                    if (result.status === 200) {
+                        this.$emit('workflowSubmitted', result.data.job_id);
+                    } else {
+                        //TODO: Replace this with something to alerts the user.
+                        Sentry.captureMessage('Submission Failed:' + result);
+                    }
                 }
-            });
+            );
         },
         saveMetadata() {
             // TODO update job
-
         }
     }
 };

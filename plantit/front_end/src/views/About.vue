@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="p-5">
         <b-container>
             <h2>
                 About PlantIT

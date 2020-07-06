@@ -1,5 +1,11 @@
 <template>
     <div class="w-100 p-4">
+        <p>
+            To start a new <b>Job</b>, click <i class="fas fa-plus"></i> or go
+            to the
+            <b>Workflows</b>
+            page. Select an existing <b>Job</b> to view logs and results.
+        </p>
         <b-card>
             <template v-slot:header style="background-color: white">
                 <b-row>
@@ -49,12 +55,6 @@
                     </b-col>
                 </b-row>
             </template>
-            <p>
-                To start a new <b>Job</b>, click
-                <i class="fas fa-plus"></i> or go to the
-                <b>Workflows</b>
-                page. Select an existing <b>Job</b> to view logs and results.
-            </p>
             <b-row>
                 <b-col>
                     <b-table
@@ -202,8 +202,8 @@ export default {
                 {
                     key: 'work_dir',
                     label: 'Directory',
-                    sortable: true,
-                },
+                    sortable: true
+                }
             ],
             items: [],
             workflows: []

@@ -19,7 +19,7 @@
                     </b-col>
                 </b-row>
                 <b-card-body class="text-center">
-                    <p><b>Phenomics</b>-as-a-Service software for accessible, reproducible plant science.</p>
+                    Workflow automation for plant science.
                 </b-card-body>
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>

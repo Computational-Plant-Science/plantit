@@ -6,14 +6,14 @@
                     class="rounded-0 text-center"
                     bg-variant="secondary"
                     border-variant="default"
-                    text-variant="dark"
-                    sub-title-text-variant="dark"
+                    text-variant="white"
+                    sub-title-text-variant="white"
                     header-bg-variant="secondary"
                     header-border-variant="secondary"
                 >
                     <template slot="header" style="border: none">
                         <h1 class="text-success">Researchers</h1>
-                        <p class="text-dark">
+                        <p class="text-white">
                             PlantIT takes care of infrastructure details so you
                             can focus on your data.
                         </p>

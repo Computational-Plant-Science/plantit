@@ -3,7 +3,9 @@ import Router from 'vue-router';
 import Home from './views/Home.vue';
 import About from './views/About.vue';
 import Guide from './views/Guide.vue';
+import Docs from './views/Docs.vue';
 import Workflows from './views/Workflows.vue';
+import SubmitWorkflow from './views/SubmitWorkflow.vue';
 import Jobs from './views/Jobs.vue';
 import Profile from './views/Profile.vue';
 import Login from './views/Login.vue';
@@ -25,7 +27,6 @@ let router = new Router({
                     {
                         text: 'PlantIT',
                         href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
                     }
                 ]
             }
@@ -39,12 +40,10 @@ let router = new Router({
                     {
                         text: 'PlantIT',
                         href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
                     },
                     {
                         text: 'About',
                         href: '/about',
-                        icon: '<i class="fas fa-seedling fa-1x text-dark align-middle"></i>'
                     }
                 ]
             }
@@ -58,12 +57,27 @@ let router = new Router({
                     {
                         text: 'PlantIT',
                         href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
                     },
                     {
                         text: 'Guide',
                         href: '/guide',
-                        icon: '<i class="fas fa-map-signs fa-1x text-dark align-middle"></i>'
+                    }
+                ]
+            }
+        },
+        {
+            path: '/docs',
+            name: 'docs',
+            component: Docs,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                    },
+                    {
+                        text: 'Docs',
+                        href: '/docs',
                     }
                 ]
             }
@@ -77,7 +91,6 @@ let router = new Router({
                     {
                         text: 'Log In',
                         href: '/login/?next=/dashboard/',
-                        icon: '<i class="fas fa-door-open fa-1x text-dark align-middle"></i>'
                     }
                 ]
             }
@@ -91,7 +104,6 @@ let router = new Router({
                     {
                         text: 'Log Out',
                         href: '/logout',
-                        icon: '<i class="fas fa-door-closed fa-1x text-dark align-middle"></i>'
                     }
                 ]
             }
@@ -105,12 +117,28 @@ let router = new Router({
                     {
                         text: 'PlantIT',
                         href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
                     },
                     {
                         text: 'Workflows',
                         href: '/workflows',
-                        icon: '<i class="fas fa-stream fa-1x text-dark align-middle"></i>'
+                    }
+                ]
+            }
+        },
+        {
+            path: '/workflows/submit/:owner/:name',
+            name: 'submit',
+            props: true,
+            component: SubmitWorkflow,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/',
+                    },
+                    {
+                        text: 'Workflows',
+                        href: '/workflows',
                     }
                 ]
             }
@@ -124,12 +152,10 @@ let router = new Router({
                     {
                         text: 'PlantIT',
                         href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
                     },
                     {
                         text: 'Jobs',
                         href: '/jobs',
-                        icon: '<i class="fas fa-terminal fa-1x text-dark align-middle"></i>'
                     }
                 ]
             }
@@ -143,12 +169,10 @@ let router = new Router({
                     {
                         text: 'PlantIT',
                         href: '/',
-                        icon: '<i class="fas fa-home fa-1x text-dark align-middle:"></i>'
                     },
                     {
                         text: 'Profile',
                         href: '/profile',
-                        icon: '<i class="fas fa-user fa-1x text-dark align-middle"></i>'
                     }
                 ],
                 requiresAuth: true
@@ -164,8 +188,11 @@ let router = new Router({
             meta: {
                 crumb: [
                     {
+                        text: 'PlantIT',
+                        href: '/',
+                    },
+                    {
                         text: '404',
-                        icon: '<i class="fas fa-question fa-1x text-dark align-middle"></i>'
                     }
                 ]
             }
@@ -174,6 +201,25 @@ let router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
+    if (to.matched.some(record => record.name === 'submit') && to.meta.crumb[to.meta.crumb.length - 1].text !== 'Submit') {
+        to.meta.crumb.push(
+            {
+                text: to.params.owner,
+                href: `/workflows/${to.params.owner}`,
+            },
+            {
+                text: to.params.name,
+                href: `/workflows/${to.params.owner}/${to.params.name}`,
+            },
+            {
+                text: 'Submit',
+                href: `/workflows/${to.params.owner}/${to.params.name}/submit`,
+            }
+        );
+    }
+    if (from.matched.some(record => record.name === 'submit')) {
+        to.meta.crumb = to.meta.crumb.slice(0, 2);
+    }
     if (to.matched.some(record => record.meta.requiresAuth)) {
         if (!Auth.isLoggedIn()) {
             window.location = '/login/?next=' + to.fullPath;

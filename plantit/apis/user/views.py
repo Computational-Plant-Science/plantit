@@ -1,6 +1,3 @@
-import json
-import yaml
-from random import choice
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
@@ -16,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apis.user.serializers import UserSerializer
+from apis.util import get_config, csrf_token
 
 
 class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
@@ -58,13 +56,12 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             'code': code})
 
         token = parse_qs(response.text)['access_token'][0]
-        print(token)
         user = self.get_object()
         user.profile.github_username = Github(token).get_user().login
         user.profile.github_auth_token = token
         user.save()
 
-        return redirect('/dashboard/')
+        return redirect('/workflows/')
 
     @action(methods=['get'], detail=False)
     def github_repos(self, request):
@@ -73,38 +70,8 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         github_username = gh.get_user().login
 
         response = requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{github_username}")
-        hits = response.json()['items']
-        repos = [map_repo(hit['repository']) for hit in hits]
-        return Response(repos)
-
-
-def map_repo(repo):
-    name = repo['name']
-    user = repo['owner']['login']
-    url = f"https://api.github.com/repos/{user}/{name}/contents/plantit.yaml"
-    response = requests.get(url)
-    download_url = response.json()['download_url']
-    config = yaml.load(requests.get(download_url).text)
-    return {
-        'name': repo['name'],
-        'url': repo['html_url'],
-        'description': repo['description'],
-        'config': config
-    }
-
-
-def csrf_token(request):
-    token = request.session.get('csrfToken', None)
-    if token is None:
-        token = secret_key()
-        request.session['csrfToken'] = token
-    return token
-
-
-def random_string(length, allowed_chars='abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
-    return ''.join(choice(allowed_chars) for i in range(length))
-
-
-def secret_key():
-    chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
-    return random_string(40, chars)
+        workflows = [{
+            'repo': item['repository'],
+            'config': get_config(item['repository'], user.profile.github_auth_token)
+        } for item in response.json()['items']]
+        return Response(workflows)

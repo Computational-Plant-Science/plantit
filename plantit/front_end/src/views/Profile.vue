@@ -1,5 +1,5 @@
 <template>
-    <div class="w-100 p-0 m-0">
+    <div class="w-100 p-5 m-0">
         <b-container>
             <div class="w-100 pb-4">
                 <b-card
@@ -25,7 +25,7 @@
                                     @click="$bvModal.show('editUserInfoModal')"
                                     variant="outline-dark"
                                     v-b-tooltip.hover
-                                    title="Edit user information."
+                                    title="Edit profile."
                                 >
                                     <i class="far fa-edit"></i>
                                 </b-button>
@@ -33,42 +33,11 @@
                         </b-row>
                     </template>
                     <b-card-text v-if="!loading">
-                        <h5>PlantIT</h5>
+                        <h4>PlantIT</h4>
                         <hr />
                         <p><b>Email Address:</b> {{ this.info.email }}</p>
                         <p><b>First Name:</b> {{ this.info.first_name }}</p>
                         <p><b>Last Name:</b> {{ this.info.last_name }}</p>
-                        <h5>Github</h5>
-                        <hr />
-                        <p>
-                            <b>Username:</b>
-                            {{
-                                this.info.profile === undefined
-                                    ? ''
-                                    : this.info.profile.github_username
-                            }}
-                        </p>
-                        <p>
-                            <b>Repos:</b>
-                            <b-list-group>
-                                <b-list-group-item
-                                    class="flex-column align-items-start"
-                                    v-for="repo in repos"
-                                    :key="repo.name"
-                                >
-                                    <div
-                                        class="d-flex justify-content-between"
-                                    >
-                                        <h5 class="mb-1">
-                                            {{ repo.name }}
-                                        </h5>
-                                    </div>
-                                    <small>{{ repo.description }}</small>
-                                </b-list-group-item>
-                            </b-list-group>
-                        </p>
-                        <h5>Institution</h5>
-                        <hr />
                         <p>
                             <b>Country:</b>
                             {{
@@ -108,6 +77,20 @@
                                     ? ''
                                     : this.info.profile.field_of_study
                             }}
+                        </p>
+                        <br>
+                        <h4>Github</h4>
+                        <hr />
+                        <p>
+                            <b>Username:</b>
+                            {{
+                                this.info.profile === undefined
+                                    ? ''
+                                    : this.info.profile.github_username
+                            }}
+                        </p>
+                        <p>
+                            <b>Pipelines:</b> {{ this.pipelines }}
                         </p>
                     </b-card-text>
                 </b-card>
@@ -158,7 +141,7 @@ export default {
     data() {
         return {
             info: {},
-            repos: [],
+            pipelines: 0,
             loading: true
         };
     },
@@ -171,7 +154,7 @@ export default {
         },
         getRepos() {
             UserApi.getCurrentUserGithubRepos().then(repos => {
-                this.repos = repos;
+                this.pipelines = repos.length;
             });
         },
         saveUserInfo(

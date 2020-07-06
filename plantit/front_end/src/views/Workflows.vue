@@ -6,8 +6,8 @@
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
                         <h5>
-                            <i class="fas fa-stream text-dark"></i> Computational Plant Science Lab
-                            Workflows
+                            <i class="fas fa-stream text-dark"></i>
+                            Computational Plant Science Lab Workflows
                         </h5>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
@@ -36,14 +36,14 @@
                 <b-card-group deck>
                     <b-card
                         v-for="workflow in filtered_cps_workflows"
-                        :key="workflow.name"
+                        :key="workflow.repo.name"
                         class="overflow-hidden p-0 m-2"
                         style="min-width: 30rem"
                     >
                         <template slot="header">
                             <b-row>
                                 <b-col>
-                                    <h3>{{ workflow.name }}</h3>
+                                    <h3>{{ workflow.repo.name }}</h3>
                                 </b-col>
                                 <b-col md="auto">
                                     <b-button
@@ -81,7 +81,7 @@
                                 <b-row>
                                     <b-col>
                                         <b-card-body>
-                                            {{ workflow.description }}
+                                            {{ workflow.repo.description }}
                                         </b-card-body>
                                     </b-col>
                                 </b-row>
@@ -130,14 +130,14 @@
                 <b-card-group deck class="pl-3 pr-3">
                     <b-card
                         v-for="workflow in filtered_public_user_workflows"
-                        :key="workflow.name"
+                        :key="workflow.repo.name"
                         class="overflow-hidden p-0 m-2"
                         style="min-width: 30rem"
                     >
                         <template slot="header">
                             <b-row align-v="center">
                                 <b-col>
-                                    <h5>{{ workflow.name }}</h5>
+                                    <h5>{{ workflow.repo.name }}</h5>
                                 </b-col>
                                 <b-col md="auto">
                                     <b-button
@@ -175,7 +175,7 @@
                                 <b-row>
                                     <b-col>
                                         <b-card-body>
-                                            {{ workflow.description }}
+                                            {{ workflow.repo.description }}
                                         </b-card-body>
                                     </b-col>
                                 </b-row>
@@ -224,14 +224,14 @@
                 <b-card-group deck class="pl-3 pr-3">
                     <b-card
                         v-for="workflow in filtered_private_user_workflows"
-                        :key="workflow.name"
+                        :key="workflow.repo.name"
                         class="overflow-hidden p-0 m-2"
                         style="min-width: 30rem"
                     >
                         <template slot="header">
                             <b-row align-v="center">
                                 <b-col>
-                                    <h5>{{ workflow.name }}</h5>
+                                    <h5>{{ workflow.repo.name }}</h5>
                                 </b-col>
                                 <b-col md="auto">
                                     <b-button
@@ -269,7 +269,7 @@
                                 <b-row>
                                     <b-col>
                                         <b-card-body>
-                                            {{ workflow.description }}
+                                            {{ workflow.repo.description }}
                                         </b-card-body>
                                     </b-col>
                                 </b-row>
@@ -283,6 +283,7 @@
 </template>
 
 <script>
+import router from '../router';
 import WorkflowAPI from '@/services/apiV1/WorkflowManager';
 import UserApi from '@/services/apiV1/UserManager.js';
 
@@ -379,7 +380,13 @@ export default {
     },
     methods: {
         workflowSelected: function(workflow) {
-            this.$emit('workflowSelected', workflow);
+            router.push({
+                name: 'submit',
+                params: {
+                    owner: workflow['repo']['owner']['login'],
+                    name: workflow['repo']['name']
+                }
+            });
         }
     }
 };

@@ -4,6 +4,5 @@ from . import views
 
 urlpatterns = [
     path(r'', views.workflows),
-    path(r'<workflow>/', views.workflow),
-    path(r'<workflow>/submit/<pk>/', views.submit)
+    path(r'<owner>/<name>/', views.workflow)
 ]

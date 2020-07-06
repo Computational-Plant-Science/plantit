@@ -3,12 +3,6 @@ import * as Sentry from '@sentry/browser';
 
 export default {
     getWorkflows() {
-        /**
-         * Get Available stroage types.
-         *
-         * Returns:
-         *    Axios promise containing returning an array of workflow objects
-         **/
         return axios
             .get('/apis/v1/workflows/')
             .then(response => {
@@ -18,20 +12,11 @@ export default {
                 Sentry.captureException(err);
             });
     },
-    getWorkflow(workflow) {
-        /**
-         * Get workflow info and parameters
-         *
-         * Args:
-         *   workflow (str): app_name of workflow
-         *
-         * Returns:
-         *    Axios promise containing returning the workflow info and parameters
-         **/
+    getWorkflow(owner, name) {
         return axios
-            .get(`/apis/v1/workflows/${workflow}/`)
+            .get(`/apis/v1/workflows/${owner}/${name}/`)
             .then(response => {
-                return response.data.workflows;
+                return response.data;
             })
             .catch(err => {
                 Sentry.captureException(err);
