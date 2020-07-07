@@ -62,7 +62,7 @@
                                 variant="white"
                                 block
                                 class="text-center"
-                                href="/login/?next=/dashboard/"
+                                href="/login/?next=/pipelines/"
                             >
                                 <b-img
                                     :src="

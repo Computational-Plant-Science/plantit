@@ -63,7 +63,6 @@ INSTALLED_APPS = [
     'plantit.apps.PlantITConfig',
     'front_end.apps.FrontEndConfig',
     'django_cas_ng',
-    'taggit'
 ]
 
 MIDDLEWARE = [

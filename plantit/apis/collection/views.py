@@ -1,8 +1,13 @@
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from rest_framework import viewsets
+
+from plantit.stores.irodsstore import IRODS, IRODSOptions
 from .serializers import CollectionSerializer, SampleSerializer
 from plantit.collection.models import Collection, Sample
 from rest_framework.permissions import IsAuthenticated
 from ..mixins import PinViewMixin
+
 
 class CollectionViewSet(viewsets.ModelViewSet, PinViewMixin):
     """
@@ -17,6 +22,7 @@ class CollectionViewSet(viewsets.ModelViewSet, PinViewMixin):
         user = self.request.user
         return self.queryset.filter(user=user)
 
+
 class SampleViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows collections to be viewed and edited.
@@ -29,3 +35,30 @@ class SampleViewSet(viewsets.ModelViewSet):
     # def get_queryset(self):
     #     user = self.request.user
     #     return self.queryset.filter(user=user)
+
+
+@login_required
+def list_files(request):
+    options = IRODSOptions(request.GET.get('host'), int(request.GET.get('port')), request.GET.get('username'),
+                 request.GET.get('password'), request.GET.get('zone'))
+    irods = IRODS(options)
+    files = irods.list(request.GET.get('path'))
+    request.session['irods_username'] = options.user
+    request.session['irods_host'] = options.host
+    request.session['irods_port'] = options.port
+    request.session['irods_zone'] = options.zone
+    request.session['irods_path'] = request.GET.get('path', None)
+    return JsonResponse({
+        'files': files
+    })
+
+
+@login_required
+def get_connection_info(request):
+    return JsonResponse({
+        'username': request.session.get('irods_username', None),
+        'host': request.session.get('irods_host', None),
+        'port': request.session.get('irods_port', None),
+        'zone': request.session.get('irods_zone', None),
+        'path': request.session.get('irods_path', None)
+    })

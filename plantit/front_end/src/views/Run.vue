@@ -134,7 +134,7 @@
 </template>
 
 <script>
-import JobApi from '@/services/apiV1/JobManager.js';
+import JobApi from '@/services/apiV1/RunManager.js';
 import moment from 'moment';
 
 export default {

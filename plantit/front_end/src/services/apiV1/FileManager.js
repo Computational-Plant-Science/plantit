@@ -33,6 +33,35 @@ export default {
                 Sentry.captureException(err);
             });
     },
+    connectionInfo() {
+        return axios
+            .get(`/apis/v1/collections/connection_info/`)
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
+    list(username, password, host, port, zone, path) {
+        return axios
+            .get(`/apis/v1/collections/list_files/`, {
+                params: {
+                    username: username,
+                    password: password,
+                    host: host,
+                    port: port,
+                    zone: zone,
+                    path: path
+                }
+            })
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
     listDir(dir, storage_type) {
         /**
          * List folder contents in the format required by

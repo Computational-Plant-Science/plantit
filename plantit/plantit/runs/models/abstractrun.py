@@ -1,4 +1,4 @@
-class AbstractJob:
+class AbstractRun:
     pipeline_owner = None
     pipeline_name = None
     cluster = None

@@ -69,7 +69,7 @@
                                             :src="
                                                 require('@/assets/sponsors/cyversebw-notext.png')
                                             "
-                                            height="18px"
+                                            height="1px"
                                             alt="Cyverse"
                                         ></b-img>
                                         Log In with CyVerse
@@ -192,7 +192,7 @@
                 </b-container>
             </template>
         </b-sidebar>
-        <b-navbar toggleable="sm" class="logo p-3" style="max-height: 60px">
+        <b-navbar toggleable="sm" class="logo p-3 pt-5" style="max-height: 60px">
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-3 mr-3">
                     <b-nav-item class="m-0 p-0" v-b-toggle.sidebar-left>
@@ -200,14 +200,13 @@
                             class="brand-img m-0 p-0"
                             v-bind:class="{ 'not-found': not_found }"
                             variant="outline-white"
-                            style="color: white;-webkit-transform: rotate(90deg);transform: rotate(90deg)"
                             @mouseenter="titleContent = 'sidebar'"
                             @mouseleave="titleContent = 'breadcrumb'"
                         >
                             <b-img
                                 class="m-0 p-0"
                                 center
-                                width="30px"
+                                width="28px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -586,4 +585,14 @@ a:hover
 
 .component-fade-enter, .component-fade-leave-to
     opacity: 0
+
+.brand-img
+    border-radius: 50%
+    -webkit-transition: -webkit-transform .2s ease-in-out
+        transition: transform .2s ease-in-out
+
+.brand-img:hover
+    color: white
+    -webkit-transform: rotate(90deg)
+    transform: rotate(90deg)
 </style>

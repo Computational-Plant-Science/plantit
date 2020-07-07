@@ -7,6 +7,7 @@ import Docs from './views/Docs.vue';
 import Pipelines from './views/Pipelines.vue';
 import StartPipeline from './views/StartPipeline.vue';
 import Runs from './views/Runs.vue';
+import Run from './views/Run.vue';
 import Profile from './views/Profile.vue';
 import Login from './views/Login.vue';
 import Logout from './views/Logout.vue';
@@ -26,7 +27,7 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'PlantIT',
-                        href: '/',
+                        href: '/'
                     }
                 ]
             }
@@ -39,11 +40,11 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'PlantIT',
-                        href: '/',
+                        href: '/'
                     },
                     {
                         text: 'About',
-                        href: '/about',
+                        href: '/about'
                     }
                 ]
             }
@@ -56,11 +57,11 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'PlantIT',
-                        href: '/',
+                        href: '/'
                     },
                     {
                         text: 'Guide',
-                        href: '/guide',
+                        href: '/guide'
                     }
                 ]
             }
@@ -73,11 +74,11 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'PlantIT',
-                        href: '/',
+                        href: '/'
                     },
                     {
                         text: 'Docs',
-                        href: '/docs',
+                        href: '/docs'
                     }
                 ]
             }
@@ -90,7 +91,7 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'Log In',
-                        href: '/login/?next=/pipelines/',
+                        href: '/login/?next=/pipelines/'
                     }
                 ]
             }
@@ -103,7 +104,7 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'Log Out',
-                        href: '/logout',
+                        href: '/logout'
                     }
                 ]
             }
@@ -116,11 +117,11 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'PlantIT',
-                        href: '/',
+                        href: '/'
                     },
                     {
                         text: 'Pipelines',
-                        href: '/pipelines',
+                        href: '/pipelines'
                     }
                 ]
             }
@@ -134,11 +135,11 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'PlantIT',
-                        href: '/',
+                        href: '/'
                     },
                     {
                         text: 'Pipelines',
-                        href: '/pipelines',
+                        href: '/pipelines'
                     }
                 ]
             }
@@ -151,11 +152,29 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'PlantIT',
-                        href: '/',
+                        href: '/'
                     },
                     {
                         text: 'Runs',
-                        href: '/runs',
+                        href: '/runs'
+                    }
+                ]
+            }
+        },
+        {
+            path: '/runs/:id',
+            name: 'run',
+            props: true,
+            component: Run,
+            meta: {
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/'
+                    },
+                    {
+                        text: 'Runs',
+                        href: '/runs'
                     }
                 ]
             }
@@ -168,11 +187,11 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'PlantIT',
-                        href: '/',
+                        href: '/'
                     },
                     {
                         text: 'Profile',
-                        href: '/profile',
+                        href: '/profile'
                     }
                 ],
                 requiresAuth: true
@@ -189,10 +208,10 @@ let router = new Router({
                 crumb: [
                     {
                         text: 'PlantIT',
-                        href: '/',
+                        href: '/'
                     },
                     {
-                        text: '404',
+                        text: '404'
                     }
                 ]
             }
@@ -201,23 +220,38 @@ let router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
-    if (to.matched.some(record => record.name === 'start') && to.meta.crumb[to.meta.crumb.length - 1].text !== 'Start') {
+    if (
+        to.matched.some(record => record.name === 'start') &&
+        to.meta.crumb[to.meta.crumb.length - 1].text !== 'Start'
+    ) {
         to.meta.crumb.push(
             {
                 text: to.params.owner,
-                href: `/pipelines/${to.params.owner}`,
+                href: `/pipelines/${to.params.owner}`
             },
             {
                 text: to.params.name,
-                href: `/pipelines/${to.params.owner}/${to.params.name}`,
+                href: `/pipelines/${to.params.owner}/${to.params.name}`
             },
             {
                 text: 'Start',
-                href: `/pipelines/${to.params.owner}/${to.params.name}/start`,
+                href: `/pipelines/${to.params.owner}/${to.params.name}/start`
             }
         );
     }
     if (from.matched.some(record => record.name === 'start')) {
+        to.meta.crumb = to.meta.crumb.slice(0, 2);
+    }
+    if (
+        to.matched.some(record => record.name === 'run') &&
+        to.meta.crumb[to.meta.crumb.length - 1].text !== 'Run'
+    ) {
+        to.meta.crumb.push({
+            text: to.params.id,
+            href: `/runs/${to.params.id}`
+        });
+    }
+    if (from.matched.some(record => record.name === 'run')) {
         to.meta.crumb = to.meta.crumb.slice(0, 2);
     }
     if (to.matched.some(record => record.meta.requiresAuth)) {

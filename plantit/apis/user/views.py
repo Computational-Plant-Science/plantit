@@ -66,12 +66,13 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(methods=['get'], detail=False)
     def github_repos(self, request):
         user = self.get_object()
+        token = user.profile.github_auth_token
         gh = Github(user.profile.github_auth_token)
         github_username = gh.get_user().login
 
-        response = requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{github_username}")
-        workflows = [{
+        response = requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{github_username}", headers={"Authorization": f"token {token}"})
+        pipelines = [{
             'repo': item['repository'],
-            'config': get_config(item['repository'], user.profile.github_auth_token)
+            'config': get_config(item['repository'], token)
         } for item in response.json()['items']]
-        return Response(workflows)
+        return Response(pipelines)

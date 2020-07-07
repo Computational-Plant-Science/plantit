@@ -2,24 +2,25 @@
     <div class="p-5 background-dark text-white" style="min-height: 100%">
         <b-container>
             <b-img
-                                    style="max-width: 8rem"
-                                    :src="require('../assets/logo.png')"
-                                    center
-                                ></b-img>
-            <h2 class="text-white">
-                About PlantIT
-            </h2>
+                style="max-width: 8rem"
+                :src="require('../assets/logo.png')"
+                center
+            ></b-img>
+            <h1 class="text-white text-center">
+                PlantIT
+            </h1>
+            <br />
             <b-row class="justify-content-md-center mb-4">
                 <b-col>
-                    <h5 class="text-white">
-                        PlantIT is
+                    <h4 class="text-white">
+                        ...is
                         <b class="text-success"
-                            >workflow automation for plant science</b
+                            >a workflow automation platform for plant science</b
                         >.
-                    </h5>
+                    </h4>
                     <p>
-                        PlantIT is developed and maintained by the
-                        University of Georgia's
+                        PlantIT is developed and maintained by the University of
+                        Georgia's
                         <b-link
                             href="https://www.computational-plant-science.org/joomla30/"
                             >Computational Plant Science lab
@@ -30,29 +31,29 @@
                             >ARPA-E ROOTS project</b-link
                         >.
                     </p>
-                    <h5 class="text-white">
-                        PlantIT is <b class="text-success">for developers</b>.
-                    </h5>
+                    <h4 class="text-white">
+                        ...is <b class="text-success">for developers</b>.
+                    </h4>
                     <p>
                         All it takes to share a pipeline with the research
                         community is a Github account: just add a
                         <code class="text-success">plantit.yaml</code> file to
                         your repository.
                     </p>
-                    <h5 class="text-white">
-                        PlantIT is <b class="text-success">for researchers</b>.
-                    </h5>
+                    <h4 class="text-white">
+                        ...is <b class="text-success">for researchers</b>.
+                    </h4>
                     <p>
-                        Log in with CyVerse, deploy pipelines on
-                        high-performance and high-throughput computing
+                        Log in with CyVerse, deploy pipelines on computing
                         resources, and get notified when results are available
                         &mdash; all from the browser, no programming required.
                     </p>
                 </b-col>
             </b-row>
-            <h2 class="text-white">
+            <h1 class="text-white text-center">
                 People
-            </h2>
+            </h1>
+            <br />
             <b-row class="justify-content-md-center mb-4">
                 <b-col>
                     <b-tabs

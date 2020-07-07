@@ -1,8 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
-from plantit.jobs.models.abstract_status import AbstractStatus
-from plantit.jobs.models.job import Job
+from plantit.runs.models.abstractstatus import AbstractStatus
+from plantit.runs.models.run import Run
 
 
 class Status(models.Model, AbstractStatus):
@@ -43,7 +43,7 @@ class Status(models.Model, AbstractStatus):
         (CREATED, 'Created')
     )
 
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    job = models.ForeignKey(Run, on_delete=models.CASCADE)
     state = models.PositiveIntegerField(choices=State, default=CREATED)
     date = models.DateTimeField(default=timezone.now, blank=True)
     description = models.CharField(max_length=1000)

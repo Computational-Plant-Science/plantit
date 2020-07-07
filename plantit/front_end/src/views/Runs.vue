@@ -1,38 +1,67 @@
 <template>
     <div class="w-100 p-4">
-        <p>
-            Select a <b-badge variant="white"><i class="fas fa-terminal text-dark"></i> Run</b-badge> to
-            view logs and results. To start a new
-            <b-badge variant="white"><i class="fas fa-terminal text-dark"></i> Run</b-badge>, go to the
-            <b-badge variant="white"><i class="fas fa-stream text-dark"></i> Pipelines</b-badge>
-            page.
-        </p>
-        <b-row>
-            <b-col>
-                <b-table
-                    show-empty
-                    small
-                    sticky-header="true"
-                    selectable
-                    hover
-                    responsive="sm"
-                    :sort-by.sync="sortBy"
-                    :sort-desc.sync="sortDesc"
-                    :items="runs"
-                    :fields="fields"
-                    :per-page="perPage"
-                    :borderless="true"
-                    select-mode="single"
-                    :filter="filter"
-                    class="table-responsive"
-                    @row-selected="onRunSelected"
-                >
-                    <template v-slot:cell(status_set[0].state)="data">
-                        <b>{{ data.value }}</b>
-                    </template>
-                </b-table>
-            </b-col>
-        </b-row>
+        <b-card
+            header-bg-variant="white"
+            border-variant="white"
+            header-border-variant="dark"
+        >
+            <template v-slot:header style="background-color: white">
+                <b-row align-v="center">
+                    <b-col style="color: white">
+                        <h4>
+                            Runs
+                        </h4>
+                    </b-col>
+                    <b-col md="auto" class="b-form-col">
+                        <b-input-group>
+                            <b-form-input
+                                v-model="runs_query"
+                                placeholder="Filter..."
+                                class="b-form-input"
+                            ></b-form-input>
+                            <b-input-group-append>
+                                <b-button
+                                    :disabled="
+                                        !runs_query
+                                    "
+                                    @click="
+                                        runs_query = ''
+                                    "
+                                    variant="white"
+                                    >Clear
+                                </b-button>
+                            </b-input-group-append>
+                        </b-input-group>
+                    </b-col>
+                </b-row>
+            </template>
+            <b-row>
+                <b-col>
+                    <b-table
+                        show-empty
+                        small
+                        sticky-header="true"
+                        selectable
+                        hover
+                        responsive="sm"
+                        :sort-by.sync="sortBy"
+                        :sort-desc.sync="sortDesc"
+                        :items="runs"
+                        :fields="fields"
+                        :per-page="perPage"
+                        :borderless="true"
+                        select-mode="single"
+                        :filter="filter"
+                        class="table-responsive"
+                        @row-selected="onRunSelected"
+                    >
+                        <template v-slot:cell(status_set[0].state)="data">
+                            <b>{{ data.value }}</b>
+                        </template>
+                    </b-table>
+                </b-col>
+            </b-row>
+        </b-card>
     </div>
 </template>
 
@@ -105,6 +134,7 @@ export default {
             sortBy: 'date',
             sortDesc: true,
             filter: '',
+            runs_query: '',
             fields: [
                 {
                     key: 'pk',

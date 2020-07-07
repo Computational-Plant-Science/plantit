@@ -56,7 +56,7 @@ $theme-colors: map-merge(('primary': $primary, 'secondary': $secondary, 'success
   color: $dark
 
 .logo
-  border-bottom: 2px solid $success // $color-button
+  // border-bottom: 1px solid $dark // $color-button
   // border-top: 2px solid transparent
   // border-left: 2px solid transparent
   // border-right: 2px solid transparent
@@ -102,6 +102,11 @@ $theme-colors: map-merge(('primary': $primary, 'secondary': $secondary, 'success
   color: $color-highlight
   background-color: $dark
   border: 1px solid $dark !important
+
+.btn-outline-secondary:hover
+  color: $success
+  background-color: $secondary
+  border: 1px solid $secondary !important
 
 .btn-outline-dark:after
   color: $color-highlight !important

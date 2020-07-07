@@ -3,7 +3,7 @@ from django.forms import ModelForm, PasswordInput
 from django.utils import timezone
 
 from .models.cluster import Cluster
-from .models.job import Job
+from .models.run import Run
 from .models.status import Status
 
 
@@ -17,8 +17,8 @@ class StatusInline(admin.StackedInline):
         return False
 
 
-class JobAdmin(admin.ModelAdmin):
-    readonly_fields = ['token', 'created', 'submission_id']
+class RunAdmin(admin.ModelAdmin):
+    readonly_fields = ['created', 'submission_id']
     inlines = [StatusInline]
 
     def save_model(self, request, obj, form, change):
@@ -26,8 +26,8 @@ class JobAdmin(admin.ModelAdmin):
             obj.status_set.create(job=obj,
                      state=Status.CREATED,
                      date=timezone.now(),
-                     description="Job Created")
-        super(JobAdmin, self).save_model(request, obj, form, change)
+                     description="Run Created")
+        super(RunAdmin, self).save_model(request, obj, form, change)
 
 
 class ClusterForm(ModelForm):
@@ -41,5 +41,5 @@ class ClusterForm(ModelForm):
 class ClusterAdmin(admin.ModelAdmin):
     form = ClusterForm
 
-admin.site.register(Job, JobAdmin)
+admin.site.register(Run, RunAdmin)
 admin.site.register(Cluster, ClusterAdmin)

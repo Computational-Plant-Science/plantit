@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from datetime import datetime
 
-from plantit.jobs.models.job import Job
-from plantit.jobs.models.status import Status
+from plantit.runs.models.run import Run
+from plantit.runs.models.status import Status
 from ..mixins import PinnedSerilizerMethodMixin
 
 
@@ -20,7 +20,7 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
     workflow_name = serializers.SerializerMethodField()
 
     class Meta:
-        model = Job
+        model = Run
         fields = ('pk', 'pinned', 'collection', 'pipeline',
                   'cluster', 'workflow_name',
                   'created', 'work_dir',
@@ -28,7 +28,7 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
 
     def create(self, validated_data):
         status_data = validated_data.pop('status_set')
-        job = Job.objects.create(**validated_data)
+        job = Run.objects.create(**validated_data)
         job.save()
         for _ in status_data:
             Status.objects.create(job=job, **status_data)

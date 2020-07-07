@@ -9,7 +9,7 @@
         caption-top
     >
         <template v-slot:table-caption
-            >Configure workflow parameters.</template
+            >Configure pipeline parameters.</template
         >
         <template v-slot:cell(name)="param">
             {{ param.item.key.toUpperCase() }}

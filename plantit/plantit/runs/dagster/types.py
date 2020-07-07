@@ -1,8 +1,8 @@
 from dagster import DagsterType, Selector, input_hydration_config, Field, String, Int, Shape, Dict, Permissive
 
-from plantit.jobs.models.abstract_status import AbstractStatus
-from plantit.jobs.models.abstract_cluster import AbstractCluster
-from plantit.jobs.models.abstract_job import AbstractJob
+from plantit.runs.models.abstractstatus import AbstractStatus
+from plantit.runs.models.abstractcluster import AbstractCluster
+from plantit.runs.models.abstractrun import AbstractRun
 
 DagsterStatus = DagsterType(
     name='Status',
@@ -44,8 +44,8 @@ DagsterCluster = DagsterType(
     'cluster': Field(String),
     'work_dir': Field(String),
 }))
-def job_input_hydration_config(_, selector) -> AbstractJob:
-    job = AbstractJob()
+def job_input_hydration_config(_, selector) -> AbstractRun:
+    job = AbstractRun()
     job.pipeline_owner = selector['pipeline_owner']
     job.pipeline_owner = selector['pipeline_name']
     job.cluster = selector['cluster']
@@ -55,7 +55,7 @@ def job_input_hydration_config(_, selector) -> AbstractJob:
 
 DagsterJob = DagsterType(
     name='Job',
-    type_check_fn=lambda _, value: isinstance(value, AbstractJob),
+    type_check_fn=lambda _, value: isinstance(value, AbstractRun),
     description='Job definition',
     input_hydration_config=job_input_hydration_config
 )

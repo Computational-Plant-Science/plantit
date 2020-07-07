@@ -4,17 +4,33 @@
             bg-variant="white"
             header-bg-variant="white"
             footer-bg-variant="white"
-            class="mb-4 overflow-hidden"
+            border-variant="white"
+            footer-border-variant="white"
+            header-border-variant="dark"
         >
             <template slot="header">
                 <b-row align-v="center">
                     <b-col>
-                        <h5>{{ pipeline.repo.name }}</h5>
+                        <h5>{{ pipeline.config.name }}</h5>
                     </b-col>
                 </b-row>
                 <b-row>
                     <b-col>
-                        <small>{{ pipeline.repo.owner.login }}</small>
+                        <small>
+                            <b-link
+                                class="text-secondary"
+                                :href="
+                                    'https://github.com/' +
+                                        pipeline.repo.owner.login +
+                                        '/' +
+                                        pipeline.repo.name
+                                "
+                            >
+                                {{ pipeline.repo.owner.login }}/{{
+                                    pipeline.repo.name
+                                }}
+                            </b-link>
+                        </small>
                     </b-col>
                 </b-row>
             </template>
@@ -42,17 +58,24 @@
                         {{ pipeline.repo.description }}
                         <br />
                         <br />
+                        <b>Author:</b>
+                        {{ pipeline.config.author }}
+                        <br />
                         <b>Image:</b>
                         {{ pipeline.config.image }}
                         <br />
+                        <b>Clone:</b>
+                        {{ pipeline.config.clone ? 'Yes' : 'No' }}
+                        <br />
                         <b>Parameters:</b>
-                        {{ pipeline.config.params.length }}
+                        {{ params.length === 0 ? 'None' : params.length }}
                         <br />
                         <b>Input:</b>
-                        {{ pipeline.config.input ? 'Yes' : 'No' }}
-                        <br />
-                        <b>Output:</b>
-                        {{ pipeline.config.output ? 'Yes' : 'No' }}
+                        {{
+                            pipeline.config.input
+                                ? pipeline.config.input.capitalize()
+                                : 'None'
+                        }}
                         <br />
                         <b>Command:</b>
                         <code>{{ ' ' + pipeline.config.commands }}</code>
@@ -61,9 +84,13 @@
             </b-row>
         </b-card>
         <b-card
+            v-if="params.length !== 0"
             bg-variant="white"
             header-bg-variant="white"
             footer-bg-variant="white"
+            border-variant="white"
+            footer-border-variant="white"
+            header-border-variant="dark"
             class="mb-4"
         >
             <template v-slot:header style="background-color: white">
@@ -83,17 +110,53 @@
             </b-card-body>-->
         </b-card>
         <b-card
+            v-if="pipeline.config.input"
             bg-variant="white"
             header-bg-variant="white"
             footer-bg-variant="white"
+            border-variant="white"
+            footer-border-variant="white"
+            header-border-variant="dark"
             class="mb-4"
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h5>
+                        <h4>
+                            Input
+                        </h4>
+                    </b-col>
+                </b-row>
+            </template>
+            <b-card-body>
+                <EditInput
+                    :user="user"
+                    v-on:inputSelected="onInputSelected"
+                ></EditInput>
+            </b-card-body>
+            <template v-slot:footer style="background-color: white">
+                <b-row align-v="center">
+                    <b-col class="mt-2" style="color: white">
+                        <h5>Files: {{ input.files.length }}</h5>
+                    </b-col>
+                </b-row>
+            </template>
+        </b-card>
+        <b-card
+            bg-variant="white"
+            header-bg-variant="white"
+            footer-bg-variant="white"
+            border-variant="white"
+            footer-border-variant="white"
+            header-border-variant="dark"
+            class="mb-4"
+        >
+            <template v-slot:header style="background-color: white">
+                <b-row align-v="center">
+                    <b-col class="mt-2" style="color: white">
+                        <h4>
                             Target
-                        </h5>
+                        </h4>
                     </b-col>
                 </b-row>
             </template>
@@ -111,6 +174,13 @@
                 </b-row>
             </template>
         </b-card>
+        <b-row>
+            <b-col>
+                <b-button @click="onStart" variant="success" block>
+                    Start
+                </b-button>
+            </b-col>
+        </b-row>
     </div>
     <!--<NewCollection>
 
@@ -131,13 +201,21 @@
 
 <script>
 import EditParameters from '../components/EditParameters';
+import EditInput from '../components/EditInput';
 import SelectTarget from '../components/SelectTarget';
 import Pipelines from '@/services/apiV1/PipelineManager';
+import Users from '@/services/apiV1/UserManager';
+import router from '../router';
+
+String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+};
 
 export default {
     name: 'StartPipeline',
     components: {
         EditParameters,
+        EditInput,
         SelectTarget
     },
     props: {
@@ -150,33 +228,53 @@ export default {
     },
     data: function() {
         return {
+            user: null,
             pipeline: null,
             params: [],
+            input: {
+                files: []
+            },
             target: {
                 name: 'None'
             }
         };
     },
     mounted: function() {
+        Users.getCurrentUser().then(user => {
+            this.user = user;
+        });
         Pipelines.get(this.owner, this.name).then(pipeline => {
             this.pipeline = pipeline;
-            this.params = pipeline.config.params.map(function(param) {
-                return {
-                    key: param,
-                    value: ''
-                };
-            });
+            if (pipeline.config.params != null) {
+                this.params = pipeline.config.params.map(function(param) {
+                    return {
+                        key: param,
+                        value: ''
+                    };
+                });
+            }
         });
     },
     methods: {
+        onInputSelected(input) {
+            this.input = input;
+        },
         onTargetSelected(target) {
             this.target = target;
+        },
+        onStart() {
+            Pipelines.start(this.owner, this.name, {
+                input: this.input,
+                target: this.target
+            }).then(result => {
+                router.push({
+                    name: 'run',
+                    params: {
+                        id: result.id
+                    }
+                });
+            });
         }
-        // onStart(values) {
-        //     Pipelines.start(this.name, this.collection_pk, values).then(
-        //         result => {}
-        //     );
-        // },
     }
 };
 </script>

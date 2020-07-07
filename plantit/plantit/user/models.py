@@ -9,7 +9,7 @@ from encrypted_model_fields.fields import EncryptedCharField
 from plantit.collection.models import Collection
 
 # Create your models here.
-from plantit.jobs.models.job import Job
+from plantit.runs.models.run import Run
 
 
 class Profile(models.Model):
@@ -36,7 +36,7 @@ class Profile(models.Model):
     institution: str = models.CharField(max_length=256, default='', blank=True)
     institution_type: str = models.CharField(max_length=256, default='', blank=True)
     field_of_study: str = models.CharField(max_length=256, default='', blank=True)
-    pinned_jobs: Manager = models.ManyToManyField(Job, related_name='profile_pins', blank=True)
+    pinned_jobs: Manager = models.ManyToManyField(Run, related_name='profile_pins', blank=True)
     pinned_collections: Manager = models.ManyToManyField(Collection, related_name='profile_pins', blank=True)
 
     def asdict(self):

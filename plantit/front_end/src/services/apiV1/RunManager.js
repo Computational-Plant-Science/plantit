@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/browser';
 export default {
     list() {
         return axios
-            .get('/apis/v1/jobs/')
+            .get('/apis/v1/runs/')
             .then(response => {
                 return response.data;
             })
@@ -20,6 +20,16 @@ export default {
             .post(url)
             .then(response => {
                 return response.status == 200;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
+    getRun(id) {
+        return axios
+            .get(`/apis/v1/runs/${id}/`)
+            .then(response => {
+                return response.data;
             })
             .catch(err => {
                 Sentry.captureException(err);

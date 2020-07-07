@@ -1,7 +1,7 @@
 from rest_framework import authentication
 from rest_framework import exceptions
 
-from .models.job import Job
+from .models.run import Run
 
 
 class JobTokenAuthentication(authentication.TokenAuthentication):
@@ -24,7 +24,7 @@ class JobTokenAuthentication(authentication.TokenAuthentication):
     def get_model(self):
         if self.model is not None:
             return self.model
-        return Job
+        return Run
 
     def authenticate_credentials(self, key):
         model = self.get_model()
