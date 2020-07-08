@@ -1,25 +1,33 @@
 <template>
-    <div>
-        <b-card>
-            <template
-                v-slot:header
-                v-bind:job="this.job"
-                style="background-color: white"
-            >
+    <div class="w-100 p-4">
+        <b-card
+            bg-variant="white"
+            header-bg-variant="white"
+            footer-bg-variant="white"
+            border-variant="white"
+            footer-border-variant="white"
+            header-border-variant="dark"
+            class="mb-4"
+        >
+            <template slot="header">
                 <b-row>
-                    <b-col class="mt-2" style="color:white">
-                        <h5>
-                            <i class="fas fa-terminal gray"></i>
-                            Job
+                    <b-col md="auto">
+                        <h2>{{ pipeline.config.name }}</h2>
+                    </b-col>
+                    <b-col style="color:white">
+                        <h3>
+                            <b-badge variant="success" class="p-0 m-0 mr-2">{{
+                                run.id
+                            }}</b-badge>
                             <b-badge
-                                pill
-                                variant="transparent"
-                                class="dark p-0 m-0 ml-1 mr-1"
-                                >{{ job.pk }}</b-badge
+                                variant="success"
+                                class="p-0 m-0 ml-2 mr-2"
                             >
+                                {{ run.cluster }}
+                            </b-badge>
                             <b-badge
                                 pill
-                                class="ml-1 mr-1"
+                                class="ml-2 mr-2"
                                 style="color: white"
                                 :variant="
                                     error_count !== 0
@@ -34,26 +42,138 @@
                                     {{ error_count }} error(s)
                                 </span>
                             </b-badge>
-                        </h5>
+                        </h3>
                     </b-col>
-                    <b-col md="auto" class="mr-0 pr-1">
-                        <b-button
-                            variant="outline-dark"
-                            @click="
-                                status_table.perPage = status_table.perPage
-                                    ? null
-                                    : 1
-                            "
-                        >
-                            {{ status_table.perPage ? 'Show' : 'Hide' }}
-                            Logs
-                        </b-button>
+                </b-row>
+            </template>
+            <b-row no-gutters>
+                <b-col
+                    md="auto"
+                    style="min-width: 8em; max-width: 8rem; min-height: 8rem; max-height: 8rem"
+                >
+                    <b-img
+                        v-if="pipeline.icon_url"
+                        style="max-width: 8rem"
+                        :src="pipeline.icon_url"
+                        right
+                    >
+                    </b-img>
+                    <b-img
+                        v-else
+                        style="max-width: 8rem"
+                        :src="require('../assets/logo.png')"
+                        right
+                    ></b-img>
+                </b-col>
+                <b-card-body>
+                    <b-col>
+                        <b-row>
+                            <b-col>
+                                {{ pipeline.repo.description }}
+                            </b-col>
+                        </b-row>
+                        <br />
+                        <b-row>
+                            <b-col>
+                                <b-row>
+                                    <b-col>
+                                        Author:
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{ pipeline.config.author }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        Image:
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{ pipeline.config.image }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        Clone:
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{
+                                            pipeline.config.clone ? 'Yes' : 'No'
+                                        }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        Parameters:
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{
+                                            params.length === 0
+                                                ? 'None'
+                                                : params.length
+                                        }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        Input:
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{
+                                            pipeline.config.input
+                                                ? pipeline.config.input.capitalize()
+                                                : 'None'
+                                        }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        Output:
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{
+                                            pipeline.config.output
+                                                ? pipeline.config.output.capitalize()
+                                                : 'None'
+                                        }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        Command:
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b
+                                            ><code>{{
+                                                ' ' + pipeline.config.commands
+                                            }}</code></b
+                                        >
+                                    </b-col>
+                                </b-row>
+                            </b-col>
+                        </b-row>
+                    </b-col>
+                </b-card-body>
+            </b-row>
+        </b-card>
+        <b-card
+            bg-variant="white"
+            header-bg-variant="white"
+            footer-bg-variant="white"
+            border-variant="white"
+            footer-border-variant="white"
+            header-border-variant="dark"
+            class="mb-4"
+        >
+            <template slot="header">
+                <b-row align-v="center">
+                    <b-col>
+                        <h4>Logs</h4>
                     </b-col>
                     <b-col md="auto" class="ml-0 pl-1">
                         <b-button
                             variant="outline-dark"
                             v-b-tooltip.hover
-                            title="Reload job info"
+                            title="Refresh"
                             @click="reloadJob"
                         >
                             <i class="fas fa-redo"></i>
@@ -63,16 +183,6 @@
             </template>
             <b-row>
                 <b-col>
-                    <p><b>Workflow:</b> {{ job.workflow_name }}</p>
-                    <p><b>Collection:</b> {{ job.collection }}</p>
-                    <p><b>Cluster:</b> {{ job.cluster }}</p>
-                    <p>
-                        <b>Created:</b> {{ job.date_created | format_date
-                        }}<br />
-                    </p>
-                    <p><b>Directory:</b> {{ job.work_dir }}</p>
-                </b-col>
-                <b-col>
                     <b-alert
                         :show="reloadAlertDismissCountdown"
                         dismissible
@@ -81,40 +191,26 @@
                         @dismiss-count-down="countDownChanged"
                     >
                         <p>
-                            Job info reloaded.
+                            Logs refreshed.
                         </p>
                     </b-alert>
                 </b-col>
             </b-row>
-            <b-row>
-                <b-col class="text-center p-5">
-                    <b-img
-                        v-if="job_status !== 1 && job_status !== 2"
-                        :src="require('../assets/PlantITLoading.gif')"
-                        width="250%"
-                        alt="Plant IT"
-                    ></b-img>
-                    <b-link
-                        v-else-if="job_status === 1"
-                        :href="job | resultsLink"
-                    >
-                        <b-img
-                            :src="require('../assets/icons/download.png')"
-                            width="250%"
-                            alt="Download"
-                        ></b-img>
-                    </b-link>
-                    <i v-else class="fas fa-bug fa-6x red"></i>
-                </b-col>
+            <b-row align-h="center" v-if="loadingRun">
+                <b-spinner
+                    type="grow"
+                    label="Loading..."
+                    variant="dark"
+                ></b-spinner>
             </b-row>
-            <b-row>
+            <b-row v-if="!loadingRun">
                 <b-col>
                     <b-table
                         id="error-log"
                         striped
                         borderless
                         responsive="lg"
-                        :items="job.status_set"
+                        :items="run.status_set"
                         :fields="status_table.fields"
                         :per-page="status_table.perPage"
                         :sort-by.sync="status_table.sortBy"
@@ -134,7 +230,9 @@
 </template>
 
 <script>
-import JobApi from '@/services/apiV1/RunManager.js';
+import Pipelines from '@/services/apiV1/PipelineManager';
+import Users from '@/services/apiV1/UserManager';
+import Runs from '@/services/apiV1/RunManager.js';
 import moment from 'moment';
 
 export default {
@@ -150,16 +248,12 @@ export default {
             reloadAlertDismissSeconds: 5,
             reloadAlertDismissCountdown: 0,
             showReloadAlert: false,
-            job: {
-                pk: null,
-                collection: 'NULL',
-                current_status: 'NULL',
-                submission_id: 'NULL',
-                work_dir: 'NULL',
-                auth_token: 'NULL',
-                remote_results_path: null,
-                task_set: [],
-                status_set: []
+            user: null,
+            pipeline: null,
+            loadingRun: false,
+            run: {
+                pipeline_owner: null,
+                pipeline_name: null
             },
             status_table: {
                 sortBy: 'date',
@@ -205,9 +299,11 @@ export default {
     },
     methods: {
         reloadJob(toast) {
-            JobApi.getJob(this.pk).then(data => {
-                this.job = data;
+            this.loadingRun = true;
+            Runs.getRun(this.$router.currentRoute.params.id).then(run => {
+                this.run = run;
                 if (toast) this.showAlert();
+                this.loadingRun = false;
             });
         },
         countDownChanged(dismissCountDown) {
@@ -232,28 +328,49 @@ export default {
         }
     },
     mounted: function() {
-        this.reloadJob();
+        Runs.getRun(this.$router.currentRoute.params.id).then(r => {
+            this.run = r;
+            Users.getCurrentUser().then(user => {
+                this.user = user;
+                Pipelines.get(
+                    this.run.pipeline_owner,
+                    this.run.pipeline_name
+                ).then(pipeline => {
+                    this.pipeline = pipeline;
+                    if (pipeline.config.params != null) {
+                        this.params = pipeline.config.params.map(function(
+                            param
+                        ) {
+                            return {
+                                key: param,
+                                value: ''
+                            };
+                        });
+                    }
+                });
+            });
+        });
     },
     computed: {
         job_status() {
-            if (this.job.status_set.length > 0) {
-                return this.job.status_set[0].state;
+            if (this.run.status_set.length > 0) {
+                return this.run.status_set[0].state;
             } else {
                 return 0;
             }
         },
         warning_count() {
-            return this.job.status_set.filter(status => {
+            return this.run.status_set.filter(status => {
                 return status.state === 4;
             }).length;
         },
         error_count() {
-            return this.job.status_set.filter(status => {
+            return this.run.status_set.filter(status => {
                 return status.state === 2;
             }).length;
         },
         warning_error_count() {
-            return this.job.status_set.filter(status => {
+            return this.run.status_set.filter(status => {
                 return status.state === 2 || status.state === 4;
             }).length;
         }
@@ -263,7 +380,7 @@ export default {
             return moment(value).format('MM/DD/YY HH:mm');
         },
         resultsLink() {
-            return JobApi.resultsLink(this.pk);
+            return Runs.resultsLink(this.pk);
         }
     }
 };

@@ -22,10 +22,10 @@ export default {
                 Sentry.captureException(err);
             });
     },
-    start(owner, name, params) {
+    start(params) {
         return axios({
             method: 'post',
-            url: `/apis/v1/pipelines/${owner}/${name}/start/`,
+            url: `/apis/v1/pipelines/start/`,
             data: params,
             headers: { 'Content-Type': 'application/json' }
         }).catch(err => {

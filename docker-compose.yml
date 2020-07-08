@@ -128,7 +128,7 @@ services:
     build:
       context: .
       dockerfile: dev/dockerfiles/plantit/Dockerfile
-    command: ["dagster-celery", "worker", "start", "-n", "plantit-dagster", "-y", "/code/plantit/celery_config.yaml"]
+    command: ["dagster-celery", "worker", "start", "-A", "dagster_celery.app", "-n", "plantit-dagster", "-y", "/code/plantit/celery_config.yaml"]
     volumes:
       - .:/code
       - dagster:/opt/dagster

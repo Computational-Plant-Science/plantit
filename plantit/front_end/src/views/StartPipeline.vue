@@ -150,9 +150,13 @@
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h5>
+                        <h3>
                             Parameters
-                        </h5>
+                            <i
+                                class="fas fa-check ml-2 success"
+                                v-if="!paramsIncomplete"
+                            ></i>
+                        </h3>
                     </b-col>
                 </b-row>
             </template>
@@ -181,7 +185,7 @@
                             <b>{{ pipeline.config.input.capitalize() }}</b>
                             <i
                                 class="fas fa-check ml-2 success"
-                                v-if="input.files.length !== 0"
+                                v-if="!inputIncomplete"
                             ></i>
                         </h4>
                     </b-col>
@@ -223,12 +227,7 @@
                             <b>{{ pipeline.config.output.capitalize() }}</b>
                             <i
                                 class="fas fa-check ml-2 success"
-                                v-if="
-                                    output.local_path !== null &&
-                                        output.local_path !== '' &&
-                                        output.irods_path !== null &&
-                                        output.irods_path !== ''
-                                "
+                                v-if="!outputIncomplete"
                             ></i>
                         </h4>
                     </b-col>
@@ -270,18 +269,18 @@
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
                         <h3>
-                            Deployment <b>Target</b>
+                            Target
                             <i
                                 class="fas fa-check ml-2 success"
-                                v-if="
-                                    target.name !== null && target.name !== ''
-                                "
+                                v-if="!targetIncomplete"
                             ></i>
                         </h3>
                     </b-col>
                     <b-col md="auto" class="mt-2" style="color: white">
                         <h5>
-                            <h5>Target: <b>{{ target.name }}</b></h5>
+                            <h5>
+                                <b>{{ target.name }}</b>
+                            </h5>
                         </h5>
                     </b-col>
                 </b-row>
@@ -295,8 +294,41 @@
         </b-card>
         <b-row>
             <b-col>
-                <b-button @click="onStart" variant="success" block>
-                    Start
+                <b-alert v-model="paramsIncomplete" variant="warning"
+                    >Parameter configuration is incomplete.</b-alert
+                >
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
+                <b-alert v-model="inputIncomplete" variant="warning"
+                    >Input configuration is incomplete.</b-alert
+                >
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
+                <b-alert v-model="outputIncomplete" variant="warning"
+                    >Output configuration is incomplete.</b-alert
+                >
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
+                <b-alert v-model="targetIncomplete" variant="warning"
+                    >Deployment target configuration is incomplete.</b-alert
+                >
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
+                <b-button
+                    @click="onStart"
+                    variant="success"
+                    block
+                    :disabled="anyIncomplete"
+                >
+                    Start <b>{{ pipeline.config.name }}</b>
                 </b-button>
             </b-col>
         </b-row>
@@ -380,6 +412,33 @@ export default {
             }
         });
     },
+    computed: {
+        paramsIncomplete() {
+            return this.params.some(param => param.value === '');
+        },
+        inputIncomplete() {
+            return this.pipeline.config.input && this.input.files.length === 0;
+        },
+        outputIncomplete() {
+            return this.pipeline.config.output && (
+                this.output.local_path === null ||
+                this.output.local_path === '' ||
+                this.output.irods_path === null ||
+                this.output.irods_path === ''
+            );
+        },
+        targetIncomplete() {
+            return this.target.name === null || this.target.name === '';
+        },
+        anyIncomplete() {
+            return (
+                this.paramsIncomplete ||
+                this.inputIncomplete ||
+                this.outputIncomplete ||
+                this.targetIncomplete
+            );
+        }
+    },
     methods: {
         onInputSelected(input) {
             this.input = input;
@@ -391,14 +450,19 @@ export default {
             this.target = target;
         },
         onStart() {
-            Pipelines.start(this.owner, this.name, {
-                input: this.input,
-                target: this.target
+            Pipelines.start({
+                repo: this.pipeline.repo,
+                config: {
+                    params: this.params,
+                    input: this.input,
+                    output: this.output,
+                    target: this.target
+                }
             }).then(result => {
                 router.push({
                     name: 'run',
                     params: {
-                        id: result.id
+                        id: result.data.id
                     }
                 });
             });

@@ -1,9 +1,10 @@
+import django
 import requests
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import redirect
-from django.utils import timezone
+from django.utils import timezone, dateparse
 from rest_framework.decorators import api_view
 
 from apis.util import get_config
@@ -21,19 +22,8 @@ from plantit.runs.models.status import Status
 
 
 @app.task()
-def run_pipeline(username, pipeline, now):
-    now_str = now.strftime('%s')
-    cluster = Cluster.objects.get(name=pipeline['target']['name'])
-    work_dir = join(cluster.workdir, now_str)
-    run = Run.objects.create(
-        user=User.objects.get(username=username),
-        pipeline_owner=pipeline['owner'],
-        pipeline_name=pipeline['name'],
-        cluster=cluster,
-        created=now,
-        submission_id=now_str,
-        work_dir=now_str + "/",
-        remote_results_path=pipeline['config']['results_path'])
+def run_pipeline(pipeline, run_id):
+    run = Run.objects.get(submission_id=run_id)
     del pipeline['target']
     run.status_set.create(description="Created")
     for event in execute_pipeline_iterator(
@@ -41,24 +31,24 @@ def run_pipeline(username, pipeline, now):
             run_config={
                 'solids': {
                     'create_working_directory': {
-                        'command': f"mkdir {work_dir}",
-                        'directory': cluster.workdir
+                        'command': f"mkdir {run.work_dir}",
+                        'directory': run.cluster.workdir
                     },
                     'upload_pipeline': {
                         'pipeline': pipeline,
-                        'directory': work_dir
+                        'directory': run.work_dir
                     },
                     'execute_command': {
                         'command': f"plantit run pipeline.yaml",
-                        'directory': work_dir
+                        'directory': run.work_dir
                     }
                 },
                 'resources': {
                     'ssh': {
                         'config': {
-                            'host': cluster.hostname,
-                            'port': cluster.port,
-                            'username': cluster.username,
+                            'host': run.cluster.hostname,
+                            'port': run.cluster.port,
+                            'username': run.cluster.username,
                         }
                     }
                 },
@@ -122,15 +112,27 @@ def get(request, owner, name):
 
 @login_required
 @api_view(['POST'])
-def start(request, owner, name):
+def start(request):
     user = request.user
     pipeline = request.data
+
     now = timezone.now()
     now_str = now.strftime('%s')
-    pipeline['owner'] = owner
-    pipeline['name'] = name
-    pipeline['remote_results_path'] = now_str
-    run_pipeline.delay(user.username, pipeline, now)
+
+    cluster = Cluster.objects.get(name=pipeline['config']['target']['name'])
+    run = Run.objects.create(
+        user=User.objects.get(username=user.username),
+        pipeline_owner=pipeline['repo']['owner']['login'],
+        pipeline_name=pipeline['repo']['name'],
+        cluster=cluster,
+        created=now,
+        submission_id=now_str,
+        work_dir=now_str + "/",
+        remote_results_path=now_str + "/")
+    run.save()
+
+    run_pipeline.delay(pipeline, run.submission_id)
+
     return JsonResponse({
-        'id': now_str
+        'id': run.submission_id
     })

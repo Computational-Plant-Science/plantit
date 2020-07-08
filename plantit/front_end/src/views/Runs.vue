@@ -21,12 +21,8 @@
                             ></b-form-input>
                             <b-input-group-append>
                                 <b-button
-                                    :disabled="
-                                        !runs_query
-                                    "
-                                    @click="
-                                        runs_query = ''
-                                    "
+                                    :disabled="!runs_query"
+                                    @click="runs_query = ''"
                                     variant="white"
                                     >Clear
                                 </b-button>
@@ -69,6 +65,7 @@
 import Runs from '@/services/apiV1/RunManager.js';
 import Pipelines from '@/services/apiV1/PipelineManager';
 import moment from 'moment';
+import router from '../router';
 
 export default {
     name: 'Runs',
@@ -101,7 +98,12 @@ export default {
             this.$emit('pipelineSelected', pipeline);
         },
         onRunSelected: function(items) {
-            this.$emit('runSelected', items[0].pk);
+            router.push({
+                name: 'run',
+                params: {
+                    id: items[0].submission_id
+                }
+            });
         },
         togglePin(pk, item) {
             Runs.pin(pk, !item.pinned).then(success => {
@@ -137,7 +139,7 @@ export default {
             runs_query: '',
             fields: [
                 {
-                    key: 'pk',
+                    key: 'submission_id',
                     label: 'Id',
                     sortable: true
                 },
@@ -147,6 +149,11 @@ export default {
                     formatter: value => {
                         return moment(value).format('MM/DD/YY HH:mm');
                     }
+                },
+                {
+                    key: 'pipeline_name',
+                    label: 'Pipeline',
+                    sortable: true
                 },
                 {
                     key: 'status_set[0].state',
@@ -165,24 +172,6 @@ export default {
                                 return 'Created';
                         }
                     }
-                },
-                {
-                    key: 'pipeline_name',
-                    label: 'Pipeline',
-                    sortable: true
-                },
-                {
-                    key: 'collection',
-                    sortable: true
-                },
-                {
-                    key: 'cluster',
-                    sortable: true
-                },
-                {
-                    key: 'work_dir',
-                    label: 'Directory',
-                    sortable: true
                 }
             ],
             runs: [],

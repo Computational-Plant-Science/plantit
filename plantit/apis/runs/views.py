@@ -29,9 +29,17 @@ class RunViewSet(viewsets.ModelViewSet, PinViewMixin):
 
 @action(methods=['get'], detail=False)
 @login_required
-def get_run(request):
-    run = Run.objects.get(user=request.user, submission_id=request.GET.get('id', None))
-    return JsonResponse(run)
+def get_run(request, id):
+    run = Run.objects.get(submission_id=id)
+    return JsonResponse({
+        'id': run.submission_id,
+        'work_dir': run.work_dir,
+        'cluster': run.cluster.name,
+        'created': run.created,
+        'status_set': list(run.status_set.all()),
+        'pipeline_owner': run.pipeline_owner,
+        'pipeline_name': run.pipeline_name
+    })
 
 
 @login_required
