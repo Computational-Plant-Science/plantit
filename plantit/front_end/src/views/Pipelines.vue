@@ -1,12 +1,16 @@
 <template>
     <div class="w-100 p-4">
-        <b-card header-bg-variant="white" border-variant="white" header-border-variant="dark">
+        <b-card
+            header-bg-variant="white"
+            border-variant="white"
+            header-border-variant="dark"
+        >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col style="color: white">
-                        <h4>
+                        <h2>
                             Community Pipelines
-                        </h4>
+                        </h2>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -32,7 +36,19 @@
                 </b-row>
             </template>
             <b-row align-h="center">
-                <div v-if="!filtered_community_pipelines.length">
+                <b-row align-h="center" v-if="community_pipelines_loading">
+                    <b-spinner
+                        type="grow"
+                        label="Loading..."
+                        variant="dark"
+                    ></b-spinner>
+                </b-row>
+                <div
+                    v-if="
+                        !community_pipelines_loading &&
+                            filtered_community_pipelines.length === 0
+                    "
+                >
                     None to show.
                 </div>
                 <b-card-group deck columns>
@@ -52,7 +68,7 @@
                         <template slot="header">
                             <b-row align-v="center">
                                 <b-col>
-                                    <h5>{{ pipeline.config.name }}</h5>
+                                    <h3>{{ pipeline.config.name }}</h3>
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -160,13 +176,18 @@
                 </b-card-group>
             </b-row>
         </b-card>
-        <b-card header-bg-variant="white" border-variant="white" header-border-variant="dark" class="mt-3">
+        <b-card
+            header-bg-variant="white"
+            border-variant="white"
+            header-border-variant="dark"
+            class="mt-3"
+        >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h4>
+                        <h3>
                             Your Pipelines
-                        </h4>
+                        </h3>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -188,10 +209,22 @@
                 </b-row>
             </template>
             <b-row align-h="center">
-                <div v-if="!filtered_user_pipelines.length">
+                <b-row align-h="center" v-if="user_pipelines_loading">
+                    <b-spinner
+                        type="grow"
+                        label="Loading..."
+                        variant="dark"
+                    ></b-spinner>
+                </b-row>
+                <div
+                    v-if="
+                        !user_pipelines_loading &&
+                            filtered_user_pipelines.length === 0
+                    "
+                >
                     None to show.
                 </div>
-                <b-card-group deck columns class="pl-3 pr-3">
+                <b-card-group deck columns>
                     <b-card
                         v-for="pipeline in filtered_user_pipelines"
                         :key="pipeline.repo.name"
@@ -207,7 +240,7 @@
                         <template slot="header">
                             <b-row align-v="center">
                                 <b-col>
-                                    <h5>{{ pipeline.config.name }}</h5>
+                                    <h3>{{ pipeline.config.name }}</h3>
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -332,6 +365,8 @@ export default {
     components: {},
     data: function() {
         return {
+            community_pipelines_loading: false,
+            user_pipelines_loading: false,
             filter_community_pipelines_query: '',
             filter_user_pipelines_query: '',
             community_pipelines: [],
@@ -339,16 +374,8 @@ export default {
         };
     },
     mounted: function() {
-        Pipelines.list().then(data => {
-            this.community_pipelines = data.pipelines || [];
-        });
-        Users.getCurrentUserGithubRepos().then(pipelines => {
-            if (pipelines == null) {
-                this.user_pipelines = [];
-            } else {
-                this.user_pipelines = pipelines;
-            }
-        });
+        this.loadCommunityPipelines();
+        this.loadUserPipelines();
     },
     computed: {
         filter_community_pipelines_text: function() {
@@ -391,6 +418,24 @@ export default {
         }
     },
     methods: {
+        loadCommunityPipelines() {
+            this.community_pipelines_loading = true;
+            Pipelines.list().then(data => {
+                this.community_pipelines = data.pipelines || [];
+                this.community_pipelines_loading = false;
+            });
+        },
+        loadUserPipelines() {
+            this.user_pipelines_loading = true;
+            Users.getCurrentUserGithubRepos().then(pipelines => {
+                if (pipelines == null) {
+                    this.user_pipelines = [];
+                } else {
+                    this.user_pipelines = pipelines;
+                }
+                this.user_pipelines_loading = false;
+            });
+        },
         pipelineSelected: function(pipeline) {
             router.push({
                 name: 'start',

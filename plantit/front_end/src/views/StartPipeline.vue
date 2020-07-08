@@ -7,30 +7,29 @@
             border-variant="white"
             footer-border-variant="white"
             header-border-variant="dark"
+            class="mb-4"
         >
             <template slot="header">
                 <b-row align-v="center">
                     <b-col>
-                        <h5>{{ pipeline.config.name }}</h5>
+                        <h2>{{ pipeline.config.name }}</h2>
                     </b-col>
                 </b-row>
                 <b-row>
                     <b-col>
-                        <small>
-                            <b-link
-                                class="text-secondary"
-                                :href="
-                                    'https://github.com/' +
-                                        pipeline.repo.owner.login +
-                                        '/' +
-                                        pipeline.repo.name
-                                "
-                            >
-                                {{ pipeline.repo.owner.login }}/{{
+                        <b-link
+                            class="text-secondary"
+                            :href="
+                                'https://github.com/' +
+                                    pipeline.repo.owner.login +
+                                    '/' +
                                     pipeline.repo.name
-                                }}
-                            </b-link>
-                        </small>
+                            "
+                        >
+                            {{ pipeline.repo.owner.login }}/{{
+                                pipeline.repo.name
+                            }}
+                        </b-link>
                     </b-col>
                 </b-row>
             </template>
@@ -55,30 +54,85 @@
                 </b-col>
                 <b-col>
                     <b-card-body>
-                        {{ pipeline.repo.description }}
+                        <b-row>
+                            <b-col>
+                                {{ pipeline.repo.description }}
+                            </b-col>
+                        </b-row>
                         <br />
                         <br />
-                        <b>Author:</b>
-                        {{ pipeline.config.author }}
-                        <br />
-                        <b>Image:</b>
-                        {{ pipeline.config.image }}
-                        <br />
-                        <b>Clone:</b>
-                        {{ pipeline.config.clone ? 'Yes' : 'No' }}
-                        <br />
-                        <b>Parameters:</b>
-                        {{ params.length === 0 ? 'None' : params.length }}
-                        <br />
-                        <b>Input:</b>
-                        {{
-                            pipeline.config.input
-                                ? pipeline.config.input.capitalize()
-                                : 'None'
-                        }}
-                        <br />
-                        <b>Command:</b>
-                        <code>{{ ' ' + pipeline.config.commands }}</code>
+                        <b-row>
+                            <b-col>
+                                Author:
+                            </b-col>
+                            <b-col cols="11">
+                                <b>{{ pipeline.config.author }}</b>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                Image:
+                            </b-col>
+                            <b-col cols="11">
+                                <b>{{ pipeline.config.image }}</b>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                Clone:
+                            </b-col>
+                            <b-col cols="11">
+                                <b>{{
+                                    pipeline.config.clone ? 'Yes' : 'No'
+                                }}</b>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                Parameters:
+                            </b-col>
+                            <b-col cols="11">
+                                <b>{{
+                                    params.length === 0 ? 'None' : params.length
+                                }}</b>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                Input:
+                            </b-col>
+                            <b-col cols="11">
+                                <b>{{
+                                    pipeline.config.input
+                                        ? pipeline.config.input.capitalize()
+                                        : 'None'
+                                }}</b>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                Output:
+                            </b-col>
+                            <b-col cols="11">
+                                <b>{{
+                                    pipeline.config.output
+                                        ? pipeline.config.output.capitalize()
+                                        : 'None'
+                                }}</b>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                Command:
+                            </b-col>
+                            <b-col cols="11">
+                                <b
+                                    ><code>{{
+                                        ' ' + pipeline.config.commands
+                                    }}</code></b
+                                >
+                            </b-col>
+                        </b-row>
                     </b-card-body>
                 </b-col>
             </b-row>
@@ -124,7 +178,23 @@
                     <b-col class="mt-2" style="color: white">
                         <h4>
                             Input
+                            <b>{{ pipeline.config.input.capitalize() }}</b>
+                            <i
+                                class="fas fa-check ml-2 success"
+                                v-if="input.files.length !== 0"
+                            ></i>
                         </h4>
+                    </b-col>
+                    <b-col class="mt-2" md="auto" style="color: white">
+                        <h5>
+                            iRODS Path:
+                            <b>{{ input.path ? input.path : 'None' }}</b>
+                        </h5>
+                    </b-col>
+                    <b-col class="mt-2" md="auto" style="color: white">
+                        <h5>
+                            iRODS File Count: <b>{{ input.files.length }}</b>
+                        </h5>
                     </b-col>
                 </b-row>
             </template>
@@ -134,13 +204,58 @@
                     v-on:inputSelected="onInputSelected"
                 ></EditInput>
             </b-card-body>
-            <template v-slot:footer style="background-color: white">
+        </b-card>
+        <b-card
+            v-if="pipeline.config.output"
+            bg-variant="white"
+            header-bg-variant="white"
+            footer-bg-variant="white"
+            border-variant="white"
+            footer-border-variant="white"
+            header-border-variant="dark"
+            class="mb-4"
+        >
+            <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h5>Files: {{ input.files.length }}</h5>
+                        <h4>
+                            Output
+                            <b>{{ pipeline.config.output.capitalize() }}</b>
+                            <i
+                                class="fas fa-check ml-2 success"
+                                v-if="
+                                    output.local_path !== null &&
+                                        output.local_path !== '' &&
+                                        output.irods_path !== null &&
+                                        output.irods_path !== ''
+                                "
+                            ></i>
+                        </h4>
+                    </b-col>
+                    <b-col md="auto" class="mt-2" style="color: white">
+                        <h5>
+                            Local Path:
+                            <b>{{
+                                output.local_path ? output.local_path : 'None'
+                            }}</b>
+                        </h5>
+                    </b-col>
+                    <b-col class="mt-2" md="auto" style="color: white">
+                        <h5>
+                            iRODS Path:
+                            <b>{{
+                                output.irods_path ? output.irods_path : 'None'
+                            }}</b>
+                        </h5>
                     </b-col>
                 </b-row>
             </template>
+            <b-card-body>
+                <EditOutput
+                    :user="user"
+                    v-on:outputSelected="onOutputSelected"
+                ></EditOutput>
+            </b-card-body>
         </b-card>
         <b-card
             bg-variant="white"
@@ -154,9 +269,20 @@
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h4>
-                            Target
-                        </h4>
+                        <h3>
+                            Deployment <b>Target</b>
+                            <i
+                                class="fas fa-check ml-2 success"
+                                v-if="
+                                    target.name !== null && target.name !== ''
+                                "
+                            ></i>
+                        </h3>
+                    </b-col>
+                    <b-col md="auto" class="mt-2" style="color: white">
+                        <h5>
+                            <h5>Target: <b>{{ target.name }}</b></h5>
+                        </h5>
                     </b-col>
                 </b-row>
             </template>
@@ -166,13 +292,6 @@
                     v-on:targetSelected="onTargetSelected"
                 ></SelectTarget>
             </b-card-body>
-            <template v-slot:footer style="background-color: white">
-                <b-row align-v="center">
-                    <b-col class="mt-2" style="color: white">
-                        <h5>Selected: {{ target.name }}</h5>
-                    </b-col>
-                </b-row>
-            </template>
         </b-card>
         <b-row>
             <b-col>
@@ -202,6 +321,7 @@
 <script>
 import EditParameters from '../components/EditParameters';
 import EditInput from '../components/EditInput';
+import EditOutput from '../components/EditOutput';
 import SelectTarget from '../components/SelectTarget';
 import Pipelines from '@/services/apiV1/PipelineManager';
 import Users from '@/services/apiV1/UserManager';
@@ -216,6 +336,7 @@ export default {
     components: {
         EditParameters,
         EditInput,
+        EditOutput,
         SelectTarget
     },
     props: {
@@ -234,8 +355,12 @@ export default {
             input: {
                 files: []
             },
+            output: {
+                local_path: null,
+                irods_path: null
+            },
             target: {
-                name: 'None'
+                name: null
             }
         };
     },
@@ -258,6 +383,9 @@ export default {
     methods: {
         onInputSelected(input) {
             this.input = input;
+        },
+        onOutputSelected(output) {
+            this.output = output;
         },
         onTargetSelected(target) {
             this.target = target;
@@ -282,6 +410,9 @@ export default {
 <style scoped lang="sass">
 @import "../scss/_colors.sass"
 @import "../scss/main.sass"
+
+.success
+    color: $success
 
 .workflow-icon
     width: 200px

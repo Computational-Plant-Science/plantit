@@ -2,6 +2,23 @@
     <div>
         <b-row>
             <b-col>
+                <b>Configure local path.</b>
+            </b-col>
+        </b-row>
+        <br />
+        <b-row>
+            <b-col> File Name </b-col>
+            <b-col cols="10">
+                <b-form-input
+                    size="sm"
+                    v-model="local_path"
+                    placeholder="Enter a file name."
+                ></b-form-input>
+            </b-col>
+        </b-row>
+        <br />
+        <b-row>
+            <b-col>
                 <b>Configure iRODS connection.</b>
             </b-col>
         </b-row>
@@ -12,7 +29,7 @@
                 <b-form-input
                     size="sm"
                     v-model="username"
-                    placeholder="Enter a value for 'username'"
+                    placeholder="Enter a username."
                 ></b-form-input>
             </b-col>
         </b-row>
@@ -23,7 +40,7 @@
                     size="sm"
                     type="password"
                     v-model="password"
-                    placeholder="Enter a value for 'password'"
+                    placeholder="Enter a password."
                 ></b-form-input>
             </b-col>
         </b-row>
@@ -33,7 +50,7 @@
                 <b-form-input
                     size="sm"
                     v-model="host"
-                    placeholder="Enter a value for 'host'"
+                    placeholder="Enter a host FQDN or IP address."
                 ></b-form-input>
             </b-col>
         </b-row>
@@ -43,7 +60,7 @@
                 <b-form-input
                     size="sm"
                     v-model="port"
-                    placeholder="Enter a value for 'port'"
+                    placeholder="Enter a port number."
                 ></b-form-input>
             </b-col>
         </b-row>
@@ -53,7 +70,7 @@
                 <b-form-input
                     size="sm"
                     v-model="zone"
-                    placeholder="Enter a value for 'zone'"
+                    placeholder="Enter a zone name."
                 ></b-form-input>
             </b-col>
         </b-row>
@@ -69,7 +86,7 @@
             <b-col cols="10">
                 <b-form-input
                     size="sm"
-                    v-model="path"
+                    v-model="irods_path"
                     placeholder="Enter a path."
                 ></b-form-input>
             </b-col>
@@ -77,12 +94,19 @@
         <br />
         <b-row>
             <b-col>
-                <b-button @click="listFiles()" variant="success" block>
+                <b-button @click="verify" variant="success" block>
                     Verify
                 </b-button>
             </b-col>
         </b-row>
         <br />
+        <b-row>
+            <b-col>
+                <b-alert v-model="localConfigIncomplete" variant="warning"
+                    >Local path configuration incomplete.</b-alert
+                >
+            </b-col>
+        </b-row>
         <b-row>
             <b-col>
                 <b-alert v-model="irodsConfigIncomplete" variant="warning"
@@ -97,11 +121,6 @@
                 variant="dark"
             ></b-spinner>
         </b-row>
-        <b-row align-h="center" v-for="file in files" :key="file">
-            <b-col class="text-center">
-                {{ file }}
-            </b-col>
-        </b-row>
     </div>
 </template>
 
@@ -109,7 +128,7 @@
 import Files from '@/services/apiV1/FileManager';
 
 export default {
-    name: 'EditInput',
+    name: 'EditOutput',
     data() {
         return {
             username: '',
@@ -117,9 +136,11 @@ export default {
             host: '',
             port: '',
             zone: '',
-            path: '',
+            local_path: '',
+            irods_path: '',
             files: [],
             filesLoading: false,
+            localConfigIncomplete: false,
             irodsConfigIncomplete: false
         };
     },
@@ -129,10 +150,14 @@ export default {
             this.host = info.host;
             this.port = info.port;
             this.zone = info.zone;
-            this.path = info.path;
+            this.irods_path = info.path;
         });
     },
     methods: {
+        verify() {
+            this.localConfigIncomplete = this.local_path === '';
+            this.listFiles();
+        },
         listFiles() {
             if (
                 !(
@@ -141,7 +166,7 @@ export default {
                     this.host &&
                     this.port &&
                     this.zone &&
-                    this.path
+                    this.irods_path
                 )
             ) {
                 this.irodsConfigIncomplete = true;
@@ -154,21 +179,19 @@ export default {
                     this.host,
                     this.port,
                     this.zone,
-                    this.path
+                    this.irods_path
                 ).then(files => {
                     this.files = files.files;
                     this.filesLoading = false;
-                    if (this.files.length > 0) {
-                        this.$emit('inputSelected', {
-                            username: this.username,
-                            password: this.password,
-                            host: this.host,
-                            port: this.port,
-                            zone: this.zone,
-                            path: this.path,
-                            files: this.files
-                        });
-                    }
+                    this.$emit('outputSelected', {
+                        username: this.username,
+                        password: this.password,
+                        host: this.host,
+                        port: this.port,
+                        zone: this.zone,
+                        local_path: this.local_path,
+                        irods_path: this.irods_path
+                    });
                 });
             }
         }
