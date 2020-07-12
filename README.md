@@ -2,9 +2,9 @@
 
 # PlantIT [![Build Status](https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/plantit)
 
-**Phenomics**-as-a-Service software for accessible, reproducible plant science.
+Workflow automation for plant science.
 
-**This project is under active development and is not yet stable**.
+**This project is in alpha and is not yet stable**.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -28,11 +28,7 @@ The following are required to build and run `PlantIT` in a Unix environment:
 
 - [Docker](https://www.docker.com/)
 - [npm](https://www.npmjs.com/get-npm)
-- Python 2
-
-## Documentation
-
-Full documentation can be found [here](https://computational-plant-science.github.io/DIRT2_Webplatform/build/html/index.html).
+- Python 2.7+
 
 ## Installation
 
@@ -44,7 +40,7 @@ git clone git@github.com:Computational-Plant-Science/plantit.git
 
 ### Development
 
-To set up a new (or restore a clean) development environment, run `dev/bootstrap.sh` from the project root (you may need to use `chmod +x` first). This will:
+To set up a new (or restore a clean) development environment, run `dev/bootstrap.sh` from the project root (you may need to use `chmod +x` first). You can use the `-n` option to disable the Docker build cache. This command will:
 
 - Stop and remove project containers and networks
 - If an `.env` file (to configure environment variables) does not exist, generate one with default values
@@ -60,8 +56,7 @@ Then bring the project up with `docker-compose -f docker-compose.yml -f docker-c
 This will start a number of containers:
 
 - `plantit`: Django web application (`http://localhost:80`)
-- `dagit`: Dagster Dagit instance (`http://localhost:3000`)
-- `dagster-celery`: Celery worker for Dagster
+- `celery`: Celery worker
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `postgres`: PostgreSQL database
 - `flower`: Celery monitoring UI (`http://localhost:5555`)
@@ -85,8 +80,6 @@ The production configurations look somewhat different than development:
 - NGINX serves static assets and acts as a reverse proxy
 - Postgres stores data in a persistent volume
 - Graylog consumes and stores container logs
-- Google Analytics are enabled via [`vue-analytics`](https://github.com/MatteoGabriele/vue-analytics)
-- [Sentry](https://sentry.io/welcome/) provides Vue monitoring and error tracking
 - Monitoring tools (Adminer and RabbitMQ dashboard)
 
 Before running PlantIT in a production environment, you must:
@@ -124,8 +117,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 This will start the following:
 
 - `plantit`: Django web application (`http://<host>:80`)
-- `dagit`: Dagster Dagit instance (`http://<host>:3000`)
-- `dagster-celery`: Celery worker for Dagster
+- `celery`: Celery worker for Dagster
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `postgres`: PostgreSQL database
 - `flower`: Celery monitoring UI (`http://localhost:5555`)
@@ -161,14 +153,6 @@ SQL_PORT=5432
 SQL_NAME=postgres
 SQL_USER=postgres
 SQL_PASSWORD=some_password
-DAGIT_GRAPHQL_URL=http://dagit:3000/graphql
-DAGSTER_HOME=/code/plantit
-DAGSTER_RUN_DB=run_storage
-DAGSTER_EVENT_DB=event_log_storage
-DAGSTER_SCHEDULE_DB=schedule_storage
-DAGSTER_FILESTORAGE_BASEDIR=/opt/dagster
-DAGSTER_CELERY_BACKEND=amqp://rabbitmq
-DAGSTER_CELERY_BROKER=amqp://rabbitmq
 GRAYLOG_GELF_URI=http://localhost:12201
 GRAYLOG_HTTP_EXTERNAL_URI=http://localhost:9000
 ```
@@ -189,40 +173,11 @@ The following variables are required only in production:
 - `VUE_APP_SENTRY_IO_KEY`: provided by Sentry
 - `VUE_APP_SENTRY_IO_PROJECT`: provided by Sentry
 
-## Workflows
+## Compute targets
 
-Workflows created with the [Plant IT workflow template](https://github.com/Computational-Plant-Science/cookiecutter_PlantIT) can be plugged into the web platform by placing workflow repositories in the `django/workflows` directory.
+Targets are added via the Django admin interface. Note that [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) must be installed on the target. In some environments, [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) may not automatically be added to `$PATH` upon installation; either update `$PATH` or use `plantit-cli`'s absolute path.
 
-Note that the  `dagit`, and `dagster-celery`, and `plantit` containers must be restarted to reload workflows:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart dagit
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart dagster-celery
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml restart plantit
-```
-
-Note also that the workflow directory name must be identical to the `app_name` configured when the workflow was created (this can also be edited later in the `WORKFLOW_CONFIG` dictionary in `workflow.py`.
-
-## Clusters
-
-See [ClusterSide README](https://github.com/Computational-Plant-Science/plantit-clusterside) for information on installation and configuration of required remote Plant IT code on cluster.
-
-Clusters are added via the admin interface `(/admin/)`. Choose Clusters->Add Cluster. Fill in the commands
-accordingly.
-
-Typically, the submit commands will include `clusterside submit`. They may also include loading packages necessary to run clusterside, for example, loading python3.
-
-For Sapelo2 (UGA's cluster), the submit command is:
-
-```bash
-ml Python/3.6.4-foss-2018a; /home/cotter/.local/bin/clusterside submit
-```
-
-Note that in some environments, [`plantit-clusterside`](https://github.com/Computational-Plant-Science/plantit-clusterside) may not automatically be added to `$PATH` upon installation; either update `$PATH` or use `plantit-clusterside`'s absolute path.
-
-### Cluster login configuration
-
-Plant IT supports both ssh password and public-key based
+PlantIT supports both ssh password and public-key based
 login. To use public-key login, leave the Password field blank. Public-key login requires the private key and a known_hosts list to be available. Plant IT expects this data to be in the following two files:
 
 - `config/ssh/id_rsa`: The private key used for login
