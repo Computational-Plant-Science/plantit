@@ -18,14 +18,10 @@ sphinx_rtd_theme
 pillow
 sentry-sdk
 gunicorn
-dagster
-dagster-postgres
-dagster-celery
-dagster-cron
-dagit
 gql
 six>=1.12
 PyJWT
 PyGithub
 requests
 pyaml
+channels

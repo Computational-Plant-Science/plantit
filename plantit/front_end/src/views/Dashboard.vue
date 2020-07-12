@@ -104,7 +104,7 @@ export default {
             this.job_pk = pk;
             this.state = State.Jobs;
             this.job_state = JobState.View;
-        },
+        }
     }
 };
 </script>

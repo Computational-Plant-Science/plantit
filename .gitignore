@@ -11,6 +11,8 @@ plantit/workflows/
 plantit/settings.py
 plantit/plantit/static/workflow_icons/*.png
 plantit/plantit/runs/dagster/.logs_queue/
+plantit/plantit/runs/dagster/dagster_celery/
+plantit/plantit/runs/dagster/storage/
 plantit/plantit/runs/dagster/.telemetry/
 plantit/plantit/runs/dagster/history/
 plantit/plantit/runs/dagster/schedules/

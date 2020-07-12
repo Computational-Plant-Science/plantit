@@ -33,6 +33,18 @@ export default {
             })
             .catch(err => {
                 Sentry.captureException(err);
+                return err;
+            });
+    },
+    getStatus(id) {
+        return axios
+            .get(`/apis/v1/runs/${id}/status/`)
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+                return err;
             });
     },
     get(pk) {

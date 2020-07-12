@@ -1,13 +1,12 @@
 <template>
     <div class="w-100">
         <b-card>
-            <template
-                    v-slot:header
-                  style="background-color: white">
+            <template v-slot:header style="background-color: white">
                 <b-row>
                     <b-col class="mt-2" style="color: white">
                         <h5>
-                            <i class="fas fa-layer-group text-dark"></i> Collections
+                            <i class="fas fa-layer-group text-dark"></i>
+                            Collections
                         </h5>
                     </b-col>
                     <b-col md="auto" v-if="filterable" class="b-form-col">

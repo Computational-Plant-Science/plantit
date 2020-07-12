@@ -8,9 +8,7 @@
         sticky-header="true"
         caption-top
     >
-        <template v-slot:table-caption
-            >Configure pipeline parameters.</template
-        >
+        <template v-slot:table-caption>Configure workflow parameters.</template>
         <template v-slot:cell(name)="param">
             {{ param.item.key.toUpperCase() }}
         </template>
@@ -18,7 +16,9 @@
             <b-form-input
                 size="sm"
                 v-model="param.item.value"
-                :placeholder="'Enter a value for \'' + param.item.key.toUpperCase() + '\''"
+                :placeholder="
+                    'Enter a value for \'' + param.item.key.toUpperCase() + '\''
+                "
             ></b-form-input>
         </template>
     </b-table>

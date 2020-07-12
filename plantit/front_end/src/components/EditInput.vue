@@ -69,7 +69,7 @@
             <b-col cols="10">
                 <b-form-input
                     size="sm"
-                    v-model="path"
+                    v-model="irods_path"
                     placeholder="Enter a path."
                 ></b-form-input>
             </b-col>
@@ -117,7 +117,7 @@ export default {
             host: '',
             port: '',
             zone: '',
-            path: '',
+            irods_path: '',
             files: [],
             filesLoading: false,
             irodsConfigIncomplete: false
@@ -129,7 +129,7 @@ export default {
             this.host = info.host;
             this.port = info.port;
             this.zone = info.zone;
-            this.path = info.path;
+            this.irods_path = info.path;
         });
     },
     methods: {
@@ -141,7 +141,7 @@ export default {
                     this.host &&
                     this.port &&
                     this.zone &&
-                    this.path
+                    this.irods_path
                 )
             ) {
                 this.irodsConfigIncomplete = true;
@@ -154,7 +154,7 @@ export default {
                     this.host,
                     this.port,
                     this.zone,
-                    this.path
+                    this.irods_path
                 ).then(files => {
                     this.files = files.files;
                     this.filesLoading = false;
@@ -165,7 +165,7 @@ export default {
                             host: this.host,
                             port: this.port,
                             zone: this.zone,
-                            path: this.path,
+                            irods_path: this.irods_path,
                             files: this.files
                         });
                     }

@@ -1,95 +1,108 @@
-import django
+import os
+import traceback
+import uuid
+from os.path import join
+
 import requests
+import yaml
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
-from django.shortcuts import redirect
-from django.utils import timezone, dateparse
+from django.utils import timezone
 from rest_framework.decorators import api_view
 
 from apis.util import get_config
-
-
-from os.path import join
-
-from dagster import DagsterEventType, execute_pipeline_iterator
-
 from plantit.celery import app
-from plantit.runs.dagster.pipelines import plantit_pipeline
 from plantit.runs.models.cluster import Cluster
 from plantit.runs.models.run import Run
-from plantit.runs.models.status import Status
+from plantit.runs.models.status import PlantitStatus
+from plantit.runs.ssh import SSH
+
+import re
+
+
+def clean_html(raw_html):
+    expr = re.compile('<.*?>')
+    text = re.sub(expr, '', raw_html)
+    return text
+
+
+def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, directory: str):
+    cmd = f"cd {directory}; {pre_command}; {command}" if directory else command
+    print(f"Executing remote command: '{cmd}'")
+    stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
+    stdin.close()
+    for line in iter(lambda: stdout.readline(2048), ""):
+        print(f"Received stout from remote command: '{clean_html(line)}'")
+    for line in iter(lambda: stderr.readline(2048), ""):
+        print(f"Received sterr from remote command: '{clean_html(line)}'")
+
+    if stdout.channel.recv_exit_status():
+        raise Exception(f"Received non-zero exit status from remote command")
+    else:
+        print(f"Successfully executed remote command.")
 
 
 @app.task()
-def run_pipeline(pipeline, run_id):
-    run = Run.objects.get(submission_id=run_id)
-    del pipeline['target']
-    run.status_set.create(description="Created")
-    for event in execute_pipeline_iterator(
-            plantit_pipeline,
-            run_config={
-                'solids': {
-                    'create_working_directory': {
-                        'command': f"mkdir {run.work_dir}",
-                        'directory': run.cluster.workdir
-                    },
-                    'upload_pipeline': {
-                        'pipeline': pipeline,
-                        'directory': run.work_dir
-                    },
-                    'execute_command': {
-                        'command': f"plantit run pipeline.yaml",
-                        'directory': run.work_dir
-                    }
-                },
-                'resources': {
-                    'ssh': {
-                        'config': {
-                            'host': run.cluster.hostname,
-                            'port': run.cluster.port,
-                            'username': run.cluster.username,
-                        }
-                    }
-                },
-                "execution": {
-                    "celery": {
-                        "config": {
-                            "backend": "amqp://rabbitmq",
-                            "broker": "amqp://rabbitmq"
-                        }
-                    }
-                },
-                'storage': {
-                    'filesystem': {
-                        'config': {
-                            'base_dir': '/opt/dagster'
-                        }
-                    }
-                },
-                'loggers': {
-                    'console': {
-                        'config': {
-                            'log_level': 'INFO'
-                        }
-                    }
-                }
-            }):
-        print(f"Dagster event '{event.event_type}' with message '{event.message}'")
-        if event.event_type is DagsterEventType.PIPELINE_INIT_FAILURE or event.is_pipeline_failure:
-            run.status_set.create(state=Status.FAILED, description=event.message)
-            raise Exception(event.message)
-        run.status_set.create(state=Status.OK, description=event.message)
-    run.status_set.create(state=Status.OK, description=f"Completed")
+def execute(workflow, run_id, token):
+    run = Run.objects.get(identifier=run_id)
+    run.plantitstatus_set.create(description=f"Run started.",
+                                 state=PlantitStatus.RUNNING)
+    run.save()
+
+    try:
+        work_dir = join(run.cluster.workdir, run.work_dir)
+        ssh_client = SSH(run.cluster.hostname,
+                         run.cluster.port,
+                         run.cluster.username,
+                         run.cluster.password) if run.cluster.password else SSH(run.cluster.hostname,
+                                                                                run.cluster.port,
+                                                                                run.cluster.username)
+
+        with ssh_client:
+            execute_command(run=run, ssh_client=ssh_client, pre_command=':', command=f"mkdir {work_dir}",
+                            directory=run.cluster.workdir)
+            print(f"Created working directory '{work_dir}'. Uploading workflow definition...")
+            run.plantitstatus_set.create(
+                description=f"Created working directory. Uploading workflow definition...",
+                state=PlantitStatus.RUNNING)
+            run.save()
+
+            with ssh_client.client.open_sftp() as sftp:
+                sftp.chdir(work_dir)
+                with sftp.open('workflow.yaml', 'w') as file:
+                    yaml.dump(workflow['config'], file, default_flow_style=False)
+            print(f"Uploaded workflow definition to '{work_dir}'. Running workflow...")
+            run.plantitstatus_set.create(
+                description=f"Uploaded workflow definition. Running workflow...",
+                state=PlantitStatus.RUNNING)
+            run.save()
+
+            execute_command(run=run, ssh_client=ssh_client, pre_command='; '.join(
+                str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
+                            command=f"plantit workflow.yaml --token {token}",
+                            directory=work_dir)
+            print(f"Run completed.")
+            run.plantitstatus_set.create(
+                description=f"Run completed.",
+                state=PlantitStatus.COMPLETED)
+            run.save()
+
+    except Exception:
+        run.plantitstatus_set.create(
+            description=f"Run failed: {traceback.format_exc()}.",
+            state=PlantitStatus.FAILED)
+        run.save()
 
 
 @login_required
 def list(request):
     token = request.user.profile.github_auth_token
     response = requests.get(
-        f"https://api.github.com/search/code?q=filename:plantit.yaml+org:computational-plant-science",
-        headers={"Authorization": f"token {token}"}
-    )
+        f"https://api.github.com/search/code?q=filename:plantit.yaml+org:computational-plant-science") if '' == token \
+        else requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+org:computational-plant-science",
+                          headers={"Authorization": f"token {token}"})
+
     return JsonResponse({
         'pipelines': [{
             'repo': item['repository'],
@@ -110,29 +123,58 @@ def get(request, owner, name):
     })
 
 
+def get_executor(cluster):
+    return {
+        'in-process': {}
+    }
+
+
 @login_required
 @api_view(['POST'])
 def start(request):
     user = request.user
-    pipeline = request.data
+    workflow = request.data
 
     now = timezone.now()
     now_str = now.strftime('%s')
 
-    cluster = Cluster.objects.get(name=pipeline['config']['target']['name'])
+    cluster = Cluster.objects.get(name=workflow['config']['target']['name'])
     run = Run.objects.create(
         user=User.objects.get(username=user.username),
-        pipeline_owner=pipeline['repo']['owner']['login'],
-        pipeline_name=pipeline['repo']['name'],
+        workflow_owner=workflow['repo']['owner']['login'],
+        workflow_name=workflow['repo']['name'],
         cluster=cluster,
         created=now,
-        submission_id=now_str,
         work_dir=now_str + "/",
-        remote_results_path=now_str + "/")
+        remote_results_path=now_str + "/",
+        identifier=uuid.uuid4())
+    workflow_path = f"{workflow['repo']['owner']['login']}/{workflow['repo']['name']}"
+    run.plantitstatus_set.create(description=f"Workflow '{workflow_path}' run '{run.identifier}' created.",
+                                 state=PlantitStatus.CREATED)
     run.save()
 
-    run_pipeline.delay(pipeline, run.submission_id)
+    # token = request.session._session['csrfToken']
+    token = run.token
+    config = {
+        'identifier': run.identifier,
+        'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/update_target_status/",
+        'workdir': join(cluster.workdir, now_str),
+        'clone': f"https://github.com/{workflow_path}" if workflow['config']['clone'] else None,
+        'image': workflow['config']['image'],
+        'command': workflow['config']['commands'],
+        'params': workflow['config']['params'],
+        'executor': get_executor(cluster)
+    }
+    if 'input' in workflow['config']:
+        config['input'] = workflow['config']['input']
+    if 'output' in workflow['config']:
+        config['output'] = workflow['config']['output']
+
+    execute.delay({
+        'repo': workflow['repo'],
+        'config': config
+    }, run.identifier, token)
 
     return JsonResponse({
-        'id': run.submission_id
+        'id': run.identifier
     })

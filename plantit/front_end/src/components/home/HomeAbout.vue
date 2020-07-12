@@ -1,166 +1,152 @@
 <template>
-    <div id="background" class="vertical-center m-0 p-0">
-        <b-container id="main">
-            <b-card
+    <b-card
+        class="rounded-0 text-center"
+        bg-variant="dark"
+        border-variant="dark"
+        text-variant="white"
+        header-bg-variant="dark"
+        header-border-variant="dark"
+    >
+        <template slot="header" style="border: none">
+            <h2 class="text-white mt-5">
+                Workflow automation for plant science.
+            </h2>
+        </template>
+        <b-container>
+            <br />
+            <br />
+            <b-row align-content="center" align-h="center">
+                <b-col align-h="center">
+                    <b-card
+                        sub-title-text-variant="success"
+                        class="text-left rounded-0 overflow-hidden"
+                        bg-variant="dark"
+                        no-body
+                        text-variant="success"
+                        :img-src="
+                            require('../../assets/frontpage/icons/algorithm.png')
+                        "
+                        img-width="100px"
+                        img-height="90px"
+                        img-left
+                        style="border: none;"
+                    >
+                        <b-card-text class="ml-4">
+                            <h4 class="text-white">
+                                Access or upload data.
+                            </h4>
+                            Upload, store, and publish datasets with
+                            <b-link
+                                class="text-white"
+                                href="https://www.cyverse.org/"
+                                >CyVerse</b-link
+                            >, or plug in cloud stores like
+                            <b-link
+                                class="text-white"
+                                href="https://aws.amazon.com/s3/"
+                                >Amazon S3</b-link
+                            >.
+                        </b-card-text>
+                    </b-card>
+                </b-col>
+            </b-row>
+            <br />
+            <br />
+            <b-row>
+                <b-col>
+                    <b-card
+                        sub-title-text-variant="success"
+                        class="text-left rounded-0 overflow-hidden"
+                        bg-variant="dark"
+                        text-variant="success"
+                        no-body
+                        :img-src="
+                            require('../../assets/frontpage/icons/code.png')
+                        "
+                        img-width="100px"
+                        img-height="90px"
+                        img-left
+                        style="border: none;"
+                    >
+                        <b-card-text class="ml-4">
+                            <h4 class="text-white">
+                                Find or share software.
+                            </h4>
+                            Run workflows from the <b-link
+                                class="text-white"
+                                href="https://www.github.com/"
+                                >Github</b-link> community or develop your own. If it can run in
+                            <b-link
+                                class="text-white"
+                                href="https://www.docker.com/"
+                                >Docker</b-link
+                            >
+                            or
+                            <b-link
+                                class="text-white"
+                                href="https://sylabs.io/docs/"
+                                >Singularity</b-link
+                            >, it will run on PlantIT.
+                        </b-card-text>
+                    </b-card>
+                </b-col>
+            </b-row>
+            <br />
+            <br />
+            <b-row>
+                <b-col md="auto">
+                    <b-card
+                        sub-title-text-variant="success"
+                        class="text-left text-white rounded-0 overflow-hidden"
+                        no-body
+                        bg-variant="dark"
+                        text-variant="success"
+                        :img-src="
+                            require('../../assets/frontpage/icons/UI.png')
+                        "
+                        img-width="100px"
+                        img-height="90px"
+                        img-left
+                        style="border: none;"
+                    >
+                        <b-card-text class="ml-4">
+                            <h4 class="text-white">
+                                Automate all the things.
+                            </h4>
+                            Configure parameters, deploy to a cluster, and get
+                            notified when results are ready: all from the
+                            browser, no programming required.
+                        </b-card-text>
+                    </b-card>
+                </b-col>
+            </b-row>
+            <br />
+            <br />
+            <!--<b-card
                 align="center"
-                footer-bg-variant="white"
-                footer-border-variant="white"
-                border-variant="default"
-                style="max-width: 400px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.98"
-            >
-                <b-row align-v="center" class="justify-content-md-center">
-                    <b-col>
-                        <b-img
-                            :src="require('@/assets/logo.png')"
-                            width="100px"
-                            alt="Plant IT"
-                        ></b-img>
-                        <h1>PlantIT</h1>
-                    </b-col>
-                </b-row>
-                <br>
-                <b-navbar toggleable="sm" class="m-0 p-0">
-                    <b-collapse class="justify-content-center m-0 p-0" is-nav>
-                        <b-navbar-nav class="m-0 p-0">
-                            <b-nav-item to="/About" class="m-0 p-0">
-                                <b-button variant="outline-dark">
-                                    <i class="fas fa-seedling fa-2x"></i>
-                                    <br />
-                                    About
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item to="/Guide" class="m-0 p-0">
-                                <b-button variant="outline-dark">
-                                    <i class="fas fa-map-signs fa-2x"></i>
-                                    <br />
-                                    Guide
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item to="/Documentation" class="m-0 p-0">
-                                <b-button variant="outline-dark">
-                                    <i class="fas fa-book fa-2x"></i>
-                                    <br />
-                                    Docs
-                                </b-button>
-                            </b-nav-item>
-                        </b-navbar-nav>
-                    </b-collapse>
-                </b-navbar>
-                <template v-slot:footer class="m-0 p-0">
-                    <b-row class="m-0 p-0">
-                        <b-col class="ml-5 mr-5 mb-4 mt-0 p-0">
-                            <b-button
-                                variant="white"
-                                block
-                                class="text-center"
-                                href="/apis/v1/profiles/github_request_identity/"
-                            >
-                                <i class="fab fa-github fa-1x fa-fw"></i>
-                                Log In with Github
-                            </b-button>
-                            <b-button
-                                variant="white"
-                                block
-                                class="text-center"
-                                href="/login/?next=/pipelines/"
-                            >
-                                <b-img
-                                    :src="
-                                        require('@/assets/sponsors/cyversebw-notext.png')
-                                    "
-                                    height="18px"
-                                    alt="Cyverse"
-                                ></b-img>
-                                Log In with CyVerse
-                            </b-button>
-                        </b-col>
-                        <!--<b-col class="m-0 p-0 ml-2">
-                            <b-button variant="white" block class="text-center" href="/404/">
-                                <i class="fab fa-github fa-1x fa-fw"></i>
-                                Log In with GitHub
-                            </b-button>
-                        </b-col>-->
-                    </b-row>
-                </template>
-            </b-card>
+                    sub-title-text-variant="success"
+                    class="text-left text-white rounded-0 overflow-hidden"
+                    no-body
+                    bg-variant="dark"
+                    text-variant="success"
+                    :img-src="require('../../assets/frontpage/hex_blank.png')"
+                img-top
+                    style="border: none"
+                >
+                </b-card>-->
         </b-container>
-        <i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i>
-    </div>
+    </b-card>
 </template>
 
 <script>
-
 export default {
-    name: 'HomeAbout'
+    name: 'HomeDevelopers'
 };
 </script>
 
 <style scoped lang="sass">
 @import '../../scss/_colors.sass'
 
-.vertical-center
-    min-height: 100%
-    /* Fallback for browsers do NOT support vh unit */
-    min-height: 100vh
-    /* These two lines are counted as one :-)       */
-
-    display: flex
-    align-items: center
-
-#background
-    background-image: url('../../assets/frontpage/index_bg.png')
-    background-blend-mode: overlay
-    background-color: hsla(0, 0%, 100%, 0.10)
-    background-repeat: no-repeat
-    background-position: center
-    background-size: cover
-    min-height: 100vh
-    width: 100%
-    white-space: nowrap
-    position: relative
-    text-align: center
-
-#background:after
-    opacity: 0.5
-
-#main
-    text-align: center
-    padding-bottom: 50px
-    white-space: normal
-
-#message
-    width: 60%
-    background-color: $color-box-background
-    margin: 0 auto
-    color: white
-
-#main-nav
-    width: 60%
-    background-color: $color-box-background
-    margin-top: 10px
-    margin-bottom: 75px
-    border-radius: 10px
-
-    a
-        color: $color-highlight
-        margin: 0 auto
-
-    a:hover
-        text-decoration: underline
-
-@keyframes down-arrow-highlight
-    0%
-        color: $color-box-background
-    100%
-        color: $color-highlight
-
-#about-down-arrow
-    position: absolute
-    bottom: 0
-    left: 50%
-    margin-left: -40px
-    animation-name: down-arrow-highlight
-    animation-duration: 2s
-    animation-iteration-count: infinite
-    animation-direction: alternate
+h1
+    color: $color-highlight
 </style>

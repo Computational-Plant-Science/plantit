@@ -97,20 +97,14 @@ export default {
                     )
                     .then(value => {
                         if (value === true) {
-                            this.$emit(
-                                'save',
-                                this.metadata
-                            );
+                            this.$emit('save', this.metadata);
                             this.$bvModal.hide(bvModalEvent.componentId);
                         } else {
                             this.$bvModal.show(bvModalEvent.componentId);
                         }
                     });
             } else {
-                this.$emit(
-                    'save',
-                    this.metadata
-                );
+                this.$emit('save', this.metadata);
             }
         },
         cancel() {

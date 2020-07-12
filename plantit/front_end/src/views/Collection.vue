@@ -35,7 +35,7 @@
                             <i class="far fa-edit"></i>
                         </b-button>
                         <b-button
-                                class="ml-3"
+                            class="ml-3"
                             size="md"
                             variant="outline-danger"
                             @click="remove()"

@@ -1,28 +1,27 @@
+import binascii
 import json
 import os
-
-import binascii
+import uuid
 
 from django.conf import settings
 from django.db import models
 from django.forms import model_to_dict
 from django.utils import timezone
 
-from plantit.runs.models.abstractrun import AbstractRun
 from plantit.runs.models.cluster import Cluster
 
 
-class Run(models.Model, AbstractRun):
+class Run(models.Model):
     class Meta:
         ordering = ['-created']
 
     # collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now())
-    # token = models.CharField(max_length=40, default=binascii.hexlify(os.urandom(20)).decode())
+    token = models.CharField(max_length=40, default=binascii.hexlify(os.urandom(20)).decode())
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    submission_id = models.CharField(max_length=100, null=True, blank=True, default=binascii.hexlify(os.urandom(20)))
-    pipeline_owner = models.CharField(max_length=280, null=True, blank=True)
-    pipeline_name = models.CharField(max_length=280, null=True, blank=True)
+    identifier = models.CharField(max_length=36, null=False, blank=False, default=uuid.uuid4())
+    workflow_owner = models.CharField(max_length=280, null=True, blank=True)
+    workflow_name = models.CharField(max_length=280, null=True, blank=True)
     cluster = models.ForeignKey(Cluster,
                                 null=True,
                                 blank=True,
@@ -39,15 +38,16 @@ class Run(models.Model, AbstractRun):
     def __str__(self):
         return json.dumps(model_to_dict(self))
 
-    def current_status(self):
-        """
-            The job's most recent status.
-
-            Returns:
-                the most recent status of the job as a :class:`Status` object.
-        """
+    @property
+    def plantit_status(self):
         try:
-            return self.status_set.filter(date__isnull=False).latest('date')
+            return self.plantitstatus_set.filter(date__isnull=False).latest('date')
         except:
             return None
 
+    @property
+    def target_status(self):
+        try:
+            return self.targetstatus_set.filter(date__isnull=False).latest('date')
+        except:
+            return None

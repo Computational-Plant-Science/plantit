@@ -69,14 +69,15 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_cas_ng.middleware.CASMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (
+    'plantit.runs.authentication.RunTokenAuthentication',
     'django.contrib.auth.backends.ModelBackend',
     'django_cas_ng.backends.CASBackend',
 )
@@ -159,6 +160,7 @@ USE_TZ = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'plantit.runs.authentication.RunTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
 }

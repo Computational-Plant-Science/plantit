@@ -4,8 +4,8 @@ import Home from './views/Home.vue';
 import About from './views/About.vue';
 import Guide from './views/Guide.vue';
 import Docs from './views/Docs.vue';
-import Pipelines from './views/Pipelines.vue';
-import StartPipeline from './views/StartPipeline.vue';
+import Workflows from './views/Workflows.vue';
+import Workflow from './views/Workflow.vue';
 import Runs from './views/Runs.vue';
 import Run from './views/Run.vue';
 import Profile from './views/Profile.vue';
@@ -84,14 +84,14 @@ let router = new Router({
             }
         },
         {
-            path: '/login?next=/pipelines/',
+            path: '/login?next=/workflows/',
             name: 'login',
             component: Login,
             meta: {
                 crumb: [
                     {
                         text: 'Log In',
-                        href: '/login/?next=/pipelines/'
+                        href: '/login/?next=/workflows/'
                     }
                 ]
             }
@@ -110,9 +110,9 @@ let router = new Router({
             }
         },
         {
-            path: '/pipelines',
-            name: 'pipelines',
-            component: Pipelines,
+            path: '/workflows',
+            name: 'workflows',
+            component: Workflows,
             meta: {
                 crumb: [
                     {
@@ -120,17 +120,17 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Pipelines',
-                        href: '/pipelines'
+                        text: 'Workflows',
+                        href: '/workflows'
                     }
                 ]
             }
         },
         {
-            path: '/pipelines/start/:owner/:name',
-            name: 'start',
+            path: '/workflows/:owner/:name',
+            name: 'workflow',
             props: true,
-            component: StartPipeline,
+            component: Workflow,
             meta: {
                 crumb: [
                     {
@@ -138,8 +138,8 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Pipelines',
-                        href: '/pipelines'
+                        text: 'Workflows',
+                        href: '/workflows'
                     }
                 ]
             }
@@ -220,39 +220,30 @@ let router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
-    if (
-        to.matched.some(record => record.name === 'start') &&
-        to.meta.crumb[to.meta.crumb.length - 1].text !== 'Start'
-    ) {
+    if (to.matched.some(record => record.name === 'workflow')) {
+        if (to.meta.crumb.length === 4) {
+            to.meta.crumb.pop();
+            to.meta.crumb.pop();
+        }
         to.meta.crumb.push(
             {
                 text: to.params.owner,
-                href: `/pipelines/${to.params.owner}`
+                href: `/workflows/${to.params.owner}`
             },
             {
                 text: to.params.name,
-                href: `/pipelines/${to.params.owner}/${to.params.name}`
+                href: `/workflows/${to.params.owner}/${to.params.name}`
             },
-            {
-                text: 'Start',
-                href: `/pipelines/${to.params.owner}/${to.params.name}/start`
-            }
         );
     }
-    if (from.matched.some(record => record.name === 'start')) {
-        to.meta.crumb = to.meta.crumb.slice(0, 2);
-    }
-    if (
-        to.matched.some(record => record.name === 'run') &&
-        to.meta.crumb[to.meta.crumb.length - 1].text !== 'Run'
-    ) {
+    if (to.matched.some(record => record.name === 'run')) {
+        if (to.meta.crumb.length === 3) {
+            to.meta.crumb.pop();
+        }
         to.meta.crumb.push({
             text: to.params.id,
             href: `/runs/${to.params.id}`
         });
-    }
-    if (from.matched.some(record => record.name === 'run')) {
-        to.meta.crumb = to.meta.crumb.slice(0, 2);
     }
     if (to.matched.some(record => record.meta.requiresAuth)) {
         if (!Auth.isLoggedIn()) {

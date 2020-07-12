@@ -18,10 +18,9 @@ services:
     working_dir: /code/plantit
     depends_on:
       - postgres
-      - dagster-celery
+      - celery
     volumes:
       - .:/code
-      - dagster:/opt/dagster
     environment:
       - VUE_APP_TITLE=${VUE_APP_TITLE}
       - NODE_ENV=${NODE_ENV}
@@ -39,7 +38,6 @@ services:
       - SQL_NAME=${SQL_NAME}
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
-      - DAGIT_GRAPHQL_URL=${DAGIT_GRAPHQL_URL}
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
@@ -112,7 +110,6 @@ services:
       - SQL_NAME=${SQL_NAME}
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
-      - DAGIT_GRAPHQL_URL=${DAGIT_GRAPHQL_URL}
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
@@ -124,52 +121,10 @@ services:
       retries: 2
       start_period: 20s
 
-  dagster-celery:
-    build:
-      context: .
-      dockerfile: dev/dockerfiles/plantit/Dockerfile
-    command: ["dagster-celery", "worker", "start", "-A", "dagster_celery.app", "-n", "plantit-dagster", "-y", "/code/plantit/celery_config.yaml"]
-    volumes:
-      - .:/code
-      - dagster:/opt/dagster
-    working_dir: /code/plantit
-    depends_on:
-      - rabbitmq
-    environment:
-      - DAGSTER_HOME=${DAGSTER_HOME}
-    healthcheck:
-      test: dagster-celery worker list -y /code/plantit/celery_config.yaml | grep "plantit-dagster"
-      interval: 20s
-      timeout: 20s
-      retries: 2
-      start_period: 20s
-
-  dagit:
-    build:
-      context: .
-      dockerfile: dev/dockerfiles/plantit/Dockerfile
-    working_dir: /code/plantit
-    command: ["/code/dev/start-dagit.sh"]
-    environment:
-      - DAGSTER_HOME=${DAGSTER_HOME}
-    volumes:
-      - .:/code
-      - dagster:/opt/dagster
-    ports:
-    - "3000:3000"
-    healthcheck:
-      test: curl -f http://localhost:3000/dagit_info/
-      interval: 20s
-      timeout: 20s
-      retries: 2
-      start_period: 20s
-
   flower:
     image: mher/flower
     volumes:
       - .:/code
-    depends_on:
-      - dagster-celery
     command: flower --broker=amqp://rabbitmq --port=5555
     ports:
       - 5555:5555
@@ -180,5 +135,3 @@ services:
       retries: 2
       start_period: 20s
 
-volumes:
-  dagster:

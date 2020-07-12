@@ -2,9 +2,8 @@
     <b-container fluid>
         <b-row no-gutters>
             <b-col>
+                <HomeSplash></HomeSplash>
                 <HomeAbout></HomeAbout>
-                <HomeResearchers></HomeResearchers>
-                <HomeDevelopers></HomeDevelopers>
                 <HomeSponsors></HomeSponsors>
             </b-col>
         </b-row>
@@ -13,24 +12,25 @@
 
 <script>
 // @ is an alias to /src
+import HomeSplash from '@/components/home/HomeSplash.vue';
 import HomeAbout from '@/components/home/HomeAbout.vue';
-import HomeDevelopers from '@/components/home/HomeDevelopers.vue';
-import HomeResearchers from '@/components/home/HomeResearchers.vue';
-import HomeSponsors from "../components/home/HomeSponsors";
+import HomeSponsors from '../components/home/HomeSponsors';
 
 export default {
     name: 'home',
     components: {
-        HomeSponsors,
+        HomeSplash,
         HomeAbout,
-        HomeDevelopers,
-        HomeResearchers
+        HomeSponsors
     }
 };
 </script>
 
-<style>
-html {
-    scroll-behavior: smooth;
-}
+<style scoped lang="sass">
+@import '../scss/_colors.sass'
+@import '../scss/main.sass'
+
+html
+    scroll-behavior: smooth
+
 </style>

@@ -41,9 +41,7 @@
                                     ></b-spinner>
                                     ...
                                 </i>
-                                <span v-else-if="!info"
-                                    >! Log in to use PlantIT.
-                                </span>
+                                <span v-else-if="!info">! Please log in. </span>
                                 <b v-else
                                     >,
                                     {{
@@ -55,7 +53,7 @@
                             </p>
                         </b-col>
                     </b-row>
-                    <b-row class="m-0 p-0 pb-3" v-if="!info">
+                    <b-row class="m-0 p-0" v-if="!info">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item to="/" class="m-0 p-0">
@@ -67,9 +65,9 @@
                                     >
                                         <b-img
                                             :src="
-                                                require('@/assets/sponsors/cyversebw-notext.png')
+                                                require('../assets/sponsors/cyversebw-notext.png')
                                             "
-                                            height="1px"
+                                            height="18px"
                                             alt="Cyverse"
                                         ></b-img>
                                         Log In with CyVerse
@@ -78,15 +76,9 @@
                             </b-nav>
                         </b-col>
                     </b-row>
+                    <hr>
                     <b-row class="ml-0 mr-0 pl-0 pr-0">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
-                            <p class="mr-4 ml-4">
-                                See the
-                                <b-link to="/Guide">Guide</b-link>
-                                to learn how to run pipelines, or the
-                                <b-link to="/Docs">Docs</b-link>
-                                to create your own.
-                            </p>
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item to="/" class="m-0 p-0">
                                     <b-button
@@ -135,14 +127,7 @@
                             </b-nav>
                         </b-col>
                     </b-row>
-                    <b-row>
-                        <b-col>
-                            <p class="mr-4 ml-4 pt-3">
-                                Join the conversation on Slack or contribute on
-                                GitHub.
-                            </p>
-                        </b-col>
-                    </b-row>
+                    <hr>
                     <b-row class="ml-0 mr-0 pl-0 pr-0">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
@@ -192,7 +177,11 @@
                 </b-container>
             </template>
         </b-sidebar>
-        <b-navbar toggleable="sm" class="logo p-3 pt-5" style="max-height: 60px">
+        <b-navbar
+            toggleable="sm"
+            class="logo p-3 pt-5 pb-4"
+            style="max-height: 60px"
+        >
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-3 mr-3">
                     <b-nav-item class="m-0 p-0" v-b-toggle.sidebar-left>
@@ -238,16 +227,32 @@
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                 </transition>
+                <b-navbar-nav class="ml-auto m-0 p-0"> </b-navbar-nav>
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
+                        v-if="
+                            isLoggedIn && info.profile
+                                ? info.profile.github_username === ''
+                                : false
+                        "
+                        title="Log In with Github"
+                        href="/apis/v1/profiles/github_request_identity/"
+                        class="m-0 p-0"
+                    >
+                        <b-button class="text-left" variant="success">
+                            <i class="fab fa-github"></i>
+                            Log In with Github
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item
                         v-if="isLoggedIn"
-                        title="Pipelines"
-                        to="/pipelines"
+                        title="Workflows"
+                        to="/workflows"
                         class="m-0 p-0"
                     >
                         <b-button variant="outline-dark">
                             <i class="fas fa-stream fa-1x fa-fw"></i>
-                            Pipelines
+                            Workflows
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -269,7 +274,11 @@
                     >
                         <b-button variant="outline-dark">
                             <i class="fas fa-user fa-1x"></i>
-                            {{ info.first_name }}
+                            {{
+                                info.first_name
+                                    ? info.first_name
+                                    : info.username
+                            }}
                         </b-button>
                     </b-nav-item>
                     <b-nav-item

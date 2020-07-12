@@ -1,58 +1,105 @@
-from django.http import JsonResponse
-from rest_framework import viewsets
-from rest_framework.decorators import action
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import action, api_view
 
 from plantit.runs.models.run import Run
-from .serializers import JobSerializer
-from rest_framework.permissions import IsAuthenticated
-from ..mixins import PinViewMixin
-from django.contrib.auth.decorators import login_required
+from plantit.runs.models.status import TargetStatus
 from plantit.stores.services import download_stream
 
 
-class RunViewSet(viewsets.ModelViewSet, PinViewMixin):
-    permission_classes = (IsAuthenticated,)
+@action(methods=['get'], detail=False)
+@login_required
+def get_runs(request):
+    runs = Run.objects.all()
 
-    queryset = Run.objects.all()
-    serializer_class = JobSerializer
-
-    def get_queryset(self):
-        if not self.request.user.is_anonymous:
-            user = self.request.user
-            return self.queryset.filter(user=user)
-        else:
-            # If no user info, return all jobs.
-            # This will happen if access the jobs via a token.
-            # TODO: restrict to job with given token.
-            return self.queryset
+    return JsonResponse([{
+        'id': run.identifier,
+        'work_dir': run.work_dir,
+        'cluster': run.cluster.name,
+        'created': run.created,
+        'state': run.plantit_status.state if run.plantit_status is not None else 'Unknown',
+        'workflow_owner': run.workflow_owner,
+        'workflow_name': run.workflow_name
+    } for run in runs], safe=False)
 
 
 @action(methods=['get'], detail=False)
 @login_required
 def get_run(request, id):
-    run = Run.objects.get(submission_id=id)
+    try:
+        run = Run.objects.get(identifier=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
     return JsonResponse({
-        'id': run.submission_id,
+        'id': run.identifier,
         'work_dir': run.work_dir,
         'cluster': run.cluster.name,
         'created': run.created,
-        'status_set': list(run.status_set.all()),
-        'pipeline_owner': run.pipeline_owner,
-        'pipeline_name': run.pipeline_name
+        'state': run.plantit_status.state if run.plantit_status is not None else 'Unknown',
+        'workflow_owner': run.workflow_owner,
+        'workflow_name': run.workflow_name
     })
 
 
+@action(methods=['get'], detail=False)
 @login_required
-def download_results(request, pk):
-    """
-        Stream the results file from a job to the the user.
+def get_status(request, id):
+    try:
+        run = Run.objects.get(identifier=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
 
-        **url:** `/apis/v1/jobs/<job_pk>/download_results/`
+    return JsonResponse({
+        'plantit': [{
+            'run_id': id,
+            'state': status.state,
+            'date': status.date,
+            'description': status.description
+        } for status in list(run.plantitstatus_set.all())],
+        'target': [{
+            'run_id': id,
+            'state': status.state,
+            'date': status.date,
+            'description': status.description
+        } for status in list(run.targetstatus_set.all())],
+    })
 
-        **Response Data:** A HTTP streaming response.
 
-        **Requires:** User must be logged in.
-    """
+@api_view(['POST'])
+@login_required
+def update_target_status(request, id):
+    status = request.data
+    state = int(status['state'])
+
+    if state == 2:
+        state = TargetStatus.FAILED
+    elif state == 3:
+        state = TargetStatus.RUNNING
+    elif state == 4:
+        state = TargetStatus.CREATED
+    else:
+        raise ValueError(f"Invalid value for state '{status['state']}' (expected 2 - 4)")
+
+    try:
+        run = Run.objects.get(identifier=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    for chunk in status['description'].split('<br>'):
+        for line in chunk.split('\n'):
+            if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
+                continue
+            run.targetstatus_set.create(description=line, state=state)
+
+    run.save()
+
+    return HttpResponse(status=200)
+
+
+@login_required
+def get_results(request, pk):
     run = Run.objects.get(pk=pk)
 
     return download_stream(run.collection.storage_type,

@@ -2,15 +2,15 @@
     <div class="w-100 p-4">
         <b-card
             header-bg-variant="white"
-            border-variant="white"
-            header-border-variant="dark"
+            border-variant="dark"
+            header-border-variant="white"
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col style="color: white">
-                        <h4>
+                        <h3>
                             Runs
-                        </h4>
+                        </h3>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -45,15 +45,13 @@
                         :items="runs"
                         :fields="fields"
                         :per-page="perPage"
+                        style="min-height: 100%"
                         :borderless="true"
                         select-mode="single"
                         :filter="filter"
                         class="table-responsive"
                         @row-selected="onRunSelected"
                     >
-                        <template v-slot:cell(status_set[0].state)="data">
-                            <b>{{ data.value }}</b>
-                        </template>
                     </b-table>
                 </b-col>
             </b-row>
@@ -63,7 +61,6 @@
 
 <script>
 import Runs from '@/services/apiV1/RunManager.js';
-import Pipelines from '@/services/apiV1/PipelineManager';
 import moment from 'moment';
 import router from '../router';
 
@@ -94,14 +91,11 @@ export default {
                     return 'Created';
             }
         },
-        onPipelineSelected(pipeline) {
-            this.$emit('pipelineSelected', pipeline);
-        },
         onRunSelected: function(items) {
             router.push({
                 name: 'run',
                 params: {
-                    id: items[0].submission_id
+                    id: items[0].id
                 }
             });
         },
@@ -139,7 +133,7 @@ export default {
             runs_query: '',
             fields: [
                 {
-                    key: 'submission_id',
+                    key: 'id',
                     label: 'Id',
                     sortable: true
                 },
@@ -147,43 +141,37 @@ export default {
                     key: 'created',
                     sortable: true,
                     formatter: value => {
-                        return moment(value).format('MM/DD/YY HH:mm');
+                        return `${moment(value).fromNow()} (${moment(value).format('MMMM Do YYYY, h:mm a')})`
                     }
                 },
                 {
-                    key: 'pipeline_name',
-                    label: 'Pipeline',
+                    key: 'workflow_name',
+                    label: 'Workflow',
                     sortable: true
                 },
                 {
-                    key: 'status_set[0].state',
-                    label: 'Status',
-                    formatter: status => {
-                        switch (status) {
+                    key: 'state',
+                    label: 'State',
+                    formatter: value => {
+                        switch (value) {
                             case 1:
                                 return 'Completed';
                             case 2:
                                 return 'Failed';
                             case 3:
-                                return 'OK';
+                                return 'Running';
                             case 4:
-                                return 'Warning';
-                            case 5:
                                 return 'Created';
                         }
                     }
                 }
             ],
-            runs: [],
-            pipelines: []
+            runs: []
         };
     },
     mounted: function() {
         Runs.list().then(runs => {
             this.runs = runs;
-        });
-        Pipelines.list().then(pipelines => {
-            this.pipelines = pipelines;
         });
     },
     filters: {

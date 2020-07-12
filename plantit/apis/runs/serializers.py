@@ -2,41 +2,36 @@ from rest_framework import serializers
 from datetime import datetime
 
 from plantit.runs.models.run import Run
-from plantit.runs.models.status import Status
+from plantit.runs.models.status import PlantitStatus
 from ..mixins import PinnedSerilizerMethodMixin
 
 
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Status
+        model = PlantitStatus
         fields = ('state', 'date', 'description')
 
 
-class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
-    status_set = StatusSerializer(many=True)
-    #cluster = serializers.SerializerMethodField()
-    #pinned = serializers.SerializerMethodField('pinnedByUser', source='profile_pins')
-    #pipeline_name = serializers.StringRelatedField()
-    #pipeline_owner = serializers.StringRelatedField()
+class RunSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
 
     class Meta:
         model = Run
         fields = ('pk', 'cluster', 'pipeline_owner', 'pipeline_name',
-                  'created', 'work_dir', 'submission_id',
-                  'remote_results_path', 'status_set')
+                  'created', 'work_dir', 'identifier',
+                  'remote_results_path')
 
     def create(self, validated_data):
         status_data = validated_data.pop('status_set')
         run = Run.objects.create(**validated_data)
         run.save()
         for _ in status_data:
-            Status.objects.create(job=run, **status_data)
+            PlantitStatus.objects.create(run=run, **status_data)
         return run
 
     def update(self, run, validated_data):
         print(validated_data)
-        if 'submission_id' in validated_data.keys():
-            run.submission_id = validated_data['submission_id']
+        if 'identifier' in validated_data.keys():
+            run.identifier = validated_data['identifier']
 
         if 'remote_results_path' in validated_data.keys():
             run.remote_results_path = validated_data['remote_results_path']
@@ -45,7 +40,7 @@ class JobSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
         if status_data:
             for status in status_data:
                 status['date'] = datetime.now()
-                Status.objects.create(job=run, **status)
+                PlantitStatus.objects.create(run=run, **status)
 
         run.save()
         return run

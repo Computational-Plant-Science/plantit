@@ -3,8 +3,8 @@
         <b-container>
             <div class="w-100 pb-4">
                 <b-card
-                        bg-variant="white"
-                        header-bg-variant="white"
+                    bg-variant="white"
+                    header-bg-variant="white"
                     :img-src="require('../assets/icons/default-user-small.png')"
                     img-alt="Image"
                     img-top
@@ -17,9 +17,7 @@
                     >
                         <b-row>
                             <b-col class="mt-2" style="color:white">
-                                <h5>
-                                    Profile: {{ info.username }}
-                                </h5>
+                                <h5>Profile: {{ info.username }}</h5>
                             </b-col>
                             <b-col md="auto">
                                 <b-button
@@ -77,7 +75,7 @@
                                     : this.info.profile.field_of_study
                             }}
                         </p>
-                        <br>
+                        <br />
                         <h5>Github</h5>
                         <hr />
                         <p>
@@ -88,9 +86,7 @@
                                     : this.info.profile.github_username
                             }}
                         </p>
-                        <p>
-                            <b>Pipelines:</b> {{ this.pipelines }}
-                        </p>
+                        <p><b>Pipelines:</b> {{ this.pipelines }}</p>
                     </b-card-text>
                 </b-card>
             </div>

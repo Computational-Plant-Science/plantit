@@ -50,26 +50,12 @@ services:
         gelf-address: ${GRAYLOG_GELF_URI}
         tag: "rabbitmq"
 
-  # celery:
-  #   logging:
-  #     driver: gelf
-  #     options:
-  #       gelf-address: ${GRAYLOG_GELF_URI}
-  #       tag: "celery"
-
-  dagster-celery:
+  celery:
     logging:
       driver: gelf
       options:
         gelf-address: ${GRAYLOG_GELF_URI}
-        tag: "dagster-celery"
-
-  dagit:
-    logging:
-      driver: gelf
-      options:
-        gelf-address: ${GRAYLOG_GELF_URI}
-        tag: "dagit"
+        tag: "celery"
 
   flower:
     logging:

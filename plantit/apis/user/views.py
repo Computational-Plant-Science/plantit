@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponse
 from django.shortcuts import redirect
-from github import Github
+from github import Github, BadCredentialsException
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -61,14 +61,17 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         user.profile.github_auth_token = token
         user.save()
 
-        return redirect('/workflows/')
+        return redirect('/pipelines/')
 
     @action(methods=['get'], detail=False)
     def github_repos(self, request):
         user = self.get_object()
         token = user.profile.github_auth_token
         gh = Github(user.profile.github_auth_token)
-        github_username = gh.get_user().login
+        try:
+            github_username = gh.get_user().login
+        except BadCredentialsException:
+            return Response([])
 
         response = requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{github_username}", headers={"Authorization": f"token {token}"})
         pipelines = [{

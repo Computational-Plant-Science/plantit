@@ -1,4 +1,3 @@
-from dagster import DagsterType
 from django.db import models
 from encrypted_model_fields.fields import EncryptedCharField
 
@@ -18,9 +17,7 @@ class Cluster(models.Model):
                                        help_text="ssh port")
     hostname = models.CharField(max_length=250,
                                 help_text="ssh hostname")
-    pre_commands = models.TextField(help_text="Commands to run before starting jobs.")
-    submit_commands = models.TextField(default="clusterside submit",
-                                       help_text="Commands to run to submit a job.")
+    pre_commands = models.TextField(help_text="Commands to run before starting jobs.", blank=True, null=True, default=None)
 
     def __str__(self):
         return self.name

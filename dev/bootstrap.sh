@@ -28,16 +28,6 @@ else
   echo "Environment variable file '$env_file' already exists. Continuing..."
 fi
 
-dagster_config_file="plantit/dagster.yaml"
-echo "Checking for dagster config file '$dagster_config_file'..."
-if [ ! -f $dagster_config_file ]; then
-  echo "Dagster config file '$dagster_config_file' does not exist. Creating it..."
-  chmod +x dev/create-dagster-config-file.sh
-  ./dev/create-dagster-config-file.sh
-else
-  echo "Dagster config file '$dagster_config_file' already exists. Continuing..."
-fi
-
 echo "Building front end..."
 cd plantit/front_end || exit
 npm install
@@ -82,9 +72,6 @@ if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
 fi
 $DOCKER_COMPOSE exec plantit bash -c "/code/dev/ssh-copy-id.expect"
-
-echo "Creating Dagster databases..."
-$DOCKER_COMPOSE exec plantit /code/dev/create-dagster-databases.sh run_storage event_log_storage schedule_storage
 
 echo "Stopping containers..."
 $DOCKER_COMPOSE stop

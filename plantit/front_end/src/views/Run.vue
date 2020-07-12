@@ -1,271 +1,160 @@
 <template>
     <div class="w-100 p-4">
-        <b-card
-            bg-variant="white"
-            header-bg-variant="white"
-            footer-bg-variant="white"
-            border-variant="white"
-            footer-border-variant="white"
-            header-border-variant="dark"
-            class="mb-4"
-        >
-            <template slot="header">
-                <b-row>
-                    <b-col md="auto">
-                        <h2>{{ pipeline.config.name }}</h2>
-                    </b-col>
-                    <b-col style="color:white">
-                        <h3>
-                            <b-badge variant="success" class="p-0 m-0 mr-2">{{
-                                run.id
-                            }}</b-badge>
-                            <b-badge
-                                variant="success"
-                                class="p-0 m-0 ml-2 mr-2"
-                            >
-                                {{ run.cluster }}
-                            </b-badge>
-                            <b-badge
-                                pill
-                                class="ml-2 mr-2"
-                                style="color: white"
-                                :variant="
-                                    error_count !== 0
-                                        ? 'danger'
-                                        : warning_error_count !== 0
-                                        ? 'warning'
-                                        : 'success'
-                                "
-                                >{{ statusToString(job_status)
-                                }}<span v-if="warning_error_count > 0">
-                                    with {{ warning_count }} warning(s) and
-                                    {{ error_count }} error(s)
-                                </span>
-                            </b-badge>
-                        </h3>
-                    </b-col>
-                </b-row>
-            </template>
-            <b-row no-gutters>
-                <b-col
-                    md="auto"
-                    style="min-width: 8em; max-width: 8rem; min-height: 8rem; max-height: 8rem"
-                >
-                    <b-img
-                        v-if="pipeline.icon_url"
-                        style="max-width: 8rem"
-                        :src="pipeline.icon_url"
-                        right
-                    >
-                    </b-img>
-                    <b-img
-                        v-else
-                        style="max-width: 8rem"
-                        :src="require('../assets/logo.png')"
-                        right
-                    ></b-img>
+        <div v-if="runNotFound">
+            <b-row align-content="center">
+                <b-col>
+                    <h5 class="text-center">
+                        This page does not exist.
+                    </h5>
                 </b-col>
-                <b-card-body>
-                    <b-col>
-                        <b-row>
-                            <b-col>
-                                {{ pipeline.repo.description }}
-                            </b-col>
-                        </b-row>
-                        <br />
-                        <b-row>
-                            <b-col>
-                                <b-row>
-                                    <b-col>
-                                        Author:
-                                    </b-col>
-                                    <b-col cols="11">
-                                        <b>{{ pipeline.config.author }}</b>
-                                    </b-col>
-                                </b-row>
-                                <b-row>
-                                    <b-col>
-                                        Image:
-                                    </b-col>
-                                    <b-col cols="11">
-                                        <b>{{ pipeline.config.image }}</b>
-                                    </b-col>
-                                </b-row>
-                                <b-row>
-                                    <b-col>
-                                        Clone:
-                                    </b-col>
-                                    <b-col cols="11">
-                                        <b>{{
-                                            pipeline.config.clone ? 'Yes' : 'No'
-                                        }}</b>
-                                    </b-col>
-                                </b-row>
-                                <b-row>
-                                    <b-col>
-                                        Parameters:
-                                    </b-col>
-                                    <b-col cols="11">
-                                        <b>{{
-                                            params.length === 0
-                                                ? 'None'
-                                                : params.length
-                                        }}</b>
-                                    </b-col>
-                                </b-row>
-                                <b-row>
-                                    <b-col>
-                                        Input:
-                                    </b-col>
-                                    <b-col cols="11">
-                                        <b>{{
-                                            pipeline.config.input
-                                                ? pipeline.config.input.capitalize()
-                                                : 'None'
-                                        }}</b>
-                                    </b-col>
-                                </b-row>
-                                <b-row>
-                                    <b-col>
-                                        Output:
-                                    </b-col>
-                                    <b-col cols="11">
-                                        <b>{{
-                                            pipeline.config.output
-                                                ? pipeline.config.output.capitalize()
-                                                : 'None'
-                                        }}</b>
-                                    </b-col>
-                                </b-row>
-                                <b-row>
-                                    <b-col>
-                                        Command:
-                                    </b-col>
-                                    <b-col cols="11">
-                                        <b
-                                            ><code>{{
-                                                ' ' + pipeline.config.commands
-                                            }}</code></b
-                                        >
-                                    </b-col>
-                                </b-row>
-                            </b-col>
-                        </b-row>
-                    </b-col>
-                </b-card-body>
             </b-row>
-        </b-card>
-        <b-card
-            bg-variant="white"
-            header-bg-variant="white"
-            footer-bg-variant="white"
-            border-variant="white"
-            footer-border-variant="white"
-            header-border-variant="dark"
-            class="mb-4"
-        >
-            <template slot="header">
-                <b-row align-v="center">
-                    <b-col>
-                        <h4>Logs</h4>
-                    </b-col>
-                    <b-col md="auto" class="ml-0 pl-1">
-                        <b-button
-                            variant="outline-dark"
-                            v-b-tooltip.hover
-                            title="Refresh"
-                            @click="reloadJob"
-                        >
-                            <i class="fas fa-redo"></i>
-                        </b-button>
-                    </b-col>
-                </b-row>
-            </template>
+        </div>
+        <b-row align-h="center" v-if="loadingRun">
+            <b-spinner
+                type="grow"
+                label="Loading..."
+                variant="dark"
+            ></b-spinner>
+        </b-row>
+        <div v-if="!loadingRun && !runNotFound">
+            <b-row>
+                <b-col md="auto">
+                    <b-card
+                        bg-variant="white"
+                        header-bg-variant="white"
+                        footer-bg-variant="white"
+                        border-variant="dark"
+                        footer-border-variant="white"
+                        header-border-variant="dark"
+                        class="overflow-hidden"
+                    >
+                        <RunBlurb
+                            :workflow="workflow"
+                            :run="run"
+                            :selectable="false"
+                        ></RunBlurb>
+                    </b-card>
+                </b-col>
+            </b-row>
+            <br />
             <b-row>
                 <b-col>
-                    <b-alert
-                        :show="reloadAlertDismissCountdown"
-                        dismissible
-                        variant="success"
-                        @dismissed="reloadAlertDismissCountdown = 0"
-                        @dismiss-count-down="countDownChanged"
+                    <b-card
+                        bg-variant="white"
+                        header-bg-variant="white"
+                        footer-bg-variant="white"
+                        border-variant="dark"
+                        footer-border-variant="white"
+                        header-border-variant="white"
                     >
-                        <p>
-                            Logs refreshed.
-                        </p>
-                    </b-alert>
+                        <template slot="header">
+                            <b-row>
+                                <b-col>
+                                    <h3>Logs</h3>
+                                </b-col>
+                                <b-col md="auto">
+                                    <b-alert
+                                        class="m-0 pt-2 pb-2"
+                                        :show="reloadAlertDismissCountdown"
+                                        variant="success"
+                                        @dismissed="
+                                            reloadAlertDismissCountdown = 0
+                                        "
+                                        @dismiss-count-down="countDownChanged"
+                                    >
+                                        Logs refreshed.
+                                    </b-alert>
+                                </b-col>
+                                <b-col md="auto" class="m-0">
+                                    <b-button
+                                        variant="outline-dark"
+                                        v-b-tooltip.hover
+                                        title="Refresh"
+                                        @click="reloadRun(true)"
+                                    >
+                                        <i class="fas fa-redo"></i>
+                                    </b-button>
+                                </b-col>
+                            </b-row>
+                        </template>
+                        <b-row>
+                            <b-col>
+                                <h4><b-badge variant="dark" class="text-success">PlantIT</b-badge></h4>
+                                <hr />
+                                <b-table
+                                    borderless
+                                    responsive="sm"
+                                    :items="logs ? logs.plantit : []"
+                                    :fields="plantit_status_table.fields"
+                                    :sort-by.sync="plantit_status_table.sortBy"
+                                >
+                                    <span
+                                        slot="description"
+                                        slot-scope="data"
+                                        v-html="data.value"
+                                        class="align-left"
+                                    ></span>
+                                </b-table>
+                            </b-col>
+                            <b-col>
+                                <h4><b-badge variant="dark">{{ run.cluster }}</b-badge></h4>
+                                <hr>
+                                <b-table
+                                    borderless
+                                    responsive="sm"
+                                    :items="logs ? logs.target : []"
+                                    :fields="target_status_table.fields"
+                                    :sort-by.sync="target_status_table.sortBy"
+                                >
+                                    <span
+                                        slot="description"
+                                        slot-scope="data"
+                                        v-html="data.value"
+                                        class="align-left"
+                                    ></span>
+                                </b-table>
+                            </b-col>
+                        </b-row>
+                    </b-card>
                 </b-col>
             </b-row>
-            <b-row align-h="center" v-if="loadingRun">
-                <b-spinner
-                    type="grow"
-                    label="Loading..."
-                    variant="dark"
-                ></b-spinner>
-            </b-row>
-            <b-row v-if="!loadingRun">
-                <b-col>
-                    <b-table
-                        id="error-log"
-                        striped
-                        borderless
-                        responsive="lg"
-                        :items="run.status_set"
-                        :fields="status_table.fields"
-                        :per-page="status_table.perPage"
-                        :sort-by.sync="status_table.sortBy"
-                        :sort-desc.sync="status_table.sortDesc"
-                    >
-                        <span
-                            slot="description"
-                            slot-scope="data"
-                            v-html="data.value"
-                            class="align-left"
-                        ></span>
-                    </b-table>
-                </b-col>
-            </b-row>
-        </b-card>
+        </div>
     </div>
 </template>
 
 <script>
-import Pipelines from '@/services/apiV1/PipelineManager';
+import RunBlurb from '../components/RunBlurb';
+import Workflows from '@/services/apiV1/WorkflowManager';
 import Users from '@/services/apiV1/UserManager';
 import Runs from '@/services/apiV1/RunManager.js';
 import moment from 'moment';
 
 export default {
-    name: 'Job',
-    components: {},
-    props: {
-        pk: {
-            required: true
-        }
+    name: 'Run',
+    components: {
+        RunBlurb
     },
     data() {
         return {
-            reloadAlertDismissSeconds: 5,
+            reloadAlertDismissSeconds: 2,
             reloadAlertDismissCountdown: 0,
             showReloadAlert: false,
             user: null,
-            pipeline: null,
-            loadingRun: false,
-            run: {
-                pipeline_owner: null,
-                pipeline_name: null
-            },
-            status_table: {
+            workflow: null,
+            loadingRun: true,
+            runNotFound: false,
+            run: null,
+            logs: null,
+            plantit_status_table: {
                 sortBy: 'date',
                 sortDesc: true,
-                perPage: 1,
                 fields: [
                     {
                         key: 'date',
-                        label: 'Time',
+                        label: 'Timestamp',
                         sortable: true,
                         formatter: value => {
-                            return moment(value).format('MM/DD/YY HH:mm');
+                            return `${moment(value).fromNow()} (${moment(value).format('MMMM Do YYYY, h:mm a')})`;
                         }
                     },
                     {
@@ -278,10 +167,45 @@ export default {
                                 case 2:
                                     return 'Failed';
                                 case 3:
-                                    return 'OK';
+                                    return 'Running';
                                 case 4:
-                                    return 'Warning';
-                                case 5:
+                                    return 'Created';
+                            }
+                        }
+                    },
+                    {
+                        key: 'description',
+                        formatter: value => {
+                            return value.replace(/(?:\r\n|\r|\n)/g, '<br>');
+                        },
+                        tdClass: 'table-td'
+                    }
+                ]
+            },
+            target_status_table: {
+                sortBy: 'date',
+                sortDesc: true,
+                fields: [
+                    {
+                        key: 'date',
+                        label: 'Timestamp',
+                        sortable: true,
+                        formatter: value => {
+                            return `${moment(value).fromNow()} (${moment(value).format('MMMM Do YYYY, h:mm a')})`;
+                        }
+                    },
+                    {
+                        key: 'state',
+                        label: 'State',
+                        formatter: value => {
+                            switch (value) {
+                                case 1:
+                                    return 'Completed';
+                                case 2:
+                                    return 'Failed';
+                                case 3:
+                                    return 'Running';
+                                case 4:
                                     return 'Created';
                             }
                         }
@@ -298,12 +222,35 @@ export default {
         };
     },
     methods: {
-        reloadJob(toast) {
+        reloadRun(toast) {
             this.loadingRun = true;
             Runs.getRun(this.$router.currentRoute.params.id).then(run => {
-                this.run = run;
-                if (toast) this.showAlert();
+                if (run.response && run.response.status === 404) {
+                    this.runNotFound = true;
+                } else {
+                    this.runNotFound = false;
+                    this.run = run;
+                }
+                this.reloadLogs(toast);
                 this.loadingRun = false;
+                Users.getCurrentUser().then(user => {
+                    this.user = user;
+                    Workflows.get(
+                        this.run.workflow_owner,
+                        this.run.workflow_name
+                    ).then(workflow => {
+                        this.workflow = workflow;
+                    });
+                });
+            });
+        },
+        reloadLogs(toast) {
+            Runs.getStatus(this.$router.currentRoute.params.id).then(logs => {
+                if (logs.response && logs.response.status === 404) {
+                    return;
+                }
+                this.logs = logs;
+                if (toast) this.showAlert();
             });
         },
         countDownChanged(dismissCountDown) {
@@ -319,60 +266,22 @@ export default {
                 case 2:
                     return 'Failed';
                 case 3:
-                    return 'OK';
+                    return 'Running';
                 case 4:
-                    return 'Warning';
-                case 5:
                     return 'Created';
             }
         }
     },
     mounted: function() {
-        Runs.getRun(this.$router.currentRoute.params.id).then(r => {
-            this.run = r;
-            Users.getCurrentUser().then(user => {
-                this.user = user;
-                Pipelines.get(
-                    this.run.pipeline_owner,
-                    this.run.pipeline_name
-                ).then(pipeline => {
-                    this.pipeline = pipeline;
-                    if (pipeline.config.params != null) {
-                        this.params = pipeline.config.params.map(function(
-                            param
-                        ) {
-                            return {
-                                key: param,
-                                value: ''
-                            };
-                        });
-                    }
-                });
-            });
-        });
+        this.reloadRun(false);
     },
     computed: {
-        job_status() {
-            if (this.run.status_set.length > 0) {
-                return this.run.status_set[0].state;
+        runStatus() {
+            if (this.run.runstatus_set.length > 0) {
+                return this.run.runstatus_set[0].state;
             } else {
                 return 0;
             }
-        },
-        warning_count() {
-            return this.run.status_set.filter(status => {
-                return status.state === 4;
-            }).length;
-        },
-        error_count() {
-            return this.run.status_set.filter(status => {
-                return status.state === 2;
-            }).length;
-        },
-        warning_error_count() {
-            return this.run.status_set.filter(status => {
-                return status.state === 2 || status.state === 4;
-            }).length;
         }
     },
     filters: {

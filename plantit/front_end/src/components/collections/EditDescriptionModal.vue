@@ -17,10 +17,7 @@
         footer-border-variant="white"
         header-text-variant="white"
     >
-        <b-form-group
-            v-if="description !== null"
-            label-for="description"
-        >
+        <b-form-group v-if="description !== null" label-for="description">
             <b-form-textarea
                 id="description"
                 v-model="description_internal"
@@ -53,10 +50,7 @@ export default {
     },
     methods: {
         save(bvModalEvent) {
-            this.$emit(
-                'saveDescription',
-                this.description_internal,
-            );
+            this.$emit('saveDescription', this.description_internal);
             this.$bvModal.hide(bvModalEvent.componentId);
         },
         cancel() {

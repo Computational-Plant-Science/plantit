@@ -5,10 +5,11 @@ import yaml
 
 
 def get_config(repo, token):
-    file = requests.get(
-        f"https://api.github.com/repos/{repo['owner']['login']}/{repo['name']}/contents/plantit.yaml",
-        headers={"Authorization": f"token {token}"}
-    ).json()
+    request = requests.get(
+        f"https://api.github.com/repos/{repo['owner']['login']}/{repo['name']}/contents/plantit.yaml") if token == '' \
+        else requests.get(f"https://api.github.com/repos/{repo['owner']['login']}/{repo['name']}/contents/plantit.yaml",
+                          headers={"Authorization": f"token {token}"})
+    file = request.json()
     content = requests.get(file['download_url']).text
     return yaml.load(content)
 

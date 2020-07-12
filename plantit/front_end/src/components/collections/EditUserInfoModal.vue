@@ -1,9 +1,7 @@
 <template>
     <b-modal
         :id="modalId"
-        :title="
-            prompt ? 'Complete Profile' : 'Edit Profile'
-        "
+        :title="prompt ? 'Complete Profile' : 'Edit Profile'"
         ok-title="Save"
         ok-variant="success"
         cancel-variant="outline-danger"
@@ -16,8 +14,8 @@
         centered
     >
         <p v-if="prompt">
-            PlantIT collects user information to report to funding organizations.
-            Please enter your information below.
+            PlantIT collects user information to report to funding
+            organizations. Please enter your information below.
         </p>
         <b-form-group
             label="First Name"
@@ -61,7 +59,12 @@
             invalid-feedback="Please enter your institution or organization."
             :state="valid(institution_internal)"
         >
-            <b-form-input id="institution" v-model="institution_internal" trim @input="searchInstitution(institution_internal)">
+            <b-form-input
+                id="institution"
+                v-model="institution_internal"
+                trim
+                @input="searchInstitution(institution_internal)"
+            >
             </b-form-input>
         </b-form-group>
         <b-form-group
@@ -94,7 +97,7 @@
 </template>
 
 <script>
-import PlaceManager from "../../services/apiV1/PlaceManager";
+import PlaceManager from '../../services/apiV1/PlaceManager';
 
 export default {
     name: 'EditUserInfoModal',

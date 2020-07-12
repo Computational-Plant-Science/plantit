@@ -66,15 +66,12 @@
 </template>
 
 <script>
-import SelectCollection from '@/components/collections/SelectCollection';
 import FileManagerApi from '@/services/apiV1/FileManager';
 import CollectionApi from '@/services/apiV1/CollectionManager';
 
 export default {
     name: 'NewCollection',
-    components: {
-        SelectCollection
-    },
+    components: {},
     data() {
         return {
             form: {

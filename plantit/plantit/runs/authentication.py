@@ -4,19 +4,7 @@ from rest_framework import exceptions
 from .models.run import Run
 
 
-class JobTokenAuthentication(authentication.TokenAuthentication):
-    """
-    Extends the token system provided by the django rest framework to
-    authenicate against tokens saved in a :class:`job.Job`
-    (:attr:`job.Job.token`). This allows tokens
-    to be issued per job instead of per user.
-
-    Clients should authenticate by passing the token key in the "Authorization"
-    HTTP header, prepended with the string "Token ".
-
-    Example:
-        Authorization: Token 401f7ac837da42b97f613d789819ff93537bee6a
-    """
+class RunTokenAuthentication(authentication.TokenAuthentication):
 
     keyword = 'Token'
     model = None
@@ -29,9 +17,8 @@ class JobTokenAuthentication(authentication.TokenAuthentication):
     def authenticate_credentials(self, key):
         model = self.get_model()
         try:
-            job = model.objects.get(token=key)
-            print(key)
+            run = model.objects.get(token=key)
         except model.DoesNotExist:
             raise exceptions.AuthenticationFailed('Invalid token.')
 
-        return job.user, job
+        return run.user, run

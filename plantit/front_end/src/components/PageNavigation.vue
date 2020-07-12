@@ -4,7 +4,6 @@
             <slot name="page-nav"></slot>
         </b-navbar>
 
-
         <div class="button-nav">
             <slot name="buttons"></slot>
         </div>
@@ -12,7 +11,7 @@
 </template>
 
 <script>
-    export default {
-        name: 'PageNavigation'
-    };
+export default {
+    name: 'PageNavigation'
+};
 </script>

@@ -1,6 +1,7 @@
 <template>
-    <div>
+    <b-container>
         <b-card
+            align="center"
             class="rounded-0 text-center"
             bg-variant="white"
             border-variant="default"
@@ -8,12 +9,12 @@
             header-bg-variant="white"
             header-border-variant="white"
         >
-            <template slot="header" style="border: none">
-                <h1>Sponsors</h1>
-                <p>PlantIT is supported by the following organizations.</p>
-            </template>
             <b-card-group columns>
-                <b-card align="center" bg-variant="transparent" border-variant="white" class="mr-4 mb-4">
+                <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                >
                     <b-link href="http://www.computational-plant-science.org">
                         <b-img
                             :src="require('@/assets/sponsors/cps-black.png')"
@@ -22,16 +23,11 @@
                         ></b-img>
                     </b-link>
                 </b-card>
-                <b-card align="center" class="mr-4 mb-4" bg-variant="transparent" border-variant="white">
-                    <b-link href="http://www.cyverse.org/">
-                        <b-img
-                            :src="require('@/assets/sponsors/cyversebw.png')"
-                            height="70px"
-                            alt="Cyverse"
-                        ></b-img>
-                    </b-link>
-                </b-card>
-                <b-card align="center" class="mr-4 mb-4" bg-variant="transparent" border-variant="white">
+                <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                >
                     <b-link href="http://www.xsede.org/">
                         <b-img
                             :src="require('@/assets/sponsors/xsede.png')"
@@ -40,16 +36,24 @@
                         ></b-img>
                     </b-link>
                 </b-card>
-                <b-card align="center" class="mr-4 mb-4" bg-variant="transparent" border-variant="white">
-                    <b-link href="http://arpa-e.energy.gov/">
+                <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                >
+                    <b-link href="http://www.cyverse.org/">
                         <b-img
-                            :src="require('@/assets/sponsors/arpa_e.png')"
+                            :src="require('@/assets/sponsors/cyversebw.png')"
                             height="70px"
-                            alt="ARPA-E"
+                            alt="Cyverse"
                         ></b-img>
                     </b-link>
                 </b-card>
-                <b-card align="center" class="mr-4 mb-4" bg-variant="transparent" border-variant="white">
+                <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                >
                     <b-link href="http://www.uga.edu/">
                         <b-img
                             :src="require('@/assets/sponsors/uga.png')"
@@ -58,7 +62,24 @@
                         ></b-img>
                     </b-link>
                 </b-card>
-                <b-card align="center" class="mr-4 mb-4" bg-variant="transparent" border-variant="white">
+                <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                >
+                    <b-link href="http://arpa-e.energy.gov/">
+                        <b-img
+                            :src="require('@/assets/sponsors/arpa_e.png')"
+                            height="70px"
+                            alt="ARPA-E"
+                        ></b-img>
+                    </b-link>
+                </b-card>
+                <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                >
                     <b-link href="http://gacra.uga.edu/">
                         <b-img
                             :src="require('@/assets/sponsors/gacrc.png')"
@@ -69,7 +90,7 @@
                 </b-card>
             </b-card-group>
         </b-card>
-    </div>
+    </b-container>
 </template>
 
 <script>

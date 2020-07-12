@@ -1,9 +1,0 @@
-execution:
-  celery:
-    config:
-      backend: 'amqp://rabbitmq'
-      broker: 'amqp://rabbitmq'
-storage:
-  filesystem:
-    config:
-      base_dir: '/opt/dagster'

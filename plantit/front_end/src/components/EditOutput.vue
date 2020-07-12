@@ -2,7 +2,7 @@
     <div>
         <b-row>
             <b-col>
-                <b>Configure local path.</b>
+                <b>Configure file name.</b>
             </b-col>
         </b-row>
         <br />
@@ -114,6 +114,13 @@
                 >
             </b-col>
         </b-row>
+        <b-row>
+            <b-col>
+                <b-alert v-model="irodsPathDoesNotExist" variant="warning"
+                    >iRODS path does not exist.</b-alert
+                >
+            </b-col>
+        </b-row>
         <b-row align-h="center" v-if="filesLoading">
             <b-spinner
                 type="grow"
@@ -141,7 +148,8 @@ export default {
             files: [],
             filesLoading: false,
             localConfigIncomplete: false,
-            irodsConfigIncomplete: false
+            irodsConfigIncomplete: false,
+            irodsPathDoesNotExist: false,
         };
     },
     mounted() {
@@ -181,17 +189,21 @@ export default {
                     this.zone,
                     this.irods_path
                 ).then(files => {
-                    this.files = files.files;
                     this.filesLoading = false;
-                    this.$emit('outputSelected', {
-                        username: this.username,
-                        password: this.password,
-                        host: this.host,
-                        port: this.port,
-                        zone: this.zone,
-                        local_path: this.local_path,
-                        irods_path: this.irods_path
-                    });
+                    if (files.response && files.response.status === 404) {
+                        this.irodsPathDoesNotExist = true;
+                    } else {
+                        this.files = files.files;
+                        this.$emit('outputSelected', {
+                            username: this.username,
+                            password: this.password,
+                            host: this.host,
+                            port: this.port,
+                            zone: this.zone,
+                            local_path: this.local_path,
+                            irods_path: this.irods_path
+                        });
+                    }
                 });
             }
         }

@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404, HttpResponseNotFound
 from rest_framework import viewsets
 
 from plantit.stores.irodsstore import IRODS, IRODSOptions
@@ -40,14 +40,20 @@ class SampleViewSet(viewsets.ModelViewSet):
 @login_required
 def list_files(request):
     options = IRODSOptions(request.GET.get('host'), int(request.GET.get('port')), request.GET.get('username'),
-                 request.GET.get('password'), request.GET.get('zone'))
+                           request.GET.get('password'), request.GET.get('zone'))
     irods = IRODS(options)
-    files = irods.list(request.GET.get('path'))
+
     request.session['irods_username'] = options.user
     request.session['irods_host'] = options.host
     request.session['irods_port'] = options.port
     request.session['irods_zone'] = options.zone
     request.session['irods_path'] = request.GET.get('path', None)
+
+    try:
+        files = irods.list(request.GET.get('path'))
+    except FileNotFoundError:
+        return HttpResponseNotFound('Path not found')
+
     return JsonResponse({
         'files': files
     })
