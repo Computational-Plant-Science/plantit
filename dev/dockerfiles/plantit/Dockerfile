@@ -19,10 +19,8 @@ COPY . ./
 RUN pip install -r dev/dockerfiles/plantit/requirements.txt
 RUN chmod +x dev/configure-irods.sh
 RUN chmod +x dev/configure-superuser.sh
-RUN chmod +x dev/start-dagit.sh
 RUN chmod +x dev/wait-for-it.sh
 RUN chmod +x dev/wait-for-postgres.sh
-RUN chmod +x dev/create-dagster-databases.sh
 RUN chmod +x dev/ssh-echo-pass.sh
 RUN chmod +x dev/ssh-copy-id.expect
 

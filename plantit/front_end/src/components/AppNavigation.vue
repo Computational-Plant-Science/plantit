@@ -53,7 +53,7 @@
                             </p>
                         </b-col>
                     </b-row>
-                    <b-row class="m-0 p-0" v-if="!info">
+                    <!--<b-row class="m-0 p-0" v-if="!info">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item to="/" class="m-0 p-0">
@@ -75,8 +75,7 @@
                                 </b-nav-item>
                             </b-nav>
                         </b-col>
-                    </b-row>
-                    <hr>
+                    </b-row>-->
                     <b-row class="ml-0 mr-0 pl-0 pr-0">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">

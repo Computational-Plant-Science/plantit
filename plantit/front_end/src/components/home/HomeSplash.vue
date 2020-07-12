@@ -49,7 +49,7 @@
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <template v-slot:footer class="m-0 p-0">
+                <!--<template v-slot:footer class="m-0 p-0">
                     <b-row class="m-0 p-0">
                         <b-col class="m-0 p-0">
                             <b-button
@@ -69,7 +69,7 @@
                             </b-button>
                         </b-col>
                     </b-row>
-                </template>
+                </template>-->
             </b-card>
         </b-container>
         <i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i>
