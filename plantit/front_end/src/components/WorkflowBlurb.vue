@@ -19,7 +19,7 @@
                                     }}
                                 </b-badge>
                             </h5>
-                            <h3>{{ workflow.config.name }}</h3>
+                            <h3><b>{{ workflow.config.name }}</b></h3>
                             <small>
                                 <b-link
                                     class="text-dark"

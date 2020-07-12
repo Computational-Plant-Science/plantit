@@ -3,12 +3,22 @@
         <b-row>
             <b-col>
                 <h2>
-                    Run
-                    <b-badge :variant="run.state === 2 ? 'danger' : 'success'"
-                        >{{ statusToString(run.state) }}
-                    </b-badge>
-                    on
-                    <b-badge variant="dark">{{ run.cluster }}</b-badge>
+                    <b>
+                        {{ run.id }}</b>
+                </h2>
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
+                <h2>
+                    <b>
+                        <b-badge
+                            :variant="run.state === 2 ? 'danger' : 'success'"
+                            >{{ statusToString(run.state) }}
+                        </b-badge>
+                        on
+                        <b-badge variant="secondary" class="text-white">{{ run.cluster }}</b-badge>
+                    </b>
                 </h2>
             </b-col>
         </b-row>
@@ -17,7 +27,9 @@
                 <b-row>
                     <b-col>
                         <b-card-body>
-                            <h2>{{ workflow.config.name }}</h2>
+                            <h3>
+                                <b>{{ workflow.config.name }}</b>
+                            </h3>
                             <small>
                                 <b-link
                                     class="text-dark"
@@ -33,6 +45,9 @@
                                     }}
                                 </b-link>
                             </small>
+                            <br />
+                            <br />
+                            <p>{{ workflow.repo.description }}</p>
                             <br />
                             <b-row v-if="selectable">
                                 <b-col>

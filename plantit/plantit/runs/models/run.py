@@ -17,9 +17,9 @@ class Run(models.Model):
 
     # collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now())
-    token = models.CharField(max_length=40, default=binascii.hexlify(os.urandom(20)).decode())
+    token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    identifier = models.CharField(max_length=36, null=False, blank=False, default=uuid.uuid4())
+    identifier = models.CharField(max_length=36, null=False, blank=False)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     cluster = models.ForeignKey(Cluster,

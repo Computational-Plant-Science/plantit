@@ -1,3 +1,4 @@
+import binascii
 import os
 import traceback
 import uuid
@@ -147,7 +148,8 @@ def start(request):
         created=now,
         work_dir=now_str + "/",
         remote_results_path=now_str + "/",
-        identifier=uuid.uuid4())
+        identifier=uuid.uuid4(),
+        token=binascii.hexlify(os.urandom(20)).decode())
     workflow_path = f"{workflow['repo']['owner']['login']}/{workflow['repo']['name']}"
     run.plantitstatus_set.create(description=f"Workflow '{workflow_path}' run '{run.identifier}' created.",
                                  state=PlantitStatus.CREATED)

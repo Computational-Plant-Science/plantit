@@ -81,7 +81,7 @@ COPY . ./
 RUN chmod +x dev/configure-irods.sh \
     && chmod +x dev/wait-for-it.sh \
     && chmod +x dev/wait-for-postgres.sh \
-    && pip3 install plantit-cli \
+    && pip3 install plantit-cluster \
     && pip3 install -U pytest
 
 SHELL ["/bin/bash", "-c"]

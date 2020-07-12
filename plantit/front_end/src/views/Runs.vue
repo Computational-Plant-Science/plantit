@@ -8,9 +8,11 @@
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col style="color: white">
-                        <h3>
-                            Runs
-                        </h3>
+                        <h2>
+                            <b>
+                                Your Runs
+                            </b>
+                        </h2>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -141,7 +143,9 @@ export default {
                     key: 'created',
                     sortable: true,
                     formatter: value => {
-                        return `${moment(value).fromNow()} (${moment(value).format('MMMM Do YYYY, h:mm a')})`
+                        return `${moment(value).fromNow()} (${moment(
+                            value
+                        ).format('MMMM Do YYYY, h:mm a')})`;
                     }
                 },
                 {

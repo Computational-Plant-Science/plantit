@@ -8,8 +8,8 @@
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col style="color: white">
-                        <h2>
-                            Community Workflows
+                        <h2><b>
+                            Community Workflows</b>
                         </h2>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
@@ -79,8 +79,8 @@
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h2>
-                            Your Workflows
+                        <h2><b>
+                            Your Workflows</b>
                         </h2>
                     </b-col>
                     <b-col md="auto" class="b-form-col">

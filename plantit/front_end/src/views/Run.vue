@@ -50,7 +50,7 @@
                         <template slot="header">
                             <b-row>
                                 <b-col>
-                                    <h3>Logs</h3>
+                                    <h2><b>Logs</b></h2>
                                 </b-col>
                                 <b-col md="auto">
                                     <b-alert
@@ -97,7 +97,7 @@
                                 </b-table>
                             </b-col>
                             <b-col>
-                                <h4><b-badge variant="dark">{{ run.cluster }}</b-badge></h4>
+                                <h4><b-badge variant="secondary" class="text-white">{{ run.cluster }}</b-badge></h4>
                                 <hr>
                                 <b-table
                                     borderless

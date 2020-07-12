@@ -1,147 +1,172 @@
 <template>
     <div class="w-100 p-4">
-        <b-card
-            bg-variant="white"
-            header-bg-variant="white"
-            footer-bg-variant="white"
-            border-variant="white"
-            footer-border-variant="white"
-            header-border-variant="dark"
-        >
-            <WorkflowDetail
-                :workflow="workflow"
-                :selectable="false"
-            ></WorkflowDetail>
-        </b-card>
-        <b-card
-            v-if="params.length !== 0"
-            bg-variant="white"
-            header-bg-variant="white"
-            footer-bg-variant="white"
-            border-variant="white"
-            footer-border-variant="white"
-            header-border-variant="dark"
-        >
-            <template v-slot:header style="background-color: white">
-                <b-row align-v="center">
-                    <b-col style="color: white">
-                        <h3>
-                            Configure <b>Parameters</b>
-                            <i
-                                class="ml-2 fas fa-exclamation text-warning"
-                                v-if="parametersUnready"
-                            ></i>
-
-                            <i
-                                class="ml-2 fas fa-check text-success"
-                                v-if="!parametersUnready"
-                            ></i>
-                        </h3>
-                    </b-col>
-                </b-row>
-            </template>
-            <b-card-body>
-                <EditParameters :params="params"></EditParameters>
-            </b-card-body>
-        </b-card>
-        <b-card
-            v-if="workflow && workflow.config.from"
-            bg-variant="white"
-            header-bg-variant="white"
-            footer-bg-variant="white"
-            border-variant="white"
-            footer-border-variant="white"
-            header-border-variant="dark"
-        >
-            <template v-slot:header style="background-color: white">
-                <b-row align-v="center">
-                    <b-col style="color: white">
-                        <h4>
-                            From <b>{{ workflow.config.from.capitalize() }}</b>
-                            <i
-                                class="ml-2 fas fa-exclamation text-warning"
-                                v-if="inputUnready"
-                            ></i>
-                            <i
-                                class="ml-2 fas fa-check success"
-                                v-if="!inputUnready"
-                            ></i>
-                        </h4>
-                    </b-col>
-                </b-row>
-            </template>
-            <b-card-body>
-                <EditInput
-                    :user="user"
-                    v-on:inputSelected="onInputSelected"
-                ></EditInput>
-            </b-card-body>
-        </b-card>
-        <b-card
-            v-if="workflow.config && workflow.config.to"
-            bg-variant="white"
-            header-bg-variant="white"
-            footer-bg-variant="white"
-            border-variant="white"
-            footer-border-variant="white"
-            header-border-variant="dark"
-        >
-            <template v-slot:header style="background-color: white">
-                <b-row align-v="center">
-                    <b-col style="color: white">
-                        <h4>
-                            To <b>{{ workflow.config.to.capitalize() }}</b>
-                            <i
-                                class="ml-2 fas fa-exclamation text-warning"
-                                v-if="outputUnready"
-                            ></i>
-                            <i
-                                class="ml-2 fas fa-check success"
-                                v-if="!outputUnready"
-                            ></i>
-                        </h4>
-                    </b-col>
-                </b-row>
-            </template>
-            <b-card-body>
-                <EditOutput
-                    :user="user"
-                    v-on:outputSelected="onOutputSelected"
-                ></EditOutput>
-            </b-card-body>
-        </b-card>
-        <b-card
-            bg-variant="white"
-            header-bg-variant="white"
-            footer-bg-variant="white"
-            border-variant="white"
-            footer-border-variant="white"
-            header-border-variant="dark"
-        >
-            <template v-slot:header style="background-color: white">
-                <b-row align-v="center">
-                    <b-col style="color: white">
-                        <h3>
-                            Deployment <b>Target</b>
-                            <i
-                                class="ml-2 fas fa-exclamation text-warning"
-                                v-if="targetUnready"
-                            ></i>
-                            <i
-                                class="ml-2 fas fa-check text-success"
-                                v-if="!targetUnready"
-                            ></i>
-                        </h3>
-                    </b-col>
-                </b-row>
-            </template>
-            <b-card-body>
-                <SelectTarget
-                    :selected="target"
-                    v-on:targetSelected="onTargetSelected"
-                ></SelectTarget>
-            </b-card-body>
-        </b-card>
+        <b-row>
+            <b-col>
+                <b-card
+                    bg-variant="white"
+                    header-bg-variant="white"
+                    footer-bg-variant="white"
+                    border-variant="white"
+                    footer-border-variant="white"
+                    header-border-variant="dark"
+                >
+                    <WorkflowDetail
+                        :workflow="workflow"
+                        :selectable="false"
+                    ></WorkflowDetail>
+                </b-card>
+            </b-col>
+        </b-row>
+        <br />
+        <b-row v-if="params.length !== 0">
+            <b-col>
+                <b-card
+                    bg-variant="white"
+                    header-bg-variant="white"
+                    footer-bg-variant="white"
+                    border-variant="dark"
+                    footer-border-variant="white"
+                    header-border-variant="white"
+                >
+                    <template v-slot:header style="background-color: white">
+                        <b-row align-v="center">
+                            <b-col style="color: white">
+                                <h3>
+                                    Configure <b>Parameters</b>
+                                    <i
+                                        class="ml-2 fas fa-exclamation text-warning"
+                                        v-if="parametersUnready"
+                                    ></i>
+                                    <i
+                                        class="ml-2 fas fa-check text-success"
+                                        v-if="!parametersUnready"
+                                    ></i>
+                                </h3>
+                            </b-col>
+                        </b-row>
+                    </template>
+                    <b-card-body>
+                        <EditParameters :params="params"></EditParameters>
+                    </b-card-body>
+                </b-card>
+                <br />
+            </b-col>
+        </b-row>
+        <b-row v-if="workflow && workflow.config.from">
+            <b-col>
+                <b-card
+                    bg-variant="white"
+                    header-bg-variant="white"
+                    footer-bg-variant="white"
+                    border-variant="dark"
+                    footer-border-variant="white"
+                    header-border-variant="white"
+                >
+                    <template v-slot:header style="background-color: white">
+                        <b-row align-v="center">
+                            <b-col style="color: white">
+                                <h4>
+                                    From
+                                    <b>{{
+                                        workflow.config.from.capitalize()
+                                    }}</b>
+                                    <i
+                                        class="ml-2 fas fa-exclamation text-warning"
+                                        v-if="inputUnready"
+                                    ></i>
+                                    <i
+                                        class="ml-2 fas fa-check text-success"
+                                        v-if="!inputUnready"
+                                    ></i>
+                                </h4>
+                            </b-col>
+                        </b-row>
+                    </template>
+                    <b-card-body>
+                        <EditInput
+                            :user="user"
+                            v-on:inputSelected="onInputSelected"
+                        ></EditInput>
+                    </b-card-body>
+                </b-card>
+                <br />
+            </b-col>
+        </b-row>
+        <b-row v-if="workflow.config && workflow.config.to">
+            <b-col>
+                <b-card
+                    bg-variant="white"
+                    header-bg-variant="white"
+                    footer-bg-variant="white"
+                    border-variant="dark"
+                    footer-border-variant="white"
+                    header-border-variant="white"
+                >
+                    <template v-slot:header style="background-color: white">
+                        <b-row align-v="center">
+                            <b-col style="color: white">
+                                <h4>
+                                    To
+                                    <b>{{ workflow.config.to.capitalize() }}</b>
+                                    <i
+                                        class="ml-2 fas fa-exclamation text-warning"
+                                        v-if="outputUnready"
+                                    ></i>
+                                    <i
+                                        class="ml-2 fas fa-check success"
+                                        v-if="!outputUnready"
+                                    ></i>
+                                </h4>
+                            </b-col>
+                        </b-row>
+                    </template>
+                    <b-card-body>
+                        <EditOutput
+                            :user="user"
+                            v-on:outputSelected="onOutputSelected"
+                        ></EditOutput>
+                    </b-card-body>
+                </b-card>
+                <br />
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
+                <b-card
+                    bg-variant="white"
+                    header-bg-variant="white"
+                    footer-bg-variant="white"
+                    border-variant="dark"
+                    footer-border-variant="white"
+                    header-border-variant="white"
+                >
+                    <template v-slot:header style="background-color: white">
+                        <b-row align-v="center">
+                            <b-col style="color: white">
+                                <h3>
+                                    Deployment <b>Target</b>
+                                    <i
+                                        class="ml-2 fas fa-exclamation text-warning"
+                                        v-if="targetUnready"
+                                    ></i>
+                                    <i
+                                        class="ml-2 fas fa-check text-success"
+                                        v-if="!targetUnready"
+                                    ></i>
+                                </h3>
+                            </b-col>
+                        </b-row>
+                    </template>
+                    <b-card-body>
+                        <SelectTarget
+                            :selected="target"
+                            v-on:targetSelected="onTargetSelected"
+                        ></SelectTarget>
+                    </b-card-body>
+                </b-card>
+            </b-col>
+        </b-row>
+        <br />
         <b-row>
             <b-col>
                 <b-button @click="onStart" variant="success" block>
