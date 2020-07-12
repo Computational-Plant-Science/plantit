@@ -74,14 +74,14 @@ COPY ./dev/configure-irods.sh /root/
 RUN chmod +x /root/wait-for-it.sh
 RUN chmod +x /root/configure-irods.sh
 
-RUN mkdir -p /opt/plantit-cluster-home \
-    && mkdir -p /opt/plantit-cluster
-WORKDIR /opt/plantit-cluster
+RUN mkdir -p /opt/plantit-cli-home \
+    && mkdir -p /opt/plantit-cli
+WORKDIR /opt/plantit-cli
 COPY . ./
 RUN chmod +x dev/configure-irods.sh \
     && chmod +x dev/wait-for-it.sh \
     && chmod +x dev/wait-for-postgres.sh \
-    && pip3 install plantit-cluster \
+    && pip3 install plantit-cli \
     && pip3 install -U pytest
 
 SHELL ["/bin/bash", "-c"]

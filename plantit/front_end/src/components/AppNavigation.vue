@@ -25,32 +25,28 @@
                             </h1>
                         </b-col>
                         <b-col md="auto" class="pl-0 ml-1 pt-1">
-                            <b-badge variant="dark" class="text-success"
+                            <b-badge
+                                variant="dark"
+                                :class="
+                                    version.includes('alpha')
+                                        ? 'text-warning'
+                                        : 'text-success'
+                                "
                                 >{{ version }}
                             </b-badge>
                         </b-col>
                     </b-row>
-                    <b-row>
-                        <b-col>
-                            <p class="mr-4 ml-4 pt-2">
-                                Welcome<i v-if="loading">
+                    <b-row align-v="center">
+                        <b-col align-self="center" class="mr-4 ml-4 pt-2">
+                            <!--Welcome<i v-if="loading">
                                     <b-spinner
                                         variant="secondary"
                                         type="grow"
                                         label="Loading..."
                                     ></b-spinner>
-                                    ...
                                 </i>
-                                <span v-else-if="!info">! Please log in. </span>
-                                <b v-else
-                                    >,
-                                    {{
-                                        info.first_name
-                                            ? info.first_name
-                                            : info.username
-                                    }}.</b
-                                >
-                            </p>
+                                <span v-else-if="!info">, guest.</span>
+                                <span v-else> {{ info.first_name }}</span>-->
                         </b-col>
                     </b-row>
                     <!--<b-row class="m-0 p-0" v-if="!info">
@@ -126,7 +122,7 @@
                             </b-nav>
                         </b-col>
                     </b-row>
-                    <hr>
+                    <hr />
                     <b-row class="ml-0 mr-0 pl-0 pr-0">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
