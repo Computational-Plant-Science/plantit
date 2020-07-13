@@ -2,13 +2,13 @@ from rest_framework import serializers
 from datetime import datetime
 
 from plantit.runs.models.run import Run
-from plantit.runs.models.status import PlantitStatus
+from plantit.runs.models.status import Status
 from ..mixins import PinnedSerilizerMethodMixin
 
 
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PlantitStatus
+        model = Status
         fields = ('state', 'date', 'description')
 
 
@@ -25,7 +25,7 @@ class RunSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
         run = Run.objects.create(**validated_data)
         run.save()
         for _ in status_data:
-            PlantitStatus.objects.create(run=run, **status_data)
+            Status.objects.create(run=run, **status_data)
         return run
 
     def update(self, run, validated_data):
@@ -40,7 +40,7 @@ class RunSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
         if status_data:
             for status in status_data:
                 status['date'] = datetime.now()
-                PlantitStatus.objects.create(run=run, **status)
+                Status.objects.create(run=run, **status)
 
         run.save()
         return run

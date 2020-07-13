@@ -9,7 +9,7 @@
     >
         <template slot="header" style="border: none">
             <h2 class="text-white mt-5">
-                Workflow automation for plant science.
+                Computational plant science in the browser.
             </h2>
         </template>
         <b-container>
@@ -72,10 +72,10 @@
                             <h4 class="text-white">
                                 Find or share software.
                             </h4>
-                            Run workflows from the <b-link
+                            Run code from <b-link
                                 class="text-white"
                                 href="https://www.github.com/"
-                                >Github</b-link> community or develop your own. If it can run in
+                                >Github</b-link> or publish your own to the community. If it can run in
                             <b-link
                                 class="text-white"
                                 href="https://www.docker.com/"
@@ -111,7 +111,7 @@
                     >
                         <b-card-text class="ml-4">
                             <h4 class="text-white">
-                                Automate all the things.
+                                 Workflows on the web.
                             </h4>
                             Configure parameters, deploy to a cluster, and get
                             notified when results are ready: all from the

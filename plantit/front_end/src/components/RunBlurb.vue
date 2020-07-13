@@ -2,10 +2,9 @@
     <div v-if="workflow.config">
         <b-row>
             <b-col>
-                <h2>
-                    <b>
-                        {{ run.id }}</b>
-                </h2>
+                <h5>
+                    <b> {{ run.id }}</b>
+                </h5>
             </b-col>
         </b-row>
         <b-row>
@@ -17,13 +16,15 @@
                             >{{ statusToString(run.state) }}
                         </b-badge>
                         on
-                        <b-badge variant="secondary" class="text-white">{{ run.cluster }}</b-badge>
+                        <b-badge variant="secondary" class="text-white">{{
+                            run.cluster
+                        }}</b-badge>
                     </b>
                 </h2>
             </b-col>
         </b-row>
         <b-row>
-            <b-col align-self="start">
+            <b-col align-self="start" md="auto">
                 <b-row>
                     <b-col>
                         <b-card-body>

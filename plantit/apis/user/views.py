@@ -1,3 +1,4 @@
+import json
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
@@ -67,7 +68,7 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     def github_repos(self, request):
         user = self.get_object()
         token = user.profile.github_auth_token
-        gh = Github(user.profile.github_auth_token)
+        gh = Github(token)
         try:
             github_username = gh.get_user().login
         except BadCredentialsException:
@@ -79,3 +80,15 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             'config': get_config(item['repository'], token)
         } for item in response.json()['items']]
         return Response(pipelines)
+
+    @action(methods=['get'], detail=False)
+    def github_user(self, request):
+        user = self.get_object()
+        gh = Github(user.profile.github_auth_token)
+        github_user = gh.get_user()
+        try:
+            return Response({
+                'avatar_url': github_user.avatar_url
+            })
+        except BadCredentialsException:
+            return Response([])

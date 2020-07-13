@@ -8,7 +8,7 @@
                     footer-bg-variant="white"
                     border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="dark"
+                    header-border-variant="white"
                 >
                     <WorkflowDetail
                         :workflow="workflow"
@@ -24,9 +24,9 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="white"
+                    header-border-variant="dark"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
@@ -58,9 +58,9 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="white"
+                    header-border-variant="dark"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
@@ -98,9 +98,9 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="white"
+                    header-border-variant="dark"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
@@ -113,7 +113,7 @@
                                         v-if="outputUnready"
                                     ></i>
                                     <i
-                                        class="ml-2 fas fa-check success"
+                                        class="ml-2 fas fa-check text-success"
                                         v-if="!outputUnready"
                                     ></i>
                                 </h4>
@@ -136,9 +136,9 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="white"
+                    header-border-variant="dark"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
@@ -255,7 +255,7 @@ export default {
                     name: this.workflow.config.name,
                     image: this.workflow.config.image,
                     clone: this.workflow.config.clone,
-                    input: this.input.path ? this.input : null,
+                    input: this.input.irods_path ? this.input : null,
                     output: this.output,
                     params: this.params,
                     target: this.target,
@@ -276,7 +276,9 @@ export default {
             return this.params.some(param => param.value === '');
         },
         inputUnready() {
-            return this.input.path === null || this.input.path === '';
+            return (
+                this.input.irods_path === null || this.input.irods_path === ''
+            );
         },
         outputUnready() {
             return (

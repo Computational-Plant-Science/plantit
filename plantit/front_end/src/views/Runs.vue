@@ -2,8 +2,8 @@
     <div class="w-100 p-4">
         <b-card
             header-bg-variant="white"
-            border-variant="dark"
-            header-border-variant="white"
+            border-variant="white"
+            header-border-variant="dark"
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
@@ -54,6 +54,16 @@
                         class="table-responsive"
                         @row-selected="onRunSelected"
                     >
+                        <template v-slot:cell(state)="run">
+                            <h4>
+                                <b-badge
+                                    :variant="
+                                        run.item.state === 2 ? 'danger' : 'success'
+                                    "
+                                    >{{ statusToString(run.item.state) }}
+                                </b-badge>
+                            </h4>
+                        </template>
                     </b-table>
                 </b-col>
             </b-row>
@@ -78,18 +88,15 @@ export default {
         }
     },
     methods: {
-        statusToString(run) {
-            let status = run.status_set[0].state;
+        statusToString(status) {
             switch (status) {
                 case 1:
                     return 'Completed';
                 case 2:
                     return 'Failed';
                 case 3:
-                    return 'OK';
+                    return 'Running';
                 case 4:
-                    return 'Warning';
-                case 5:
                     return 'Created';
             }
         },
@@ -140,6 +147,10 @@ export default {
                     sortable: true
                 },
                 {
+                    key: 'state',
+                    label: 'State',
+                },
+                {
                     key: 'created',
                     sortable: true,
                     formatter: value => {
@@ -153,22 +164,6 @@ export default {
                     label: 'Workflow',
                     sortable: true
                 },
-                {
-                    key: 'state',
-                    label: 'State',
-                    formatter: value => {
-                        switch (value) {
-                            case 1:
-                                return 'Completed';
-                            case 2:
-                                return 'Failed';
-                            case 3:
-                                return 'Running';
-                            case 4:
-                                return 'Created';
-                        }
-                    }
-                }
             ],
             runs: []
         };

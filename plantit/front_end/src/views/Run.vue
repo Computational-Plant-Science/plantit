@@ -18,16 +18,23 @@
         </b-row>
         <div v-if="!loadingRun && !runNotFound">
             <b-row>
-                <b-col md="auto">
+                <b-col>
                     <b-card
                         bg-variant="white"
                         header-bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="dark"
+                        border-variant="white"
                         footer-border-variant="white"
                         header-border-variant="dark"
                         class="overflow-hidden"
                     >
+                        <template slot="header">
+                            <b-row>
+                                <b-col>
+                                    <h2><b>Your Run</b></h2>
+                                </b-col>
+                            </b-row>
+                        </template>
                         <RunBlurb
                             :workflow="workflow"
                             :run="run"
@@ -43,9 +50,9 @@
                         bg-variant="white"
                         header-bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="dark"
+                        border-variant="white"
                         footer-border-variant="white"
-                        header-border-variant="white"
+                        header-border-variant="dark"
                     >
                         <template slot="header">
                             <b-row>
@@ -79,33 +86,48 @@
                         </template>
                         <b-row>
                             <b-col>
-                                <h4><b-badge variant="dark" class="text-success">PlantIT</b-badge></h4>
-                                <hr />
                                 <b-table
                                     borderless
                                     responsive="sm"
-                                    :items="logs ? logs.plantit : []"
-                                    :fields="plantit_status_table.fields"
-                                    :sort-by.sync="plantit_status_table.sortBy"
+                                    :items="logs ? logs : []"
+                                    :fields="status_table.fields"
+                                    :sort-by.sync="status_table.sortBy"
                                 >
-                                    <span
-                                        slot="description"
-                                        slot-scope="data"
-                                        v-html="data.value"
-                                        class="align-left"
-                                    ></span>
-                                </b-table>
-                            </b-col>
-                            <b-col>
-                                <h4><b-badge variant="secondary" class="text-white">{{ run.cluster }}</b-badge></h4>
-                                <hr>
-                                <b-table
-                                    borderless
-                                    responsive="sm"
-                                    :items="logs ? logs.target : []"
-                                    :fields="target_status_table.fields"
-                                    :sort-by.sync="target_status_table.sortBy"
-                                >
+                                    <template v-slot:cell(location)="status">
+                                        <h4>
+                                            <b-badge
+                                                v-if="
+                                                    status.item.location ===
+                                                        'PlantIT'
+                                                "
+                                                variant="dark"
+                                                class="text-success"
+                                                >{{
+                                                    status.item.location
+                                                }}</b-badge
+                                            >
+                                            <b-badge
+                                                v-else
+                                                variant="secondary"
+                                                class="text-white"
+                                                >{{
+                                                    status.item.location
+                                                }}</b-badge
+                                            >
+                                        </h4>
+                                    </template>
+                                    <template v-slot:cell(state)="status">
+                                        <h4>
+                                            <b-badge
+                                                :variant="
+                                                    run.state === 2
+                                                        ? 'danger'
+                                                        : 'success'
+                                                "
+                                                >{{ statusToString(status.item.state) }}
+                                            </b-badge>
+                                        </h4>
+                                    </template>
                                     <span
                                         slot="description"
                                         slot-scope="data"
@@ -145,18 +167,10 @@ export default {
             runNotFound: false,
             run: null,
             logs: null,
-            plantit_status_table: {
+            status_table: {
                 sortBy: 'date',
                 sortDesc: true,
                 fields: [
-                    {
-                        key: 'date',
-                        label: 'Timestamp',
-                        sortable: true,
-                        formatter: value => {
-                            return `${moment(value).fromNow()} (${moment(value).format('MMMM Do YYYY, h:mm a')})`;
-                        }
-                    },
                     {
                         key: 'state',
                         label: 'State',
@@ -174,40 +188,17 @@ export default {
                         }
                     },
                     {
-                        key: 'description',
-                        formatter: value => {
-                            return value.replace(/(?:\r\n|\r|\n)/g, '<br>');
-                        },
-                        tdClass: 'table-td'
-                    }
-                ]
-            },
-            target_status_table: {
-                sortBy: 'date',
-                sortDesc: true,
-                fields: [
+                        key: 'location',
+                        label: 'From'
+                    },
                     {
                         key: 'date',
                         label: 'Timestamp',
                         sortable: true,
                         formatter: value => {
-                            return `${moment(value).fromNow()} (${moment(value).format('MMMM Do YYYY, h:mm a')})`;
-                        }
-                    },
-                    {
-                        key: 'state',
-                        label: 'State',
-                        formatter: value => {
-                            switch (value) {
-                                case 1:
-                                    return 'Completed';
-                                case 2:
-                                    return 'Failed';
-                                case 3:
-                                    return 'Running';
-                                case 4:
-                                    return 'Created';
-                            }
+                            return `${moment(value).fromNow()} (${moment(
+                                value
+                            ).format('MMMM Do YYYY, h:mm a')})`;
                         }
                     },
                     {

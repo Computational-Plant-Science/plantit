@@ -2,12 +2,12 @@
     <div class="w-100 p-5 m-0">
         <b-container>
             <div class="w-100 pb-4">
-                <!-- :img-src="require('../assets/icons/default-user-small.png')" -->
                 <b-card
                     bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     header-border-variant="dark"
                     header-bg-variant="white"
+                    :img-src="this.githubUser.avatar_url"
                     img-alt="Image"
                     img-top
                     style="max-width: 30rem;margin: 0 auto;"
@@ -34,7 +34,7 @@
                         </b-row>
                     </template>
                     <b-card-text v-if="!loading">
-                        <h3>Profile</h3>
+                        <h4>Profile</h4>
                         <br />
                         <p><b>Email Address:</b> {{ this.info.email }}</p>
                         <p><b>First Name:</b> {{ this.info.first_name }}</p>
@@ -80,7 +80,7 @@
                             }}
                         </p>
                         <br />
-                        <h3>Github</h3>
+                        <h4>Github</h4>
                         <br />
                         <p>
                             <b>Username:</b>
@@ -108,13 +108,17 @@ export default {
         return {
             info: {},
             workflows: 0,
-            loading: true
+            loading: true,
+            githubUser: null
         };
     },
     methods: {
         reload() {
             UserApi.getCurrentUser().then(info => {
                 this.info = info;
+                UserApi.getCurrentUserGithubUser().then(user => {
+                    this.githubUser = user;
+                });
             });
             this.getRepos();
         },

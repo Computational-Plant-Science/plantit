@@ -1,10 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import action, api_view
 
 from plantit.runs.models.run import Run
-from plantit.runs.models.status import TargetStatus
+from plantit.runs.models.status import Status
 from plantit.stores.services import download_stream
 
 
@@ -18,7 +17,7 @@ def get_runs(request):
         'work_dir': run.work_dir,
         'cluster': run.cluster.name,
         'created': run.created,
-        'state': run.plantit_status.state if run.plantit_status is not None else 'Unknown',
+        'state': run.status.state if run.status is not None else 'Unknown',
         'workflow_owner': run.workflow_owner,
         'workflow_name': run.workflow_name
     } for run in runs], safe=False)
@@ -37,7 +36,7 @@ def get_run(request, id):
         'work_dir': run.work_dir,
         'cluster': run.cluster.name,
         'created': run.created,
-        'state': run.plantit_status.state if run.plantit_status is not None else 'Unknown',
+        'state': run.status.state if run.status is not None else 'Unknown',
         'workflow_owner': run.workflow_owner,
         'workflow_name': run.workflow_name
     })
@@ -51,34 +50,28 @@ def get_status(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    return JsonResponse({
-        'plantit': [{
+    return JsonResponse([
+        {
             'run_id': id,
             'state': status.state,
+            'location': status.location,
             'date': status.date,
             'description': status.description
-        } for status in list(run.plantitstatus_set.all())],
-        'target': [{
-            'run_id': id,
-            'state': status.state,
-            'date': status.date,
-            'description': status.description
-        } for status in list(run.targetstatus_set.all())],
-    })
+        } for status in list(run.status_set.all())], safe=False)
 
 
 @api_view(['POST'])
 @login_required
-def update_target_status(request, id):
+def update_status(request, id):
     status = request.data
     state = int(status['state'])
 
     if state == 2:
-        state = TargetStatus.FAILED
+        state = Status.FAILED
     elif state == 3:
-        state = TargetStatus.RUNNING
+        state = Status.RUNNING
     elif state == 4:
-        state = TargetStatus.CREATED
+        state = Status.CREATED
     else:
         raise ValueError(f"Invalid value for state '{status['state']}' (expected 2 - 4)")
 
@@ -91,7 +84,7 @@ def update_target_status(request, id):
         for line in chunk.split('\n'):
             if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
                 continue
-            run.targetstatus_set.create(description=line, state=state)
+            run.status_set.create(description=line, state=state, location=run.cluster.name)
 
     run.save()
 

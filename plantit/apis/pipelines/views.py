@@ -16,7 +16,7 @@ from apis.util import get_config
 from plantit.celery import app
 from plantit.runs.models.cluster import Cluster
 from plantit.runs.models.run import Run
-from plantit.runs.models.status import PlantitStatus
+from plantit.runs.models.status import Status
 from plantit.runs.ssh import SSH
 
 import re
@@ -47,8 +47,9 @@ def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, d
 @app.task()
 def execute(workflow, run_id, token):
     run = Run.objects.get(identifier=run_id)
-    run.plantitstatus_set.create(description=f"Run started.",
-                                 state=PlantitStatus.RUNNING)
+    run.status_set.create(description=f"Run started.",
+                          state=Status.RUNNING,
+                          location='PlantIT')
     run.save()
 
     try:
@@ -64,9 +65,10 @@ def execute(workflow, run_id, token):
             execute_command(run=run, ssh_client=ssh_client, pre_command=':', command=f"mkdir {work_dir}",
                             directory=run.cluster.workdir)
             print(f"Created working directory '{work_dir}'. Uploading workflow definition...")
-            run.plantitstatus_set.create(
+            run.status_set.create(
                 description=f"Created working directory. Uploading workflow definition...",
-                state=PlantitStatus.RUNNING)
+                state=Status.RUNNING,
+                location='PlantIT')
             run.save()
 
             with ssh_client.client.open_sftp() as sftp:
@@ -74,9 +76,10 @@ def execute(workflow, run_id, token):
                 with sftp.open('workflow.yaml', 'w') as file:
                     yaml.dump(workflow['config'], file, default_flow_style=False)
             print(f"Uploaded workflow definition to '{work_dir}'. Running workflow...")
-            run.plantitstatus_set.create(
+            run.status_set.create(
                 description=f"Uploaded workflow definition. Running workflow...",
-                state=PlantitStatus.RUNNING)
+                state=Status.RUNNING,
+                location='PlantIT')
             run.save()
 
             execute_command(run=run, ssh_client=ssh_client, pre_command='; '.join(
@@ -84,15 +87,17 @@ def execute(workflow, run_id, token):
                             command=f"plantit workflow.yaml --token {token}",
                             directory=work_dir)
             print(f"Run completed.")
-            run.plantitstatus_set.create(
+            run.status_set.create(
                 description=f"Run completed.",
-                state=PlantitStatus.COMPLETED)
+                state=Status.COMPLETED,
+                location='PlantIT')
             run.save()
 
     except Exception:
-        run.plantitstatus_set.create(
+        run.status_set.create(
             description=f"Run failed: {traceback.format_exc()}.",
-            state=PlantitStatus.FAILED)
+            state=Status.FAILED,
+            location='PlantIT')
         run.save()
 
 
@@ -151,15 +156,16 @@ def start(request):
         identifier=uuid.uuid4(),
         token=binascii.hexlify(os.urandom(20)).decode())
     workflow_path = f"{workflow['repo']['owner']['login']}/{workflow['repo']['name']}"
-    run.plantitstatus_set.create(description=f"Workflow '{workflow_path}' run '{run.identifier}' created.",
-                                 state=PlantitStatus.CREATED)
+    run.status_set.create(description=f"Workflow '{workflow_path}' run '{run.identifier}' created.",
+                          state=Status.CREATED,
+                          location='PlantIT')
     run.save()
 
     # token = request.session._session['csrfToken']
     token = run.token
     config = {
         'identifier': run.identifier,
-        'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/update_target_status/",
+        'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/update_status/",
         'workdir': join(cluster.workdir, now_str),
         'clone': f"https://github.com/{workflow_path}" if workflow['config']['clone'] else None,
         'image': workflow['config']['image'],

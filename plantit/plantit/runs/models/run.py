@@ -1,7 +1,4 @@
-import binascii
 import json
-import os
-import uuid
 
 from django.conf import settings
 from django.db import models
@@ -39,15 +36,8 @@ class Run(models.Model):
         return json.dumps(model_to_dict(self))
 
     @property
-    def plantit_status(self):
+    def status(self):
         try:
-            return self.plantitstatus_set.filter(date__isnull=False).latest('date')
-        except:
-            return None
-
-    @property
-    def target_status(self):
-        try:
-            return self.targetstatus_set.filter(date__isnull=False).latest('date')
+            return self.status_set.filter(date__isnull=False).latest('date')
         except:
             return None
