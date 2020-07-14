@@ -6,11 +6,16 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
                     header-border-variant="white"
+                    class="overflow-hidden"
                 >
                     <WorkflowDetail
+                        :show-public="
+                            workflow.repo.owner.login ===
+                                user.profile.github_username
+                        "
                         :workflow="workflow"
                         :selectable="false"
                     ></WorkflowDetail>
@@ -24,14 +29,14 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
-                    header-border-variant="dark"
+                    header-border-variant="white"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
                             <b-col style="color: white">
-                                <h3>
+                                <h2>
                                     Configure <b>Parameters</b>
                                     <i
                                         class="ml-2 fas fa-exclamation text-warning"
@@ -41,7 +46,7 @@
                                         class="ml-2 fas fa-check text-success"
                                         v-if="!parametersUnready"
                                     ></i>
-                                </h3>
+                                </h2>
                             </b-col>
                         </b-row>
                     </template>
@@ -58,14 +63,14 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
-                    header-border-variant="dark"
+                    header-border-variant="white"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
                             <b-col style="color: white">
-                                <h4>
+                                <h2>
                                     From
                                     <b>{{
                                         workflow.config.from.capitalize()
@@ -78,13 +83,14 @@
                                         class="ml-2 fas fa-check text-success"
                                         v-if="!inputUnready"
                                     ></i>
-                                </h4>
+                                </h2>
                             </b-col>
                         </b-row>
                     </template>
                     <b-card-body>
                         <EditInput
                             :user="user"
+                            :kind="workflow.config.from"
                             v-on:inputSelected="onInputSelected"
                         ></EditInput>
                     </b-card-body>
@@ -98,14 +104,14 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
-                    header-border-variant="dark"
+                    header-border-variant="white"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
                             <b-col style="color: white">
-                                <h4>
+                                <h2>
                                     To
                                     <b>{{ workflow.config.to.capitalize() }}</b>
                                     <i
@@ -116,7 +122,7 @@
                                         class="ml-2 fas fa-check text-success"
                                         v-if="!outputUnready"
                                     ></i>
-                                </h4>
+                                </h2>
                             </b-col>
                         </b-row>
                     </template>
@@ -136,14 +142,14 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
-                    header-border-variant="dark"
+                    header-border-variant="white"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
                             <b-col style="color: white">
-                                <h3>
+                                <h2>
                                     Deployment <b>Target</b>
                                     <i
                                         class="ml-2 fas fa-exclamation text-warning"
@@ -153,7 +159,7 @@
                                         class="ml-2 fas fa-check text-success"
                                         v-if="!targetUnready"
                                     ></i>
-                                </h3>
+                                </h2>
                             </b-col>
                         </b-row>
                     </template>

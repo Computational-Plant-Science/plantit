@@ -87,10 +87,16 @@ def execute(workflow, run_id, token):
                             command=f"plantit workflow.yaml --token {token}",
                             directory=work_dir)
             print(f"Run completed.")
-            run.status_set.create(
-                description=f"Run completed.",
-                state=Status.COMPLETED,
-                location='PlantIT')
+            if run.status.state != 2:
+                run.status_set.create(
+                    description=f"Run completed.",
+                    state=Status.COMPLETED,
+                    location='PlantIT')
+            else:
+                run.status_set.create(
+                    description=f"Run failed.",
+                    state=Status.FAILED,
+                    location='PlantIT')
             run.save()
 
     except Exception:
@@ -108,13 +114,14 @@ def list(request):
         f"https://api.github.com/search/code?q=filename:plantit.yaml+org:computational-plant-science") if '' == token \
         else requests.get(f"https://api.github.com/search/code?q=filename:plantit.yaml+org:computational-plant-science",
                           headers={"Authorization": f"token {token}"})
+    pipelines = [{
+        'repo': item['repository'],
+        'config': get_config(item['repository'], token)
+    } for item in response.json()['items']]
 
-    return JsonResponse({
-        'pipelines': [{
-            'repo': item['repository'],
-            'config': get_config(item['repository'], token)
-        } for item in response.json()['items']]
-    })
+    pipelines = [pipeline for pipeline in pipelines if pipeline['config']['public']]
+
+    return JsonResponse({'pipelines': pipelines})
 
 
 @login_required

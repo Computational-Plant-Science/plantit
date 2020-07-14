@@ -1,11 +1,42 @@
 <template>
     <div v-if="workflow.config">
-        <b-row>
-            <b-col align-self="center">
-                <b-row>
-                    <b-col>
-                        <b-card-body>
-                            <h5>
+        <b-img
+            class="card-img-left"
+            v-if="workflow.icon_url"
+            style="max-width: 8rem;opacity: 0.15"
+            right
+            :src="workflow.icon_url"
+        >
+        </b-img>
+        <b-img
+            v-else
+            class="card-img-left"
+            style="max-width: 15rem;opacity: 0.15"
+            right
+            :src="require('../assets/logo.png')"
+        ></b-img>
+        <b-row class="card-img-overlay">
+            <b-col>
+                <b-card-body>
+                    <b-row>
+                        <b-col md="auto" class="mr-0">
+                            <b-button
+                                class="text-left mr-0"
+                                variant="success"
+                                v-b-tooltip.hover
+                                @click="workflowSelected(workflow)"
+                            >
+                                <i class="fas fa-terminal"></i>
+                                Run
+                            </b-button>
+                        </b-col>
+                        <b-col md="auto" class="ml-0 pl-0 mr-0 pr-0">
+                            <h2 class="ml-0 pl-0 mr-0 pr-0">
+                                {{ workflow.config.name }}
+                            </h2>
+                        </b-col>
+                        <b-col md="auto">
+                            <h5 v-if="showPublic">
                                 <b-badge
                                     :variant="
                                         workflow.config.public
@@ -19,7 +50,10 @@
                                     }}
                                 </b-badge>
                             </h5>
-                            <h3><b>{{ workflow.config.name }}</b></h3>
+                        </b-col>
+                    </b-row>
+                    <b-row>
+                        <b-col>
                             <small>
                                 <b-link
                                     class="text-dark"
@@ -43,42 +77,9 @@
                                     {{ workflow.repo.description }}
                                 </b-col>
                             </b-row>
-                            <br />
-                            <b-row v-if="selectable">
-                                <b-col>
-                                    <b-button
-                                        class="text-left"
-                                        variant="success"
-                                        v-b-tooltip.hover
-                                        @click="workflowSelected(workflow)"
-                                    >
-                                        <i class="fas fa-terminal"></i>
-                                        Run
-                                    </b-button>
-                                </b-col>
-                            </b-row>
-                        </b-card-body>
-                    </b-col>
-                </b-row>
-            </b-col>
-            <b-col
-                md="auto"
-                align-self="end"
-                style="max-width: 8rem; max-height: 12rem"
-            >
-                <b-img
-                    v-if="workflow.icon_url"
-                    style="max-width: 8rem"
-                    :src="workflow.icon_url"
-                    top
-                >
-                </b-img>
-                <b-img
-                    v-else
-                    style="max-width: 8rem;"
-                    :src="require('../assets/logo.png')"
-                    right
-                ></b-img>
+                        </b-col>
+                    </b-row>
+                </b-card-body>
             </b-col>
         </b-row>
     </div>
@@ -88,6 +89,10 @@
 export default {
     name: 'WorkflowBlurb',
     props: {
+        showPublic: {
+            type: Boolean,
+            required: true
+        },
         workflow: {
             type: Object,
             required: true

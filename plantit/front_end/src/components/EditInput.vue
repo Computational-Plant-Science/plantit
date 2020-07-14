@@ -110,6 +110,12 @@ import Files from '@/services/apiV1/FileManager';
 
 export default {
     name: 'EditInput',
+    props: {
+        kind: {
+            required: true,
+            type: String
+        }
+    },
     data() {
         return {
             username: '',
@@ -160,6 +166,7 @@ export default {
                     this.filesLoading = false;
                     if (this.files.length > 0) {
                         this.$emit('inputSelected', {
+                            kind: this.kind,
                             username: this.username,
                             password: this.password,
                             host: this.host,

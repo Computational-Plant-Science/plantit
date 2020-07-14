@@ -2,15 +2,13 @@
     <div class="w-100 p-4">
         <b-card
             header-bg-variant="white"
-            border-variant="white"
-            header-border-variant="dark"
+            border-variant="dark"
+            header-border-variant="white"
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col style="color: white">
-                        <h2><b>
-                            Community Workflows</b>
-                        </h2>
+                        <h1>Community Workflows</h1>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -21,12 +19,8 @@
                             ></b-form-input>
                             <b-input-group-append>
                                 <b-button
-                                    :disabled="
-                                        !communityWorkflowsFilter
-                                    "
-                                    @click="
-                                        communityWorkflowsFilter = ''
-                                    "
+                                    :disabled="!communityWorkflowsFilter"
+                                    @click="communityWorkflowsFilter = ''"
                                     variant="white"
                                     >Clear
                                 </b-button>
@@ -51,17 +45,19 @@
                 >
                     None to show.
                 </div>
-                <b-card-group columns>
+                <b-card-group deck columns>
                     <b-card
                         v-for="workflow in communityWorkflowsAfterFilter"
                         :key="workflow.repo.name"
-                        class="overflow-hidden p-0 m-4"
                         bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="dark"
+                        border-variant="white"
                         footer-border-variant="white"
+                        style="min-width: 35rem; max-width: 35rem; min-height: 10rem; max-height: 15rem"
+                        class="overflow-hidden"
                     >
                         <WorkflowBlurb
+                            :showPublic="false"
                             :workflow="workflow"
                             :selectable="true"
                             v-on:workflowSelected="workflowSelected"
@@ -70,18 +66,16 @@
                 </b-card-group>
             </b-row>
         </b-card>
+        <br />
         <b-card
             header-bg-variant="white"
-            border-variant="white"
-            header-border-variant="dark"
-            class="mt-3"
+            border-variant="dark"
+            header-border-variant="white"
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col class="mt-2" style="color: white">
-                        <h2><b>
-                            Your Workflows</b>
-                        </h2>
+                        <h1>Your Workflows</h1>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -118,19 +112,21 @@
                 >
                     None to show.
                 </div>
-                <b-card-group columns >
+                <b-card-group deck columns>
                     <b-card
                         v-for="workflow in userWorkflowsAfterFilter"
                         :key="workflow.repo.name"
-                        class="overflow-hidden p-0 m-4"
                         bg-variant="white"
                         header-bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="dark"
+                        border-variant="white"
                         footer-border-variant="white"
                         header-border-variant="dark"
+                        style="min-width: 40rem; min-height: 10rem; max-height: 15rem"
+                        class="overflow-hidden"
                     >
                         <WorkflowBlurb
+                            :showPublic="true"
                             :workflow="workflow"
                             :selectable="true"
                             v-on:workflowSelected="workflowSelected"
@@ -164,7 +160,7 @@ export default {
             communityWorkflowsFilter: '',
             userWorkflows: [],
             userWorkflowsLoading: false,
-            userWorkflowsFilter: '',
+            userWorkflowsFilter: ''
         };
     },
     mounted: function() {
@@ -212,20 +208,31 @@ export default {
         }
     },
     methods: {
+        sortWorkflows(l, r) {
+            if (l.config.name < r.config.name) return -1;
+            if (l.config.name > r.config.name) return 1;
+            return 0;
+        },
         loadCommunityWorkflows() {
             this.communityWorkflowsLoading = true;
-            Workflows.list().then(data => {
-                this.communityWorkflows = data.pipelines || [];
+            Workflows.list().then(workflows => {
+                if (workflows.pipelines == null) {
+                    this.communityWorkflows = [];
+                } else {
+                    workflows.pipelines.sort(this.sortWorkflows);
+                    this.communityWorkflows = workflows.pipelines;
+                }
                 this.communityWorkflowsLoading = false;
             });
         },
         loadUserWorkflows() {
             this.userWorkflowsLoading = true;
-            Users.getCurrentUserGithubRepos().then(pipelines => {
-                if (pipelines == null) {
+            Users.getCurrentUserGithubRepos().then(workflows => {
+                if (workflows == null) {
                     this.userWorkflows = [];
                 } else {
-                    this.userWorkflows = pipelines;
+                    workflows.sort(this.sortWorkflows);
+                    this.userWorkflows = workflows;
                 }
                 this.userWorkflowsLoading = false;
             });

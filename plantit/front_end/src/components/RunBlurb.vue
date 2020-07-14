@@ -2,35 +2,31 @@
     <div v-if="workflow.config">
         <b-row>
             <b-col>
-                <h5>
-                    <b> {{ run.id }}</b>
-                </h5>
-            </b-col>
-        </b-row>
-        <b-row>
-            <b-col>
+                <h1>
+                    Run
+                    <b
+                        ><small>{{ run.id }}</small></b
+                    >
+                </h1>
                 <h2>
-                    <b>
-                        <b-badge
-                            :variant="run.state === 2 ? 'danger' : 'success'"
-                            >{{ statusToString(run.state) }}
-                        </b-badge>
-                        on
-                        <b-badge variant="secondary" class="text-white">{{
-                            run.cluster
-                        }}</b-badge>
-                    </b>
+                    <b-badge :variant="run.state === 2 ? 'danger' : 'success'"
+                        >{{ statusToString(run.state) }}
+                    </b-badge>
+                    on
+                    <b-badge variant="secondary" class="text-white">{{
+                        run.cluster
+                    }}</b-badge>
                 </h2>
             </b-col>
         </b-row>
         <b-row>
-            <b-col align-self="start" md="auto">
+            <b-col align-self="start">
                 <b-row>
                     <b-col>
                         <b-card-body>
-                            <h3>
-                                <b>{{ workflow.config.name }}</b>
-                            </h3>
+                            <h2>
+                                {{ workflow.config.name }}
+                            </h2>
                             <small>
                                 <b-link
                                     class="text-dark"
@@ -74,7 +70,7 @@
             >
                 <b-img
                     v-if="run.state === 1 || run.state === 2"
-                    style="max-width: 8rem"
+                    style="max-width: 8rem;"
                     :src="require('../assets/logo.png')"
                     right
                 >

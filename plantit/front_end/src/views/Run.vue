@@ -9,33 +9,27 @@
                 </b-col>
             </b-row>
         </div>
-        <b-row align-h="center" v-if="loadingRun">
-            <b-spinner
-                type="grow"
-                label="Loading..."
-                variant="dark"
-            ></b-spinner>
-        </b-row>
-        <div v-if="!loadingRun && !runNotFound">
+        <div v-if="!runNotFound">
             <b-row>
                 <b-col>
                     <b-card
                         bg-variant="white"
                         header-bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="white"
+                        border-variant="dark"
                         footer-border-variant="white"
                         header-border-variant="dark"
                         class="overflow-hidden"
                     >
-                        <template slot="header">
-                            <b-row>
-                                <b-col>
-                                    <h2><b>Your Run</b></h2>
-                                </b-col>
-                            </b-row>
-                        </template>
+                        <b-row align-h="center" v-if="loadingRun">
+                            <b-spinner
+                                type="grow"
+                                label="Loading..."
+                                variant="dark"
+                            ></b-spinner>
+                        </b-row>
                         <RunBlurb
+                            v-else
                             :workflow="workflow"
                             :run="run"
                             :selectable="false"
@@ -50,14 +44,14 @@
                         bg-variant="white"
                         header-bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="white"
+                        border-variant="dark"
                         footer-border-variant="white"
-                        header-border-variant="dark"
+                        header-border-variant="white"
                     >
                         <template slot="header">
                             <b-row>
                                 <b-col>
-                                    <h2><b>Logs</b></h2>
+                                    <h2>Logs</h2>
                                 </b-col>
                                 <b-col md="auto">
                                     <b-alert
@@ -120,7 +114,7 @@
                                         <h4>
                                             <b-badge
                                                 :variant="
-                                                    run.state === 2
+                                                    status.item.state === 2
                                                         ? 'danger'
                                                         : 'success'
                                                 "
@@ -223,7 +217,6 @@ export default {
                     this.run = run;
                 }
                 this.reloadLogs(toast);
-                this.loadingRun = false;
                 Users.getCurrentUser().then(user => {
                     this.user = user;
                     Workflows.get(
@@ -231,6 +224,7 @@ export default {
                         this.run.workflow_name
                     ).then(workflow => {
                         this.workflow = workflow;
+                        this.loadingRun = false;
                     });
                 });
             });

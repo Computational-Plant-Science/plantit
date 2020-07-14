@@ -22,6 +22,7 @@ DJANGO_API_URL=http://plantit/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
 DJANGO_ADMIN_USERNAME=admin
 DJANGO_ADMIN_PASSWORD=$admin_password
+DJANGO_SECURE_SSL_REDIRECT=False
 SQL_ENGINE=django.db.backends.postgresql
 SQL_HOST=postgres
 SQL_PORT=5432

@@ -147,6 +147,7 @@ DJANGO_API_URL=http://localhost/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
 DJANGO_ADMIN_USERNAME=admin
 DJANGO_ADMIN_PASSWORD=some_password
+DJANGO_SECURE_SSL_REDIRECT=False
 SQL_ENGINE=django.db.backends.postgresql
 SQL_HOST=postgres
 SQL_PORT=5432
@@ -165,6 +166,7 @@ In addition to the environment variables listed above, the following is required
 - `GRAYLOG_HTTP_EXTERNAL_URI`: the Graylog server HTTP API endpoint (e.g., the pre-configured value `http://localhost:9000/`)
 - `NODE_ENV` should be set to `production`
 - `DJANGO_DEBUG` should be set to `False`
+- `DJANGO_SECURE_SSL_REDIRECT` should be set to `True`
 - `DJANGO_API_URL` should point to the host's IP or FQDN
 
 The following variables are required only in production:

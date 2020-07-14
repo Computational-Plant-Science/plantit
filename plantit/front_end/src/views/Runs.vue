@@ -1,73 +1,70 @@
 <template>
     <div class="w-100 p-4">
-        <b-card
-            header-bg-variant="white"
-            border-variant="white"
-            header-border-variant="dark"
-        >
-            <template v-slot:header style="background-color: white">
-                <b-row align-v="center">
-                    <b-col style="color: white">
-                        <h2>
-                            <b>
-                                Your Runs
-                            </b>
-                        </h2>
-                    </b-col>
-                    <b-col md="auto" class="b-form-col">
-                        <b-input-group>
-                            <b-form-input
-                                v-model="runs_query"
-                                placeholder="Filter..."
-                                class="b-form-input"
-                            ></b-form-input>
-                            <b-input-group-append>
-                                <b-button
-                                    :disabled="!runs_query"
-                                    @click="runs_query = ''"
-                                    variant="white"
-                                    >Clear
-                                </b-button>
-                            </b-input-group-append>
-                        </b-input-group>
-                    </b-col>
-                </b-row>
-            </template>
-            <b-row>
-                <b-col>
+        <b-row>
+            <b-col>
+                <b-card
+                    header-bg-variant="white"
+                    border-variant="dark"
+                    header-border-variant="white"
+                >
+                    <template v-slot:header style="background-color: white">
+                        <b-row align-v="center">
+                            <b-col style="color: white">
+                                <h1>
+                                    Your Runs
+                                </h1>
+                            </b-col>
+                            <b-col md="auto" class="b-form-col">
+                                <b-input-group>
+                                    <b-form-input
+                                        v-model="runs_query"
+                                        placeholder="Filter..."
+                                        class="b-form-input"
+                                    ></b-form-input>
+                                    <b-input-group-append>
+                                        <b-button
+                                            :disabled="!runs_query"
+                                            @click="runs_query = ''"
+                                            variant="white"
+                                            >Clear
+                                        </b-button>
+                                    </b-input-group-append>
+                                </b-input-group>
+                            </b-col>
+                        </b-row>
+                    </template>
                     <b-table
                         show-empty
-                        small
                         sticky-header="true"
                         selectable
                         hover
+                        small
                         responsive="sm"
                         :sort-by.sync="sortBy"
                         :sort-desc.sync="sortDesc"
                         :items="runs"
                         :fields="fields"
-                        :per-page="perPage"
-                        style="min-height: 100%"
-                        :borderless="true"
+                        borderless
                         select-mode="single"
                         :filter="filter"
-                        class="table-responsive"
                         @row-selected="onRunSelected"
                     >
                         <template v-slot:cell(state)="run">
                             <h4>
                                 <b-badge
                                     :variant="
-                                        run.item.state === 2 ? 'danger' : 'success'
+                                        run.item.state === 2
+                                            ? 'danger'
+                                            : 'success'
                                     "
                                     >{{ statusToString(run.item.state) }}
                                 </b-badge>
                             </h4>
                         </template>
                     </b-table>
-                </b-col>
-            </b-row>
-        </b-card>
+                </b-card>
+            </b-col>
+        </b-row>
     </div>
 </template>
 
@@ -81,7 +78,7 @@ export default {
     components: {},
     props: {
         perPage: {
-            default: 0
+            default: 50
         },
         filterable: {
             default: false
@@ -148,7 +145,7 @@ export default {
                 },
                 {
                     key: 'state',
-                    label: 'State',
+                    label: 'State'
                 },
                 {
                     key: 'created',
@@ -163,7 +160,7 @@ export default {
                     key: 'workflow_name',
                     label: 'Workflow',
                     sortable: true
-                },
+                }
             ],
             runs: []
         };

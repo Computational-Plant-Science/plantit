@@ -1,62 +1,71 @@
 <template>
     <div v-if="workflow.config">
+        <b-img
+            class="card-img-left"
+            v-if="workflow.icon_url"
+            style="max-width: 20rem;"
+            right
+            :src="workflow.icon_url"
+        >
+        </b-img>
+        <b-img
+            v-else
+            class="card-img-left"
+            style="max-width: 30rem"
+            right
+            :src="require('../assets/logo.png')"
+        ></b-img>
         <b-row no-gutters>
-            <b-col
-                md="auto"
-                style="min-width: 8em; max-width: 8rem; min-height: 8rem; max-height: 8rem"
-            >
-                <b-img
-                    v-if="workflow.icon_url"
-                    style="max-width: 8rem"
-                    :src="workflow.icon_url"
-                    right
-                >
-                </b-img>
-                <b-img
-                    v-else
-                    style="max-width: 8rem"
-                    :src="require('../assets/logo.png')"
-                    right
-                ></b-img>
-            </b-col>
             <b-col>
                 <b-row>
-                    <b-col>
-                        <b-card-body>
-                            <h5>
-                                <b-badge
-                                    :variant="
-                                        workflow.config.public
-                                            ? 'success'
-                                            : 'warning'
-                                    "
-                                    >{{
+                    <b-col md="auto" class="mr-0">
+                        <h1>
+                            Workflow <b>{{ workflow.config.name }}</b>
+                        </h1>
+                    </b-col>
+                    <b-col class="ml-0 pl-0" v-if="showPublic">
+                        <h5>
+                            <b-badge
+                                :variant="
                                     workflow.config.public
-                                    ? 'Public'
-                                    : 'Private'
-                                    }}</b-badge
-                                >
-                            </h5>
-                            <h2><b>{{ workflow.config.name }}</b></h2>
-                            <h5>
-                                <b-link
-                                    class="text-dark"
-                                    :href="
-                                        'https://github.com/' +
-                                            workflow.repo.owner.login +
-                                            '/' +
-                                            workflow.repo.name
-                                    "
-                                >
-                                    {{ workflow.repo.owner.login }}/{{
+                                        ? 'success'
+                                        : 'warning'
+                                "
+                                >{{
+                                    workflow.config.public
+                                        ? 'Public'
+                                        : 'Private'
+                                }}</b-badge
+                            >
+                        </h5>
+                    </b-col>
+                </b-row>
+                <b-row>
+                    <b-col>
+                        <small>
+                            <b-link
+                                class="text-dark"
+                                :href="
+                                    'https://github.com/' +
+                                        workflow.repo.owner.login +
+                                        '/' +
+                                        workflow.repo.name
+                                "
+                            >
+                                {{ workflow.repo.owner.login }}/{{
                                     workflow.repo.name
-                                    }}
-                                </b-link>
-                            </h5>
-                            <br />
+                                }}
+                            </b-link>
+                        </small>
+                    </b-col>
+                </b-row>
+                <br />
+                <b-card-body>
+                    <b-row>
+                        <b-col>
                             <b-row>
                                 <b-col>
-                                    {{ workflow.repo.description }}
+                                        {{ workflow.repo.description }}
                                 </b-col>
                             </b-row>
                             <br />
@@ -77,9 +86,9 @@
                                         <b-col cols="10">
                                             <b>{{
                                                 workflow.config.clone
-                                                ? 'Yes'
-                                                : 'No'
-                                                }}</b>
+                                                    ? 'Yes'
+                                                    : 'No'
+                                            }}</b>
                                         </b-col>
                                     </b-row>
                                     <b-row>
@@ -97,9 +106,9 @@
                                         <b-col cols="10">
                                             <b>{{
                                                 workflow.config.from
-                                                ? workflow.config.from.capitalize()
-                                                : 'None'
-                                                }}</b>
+                                                    ? workflow.config.from.capitalize()
+                                                    : 'None'
+                                            }}</b>
                                         </b-col>
                                     </b-row>
                                     <b-row>
@@ -109,9 +118,9 @@
                                         <b-col cols="10">
                                             <b>{{
                                                 workflow.config.to
-                                                ? workflow.config.to.capitalize()
-                                                : 'None'
-                                                }}</b>
+                                                    ? workflow.config.to.capitalize()
+                                                    : 'None'
+                                            }}</b>
                                         </b-col>
                                     </b-row>
                                     <b-row>
@@ -121,10 +130,10 @@
                                         <b-col cols="10">
                                             <b>{{
                                                 workflow.config.params
-                                                ? workflow.config.params
-                                                .length
-                                                : 'None'
-                                                }}</b>
+                                                    ? workflow.config.params
+                                                          .length
+                                                    : 'None'
+                                            }}</b>
                                         </b-col>
                                     </b-row>
                                     <b-row>
@@ -134,8 +143,8 @@
                                         <b-col cols="10">
                                             <b
                                                 ><code>{{
-                                                ' ' +
-                                                workflow.config.commands
+                                                    ' ' +
+                                                        workflow.config.commands
                                                 }}</code></b
                                             >
                                         </b-col>
@@ -160,9 +169,9 @@
                                     </b-row>
                                 </b-col>
                             </b-row>
-                        </b-card-body>
-                    </b-col>
-                </b-row>
+                        </b-col>
+                    </b-row>
+                </b-card-body>
             </b-col>
         </b-row>
     </div>
@@ -172,6 +181,10 @@
 export default {
     name: 'WorkflowDetail',
     props: {
+        showPublic: {
+            type: Boolean,
+            required: true
+        },
         workflow: {
             type: Object,
             required: true
