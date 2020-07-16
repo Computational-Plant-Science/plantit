@@ -9,8 +9,22 @@
         >
             <template v-slot:default="{ hide }">
                 <b-container class="p-3">
-                    <b-row>
-                        <b-col class="mt-2">
+                    <b-row class="ml-3 mr-1">
+                        <b-col align-self="center">
+                            Welcome,
+                            <b style="text-decoration: underline;"
+                                ><i v-if="loading">
+                                    <b-spinner
+                                        variant="secondary"
+                                        type="grow"
+                                        label="Loading..."
+                                    ></b-spinner>
+                                </i>
+                                <span v-else-if="!info">guest.</span>
+                                <span v-else>{{ info.first_name }}.</span>
+                            </b>
+                        </b-col>
+                        <b-col class="mr-0" md="auto">
                             <b-button
                                 variant="outline-dark"
                                 @click="hide"
@@ -18,22 +32,6 @@
                             >
                                 <i class="fas fa-arrow-left fa-1x"></i>
                             </b-button>
-                        </b-col>
-                        <b-col md="auto" class="pr-0 mr-1 pt-0.5">
-                            <h1>
-                                PlantIT
-                            </h1>
-                        </b-col>
-                        <b-col md="auto" class="pl-0 ml-1 pt-1">
-                            <b-badge
-                                variant="dark"
-                                :class="
-                                    version.includes('alpha')
-                                        ? 'text-warning'
-                                        : 'text-success'
-                                "
-                                >{{ version }}
-                            </b-badge>
                         </b-col>
                     </b-row>
                     <b-row align-v="center">
@@ -169,17 +167,32 @@
                             ></b-img>
                         </b-col>
                     </b-row>
+                    <b-row>
+                        <b-col class="text-center" align-self="center">
+                            <h5>
+                                <b-badge
+                                    variant="dark"
+                                    :class="
+                                        version.includes('alpha')
+                                            ? 'text-warning'
+                                            : 'text-success'
+                                    "
+                                    >{{ version }}
+                                </b-badge>
+                            </h5>
+                        </b-col>
+                    </b-row>
                 </b-container>
             </template>
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo p-3 pt-4 pb-4 overflow-hidden"
+            class="logo p-0 pt-4 pb-4 overflow-hidden"
             style="max-height: 60px"
             fixed="top"
         >
             <b-collapse class="m-0 p-0" is-nav>
-                <b-navbar-nav class="m-0 p-0 pl-3 mr-3">
+                <b-navbar-nav class="m-0 p-0 pl-1 mr-1">
                     <b-nav-item class="m-0 p-0" v-b-toggle.sidebar-left>
                         <b-button
                             class="brand-img m-0 p-0"
@@ -200,16 +213,16 @@
                 </b-navbar-nav>
                 <transition name="component-fade" mode="out-in">
                     <b-breadcrumb
-                        class="m-o p-0 ml-3"
-                        style="background-color: transparent"
+                        class="m-o p-0 ml-4"
+                        style="background-color: transparent;"
                         v-if="titleContent === 'sidebar'"
                     >
-                        <b-breadcrumb-item disabled>
+                        <b-breadcrumb-item disabled class="ml-1">
                             Show Sidebar
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                     <b-breadcrumb
-                        class="m-o p-0 ml-2"
+                        class="m-o p-0 ml-0 pl-0"
                         style="background-color: transparent"
                         v-if="titleContent === 'breadcrumb'"
                     >
@@ -575,13 +588,13 @@ a:hover
 .breadcrumb > li + li::marker
     color: $dark !important
     margin-top: 14px !important
-    font-size: 16pt !important
+    font-size: 14pt !important
     font-weight: 200
 
 .breadcrumb > li + li:before + li::marker
     color: $dark !important
     margin-top: 14px !important
-    font-size: 16pt !important
+    font-size: 14pt !important
     font-weight: 200
     content: " /"
 
@@ -604,6 +617,6 @@ a:hover
 a
   font-weight: 300
   color: $dark // !important
-  text-decoration: underline
-  text-decoration-color: $color-button
+  // text-decoration: underline
+  // text-decoration-color: $color-button
 </style>

@@ -1,5 +1,8 @@
 <template>
     <div>
+        <br />
+        <br />
+        <br />
         <div class="p-0 m-0 background-white text-white">
             <b-img
                 style="max-width: 8rem;transform: translate(0px, 20px);"

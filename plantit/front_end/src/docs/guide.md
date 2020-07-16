@@ -1,7 +1,6 @@
-## What **is** PlantIT, exactly?
+## Web workflow automation for plant science.
 
 ---
 
-**PlantIT is web workflow automation for plant scientists.**
-
 PlantIT aims to make reproducible research software easy to share and easy to use. To get started, all you need is a [Cyverse](https://www.cyverse.org/) account.
+

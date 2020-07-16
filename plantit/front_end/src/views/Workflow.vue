@@ -1,12 +1,14 @@
 <template>
     <div class="w-100 p-4">
+        <br />
+        <br />
         <b-row>
             <b-col>
                 <b-card
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
                     header-border-variant="white"
                     class="overflow-hidden"
@@ -29,7 +31,7 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
                     header-border-variant="white"
                 >
@@ -63,7 +65,7 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
                     header-border-variant="white"
                 >
@@ -104,7 +106,7 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
                     header-border-variant="white"
                 >
@@ -142,7 +144,7 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
                     header-border-variant="white"
                 >

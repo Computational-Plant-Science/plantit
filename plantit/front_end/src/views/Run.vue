@@ -1,5 +1,7 @@
 <template>
     <div class="w-100 p-4">
+        <br />
+        <br />
         <div v-if="runNotFound">
             <b-row align-content="center">
                 <b-col>
@@ -16,7 +18,7 @@
                         bg-variant="white"
                         header-bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="dark"
+                        border-variant="white"
                         footer-border-variant="white"
                         header-border-variant="dark"
                         class="overflow-hidden"
@@ -44,16 +46,25 @@
                         bg-variant="white"
                         header-bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="dark"
+                        border-variant="white"
                         footer-border-variant="white"
                         header-border-variant="white"
                     >
                         <template slot="header">
                             <b-row>
-                                <b-col>
+                                <b-col md="auto" align-self="center" class="mr-0">
                                     <h2>Logs</h2>
                                 </b-col>
-                                <b-col md="auto">
+                                <b-col md="auto" class="m-0">
+                                    <b-button
+                                        variant="outline-dark"
+                                        v-b-tooltip.hover
+                                        title="Refresh"
+                                        @click="reloadRun(true)"
+                                    >
+                                        <i class="fas fa-redo"></i>
+                                    </b-button>
+                                </b-col><b-col md="auto" class="ml-0">
                                     <b-alert
                                         class="m-0 pt-2 pb-2"
                                         :show="reloadAlertDismissCountdown"
@@ -65,16 +76,6 @@
                                     >
                                         Logs refreshed.
                                     </b-alert>
-                                </b-col>
-                                <b-col md="auto" class="m-0">
-                                    <b-button
-                                        variant="outline-dark"
-                                        v-b-tooltip.hover
-                                        title="Refresh"
-                                        @click="reloadRun(true)"
-                                    >
-                                        <i class="fas fa-redo"></i>
-                                    </b-button>
                                 </b-col>
                             </b-row>
                         </template>

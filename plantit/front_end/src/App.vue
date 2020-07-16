@@ -2,8 +2,6 @@
     <div id="app" class="m-0 p-0">
         <b-container fluid class="m-0 p-0">
             <app-navigation v-if="$route.path != '/'"></app-navigation>
-            <br />
-            <br />
             <router-view class="m-0 p-0"></router-view>
         </b-container>
     </div>

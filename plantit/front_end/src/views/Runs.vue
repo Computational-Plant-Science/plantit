@@ -1,10 +1,12 @@
 <template>
     <div class="w-100 p-4">
+        <br />
+        <br />
         <b-row>
             <b-col>
                 <b-card
                     header-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     header-border-variant="white"
                 >
                     <template v-slot:header style="background-color: white">

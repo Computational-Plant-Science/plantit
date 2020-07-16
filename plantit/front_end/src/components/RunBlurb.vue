@@ -19,76 +19,36 @@
                 </h2>
             </b-col>
         </b-row>
+        <br />
         <b-row>
-            <b-col align-self="start">
-                <b-row>
-                    <b-col>
-                        <b-card-body>
-                            <h2>
-                                {{ workflow.config.name }}
-                            </h2>
-                            <small>
-                                <b-link
-                                    class="text-dark"
-                                    :href="
-                                        'https://github.com/' +
-                                            workflow.repo.owner.login +
-                                            '/' +
-                                            workflow.repo.name
-                                    "
-                                >
-                                    {{ workflow.repo.owner.login }}/{{
-                                        workflow.repo.name
-                                    }}
-                                </b-link>
-                            </small>
-                            <br />
-                            <br />
-                            <p>{{ workflow.repo.description }}</p>
-                            <br />
-                            <b-row v-if="selectable">
-                                <b-col>
-                                    <b-button
-                                        class="text-left"
-                                        variant="success"
-                                        v-b-tooltip.hover
-                                        @click="workflowSelected(workflow)"
-                                    >
-                                        <i class="fas fa-terminal"></i>
-                                        Run <b>{{ workflow.config.name }}</b>
-                                    </b-button>
-                                </b-col>
-                            </b-row>
-                        </b-card-body>
-                    </b-col>
-                </b-row>
-            </b-col>
-            <b-col
-                md="auto"
-                align-self="end"
-                style="max-width: 15rem; max-height: 12rem"
-            >
-                <b-img
-                    v-if="run.state === 1 || run.state === 2"
-                    style="max-width: 8rem;"
-                    :src="require('../assets/logo.png')"
-                    right
+            <b-col>
+                <b-card
+                    bg-variant="white"
+                    footer-bg-variant="white"
+                    border-variant="dark"
+                    footer-border-variant="white"
+                    style="min-height: 5rem; max-height: 15rem;"
+                    class="overflow-hidden"
                 >
-                </b-img>
-                <b-img
-                    v-else
-                    style="max-width: 15rem;"
-                    :src="require('../assets/PlantITLoading.gif')"
-                    right
-                ></b-img>
+                    <WorkflowBlurb
+                        :showPublic="false"
+                        :workflow="workflow"
+                        :selectable="false"
+                    ></WorkflowBlurb>
+                </b-card>
             </b-col>
         </b-row>
     </div>
 </template>
 
 <script>
+import WorkflowBlurb from '@/components/WorkflowBlurb.vue';
+
 export default {
     name: 'RunBlurb',
+    components: {
+        WorkflowBlurb
+    },
     props: {
         workflow: {
             type: Object,

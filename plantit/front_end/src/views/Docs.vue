@@ -1,5 +1,8 @@
 <template>
     <div>
+        <br />
+        <br />
+        <br />
         <div class="p-0 m-0 background-white text-white">
             <b-img
                 style="max-width: 8rem;transform: translate(0px, 20px);"
@@ -8,19 +11,10 @@
                 class="m-0 p-0"
             ></b-img>
         </div>
-        <div
-            class="p-5 m-0 background-dark text-white"
-            style="min-height: 100%"
-        >
-            <b-container class="text-white">
-                <b-row align-content="center">
-                    <b-col>
-                        <h1 class="text-center text-white">
-                            <b class="text-success">Developer Docs</b>
-                        </h1>
-                    </b-col>
-                </b-row>
-            </b-container>
+        <div class="p-1 pt-2 background-dark">
+            <h2 class="text-center text-white">
+                <b class="text-success">Developer Docs</b>
+            </h2>
         </div>
         <div class="p-5 m-0" style="min-height: 100%">
             <b-container>
@@ -35,8 +29,8 @@
 </template>
 
 <script>
-import VueMarkdown from "vue-markdown";
-import docs from "../docs/docs.md";
+import VueMarkdown from 'vue-markdown';
+import docs from '../docs/docs.md';
 
 export default {
     name: 'Docs',
@@ -75,4 +69,3 @@ a
     text-decoration: underline
     text-decoration-color: $color-button
 </style>
-

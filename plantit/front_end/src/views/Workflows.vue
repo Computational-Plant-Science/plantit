@@ -1,9 +1,11 @@
 <template>
     <div class="w-100 p-4">
+        <br />
+        <br />
         <b-card
             header-bg-variant="white"
             border-variant="white"
-            header-border-variant="dark"
+            header-border-variant="white"
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
@@ -45,16 +47,16 @@
                 >
                     None to show.
                 </div>
-                <b-card-group deck>
+                <b-card-group deck class="justify-content-center">
                     <b-card
                         v-for="workflow in communityWorkflowsAfterFilter"
                         :key="workflow.repo.name"
                         bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="white"
+                        border-variant="dark"
                         footer-border-variant="white"
-                        style="min-width: 35rem; max-width: 35rem; min-height: 10rem; max-height: 15rem"
-                        class="overflow-hidden"
+                        style="min-width: 30rem; max-width: 30rem; min-height: 5rem; max-height: 15rem;"
+                        class="overflow-hidden mb-4"
                     >
                         <WorkflowBlurb
                             :showPublic="false"
@@ -112,7 +114,7 @@
                 >
                     None to show.
                 </div>
-                <b-card-group deck columns>
+                <b-card-group deck columns class="justify-content-center">
                     <b-card
                         v-for="workflow in userWorkflowsAfterFilter"
                         :key="workflow.repo.name"
@@ -122,8 +124,8 @@
                         border-variant="white"
                         footer-border-variant="white"
                         header-border-variant="dark"
-                        style="min-width: 40rem; min-height: 10rem; max-height: 15rem"
-                        class="overflow-hidden"
+                        style="min-width: 30rem; max-width: 30rem; min-height: 5rem; max-height: 15rem;"
+                        class="overflow-hidden mb-4"
                     >
                         <WorkflowBlurb
                             :showPublic="true"
