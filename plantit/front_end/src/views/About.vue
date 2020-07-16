@@ -15,7 +15,7 @@
         >
             <b-container class="text-center">
                 <h1 class="text-success text-center">
-                    PlantIT
+                    <b>PlantIT</b>
                 </h1>
                 <br/>
                 <br/>
@@ -349,17 +349,6 @@ export default {
                     return user.profile.github_username;
                 });
         });
-        // Pipelines.list().then(data => {
-        //     if (data.pipelines!= null) {
-        //         this.pipeline_developers = Array.from(
-        //             new Set(
-        //                 data.pipelines.map(function(pipeline) {
-        //                     return pipeline.repo.owner;
-        //                 })
-        //             )
-        //         );
-        //     }
-        // });
     }
 };
 </script>

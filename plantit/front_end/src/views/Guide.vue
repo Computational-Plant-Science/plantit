@@ -1,35 +1,77 @@
 <template>
-    <div class="m-0 p-5">
-        <b-container>
-            <b-row align-content="center">
-                <b-col>
-                    <h5 class="text-center">
-                        This page is under construction.
-                    </h5>
-                    <!--<p>
-                        A <i>collection</i> is a group of samples. A sample can
-                        be any data object. PlantIT workflows operate on the
-                        samples in a collection.
-                    </p>
-                    <p>
-                        A <i>pipeline</i> represents a self-contained analysis
-                        pipeline.
-                    </p>
-                    <p>
-                        The <i>job</i> is PlantIT's fundamental unit of
-                        execution. Each job submits a pipeline and an associated
-                        collection to a cluster, then returns results.
-                    </p>-->
-                </b-col>
-            </b-row>
-        </b-container>
+    <div>
+        <div class="p-0 m-0 background-white text-white">
+            <b-img
+                style="max-width: 8rem;transform: translate(0px, 20px);"
+                :src="require('../assets/logo.png')"
+                center
+                class="m-0 p-0"
+            ></b-img>
+        </div>
+        <div
+            class="p-5 m-0 background-dark text-white"
+            style="min-height: 100%"
+        >
+            <b-container class="text-white">
+                <b-row align-content="center">
+                    <b-col>
+                        <h1 class="text-center text-white ml-2">
+                            <b class="text-success">User Guide</b>
+                        </h1>
+                    </b-col>
+                </b-row>
+            </b-container>
+        </div>
+        <div class="p-5 m-0" style="min-height: 100%">
+            <b-container>
+                <b-row align-content="center">
+                    <b-col>
+                        <VueMarkdown :source="source"> </VueMarkdown>
+                    </b-col>
+                </b-row>
+            </b-container>
+        </div>
     </div>
 </template>
 
 <script>
+import VueMarkdown from 'vue-markdown';
+import guide from '../docs/guide.md';
+
 export default {
-    name: 'Guide'
+    name: 'Guide',
+    components: {
+        VueMarkdown
+    },
+    data() {
+        return {
+            source: guide
+        };
+    }
 };
 </script>
 
-<style scoped></style>
+<style scoped lang="sass">
+@import '../scss/_colors.sass'
+@import '../scss/main.sass'
+.dark
+    color: $dark
+    padding: 0px
+    margin: 0px
+
+.background-dark
+    background-color: $dark
+
+.success
+    color: $success
+
+.selected
+    background-color: $color-button
+    color: $dark
+
+a
+    font-weight: 400
+    color: $success !important
+    text-decoration: underline
+    text-decoration-color: $color-button
+</style>

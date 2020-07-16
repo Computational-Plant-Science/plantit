@@ -174,8 +174,9 @@
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo p-3 pt-5 pb-4"
+            class="logo p-3 pt-4 pb-4 overflow-hidden"
             style="max-height: 60px"
+            fixed="top"
         >
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-3 mr-3">
@@ -188,9 +189,9 @@
                             @mouseleave="titleContent = 'breadcrumb'"
                         >
                             <b-img
-                                class="m-0 p-0"
+                                class="m-0 p-0 mb-4"
                                 center
-                                width="28px"
+                                width="50px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -199,7 +200,7 @@
                 </b-navbar-nav>
                 <transition name="component-fade" mode="out-in">
                     <b-breadcrumb
-                        class="m-o p-0 ml-2"
+                        class="m-o p-0 ml-3"
                         style="background-color: transparent"
                         v-if="titleContent === 'sidebar'"
                     >
@@ -599,4 +600,10 @@ a:hover
     color: white
     -webkit-transform: rotate(90deg)
     transform: rotate(90deg)
+
+a
+  font-weight: 300
+  color: $dark // !important
+  text-decoration: underline
+  text-decoration-color: $color-button
 </style>

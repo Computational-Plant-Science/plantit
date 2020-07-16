@@ -2,8 +2,8 @@
     <div class="w-100 p-4">
         <b-card
             header-bg-variant="white"
-            border-variant="dark"
-            header-border-variant="white"
+            border-variant="white"
+            header-border-variant="dark"
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
@@ -45,7 +45,7 @@
                 >
                     None to show.
                 </div>
-                <b-card-group deck columns>
+                <b-card-group deck>
                     <b-card
                         v-for="workflow in communityWorkflowsAfterFilter"
                         :key="workflow.repo.name"
@@ -69,7 +69,7 @@
         <br />
         <b-card
             header-bg-variant="white"
-            border-variant="dark"
+            border-variant="white"
             header-border-variant="white"
         >
             <template v-slot:header style="background-color: white">

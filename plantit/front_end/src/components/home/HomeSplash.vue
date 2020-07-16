@@ -18,7 +18,7 @@
                             width="100px"
                             alt="Plant IT"
                         ></b-img>
-                        <h1>PlantIT</h1>
+                        <h1><b>PlantIT</b></h1>
                     </b-col>
                 </b-row>
                 <br />
