@@ -51,12 +51,11 @@
                     <b-row class="m-0 p-0" v-if="!info">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item class="m-0 p-0">
+                                <b-nav-item href="/login/?next=/workflows/" class="m-0 p-0">
                                     <b-button
                                         variant="white"
                                         block
                                         class="text-left m-0"
-                                        href="/login/?next=/workflows/"
                                     >
                                         <b-img
                                             :src="
@@ -306,6 +305,7 @@
             </b-collapse>
         </b-navbar>
         <b-alert
+                class="mt-5 pt-4"
             :show="reload_alert_dismiss_countdown"
             dismissible
             variant="success"
@@ -539,7 +539,8 @@ export default {
                 fieldOfStudy
             ).then(() => {
                 this.reload();
-                this.showAlert();
+                this.$router.go()
+                // this.showAlert();
             });
         }
     }

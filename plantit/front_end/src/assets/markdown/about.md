@@ -25,8 +25,8 @@ Some vignettes:
 
 - An experimentalist collects a dataset, associates it with metadata, preprocesses it, acquires a DOI, publishes it, and attempts to encourage replication.
 - A researcher develops a growth model and runs a series of embarrassingly parallel Monte Carlo simulations to explore the corresponding phenotype space.
-- A breeder deploys an automated imaging mechanism and generates 3D reconstructions of thousands of individuals, each described by hundreds of images.
-- A computer scientist shares an algorithm with a biologist who is unfamiliar with the command line and would like to use it on a variety of operating systems.
+- A breeder deploys an automated imaging mechanism and generates thousands of 3D reconstructions, each described by hundreds of images.
+- A computer scientist shares an algorithm with biologists who may be unfamiliar with the command line and may use a variety of operating systems.
 
 Typically, these tasks might involve:
 
@@ -38,7 +38,7 @@ Typically, these tasks might involve:
 - trying to remember which directory yesterday's data is in
 - answering support requests at 2 A.M. ("Why doesn't it work on my machine?")
 
-Couldn't we just do these things in the browser? That would be nice.
+Couldn't we just do this in the browser? That would be nice.
 
 <br>
 
@@ -46,7 +46,7 @@ Couldn't we just do these things in the browser? That would be nice.
 
 ---
 
-Sort of. PlantIT is flexible enough to run nearly any HPC workflow, but the platform is tailored for *phenomics*. If you're looking to do genomics, a different tool such as [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) is likely a better fit.
+Sort of. PlantIT is flexible enough to run nearly any HPC workflow, but the platform is developed primarily for phenomics. If you're looking to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit.
 
 <br>
  

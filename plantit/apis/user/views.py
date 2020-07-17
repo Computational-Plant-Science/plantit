@@ -62,7 +62,7 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         user.profile.github_auth_token = token
         user.save()
 
-        return redirect('/pipelines/')
+        return redirect('/workflows/')
 
     @action(methods=['get'], detail=False)
     def github_repos(self, request):

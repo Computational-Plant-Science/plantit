@@ -65,7 +65,7 @@
                         <b-col>
                             <b-row>
                                 <b-col>
-                                        {{ workflow.repo.description }}
+                                    {{ workflow.repo.description }}
                                 </b-col>
                             </b-row>
                             <br />

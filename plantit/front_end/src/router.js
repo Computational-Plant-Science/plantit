@@ -214,6 +214,7 @@ let router = new Router({
                     /* webpackChunkName: "about" */ './views/PageNotFound.vue'
                 ),
             meta: {
+                title: 'Not Found',
                 crumb: [
                     {
                         text: 'PlantIT',

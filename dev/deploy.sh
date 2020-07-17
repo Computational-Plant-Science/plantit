@@ -3,7 +3,6 @@
 host="$1"
 compose="docker-compose -f docker-compose.yml -f docker-compose.prod.yml"
 env_file=".env"
-dagster_config_file="plantit/dagster.yaml"
 
 echo "Bringing containers down..."
 $compose down
@@ -19,15 +18,6 @@ if [ ! -f $env_file ]; then
   ./dev/create-env-file.sh
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."
-fi
-
-echo "Checking for dagster config file '$dagster_config_file'..."
-if [ ! -f $dagster_config_file ]; then
-  echo "Dagster config file '$dagster_config_file' does not exist. Creating it..."
-  chmod +x dev/create-dagster-config-file.sh
-  ./dev/create-dagster-config-file.sh
-else
-  echo "Dagster config file '$dagster_config_file' already exists. Continuing..."
 fi
 
 echo "Building front end..."
@@ -46,9 +36,6 @@ $compose run plantit ./manage.py collectstatic --no-input
 echo "Running migrations..."
 $compose run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
 $compose run plantit ./manage.py migrate
-
-echo "Creating Dagster databases..."
-$compose run plantit /code/dev/create-dagster-databases.sh run_storage event_log_storage schedule_storage
 
 echo "Configuring NGINX..."
 find config/nginx/conf.d/local.conf -type f -exec sed -i "s/localhost/$host/g" {} \;

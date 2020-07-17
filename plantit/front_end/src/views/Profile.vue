@@ -1,13 +1,15 @@
 <template>
     <div class="w-100 p-5 m-0">
+        <br />
+        <br />
         <b-container>
             <div class="w-100 pb-4">
                 <b-card
                     bg-variant="white"
                     border-variant="white"
-                    header-border-variant="dark"
+                    header-border-variant="white"
                     header-bg-variant="white"
-                    :img-src="this.githubUser.avatar_url"
+                    :img-src="this.githubUser ? this.githubUser.avatar_url : ''"
                     img-alt="Image"
                     img-top
                     style="max-width: 30rem;margin: 0 auto;"
@@ -15,11 +17,11 @@
                     <template
                         v-slot:header
                         style="background-color: white"
-                        v-bind:info="this.info"
+                        v-bind:info="this.user"
                     >
                         <b-row align-v="center">
                             <b-col align-self="center" class="mt-2" style="color:white">
-                                <h2><b>{{ info.username }}</b></h2>
+                                <h2><b>{{ user.username }}</b></h2>
                             </b-col>
                             <b-col md="auto">
                                 <b-button
@@ -36,47 +38,47 @@
                     <b-card-text v-if="!loading">
                         <h4>Profile</h4>
                         <br />
-                        <p><b>Email Address:</b> {{ this.info.email }}</p>
-                        <p><b>First Name:</b> {{ this.info.first_name }}</p>
-                        <p><b>Last Name:</b> {{ this.info.last_name }}</p>
+                        <p><b>Email Address:</b> {{ this.user.email }}</p>
+                        <p><b>First Name:</b> {{ this.user.first_name }}</p>
+                        <p><b>Last Name:</b> {{ this.user.last_name }}</p>
                         <p>
                             <b>Country:</b>
                             {{
-                                this.info.profile === undefined
-                                    ? ''
-                                    : this.info.profile.country
+                            this.user.profile === undefined
+                            ? ''
+                            : this.user.profile.country
                             }}
                         </p>
                         <p>
                             <b>Continent:</b>
                             {{
-                                this.info.profile === undefined
-                                    ? ''
-                                    : this.info.profile.continent
+                            this.user.profile === undefined
+                            ? ''
+                            : this.user.profile.continent
                             }}
                         </p>
                         <p>
                             <b>Institution:</b>
                             {{
-                                this.info.profile === undefined
-                                    ? ''
-                                    : this.info.profile.institution
+                            this.user.profile === undefined
+                            ? ''
+                            : this.user.profile.institution
                             }}
                         </p>
                         <p>
                             <b>Institution Type:</b>
                             {{
-                                this.info.profile === undefined
-                                    ? ''
-                                    : this.info.profile.institution_type
+                            this.user.profile === undefined
+                            ? ''
+                            : this.user.profile.institution_type
                             }}
                         </p>
                         <p>
                             <b>Field of Study:</b>
                             {{
-                                this.info.profile === undefined
-                                    ? ''
-                                    : this.info.profile.field_of_study
+                            this.user.profile === undefined
+                            ? ''
+                            : this.user.profile.field_of_study
                             }}
                         </p>
                         <br />
@@ -85,12 +87,14 @@
                         <p>
                             <b>Username:</b>
                             {{
-                                this.info.profile === undefined
-                                    ? ''
-                                    : this.info.profile.github_username
+                            this.user.profile === undefined || this.user.profile.github_username === ''
+                            ? 'None'
+                            : this.user.profile.github_username
                             }}
                         </p>
-                        <p><b>Workflows:</b> {{ this.workflows }}</p>
+                        <p><b>Workflows:</b> {{ this.user.profile === undefined || this.user.profile.github_username ===
+                            ''
+                            ? 'None' : this.workflows }}</p>
                     </b-card-text>
                 </b-card>
             </div>
@@ -106,7 +110,7 @@ export default {
     components: {},
     data() {
         return {
-            info: {},
+            user: null,
             workflows: 0,
             loading: true,
             githubUser: null
@@ -114,13 +118,15 @@ export default {
     },
     methods: {
         reload() {
+            this.loading = true;
             UserApi.getCurrentUser().then(info => {
-                this.info = info;
+                this.user = info;
                 UserApi.getCurrentUserGithubUser().then(user => {
                     this.githubUser = user;
+                    this.getRepos();
+                    this.loading = false;
                 });
             });
-            this.getRepos();
         },
         getRepos() {
             UserApi.getCurrentUserGithubRepos().then(repos => {
