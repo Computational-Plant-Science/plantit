@@ -2,7 +2,7 @@
 
 # PlantIT [![Build Status](https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/plantit)
 
-Workflow automation for plant science.
+Web workflow automation for plant science.
 
 **This project is in alpha and is not yet stable**.
 

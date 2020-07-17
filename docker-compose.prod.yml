@@ -57,13 +57,6 @@ services:
         gelf-address: ${GRAYLOG_GELF_URI}
         tag: "celery"
 
-  flower:
-    logging:
-      driver: gelf
-      options:
-        gelf-address: ${GRAYLOG_GELF_URI}
-        tag: "flower"
-
   nginx:
     image: nginx
     ports:
