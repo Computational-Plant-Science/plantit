@@ -61,8 +61,11 @@ services:
     image: nginx
     ports:
       - 80:80
+      - 443:443
     volumes:
-      - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./config/ssl/:/opt/plantit/config/ssl/
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      - ./config/letsencrypt/:/etc/letsencrypt/
       - ./plantit/static/:/opt/plantit/static/:ro
       - ./plantit/files/public/:/opt/plantit/public/:ro
     depends_on:

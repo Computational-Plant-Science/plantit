@@ -20,8 +20,9 @@
                                         label="Loading..."
                                     ></b-spinner>
                                 </i>
-                                <span v-else-if="!info">guest.</span>
-                                <span v-else>{{ info.first_name }}.</span>
+                                <span v-else-if="!info">guest</span>
+                                <span v-else>{{ info.first_name }}</span
+                                >.
                             </b>
                         </b-col>
                         <b-col class="mr-0" md="auto">
@@ -47,15 +48,15 @@
                                 <span v-else> {{ info.first_name }}</span>-->
                         </b-col>
                     </b-row>
-                    <!--<b-row class="m-0 p-0" v-if="!info">
+                    <b-row class="m-0 p-0" v-if="!info">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item to="/" class="m-0 p-0">
+                                <b-nav-item class="m-0 p-0">
                                     <b-button
                                         variant="white"
                                         block
                                         class="text-left m-0"
-                                        href="/login/?next=/pipelines/"
+                                        href="/login/?next=/workflows/"
                                     >
                                         <b-img
                                             :src="
@@ -68,8 +69,9 @@
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
+                            <hr />
                         </b-col>
-                    </b-row>-->
+                    </b-row>
                     <b-row class="ml-0 mr-0 pl-0 pr-0">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
@@ -118,9 +120,9 @@
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
+                            <hr />
                         </b-col>
                     </b-row>
-                    <hr />
                     <b-row class="ml-0 mr-0 pl-0 pr-0">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
@@ -236,7 +238,6 @@
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                 </transition>
-                <b-navbar-nav class="ml-auto m-0 p-0"> </b-navbar-nav>
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
                         v-if="
@@ -244,13 +245,13 @@
                                 ? info.profile.github_username === ''
                                 : false
                         "
-                        title="Log In with Github"
+                        title="Link GitHub Account"
                         href="/apis/v1/profiles/github_request_identity/"
                         class="m-0 p-0"
                     >
                         <b-button class="text-left" variant="success">
                             <i class="fab fa-github"></i>
-                            Log In with Github
+                            Link GitHub Account
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
@@ -605,11 +606,11 @@ a:hover
     opacity: 0
 
 .brand-img
-    border-radius: 50%
     -webkit-transition: -webkit-transform .2s ease-in-out
         transition: transform .2s ease-in-out
 
 .brand-img:hover
+    border: none
     color: white
     -webkit-transform: rotate(90deg)
     transform: rotate(90deg)

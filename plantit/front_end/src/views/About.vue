@@ -11,22 +11,44 @@
                 class="m-0 p-0"
             ></b-img>
         </div>
+        <div class="p-1 pt-2 background-dark">
+            <h2 class="text-center text-white">
+                <b class="text-success">About PlantIT</b>
+            </h2>
+        </div>
+        <div class="p-5 m-0" style="min-height: 100%">
+            <b-container>
+                <b-row align-content="center">
+                    <b-col class="text-center">
+                        <h1>PlantIT is <b>web workflow automation for plant science.</b></h1>
+                        <b>PlantIT aims to make plant science software easy to share and easy to use. To get started, all you need is a <b-link href="https://www.cyverse.org/">CyVerse</b-link> account.</b>
+                    </b-col>
+                </b-row>
+                <br />
+                <br />
+                <b-row align-content="center">
+                    <b-col class="text-left">
+                        <VueMarkdown :source="source"> </VueMarkdown>
+                    </b-col>
+                </b-row>
+            </b-container>
+        </div>
         <div
-
             class="p-5 m-0 background-dark text-white"
             style="min-height: 100%"
         >
             <b-container class="text-center">
                 <h1 class="text-success text-center">
-                    <b>PlantIT</b>
+                    <b>People</b>
                 </h1>
-                <br/>
-                <br/>
+                <br />
+                <br />
                 <p>
                     PlantitIT is maintained by the University of Georgia's
                     <b-link
                         href="https://www.computational-plant-science.org/joomla30/"
-                        >Computational Plant Science lab</b-link>
+                        >Computational Plant Science lab</b-link
+                    >
                     and funded by the
                     <b-link
                         href="https://arpa-e.energy.gov/?q=arpa-e-programs/roots"
@@ -34,7 +56,7 @@
                     >.
                 </p>
                 <br />
-                <br/>
+                <br />
                 <b-row class="justify-content-md-center mb-4">
                     <b-col>
                         <b-tabs
@@ -281,10 +303,10 @@
                                     </b-tab>
                                 </b-tabs>
                             </b-tab>
-                            <b-tab title="Pipeline Contributors">
+                            <b-tab title="Workflow Contributors">
                                 <template v-slot:title class="m-0 p-0">
                                     <b class="text-success"
-                                        >Pipeline Developers</b
+                                        >Workflow Contributors</b
                                     >
                                 </template>
                                 <b-card-group columns>
@@ -334,12 +356,18 @@
 
 <script>
 import Users from '@/services/apiV1/UserManager';
+import VueMarkdown from 'vue-markdown';
+import about from '../assets/markdown/about.md';
 
 export default {
-    name: 'Contact',
+    name: 'About',
+    components: {
+        VueMarkdown
+    },
     data: function() {
         return {
-            pipeline_developers: []
+            pipeline_developers: [],
+            source: about
         };
     },
     mounted: function() {

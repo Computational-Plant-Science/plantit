@@ -24,6 +24,7 @@ let router = new Router({
             name: 'home',
             component: Home,
             meta: {
+                title: 'PlantIT',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -37,6 +38,7 @@ let router = new Router({
             name: 'about',
             component: About,
             meta: {
+                title: 'About',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -54,6 +56,7 @@ let router = new Router({
             name: 'guide',
             component: Guide,
             meta: {
+                title: 'Guide',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -71,6 +74,7 @@ let router = new Router({
             name: 'docs',
             component: Docs,
             meta: {
+                title: 'Docs',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -114,6 +118,7 @@ let router = new Router({
             name: 'workflows',
             component: Workflows,
             meta: {
+                title: 'Workflows',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -132,6 +137,7 @@ let router = new Router({
             props: true,
             component: Workflow,
             meta: {
+                title: '',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -149,6 +155,7 @@ let router = new Router({
             name: 'runs',
             component: Runs,
             meta: {
+                title: 'Runs',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -167,6 +174,7 @@ let router = new Router({
             props: true,
             component: Run,
             meta: {
+                title: '',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -184,6 +192,7 @@ let router = new Router({
             name: 'profile',
             component: Profile,
             meta: {
+                title: '',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -220,6 +229,15 @@ let router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
+    if (to.name === 'workflow') {
+        to.meta.title = `Workflow: ${to.params.name}`;
+    }
+    if (to.name === 'run') {
+        to.meta.title = `Run: ${to.params.id}`;
+    }
+    if (to.meta.name !== null) {
+        document.title = to.meta.title;
+    }
     if (to.matched.some(record => record.name === 'workflow')) {
         if (to.meta.crumb.length === 4) {
             to.meta.crumb.pop();

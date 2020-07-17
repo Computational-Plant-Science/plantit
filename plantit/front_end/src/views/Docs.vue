@@ -30,7 +30,7 @@
 
 <script>
 import VueMarkdown from 'vue-markdown';
-import docs from '../docs/docs.md';
+import docs from '../assets/markdown/docs.md';
 
 export default {
     name: 'Docs',

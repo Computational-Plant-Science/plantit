@@ -6,9 +6,9 @@
                 class="p-2 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
-                border-variant="white"
+                border-variant="dark"
                 text-variant="white"
-                bg-variant="transparent"
+                bg-variant="white"
                 style="max-width: 400px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
             >
                 <b-row align-v="center" class="justify-content-md-center">
@@ -18,30 +18,29 @@
                             width="100px"
                             alt="Plant IT"
                         ></b-img>
-                        <h1><b>PlantIT</b></h1>
+                        <h1>PlantIT</h1>
                     </b-col>
                 </b-row>
-                <br />
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
                             <b-nav-item to="/About" class="m-0 p-0">
                                 <b-button variant="outline-dark">
-                                    <i class="fas fa-seedling fa-3x"></i>
+                                    <i class="fas fa-seedling fa-2x"></i>
                                     <br />
                                     About
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/Guide" class="m-0 p-0">
                                 <b-button variant="outline-dark">
-                                    <i class="fas fa-map-signs fa-3x"></i>
+                                    <i class="fas fa-map-signs fa-2x"></i>
                                     <br />
                                     Guide
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/Docs" class="m-0 p-0">
                                 <b-button variant="outline-dark">
-                                    <i class="fas fa-book fa-3x"></i>
+                                    <i class="fas fa-book fa-2x"></i>
                                     <br />
                                     Docs
                                 </b-button>
@@ -49,14 +48,13 @@
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <!--<template v-slot:footer class="m-0 p-0">
-                    <b-row class="m-0 p-0">
+                <b-row class="m-0 p-0">
                         <b-col class="m-0 p-0">
                             <b-button
                                 variant="outline-white"
                                 block
                                 class="text-center"
-                                href="/login/?next=/pipelines/"
+                                href="/login/?next=/workflows/"
                             >
                                 <b-img
                                     :src="
@@ -69,7 +67,6 @@
                             </b-button>
                         </b-col>
                     </b-row>
-                </template>-->
             </b-card>
         </b-container>
         <i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i>

@@ -20,8 +20,7 @@
             <b-container>
                 <b-row align-content="center">
                     <b-col class="text-center">
-                        This page is under construction.
-                        <!--<VueMarkdown :source="source"> </VueMarkdown>-->
+                        <VueMarkdown :source="source"> </VueMarkdown>
                     </b-col>
                 </b-row>
             </b-container>
@@ -31,7 +30,7 @@
 
 <script>
 import VueMarkdown from 'vue-markdown';
-import guide from '../docs/guide.md';
+import guide from '../assets/markdown/guide.md';
 
 export default {
     name: 'Guide',
