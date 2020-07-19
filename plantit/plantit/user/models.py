@@ -39,14 +39,6 @@ class Profile(models.Model):
     pinned_jobs: Manager = models.ManyToManyField(Run, related_name='profile_pins', blank=True)
     pinned_collections: Manager = models.ManyToManyField(Collection, related_name='profile_pins', blank=True)
 
-    def asdict(self):
-        return {
-            'country': self.country,
-            'continent': self.continent,
-            'institution': self.institution,
-            'institution_type': self.institution_type,
-            'field_of_study': self.field_of_study
-        }
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -58,5 +50,6 @@ def create_user_profile(sender, instance, created, **kwargs):
         Profile.objects.create(user=instance)
     else:
         instance.profile.save()
+
 
 post_save.connect(create_user_profile, sender=User)

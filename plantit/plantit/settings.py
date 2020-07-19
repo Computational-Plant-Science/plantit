@@ -49,13 +49,9 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "front_end", "dist", "assets"),
 )
 
-#Where Plant IT workflows are kept
-WORKFLOW_DIR = os.path.join(BASE_DIR,"workflows")
-
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    #'workflows.finders.WorkflowDirectoriesFinder'
 ]
 
 MEDIA_URL = "/public/"
@@ -93,10 +89,9 @@ AUTHENTICATION_BACKENDS = (
     'django_cas_ng.backends.CASBackend',
 )
 
-CAS_SERVER_URL = "https://auth.iplantcollaborative.org/cas4/"
 # CAS_SERVER_URL = "https://auth.cyverse.org/cas5/login"
+CAS_SERVER_URL = "https://auth.iplantcollaborative.org/cas4/"
 CAS_APPLY_ATTRIBUTES_TO_USER=True
-# CAS_VERSION = '3'
 
 ROOT_URLCONF = 'urls'
 

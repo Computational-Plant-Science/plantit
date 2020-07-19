@@ -50,6 +50,6 @@ if User.objects.filter(username=username).count()==0:
     # profile = Profile.objects.create(user=user)
     print('Superuser created.');
 else:
-    print('Superuser with that name already exists!');
+    print('User with that name already exists!');
 "
 printf "$script" | python manage.py shell
