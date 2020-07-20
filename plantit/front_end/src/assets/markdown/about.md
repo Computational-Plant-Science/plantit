@@ -46,6 +46,7 @@ PlantIT makes the computer do some of the painful bits.
 - acquire a DOI for and publish your data
 - associate metadata with your data
 - run your workflow
+- run someone else's workflow
 - develop a new workflow
 - share a workflow
 - collaborate on a workflow
