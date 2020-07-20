@@ -9,7 +9,7 @@
     >
         <template slot="header" style="border: none">
             <h2 class="text-white mt-5">
-                Computational plant science in the browser.
+                Plant science workflow automation in the browser.
             </h2>
         </template>
         <b-container>

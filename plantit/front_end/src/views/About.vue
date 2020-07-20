@@ -20,8 +20,8 @@
             <b-container>
                 <b-row align-content="center">
                     <b-col class="text-center">
-                        <h1>PlantIT is <b>web workflow automation for plant science.</b></h1>
-                        <b>PlantIT aims to make plant science software easy to share and easy to use. To get started, all you need is a <b-link href="https://www.cyverse.org/">CyVerse</b-link> account.</b>
+                        <h1>Plant science workflow automation in the browser.</h1>
+                        <b>Store and publish data with <b-link href="https://www.cyverse.org/">CyVerse</b-link>. Share workflows with <b-link href="https://www.github.com/">GitHub</b-link>. Deploy to HPC environments with a click.</b>
                     </b-col>
                 </b-row>
                 <br />

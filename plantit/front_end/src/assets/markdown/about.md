@@ -2,7 +2,7 @@
 
 ---
 
-- [DIRT](http://dirt.cyverse.org/?q=welcome): Digital Imaging of Root Traits measures traits of monocot and dicot roots from digital images. DIRT automates the extraction of root traits by making high-throughput grid computing environments available to end-users without technical training.
+PlantIT was preceded by &mdash; grew out of, as it were &mdash; [DIRT](http://dirt.cyverse.org/?q=welcome). **D**igital **I**maging of **R**oot **T**raits measures traits of monocot and dicot roots from digital images. DIRT automates the extraction of root traits by making high-throughput grid computing environments available to end-users without technical training.
 
 <br>
 
@@ -10,35 +10,50 @@
 
 ---
 
-Some principles:
+Some ideas:
 
-- Computational science should be simple to conduct and straightforward to reproduce.
-- Research software should be easy to version, share, configure, deploy, and monitor.
-
-Some hypotheses:
-
-- Most plant scientists have access to a modern web browser (when not in the field, at least).
-- Most plant scientists do not want to care very much about computing infrastructure details.
-- Many developers of plant science research software are also plant scientists; see previous.
+- computational science ought to be straightforward to reproduce
+- research software ought to be easy to version, run, and share
 
 Some vignettes:
 
-- An experimentalist collects a dataset, associates it with metadata, preprocesses it, acquires a DOI, publishes it, and attempts to encourage replication.
-- A researcher develops a growth model and runs a series of embarrassingly parallel Monte Carlo simulations to explore the corresponding phenotype space.
-- A breeder deploys an automated imaging mechanism and generates thousands of 3D reconstructions, each described by hundreds of images.
-- A computer scientist shares an algorithm with biologists who may be unfamiliar with the command line and may use a variety of operating systems.
+- a field biologist collects a dataset, associates it with metadata, preprocesses it, acquires a DOI, and publishes it to the community
+- a breeder deploys an automated imaging mechanism and generates thousands of 3D reconstructions, each described by hundreds of images
+- a researcher develops a growth model and runs embarrassingly parallel Monte Carlo simulations to explore the corresponding phenotype space
+- a computer scientist shares an algorithm with biologists who may be unfamiliar with the command line and may use a variety of operating systems
 
-Typically, these tasks might involve:
+These may involve:
 
 - hard drives
 - shell scripting
 - emailing strangers
 - juggling job submission scripts
+- answering support requests at 2 A.M.
 - sticking Post-it notes to computer monitors
 - trying to remember which directory yesterday's data is in
-- answering support requests at 2 A.M. ("Why doesn't it work on my machine?")
 
-Couldn't we just do this in the browser? That would be nice.
+PlantIT makes the computer do some of the painful bits.
+
+<br>
+
+### With PlantIT, you can...
+
+---
+
+- grab your data
+- store your data
+- view your data
+- acquire a DOI for and publish your data
+- associate metadata with your data
+- run your workflow
+- develop a new workflow
+- share a workflow
+- collaborate on a workflow
+- trigger a workflow to run when your code changes
+- trigger a workflow to run when your data changes
+- think less about infrastructure and more about science
+
+...all from the browser (or API).
 
 <br>
 
@@ -46,11 +61,11 @@ Couldn't we just do this in the browser? That would be nice.
 
 ---
 
-Sort of. PlantIT is flexible enough to run nearly any HPC workflow, but the platform is developed primarily for phenomics. If you're looking to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit.
+Sort of. PlantIT is flexible enough to run any container-friendly code, but is intended for and suited to phenomics workloads. If you're looking to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit.
 
 <br>
  
-### Do we really need another workflow management system?
+### Is PlantIT a workflow management system?
 
 ---
 
@@ -62,10 +77,10 @@ PlantIT is not:
 - a container orchestrator (e.g., [Kubernetes](https://kubernetes.io/))
 - a cluster resource manager (e.g., [Torque/Moab](https://adaptivecomputing.com/cherry-services/torque-resource-manager/), [Slurm](https://slurm.schedmd.com/overview.html))
 
-PlantIT does not reinvent these tools or reproduce their features. *PlantIT just glues them together.*
+PlantIT just glues tools like these together.
 
-PlantIT is a bit like [Metaflow](https://metaflow.org/) tuned for plant science workloads, minus the Python DSL, with a web application bolted on top. Metaflow's documentation [states](https://docs.metaflow.org/introduction/what-is-metaflow#infrastructure-stack-for-data-science):
+PlantIT is a bit like [Metaflow](https://metaflow.org/) tuned for plant phenomics, minus the Python DSL, with a web application bolted on top. Metaflow's documentation [states](https://docs.metaflow.org/introduction/what-is-metaflow#infrastructure-stack-for-data-science):
 
 ```Internally, Metaflow leverages existing infrastructure when feasible... it is tightly integrated with Amazon Web Services. The core value proposition of Metaflow is its integrated full-stack, human-centric API, rather than reinvention of the stack itself.```
 
-PlantIT embraces a similar philosophy; just substitute [Cyverse](https://www.cyverse.org)/HPC for AWS.
+PlantIT embraces a similar philosophy; just substitute [Cyverse](https://www.cyverse.org)/[Github](https://www.github.com/)/HPC for AWS.

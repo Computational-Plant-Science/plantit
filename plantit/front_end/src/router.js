@@ -92,6 +92,7 @@ let router = new Router({
             name: 'login',
             component: Login,
             meta: {
+                title: 'Log In',
                 crumb: [
                     {
                         text: 'Log In',
@@ -105,6 +106,7 @@ let router = new Router({
             name: 'logout',
             component: Logout,
             meta: {
+                title: 'Log Out',
                 crumb: [
                     {
                         text: 'Log Out',
