@@ -2,9 +2,9 @@
 
 # PlantIT [![Build Status](https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/plantit)
 
-Web workflow automation for plant science.
+Plant science workflow automation in the browser.
 
-**This project is in alpha and is not yet stable**.
+**This project is in open alpha and is not yet stable**.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -24,7 +24,7 @@ Web workflow automation for plant science.
 
 ## Requirements
 
-The following are required to build and run `PlantIT` in a Unix environment:
+The following are required to run `PlantIT` in a Unix environment:
 
 - [Docker](https://www.docker.com/)
 - [npm](https://www.npmjs.com/get-npm)

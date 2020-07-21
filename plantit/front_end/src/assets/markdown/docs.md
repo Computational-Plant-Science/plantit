@@ -70,4 +70,8 @@ params:
 commands: cat "$INPUT" && echo "$MESSAGE" >> "$OUTPUT"
 ```
 
+#### Test Datasets
+
+
+
 PlantIT will prompt users of this workflow to select input and ouput paths in the browser. Note that this configuration maps a single input file to a single output file. If the user provides a directory containing multiple input files, PlantIT will automagically spawn multiple containers to process them in parallel. To indicate that your code accepts an entire *directory* as input (and should not be parallelized), use `from: directory` instead.
