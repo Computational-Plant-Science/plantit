@@ -20,7 +20,6 @@
             <b-container>
                 <b-row align-content="center">
                     <b-col>
-                        <!--This page is under construction.-->
                         <VueMarkdown :source="source"> </VueMarkdown>
                     </b-col>
                 </b-row>
@@ -42,7 +41,7 @@ export default {
         return {
             source: docs
         };
-    }
+    },
 };
 </script>
 

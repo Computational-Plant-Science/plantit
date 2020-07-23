@@ -55,7 +55,11 @@ This will cause the value of `message`, specified by the user in the browser, to
 
 #### Input/Output
 
-PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) (or any other iRODS instance) onto the file system in your deployment environment, then push output files back to the store after your workflow runs. To enable this behavior, add `from` and `to` sections to your configuration. For example, the following workflow prints the contents of an input file and writes a message to an ouput file:
+PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) (or any other iRODS instance) onto the file system in your deployment environment, then push output files back to the store after your workflow runs. To enable this behavior, add `from` and `to` sections to your configuration.
+
+##### Workflow "shapes"
+
+The following workflow prints the contents of an input file and writes a message to an ouput file:
 
 ```yaml
 name: Hello File
@@ -80,7 +84,9 @@ This section is under construction.
 
 If you've published your algorithm or workflow, you can link PlantIT users to your publication with a `doi` attribute:
 
-`doi: https://doi.org/10.1186/s13007-015-0093-3`
+```yaml
+doi: https://doi.org/10.1186/s13007-015-0093-3
+```
 
 The link will then be displayed in the browser.
 
