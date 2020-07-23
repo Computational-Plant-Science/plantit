@@ -16,14 +16,12 @@ Plant science workflow automation in the browser.
 **Contents**
 
 - [Requirements](#requirements)
-- [Documentation](#documentation)
 - [Installation](#installation)
   - [Development](#development)
+    - [Tests](#tests)
   - [Production](#production)
 - [Environment variables](#environment-variables)
-- [Workflows](#workflows)
-- [Clusters](#clusters)
-  - [Cluster login configuration](#cluster-login-configuration)
+- [Compute targets](#compute-targets)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
