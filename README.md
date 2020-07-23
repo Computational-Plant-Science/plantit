@@ -1,8 +1,14 @@
-![alt text](https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true)
+<p align="center">
+<img src="https://github.com/Computational-Plant-Science/plantit/blob/master/plantit/front_end/src/assets/logo.png?raw=true" />
+<br /><br />
+<a href="https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master"><img src='https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master' alt='Build Status' /></a>
+<a href='https://coveralls.io/github/Computational-Plant-Science/plantit?branch=HEAD'><img src='https://coveralls.io/repos/github/Computational-Plant-Science/plantit/badge.svg?branch=HEAD' alt='Coverage Status' /></a>
 
-# PlantIT [![Build Status](https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/plantit)
+# PlantIT
 
 Plant science workflow automation in the browser.
+
+</p>
 
 **This project is in open alpha and is not yet stable**.
 
