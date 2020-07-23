@@ -23,5 +23,5 @@ RUN chmod +x dev/wait-for-it.sh
 RUN chmod +x dev/wait-for-postgres.sh
 RUN chmod +x dev/ssh-echo-pass.sh
 RUN chmod +x dev/ssh-copy-id.expect
-
+RUN pip3 install coveralls
 
