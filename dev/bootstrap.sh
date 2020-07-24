@@ -16,7 +16,7 @@ echo "Bootstrapping ${PWD##*/}..."
 DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f docker-compose.dev.yml"
 
 echo "Bringing containers down..."
-$DOCKER_COMPOSE down
+$DOCKER_COMPOSE down --remove-orphans
 
 env_file=".env"
 echo "Checking for environment variable file '$env_file'..."

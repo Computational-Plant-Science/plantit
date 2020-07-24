@@ -1,11 +1,5 @@
-# Runs PlantIT in production mode.
-#
-# See README for information and usage.
-
 version: '3.7'
-
 services:
-
   plantit:
     command: ["gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
     networks:
@@ -18,45 +12,14 @@ services:
       timeout: 20s
       retries: 2
       start_period: 20s
-    logging:
-      driver: gelf
-      options:
-        gelf-address: ${GRAYLOG_GELF_URI}
-        tag: "plantit"
-
   postgres:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: always
-    logging:
-      driver: gelf
-      options:
-        gelf-address: ${GRAYLOG_GELF_URI}
-        tag: "postgres"
-
-  adminer:
-    restart: always
-    logging:
-      driver: gelf
-      options:
-        gelf-address: ${GRAYLOG_GELF_URI}
-        tag: "adminer"
-
   rabbitmq:
     restart: always
-    logging:
-      driver: gelf
-      options:
-        gelf-address: ${GRAYLOG_GELF_URI}
-        tag: "rabbitmq"
-
   celery:
-    logging:
-      driver: gelf
-      options:
-        gelf-address: ${GRAYLOG_GELF_URI}
-        tag: "celery"
-
+    restart: always
   nginx:
     image: nginx
     ports:
@@ -73,15 +36,8 @@ services:
     networks:
       - ngnix_network
     restart: always
-    logging:
-      driver: gelf
-      options:
-        gelf-address: ${GRAYLOG_GELF_URI}
-        tag: "ngnix"
-
 networks:
   ngnix_network:
     driver: bridge
-
 volumes:
   pgdata:

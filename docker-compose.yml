@@ -1,16 +1,5 @@
-# Base docker-compose file.
-#
-# Usage:
-#   Development:
-#     docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-#
-#   Production:
-#     docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
-
 version: '3.7'
-
 services:
-
   plantit:
     build:
       context: .
@@ -45,7 +34,6 @@ services:
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
       - GITHUB_SECRET=${GITHUB_SECRET}
-
   postgres:
     image: postgres
     ports:
@@ -62,20 +50,6 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-
-  adminer:
-    image: adminer
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-    healthcheck:
-      test: curl -f http://localhost:8080/
-      interval: 60s
-      timeout: 60s
-      retries: 2
-      start_period: 20s
-
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
@@ -88,7 +62,6 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-
   celery:
     build:
       context: .
@@ -126,18 +99,12 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-
-  # flower:
-  #   image: mher/flower
-  #   volumes:
-  #     - .:/code
-  #   command: flower --broker=amqp://rabbitmq --port=5555
-  #   ports:
-  #     - 5555:5555
-  #   healthcheck:
-  #     test: python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:5555').getcode());" | grep "200"
-  #     interval: 60s
-  #     timeout: 60s
-  #     retries: 2
-  #     start_period: 20s
-
+  cluster:
+    build:
+      context: .
+      dockerfile: dev/dockerfiles/cluster/Dockerfile
+    privileged: true
+  irods:
+    image: mjstealey/irods-provider-postgres:4.2.3
+    # ports:
+    #   - "1247:1247"
