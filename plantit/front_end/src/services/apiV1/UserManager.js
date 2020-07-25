@@ -42,6 +42,30 @@ export default {
                 Sentry.captureException(err);
             });
     },
+    getCountries() {
+        return axios
+            .get('/apis/v1/profiles/countries/')
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
+    getUniversities(country) {
+        return axios
+            .get('/apis/v1/profiles/universities/', {
+                params: {
+                    country: country
+                }
+            })
+            .then(response => {
+                return response.data;
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
+    },
     updateUserInfo(
         userName,
         firstName,

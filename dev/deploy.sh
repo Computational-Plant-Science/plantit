@@ -2,40 +2,11 @@
 
 host="$1"
 compose="docker-compose -f docker-compose.yml -f docker-compose.prod.yml"
-env_file=".env"
 
-echo "Bringing containers down..."
-$compose down
-
-echo "Pulling changes..."
-git stash
-git pull
-
-echo "Checking for environment variable file '$env_file'..."
-if [ ! -f $env_file ]; then
-  echo "Environment variable file '$env_file' does not exist. Creating it..."
-  chmod +x dev/create-env-file.sh
-  ./dev/create-env-file.sh
-else
-  echo "Environment variable file '$env_file' already exists. Continuing..."
-fi
-
-echo "Building front end..."
-cd plantit/front_end || exit
-npm install
-npm run build
-cd ..
-cd ..
-
-echo "Building containers..."
-$compose build
+./dev/bootstrap.sh -p
 
 echo "Collecting static files..."
 $compose run plantit ./manage.py collectstatic --no-input
-
-echo "Running migrations..."
-$compose run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
-$compose run plantit ./manage.py migrate
 
 echo "Configuring NGINX..."
 find config/nginx/conf.d/local.conf -type f -exec sed -i "s/localhost/$host/g" {} \;

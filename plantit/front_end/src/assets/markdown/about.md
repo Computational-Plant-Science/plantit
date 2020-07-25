@@ -1,13 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-- [Prior art](#prior-art)
-- [Why does PlantIT exist?](#why-does-plantit-exist)
-- [With PlantIT, you can...](#with-plantit-you-can)
-- [Is PlantIT a bioinformatics gateway?](#is-plantit-a-bioinformatics-gateway)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 ### Prior art
 
 ---

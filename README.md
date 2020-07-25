@@ -47,25 +47,22 @@ To set up a new (or restore a clean) development environment, run `dev/bootstrap
 
 - Stop and remove project containers and networks
 - If an `.env` file (to configure environment variables) does not exist, generate one with default values
-- Remove migrations and stored files
 - Rebuild containers
 - Run migrations
-- Create a Django superuser (username `admin`, password `admin`) for the web application
-- Configure a mock IRODS server and compute cluster, populating a `known_hosts` file and creating a public/private keypair in `config/ssh`
+- If a Django superuser does not exist, create one (username and password specified in `.env`)
+- Configure a sandbox container to act as a test deployment target (creates a public/private keypair in `config/ssh` if one does not exist, then configures SSH key authentication between the web application container and the sandbox environment)
+- Configure a mock iRODS server
 - Build the Vue front end
 
-Then bring the project up with `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up` (`-d` for detached mode).
+Bring everything up with `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up` (`-d` for detached mode).
 
 This will start a number of containers:
 
 - `plantit`: Django web application (`http://localhost:80`)
-- `celery`: Celery worker
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
-- `postgres`: PostgreSQL database
-- `flower`: Celery monitoring UI (`http://localhost:5555`)
-- `adminer`: DB admin UI (`http://localhost:8080`)
+- `celery`: Celery worker
+- `sandbox`: sandbox deployment target
 - `irods`: mock IRODS server
-- `cluster`: mock compute cluster
 
 To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin`.
 
@@ -77,41 +74,22 @@ Tests can be run with `docker-compose -f docker-compose.yml -f docker-compose.de
 
 ### Production
 
-The production configurations look somewhat different than development:
+In production configuration:
 
 - Django runs behind Gunicorn (both in the same container) which runs behind NGINX (in a separate container)
 - NGINX serves static assets and acts as a reverse proxy
-- Postgres stores data in a persistent volume
-- Graylog consumes and stores container logs
-- Monitoring tools (Adminer and RabbitMQ dashboard)
 
-Before running PlantIT in a production environment, you must:
+To configure PlantIT for deployment, run `./dev/bootstrap.sh -p` (`-p` for production). This will do everything detailed above except configuring a mock iRODS server. Additionally, it will:
 
-- Configure environment variables
-- Build the Vue front end with `npm run build` from the `plantit/front_end` directory
 - Collect static files:
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py collectstatic --no-input
 ```
 
-- Run migrations:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py makemigrations
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py migrate
-```
-
-- Create a Django superuser (if one does not exist):
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit /code/dev/configure-superuser.sh -u "<username>" -p "<password>" -e "<email address>"
-```
-
 - Configure NGINX `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN
-- If deploying for the first time, Graylog must be configured to consume input from other containers once they have all been brought up
 
-Containers can then be brought up with:
+Bring containers up with:
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
@@ -119,13 +97,11 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 
 This will start the following:
 
-- `plantit`: Django web application (`http://<host>:80`)
-- `celery`: Celery worker for Dagster
+- `plantit`: Django web application (`http://localhost:80`)
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
-- `postgres`: PostgreSQL database
-- `flower`: Celery monitoring UI (`http://localhost:5555`)
-- `adminer`: PostgreSQL admin UI (`http://localhost:8080`)
-- `nginx`: NGINX server
+- `celery`: Celery worker
+- `sandbox`: sandbox deployment target
+- `nginx`: NGINX reverse proxy
 
 ## Environment variables
 

@@ -1,5 +1,5 @@
 #!/usr/bin/expect -f
-spawn ssh-copy-id -f -i /code/config/ssh/id_rsa.pub root@cluster
+spawn ssh-copy-id -f -i /code/config/ssh/id_rsa.pub root@sandbox
 expect "(yes/no)?"
 send "yes\n"
 expect "password:"

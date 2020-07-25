@@ -73,6 +73,9 @@
             header-bg-variant="white"
             border-variant="white"
             header-border-variant="white"
+            v-if="
+                !userWorkflowsLoading && userWorkflowsAfterFilter.length !== 0
+            "
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">

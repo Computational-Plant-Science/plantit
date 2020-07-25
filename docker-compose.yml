@@ -6,7 +6,6 @@ services:
       dockerfile: dev/dockerfiles/plantit/Dockerfile
     working_dir: /code/plantit
     depends_on:
-      - postgres
       - celery
     volumes:
       - .:/code
@@ -25,36 +24,14 @@ services:
       - DJANGO_SESSION_COOKIE_SECURE=${DJANGO_SESSION_COOKIE_SECURE}
       - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
       - SQL_ENGINE=${SQL_ENGINE}
-      - SQL_HOST=${SQL_HOST}
-      - SQL_PORT=${SQL_PORT}
-      - SQL_NAME=${SQL_NAME}
-      - SQL_USER=${SQL_USER}
-      - SQL_PASSWORD=${SQL_PASSWORD}
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
       - GITHUB_SECRET=${GITHUB_SECRET}
-  postgres:
-    image: postgres
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_HOST=${SQL_HOST}
-      - POSTGRES_PORT=${SQL_PORT}
-      - POSTGRES_NAME=${SQL_NAME}
-      - POSTGRES_USER=${SQL_USER}
-      - POSTGRES_PASSWORD=${SQL_PASSWORD}
-    healthcheck:
-      test: /usr/bin/pg_isready -U "postgres"
-      interval: 60s
-      timeout: 60s
-      retries: 2
-      start_period: 20s
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
     ports:
-      - 5672:5672
       - 15672:15672
     healthcheck:
       test: python -c "import urllib2; print urllib2.urlopen('http://localhost:15672').getcode();" | grep "200"
@@ -66,12 +43,11 @@ services:
     build:
       context: .
       dockerfile: dev/dockerfiles/plantit/Dockerfile
-    command: ["/code/dev/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "--loglevel=info"]
+    command: ["celery", "-A", "plantit", "worker", "--loglevel=info"]
     volumes:
       - .:/code
     working_dir: /code/plantit
     depends_on:
-      - postgres
       - rabbitmq
     environment:
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
@@ -84,11 +60,6 @@ services:
       - DJANGO_SESSION_COOKIE_SECURE=${DJANGO_SESSION_COOKIE_SECURE}
       - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
       - SQL_ENGINE=${SQL_ENGINE}
-      - SQL_HOST=${SQL_HOST}
-      - SQL_PORT=${SQL_PORT}
-      - SQL_NAME=${SQL_NAME}
-      - SQL_USER=${SQL_USER}
-      - SQL_PASSWORD=${SQL_PASSWORD}
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
@@ -99,12 +70,8 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-  cluster:
+  sandbox:
     build:
       context: .
-      dockerfile: dev/dockerfiles/cluster/Dockerfile
+      dockerfile: dev/dockerfiles/sandbox/Dockerfile
     privileged: true
-  irods:
-    image: mjstealey/irods-provider-postgres:4.2.3
-    # ports:
-    #   - "1247:1247"

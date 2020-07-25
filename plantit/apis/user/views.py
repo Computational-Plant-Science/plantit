@@ -1,8 +1,10 @@
 import json
+import os
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
 import requests
+import yaml
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponse
@@ -92,3 +94,20 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             })
         except BadCredentialsException:
             return Response([])
+
+    @action(methods=['get'], detail=False)
+    def countries(self, request):
+        with open("apis/user/countries.yaml", 'r') as stream:
+            countries = yaml.safe_load(stream)
+        return Response({
+            'countries': countries
+        })
+
+    @action(methods=['get'], detail=False)
+    def universities(self, request):
+        country = request.GET.get('country', None)
+        with open("apis/user/universities.yaml", 'r') as stream:
+            universities = yaml.safe_load(stream)
+        return Response({
+            'universities': universities[country]
+        })

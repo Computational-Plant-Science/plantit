@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import PlaceManager from '../../services/apiV1/PlaceManager';
+import User from '../../services/apiV1/UserManager';
 
 export default {
     name: 'EditUserInfoModal',
@@ -161,6 +161,7 @@ export default {
     },
     data() {
         return {
+            countries: [],
             institutions: [],
             username_internal: this.username,
             first_name_internal: this.first_name,
@@ -190,9 +191,19 @@ export default {
         valid(str) {
             return str !== null && str !== undefined && str.length > 0;
         },
-        searchInstitution(name) {
-            this.institutions = PlaceManager.searchInstitution(name);
+        getCountries() {
+            User.getCountries().then(countries => {
+                this.countries = countries;
+            });
+        },
+        getInstitutions(country) {
+            User.getUniversities(country).then(institutions => {
+                this.institutions = institutions;
+            });
         }
+    },
+    mounted() {
+        this.getCountries();
     },
     computed: {
         invalid: function() {
