@@ -7,7 +7,7 @@ before_install:
 script:
 - "./dev/bootstrap.sh"
 - docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-- docker-compose -f docker-compose.yml -f docker-compose.dev.yml exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit /code/dev/wait-for-postgres.sh postgres coverage run --source='.' ./manage.py test
+- docker-compose -f docker-compose.yml -f docker-compose.dev.yml exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coverage run --source='.' ./manage.py test
 - docker-compose -f docker-compose.yml -f docker-compose.dev.yml exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
 deploy:
 - provider: script
