@@ -6,6 +6,10 @@ compose="docker-compose -f docker-compose.prod.yml"
 echo "Bringing containers down..."
 $compose down --remove-orphans
 
+echo "Fetching latest source from git..."
+git fetch origin master
+git reset --hard origin/master
+
 echo "Pulling new image definitions..."
 $compose pull
 
