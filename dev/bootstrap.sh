@@ -40,14 +40,15 @@ npm install
 npm run build
 cd ../..
 
+
 if [[ "$nocache" -eq 0 ]]; then
-  echo "Building containers..."
-  $compose build "$@"
+  echo "Building..."
+  docker build -t computationalplantscience/plantit -f dev/dockerfiles/plantit/Dockerfile .
 else
-  echo "Building containers with option '--no-cache'..."
-  $compose build "$@" --no-cache
+  echo "Building with cache disabled..."
+  docker build -t computationalplantscience/plantit -f dev/dockerfiles/plantit/Dockerfile --no-cache .
 fi
-$compose up -d plantit
+$compose up -d --force-recreate
 
 echo "Running migrations..."
 $compose exec plantit python manage.py makemigrations
@@ -75,6 +76,3 @@ if [[ "$useprod" -eq 0 ]]; then
   $compose up -d irods
   $compose exec sandbox /bin/bash /root/wait-for-it.sh irods:1247 -- /root/configure-irods.sh
 fi
-
-echo "Stopping containers..."
-$compose stop

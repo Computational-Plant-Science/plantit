@@ -1,9 +1,7 @@
 version: '3.7'
 services:
   plantit:
-    build:
-      context: .
-      dockerfile: dev/dockerfiles/plantit/Dockerfile
+    image: computationalplantscience/plantit
     working_dir: /code/plantit
     volumes:
       - .:/code
@@ -51,9 +49,7 @@ services:
       retries: 2
       start_period: 20s
   celery:
-    build:
-      context: .
-      dockerfile: dev/dockerfiles/plantit/Dockerfile
+    image: computationalplantscience/plantit
     command: ["celery", "-A", "plantit", "worker", "--loglevel=info"]
     volumes:
       - .:/code
