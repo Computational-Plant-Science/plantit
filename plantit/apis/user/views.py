@@ -1,5 +1,3 @@
-import json
-import os
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
@@ -7,7 +5,7 @@ import requests
 import yaml
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.http import HttpResponseBadRequest, HttpResponse
+from django.http import HttpResponseBadRequest, HttpResponse, HttpResponseNotFound
 from django.shortcuts import redirect
 from github import Github, BadCredentialsException
 from rest_framework import viewsets, mixins
@@ -26,6 +24,12 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
+
+    with open("apis/user/countries.yaml", 'r') as f:
+        _countries = yaml.safe_load(f)
+
+    with open("apis/user/universities.yaml", 'r') as f:
+        _universities = yaml.safe_load(f)
 
     def get_object(self):
         return self.request.user
@@ -97,17 +101,16 @@ class ProfileViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(methods=['get'], detail=False)
     def countries(self, request):
-        with open("apis/user/countries.yaml", 'r') as stream:
-            countries = yaml.safe_load(stream)
         return Response({
-            'countries': countries
+            'countries': self._countries
         })
 
     @action(methods=['get'], detail=False)
     def universities(self, request):
         country = request.GET.get('country', None)
-        with open("apis/user/universities.yaml", 'r') as stream:
-            universities = yaml.safe_load(stream)
-        return Response({
-            'universities': universities[country]
-        })
+        if country in self._universities:
+            return Response({
+                'universities': self._universities[country]
+            })
+        else:
+            return HttpResponseNotFound()

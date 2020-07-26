@@ -174,11 +174,11 @@
                                 <b-badge
                                     variant="dark"
                                     :class="
-                                        version.includes('alpha')
+                                        version && version.includes('alpha')
                                             ? 'text-warning'
                                             : 'text-success'
                                     "
-                                    >{{ version }}
+                                    >{{ version || '...' }}
                                 </b-badge>
                             </h5>
                         </b-col>
@@ -318,123 +318,35 @@
             </p>
         </b-alert>
         <EditUserInfoModal
-            :prompt="false"
-            modal-id="editUserInfoModal"
-            :username="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.username
-                    : ''
-            "
-            :first_name="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.first_name
-                    : ''
-            "
-            :last_name="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.last_name
-                    : ''
-            "
-            :country="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.profile.country
-                    : ''
-            "
-            :continent="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.profile.continent
-                    : ''
-            "
-            :institution="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.profile.institution
-                    : ''
-            "
-            :institution_type="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.profile.institution_type
-                    : ''
-            "
-            :field_of_study="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.profile.field_of_study
-                    : ''
-            "
-            @saveUserInfo="saveUserInfo"
-        >
-        </EditUserInfoModal>
-        <EditUserInfoModal
-            :prompt="true"
+            :v-if="!this.loading && this.profileIncomplete"
             modal-id="editUserInfoModalNav"
             :username="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
+                this.info
                     ? this.info.username
                     : ''
             "
             :first_name="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
+                this.info
                     ? this.info.first_name
                     : ''
             "
             :last_name="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
+                this.info
                     ? this.info.last_name
                     : ''
             "
             :country="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
+                this.info
                     ? this.info.profile.country
                     : ''
             "
-            :continent="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.profile.continent
-                    : ''
-            "
             :institution="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
+                this.info
                     ? this.info.profile.institution
                     : ''
             "
-            :institution_type="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
-                    ? this.info.profile.institution_type
-                    : ''
-            "
             :field_of_study="
-                this.loading
-                    ? 'Loading...'
-                    : this.info
+                this.info
                     ? this.info.profile.field_of_study
                     : ''
             "
@@ -468,9 +380,7 @@ export default {
                 this.info &&
                 !(
                     this.info.profile.country &&
-                    this.info.profile.continent &&
                     this.info.profile.institution &&
-                    this.info.profile.institution_type &&
                     this.info.profile.field_of_study
                 )
             );

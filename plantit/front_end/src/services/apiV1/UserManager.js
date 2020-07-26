@@ -71,9 +71,7 @@ export default {
         firstName,
         lastName,
         country,
-        continent,
         institution,
-        institutionType,
         fieldOfStudy
     ) {
         const data = {
@@ -81,9 +79,7 @@ export default {
             last_name: lastName,
             profile: {
                 country: country,
-                continent: continent,
                 institution: institution,
-                institution_type: institutionType,
                 field_of_study: fieldOfStudy
             }
         };

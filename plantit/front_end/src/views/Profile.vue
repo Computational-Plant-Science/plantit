@@ -25,7 +25,7 @@
                             </b-col>
                             <b-col md="auto">
                                 <b-button
-                                    @click="$bvModal.show('editUserInfoModal')"
+                                    @click="$bvModal.show('editUserInfoModalNav')"
                                     variant="outline-dark"
                                     v-b-tooltip.hover
                                     title="Edit profile."
@@ -50,27 +50,11 @@
                             }}
                         </p>
                         <p>
-                            <b>Continent:</b>
-                            {{
-                            this.user.profile === undefined
-                            ? ''
-                            : this.user.profile.continent
-                            }}
-                        </p>
-                        <p>
                             <b>Institution:</b>
                             {{
                             this.user.profile === undefined
                             ? ''
                             : this.user.profile.institution
-                            }}
-                        </p>
-                        <p>
-                            <b>Institution Type:</b>
-                            {{
-                            this.user.profile === undefined
-                            ? ''
-                            : this.user.profile.institution_type
                             }}
                         </p>
                         <p>
@@ -138,9 +122,7 @@ export default {
             firstName,
             lastName,
             country,
-            continent,
             institution,
-            institutionType,
             fieldOfStudy
         ) {
             UserApi.updateUserInfo(
@@ -148,9 +130,7 @@ export default {
                 firstName,
                 lastName,
                 country,
-                continent,
                 institution,
-                institutionType,
                 fieldOfStudy
             ).then(() => {
                 this.reload();
