@@ -95,6 +95,10 @@ let router = new Router({
                 title: 'Log In',
                 crumb: [
                     {
+                        text: 'PlantIT',
+                        href: '/'
+                    },
+                    {
                         text: 'Log In',
                         href: '/login/?next=/workflows/'
                     }
@@ -108,6 +112,10 @@ let router = new Router({
             meta: {
                 title: 'Log Out',
                 crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/'
+                    },
                     {
                         text: 'Log Out',
                         href: '/logout'

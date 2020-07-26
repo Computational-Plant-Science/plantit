@@ -57,8 +57,6 @@ This will cause the value of `message`, specified by the user in the browser, to
 
 PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) (or any other iRODS instance) onto the file system in your deployment environment, then push output files back to the store after your workflow runs. To enable this behavior, add `from` and `to` sections to your configuration.
 
-##### Workflow "shapes"
-
 The following workflow prints the contents of an input file and writes a message to an ouput file:
 
 ```yaml

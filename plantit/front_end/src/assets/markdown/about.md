@@ -40,21 +40,21 @@ PlantIT makes the computer do some of the painful bits.
 
 ---
 
-- grab your data
-- store your data
-- view your data
+- access your data
+- upload your data
 - acquire a DOI for and publish your data
 - associate metadata with your data
+- access public datasets
+- automatically feed your data to a workflow
+- containerize your workflow
 - run your workflow
-- run someone else's workflow
-- develop a new workflow
-- share a workflow
-- collaborate on a workflow
-- trigger a workflow to run when your code changes
-- trigger a workflow to run when your data changes
-- think less about infrastructure and more about science
-
-...all from the browser (or API).
+- run a public workflow
+- collaborate on workflows and data
+- develop and share a new workflow
+- download the results of your workflow
+- automatically push workflow results to a data store
+- trigger a workflow to run when your code or data changes
+- *think less about infrastructure and more about science*
 
 <br>
 
@@ -62,7 +62,7 @@ PlantIT makes the computer do some of the painful bits.
 
 ---
 
-Sort of. PlantIT is flexible enough to run any container-friendly code, but is intended for and suited to phenomics workloads. If you're looking to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit.
+Sort of. PlantIT is flexible enough to run nearly any container-friendly code, but is intended for and suited to phenomics workloads. If you want to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit.
 
 <br>
  
@@ -78,10 +78,8 @@ PlantIT is not:
 - a container orchestrator (e.g., [Kubernetes](https://kubernetes.io/))
 - a cluster resource manager (e.g., [Torque/Moab](https://adaptivecomputing.com/cherry-services/torque-resource-manager/), [Slurm](https://slurm.schedmd.com/overview.html))
 
-PlantIT just glues tools like these together.
-
 PlantIT is a bit like [Metaflow](https://metaflow.org/) tuned for plant phenomics, minus the Python DSL, with a web application bolted on top. Metaflow's documentation [states](https://docs.metaflow.org/introduction/what-is-metaflow#infrastructure-stack-for-data-science):
 
 ```Internally, Metaflow leverages existing infrastructure when feasible... it is tightly integrated with Amazon Web Services. The core value proposition of Metaflow is its integrated full-stack, human-centric API, rather than reinvention of the stack itself.```
 
-PlantIT embraces a similar philosophy; just substitute [Cyverse](https://www.cyverse.org)/[Github](https://www.github.com/)/HPC for AWS.
+PlantIT embraces a similar philosophy; just substitute [Cyverse](https://www.cyverse.org)/[Github](https://www.github.com/)/HPC for AWS. PlantIT is about *integrations*: it just glues stuff together in useful ways.

@@ -28,7 +28,7 @@ export default {
     name: 'Logout',
     data() {
         return {
-            seconds: 3
+            seconds: 1
         };
     },
     methods: {
