@@ -54,7 +54,7 @@ To set up a new (or restore a clean) development environment, run `dev/bootstrap
 - Configure a mock iRODS server
 - Build the Vue front end
 
-Bring everything up with `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up` (`-d` for detached mode).
+Bring everything up with `docker-compose -f docker-compose.dev.yml up` (`-d` for detached mode).
 
 This will start a number of containers:
 
@@ -70,7 +70,7 @@ The Django admin interface is at `http://localhost/admin/`.
 
 #### Tests
 
-Tests can be run with `docker-compose -f docker-compose.yml -f docker-compose.dev.yml run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py test`.
+Tests can be run with `docker-compose -f docker-compose.dev.yml run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py test`.
 
 ### Production
 
@@ -84,7 +84,7 @@ To configure PlantIT for deployment, run `./dev/bootstrap.sh -p` (`-p` for produ
 - Collect static files:
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./manage.py collectstatic --no-input
+docker-compose -f docker-compose.prod.yml run plantit ./manage.py collectstatic --no-input
 ```
 
 - Configure NGINX `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN
@@ -92,7 +92,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml run plantit ./ma
 Bring containers up with:
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+docker-compose -f docker-compose.prod.yml up
 ```
 
 This will start the following:

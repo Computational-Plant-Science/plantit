@@ -6,9 +6,9 @@ before_install:
 - chmod +x dev/bootstrap.sh
 script:
 - "./dev/bootstrap.sh"
-- docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-- docker-compose -f docker-compose.yml -f docker-compose.dev.yml exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coverage run --source='.' ./manage.py test
-- docker-compose -f docker-compose.yml -f docker-compose.dev.yml exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
+- docker-compose -f docker-compose.dev.yml up -d
+- docker-compose -f docker-compose.dev.yml exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coverage run --source='.' ./manage.py test
+- docker-compose -f docker-compose.dev.yml exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
 deploy:
 - provider: script
   script: bash dev/deploy-ssh.sh

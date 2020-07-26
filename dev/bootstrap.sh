@@ -15,10 +15,10 @@ shift "$(( OPTIND - 1 ))"
 
 if [[ "$useprod" -eq 0 ]]; then
   echo "Bootstrapping ${PWD##*/} for development..."
-  compose="docker-compose -f docker-compose.yml -f docker-compose.dev.yml"
+  compose="docker-compose -f docker-compose.dev.yml"
 else
   echo "Bootstrapping ${PWD##*/} for production..."
-  compose="docker-compose -f docker-compose.yml -f docker-compose.prod.yml"
+  compose="docker-compose -f docker-compose.prod.yml"
 fi
 
 echo "Bringing containers down..."
