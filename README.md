@@ -79,23 +79,26 @@ In production configuration:
 - Django runs behind Gunicorn (both in the same container) which runs behind NGINX (in a separate container)
 - NGINX serves static assets and acts as a reverse proxy
 
-To configure PlantIT for deployment, run `./dev/bootstrap.sh -p` (`-p` for production). This will do everything detailed above except configuring a mock iRODS server. Additionally, it will:
+To configure PlantIT for deployment, first clone the repo, then run `./dev/deploy.sh <host IP or FQDN>` from the root directory. This script is idempotent and may safely be triggered to run by e.g., a CI/CD server. This will:
 
+- Bring containers down
+- Fetch the latest version of the project
+- Pull the latest versions of Docker containers
+- Build the Vue front end
 - Collect static files:
 
 ```bash
 docker-compose -f docker-compose.prod.yml run plantit ./manage.py collectstatic --no-input
 ```
 
-- Configure NGINX `server_name` in `config/ngnix/conf.d/local.conf` to match the host's IP or FQDN
+- Configure NGINX (replace `localhost` in `config/ngnix/conf.d/local.conf` with the host's IP or FQDN)
+- Configure environment variables (disable debugging, enable SSL and secure cookies, etc)
+- Bring containers up
+- Run migrations
+- Create a superuser (if one does not already exist)
+- Configure the `sandbox` deployment target (if not already configured
 
-Bring containers up with:
-
-```bash
-docker-compose -f docker-compose.prod.yml up
-```
-
-This will start the following:
+At this point the following containers should be running:
 
 - `plantit`: Django web application (`http://localhost:80`)
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
@@ -139,7 +142,7 @@ GITHUB_SECRET=some_secret
 
 Note that `DJANGO_SECRET_KEY`, `DJANGO_FIELD_ENCRYPTION_KEY`, and `SQL_PASSWORD` are given dummy values above. Executing `dev/bootstrap.sh` in a clean (empty) install directory will generate secure values.
 
-Reconfigure the following variables for production environments:
+The following variables must be reconfigured for production environments (`dev/deploy` will automatically do so):
 
 - `NODE_ENV` should be set to `production`
 - `DJANGO_DEBUG` should be set to `False`
