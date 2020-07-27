@@ -93,7 +93,7 @@ services:
       - 443:443
     volumes:
       - ./config/ssl/:/opt/plantit/config/ssl/
-      - ./config/nginx/conf.d:/opt/plantit/config/nginx/conf.d
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
       - ./config/letsencrypt/:/etc/letsencrypt/
       - ./plantit/static/:/opt/plantit/static/:ro
       - ./plantit/files/public/:/opt/plantit/public/:ro
