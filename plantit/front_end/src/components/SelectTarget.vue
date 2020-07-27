@@ -54,8 +54,8 @@ export default {
                     label: 'Name'
                 },
                 {
-                    key: 'host',
-                    label: 'Host'
+                    key: 'description',
+                    label: 'Description'
                 }
             ],
             clusters: [],

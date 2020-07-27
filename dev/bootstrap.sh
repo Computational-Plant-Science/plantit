@@ -54,7 +54,10 @@ $compose exec plantit /code/dev/configure-superuser.sh -u "$admin_username" -p "
 
 echo "Configuring sandbox deployment target container..."
 $compose up -d sandbox
-$compose exec plantit /bin/bash /root/configure-sandbox.sh
+$compose exec plantit /bin/bash /code/dev/configure-sandbox.sh
+if [ ! -d config/ssh ]; then
+  mkdir config/ssh
+fi
 if [ ! -f config/ssh/known_hosts ]; then
   touch config/ssh/known_hosts
   $compose exec plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"

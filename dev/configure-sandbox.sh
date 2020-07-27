@@ -3,15 +3,15 @@
 echo "Configuring sandbox deployment target..."
 
 script="
-from plantit.runs.models import Cluster
+from plantit.runs.models.cluster import Cluster
 
 name = 'Sandbox'
-description = 'An Ubuntu 18.04 deployment target suitable for workflow test runs. Executes workflows in-process and does not support parallelization.'
+description = 'A cluster-in-a-container suitable for lightweight, in-process test deployments.'
 workdir = 'test'
 username = 'root'
 password = 'root'
 port = 22
-hostname = sandbox
+hostname = 'sandbox'
 
 if Cluster.objects.filter(name=name).count()==0:
     Cluster.objects.create(name=name, description=description, workdir=workdir, username=username, password=password, port=port, hostname=hostname)
