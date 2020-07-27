@@ -16,8 +16,8 @@ COPY . ./
 RUN pip install -r dev/dockerfiles/plantit/requirements.txt
 RUN chmod +x dev/configure-irods.sh
 RUN chmod +x dev/configure-superuser.sh
+RUN chmod +x dev/configure-sandbox.sh
 RUN chmod +x dev/wait-for-it.sh
-RUN chmod +x dev/wait-for-postgres.sh
 RUN chmod +x dev/ssh-copy-id.expect
 RUN pip3 install coveralls
 

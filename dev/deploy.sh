@@ -41,6 +41,7 @@ $compose exec plantit python manage.py makemigrations
 $compose exec plantit python manage.py migrate
 
 echo "Creating superuser (if one does not already exist)..."
+env_file=".env"
 admin_password=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_PASSWORD" "$env_file")" )
 admin_username=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_USERNAME" "$env_file")" )
 admin_email=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_EMAIL" "$env_file")" )
@@ -48,7 +49,7 @@ $compose exec plantit /code/dev/configure-superuser.sh -u "$admin_username" -p "
 
 echo "Configuring sandbox deployment target container (if not already configured)..."
 $compose up -d sandbox
-$compose exec plantit /bin/bash /root/configure-sandbox.sh
+$compose exec plantit /bin/bash /code/dev/configure-sandbox.sh
 if [ -f config/ssh/known_hosts ]; then
   touch config/ssh/known_hosts
   $compose exec plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
