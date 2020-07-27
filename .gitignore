@@ -257,3 +257,5 @@ db/
 *.xcf
 
 dagster.yaml
+
+plantit/.telemetry
