@@ -85,18 +85,13 @@ To configure PlantIT for deployment, first clone the repo, then run `./dev/deplo
 - Fetch the latest version of the project
 - Pull the latest versions of Docker containers
 - Build the Vue front end
-- Collect static files:
-
-```bash
-docker-compose -f docker-compose.prod.yml run plantit ./manage.py collectstatic --no-input
-```
-
+- Collect static files
 - Configure NGINX (replace `localhost` in `config/ngnix/conf.d/local.conf` with the host's IP or FQDN)
 - Configure environment variables (disable debugging, enable SSL and secure cookies, etc)
 - Bring containers up
 - Run migrations
 - Create a superuser (if one does not already exist)
-- Configure the `sandbox` deployment target (if not already configured
+- Configure the `sandbox` deployment target (if not already configured)
 
 At this point the following containers should be running:
 
