@@ -61,16 +61,16 @@ This will start a number of containers:
 - `plantit`: Django web application (`http://localhost:80`)
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `celery`: Celery worker
-- `sandbox`: sandbox deployment target
+- `sandbox`: test deployment target
 - `irods`: mock IRODS server
 
-To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and enter username `admin` and password `admin`.
+To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and use the values for `DJANGO_ADMIN_USERNAME` and `DJANGO_ADMIN_PASSWORD` configured in `.env`.
 
 The Django admin interface is at `http://localhost/admin/`.
 
 #### Tests
 
-Tests can be run with `docker-compose -f docker-compose.dev.yml run plantit /code/dev/wait-for-postgres.sh postgres ./manage.py test`.
+Tests can be run with `docker-compose -f docker-compose.dev.yml run plantit ./manage.py test`.
 
 ### Production
 
@@ -119,49 +119,40 @@ key=value
 VUE_APP_TITLE=plantit
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
-DJANGO_SECRET_KEY=some_secret_key
+DJANGO_SECRET_KEY=some_key
 DJANGO_DEBUG=True
-DJANGO_FIELD_ENCRYPTION_KEY=some_encryption_key
-DJANGO_API_URL=http://localhost/apis/v1/
+DJANGO_FIELD_ENCRYPTION_KEY=$field_encryption_key
+DJANGO_API_URL=http://plantit/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
 DJANGO_ADMIN_USERNAME=admin
+DJANGO_ADMIN_EMAIL=admin@example.com
 DJANGO_ADMIN_PASSWORD=some_password
 DJANGO_SECURE_SSL_REDIRECT=False
-SQL_ENGINE=django.db.backends.postgresql
-SQL_HOST=postgres
-SQL_PORT=5432
-SQL_NAME=postgres
-SQL_USER=postgres
-SQL_PASSWORD=some_password
-GRAYLOG_GELF_URI=http://localhost:12201
-GRAYLOG_HTTP_EXTERNAL_URI=http://localhost:9000
+DJANGO_SESSION_COOKIE_SECURE=False
+DJANGO_CSRF_COOKIE_SECURE=False
+SQL_ENGINE=django.db.backends.sqlite3
+GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
+GITHUB_REDIRECT_URI=http://<host>/apis/v1/profiles/github_handle_temporary_code/
+GITHUB_KEY=d15df2f5710e9597290f
+GITHUB_SECRET=some_secret
 ```
 
 Note that `DJANGO_SECRET_KEY`, `DJANGO_FIELD_ENCRYPTION_KEY`, and `SQL_PASSWORD` are given dummy values above. Executing `dev/bootstrap.sh` in a clean (empty) install directory will generate secure values.
 
-In addition to the environment variables listed above, the following is required to run PlantIT in staging or production:
+Reconfigure the following variables for production environments:
 
-- `GRAYLOG_GELF_URI`: the endpoint to route log messages to (e.g., the pre-configured value `udp://localhost:12201` if Graylog server is running on the same host as PlantIT)
-- `GRAYLOG_HTTP_EXTERNAL_URI`: the Graylog server HTTP API endpoint (e.g., the pre-configured value `http://localhost:9000/`)
 - `NODE_ENV` should be set to `production`
 - `DJANGO_DEBUG` should be set to `False`
 - `DJANGO_SECURE_SSL_REDIRECT` should be set to `True`
 - `DJANGO_API_URL` should point to the host's IP or FQDN
 
-The following variables are required only in production:
+## Deployment targets
 
-- `VUE_APP_ANALYTICS_ID`: provided by Google Analytics
-- `VUE_APP_SENTRY_IO_KEY`: provided by Sentry
-- `VUE_APP_SENTRY_IO_PROJECT`: provided by Sentry
+Deployment targets may be configured via the Django admin interface. Note that [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) must be installed on the target. In some environments, [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) may not automatically be added to `$PATH` upon installation; either update `$PATH` or use `plantit-cli`'s absolute path.
 
-## Compute targets
+PlantIT uses `paramiko` to orchestrate workflows on deployment targets over SSH. Password and public-key authentication are supported; to use a key, leave the `password` field blank and provide the `plantit` container with a key and fingerprint in `config/ssh/`:
 
-Targets are added via the Django admin interface. Note that [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) must be installed on the target. In some environments, [`plantit-cli`](https://github.com/Computational-Plant-Science/plantit-cli) may not automatically be added to `$PATH` upon installation; either update `$PATH` or use `plantit-cli`'s absolute path.
+- `config/ssh/id_rsa`
+- `config/ssh/known_hosts`
 
-PlantIT supports both ssh password and public-key based
-login. To use public-key login, leave the Password field blank. Public-key login requires the private key and a known_hosts list to be available. Plant IT expects this data to be in the following two files:
-
-- `config/ssh/id_rsa`: The private key used for login
-- `config/ssh/known_hosts`: The known_hosts file.
-
-The easiest way to setup public-key logins is to configure the keys for login from the web server, then copy the configured `id_rsa` and `known_hosts` files from the web server user (typically in `$HOME/.ssh/`) to `config/ssh/`
+Key authentication is configured for the `sandbox` deployment target when bootstrapping or deploying PlantIT; refer to `dev/bootstrap.sh` or `dev/deploy` for more detail.
