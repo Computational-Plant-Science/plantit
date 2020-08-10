@@ -7,17 +7,9 @@ from django.core.files.storage import Storage
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
 
-from .store import AbstractStorageType
-
 
 # to be deprecated
 class IRODSFileSystem(Storage):
-    """
-        Implements basic file stroage on a iRODS_ filesystem. It inherits from
-        Storage and provides implementations for all the public methods thereof.
-
-        .. _iRODS: https://irods.org/
-    """
 
     def __init__(self, host, port, user, password, zone, path='/'):
         self.session = iRODSSession(host=host, port=port, user=user, password=password, zone=zone)
@@ -76,40 +68,6 @@ class IRODSFileSystem(Storage):
     def size(self, name):
         obj = self.session.data_objects.get(self._mkpath(name))
         return obj.size
-
-
-# to be deprecated
-class IRODSStore(AbstractStorageType):
-    """
-        Implements an AbstractStorageType for the IRodsFileSystem storage type,
-        which provides access to an iRODS_ server file system.
-
-        Attributes:
-            name: Server Name
-            username: Login username
-            password: Login password
-            port: connection port
-            hostname: hostname of server
-            zone: irodsZone
-
-        .. _iRODS: https://irods.org/
-    """
-
-    def __init__(self, name, username, password, hostname, zone, port=1247):
-        self.name = name
-        self.username = username
-        self.password = password
-        self.port = port
-        self.hostname = hostname
-        self.zone = zone
-
-    def open(self, path):
-        return IRODSFileSystem(host=self.hostname,
-                               port=self.port,
-                               user=self.username,
-                               password=self.password,
-                               zone=self.zone,
-                               path=path)
 
 
 class IRODSOptions:
@@ -201,3 +159,53 @@ class IRODS:
         session.data_objects.put(local, remote)
         session.cleanup()
 
+    def save(self, path, content):
+        session = iRODSSession(host=self.options.host,
+                               port=self.options.port,
+                               user=self.options.user,
+                               password=self.options.password,
+                               zone=self.options.zone)
+        file = session.data_objects.create(path)
+
+        with file.open('r+') as f:
+            f.write(content.read())
+
+        return file.name
+
+    def delete(self, path):
+        session = iRODSSession(host=self.options.host,
+                               port=self.options.port,
+                               user=self.options.user,
+                               password=self.options.password,
+                               zone=self.options.zone)
+
+        file = session.data_objects.get(path)
+        session.data_objects.unlink(path)
+        return file.name
+
+    def read(self, path):
+        session = iRODSSession(host=self.options.host,
+                               port=self.options.port,
+                               user=self.options.user,
+                               password=self.options.password,
+                               zone=self.options.zone)
+
+        return session.data_objects.get(path).open('r')
+
+    def create_collection(self, path):
+        session = iRODSSession(host=self.options.host,
+                               port=self.options.port,
+                               user=self.options.user,
+                               password=self.options.password,
+                               zone=self.options.zone)
+
+        session.collections.create(path)
+
+    def delete_collection(self, path):
+        session = iRODSSession(host=self.options.host,
+                               port=self.options.port,
+                               user=self.options.user,
+                               password=self.options.password,
+                               zone=self.options.zone)
+
+        session.collections.remove(path, recurse=True, force=True)

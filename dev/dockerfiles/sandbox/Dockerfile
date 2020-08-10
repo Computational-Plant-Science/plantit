@@ -31,6 +31,8 @@ COPY ./dev/configure-irods.sh /root/
 RUN chmod +x /root/wait-for-it.sh
 RUN chmod +x /root/configure-irods.sh
 
+RUN mkdir /test
+
 RUN mkdir -p /opt/plantit-cli-home \
     && mkdir -p /opt/plantit-cli
 WORKDIR /opt/plantit-cli

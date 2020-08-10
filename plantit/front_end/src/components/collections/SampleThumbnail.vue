@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import CollectionApi from '@/services/apiV1/CollectionManager';
+import CollectionApi from '@/services/apiV1/DatasetManager';
 
 export default {
     /**

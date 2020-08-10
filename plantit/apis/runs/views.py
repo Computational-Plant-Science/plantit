@@ -4,7 +4,6 @@ from rest_framework.decorators import action, api_view
 
 from plantit.runs.models.run import Run
 from plantit.runs.models.status import Status
-from plantit.stores.services import download_stream
 
 
 @action(methods=['get'], detail=False)
@@ -93,8 +92,7 @@ def update_status(request, id):
 
 @login_required
 def get_results(request, pk):
-    run = Run.objects.get(pk=pk)
+    pass
+    # run = Run.objects.get(pk=pk)
+    # return download_stream(request, run.remote_results_path)
 
-    return download_stream(run.collection.storage_type,
-                           run.remote_results_path,
-                           request.user)

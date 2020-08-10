@@ -52,7 +52,11 @@
                     >
                         <template slot="header">
                             <b-row>
-                                <b-col md="auto" align-self="center" class="mr-0">
+                                <b-col
+                                    md="auto"
+                                    align-self="center"
+                                    class="mr-0"
+                                >
                                     <h2>Logs</h2>
                                 </b-col>
                                 <b-col md="auto" class="m-0">
@@ -63,8 +67,8 @@
                                         @click="reloadRun(true)"
                                     >
                                         <i class="fas fa-redo"></i>
-                                    </b-button>
-                                </b-col><b-col md="auto" class="ml-0">
+                                    </b-button> </b-col
+                                ><b-col md="auto" class="ml-0">
                                     <b-alert
                                         class="m-0 pt-2 pb-2"
                                         :show="reloadAlertDismissCountdown"
@@ -119,7 +123,11 @@
                                                         ? 'danger'
                                                         : 'success'
                                                 "
-                                                >{{ statusToString(status.item.state) }}
+                                                >{{
+                                                    statusToString(
+                                                        status.item.state
+                                                    )
+                                                }}
                                             </b-badge>
                                         </h4>
                                     </template>

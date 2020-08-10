@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "Deploying ${PWD##*/}..."
 host="$1"
 compose="docker-compose -f docker-compose.prod.yml"
 

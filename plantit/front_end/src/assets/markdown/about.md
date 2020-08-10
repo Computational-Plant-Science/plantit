@@ -40,21 +40,17 @@ PlantIT makes the computer do some of the painful bits.
 
 ---
 
-- access your data
-- upload your data
-- acquire a DOI for and publish your data
-- associate metadata with your data
 - access public datasets
-- automatically feed your data to a workflow
-- containerize your workflow
-- run your workflow
-- run a public workflow
-- collaborate on workflows and data
-- develop and share a new workflow
-- download the results of your workflow
-- automatically push workflow results to a data store
-- trigger a workflow to run when your code or data changes
-- *think less about infrastructure and more about science*
+- access or upload your own datasets
+- associate metadata with your datasets
+- acquire a DOI for and publish your datasets
+- deploy a workflow to a HPC/HTC cluster
+- download workflow results
+- upload workflow results as a new dataset
+- trigger a workflow to run when it or your dataset changes
+- develop a new workflow
+- publish workflows to the community
+- **think less about infrastructure and more about science**
 
 <br>
 
@@ -62,24 +58,17 @@ PlantIT makes the computer do some of the painful bits.
 
 ---
 
-Sort of. PlantIT is flexible enough to run nearly any container-friendly code, but is intended for and suited to phenomics workloads. If you want to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit.
+Sort of. PlantIT is a browser-based data science portal for plant phenomics. PlantIT is flexible enough to run nearly any container-friendly workload, but if you want to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit.
 
 <br>
  
-### Is PlantIT a workflow management system?
+### PlantIT is not a...
 
 ---
 
-PlantIT is not:
+- computational pipeline framework (e.g., [Snakemake](https://snakemake.readthedocs.io/en/stable/), [Nextflow](https://www.nextflow.io/), [Luigi](https://luigi.readthedocs.io/en/stable/), [Airflow](https://airflow.apache.org/), [Metaflow](https://metaflow.org/))
+- distributed queue or task scheduler (e.g., [Celery](https://docs.celeryproject.org/en/stable/index.html) or [Dask](https://dask.org/), respectively)
+- batch processing, dataflow/streaming, or analytics framework (e.g., [Spark](https://spark.apache.org/))
+- container orchestrator (e.g., [Kubernetes](https://kubernetes.io/))
+- cluster resource manager (e.g., [Torque/Moab](https://adaptivecomputing.com/cherry-services/torque-resource-manager/), [Slurm](https://slurm.schedmd.com/overview.html))
 
-- a workflow engine (e.g., [Snakemake](https://snakemake.readthedocs.io/en/stable/), [Nextflow](https://www.nextflow.io/), [Luigi](https://luigi.readthedocs.io/en/stable/), [Airflow](https://airflow.apache.org/))
-- a distributed queue or task scheduler (e.g., [Celery](https://docs.celeryproject.org/en/stable/index.html) or [Dask](https://dask.org/), respectively)
-- a batch processing, dataflow/streaming, or analytics framework (e.g., [Spark](https://spark.apache.org/))
-- a container orchestrator (e.g., [Kubernetes](https://kubernetes.io/))
-- a cluster resource manager (e.g., [Torque/Moab](https://adaptivecomputing.com/cherry-services/torque-resource-manager/), [Slurm](https://slurm.schedmd.com/overview.html))
-
-PlantIT is a bit like [Metaflow](https://metaflow.org/) tuned for plant phenomics, minus the Python DSL, with a web application bolted on top. Metaflow's documentation [states](https://docs.metaflow.org/introduction/what-is-metaflow#infrastructure-stack-for-data-science):
-
-```Internally, Metaflow leverages existing infrastructure when feasible... it is tightly integrated with Amazon Web Services. The core value proposition of Metaflow is its integrated full-stack, human-centric API, rather than reinvention of the stack itself.```
-
-PlantIT embraces a similar philosophy; just substitute [Cyverse](https://www.cyverse.org)/[Github](https://www.github.com/)/HPC for AWS. PlantIT is about *integrations*: it just glues stuff together in useful ways.

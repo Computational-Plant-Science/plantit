@@ -19,9 +19,8 @@
         <div class="p-5 m-0" style="min-height: 100%">
             <b-container>
                 <b-row align-content="center">
-                    <b-col class="text-center">
-                        This page is under construction.
-                        <!--<VueMarkdown :source="source"> </VueMarkdown>-->
+                    <b-col>
+                        <VueMarkdown :source="source"> </VueMarkdown>
                     </b-col>
                 </b-row>
             </b-container>
@@ -30,13 +29,13 @@
 </template>
 
 <script>
-// import VueMarkdown from 'vue-markdown';
+import VueMarkdown from 'vue-markdown';
 import guide from '../assets/markdown/guide.md';
 
 export default {
     name: 'Guide',
     components: {
-        // VueMarkdown
+        VueMarkdown
     },
     data() {
         return {

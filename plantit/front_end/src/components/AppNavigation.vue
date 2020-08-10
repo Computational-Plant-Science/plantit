@@ -21,7 +21,7 @@
                                     ></b-spinner>
                                 </i>
                                 <span v-else-if="!info">guest</span>
-                                <span v-else>{{ info.first_name }}</span
+                                <span v-else>{{ info.first_name ? info.first_name : info.username }}</span
                                 >.
                             </b>
                         </b-col>
@@ -253,6 +253,17 @@
                             Link GitHub Account
                         </b-button>
                     </b-nav-item>
+                  <b-nav-item
+                        v-if="isLoggedIn"
+                        title="Datasets"
+                        to="/datasets"
+                        class="m-0 p-0"
+                    >
+                        <b-button variant="outline-dark">
+                            <i class="fas fa-database fa-1x fa-fw"></i>
+                            Datasets
+                        </b-button>
+                    </b-nav-item>
                     <b-nav-item
                         v-if="isLoggedIn"
                         title="Workflows"
@@ -285,7 +296,7 @@
                             <i class="fas fa-user fa-1x"></i>
                             {{
                                 info.first_name
-                                    ? info.first_name
+                                    ?  info.first_name + ' (' + info.username + ')'
                                     : info.username
                             }}
                         </b-button>

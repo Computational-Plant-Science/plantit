@@ -89,7 +89,7 @@
 <script>
 import EditMetadataModal from '@/components/collections/EditMetadataModal';
 import SampleThumbnail from '@/components/collections/SampleThumbnail';
-import CollectionApi from '@/services/apiV1/CollectionManager';
+import CollectionApi from '@/services/apiV1/DatasetManager';
 
 export default {
     name: 'CollectionThumbnails',

@@ -2,20 +2,15 @@
     <b-modal
         :id="modalId"
         title="Edit Description"
-        ok-title="Save"
         @cancel="cancel"
         @close="cancel"
         @ok="save"
         no-close-on-backdrop
         centered
-        ok-variant="outline-dark"
-        cancel-variant="outline-danger"
         hide-header-close
-        header-bg-variant="dark"
-        header-border-variant="dark"
-        footer-bg-variant="white"
-        footer-border-variant="white"
-        header-text-variant="white"
+        ok-title="Save"
+        ok-variant="success"
+        cancel-variant="outline-danger"
     >
         <b-form-group v-if="description !== null" label-for="description">
             <b-form-textarea

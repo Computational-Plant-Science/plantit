@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Bootstrapping ${PWD##*/} development environment..."
+compose="docker-compose -f docker-compose.dev.yml"
 nocache=0
 
 while getopts 'np' opt; do
@@ -10,9 +12,6 @@ while getopts 'np' opt; do
     esac
 done
 shift "$(( OPTIND - 1 ))"
-
-echo "Bootstrapping ${PWD##*/} development environment..."
-compose="docker-compose -f docker-compose.dev.yml"
 
 echo "Bringing containers down..."
 $compose down --remove-orphans

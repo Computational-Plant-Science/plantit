@@ -50,8 +50,8 @@
                 />
             </td>
             <td>
-                <b-button @click="addField">
-                    <i class="fas fa-plus"></i>
+                <b-button @click="addField" variant="success">
+                    Save
                 </b-button>
             </td>
         </tr>
@@ -62,29 +62,10 @@
 import ClickToEdit from '@/components/collections/ClickToEdit';
 
 export default {
-    /*
-      This allows editing of an objects metadata, for example for a Sample
-      or Collection. Metdata is an array of objects with a "name" and "value"
-      property. Both are saved as strings.
-
-      Events:
-        unsaved(): emits true when there is unsaved metadata (i.e.) text
-        in the input boxes, false when the input boxes are empty
-
-     */
     components: {
         ClickToEdit
     },
     props: {
-        //The objects metadata. Provided as an arry of objects of key (name) and
-        // value (value) pairs.
-        // metadata: [
-        //  {
-        //    name: "Name of metadata value",
-        //      value: "value of metadata"
-        //  },
-        //  ...
-        // ]
         metadata: {
             type: Array,
             required: true
@@ -96,8 +77,6 @@ export default {
     },
     data: function() {
         return {
-            // Keeps the values for a new metadata value to be added to the
-            // metadata array.
             newField: {
                 type: Object,
                 required: false,
@@ -118,17 +97,17 @@ export default {
                 value: ''
             };
             this.$refs.newField.focus();
-            this.$emit('input', this.metadata);
+            this.$emit('addMetadatum', this.metadata);
             this.edited();
         },
         deleteField(idx) {
             this.$delete(this.metadata, idx);
-            this.$emit('input', this.metadata);
+            this.$emit('removeMetadatum', this.metadata);
         },
         edited() {
             this.$emit(
                 'unsaved',
-                !(this.newField.name == '' && this.newField.value == '')
+                !(this.newField.name === '' && this.newField.value === '')
             );
         }
     }

@@ -43,6 +43,24 @@ GITHUB_KEY = os.environ.get('GITHUB_KEY')
 assert 'GITHUB_SECRET' in os.environ, f"{NO_ENV_VAR}: GITHUB_SECRET"
 GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
 
+assert 'IRODS_HOST' in os.environ, f"{NO_ENV_VAR}: IRODS_HOST"
+IRODS_HOST = os.environ.get('IRODS_HOST')
+
+assert 'IRODS_PORT' in os.environ, f"{NO_ENV_VAR}: IRODS_PORT"
+IRODS_PORT = os.environ.get('IRODS_PORT')
+
+assert 'IRODS_ZONE' in os.environ, f"{NO_ENV_VAR}: IRODS_ZONE"
+IRODS_ZONE = os.environ.get('IRODS_ZONE')
+
+assert 'IRODS_USERNAME' in os.environ, f"{NO_ENV_VAR}: IRODS_USERNAME"
+IRODS_USERNAME = os.environ.get('IRODS_USERNAME')
+
+assert 'IRODS_PASSWORD' in os.environ, f"{NO_ENV_VAR}: IRODS_PASSWORD"
+IRODS_PASSWORD = os.environ.get('IRODS_PASSWORD')
+
+assert 'IRODS_BASEPATH' in os.environ, f"{NO_ENV_VAR}: IRODS_BASEPATH"
+IRODS_BASEPATH = os.environ.get('IRODS_BASEPATH')
+
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "/assets/"
 STATICFILES_DIRS = (

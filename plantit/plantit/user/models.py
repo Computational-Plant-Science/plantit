@@ -1,3 +1,6 @@
+from os.path import join
+
+from django.conf import settings
 from django.db import models
 
 from django.contrib.auth.models import User
@@ -8,8 +11,8 @@ from encrypted_model_fields.fields import EncryptedCharField
 
 from plantit.collection.models import Collection
 
-# Create your models here.
 from plantit.runs.models.run import Run
+from plantit.stores.irodsstore import IRODS, IRODSOptions
 
 
 class Profile(models.Model):
@@ -40,14 +43,21 @@ class Profile(models.Model):
     pinned_collections: Manager = models.ManyToManyField(Collection, related_name='profile_pins', blank=True)
 
 
+def __irods():
+    return IRODS(IRODSOptions(settings.IRODS_HOST,
+                              int(
+                                  settings.IRODS_PORT),
+                              settings.IRODS_USERNAME,
+                              settings.IRODS_PASSWORD,
+                              settings.IRODS_ZONE))
+
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    """
-        Post-Create hook for django User objects that creates a repective
-        profile object for the user.
-    """
     if created:
         Profile.objects.create(user=instance)
+        irods = __irods()
+        irods.create_collection(join(settings.IRODS_BASEPATH, instance.username))
     else:
         instance.profile.save()
 

@@ -4,6 +4,8 @@ import Home from './views/Home.vue';
 import About from './views/About.vue';
 import Guide from './views/Guide.vue';
 import Docs from './views/Docs.vue';
+import Datasets from './views/Datasets.vue';
+import Dataset from './views/Dataset.vue';
 import Workflows from './views/Workflows.vue';
 import Workflow from './views/Workflow.vue';
 import Runs from './views/Runs.vue';
@@ -119,6 +121,43 @@ let router = new Router({
                     {
                         text: 'Log Out',
                         href: '/logout'
+                    }
+                ]
+            }
+        },
+        {
+            path: '/datasets',
+            name: 'datasets',
+            component: Datasets,
+            meta: {
+                title: 'Datasets',
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/'
+                    },
+                    {
+                        text: 'Datasets',
+                        href: '/datasets'
+                    }
+                ]
+            }
+        },
+        {
+            path: '/datasets/:owner/:name',
+            name: 'dataset',
+            props: true,
+            component: Dataset,
+            meta: {
+                title: 'Dataset',
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/'
+                    },
+                    {
+                        text: 'Datasets',
+                        href: '/datasets'
                     }
                 ]
             }
@@ -240,6 +279,9 @@ let router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
+    if (to.name === 'dataset') {
+        to.meta.title = `Dataset: ${to.params.name}`;
+    }
     if (to.name === 'workflow') {
         to.meta.title = `Workflow: ${to.params.name}`;
     }
@@ -248,6 +290,22 @@ router.beforeEach((to, from, next) => {
     }
     if (to.meta.name !== null) {
         document.title = to.meta.title;
+    }
+    if (to.matched.some(record => record.name === 'dataset')) {
+        if (to.meta.crumb.length === 4) {
+            to.meta.crumb.pop();
+            to.meta.crumb.pop();
+        }
+        to.meta.crumb.push(
+            {
+                text: to.params.owner,
+                href: `/dataset/${to.params.owner}`
+            },
+            {
+                text: to.params.name,
+                href: `/dataset/${to.params.owner}/${to.params.name}`
+            }
+        );
     }
     if (to.matched.some(record => record.name === 'workflow')) {
         if (to.meta.crumb.length === 4) {
@@ -262,7 +320,7 @@ router.beforeEach((to, from, next) => {
             {
                 text: to.params.name,
                 href: `/workflows/${to.params.owner}/${to.params.name}`
-            },
+            }
         );
     }
     if (to.matched.some(record => record.name === 'run')) {
@@ -278,11 +336,9 @@ router.beforeEach((to, from, next) => {
         if (!Auth.isLoggedIn()) {
             window.location = '/login/?next=' + to.fullPath;
         } else {
-            //User is logged in
             next();
         }
     } else {
-        //No Auth required
         next();
     }
 });

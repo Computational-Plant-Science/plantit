@@ -52,9 +52,7 @@
                             </b-col>
                         </b-row>
                     </template>
-                    <b-card-body>
-                        <EditParameters :params="params"></EditParameters>
-                    </b-card-body>
+                    <EditParameters :params="params"></EditParameters>
                 </b-card>
                 <br />
             </b-col>
@@ -73,10 +71,10 @@
                         <b-row align-v="center">
                             <b-col style="color: white">
                                 <h2>
-                                    From
-                                    <b>{{
+                                    Configure <b>Input</b>
+                                    <!--<b>{{
                                         workflow.config.from.capitalize()
-                                    }}</b>
+                                    }}</b>-->
                                     <i
                                         class="ml-2 fas fa-exclamation text-warning"
                                         v-if="inputUnready"
@@ -89,13 +87,11 @@
                             </b-col>
                         </b-row>
                     </template>
-                    <b-card-body>
-                        <EditInput
-                            :user="user"
-                            :kind="workflow.config.from"
-                            v-on:inputSelected="onInputSelected"
-                        ></EditInput>
-                    </b-card-body>
+                    <EditInput
+                        :user="user"
+                        :kind="workflow.config.from"
+                        v-on:inputSelected="onInputSelected"
+                    ></EditInput>
                 </b-card>
                 <br />
             </b-col>
@@ -114,8 +110,8 @@
                         <b-row align-v="center">
                             <b-col style="color: white">
                                 <h2>
-                                    To
-                                    <b>{{ workflow.config.to.capitalize() }}</b>
+                                    Configure <b>Output</b>
+                                    <!--<b>{{ workflow.config.to.capitalize() }}</b>-->
                                     <i
                                         class="ml-2 fas fa-exclamation text-warning"
                                         v-if="outputUnready"
@@ -128,12 +124,10 @@
                             </b-col>
                         </b-row>
                     </template>
-                    <b-card-body>
-                        <EditOutput
-                            :user="user"
-                            v-on:outputSelected="onOutputSelected"
-                        ></EditOutput>
-                    </b-card-body>
+                    <EditOutput
+                        :user="user"
+                        v-on:outputSelected="onOutputSelected"
+                    ></EditOutput>
                 </b-card>
                 <br />
             </b-col>
