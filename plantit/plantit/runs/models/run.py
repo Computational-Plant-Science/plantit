@@ -12,7 +12,7 @@ class Run(models.Model):
     class Meta:
         ordering = ['-created']
 
-    # collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
+    # collection = models.ForeignKey(Dataset, on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now())
     token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

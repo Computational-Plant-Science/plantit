@@ -87,7 +87,7 @@
 </template>
 
 <script>
-import UserApi from '@/services/apiV1/UserManager.js';
+import UserApi from '@/services/apiV1/Users.js';
 
 export default {
     name: 'UserInfo',

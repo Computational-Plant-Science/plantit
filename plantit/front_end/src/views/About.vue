@@ -355,7 +355,7 @@
 </template>
 
 <script>
-import Users from '@/services/apiV1/UserManager';
+import Users from '@/services/apiV1/Users';
 import VueMarkdown from 'vue-markdown';
 import about from '../assets/markdown/about.md';
 

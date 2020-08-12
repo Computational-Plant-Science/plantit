@@ -145,8 +145,8 @@
 
 <script>
 import router from '../router';
-import Workflows from '@/services/apiV1/WorkflowManager';
-import Users from '@/services/apiV1/UserManager.js';
+import Workflows from '@/services/apiV1/Workflows';
+import Users from '@/services/apiV1/Users.js';
 import WorkflowBlurb from '@/components/WorkflowBlurb.vue';
 
 String.prototype.capitalize = function() {

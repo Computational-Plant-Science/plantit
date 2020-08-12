@@ -1,3 +1,3 @@
 from .runs import admin
-from .collection import admin
-from .user import admin
+from .datasets import admin
+from .users import admin

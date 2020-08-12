@@ -53,7 +53,7 @@
                                                 id="edit-description-btn"
                                                 @click="
                                                     $bvModal.show(
-                                                        'editDescriptionModal'
+                                                        'datasetDescriptionModal'
                                                     )
                                                 "
                                                 variant="outline-dark"
@@ -548,12 +548,12 @@
                     </b-overlay>
                 </b-col>
             </b-row>
-            <EditDescriptionModal
-                modal-id="editDescriptionModal"
+            <DatasetDescriptionModal
+                modal-id="datasetDescriptionModal"
                 :description="collection.description"
                 @saveDescription="saveDescription"
             >
-            </EditDescriptionModal>
+            </DatasetDescriptionModal>
         </div>
     </div>
 </template>
@@ -562,14 +562,14 @@
 import router from '../router';
 import VueUpload from 'vue-upload-component';
 import Auth from '@/services/apiV1/Auth';
-import Datasets from '@/services/apiV1/DatasetManager';
-import EditDescriptionModal from '@/components/collections/EditDescriptionModal';
+import Datasets from '@/services/apiV1/Datasets';
+import DatasetDescriptionModal from '@/components/DatasetDescriptionModal';
 
 export default {
     name: 'Dataset',
     components: {
         VueUpload,
-        EditDescriptionModal
+        DatasetDescriptionModal
     },
     beforeRouteLeave(to, from, next) {
         if (!this.metadataChanged) {

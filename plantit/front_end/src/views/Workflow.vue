@@ -181,12 +181,12 @@
 
 <script>
 import WorkflowDetail from '../components/WorkflowDetail';
-import EditParameters from '../components/EditParameters';
-import EditInput from '../components/EditInput';
-import EditOutput from '../components/EditOutput';
-import SelectTarget from '../components/SelectTarget';
-import Workflows from '@/services/apiV1/WorkflowManager';
-import Users from '@/services/apiV1/UserManager';
+import EditParameters from '../components/ConfigureRunParameters';
+import EditInput from '../components/ConfigureRunInput';
+import EditOutput from '../components/ConfigureRunOutput';
+import SelectTarget from '../components/ConfigureRunTarget';
+import Workflows from '@/services/apiV1/Workflows';
+import Users from '@/services/apiV1/Users';
 import router from '../router';
 
 String.prototype.capitalize = function() {

@@ -149,9 +149,9 @@
 
 <script>
 import RunBlurb from '../components/RunBlurb';
-import Workflows from '@/services/apiV1/WorkflowManager';
-import Users from '@/services/apiV1/UserManager';
-import Runs from '@/services/apiV1/RunManager.js';
+import Workflows from '@/services/apiV1/Workflows';
+import Users from '@/services/apiV1/Users';
+import Runs from '@/services/apiV1/Runs.js';
 import moment from 'moment';
 
 export default {

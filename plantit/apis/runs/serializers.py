@@ -3,7 +3,6 @@ from datetime import datetime
 
 from plantit.runs.models.run import Run
 from plantit.runs.models.status import Status
-from ..mixins import PinnedSerilizerMethodMixin
 
 
 class StatusSerializer(serializers.ModelSerializer):
@@ -12,7 +11,7 @@ class StatusSerializer(serializers.ModelSerializer):
         fields = ('state', 'date', 'description')
 
 
-class RunSerializer(serializers.ModelSerializer, PinnedSerilizerMethodMixin):
+class RunSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Run

@@ -216,7 +216,7 @@
 
 <script>
 import router from '../router';
-import Datasets from '@/services/apiV1/DatasetManager';
+import Datasets from '@/services/apiV1/Datasets';
 
 export default {
     name: 'Datasets',
