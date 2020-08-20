@@ -1,11 +1,10 @@
 from rest_framework import authentication
 from rest_framework import exceptions
 
-from .models.run import Run
+from plantit.runs.run import Run
 
 
 class RunTokenAuthentication(authentication.TokenAuthentication):
-
     keyword = 'Token'
     model = None
 

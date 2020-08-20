@@ -83,7 +83,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'encrypted_model_fields',
     'plantit.apps.PlantITConfig',
     'front_end.apps.FrontEndConfig',
     'django_cas_ng',

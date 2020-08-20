@@ -92,7 +92,7 @@ services:
   sandbox:
     build:
       context: .
-      dockerfile: dev/dockerfiles/sandbox/Dockerfile
+      dockerfile: scripts/dockerfiles/sandbox/Dockerfile
     privileged: true
   irods:
     image: mjstealey/irods-provider-postgres:4.2.3

@@ -43,7 +43,7 @@ git clone git@github.com:Computational-Plant-Science/plantit.git
 
 ### Development
 
-To set up a new (or restore a clean) development environment, run `dev/bootstrap.sh` from the project root (you may need to use `chmod +x` first). You can use the `-n` option to disable the Docker build cache. This command will:
+To set up a new (or restore a clean) development environment, run `scripts/bootstrap.sh` from the project root (you may need to use `chmod +x` first). You can use the `-n` option to disable the Docker build cache. This command will:
 
 - Stop and remove project containers and networks
 - If an `.env` file (to configure environment variables) does not exist, generate one with default values
@@ -79,7 +79,7 @@ In production configuration:
 - Django runs behind Gunicorn (both in the same container) which runs behind NGINX (in a separate container)
 - NGINX serves static assets and acts as a reverse proxy
 
-To configure PlantIT for deployment, first clone the repo, then run `./dev/deploy.sh <host IP or FQDN>` from the root directory. This script is idempotent and may safely be triggered to run by e.g., a CI/CD server. This will:
+To configure PlantIT for deployment, first clone the repo, then run `./scripts/deploy.sh <host IP or FQDN>` from the root directory. This script is idempotent and may safely be triggered to run by e.g., a CI/CD server. This will:
 
 - Bring containers down
 - Fetch the latest version of the project
@@ -135,9 +135,9 @@ GITHUB_KEY=d15df2f5710e9597290f
 GITHUB_SECRET=some_secret
 ```
 
-Note that `DJANGO_SECRET_KEY`, `DJANGO_FIELD_ENCRYPTION_KEY`, and `SQL_PASSWORD` are given dummy values above. Executing `dev/bootstrap.sh` in a clean (empty) install directory will generate secure values.
+Note that `DJANGO_SECRET_KEY`, `DJANGO_FIELD_ENCRYPTION_KEY`, and `SQL_PASSWORD` are given dummy values above. Executing `scripts/bootstrap.sh` in a clean (empty) install directory will generate secure values.
 
-The following variables must be reconfigured for production environments (`dev/deploy` will automatically do so):
+The following variables must be reconfigured for production environments (`scripts/deploy` will automatically do so):
 
 - `NODE_ENV` should be set to `production`
 - `DJANGO_DEBUG` should be set to `False`
@@ -153,4 +153,4 @@ PlantIT uses `paramiko` to orchestrate workflows on deployment targets over SSH.
 - `config/ssh/id_rsa`
 - `config/ssh/known_hosts`
 
-Key authentication is configured for the `sandbox` deployment target when bootstrapping or deploying PlantIT; refer to `dev/bootstrap.sh` or `dev/deploy` for more detail.
+Key authentication is configured for the `sandbox` deployment target when bootstrapping or deploying PlantIT; refer to `scripts/bootstrap.sh` or `scripts/deploy` for more detail.

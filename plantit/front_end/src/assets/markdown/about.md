@@ -1,3 +1,15 @@
+## What is PlantIT?
+
+PlantIT is web workflow automation for plant phenomics. PlantIT is a science gateway with two user groups in mind:
+
+#### Biologists and Breeders
+
+PlantIT is Software-as-a-Service for plant science professionals &mdash; in other words, a website. With it you can store, publish, and access data with CyVerse, and run simulations and analyses on clusters with a click.
+
+### Programmers and Developers
+
+PlantIT is a Platform-as-a-Service for computer programmers and research software developers. PlantIT integrates with GitHub: just add a `plantit.yaml` file to your repository to deploy a workflow, then submit a review request to share it with the community. You can develop with your tools of choice &mdash; if it runs in Docker or Singularity, it will run on PlantIT.
+
 ### Prior art
 
 ---

@@ -1,4 +1,5 @@
-from django.apps import AppConfig
+from django.apps.config import AppConfig
+
 
 class PlantITConfig(AppConfig):
     name = 'plantit'
