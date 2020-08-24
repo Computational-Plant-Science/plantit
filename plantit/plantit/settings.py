@@ -1,65 +1,37 @@
 import os
 
+missing_variable = 'Environment variable not configured'
+
+assert 'DJANGO_SECRET_KEY' in os.environ, f"{missing_variable}: DJANGO_SECRET_KEY"
+assert 'DJANGO_DEBUG' in os.environ, f"{missing_variable}: DJANGO_DEBUG"
+assert 'DJANGO_FIELD_ENCRYPTION_KEY' in os.environ, f"{missing_variable}: DJANGO_FIELD_ENCRYPTION_KEY"
+assert 'DJANGO_ALLOWED_HOSTS' in os.environ, f"{missing_variable}: DJANGO_ALLOWED_HOSTS"
+assert 'DJANGO_SECURE_SSL_REDIRECT' in os.environ, f"{missing_variable}: DJANGO_SECURE_SSL_REDIRECT"
+assert 'DJANGO_SESSION_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_SESSION_COOKIE_SECURE"
+assert 'DJANGO_CSRF_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_CSRF_COOKIE_SECURE"
+assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
+assert 'DJANGO_CAS_PROXY_CALLBACK' in os.environ, f"{missing_variable}: DJANGO_CAS_PROXY_CALLBACK"
+assert 'GITHUB_AUTH_URI' in os.environ, f"{missing_variable}: GITHUB_AUTH_URI"
+assert 'GITHUB_REDIRECT_URI' in os.environ, f"{missing_variable}: GITHUB_REDIRECT_URI"
+assert 'GITHUB_KEY' in os.environ, f"{missing_variable}: GITHUB_KEY"
+assert 'GITHUB_SECRET' in os.environ, f"{missing_variable}: GITHUB_SECRET"
+
+API_URL = os.environ.get('DJANGO_API_URL')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+DEBUG = os.environ.get('DJANGO_DEBUG')
+FIELD_ENCRYPTION_KEY = os.environ.get('DJANGO_FIELD_ENCRYPTION_KEY')
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(',')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-NO_ENV_VAR = 'Environment variable not configured'
-
-assert 'DJANGO_SECRET_KEY' in os.environ, f"{NO_ENV_VAR}: DJANGO_SECRET_KEY"
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-
-assert 'DJANGO_DEBUG' in os.environ, f"{NO_ENV_VAR}: DJANGO_DEBUG"
-DEBUG = os.environ.get('DJANGO_DEBUG')
-
-assert 'DJANGO_FIELD_ENCRYPTION_KEY' in os.environ, f"{NO_ENV_VAR}: DJANGO_FIELD_ENCRYPTION_KEY"
-FIELD_ENCRYPTION_KEY = os.environ.get('DJANGO_FIELD_ENCRYPTION_KEY')
-
-assert 'DJANGO_ALLOWED_HOSTS' in os.environ, f"{NO_ENV_VAR}: DJANGO_ALLOWED_HOSTS"
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(',')
-
-assert 'DJANGO_SECURE_SSL_REDIRECT' in os.environ, f"{NO_ENV_VAR}: DJANGO_SECURE_SSL_REDIRECT"
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')
-
-assert 'DJANGO_SESSION_COOKIE_SECURE' in os.environ, f"{NO_ENV_VAR}: DJANGO_SESSION_COOKIE_SECURE"
-if not DEBUG:
     SESSION_COOKIE_SECURE = os.environ.get('DJANGO_SESSION_COOKIE_SECURE')
-
-assert 'DJANGO_CSRF_COOKIE_SECURE' in os.environ, f"{NO_ENV_VAR}: DJANGO_CSRF_COOKIE_SECURE"
-if not DEBUG:
     CSRF_COOKIE_SECURE = os.environ.get('DJANGO_CSRF_COOKIE_SECURE')
 
-assert 'DJANGO_API_URL' in os.environ, f"{NO_ENV_VAR}: DJANGO_API_URL"
-API_URL = os.environ.get('DJANGO_API_URL')
-
-assert 'GITHUB_AUTH_URI' in os.environ, f"{NO_ENV_VAR}: GITHUB_AUTH_URI"
 GITHUB_AUTH_URI = os.environ.get('GITHUB_AUTH_URI')
-
-assert 'GITHUB_REDIRECT_URI' in os.environ, f"{NO_ENV_VAR}: GITHUB_REDIRECT_URI"
 GITHUB_REDIRECT_URI = os.environ.get('GITHUB_REDIRECT_URI')
-
-assert 'GITHUB_KEY' in os.environ, f"{NO_ENV_VAR}: GITHUB_KEY"
 GITHUB_KEY = os.environ.get('GITHUB_KEY')
-
-assert 'GITHUB_SECRET' in os.environ, f"{NO_ENV_VAR}: GITHUB_SECRET"
 GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
-
-assert 'IRODS_HOST' in os.environ, f"{NO_ENV_VAR}: IRODS_HOST"
-IRODS_HOST = os.environ.get('IRODS_HOST')
-
-assert 'IRODS_PORT' in os.environ, f"{NO_ENV_VAR}: IRODS_PORT"
-IRODS_PORT = os.environ.get('IRODS_PORT')
-
-assert 'IRODS_ZONE' in os.environ, f"{NO_ENV_VAR}: IRODS_ZONE"
-IRODS_ZONE = os.environ.get('IRODS_ZONE')
-
-assert 'IRODS_USERNAME' in os.environ, f"{NO_ENV_VAR}: IRODS_USERNAME"
-IRODS_USERNAME = os.environ.get('IRODS_USERNAME')
-
-assert 'IRODS_PASSWORD' in os.environ, f"{NO_ENV_VAR}: IRODS_PASSWORD"
-IRODS_PASSWORD = os.environ.get('IRODS_PASSWORD')
-
-assert 'IRODS_BASEPATH' in os.environ, f"{NO_ENV_VAR}: IRODS_BASEPATH"
-IRODS_BASEPATH = os.environ.get('IRODS_BASEPATH')
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "/assets/"
@@ -105,10 +77,9 @@ AUTHENTICATION_BACKENDS = (
     'django_cas_ng.backends.CASBackend',
 )
 
-# CAS_SERVER_URL = "https://auth.iplantcollaborative.org/cas4/"
 CAS_SERVER_URL = "https://auth.cyverse.org/cas5/"
 CAS_APPLY_ATTRIBUTES_TO_USER = True
-CAS_VERSION = 3
+CAS_PROXY_CALLBACK = os.environ.get('DJANGO_CAS_PROXY_CALLBACK')
 
 ROOT_URLCONF = 'urls'
 

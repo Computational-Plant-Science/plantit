@@ -62,7 +62,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return redirect('/workflows/')
 
     @action(methods=['get'], detail=False)
-    def cyverse_cas_proxy_granting_ticket_callback(self, request):
+    def cyverse_cas_proxy_callback(self, request):
         token = ProxyGrantingTicket.retrieve_pt(request, 'https://de.cyverse.org/terrain')
         user = self.get_object()
         user.profile.cyverse_token = token
