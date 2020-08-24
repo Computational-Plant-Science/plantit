@@ -26,7 +26,7 @@
 
 <script>
 export default {
-    name: 'EditParameters',
+    name: 'RunParams',
     props: {
         params: {
             type: Array,

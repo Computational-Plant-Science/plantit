@@ -135,7 +135,7 @@
 import Datasets from '@/services/apiV1/Datasets';
 
 export default {
-    name: 'EditOutput',
+    name: 'RunOutput',
     data() {
         return {
             username: '',

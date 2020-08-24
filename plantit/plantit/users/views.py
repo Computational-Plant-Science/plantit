@@ -2,16 +2,16 @@ from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
 import requests
-import yaml
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.http import HttpResponseBadRequest, HttpResponse, HttpResponseNotFound
+from django.http import HttpResponseBadRequest, HttpResponse
 from django.shortcuts import redirect
 from github import Github
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django_cas_ng.models import ProxyGrantingTicket
 
 from plantit.users.serializers import UserSerializer
 from plantit.util import csrf_token
@@ -22,30 +22,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
 
-    with open("plantit/users/countries.yaml", 'r') as f:
-        _countries = yaml.safe_load(f)
-
-    with open("plantit/users/universities.yaml", 'r') as f:
-        _universities = yaml.safe_load(f)
-
     def get_object(self):
         return self.request.user
-
-    @action(methods=['get'], detail=False)
-    def countries(self, request):
-        return Response({
-            'countries': self._countries
-        })
-
-    @action(methods=['get'], detail=False)
-    def universities(self, request):
-        country = request.GET.get('country', None)
-        if country in self._universities:
-            return Response({
-                'universities': self._universities[country]
-            })
-        else:
-            return HttpResponseNotFound()
 
     @action(methods=['get'], detail=False)
     def github_request_identity(self, request):
@@ -78,18 +56,16 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         token = parse_qs(response.text)['access_token'][0]
         user = self.get_object()
         user.profile.github_username = Github(token).get_user().login
-        request.session['github_auth_token'] = token
+        user.profile.github_auth_token = token
         user.save()
 
         return redirect('/workflows/')
 
     @action(methods=['get'], detail=False)
-    def github_avatar_url(self, request):
-        if 'github_auth_token' not in request.session:
-            return HttpResponse('Unauthorized for GitHub API', status=401)
+    def cyverse_cas_proxy_granting_ticket_callback(self, request):
+        token = ProxyGrantingTicket.retrieve_pt(request, 'https://de.cyverse.org/terrain')
+        user = self.get_object()
+        user.profile.cyverse_token = token
+        user.save()
 
-        token = request.session['github_auth_token']
-        github_user = Github(token).get_user()
-        return Response({
-            'avatar_url': github_user.avatar_url
-        })
+        return Response(status=200)

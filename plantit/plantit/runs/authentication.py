@@ -1,7 +1,7 @@
 from rest_framework import authentication
 from rest_framework import exceptions
 
-from plantit.runs.run import Run
+from plantit.runs.models import Run
 
 
 class RunTokenAuthentication(authentication.TokenAuthentication):

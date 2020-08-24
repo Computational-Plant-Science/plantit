@@ -181,10 +181,10 @@
 
 <script>
 import WorkflowDetail from '../components/WorkflowDetail';
-import EditParameters from '../components/ConfigureRunParameters';
-import EditInput from '../components/ConfigureRunInput';
-import EditOutput from '../components/ConfigureRunOutput';
-import SelectTarget from '../components/ConfigureRunTarget';
+import EditParameters from '../components/RunParams';
+import EditInput from '../components/RunInput';
+import EditOutput from '../components/RunOutput';
+import SelectTarget from '../components/RunTarget';
 import Workflows from '@/services/apiV1/Workflows';
 import Users from '@/services/apiV1/Users';
 import router from '../router';

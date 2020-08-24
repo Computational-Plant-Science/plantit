@@ -10,7 +10,7 @@
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col style="color: white">
-                        <h1>Community Workflows</h1>
+                        <h1>Workflows</h1>
                     </b-col>
                     <b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -39,14 +39,39 @@
                         variant="dark"
                     ></b-spinner>
                 </b-row>
-                <div
-                    v-if="
+                <b-row
+                    v-if="!communityWorkflowsLoading && unauthorizedForGitHub"
+                    align-v="center"
+                    align-h="center"
+                >
+                    <b-col>
+                        <b-button
+                            block
+                            variant="success"
+                            href="/apis/v1/profiles/github_request_identity/"
+                            class="mr-0"
+                        >
+                            <i class="fab fa-github"></i>
+                            Login to GitHub
+                        </b-button>
+                    </b-col>
+                    <b-col md="auto" class="ml-0 pl-0">
+                        <b class="text-center align-center ml-0 pl-0"
+                            >to load workflows</b
+                        >
+                    </b-col>
+                </b-row>
+                <b-row
+                    align-v="center"
+                    v-else-if="
                         !communityWorkflowsLoading &&
                             communityWorkflowsAfterFilter.length === 0
                     "
                 >
-                    None to show.
-                </div>
+                    <b-col>
+                        None to show.
+                    </b-col>
+                </b-row>
                 <b-card-group deck class="justify-content-center">
                     <b-card
                         v-for="workflow in communityWorkflowsAfterFilter"
@@ -154,12 +179,13 @@ String.prototype.capitalize = function() {
 };
 
 export default {
-    name: 'Pipelines',
+    name: 'Workflows',
     components: {
         WorkflowBlurb
     },
     data: function() {
         return {
+            unauthorizedForGitHub: false,
             communityWorkflows: [],
             communityWorkflowsLoading: false,
             communityWorkflowsFilter: '',
@@ -220,15 +246,21 @@ export default {
         },
         loadCommunityWorkflows() {
             this.communityWorkflowsLoading = true;
-            Workflows.list().then(workflows => {
-                if (workflows.pipelines == null) {
-                    this.communityWorkflows = [];
-                } else {
-                    workflows.pipelines.sort(this.sortWorkflows);
+            Workflows.list().then(
+                workflows => {
+                    workflows.workflows.sort(this.sortWorkflows);
                     this.communityWorkflows = workflows.pipelines;
+                    this.communityWorkflowsLoading = false;
+                },
+                error => {
+                    if (error === 'Unauthorized for GitHub API') {
+                        this.unauthorizedForGitHub = true;
+                    } else {
+                        alert(error);
+                    }
+                    this.communityWorkflowsLoading = false;
                 }
-                this.communityWorkflowsLoading = false;
-            });
+            );
         },
         loadUserWorkflows() {
             this.userWorkflowsLoading = true;
@@ -260,14 +292,14 @@ export default {
 @import "../scss/main.sass"
 
 .green
-    color: $color-button
+  color: $color-button
 
 .pipeline
-    width: 300px
+  width: 300px
 
 .workflow-text
-    background-color: $color-box-background
-    padding: 10px
+  background-color: $color-box-background
+  padding: 10px
 </style>
 
 <style scoped lang="sass">

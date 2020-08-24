@@ -9,7 +9,7 @@
                     border-variant="white"
                     header-border-variant="white"
                     header-bg-variant="white"
-                    :img-src="this.githubUser ? this.githubUser.avatar_url : ''"
+                    :img-src="githubUser ? githubUser.avatar_url : ''"
                     img-alt="Image"
                     img-top
                     style="max-width: 30rem;margin: 0 auto;"
@@ -17,15 +17,23 @@
                     <template
                         v-slot:header
                         style="background-color: white"
-                        v-bind:info="this.user"
+                        v-bind:info="user"
                     >
                         <b-row align-v="center">
-                            <b-col align-self="center" class="mt-2" style="color:white">
-                                <h2><b>{{ user.username }}</b></h2>
+                            <b-col
+                                align-self="center"
+                                class="mt-2"
+                                style="color:white"
+                            >
+                                <h2>
+                                    <b>{{ user.username }}</b>
+                                </h2>
                             </b-col>
                             <b-col md="auto">
                                 <b-button
-                                    @click="$bvModal.show('editUserInfoModalNav')"
+                                    @click="
+                                        $bvModal.show('editUserInfoModalNav')
+                                    "
                                     variant="outline-dark"
                                     v-b-tooltip.hover
                                     title="Edit profile."
@@ -35,34 +43,42 @@
                             </b-col>
                         </b-row>
                     </template>
-                    <b-card-text v-if="!loading">
+                    <b-card-text>
                         <h4>Profile</h4>
                         <br />
-                        <p><b>Email Address:</b> {{ this.user.email }}</p>
-                        <p><b>First Name:</b> {{ this.user.first_name }}</p>
-                        <p><b>Last Name:</b> {{ this.user.last_name }}</p>
+                        <p><b>Email Address:</b> {{ user.email }}</p>
+                        <p><b>First Name:</b> {{ user.first_name }}</p>
+                        <p><b>Last Name:</b> {{ user.last_name }}</p>
                         <p>
                             <b>Country:</b>
                             {{
-                            this.user.profile === undefined
-                            ? ''
-                            : this.user.profile.country
+                                profile === undefined
+                                    ? ''
+                                    : profile.country
                             }}
                         </p>
                         <p>
                             <b>Institution:</b>
                             {{
-                            this.user.profile === undefined
-                            ? ''
-                            : this.user.profile.institution
+                                profile === undefined
+                                    ? ''
+                                    : profile.institution
                             }}
                         </p>
                         <p>
                             <b>Field of Study:</b>
                             {{
-                            this.user.profile === undefined
-                            ? ''
-                            : this.user.profile.field_of_study
+                                profile === undefined
+                                    ? ''
+                                    : profile.field_of_study
+                            }}
+                        </p>
+                        <p>
+                            <b>Orcid ID:</b>
+                            {{
+                                profile === undefined
+                                    ? ''
+                                    : profile.orcid_id
                             }}
                         </p>
                         <br />
@@ -71,14 +87,21 @@
                         <p>
                             <b>Username:</b>
                             {{
-                            this.user.profile === undefined || this.user.profile.github_username === ''
-                            ? 'None'
-                            : this.user.profile.github_username
+                                profile === undefined ||
+                                profile.github_username === ''
+                                    ? 'None'
+                                    : this.user.profile.github_username
                             }}
                         </p>
-                        <p><b>Workflows:</b> {{ this.user.profile === undefined || this.user.profile.github_username ===
-                            ''
-                            ? 'None' : this.workflows }}</p>
+                        <p>
+                            <b>Workflows:</b>
+                            {{
+                                profile === undefined ||
+                                profile.github_username === ''
+                                    ? 'None'
+                                    : this.workflows
+                            }}
+                        </p>
                     </b-card-text>
                 </b-card>
             </div>
@@ -87,62 +110,39 @@
 </template>
 
 <script>
-import UserApi from '@/services/apiV1/Users.js';
+import { mapGetters } from 'vuex';
 
 export default {
-    name: 'UserInfo',
-    components: {},
+    name: 'Profile',
     data() {
         return {
-            user: null,
-            workflows: 0,
-            loading: true,
             githubUser: null
         };
     },
+    created: function() {
+        this.$store.dispatch('loadUsers');
+    },
+    computed: mapGetters(['user', 'profile', 'loggedIn', 'profileIncomplete']),
     methods: {
-        reload() {
-            this.loading = true;
-            UserApi.getCurrentUser().then(info => {
-                this.user = info;
-                UserApi.getCurrentUserGithubUser().then(user => {
-                    this.githubUser = user;
-                    this.getRepos();
-                    this.loading = false;
-                });
-            });
-        },
-        getRepos() {
-            UserApi.getCurrentUserGithubRepos().then(repos => {
-                this.workflows = repos.length;
-            });
-        },
         saveUserInfo(
             userName,
             firstName,
             lastName,
+            orcidId,
             country,
             institution,
             fieldOfStudy
         ) {
-            UserApi.updateUserInfo(
-                userName,
-                firstName,
-                lastName,
-                country,
-                institution,
-                fieldOfStudy
-            ).then(() => {
-                this.reload();
+            this.$store.dispatch('updateUser', {
+                userName: userName,
+                firstName: firstName,
+                lastName: lastName,
+                orcidId: orcidId,
+                country: country,
+                institution: institution,
+                fieldOfStudy: fieldOfStudy
             });
-        },
-        cancel() {
-            this.reload();
         }
-    },
-    created: function() {
-        this.reload();
-        this.loading = false;
     }
 };
 </script>

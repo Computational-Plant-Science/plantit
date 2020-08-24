@@ -256,7 +256,7 @@
 import Datasets from '@/services/apiV1/Datasets';
 
 export default {
-    name: 'EditInput',
+    name: 'RunInput',
     props: {
         kind: {
             required: true,

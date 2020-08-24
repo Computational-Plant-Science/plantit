@@ -13,15 +13,13 @@
                         <b-col align-self="center">
                             Welcome,
                             <b style="text-decoration: underline;"
-                                ><i v-if="loading">
-                                    <b-spinner
-                                        variant="secondary"
-                                        type="grow"
-                                        label="Loading..."
-                                    ></b-spinner>
-                                </i>
-                                <span v-else-if="!info">guest</span>
-                                <span v-else>{{ info.first_name ? info.first_name : info.username }}</span
+                                >
+                                <span v-if="!info">guest</span>
+                                <span v-else>{{
+                                    user.first_name
+                                        ? user.first_name
+                                        : user.username
+                                }}</span
                                 >.
                             </b>
                         </b-col>
@@ -35,23 +33,13 @@
                             </b-button>
                         </b-col>
                     </b-row>
-                    <b-row align-v="center">
-                        <b-col align-self="center" class="mr-4 ml-4 pt-2">
-                            <!--Welcome<i v-if="loading">
-                                    <b-spinner
-                                        variant="secondary"
-                                        type="grow"
-                                        label="Loading..."
-                                    ></b-spinner>
-                                </i>
-                                <span v-else-if="!info">, guest.</span>
-                                <span v-else> {{ info.first_name }}</span>-->
-                        </b-col>
-                    </b-row>
                     <b-row class="m-0 p-0" v-if="!info">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item href="/login/?next=/workflows/" class="m-0 p-0">
+                                <b-nav-item
+                                    href="/login/?next=/workflows/"
+                                    class="m-0 p-0"
+                                >
                                     <b-button
                                         variant="white"
                                         block
@@ -59,7 +47,7 @@
                                     >
                                         <b-img
                                             :src="
-                                                require('../../assets/sponsors/cyversebw-notext.png')
+                                                require('../assets/sponsors/cyversebw-notext.png')
                                             "
                                             height="18px"
                                             alt="Cyverse"
@@ -163,7 +151,7 @@
                             <b-img
                                 center
                                 width="75px"
-                                :src="require('../../assets/logo.png')"
+                                :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
                         </b-col>
@@ -197,7 +185,7 @@
                     <b-nav-item class="m-0 p-0" v-b-toggle.sidebar-left>
                         <b-button
                             class="brand-img m-0 p-0"
-                            v-bind:class="{ 'not-found': not_found }"
+                            v-bind:class="{ 'not-found': notFound }"
                             variant="outline-white"
                             @mouseenter="titleContent = 'sidebar'"
                             @mouseleave="titleContent = 'breadcrumb'"
@@ -206,7 +194,7 @@
                                 class="m-0 p-0 mb-4"
                                 center
                                 width="50px"
-                                :src="require('../../assets/logo.png')"
+                                :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
                         </b-button>
@@ -240,8 +228,8 @@
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
                         v-if="
-                            isLoggedIn && info.profile
-                                ? info.profile.github_username === ''
+                            loggedIn && profile
+                                ? profile.github_username === ''
                                 : false
                         "
                         title="Link GitHub Account"
@@ -253,8 +241,8 @@
                             Link GitHub Account
                         </b-button>
                     </b-nav-item>
-                  <b-nav-item
-                        v-if="isLoggedIn"
+                    <b-nav-item
+                        v-if="loggedIn"
                         title="Datasets"
                         to="/datasets"
                         class="m-0 p-0"
@@ -265,7 +253,7 @@
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
-                        v-if="isLoggedIn"
+                        v-if="loggedIn"
                         title="Workflows"
                         to="/workflows"
                         class="m-0 p-0"
@@ -276,7 +264,7 @@
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
-                        v-if="isLoggedIn"
+                        v-if="loggedIn"
                         title="Runs"
                         to="/runs"
                         class="m-0 p-0"
@@ -287,7 +275,7 @@
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
-                        v-if="isLoggedIn"
+                        v-if="loggedIn"
                         title="Profile"
                         class="m-0 p-0"
                         to="/profile"
@@ -295,14 +283,17 @@
                         <b-button variant="outline-dark">
                             <i class="fas fa-user fa-1x"></i>
                             {{
-                                info.first_name
-                                    ?  info.first_name + ' (' + info.username + ')'
-                                    : info.username
+                                user.first_name
+                                    ? user.first_name +
+                                      ' (' +
+                                      user.username +
+                                      ')'
+                                    : user.username
                             }}
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
-                        v-if="isLoggedIn"
+                        v-if="loggedIn"
                         title="Log Out"
                         to="/logout"
                         class="m-0 p-0"
@@ -316,51 +307,27 @@
             </b-collapse>
         </b-navbar>
         <b-alert
-                class="mt-5 pt-4"
-            :show="reload_alert_dismiss_countdown"
+            class="mt-5 pt-4"
+            :show="reloadAlertDismissCount"
             dismissible
             variant="success"
-            @dismissed="reload_alert_dismiss_countdown < 0"
+            @dismissed="reloadAlertDismissCount < 0"
             @dismiss-count-down="countDownChanged"
         >
             <p>
                 User information updated. Thanks,
-                {{ this.info ? this.info.first_name : '' }}!
+                {{ user.first_name }}!
             </p>
         </b-alert>
         <UserProfileModal
-            :v-if="!this.loading && this.profileIncomplete"
+            :v-if="profileIncomplete"
             modal-id="UserProfileModalNav"
-            :username="
-                this.info
-                    ? this.info.username
-                    : ''
-            "
-            :first_name="
-                this.info
-                    ? this.info.first_name
-                    : ''
-            "
-            :last_name="
-                this.info
-                    ? this.info.last_name
-                    : ''
-            "
-            :country="
-                this.info
-                    ? this.info.profile.country
-                    : ''
-            "
-            :institution="
-                this.info
-                    ? this.info.profile.institution
-                    : ''
-            "
-            :field_of_study="
-                this.info
-                    ? this.info.profile.field_of_study
-                    : ''
-            "
+            :username="user.username"
+            :first_name="user.first_name"
+            :last_name="user.last_name"
+            :country="profile ? profile.country : ''"
+            :institution="profile ? profile.institution : ''"
+            :field_of_study="profile ? profile.field_of_study : ''"
             @saveUserInfo="saveUserInfo"
         >
         </UserProfileModal>
@@ -368,100 +335,58 @@
 </template>
 
 <script>
-import UserApi from '@/services/apiV1/Users.js';
-import Auth from '@/services/apiV1/Auth.js';
-import Version from '@/services/apiV1/Releases.js';
+import { mapGetters } from 'vuex';
 import UserProfileModal from '@/components/UserProfileModal';
 
 export default {
-    name: 'AppNavigation',
+    name: 'Navigation',
     components: {
         UserProfileModal
     },
-    computed: {
-        isLoggedIn() {
-            return Auth.isLoggedIn() && this.info;
-        },
-        routeName() {
-            return this.$route.name;
-        },
-        profileIncomplete() {
-            return (
-                !this.loading &&
-                this.info &&
-                !(
-                    this.info.profile.country &&
-                    this.info.profile.institution &&
-                    this.info.profile.field_of_study
-                )
-            );
-        }
-    },
     data() {
         return {
-            loading: true,
-            version: null,
-            info: {},
             crumbs: [],
-            not_found: false,
-            reload_alert_dismiss_seconds: 5,
-            reload_alert_dismiss_countdown: 0,
-            show_reload_alert: false,
+            notFound: false,
+            reloadAlertDismissSeconds: 5,
+            reloadAlertDismissCount: 0,
+            reloadAlert: false,
             titleContent: 'breadcrumb'
         };
     },
-    mounted: function() {
-        this.reload();
+    created: function() {
         this.crumbs = this.$route.meta.crumb;
-        Version.getCurrentRelease().then(version => {
-            this.version = version;
-        });
-        // this.not_found = this.$route.name === '404';
+        this.$store.dispatch('loadUsers');
     },
+    computed: mapGetters(['user', 'profile', 'loggedIn', 'profileIncomplete']),
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
         }
     },
     methods: {
-        reload() {
-            UserApi.getCurrentUser().then(info => {
-                this.info = info;
-                this.loading = false;
-                if (this.profileIncomplete) {
-                    this.$bvModal.show('UserProfileModalNav');
-                }
-            });
-        },
         countDownChanged(dismissCountDown) {
-            this.reload_alert_dismiss_countdown = dismissCountDown;
+            this.reloadAlertDismissCount = dismissCountDown;
         },
         showAlert() {
-            this.reload_alert_dismiss_countdown = this.reload_alert_dismiss_seconds;
+            this.reloadAlertDismissCount = this.reloadAlertDismissSeconds;
         },
         saveUserInfo(
             userName,
             firstName,
             lastName,
+            orcidId,
             country,
-            continent,
             institution,
-            institutionType,
             fieldOfStudy
         ) {
-            UserApi.updateUserInfo(
-                userName,
-                firstName,
-                lastName,
-                country,
-                continent,
-                institution,
-                institutionType,
-                fieldOfStudy
-            ).then(() => {
-                this.reload();
-                this.$router.go()
-                // this.showAlert();
+            this.$store.dispatch('updateUser', {
+                userName: userName,
+                firstName: firstName,
+                lastName: lastName,
+                orcidId: orcidId,
+                country: country,
+                institution: institution,
+                fieldOfStudy: fieldOfStudy
             });
         }
     }
@@ -469,8 +394,8 @@ export default {
 </script>
 
 <style scoped lang="sass">
-@import '../../scss/main.sass'
-@import '../../scss/_colors.sass'
+@import '../scss/main.sass'
+@import '../scss/_colors.sass'
 
 .not-found
     color: $red

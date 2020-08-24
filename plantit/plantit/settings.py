@@ -105,9 +105,10 @@ AUTHENTICATION_BACKENDS = (
     'django_cas_ng.backends.CASBackend',
 )
 
-# CAS_SERVER_URL = "https://auth.cyverse.org/cas5/login"
-CAS_SERVER_URL = "https://auth.iplantcollaborative.org/cas4/"
-CAS_APPLY_ATTRIBUTES_TO_USER=True
+# CAS_SERVER_URL = "https://auth.iplantcollaborative.org/cas4/"
+CAS_SERVER_URL = "https://auth.cyverse.org/cas5/"
+CAS_APPLY_ATTRIBUTES_TO_USER = True
+CAS_VERSION = 3
 
 ROOT_URLCONF = 'urls'
 
@@ -116,7 +117,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'front_end', 'dist'),
-            os.path.join(BASE_DIR, 'templates') #<- This is temporary until cyverse login is implemented
+            os.path.join(BASE_DIR, 'templates') # This is temporary until cyverse login is implemented
         ],
         'APP_DIRS': True,
         'OPTIONS': {

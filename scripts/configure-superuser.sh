@@ -38,7 +38,7 @@ if (( verbose == 1 )); then
 fi
 
 script="
-from django.contrib.auth.models import User;
+from django.contrib.auth.models import User
 from plantit.users.models import Profile
 
 username = '$username';
@@ -47,7 +47,7 @@ email = '$email';
 
 if User.objects.filter(username=username).count()==0:
     user = User.objects.create_superuser(username, email, password);
-    # profile = Profile.objects.create(user=user)
+    profile = Profile.objects.create(user=user)
     print('Superuser created.');
 else:
     print('User with that name already exists!');

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.forms import ModelForm, PasswordInput
 
-from plantit.targets.target import Target
+from plantit.targets.models import Target
 
 
 class ClusterForm(ModelForm):

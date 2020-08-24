@@ -5,9 +5,8 @@ from os.path import join
 import yaml
 
 from plantit.celery import app
-from plantit.runs.run import Run
+from plantit.runs.models import Run, Status
 from plantit.runs.ssh import SSH
-from plantit.runs.status import Status
 
 
 def clean_html(raw_html):

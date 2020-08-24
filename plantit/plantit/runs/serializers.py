@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from datetime import datetime
 
-from plantit.runs.run import Run
-from plantit.runs.status import Status
+from plantit.runs.models import Run, Status
 
 
 class StatusSerializer(serializers.ModelSerializer):

@@ -1,24 +1,22 @@
 <template>
     <div id="app" class="m-0 p-0">
         <b-container fluid class="m-0 p-0">
-            <app-navigation v-if="$route.path != '/'"></app-navigation>
+            <Navigation v-if="$route.path != '/'"></Navigation>
             <router-view class="m-0 p-0"></router-view>
         </b-container>
     </div>
 </template>
 
 <script>
-import AppNavigation from '@/components/nav/AppNavigation';
+import Navigation from '@/components/Navigation';
 
 export default {
     name: 'App',
     components: {
-        AppNavigation
+        Navigation
     },
     data() {
-        return {
-            //
-        };
+        return {};
     }
 };
 </script>

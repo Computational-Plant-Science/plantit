@@ -3,7 +3,7 @@ from django.views.generic import RedirectView
 from rest_framework import routers
 
 from .targets.views import TargetsViewSet
-from .users.views import UsersViewSet
+from .users.users import UsersViewSet
 from .auth.views import login_view, logout_view
 from django.contrib.staticfiles.storage import staticfiles_storage
 

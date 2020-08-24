@@ -9,9 +9,8 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
 from django.utils import timezone
 from rest_framework.decorators import action, api_view
 
-from plantit.runs.run import Run
-from plantit.runs.status import Status
-from plantit.targets.target import Target
+from plantit.runs.models import Run, Status
+from plantit.targets.models import Target
 from plantit.runs.execute import execute
 
 

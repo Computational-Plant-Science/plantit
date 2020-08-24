@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from plantit.targets.target import Target
+from plantit.targets.models import Target
 
 
 class TargetSerializer(serializers.ModelSerializer):
