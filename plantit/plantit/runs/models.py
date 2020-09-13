@@ -12,7 +12,7 @@ class Run(models.Model):
     class Meta:
         ordering = ['-created']
 
-    created = models.DateTimeField(default=timezone.now())
+    created = models.DateTimeField(default=timezone.now)
     token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     identifier = models.CharField(max_length=36, null=False, blank=False)

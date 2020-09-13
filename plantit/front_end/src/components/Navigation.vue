@@ -12,12 +12,11 @@
                     <b-row class="ml-3 mr-1">
                         <b-col align-self="center">
                             Welcome,
-                            <b style="text-decoration: underline;"
-                                >
-                                <span v-if="!info">guest</span>
+                            <b style="text-decoration: underline;">
+                                <span v-if="!user">guest</span>
                                 <span v-else>{{
-                                    user.first_name
-                                        ? user.first_name
+                                    cyverseProfile
+                                        ? cyverseProfile.first_name
                                         : user.username
                                 }}</span
                                 >.
@@ -33,7 +32,7 @@
                             </b-button>
                         </b-col>
                     </b-row>
-                    <b-row class="m-0 p-0" v-if="!info">
+                    <b-row class="m-0 p-0" v-if="!user">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item
@@ -156,21 +155,6 @@
                             ></b-img>
                         </b-col>
                     </b-row>
-                    <b-row>
-                        <b-col class="text-center" align-self="center">
-                            <h5>
-                                <b-badge
-                                    variant="dark"
-                                    :class="
-                                        version && version.includes('alpha')
-                                            ? 'text-warning'
-                                            : 'text-success'
-                                    "
-                                    >{{ version || '...' }}
-                                </b-badge>
-                            </h5>
-                        </b-col>
-                    </b-row>
                 </b-container>
             </template>
         </b-sidebar>
@@ -228,12 +212,12 @@
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
                         v-if="
-                            loggedIn && profile
-                                ? profile.github_username === ''
+                            loggedIn
+                                ? user.profile.github_token === ''
                                 : false
                         "
                         title="Link GitHub Account"
-                        href="/apis/v1/profiles/github_request_identity/"
+                        href="/apis/v1/users/github_request_identity/"
                         class="m-0 p-0"
                     >
                         <b-button class="text-left" variant="success">
@@ -283,8 +267,8 @@
                         <b-button variant="outline-dark">
                             <i class="fas fa-user fa-1x"></i>
                             {{
-                                user.first_name
-                                    ? user.first_name +
+                                cyverseProfile !== null && cyverseProfile !== undefined
+                                    ? cyverseProfile.first_name +
                                       ' (' +
                                       user.username +
                                       ')'
@@ -306,90 +290,37 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
-        <b-alert
-            class="mt-5 pt-4"
-            :show="reloadAlertDismissCount"
-            dismissible
-            variant="success"
-            @dismissed="reloadAlertDismissCount < 0"
-            @dismiss-count-down="countDownChanged"
-        >
-            <p>
-                User information updated. Thanks,
-                {{ user.first_name }}!
-            </p>
-        </b-alert>
-        <UserProfileModal
-            :v-if="profileIncomplete"
-            modal-id="UserProfileModalNav"
-            :username="user.username"
-            :first_name="user.first_name"
-            :last_name="user.last_name"
-            :country="profile ? profile.country : ''"
-            :institution="profile ? profile.institution : ''"
-            :field_of_study="profile ? profile.field_of_study : ''"
-            @saveUserInfo="saveUserInfo"
-        >
-        </UserProfileModal>
     </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex';
-import UserProfileModal from '@/components/UserProfileModal';
 
 export default {
     name: 'Navigation',
-    components: {
-        UserProfileModal
-    },
+    components: {},
     data() {
         return {
             crumbs: [],
             notFound: false,
-            reloadAlertDismissSeconds: 5,
-            reloadAlertDismissCount: 0,
-            reloadAlert: false,
             titleContent: 'breadcrumb'
         };
     },
     created: function() {
         this.crumbs = this.$route.meta.crumb;
-        this.$store.dispatch('loadUsers');
+        this.$store.dispatch('loadUser');
     },
-    computed: mapGetters(['user', 'profile', 'loggedIn', 'profileIncomplete']),
+    computed: mapGetters([
+        'user',
+        'cyverseProfile',
+        'githubProfile',
+        'loggedIn'
+    ]),
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
         }
     },
-    methods: {
-        countDownChanged(dismissCountDown) {
-            this.reloadAlertDismissCount = dismissCountDown;
-        },
-        showAlert() {
-            this.reloadAlertDismissCount = this.reloadAlertDismissSeconds;
-        },
-        saveUserInfo(
-            userName,
-            firstName,
-            lastName,
-            orcidId,
-            country,
-            institution,
-            fieldOfStudy
-        ) {
-            this.$store.dispatch('updateUser', {
-                userName: userName,
-                firstName: firstName,
-                lastName: lastName,
-                orcidId: orcidId,
-                country: country,
-                institution: institution,
-                fieldOfStudy: fieldOfStudy
-            });
-        }
-    }
 };
 </script>
 

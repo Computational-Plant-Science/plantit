@@ -149,9 +149,8 @@
 
 <script>
 import RunBlurb from '../components/RunBlurb';
-import Workflows from '@/services/apiV1/Workflows';
-import Users from '@/services/apiV1/Users';
-import Runs from '@/services/apiV1/Runs.js';
+import Runs from '@/services/Runs.js';
+import { mapGetters } from 'vuex';
 import moment from 'moment';
 
 export default {
@@ -164,7 +163,6 @@ export default {
             reloadAlertDismissSeconds: 2,
             reloadAlertDismissCountdown: 0,
             showReloadAlert: false,
-            user: null,
             workflow: null,
             loadingRun: true,
             runNotFound: false,
@@ -226,6 +224,7 @@ export default {
                     this.run = run;
                 }
                 this.reloadLogs(toast);
+                this.run.workflow =
                 Users.getCurrentUser().then(user => {
                     this.user = user;
                     Workflows.get(

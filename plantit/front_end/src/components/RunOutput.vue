@@ -132,7 +132,6 @@
 </template>
 
 <script>
-import Datasets from '@/services/apiV1/Datasets';
 
 export default {
     name: 'RunOutput',
@@ -172,30 +171,30 @@ export default {
             } else {
                 this.irodsConfigIncomplete = false;
                 this.filesLoading = true;
-                Datasets.listFilesForCustomIrodsConnection(
-                    this.username,
-                    this.password,
-                    this.host,
-                    this.port,
-                    this.zone,
-                    this.irods_path
-                ).then(files => {
-                    this.filesLoading = false;
-                    if (files.response && files.response.status === 404) {
-                        this.irodsPathDoesNotExist = true;
-                    } else {
-                        this.files = files.files;
-                        this.$emit('outputSelected', {
-                            username: this.username,
-                            password: this.password,
-                            host: this.host,
-                            port: this.port,
-                            zone: this.zone,
-                            local_path: this.local_path,
-                            irods_path: this.irods_path
-                        });
-                    }
-                });
+                // Datasets.listFilesForCustomIrodsConnection(
+                //     this.username,
+                //     this.password,
+                //     this.host,
+                //     this.port,
+                //     this.zone,
+                //     this.irods_path
+                // ).then(files => {
+                //     this.filesLoading = false;
+                //     if (files.response && files.response.status === 404) {
+                //         this.irodsPathDoesNotExist = true;
+                //     } else {
+                //         this.files = files.files;
+                //         this.$emit('outputSelected', {
+                //             username: this.username,
+                //             password: this.password,
+                //             host: this.host,
+                //             port: this.port,
+                //             zone: this.zone,
+                //             local_path: this.local_path,
+                //             irods_path: this.irods_path
+                //         });
+                //     }
+                // });
             }
         }
     }

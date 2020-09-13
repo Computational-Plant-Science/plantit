@@ -2,14 +2,14 @@
     <div class="w-100 p-5 m-0">
         <br />
         <br />
-        <b-container>
+        <b-container v-if="user">
             <div class="w-100 pb-4">
                 <b-card
                     bg-variant="white"
                     border-variant="white"
                     header-border-variant="white"
                     header-bg-variant="white"
-                    :img-src="githubUser ? githubUser.avatar_url : ''"
+                    :img-src="githubProfile ? githubProfile.avatar_url : ''"
                     img-alt="Image"
                     img-top
                     style="max-width: 30rem;margin: 0 auto;"
@@ -43,52 +43,30 @@
                             </b-col>
                         </b-row>
                     </template>
-                    <b-card-text>
+                    <b-card-text v-if="cyverseProfile">
                         <h4>Profile</h4>
                         <br />
-                        <p><b>Email Address:</b> {{ user.email }}</p>
-                        <p><b>First Name:</b> {{ user.first_name }}</p>
-                        <p><b>Last Name:</b> {{ user.last_name }}</p>
-                        <p>
-                            <b>Country:</b>
-                            {{
-                                profile === undefined
-                                    ? ''
-                                    : profile.country
-                            }}
-                        </p>
+                        <p><b>Email Address:</b> {{ cyverseProfile.email }}</p>
+                        <p><b>First Name:</b> {{ cyverseProfile.first_name }}</p>
+                        <p><b>Last Name:</b> {{ cyverseProfile.last_name }}</p>
                         <p>
                             <b>Institution:</b>
                             {{
-                                profile === undefined
+                                cyverseProfile === undefined
                                     ? ''
-                                    : profile.institution
-                            }}
-                        </p>
-                        <p>
-                            <b>Field of Study:</b>
-                            {{
-                                profile === undefined
-                                    ? ''
-                                    : profile.field_of_study
-                            }}
-                        </p>
-                        <p>
-                            <b>Orcid ID:</b>
-                            {{
-                                profile === undefined
-                                    ? ''
-                                    : profile.orcid_id
+                                    : cyverseProfile.institution
                             }}
                         </p>
                         <br />
+                    </b-card-text>
+                  <b-card-text v-if="githubProfile">
                         <h4>Github</h4>
                         <br />
                         <p>
                             <b>Username:</b>
                             {{
-                                profile === undefined ||
-                                profile.github_username === ''
+                                githubProfile === undefined ||
+                                githubProfile.github_username === ''
                                     ? 'None'
                                     : this.user.profile.github_username
                             }}
@@ -96,8 +74,8 @@
                         <p>
                             <b>Workflows:</b>
                             {{
-                                profile === undefined ||
-                                profile.github_username === ''
+                                githubProfile === undefined ||
+                                githubProfile.github_username === ''
                                     ? 'None'
                                     : this.workflows
                             }}
@@ -114,36 +92,15 @@ import { mapGetters } from 'vuex';
 
 export default {
     name: 'Profile',
-    data() {
-        return {
-            githubUser: null
-        };
-    },
     created: function() {
         this.$store.dispatch('loadUsers');
     },
-    computed: mapGetters(['user', 'profile', 'loggedIn', 'profileIncomplete']),
-    methods: {
-        saveUserInfo(
-            userName,
-            firstName,
-            lastName,
-            orcidId,
-            country,
-            institution,
-            fieldOfStudy
-        ) {
-            this.$store.dispatch('updateUser', {
-                userName: userName,
-                firstName: firstName,
-                lastName: lastName,
-                orcidId: orcidId,
-                country: country,
-                institution: institution,
-                fieldOfStudy: fieldOfStudy
-            });
-        }
-    }
+    computed: mapGetters([
+        'user',
+        'githubProfile',
+        'cyverseProfile',
+        'loggedIn'
+    ])
 };
 </script>
 

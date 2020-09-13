@@ -1,7 +1,7 @@
-import axios from "axios";
-import * as Sentry from "@sentry/browser";
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 
-class API {
+export class API {
     url;
     constructor() {
         if (this.constructor === API) {
@@ -54,10 +54,3 @@ class API {
             });
     }
 }
-
-module.exports = {
-    API,
-    to_header(token) {
-        return { Authorization: 'Bearer ' + token };
-    }
-};

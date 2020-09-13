@@ -20,8 +20,18 @@
             <b-container>
                 <b-row align-content="center">
                     <b-col class="text-center">
-                        <h1>Plant science workflow automation in the browser.</h1>
-                        <b>Store and publish data with <b-link href="https://www.cyverse.org/">CyVerse</b-link>. Share workflows with <b-link href="https://www.github.com/">GitHub</b-link>. Deploy to HPC environments with a click.</b>
+                        <h1>
+                            Plant science workflow automation in the browser.
+                        </h1>
+                        <b
+                            >Store and publish data with
+                            <b-link href="https://www.cyverse.org/"
+                                >CyVerse</b-link
+                            >. Share workflows with
+                            <b-link href="https://www.github.com/"
+                                >GitHub</b-link
+                            >. Deploy to HPC environments with a click.</b
+                        >
                     </b-col>
                 </b-row>
                 <br />
@@ -317,7 +327,7 @@
                                         border-variant="white"
                                         text-variant="white"
                                         sub-title-text-variant="white"
-                                        v-for="developer in pipeline_developers"
+                                        v-for="developer in pipelineDevelopers"
                                         :title="developer"
                                         :key="developer"
                                     >
@@ -355,9 +365,9 @@
 </template>
 
 <script>
-import Users from '@/services/apiV1/Users';
 import VueMarkdown from 'vue-markdown';
 import about from '../assets/markdown/about.md';
+import { mapGetters } from 'vuex';
 
 export default {
     name: 'About',
@@ -366,20 +376,18 @@ export default {
     },
     data: function() {
         return {
-            pipeline_developers: [],
             source: about
         };
     },
-    mounted: function() {
-        Users.list().then(data => {
-            this.pipeline_developers = data
-                .filter(user => {
-                    return user.profile.github_username != null;
-                })
-                .map(user => {
-                    return user.profile.github_username;
-                });
-        });
+    created: function() {
+        this.$store.dispatch('loadUsers');
+    },
+    computed: {
+        ...mapGetters(['users']),
+        pipelineDevelopers: function() {
+            // TODO filter only users who have contributed workflows
+            return this.users;
+        }
     }
 };
 </script>

@@ -1,7 +1,15 @@
+import yaml
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
-from plantit.miappe.serializers import *
+from rest_framework.response import Response
+
+from plantit.miappe.models import ObservedVariable, Sample, ObservationUnit, ExperimentalFactor, \
+    EnvironmentParameter, BiologicalMaterial, Study, Investigation, Event, Role, File
+from plantit.miappe.serializers import ObservedVariableSerializer, SampleSerializer, \
+    ObservationUnitSerializer, EventSerializer, ExperimentalFactorSerializer, EnvironmentParameterSerializer, \
+    BiologicalMaterialSerializer, FileSerializer, RoleSerializer, StudySerializer, InvestigationSerializer
 
 
 class InvestigationViewSet(viewsets.ModelViewSet):
@@ -39,11 +47,25 @@ class EnvironmentParameterViewSet(viewsets.ModelViewSet):
     serializer_class = EnvironmentParameterSerializer
     permission_classes = (IsAuthenticated,)
 
+    with open("plantit/miappe/suggested_environment_parameters.yaml", 'r') as f:
+        _suggested_environment_parameters = yaml.safe_load(f)
+
+    @action(methods=['get'], detail=False)
+    def suggested_environment_parameters(self, request):
+        return Response({'suggested_environment_parameters': self._suggested_environment_parameters})
+
 
 class ExperimentalFactorViewSet(viewsets.ModelViewSet):
     queryset = ExperimentalFactor.objects.all()
     serializer_class = ExperimentalFactorSerializer
     permission_classes = (IsAuthenticated,)
+
+    with open("plantit/miappe/suggested_experimental_factors.yaml", 'r') as f:
+        _suggested_experimental_factors = yaml.safe_load(f)
+
+    @action(methods=['get'], detail=False)
+    def suggested_experimental_factors(self, request):
+        return Response({'suggested_experimental_factors': self._suggested_experimental_factors})
 
 
 class EventViewSet(viewsets.ModelViewSet):

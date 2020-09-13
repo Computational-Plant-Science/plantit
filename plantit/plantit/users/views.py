@@ -56,7 +56,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         token = parse_qs(response.text)['access_token'][0]
         user = self.get_object()
         user.profile.github_username = Github(token).get_user().login
-        user.profile.github_auth_token = token
+        user.profile.github_token = token
+        user.profile.save()
         user.save()
 
         return redirect('/workflows/')

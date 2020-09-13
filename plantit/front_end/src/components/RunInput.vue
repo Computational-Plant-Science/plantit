@@ -253,7 +253,6 @@
 </template>
 
 <script>
-import Datasets from '@/services/apiV1/Datasets';
 
 export default {
     name: 'RunInput',
@@ -302,10 +301,11 @@ export default {
     },
     methods: {
         reloadDatasets() {
-            Datasets.listAll().then(list => {
-                this.communityDatasets = list.community;
-                this.userDatasets = list.user;
-            });
+          // load data
+            // Datasets.listAll().then(list => {
+            //     this.communityDatasets = list.community;
+            //     this.userDatasets = list.user;
+            // });
         },
         onSelected(items) {
             alert(`Selected ${items[0].name}`);
@@ -329,29 +329,29 @@ export default {
             } else {
                 this.irodsConfigIncomplete = false;
                 this.filesLoading = true;
-                Datasets.listFilesForCustomIrodsConnection(
-                    this.username,
-                    this.password,
-                    this.host,
-                    this.port,
-                    this.zone,
-                    this.irods_path
-                ).then(files => {
-                    this.files = files.files;
-                    this.filesLoading = false;
-                    if (this.files.length > 0) {
-                        this.$emit('inputSelected', {
-                            kind: this.kind,
-                            username: this.username,
-                            password: this.password,
-                            host: this.host,
-                            port: this.port,
-                            zone: this.zone,
-                            irods_path: this.irods_path,
-                            files: this.files
-                        });
-                    }
-                });
+                // Datasets.listFilesForCustomIrodsConnection(
+                //     this.username,
+                //     this.password,
+                //     this.host,
+                //     this.port,
+                //     this.zone,
+                //     this.irods_path
+                // ).then(files => {
+                //     this.files = files.files;
+                //     this.filesLoading = false;
+                //     if (this.files.length > 0) {
+                //         this.$emit('inputSelected', {
+                //             kind: this.kind,
+                //             username: this.username,
+                //             password: this.password,
+                //             host: this.host,
+                //             port: this.port,
+                //             zone: this.zone,
+                //             irods_path: this.irods_path,
+                //             files: this.files
+                //         });
+                //     }
+                // });
             }
         }
     }

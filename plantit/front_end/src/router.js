@@ -4,8 +4,7 @@ import Home from './views/Home.vue';
 import About from './views/About.vue';
 import Guide from './views/Guide.vue';
 import Docs from './views/Docs.vue';
-import Datasets from './views/Datasets.vue';
-import Dataset from './views/Dataset.vue';
+import Datasets from './views/Data.vue';
 import Workflows from './views/Workflows.vue';
 import Workflow from './views/Workflow.vue';
 import Runs from './views/Runs.vue';
@@ -13,7 +12,7 @@ import Run from './views/Run.vue';
 import Profile from './views/Profile.vue';
 import Login from './views/Login.vue';
 import Logout from './views/Logout.vue';
-import Auth from '@/services/apiV1/Auth.js';
+import Auth from '@/services/Auth.js';
 
 Vue.use(Router);
 
@@ -131,25 +130,6 @@ let router = new Router({
             component: Datasets,
             meta: {
                 title: 'Datasets',
-                crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Datasets',
-                        href: '/datasets'
-                    }
-                ]
-            }
-        },
-        {
-            path: '/datasets/:owner/:name',
-            name: 'dataset',
-            props: true,
-            component: Dataset,
-            meta: {
-                title: 'Dataset',
                 crumb: [
                     {
                         text: 'PlantIT',
@@ -333,11 +313,11 @@ router.beforeEach((to, from, next) => {
         });
     }
     if (to.matched.some(record => record.meta.requiresAuth)) {
-        if (!Auth.isLoggedIn()) {
-            window.location = '/login/?next=' + to.fullPath;
-        } else {
+        // if (!Auth.isLoggedIn()) {
+        //     window.location = '/login/?next=' + to.fullPath;
+        // } else {
             next();
-        }
+        // }
     } else {
         next();
     }

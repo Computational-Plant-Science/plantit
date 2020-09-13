@@ -185,9 +185,8 @@ import EditParameters from '../components/RunParams';
 import EditInput from '../components/RunInput';
 import EditOutput from '../components/RunOutput';
 import SelectTarget from '../components/RunTarget';
-import Workflows from '@/services/apiV1/Workflows';
-import Users from '@/services/apiV1/Users';
-import router from '../router';
+import { mapGetters } from 'vuex';
+// import router from '../router';
 
 String.prototype.capitalize = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
@@ -212,7 +211,6 @@ export default {
     },
     data: function() {
         return {
-            user: null,
             workflow: null,
             params: [],
             input: {
@@ -225,22 +223,21 @@ export default {
         };
     },
     mounted: function() {
-        Users.getCurrentUser().then(user => {
-            this.user = user;
-        });
-        Workflows.get(this.owner, this.name).then(pipeline => {
-            this.workflow = pipeline;
-            if (pipeline.config.params != null) {
-                this.params = pipeline.config.params.map(function(param) {
-                    return {
-                        key: param,
-                        value: ''
-                    };
-                });
-            }
-        });
+        // TODO load workflows
+        // Workflows.get(this.owner, this.name).then(pipeline => {
+        //     this.workflow = pipeline;
+        //     if (pipeline.config.params != null) {
+        //         this.params = pipeline.config.params.map(function(param) {
+        //             return {
+        //                 key: param,
+        //                 value: ''
+        //             };
+        //         });
+        //     }
+        // });
     },
     methods: {
+        ...mapGetters(['user']),
         onInputSelected(input) {
             this.input = input;
         },
@@ -251,26 +248,27 @@ export default {
             this.target = target;
         },
         onStart() {
-            Workflows.start({
-                repo: this.workflow.repo,
-                config: {
-                    name: this.workflow.config.name,
-                    image: this.workflow.config.image,
-                    clone: this.workflow.config.clone,
-                    input: this.input.irods_path ? this.input : null,
-                    output: this.output,
-                    params: this.params,
-                    target: this.target,
-                    commands: this.workflow.config.commands
-                }
-            }).then(result => {
-                router.push({
-                    name: 'run',
-                    params: {
-                        id: result.data.id
-                    }
-                });
-            });
+            // TODO start workflow
+            // Workflows.start({
+            //     repo: this.workflow.repo,
+            //     config: {
+            //         name: this.workflow.config.name,
+            //         image: this.workflow.config.image,
+            //         clone: this.workflow.config.clone,
+            //         input: this.input.irods_path ? this.input : null,
+            //         output: this.output,
+            //         params: this.params,
+            //         target: this.target,
+            //         commands: this.workflow.config.commands
+            //     }
+            // }).then(result => {
+            //     router.push({
+            //         name: 'run',
+            //         params: {
+            //             id: result.data.id
+            //         }
+            //     });
+            // });
         }
     },
     computed: {

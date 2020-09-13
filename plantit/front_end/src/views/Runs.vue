@@ -71,7 +71,7 @@
 </template>
 
 <script>
-import Runs from '@/services/apiV1/Runs.js';
+import Runs from '@/services/Runs.js';
 import moment from 'moment';
 import router from '../router';
 

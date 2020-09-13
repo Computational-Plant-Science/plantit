@@ -12,7 +12,7 @@
                     <b-col style="color: white">
                         <h1>Workflows</h1>
                     </b-col>
-                    <b-col md="auto" class="b-form-col">
+                    <!--<b-col md="auto" class="b-form-col">
                         <b-input-group>
                             <b-form-input
                                 v-model="communityWorkflowsFilter"
@@ -28,19 +28,12 @@
                                 </b-button>
                             </b-input-group-append>
                         </b-input-group>
-                    </b-col>
+                    </b-col>-->
                 </b-row>
             </template>
             <b-row align-h="center">
-                <b-row align-h="center" v-if="communityWorkflowsLoading">
-                    <b-spinner
-                        type="grow"
-                        label="Loading..."
-                        variant="dark"
-                    ></b-spinner>
-                </b-row>
                 <b-row
-                    v-if="!communityWorkflowsLoading && unauthorizedForGitHub"
+                    v-if="githubProfile === null"
                     align-v="center"
                     align-h="center"
                 >
@@ -48,7 +41,7 @@
                         <b-button
                             block
                             variant="success"
-                            href="/apis/v1/profiles/github_request_identity/"
+                            href="/apis/v1/users/github_request_identity/"
                             class="mr-0"
                         >
                             <i class="fab fa-github"></i>
@@ -61,20 +54,9 @@
                         >
                     </b-col>
                 </b-row>
-                <b-row
-                    align-v="center"
-                    v-else-if="
-                        !communityWorkflowsLoading &&
-                            communityWorkflowsAfterFilter.length === 0
-                    "
-                >
-                    <b-col>
-                        None to show.
-                    </b-col>
-                </b-row>
-                <b-card-group deck class="justify-content-center">
+                <b-card-group deck class="justify-content-center" v-else>
                     <b-card
-                        v-for="workflow in communityWorkflowsAfterFilter"
+                        v-for="workflow in workflows"
                         :key="workflow.repo.name"
                         bg-variant="white"
                         footer-bg-variant="white"
@@ -93,85 +75,12 @@
                 </b-card-group>
             </b-row>
         </b-card>
-        <br />
-        <b-card
-            header-bg-variant="white"
-            border-variant="white"
-            header-border-variant="white"
-            v-if="
-                !userWorkflowsLoading && userWorkflowsAfterFilter.length !== 0
-            "
-        >
-            <template v-slot:header style="background-color: white">
-                <b-row align-v="center">
-                    <b-col class="mt-2" style="color: white">
-                        <h1>Your Workflows</h1>
-                    </b-col>
-                    <b-col md="auto" class="b-form-col">
-                        <b-input-group>
-                            <b-form-input
-                                v-model="userWorkflowsFilter"
-                                placeholder="Filter..."
-                                class="b-form-input"
-                            ></b-form-input>
-                            <b-input-group-append>
-                                <b-button
-                                    :disabled="!userWorkflowsFilter"
-                                    @click="userWorkflowsFilter = ''"
-                                    variant="white"
-                                    >Clear
-                                </b-button>
-                            </b-input-group-append>
-                        </b-input-group>
-                    </b-col>
-                </b-row>
-            </template>
-            <b-row align-h="center">
-                <b-row align-h="center" v-if="userWorkflowsLoading">
-                    <b-spinner
-                        type="grow"
-                        label="Loading..."
-                        variant="dark"
-                    ></b-spinner>
-                </b-row>
-                <div
-                    v-if="
-                        !userWorkflowsLoading &&
-                            userWorkflowsAfterFilter.length === 0
-                    "
-                >
-                    None to show.
-                </div>
-                <b-card-group deck columns class="justify-content-center">
-                    <b-card
-                        v-for="workflow in userWorkflowsAfterFilter"
-                        :key="workflow.repo.name"
-                        bg-variant="white"
-                        header-bg-variant="white"
-                        footer-bg-variant="white"
-                        border-variant="white"
-                        footer-border-variant="white"
-                        header-border-variant="dark"
-                        style="min-width: 30rem; max-width: 30rem; min-height: 5rem; max-height: 15rem;"
-                        class="overflow-hidden mb-4"
-                    >
-                        <WorkflowBlurb
-                            :showPublic="true"
-                            :workflow="workflow"
-                            :selectable="true"
-                            v-on:workflowSelected="workflowSelected"
-                        ></WorkflowBlurb>
-                    </b-card>
-                </b-card-group>
-            </b-row>
-        </b-card>
     </div>
 </template>
 
 <script>
 import router from '../router';
-import Workflows from '@/services/apiV1/Workflows';
-import Users from '@/services/apiV1/Users.js';
+import { mapGetters } from 'vuex';
 import WorkflowBlurb from '@/components/WorkflowBlurb.vue';
 
 String.prototype.capitalize = function() {
@@ -185,94 +94,24 @@ export default {
     },
     data: function() {
         return {
-            unauthorizedForGitHub: false,
-            communityWorkflows: [],
-            communityWorkflowsLoading: false,
-            communityWorkflowsFilter: '',
-            userWorkflows: [],
-            userWorkflowsLoading: false,
-            userWorkflowsFilter: ''
+            workflows: []
         };
     },
-    mounted: function() {
-        this.loadCommunityWorkflows();
-        this.loadUserWorkflows();
+    created: function() {
+        this.$store.dispatch('loadWorkflows');
     },
-    computed: {
-        communityWorkflowsFilterText: function() {
-            return this.communityWorkflowsFilter.toLowerCase();
-        },
-        userWorkflowsFilterText: function() {
-            return this.userWorkflowsFilter.toLowerCase();
-        },
-        communityWorkflowsAfterFilter: function() {
-            if (this.communityWorkflowsFilterText === '') {
-                return this.communityWorkflows;
-            } else {
-                return this.communityWorkflows.filter(workflow => {
-                    return (
-                        workflow.repo.name
-                            .toLowerCase()
-                            .includes(this.communityWorkflowsFilterText) ||
-                        workflow.repo.description
-                            .toLowerCase()
-                            .includes(this.communityWorkflowsFilterText)
-                    );
-                });
-            }
-        },
-        userWorkflowsAfterFilter: function() {
-            if (this.userWorkflowsFilterText === '') {
-                return this.userWorkflows;
-            } else {
-                return this.userWorkflows.filter(workflow => {
-                    return (
-                        workflow.repo.name
-                            .toLowerCase()
-                            .includes(this.userWorkflowsFilterText) ||
-                        workflow.repo.description
-                            .toLowerCase()
-                            .includes(this.userWorkflowsFilterText)
-                    );
-                });
-            }
-        }
-    },
+    computed: mapGetters([
+        'user',
+        'githubProfile',
+        'cyverseProfile',
+        'loggedIn',
+        'workflows'
+    ]),
     methods: {
         sortWorkflows(l, r) {
             if (l.config.name < r.config.name) return -1;
             if (l.config.name > r.config.name) return 1;
             return 0;
-        },
-        loadCommunityWorkflows() {
-            this.communityWorkflowsLoading = true;
-            Workflows.list().then(
-                workflows => {
-                    workflows.workflows.sort(this.sortWorkflows);
-                    this.communityWorkflows = workflows.pipelines;
-                    this.communityWorkflowsLoading = false;
-                },
-                error => {
-                    if (error === 'Unauthorized for GitHub API') {
-                        this.unauthorizedForGitHub = true;
-                    } else {
-                        alert(error);
-                    }
-                    this.communityWorkflowsLoading = false;
-                }
-            );
-        },
-        loadUserWorkflows() {
-            this.userWorkflowsLoading = true;
-            Users.getCurrentUserGithubRepos().then(workflows => {
-                if (workflows == null) {
-                    this.userWorkflows = [];
-                } else {
-                    workflows.sort(this.sortWorkflows);
-                    this.userWorkflows = workflows;
-                }
-                this.userWorkflowsLoading = false;
-            });
         },
         workflowSelected: function(workflow) {
             router.push({

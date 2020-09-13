@@ -37,9 +37,9 @@
 </template>
 
 <script>
-import Clusters from '../services/apiV1/Targets';
+import Clusters from '../services/Targets';
 export default {
-    name: 'SelectTarget',
+    name: 'RunTarget',
     props: {
         selected: {
             type: Object,
