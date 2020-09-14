@@ -20,7 +20,7 @@ mocha.describe('users.mutations', () => {
             username: 'wbonelli',
             email: 'wbonelli@uga.edu'
         };
-        store.users.mutations.setUser(state, test_user);
+        store.users.mutations.setDjango(state, test_user);
         chai.expect(state.user).to.equal(test_user);
     });
 });

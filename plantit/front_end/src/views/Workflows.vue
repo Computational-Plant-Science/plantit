@@ -33,7 +33,7 @@
             </template>
             <b-row align-h="center">
                 <b-row
-                    v-if="githubProfile === null"
+                    v-if="currentUserGitHubProfile === null"
                     align-v="center"
                     align-h="center"
                 >
@@ -101,9 +101,9 @@ export default {
         this.$store.dispatch('loadWorkflows');
     },
     computed: mapGetters([
-        'user',
-        'githubProfile',
-        'cyverseProfile',
+        'currentUserDjangoProfile',
+        'currentUserGitHubProfile',
+        'currentUserCyVerseProfile',
         'loggedIn',
         'workflows'
     ]),

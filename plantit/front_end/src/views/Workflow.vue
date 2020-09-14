@@ -237,7 +237,7 @@ export default {
         // });
     },
     methods: {
-        ...mapGetters(['user']),
+        ...mapGetters(['currentUserDjangoProfile']),
         onInputSelected(input) {
             this.input = input;
         },

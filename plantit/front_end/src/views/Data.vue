@@ -165,11 +165,11 @@ export default {
         this.crumbs = this.$route.meta.crumb;
         this.$store.dispatch('loadUsers');
         this.$store.dispatch('loadRootDirectory', {
-            path: `/iplant/home/${this.user.username}`,
+            path: `/iplant/home/${this.currentUserDjangoProfile.username}`,
             token: this.profile.cyverse_token
         });
     },
-    computed: mapGetters(['user', 'profile', 'tree']),
+    computed: mapGetters(['currentUserDjangoProfile', 'profile', 'tree']),
     methods: mapActions(['loadDirectory', 'addDirectory', 'addFile', 'remove']),
 };
 </script>

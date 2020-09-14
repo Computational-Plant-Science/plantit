@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.http import HttpResponseBadRequest, HttpResponse
+from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from github import Github
 from rest_framework import viewsets, mixins
@@ -24,6 +24,30 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     def get_object(self):
         return self.request.user
+
+    @action(detail=False, methods=['get'])
+    def get_by_username(self, request):
+        username = request.GET.get('username', None)
+        user = self.queryset.get(username=username)
+        response = {
+            'django_profile': {
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            }
+        }
+        if request.user.profile.cyverse_token is not '':
+            cyverse_response = requests.get(f"https://de.cyverse.org/terrain/secured/user-info?username={user.username}", headers={'Authorization': f"Bearer {request.user.profile.cyverse_token}"})
+            response['cyverse_profile'] = cyverse_response.json()[user.username]
+            user.first_name = response['cyverse_profile']['first_name']
+            user.last_name = response['cyverse_profile']['last_name']
+            user.save()
+        if request.user.profile.github_token is not '':
+            github_response = requests.get(f"https://api.github.com/users/{user.profile.github_username}", headers={'Authorization':
+                                                     f"Bearer {request.user.profile.github_token}"})
+            response['github_profile'] = github_response.json()
+        return JsonResponse(response)
 
     @action(methods=['get'], detail=False)
     def github_request_identity(self, request):

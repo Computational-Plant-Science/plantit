@@ -4,15 +4,15 @@ import Home from './views/Home.vue';
 import About from './views/About.vue';
 import Guide from './views/Guide.vue';
 import Docs from './views/Docs.vue';
-import Datasets from './views/Data.vue';
+import Data from './views/Data.vue';
 import Workflows from './views/Workflows.vue';
 import Workflow from './views/Workflow.vue';
 import Runs from './views/Runs.vue';
 import Run from './views/Run.vue';
-import Profile from './views/Profile.vue';
+import User from './views/User.vue';
+import Users from './views/Users.vue';
 import Login from './views/Login.vue';
 import Logout from './views/Logout.vue';
-import Auth from '@/services/Auth.js';
 
 Vue.use(Router);
 
@@ -125,19 +125,19 @@ let router = new Router({
             }
         },
         {
-            path: '/datasets',
-            name: 'datasets',
-            component: Datasets,
+            path: '/data',
+            name: 'data',
+            component: Data,
             meta: {
-                title: 'Datasets',
+                title: 'Data',
                 crumb: [
                     {
                         text: 'PlantIT',
                         href: '/'
                     },
                     {
-                        text: 'Datasets',
-                        href: '/datasets'
+                        text: 'Data',
+                        href: '/data'
                     }
                 ]
             }
@@ -217,9 +217,9 @@ let router = new Router({
             }
         },
         {
-            path: '/profile',
-            name: 'profile',
-            component: Profile,
+            path: '/users',
+            name: 'users',
+            component: Users,
             meta: {
                 title: '',
                 crumb: [
@@ -228,8 +228,27 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Profile',
-                        href: '/profile'
+                        text: 'Users',
+                        href: '/users'
+                    }
+                ],
+            }
+        },
+        {
+            path: '/users/:username',
+            name: 'user',
+            props: true,
+            component: User,
+            meta: {
+                title: '',
+                crumb: [
+                    {
+                        text: 'PlantIT',
+                        href: '/'
+                    },
+                    {
+                        text: 'Users',
+                        href: '/users'
                     }
                 ],
                 requiresAuth: true
@@ -259,33 +278,17 @@ let router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
-    if (to.name === 'dataset') {
-        to.meta.title = `Dataset: ${to.params.name}`;
-    }
     if (to.name === 'workflow') {
         to.meta.title = `Workflow: ${to.params.name}`;
     }
     if (to.name === 'run') {
         to.meta.title = `Run: ${to.params.id}`;
     }
+    if (to.name === 'user') {
+        to.meta.title = `User: ${to.params.username}`;
+    }
     if (to.meta.name !== null) {
         document.title = to.meta.title;
-    }
-    if (to.matched.some(record => record.name === 'dataset')) {
-        if (to.meta.crumb.length === 4) {
-            to.meta.crumb.pop();
-            to.meta.crumb.pop();
-        }
-        to.meta.crumb.push(
-            {
-                text: to.params.owner,
-                href: `/dataset/${to.params.owner}`
-            },
-            {
-                text: to.params.name,
-                href: `/dataset/${to.params.owner}/${to.params.name}`
-            }
-        );
     }
     if (to.matched.some(record => record.name === 'workflow')) {
         if (to.meta.crumb.length === 4) {
@@ -312,11 +315,20 @@ router.beforeEach((to, from, next) => {
             href: `/runs/${to.params.id}`
         });
     }
+    if (to.matched.some(record => record.name === 'user')) {
+        if (to.meta.crumb.length === 3) {
+            to.meta.crumb.pop();
+        }
+        to.meta.crumb.push({
+            text: to.params.username,
+            href: `/users/${to.params.username}`
+        });
+    }
     if (to.matched.some(record => record.meta.requiresAuth)) {
         // if (!Auth.isLoggedIn()) {
         //     window.location = '/login/?next=' + to.fullPath;
         // } else {
-            next();
+        next();
         // }
     } else {
         next();
