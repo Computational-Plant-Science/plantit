@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import home from './views/home.vue';
-import about from './views/about.vue';
 import guide from './views/guide.vue';
 import docs from './views/docs.vue';
 import data from './views/data.vue';
@@ -27,20 +26,6 @@ let router = new Router({
             meta: {
                 title: 'home',
                 crumb: []
-            }
-        },
-        {
-            path: '/about',
-            name: 'about',
-            component: about,
-            meta: {
-                title: 'about',
-                crumb: [
-                    {
-                        text: 'about',
-                        href: '/about'
-                    }
-                ]
             }
         },
         {

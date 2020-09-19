@@ -55,7 +55,7 @@
                                     disabled
                                 >
                                     <b-button disabled variant="white">
-                                        <small>navigate</small>
+                                        <small>learn</small>
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/" class="m-0 p-0">
@@ -102,7 +102,7 @@
                                         <small>explore</small>
                                     </b-button>
                                 </b-nav-item>
-                              <b-nav-item
+                                <b-nav-item
                                     v-if="loggedIn"
                                     title="users"
                                     to="/users"
@@ -149,37 +149,6 @@
                                             class="fas fa-stream fa-1x fa-fw"
                                         ></i>
                                         flows
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                            <hr />
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item
-                                    v-if="loggedIn"
-                                    class="m-0 p-0"
-                                    disabled
-                                >
-                                    <b-button disabled variant="white">
-                                        <small>connect</small>
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item class="m-0 p-0">
-                                    <b-button
-                                        variant="outline-dark"
-                                        class="text-left"
-                                        title="Slack"
-                                    >
-                                        <i class="fab fa-slack fa-2x fa-fw"></i>
-                                    </b-button>
-                                    <b-button
-                                        variant="outline-dark"
-                                        href="https://github.com/Computational-Plant-Science/plantit"
-                                        title="GitHub"
-                                        class="text-left pl-2 github-hover"
-                                    >
-                                        <i
-                                            class="fab fa-github fa-2x fa-fw"
-                                        ></i>
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -293,18 +262,52 @@
                             Link GitHub Account
                         </b-button>
                     </b-nav-item>
+                    <b-nav-item>
+                        <b-button
+                            variant="outline-dark"
+                            class="text-left m-0"
+                            title="Slack"
+                        >
+                            <i class="fab fa-slack fa-2x fa-fw"></i>
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item>
+                        <b-button
+                            variant="outline-dark"
+                            href="https://github.com/Computational-Plant-Science/plantit"
+                            title="GitHub"
+                            class="text-left github-hover m-0"
+                        >
+                            <i class="fab fa-github fa-2x fa-fw"></i>
+                        </b-button>
+                    </b-nav-item>
+                    <b-nav-item href="https://de.cyverse.org/de/">
+                        <b-button
+                            variant="white"
+                            class="m-0"
+                            href="https://de.cyverse.org/de/"
+                            title="CyVerse Discovery Environment"
+                        >
+                            <b-img
+                                :src="
+                                    require('../assets/sponsors/cyversebw-notext.png')
+                                "
+                                height="35px"
+                                alt="Cyverse"
+                            ></b-img>
+                        </b-button>
+                    </b-nav-item>
                     <b-nav-item
                         right
-                        variant="dark"
                         v-if="loggedIn"
                         :title="currentUserDjangoProfile.username"
-                        class="m-0 p-0"
+                        class="m-0 ml-2 p-0"
                         style="font-size: 12pt"
                         :to="
                             '/users/' + currentUserDjangoProfile.username + '/'
                         "
                     >
-                        <b-button variant="white">
+                        <b-button variant="white" class="m-0">
                             <b-img
                                 v-if="currentUserGitHubProfile"
                                 class="avatar m-0 p-0"
@@ -433,7 +436,7 @@ a
 
 
 .avatar
-  max-height: 25px
+  max-height: 35px
   border: 1px solid $success
 
 a

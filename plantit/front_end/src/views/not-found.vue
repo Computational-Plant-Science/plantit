@@ -6,7 +6,7 @@
             <b-row align-content="center">
                 <b-col>
                     <h5 class="text-center">
-                        This page does not exist.
+                        this page does not exist
                     </h5>
                 </b-col>
             </b-row>
