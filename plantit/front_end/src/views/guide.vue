@@ -13,7 +13,7 @@
         </div>
         <div class="p-1 pt-2 background-dark">
             <h2 class="text-center text-white">
-                <b class="text-success">Developer Docs</b>
+                <b class="text-success">User Guide</b>
             </h2>
         </div>
         <div class="p-5 m-0" style="min-height: 100%">
@@ -30,18 +30,18 @@
 
 <script>
 import VueMarkdown from 'vue-markdown';
-import docs from '../assets/markdown/docs.md';
+import guide from '../assets/markdown/guide.md';
 
 export default {
-    name: 'Docs',
+    name: 'guide',
     components: {
         VueMarkdown
     },
     data() {
         return {
-            source: docs
+            source: guide
         };
-    },
+    }
 };
 </script>
 

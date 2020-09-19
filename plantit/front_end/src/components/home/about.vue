@@ -9,7 +9,7 @@
     >
         <template slot="header" style="border: none">
             <h2 class="text-white mt-5">
-                Plant science workflow automation in the browser.
+                plant science workflow automation in the browser
             </h2>
         </template>
         <b-container>
@@ -33,19 +33,19 @@
                     >
                         <b-card-text class="ml-4">
                             <h4 class="text-white">
-                                Access or upload data.
+                                access or upload data
                             </h4>
-                            Upload, store, and publish datasets with
+                            upload, store, and publish datasets with
                             <b-link
                                 class="text-white"
                                 href="https://www.cyverse.org/"
                                 >CyVerse</b-link
-                            >, or plug in cloud stores like
+                            ><!--, or plug in cloud stores like
                             <b-link
                                 class="text-white"
                                 href="https://aws.amazon.com/s3/"
                                 >Amazon S3</b-link
-                            >.
+                            >-->
                         </b-card-text>
                     </b-card>
                 </b-col>
@@ -70,12 +70,16 @@
                     >
                         <b-card-text class="ml-4">
                             <h4 class="text-white">
-                                Find or share software.
+                                find or share software
                             </h4>
-                            Run code from <b-link
+                            run code from
+                            <b-link
                                 class="text-white"
                                 href="https://www.github.com/"
-                                >Github</b-link> or publish your own to the community. If it can run in
+                                >Github</b-link
+                            >
+                            or publish your own to the community &mdash; if it
+                            can run in
                             <b-link
                                 class="text-white"
                                 href="https://www.docker.com/"
@@ -86,7 +90,7 @@
                                 class="text-white"
                                 href="https://sylabs.io/docs/"
                                 >Singularity</b-link
-                            >, it will run on PlantIT.
+                            >, it will run on PlantIT
                         </b-card-text>
                     </b-card>
                 </b-col>
@@ -111,36 +115,24 @@
                     >
                         <b-card-text class="ml-4">
                             <h4 class="text-white">
-                                 Workflows on the web.
+                                workflows on the web
                             </h4>
-                            Configure parameters, deploy to a cluster, and get
-                            notified when results are ready: all from the
-                            browser, no programming required.
+                            onfigure parameters, deploy to a cluster, and get
+                            notified when results are ready &mdash; all from the
+                            browser, no programming required
                         </b-card-text>
                     </b-card>
                 </b-col>
             </b-row>
             <br />
             <br />
-            <!--<b-card
-                align="center"
-                    sub-title-text-variant="success"
-                    class="text-left text-white rounded-0 overflow-hidden"
-                    no-body
-                    bg-variant="dark"
-                    text-variant="success"
-                    :img-src="require('../../assets/frontpage/hex_blank.png')"
-                img-top
-                    style="border: none"
-                >
-                </b-card>-->
         </b-container>
     </b-card>
 </template>
 
 <script>
 export default {
-    name: 'HomeDevelopers'
+    name: 'home-about'
 };
 </script>
 

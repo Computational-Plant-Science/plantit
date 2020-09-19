@@ -18,7 +18,7 @@
                             width="100px"
                             alt="Plant IT"
                         ></b-img>
-                        <h1>PlantIT</h1>
+                        <h1>plantit</h1>
                     </b-col>
                 </b-row>
                 <b-navbar toggleable="sm" class="m-0 p-0">
@@ -28,45 +28,44 @@
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-seedling fa-2x"></i>
                                     <br />
-                                    About
+                                    about
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/Guide" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-map-signs fa-2x"></i>
                                     <br />
-                                    Guide
+                                    guide
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/Docs" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-book fa-2x"></i>
                                     <br />
-                                    Docs
+                                    docs
                                 </b-button>
                             </b-nav-item>
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
                 <b-row class="m-0 p-0">
-                        <b-col class="m-0 p-0">
-                            <b-button
-                                variant="outline-white"
-                                block
-                                class="text-center"
-                                href="/login/?next=/workflows/"
-                            >
-                                <b-img
-                                    :src="
-                                        require('@/assets/sponsors/cyversebw-notext.png')
-                                    "
-                                    height="18px"
-                                    alt="Cyverse"
-                                ></b-img>
-                                Log In with CyVerse
-                            </b-button>
-                        </b-col>
-                    </b-row>
+                    <b-col class="m-0 p-0">
+                        <b-button
+                            variant="outline-white"
+                            block
+                            class="text-center"
+                            href="/login/?next=/workflows/"
+                        >
+                            log in with <b-img
+                                :src="
+                                    require('@/assets/sponsors/cyversebw-notext.png')
+                                "
+                                height="18px"
+                                alt="Cyverse"
+                            ></b-img> <b>CyVerse</b>
+                        </b-button>
+                    </b-col>
+                </b-row>
             </b-card>
         </b-container>
         <i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i>
@@ -75,7 +74,7 @@
 
 <script>
 export default {
-    name: 'HomeAbout'
+    name: 'home-splash'
 };
 </script>
 

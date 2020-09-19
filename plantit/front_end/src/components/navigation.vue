@@ -2,33 +2,17 @@
     <div class="m-0 p-0">
         <b-sidebar
             id="sidebar-left"
-            shadow="lg"
+            shadow="sm"
             bg-variant="white"
             no-header-close
         >
             <template v-slot:default="{ hide }">
-                <b-container class="p-3">
+                <b-container class="p-1">
                     <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item
-                                    v-if="loggedIn"
-                                    class="m-0 p-0"
-                                    disabled
-                                >
-                                    <b-button disabled variant="white">
-                                        <small
-                                            >Welcome to PlantIT,
-                                            {{
-                                                currentUserCyVerseProfile
-                                                    ? currentUserCyVerseProfile.first_name
-                                                    : currentUserDjangoProfile.username
-                                            }}.
-                                        </small>
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-else
+                                    v-if="!loggedIn"
                                     href="/login/?next=/workflows/"
                                     class="m-0 p-0"
                                 >
@@ -37,6 +21,7 @@
                                         block
                                         class="text-left m-0"
                                     >
+                                        log in with
                                         <b-img
                                             :src="
                                                 require('../assets/sponsors/cyversebw-notext.png')
@@ -44,26 +29,35 @@
                                             height="18px"
                                             alt="Cyverse"
                                         ></b-img>
-                                        Log In with CyVerse
+                                        <b>CyVerse</b>
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item class="m-0 p-0">
                                     <b-button
-                                        variant="white"
+                                        variant="success"
                                         block
                                         class="text-left m-0"
                                         @click="hide"
-                                        title="Hide Sidebar"
+                                        title="hide sidebar"
                                     >
                                         <i
                                             class="fas fa-arrow-left fa-1x fa-fw"
                                         ></i>
-                                        Close Sidebar
+                                        hide
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
                             <hr />
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
+                                <b-nav-item
+                                    v-if="loggedIn"
+                                    class="m-0 p-0"
+                                    disabled
+                                >
+                                    <b-button disabled variant="white">
+                                        <small>navigate</small>
+                                    </b-button>
+                                </b-nav-item>
                                 <b-nav-item to="/" class="m-0 p-0">
                                     <b-button
                                         variant="outline-dark"
@@ -71,22 +65,10 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-home fa-1x fa-fw"></i>
-                                        Home
+                                        home
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item to="/About" class="m-0 p-0">
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-seedling fa-1x fa-fw"
-                                        ></i>
-                                        About
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item to="/Guide" class="m-0 p-0">
+                                <b-nav-item to="/guide" class="m-0 p-0">
                                     <b-button
                                         variant="outline-dark"
                                         block
@@ -95,17 +77,17 @@
                                         <i
                                             class="fas fa-map-signs fa-1x fa-fw"
                                         ></i>
-                                        Guide
+                                        guide
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item to="/Docs" class="m-0 p-0">
+                                <b-nav-item to="/docs" class="m-0 p-0">
                                     <b-button
                                         variant="outline-dark"
                                         block
                                         class="text-left"
                                     >
                                         <i class="fas fa-book fa-1x fa-fw"></i>
-                                        Docs
+                                        docs
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -113,7 +95,31 @@
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item
                                     v-if="loggedIn"
-                                    title="Data"
+                                    class="m-0 p-0"
+                                    disabled
+                                >
+                                    <b-button disabled variant="white">
+                                        <small>explore</small>
+                                    </b-button>
+                                </b-nav-item>
+                              <b-nav-item
+                                    v-if="loggedIn"
+                                    title="users"
+                                    to="/users"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button
+                                        variant="outline-dark"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i class="fas fa-user fa-1x fa-fw"></i>
+                                        users
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    v-if="loggedIn"
+                                    title="data"
                                     to="/data"
                                     class="m-0 p-0"
                                 >
@@ -125,13 +131,13 @@
                                         <i
                                             class="fas fa-database fa-1x fa-fw"
                                         ></i>
-                                        Public Data
+                                        data
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
                                     v-if="loggedIn"
-                                    title="Workflows"
-                                    to="/workflows"
+                                    title="flows"
+                                    to="/flows"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -142,36 +148,7 @@
                                         <i
                                             class="fas fa-stream fa-1x fa-fw"
                                         ></i>
-                                        Public Workflows
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                            <hr />
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item class="m-0 p-0" title="Slack">
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i class="fab fa-slack fa-1x fa-fw"></i>
-                                        Slack
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    class="m-0 p-0"
-                                    title="Github"
-                                    href="https://github.com/Computational-Plant-Science/plantit"
-                                >
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fab fa-github fa-1x fa-fw"
-                                        ></i>
-                                        GitHub
+                                        flows
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -179,7 +156,38 @@
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item
                                     v-if="loggedIn"
-                                    title="Log Out"
+                                    class="m-0 p-0"
+                                    disabled
+                                >
+                                    <b-button disabled variant="white">
+                                        <small>connect</small>
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item class="m-0 p-0">
+                                    <b-button
+                                        variant="outline-dark"
+                                        class="text-left"
+                                        title="Slack"
+                                    >
+                                        <i class="fab fa-slack fa-2x fa-fw"></i>
+                                    </b-button>
+                                    <b-button
+                                        variant="outline-dark"
+                                        href="https://github.com/Computational-Plant-Science/plantit"
+                                        title="GitHub"
+                                        class="text-left pl-2 github-hover"
+                                    >
+                                        <i
+                                            class="fab fa-github fa-2x fa-fw"
+                                        ></i>
+                                    </b-button>
+                                </b-nav-item>
+                            </b-nav>
+                            <hr />
+                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
+                                <b-nav-item
+                                    v-if="loggedIn"
+                                    title="log out"
                                     to="/logout"
                                     class="m-0 p-0"
                                 >
@@ -191,7 +199,7 @@
                                         <i
                                             class="fas fa-door-closed fa-1x fa-fw"
                                         ></i>
-                                        Log Out
+                                        log out
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -219,8 +227,8 @@
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo p-0 pt-4 pb-4 overflow-hidden"
-            style="max-height: 60px"
+            class="logo p-0 overflow-hidden"
+            style="min-height: 40px; max-height: 60px; z-index: 1000"
             fixed="top"
         >
             <b-collapse class="m-0 p-0" is-nav>
@@ -234,9 +242,9 @@
                             @mouseleave="titleContent = 'breadcrumb'"
                         >
                             <b-img
-                                class="m-0 p-0 mb-4"
+                                class="m-0 p-0 mb-1"
                                 center
-                                width="50px"
+                                width="20px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -250,7 +258,7 @@
                         v-if="titleContent === 'sidebar'"
                     >
                         <b-breadcrumb-item disabled class="ml-1">
-                            Show Sidebar
+                            show sidebar
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                     <b-breadcrumb
@@ -286,16 +294,19 @@
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
+                        right
+                        variant="dark"
                         v-if="loggedIn"
                         :title="currentUserDjangoProfile.username"
                         class="m-0 p-0"
+                        style="font-size: 12pt"
                         :to="
                             '/users/' + currentUserDjangoProfile.username + '/'
                         "
                     >
-                        <b-button variant="outline-dark">
-                            <!--<i class="fas fa-user fa-1x"></i>-->
+                        <b-button variant="white">
                             <b-img
+                                v-if="currentUserGitHubProfile"
                                 class="avatar m-0 p-0"
                                 rounded="circle"
                                 :src="
@@ -304,11 +315,14 @@
                                         : ''
                                 "
                             ></b-img>
-                            {{
-                                currentUserCyVerseProfile
-                                    ? currentUserCyVerseProfile.first_name
-                                    : currentUserDjangoProfile.username
-                            }}
+                            <b v-else
+                                >(
+                                {{
+                                    currentUserCyVerseProfile
+                                        ? currentUserCyVerseProfile.first_name
+                                        : currentUserDjangoProfile.username
+                                }})</b
+                            >
                         </b-button>
                     </b-nav-item>
                 </b-navbar-nav>
@@ -330,16 +344,16 @@ export default {
             titleContent: 'breadcrumb'
         };
     },
-    created: function() {
-        this.crumbs = this.$route.meta.crumb;
-        this.$store.dispatch('loadCurrentUser');
-    },
     computed: mapGetters([
         'currentUserDjangoProfile',
         'currentUserCyVerseProfile',
         'currentUserGitHubProfile',
         'loggedIn'
     ]),
+    created: function() {
+        this.crumbs = this.$route.meta.crumb;
+        this.$store.dispatch('loadCurrentUser');
+    },
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
@@ -368,10 +382,6 @@ a
     color: $dark !important
     border: none !important
 
-a:hover
-    // color: $color-highlight !important
-    text-decoration-color: $color-highlight
-    border: none !important
 
 .mirror
     -moz-transform: scale(-1, 1)
@@ -396,8 +406,8 @@ a:hover
 
 .breadcrumb > li + li:before + li::marker
     color: $dark !important
-    margin-top: 14px !important
-    font-size: 14pt !important
+    margin-top: 11px !important
+    font-size: 11pt !important
     font-weight: 200
     content: " /"
 
@@ -416,6 +426,11 @@ a:hover
     color: white
     -webkit-transform: rotate(90deg)
     transform: rotate(90deg)
+
+.github-hover:hover
+  color: $color-highlight !important
+  background-color: $dark !important
+
 
 .avatar
   max-height: 25px

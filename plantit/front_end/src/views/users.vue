@@ -15,17 +15,17 @@
                 <template v-slot:header style="background-color: white">
                     <b-row align-v="center">
                         <b-col style="color: white">
-                            <h1>{{ user.username }}</h1>
+                            <h3>{{ user.username }}</h3>
                         </b-col>
                         <b-col md="auto">
                             <b-button
                                 class="text-left"
-                                variant="success"
+                                variant="outline-dark"
                                 v-b-tooltip.hover
                                 @click="userSelected(user)"
                             >
-                                <i class="fas fa-terminal"></i>
-                                View User
+                                <i class="far fa-user"></i>
+                                view
                             </b-button>
                         </b-col>
                     </b-row>

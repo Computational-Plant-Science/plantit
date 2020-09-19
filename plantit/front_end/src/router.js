@@ -1,18 +1,18 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import Home from './views/Home.vue';
-import About from './views/About.vue';
-import Guide from './views/Guide.vue';
-import Docs from './views/Docs.vue';
-import Data from './views/Data.vue';
-import Workflows from './views/Workflows.vue';
-import Workflow from './views/Workflow.vue';
-import Runs from './views/Runs.vue';
-import Run from './views/Run.vue';
-import User from './views/User.vue';
-import Users from './views/Users.vue';
-import Login from './views/Login.vue';
-import Logout from './views/Logout.vue';
+import home from './views/home.vue';
+import about from './views/about.vue';
+import guide from './views/guide.vue';
+import docs from './views/docs.vue';
+import data from './views/data.vue';
+import flows from './views/flows.vue';
+import flow from './views/flow.vue';
+import runs from './views/user-runs.vue';
+import run from './views/run.vue';
+import user from './views/user.vue';
+import users from './views/users.vue';
+import login from './views/log-in.vue';
+import logout from './views/log-out.vue';
 
 Vue.use(Router);
 
@@ -23,30 +23,21 @@ let router = new Router({
         {
             path: '/',
             name: 'home',
-            component: Home,
+            component: home,
             meta: {
-                title: 'PlantIT',
-                crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    }
-                ]
+                title: 'home',
+                crumb: []
             }
         },
         {
             path: '/about',
             name: 'about',
-            component: About,
+            component: about,
             meta: {
-                title: 'About',
+                title: 'about',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'About',
+                        text: 'about',
                         href: '/about'
                     }
                 ]
@@ -55,16 +46,12 @@ let router = new Router({
         {
             path: '/guide',
             name: 'guide',
-            component: Guide,
+            component: guide,
             meta: {
-                title: 'Guide',
+                title: 'guide',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Guide',
+                        text: 'guide',
                         href: '/guide'
                     }
                 ]
@@ -73,16 +60,12 @@ let router = new Router({
         {
             path: '/docs',
             name: 'docs',
-            component: Docs,
+            component: docs,
             meta: {
-                title: 'Docs',
+                title: 'docs',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Docs',
+                        text: 'docs',
                         href: '/docs'
                     }
                 ]
@@ -91,16 +74,12 @@ let router = new Router({
         {
             path: '/login?next=/workflows/',
             name: 'login',
-            component: Login,
+            component: login,
             meta: {
-                title: 'Log In',
+                title: 'log in',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Log In',
+                        text: 'log in',
                         href: '/login/?next=/workflows/'
                     }
                 ]
@@ -109,16 +88,12 @@ let router = new Router({
         {
             path: '/logout',
             name: 'logout',
-            component: Logout,
+            component: logout,
             meta: {
-                title: 'Log Out',
+                title: 'log out',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Log Out',
+                        text: 'log out',
                         href: '/logout'
                     }
                 ]
@@ -127,54 +102,42 @@ let router = new Router({
         {
             path: '/data',
             name: 'data',
-            component: Data,
+            component: data,
             meta: {
-                title: 'Data',
+                title: 'data',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Data',
+                        text: 'data',
                         href: '/data'
                     }
                 ]
             }
         },
         {
-            path: '/workflows',
-            name: 'workflows',
-            component: Workflows,
+            path: '/flows',
+            name: 'flows',
+            component: flows,
             meta: {
-                title: 'Workflows',
+                title: 'flows',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Workflows',
-                        href: '/workflows'
+                        text: 'flows',
+                        href: '/flows'
                     }
                 ]
             }
         },
         {
-            path: '/workflows/:owner/:name',
-            name: 'workflow',
+            path: '/flows/:owner/:name',
+            name: 'flow',
             props: true,
-            component: Workflow,
+            component: flow,
             meta: {
-                title: '',
+                title: 'flow',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Workflows',
-                        href: '/workflows'
+                        text: 'flows',
+                        href: '/flows'
                     }
                 ]
             }
@@ -182,16 +145,12 @@ let router = new Router({
         {
             path: '/runs',
             name: 'runs',
-            component: Runs,
+            component: runs,
             meta: {
-                title: 'Runs',
+                title: 'runs',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Runs',
+                        text: 'runs',
                         href: '/runs'
                     }
                 ]
@@ -201,16 +160,12 @@ let router = new Router({
             path: '/runs/:id',
             name: 'run',
             props: true,
-            component: Run,
+            component: run,
             meta: {
-                title: '',
+                title: 'run',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Runs',
+                        text: 'runs',
                         href: '/runs'
                     }
                 ]
@@ -219,35 +174,27 @@ let router = new Router({
         {
             path: '/users',
             name: 'users',
-            component: Users,
+            component: users,
             meta: {
-                title: '',
+                title: 'users',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Users',
+                        text: 'users',
                         href: '/users'
                     }
-                ],
+                ]
             }
         },
         {
             path: '/users/:username',
             name: 'user',
             props: true,
-            component: User,
+            component: user,
             meta: {
-                title: '',
+                title: 'user',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Users',
+                        text: 'users',
                         href: '/users'
                     }
                 ],
@@ -258,16 +205,10 @@ let router = new Router({
             path: '*',
             name: '404',
             component: () =>
-                import(
-                    /* webpackChunkName: "about" */ './views/PageNotFound.vue'
-                ),
+                import(/* webpackChunkName: "about" */ './views/not-found.vue'),
             meta: {
                 title: 'Not Found',
                 crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
                     {
                         text: '404'
                     }
@@ -279,13 +220,13 @@ let router = new Router({
 
 router.beforeEach((to, from, next) => {
     if (to.name === 'workflow') {
-        to.meta.title = `Workflow: ${to.params.name}`;
+        to.meta.title = `flow ${to.params.name}`;
     }
     if (to.name === 'run') {
-        to.meta.title = `Run: ${to.params.id}`;
+        to.meta.title = `run ${to.params.id}`;
     }
     if (to.name === 'user') {
-        to.meta.title = `User: ${to.params.username}`;
+        to.meta.title = `user ${to.params.username}`;
     }
     if (to.meta.name !== null) {
         document.title = to.meta.title;
@@ -307,7 +248,7 @@ router.beforeEach((to, from, next) => {
         );
     }
     if (to.matched.some(record => record.name === 'run')) {
-        if (to.meta.crumb.length === 3) {
+        if (to.meta.crumb.length === 4) {
             to.meta.crumb.pop();
         }
         to.meta.crumb.push({
@@ -316,7 +257,7 @@ router.beforeEach((to, from, next) => {
         });
     }
     if (to.matched.some(record => record.name === 'user')) {
-        if (to.meta.crumb.length === 3) {
+        if (to.meta.crumb.length === 2) {
             to.meta.crumb.pop();
         }
         to.meta.crumb.push({

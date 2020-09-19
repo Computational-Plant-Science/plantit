@@ -13,7 +13,7 @@
         </div>
         <div class="p-1 pt-2 background-dark">
             <h2 class="text-center text-white">
-                <b class="text-success">About PlantIT</b>
+                <b class="text-success">about plantit</b>
             </h2>
         </div>
         <div class="p-5 m-0" style="min-height: 100%">
@@ -370,7 +370,7 @@ import about from '../assets/markdown/about.md';
 import { mapGetters } from 'vuex';
 
 export default {
-    name: 'About',
+    name: 'about',
     components: {
         VueMarkdown
     },

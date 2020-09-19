@@ -1,9 +1,17 @@
+const GoogleFontsPlugin = require('google-fonts-webpack-plugin');
+
 module.exports = {
     assetsDir: 'assets/',
     pluginOptions: {
         'style-resources-loader': {
             preProcessor: 'sass',
             patterns: []
+        },
+        'google-fonts-webpack-plugin': {
+            fonts: [
+                { family: 'Source Sans Pro' },
+                { family: 'Roboto', variants: ['400'] }
+            ]
         }
     },
     chainWebpack(config) {

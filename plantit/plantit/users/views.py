@@ -39,10 +39,13 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         }
         if request.user.profile.cyverse_token is not '':
             cyverse_response = requests.get(f"https://de.cyverse.org/terrain/secured/user-info?username={user.username}", headers={'Authorization': f"Bearer {request.user.profile.cyverse_token}"})
-            response['cyverse_profile'] = cyverse_response.json()[user.username]
-            user.first_name = response['cyverse_profile']['first_name']
-            user.last_name = response['cyverse_profile']['last_name']
-            user.save()
+            if cyverse_response.status_code == 401:
+                response['cyverse_profile'] = 'expired token'
+            else:
+                response['cyverse_profile'] = cyverse_response.json()[user.username]
+                user.first_name = response['cyverse_profile']['first_name']
+                user.last_name = response['cyverse_profile']['last_name']
+                user.save()
         if request.user.profile.github_token is not '':
             github_response = requests.get(f"https://api.github.com/users/{user.profile.github_username}", headers={'Authorization':
                                                      f"Bearer {request.user.profile.github_token}"})

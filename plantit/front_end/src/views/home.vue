@@ -2,9 +2,9 @@
     <b-container fluid>
         <b-row no-gutters>
             <b-col>
-                <HomeSplash></HomeSplash>
-                <HomeAbout></HomeAbout>
-                <HomeSponsors></HomeSponsors>
+                <splash></splash>
+                <about></about>
+                <sponsors></sponsors>
             </b-col>
         </b-row>
     </b-container>
@@ -12,16 +12,16 @@
 
 <script>
 // @ is an alias to /src
-import HomeSplash from '@/components/home/HomeSplash.vue';
-import HomeAbout from '@/components/home/HomeAbout.vue';
-import HomeSponsors from '../components/home/HomeSponsors';
+import splash from '@/components/home/splash.vue';
+import about from '@/components/home/about.vue';
+import sponsors from '../components/home/sponsors';
 
 export default {
     name: 'home',
     components: {
-        HomeSplash,
-        HomeAbout,
-        HomeSponsors
+        splash,
+        about,
+        sponsors
     }
 };
 </script>
@@ -32,5 +32,4 @@ export default {
 
 html
     scroll-behavior: smooth
-
 </style>
