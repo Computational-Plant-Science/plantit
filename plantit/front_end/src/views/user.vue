@@ -138,7 +138,10 @@
                         </b-col>
                     </b-row>
                 </b-tab>
-                <b-tab title="Data"><p>I'm the second tab</p></b-tab>
+                <b-tab title="Data">
+                  <b-card border-variant="default">
+                  <datatree :node="data"></datatree></b-card></b-tab>
+
                 <b-tab title="Flows">
                     <b-row
                         v-if="currentUserGitHubProfile === null"
@@ -170,7 +173,7 @@
                     >
                     </flows>
                 </b-tab>
-                <b-tab title="runs"><p>I'm a disabled tab!</p></b-tab>
+                <b-tab title="Runs"><p>I'm a disabled tab!</p></b-tab>
             </b-tabs>
         </b-card>
     </div>
@@ -180,13 +183,15 @@
 import router from '../router';
 import { mapGetters } from 'vuex';
 import flows from '@/components/flows.vue';
+import datatree from '@/components/data-tree.vue';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'User',
     components: {
-        flows
+        flows,
+        datatree
     },
     data: function() {
         return {
@@ -206,6 +211,10 @@ export default {
     ]),
     async mounted() {
         await this.loadUser();
+        await this.loadDirectory(
+            `/iplant/home/${this.currentUserDjangoProfile.username}/`,
+            this.currentUserDjangoProfile.profile.cyverse_token
+        );
     },
     methods: {
         async loadUser() {
@@ -231,6 +240,20 @@ export default {
                     name: workflow['repo']['name']
                 }
             });
+        },
+        loadDirectory(path, token) {
+            axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
+                    { headers: { Authorization: 'Bearer ' + token } }
+                )
+                .then(response => {
+                    this.data = response.data;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
         }
     }
 };

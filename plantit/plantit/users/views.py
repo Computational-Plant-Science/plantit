@@ -37,6 +37,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'last_name': user.last_name,
             }
         }
+        if request.user.username == user.username:
+            response['django_profile']['cyverse_token'] = user.profile.cyverse_token
         if request.user.profile.cyverse_token is not '':
             cyverse_response = requests.get(f"https://de.cyverse.org/terrain/secured/user-info?username={user.username}", headers={'Authorization': f"Bearer {request.user.profile.cyverse_token}"})
             if cyverse_response.status_code == 401:

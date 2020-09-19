@@ -80,16 +80,5 @@ export const user = {
                     if (error.response.status === 500) throw error;
                 });
         },
-        loadViewedUser({ commit }, username) {
-            axios
-                .get(`/apis/v1/users/get_by_username/?username=${username}`)
-                .then(response => {
-                    commit('setViewedUserCyVerseProfile', response.data);
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
-        }
     }
 };

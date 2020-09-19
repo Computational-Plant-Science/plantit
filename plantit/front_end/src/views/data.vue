@@ -131,7 +131,7 @@
 
 <script>
 // import router from '../router';
-import DataTreeNode from '@/components/DataTreeNode.vue';
+import DataTreeNode from '@/components/data-tree.vue';
 import { mapGetters, mapActions } from 'vuex';
 
 export default {

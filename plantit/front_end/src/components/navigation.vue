@@ -21,7 +21,7 @@
                                         <i
                                             class="fas fa-arrow-left fa-1x fa-fw"
                                         ></i>
-                                        hide sidebar
+                                        Hide Sidebar
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
@@ -34,7 +34,7 @@
                                         block
                                         class="text-left m-0"
                                     >
-                                        log in with
+                                        Log in with
                                         <b-img
                                             :src="
                                                 require('../assets/sponsors/cyversebw-notext.png')
@@ -57,7 +57,7 @@
                                     disabled
                                 >
                                     <b-button disabled variant="white">
-                                        <small>navigate</small>
+                                        <small>Learn</small>
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/" class="m-0 p-0">
@@ -67,7 +67,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-home fa-1x fa-fw"></i>
-                                        home
+                                        Home
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/guide" class="m-0 p-0">
@@ -79,7 +79,7 @@
                                         <i
                                             class="fas fa-map-signs fa-1x fa-fw"
                                         ></i>
-                                        guide
+                                        Guide
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/docs" class="m-0 p-0">
@@ -89,7 +89,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-book fa-1x fa-fw"></i>
-                                        docs
+                                        Docs
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -100,7 +100,7 @@
                             >
                                 <b-nav-item class="m-0 p-0" disabled>
                                     <b-button disabled variant="white">
-                                        <small>explore</small>
+                                        <small>Explore</small>
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
@@ -114,7 +114,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-user fa-1x fa-fw"></i>
-                                        users
+                                        Users
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
@@ -130,7 +130,7 @@
                                         <i
                                             class="fas fa-database fa-1x fa-fw"
                                         ></i>
-                                        data
+                                        Data
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
@@ -146,7 +146,7 @@
                                         <i
                                             class="fas fa-stream fa-1x fa-fw"
                                         ></i>
-                                        flows
+                                        Flows
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -184,7 +184,7 @@
                             class="text-left"
                         >
                             <i class="fas fa-door-closed fa-1x fa-fw"></i>
-                            log out
+                            Log Out
                         </b-button>
                     </b-nav-item>
                 </b-nav>
@@ -226,7 +226,7 @@
                         v-if="titleContent === 'sidebar'"
                     >
                         <b-breadcrumb-item disabled class="ml-1">
-                            show sidebar
+                            Show Sidebar
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                     <b-breadcrumb
