@@ -1,5 +1,10 @@
 <template>
     <b-container>
+      <div class="p-1 pt-2 background-dark">
+                <h1 class="text-center text-white">
+                    <b class="text-dark">plantit is supported by</b>
+                </h1>
+            </div>
         <b-card
             align="center"
             class="rounded-0 text-center"

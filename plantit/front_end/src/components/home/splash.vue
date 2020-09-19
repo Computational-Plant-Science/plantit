@@ -24,21 +24,21 @@
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
-                            <b-nav-item to="/About" class="m-0 p-0">
+                            <b-nav-item to="about" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-seedling fa-2x"></i>
                                     <br />
                                     about
                                 </b-button>
                             </b-nav-item>
-                            <b-nav-item to="/Guide" class="m-0 p-0">
+                            <b-nav-item to="/guide" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-map-signs fa-2x"></i>
                                     <br />
                                     guide
                                 </b-button>
                             </b-nav-item>
-                            <b-nav-item to="/Docs" class="m-0 p-0">
+                            <b-nav-item to="/docs" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-book fa-2x"></i>
                                     <br />

@@ -1,56 +1,53 @@
-## What is PlantIT?
+### what is plantit?
 
-PlantIT is web workflow automation for plant phenomics. PlantIT is a science gateway with two user groups in mind:
+plantit is a web workflow automation platform for plant phenomics: a science gateway for both data and software
 
-#### Biologists and Breeders
+##### prior art
 
-PlantIT is Software-as-a-Service for plant science professionals &mdash; in other words, a website. With it you can store, publish, and access data with CyVerse, and run simulations and analyses on clusters with a click.
+plantit was preceded by &mdash; grew out of, as it were &mdash; [DIRT](http://dirt.cyverse.org/?q=welcome) (**D**igital **I**maging of **R**oot **T**raits), which:
+ 
+ - measures traits of monocot and dicot roots from digital images
+ - automates the extraction of root traits
+ - makes high-throughput grid computing environments available to end-users without technical training
 
-### Programmers and Developers
+##### plantit is for biologists and breeders
 
-PlantIT is a Platform-as-a-Service for computer programmers and research software developers. PlantIT integrates with GitHub: just add a `plantit.yaml` file to your repository to deploy a workflow, then submit a review request to share it with the community. You can develop with your tools of choice &mdash; if it runs in Docker or Singularity, it will run on PlantIT.
+plantit is software-as-a-service allowing plant scientists and professionals to:
+ 
+ - store, publish, and access data with CyVerse
+ - run simulations and analyses on clusters from a web browser
 
-### Prior art
+##### plantit is for programmers and developers
 
----
+plantit is a platform-as-a-service for programmers and research software developers, integrated tightly with GitHub: just add a `plantit.yaml` file to your repository to deploy a developed developed with your tools of choice &mdash; if it runs in Docker or Singularity, it will run on PlantIT
 
-PlantIT was preceded by &mdash; grew out of, as it were &mdash; [DIRT](http://dirt.cyverse.org/?q=welcome). **D**igital **I**maging of **R**oot **T**raits measures traits of monocot and dicot roots from digital images. DIRT automates the extraction of root traits by making high-throughput grid computing environments available to end-users without technical training.
+<br/>
 
-<br>
+### why does plantit exist? 
 
-### Why does PlantIT exist? 
-
----
-
-Some ideas:
+##### ideas
 
 - computational science ought to be straightforward to reproduce
 - research software ought to be easy to version, run, and share
 
-Some vignettes:
+##### vignettes
 
 - a field biologist collects a dataset, associates it with metadata, preprocesses it, acquires a DOI, and publishes it to the community
 - a breeder deploys an automated imaging mechanism and generates thousands of 3D reconstructions, each described by hundreds of images
 - a researcher develops a growth model and runs embarrassingly parallel Monte Carlo simulations to explore the corresponding phenotype space
 - a computer scientist shares an algorithm with biologists who may be unfamiliar with the command line and may use a variety of operating systems
 
-These may involve:
+##### annoying things often involved in writing, sharing, or using research software
 
 - hard drives
 - shell scripting
 - emailing strangers
 - juggling job submission scripts
-- answering support requests at 2 A.M.
-- sticking Post-it notes to computer monitors
-- trying to remember which directory yesterday's data is in
+- answering support request at 2am
+- sticking notes to computer monitors
+- remembering which directory yesterday's data is in
 
-PlantIT makes the computer do some of the painful bits.
-
-<br>
-
-### With PlantIT, you can...
-
----
+##### things you can do with plantit
 
 - access public datasets
 - access or upload your own datasets
@@ -62,21 +59,16 @@ PlantIT makes the computer do some of the painful bits.
 - trigger a workflow to run when it or your dataset changes
 - develop a new workflow
 - publish workflows to the community
-- **think less about infrastructure and more about science**
 
-<br>
+<br/>
 
-### Is PlantIT a bioinformatics gateway?
+### is plantit a bioinformatics gateway?
 
----
+- plantit is flexible enough to run nearly any container-friendly workload, but if you want to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit
 
-Sort of. PlantIT is a browser-based data science portal for plant phenomics. PlantIT is flexible enough to run nearly any container-friendly workload, but if you want to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit.
-
-<br>
+<br/>
  
-### PlantIT is not a...
-
----
+### plantit is not a
 
 - computational pipeline framework (e.g., [Snakemake](https://snakemake.readthedocs.io/en/stable/), [Nextflow](https://www.nextflow.io/), [Luigi](https://luigi.readthedocs.io/en/stable/), [Airflow](https://airflow.apache.org/), [Metaflow](https://metaflow.org/))
 - distributed queue or task scheduler (e.g., [Celery](https://docs.celeryproject.org/en/stable/index.html) or [Dask](https://dask.org/), respectively)

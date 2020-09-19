@@ -379,9 +379,9 @@ export default {
             source: about
         };
     },
-    created: function() {
-        this.$store.dispatch('loadUsers');
-    },
+    // created: function() {
+    //     this.$store.dispatch('loadUsers');
+    // },
     computed: {
         ...mapGetters(['allUsers']),
         pipelineDevelopers: function() {
