@@ -29,21 +29,21 @@
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-map-signs fa-2x"></i>
                                     <br />
-                                    guide
+                                    Guide
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/docs" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-book fa-2x"></i>
                                     <br />
-                                    docs
+                                    Docs
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item class="m-0 p-0">
                                 <b-button variant="outline-dark" title="Slack">
                                     <i class="fab fa-slack fa-2x"></i>
                                     <br />
-                                    slack
+                                    Slack
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item class="m-0 p-0">
@@ -54,22 +54,22 @@
                                 >
                                     <i class="fab fa-github fa-2x"></i>
                                     <br />
-                                    github
+                                    Github
                                 </b-button>
                             </b-nav-item>
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
                 <br />
-                <b-row class="m-0 p-0">
+                <b-row class="m-0 p-0" v-if="!loggedIn">
                     <b-col class="m-0 p-0">
                         <b-button
                             variant="white"
                             block
                             class="text-center"
-                            href="/login/?next=/workflows/"
+                            href="/login/?next=/profile/"
                         >
-                            log in with
+                            Log in with
                             <b-img
                                 :src="
                                     require('@/assets/sponsors/cyversebw-notext.png')
@@ -81,6 +81,65 @@
                         </b-button>
                     </b-col>
                 </b-row>
+                <b-navbar toggleable="sm" class="m-0 p-0" v-else>
+                    <b-collapse class="justify-content-center m-0 p-0" is-nav>
+                        <b-navbar-nav class="m-0 p-0">
+                            <b-nav-item
+                                v-if="
+                                    loggedIn
+                                        ? currentUserGitHubProfile === null
+                                        : false
+                                "
+                                title="Link GitHub Account"
+                                href="/apis/v1/users/github_request_identity/"
+                                class="m-0 p-0"
+                            >
+                                <b-button class="text-left" variant="success">
+                                    <i class="fab fa-github"></i>
+                                    Link GitHub Account
+                                </b-button>
+                            </b-nav-item>
+                            <b-nav-item
+                                right
+                                v-if="loggedIn"
+                                title="User"
+                                style="font-size: 12pt"
+                                :to="
+                                    '/users/' +
+                                        currentUserDjangoProfile.username +
+                                        '/'
+                                "
+                            >
+                                Welcome,
+                                <b>{{ currentUserDjangoProfile.username }}.</b>
+                                <br />
+                                <br />
+                                <b-button variant="outline-dark" block>
+                                    <b-img
+                                        v-if="currentUserGitHubProfile"
+                                        class="avatar m-0 p-0"
+                                        rounded="circle"
+                                        center
+                                        :src="
+                                            currentUserGitHubProfile
+                                                ? currentUserGitHubProfile.avatar_url
+                                                : ''
+                                        "
+                                    ></b-img>
+                                    Log In
+                                    <!--<b v-else
+                                        >(
+                                        {{
+                                            currentUserCyVerseProfile
+                                                ? currentUserCyVerseProfile.first_name
+                                                : currentUserDjangoProfile.username
+                                        }})</b
+                                    >-->
+                                </b-button>
+                            </b-nav-item>
+                        </b-navbar-nav>
+                    </b-collapse>
+                </b-navbar>
             </b-card>
         </b-container>
         <div style="position: absolute; bottom: 0; left: 49%">
@@ -93,8 +152,20 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
+
 export default {
-    name: 'home-splash'
+    name: 'home-splash',
+    computed: mapGetters([
+        'currentUserDjangoProfile',
+        'currentUserCyVerseProfile',
+        'currentUserGitHubProfile',
+        'loggedIn'
+    ]),
+    created: function() {
+        this.crumbs = this.$route.meta.crumb;
+        this.$store.dispatch('loadCurrentUser');
+    }
 };
 </script>
 
@@ -168,4 +239,7 @@ export default {
     animation-duration: 2s
     animation-iteration-count: infinite
     animation-direction: alternate
+
+.avatar
+    height: 35px
 </style>

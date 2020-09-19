@@ -6,11 +6,15 @@
             header-bg-variant="white"
             border-variant="white"
             header-border-variant="white"
+            text-variant="dark"
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center">
                     <b-col style="color: white">
-                        <h1>Workflows</h1>
+                        <p class="text-dark">
+                            Flows curated by the Computational Plant
+                            Science lab. To explore user flows, <a class="hvr" @click="users()">see the user page</a> .
+                        </p>
                     </b-col>
                     <!--<b-col md="auto" class="b-form-col">
                         <b-input-group>
@@ -31,49 +35,33 @@
                     </b-col>-->
                 </b-row>
             </template>
-            <b-row align-h="center">
-                <b-row
-                    v-if="currentUserGitHubProfile === null"
-                    align-v="center"
-                    align-h="center"
-                >
-                    <b-col>
-                        <b-button
-                            block
-                            variant="success"
-                            href="/apis/v1/users/github_request_identity/"
-                            class="mr-0"
-                        >
-                            <i class="fab fa-github"></i>
-                            Login to GitHub
-                        </b-button>
-                    </b-col>
-                    <b-col md="auto" class="ml-0 pl-0">
-                        <b class="text-center align-center ml-0 pl-0"
-                            >to load workflows</b
-                        >
-                    </b-col>
-                </b-row>
-                <b-card-group deck class="justify-content-center" v-else>
-                    <b-card
-                        v-for="workflow in workflows"
-                        :key="workflow.repo.name"
-                        bg-variant="white"
-                        footer-bg-variant="white"
-                        border-variant="dark"
-                        footer-border-variant="white"
-                        style="min-width: 30rem; max-width: 30rem; min-height: 5rem; max-height: 15rem;"
-                        class="overflow-hidden mb-4"
+            <b-row
+                v-if="currentUserGitHubProfile === null"
+                align-v="center"
+                align-h="center"
+            >
+                <b-col md="auto">
+                    <b-button
+                        variant="success"
+                        href="/apis/v1/users/github_request_identity/"
+                        class="mr-0"
                     >
-                        <WorkflowBlurb
-                            :showPublic="false"
-                            :workflow="workflow"
-                            :selectable="true"
-                            v-on:workflowSelected="workflowSelected"
-                        ></WorkflowBlurb>
-                    </b-card>
-                </b-card-group>
+                        <i class="fab fa-github"></i>
+                        Login to GitHub
+                    </b-button>
+                </b-col>
+                <b-col md="auto" class="ml-0 pl-0">
+                    <b class="text-center align-center ml-0 pl-0"
+                        >to load flows</b
+                    >
+                </b-col>
             </b-row>
+            <flows
+                v-else
+                github-user="computational-plant-science"
+                :github-token="currentUserDjangoProfile.profile.github_token"
+            >
+            </flows>
         </b-card>
     </div>
 </template>
@@ -81,37 +69,28 @@
 <script>
 import router from '../router';
 import { mapGetters } from 'vuex';
-import WorkflowBlurb from '@/components/WorkflowBlurb.vue';
+import flows from '@/components/flows.vue';
 
 String.prototype.capitalize = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
 };
 
 export default {
-    name: 'Workflows',
+    name: 'explore-flows',
     components: {
-        WorkflowBlurb
-    },
-    data: function() {
-        return {
-            workflows: []
-        };
-    },
-    created: function() {
-        this.$store.dispatch('loadWorkflows');
+        flows
     },
     computed: mapGetters([
         'currentUserDjangoProfile',
         'currentUserGitHubProfile',
         'currentUserCyVerseProfile',
-        'loggedIn',
-        'workflows'
+        'loggedIn'
     ]),
     methods: {
-        sortWorkflows(l, r) {
-            if (l.config.name < r.config.name) return -1;
-            if (l.config.name > r.config.name) return 1;
-            return 0;
+        users() {
+          router.push({
+            name: 'users'
+          })
         },
         workflowSelected: function(workflow) {
             router.push({
@@ -135,6 +114,11 @@ export default {
 
 .pipeline
   width: 300px
+
+.hvr:hover
+  text-decoration: underline
+  text-underline-color: $dark
+  cursor: pointer
 
 .workflow-text
   background-color: $color-box-background

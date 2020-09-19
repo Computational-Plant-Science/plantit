@@ -9,7 +9,7 @@ import { data } from '@/store/data';
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
+const store = new Vuex.Store({
     state: () => ({
         csrfToken: Cookies.get(axios.defaults.xsrfCookieName)
     }),
@@ -23,3 +23,5 @@ export default new Vuex.Store({
         data
     }
 });
+
+export default store

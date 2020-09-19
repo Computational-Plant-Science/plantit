@@ -4,7 +4,7 @@ import home from './views/home.vue';
 import guide from './views/guide.vue';
 import docs from './views/docs.vue';
 import data from './views/data.vue';
-import flows from './views/flows.vue';
+import flows from './views/explore-flows.vue';
 import flow from './views/flow.vue';
 import runs from './views/user-runs.vue';
 import run from './views/run.vue';
@@ -12,6 +12,7 @@ import user from './views/user.vue';
 import users from './views/users.vue';
 import login from './views/log-in.vue';
 import logout from './views/log-out.vue';
+import store from './store/store';
 
 Vue.use(Router);
 
@@ -36,6 +37,10 @@ let router = new Router({
                 title: 'guide',
                 crumb: [
                     {
+                        text: 'plantit',
+                        href: '/'
+                    },
+                    {
                         text: 'guide',
                         href: '/guide'
                     }
@@ -49,6 +54,10 @@ let router = new Router({
             meta: {
                 title: 'docs',
                 crumb: [
+                    {
+                        text: 'plantit',
+                        href: '/'
+                    },
                     {
                         text: 'docs',
                         href: '/docs'
@@ -64,6 +73,10 @@ let router = new Router({
                 title: 'log in',
                 crumb: [
                     {
+                        text: 'plantit',
+                        href: '/'
+                    },
+                    {
                         text: 'log in',
                         href: '/login/?next=/workflows/'
                     }
@@ -77,6 +90,10 @@ let router = new Router({
             meta: {
                 title: 'log out',
                 crumb: [
+                    {
+                        text: 'plantit',
+                        href: '/'
+                    },
                     {
                         text: 'log out',
                         href: '/logout'
@@ -92,6 +109,10 @@ let router = new Router({
                 title: 'data',
                 crumb: [
                     {
+                        text: 'plantit',
+                        href: '/'
+                    },
+                    {
                         text: 'data',
                         href: '/data'
                     }
@@ -105,6 +126,10 @@ let router = new Router({
             meta: {
                 title: 'flows',
                 crumb: [
+                    {
+                        text: 'plantit',
+                        href: '/'
+                    },
                     {
                         text: 'flows',
                         href: '/flows'
@@ -121,6 +146,10 @@ let router = new Router({
                 title: 'flow',
                 crumb: [
                     {
+                        text: 'plantit',
+                        href: '/'
+                    },
+                    {
                         text: 'flows',
                         href: '/flows'
                     }
@@ -134,6 +163,10 @@ let router = new Router({
             meta: {
                 title: 'runs',
                 crumb: [
+                    {
+                        text: 'plantit',
+                        href: '/'
+                    },
                     {
                         text: 'runs',
                         href: '/runs'
@@ -150,6 +183,10 @@ let router = new Router({
                 title: 'run',
                 crumb: [
                     {
+                        text: 'plantit',
+                        href: '/'
+                    },
+                    {
                         text: 'runs',
                         href: '/runs'
                     }
@@ -163,6 +200,10 @@ let router = new Router({
             meta: {
                 title: 'users',
                 crumb: [
+                    {
+                        text: 'plantit',
+                        href: '/'
+                    },
                     {
                         text: 'users',
                         href: '/users'
@@ -179,6 +220,10 @@ let router = new Router({
                 title: 'user',
                 crumb: [
                     {
+                        text: 'plantit',
+                        href: '/'
+                    },
+                    {
                         text: 'users',
                         href: '/users'
                     }
@@ -194,6 +239,10 @@ let router = new Router({
             meta: {
                 title: 'Not Found',
                 crumb: [
+                    {
+                        text: 'plantit',
+                        href: '/'
+                    },
                     {
                         text: '404'
                     }
@@ -217,7 +266,7 @@ router.beforeEach((to, from, next) => {
         document.title = to.meta.title;
     }
     if (to.matched.some(record => record.name === 'workflow')) {
-        if (to.meta.crumb.length === 4) {
+        if (to.meta.crumb.length === 5) {
             to.meta.crumb.pop();
             to.meta.crumb.pop();
         }
@@ -233,32 +282,36 @@ router.beforeEach((to, from, next) => {
         );
     }
     if (to.matched.some(record => record.name === 'run')) {
-        if (to.meta.crumb.length === 4) {
-            to.meta.crumb.pop();
-        }
+        while (to.meta.crumb.length > 1) to.meta.crumb.pop();
+        to.meta.crumb.push({
+            text: 'runs',
+            href: `/runs/`
+        });
         to.meta.crumb.push({
             text: to.params.id,
             href: `/runs/${to.params.id}`
         });
     }
     if (to.matched.some(record => record.name === 'user')) {
-        if (to.meta.crumb.length === 2) {
-            to.meta.crumb.pop();
-        }
+        while (to.meta.crumb.length > 1) to.meta.crumb.pop();
+        to.meta.crumb.push({
+            text: 'users',
+            href: `/users/`
+        });
         to.meta.crumb.push({
             text: to.params.username,
             href: `/users/${to.params.username}`
         });
     }
-    if (to.matched.some(record => record.meta.requiresAuth)) {
-        // if (!Auth.isLoggedIn()) {
-        //     window.location = '/login/?next=' + to.fullPath;
-        // } else {
+    // if (to.matched.some(record => record.meta.requiresAuth)) {
+    //     if (!store.getters.loggedIn) {
+    //         window.location = '/login/?next=' + to.fullPath;
+    //     } else {
+    //     next();
+    //     }
+    // } else {
         next();
-        // }
-    } else {
-        next();
-    }
+    // }
 });
 
 export default router;

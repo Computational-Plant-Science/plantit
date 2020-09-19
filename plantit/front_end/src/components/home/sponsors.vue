@@ -1,10 +1,5 @@
 <template>
     <b-container>
-      <div class="p-1 pt-2 background-dark">
-                <h1 class="text-center text-white">
-                    <b class="text-dark">plantit is supported by</b>
-                </h1>
-            </div>
         <b-card
             align="center"
             class="rounded-0 text-center"
@@ -14,6 +9,25 @@
             header-bg-variant="white"
             header-border-variant="white"
         >
+          <template slot="header" style="border: none">
+                <br />
+
+                <br />
+                <b-row align-v="center" class="justify-content-md-center">
+                    <b-col>
+                        <b-img
+                            style="max-width: 8rem;transform: translate(0px, 20px);"
+                            :src="require('../../assets/logo.png')"
+                            center
+                            class="m-0 p-0"
+                        ></b-img>
+                        <h1>
+                            sponsors
+                        </h1>
+                      <br />
+                    </b-col>
+                </b-row>
+            </template>
             <b-card-group columns>
                 <b-card
                     align="center"

@@ -33,7 +33,7 @@
                 </b-row>
             </template>
             <b-tabs content-class="mt-3">
-                <b-tab title="profile" active>
+                <b-tab title="Profile" active>
                     <b-row align-h="center">
                         <b-col md="auto">
                             <b-card-text v-if="cyverseProfile">
@@ -45,7 +45,12 @@
                                         height="29px"
                                         alt="Cyverse"
                                     ></b-img>
-                                    cyverse
+                                    <a
+                                        href="https://de.cyverse.org/de/"
+                                        title="CyVerse Discovery Environment"
+                                    >
+                                        CyVerse
+                                    </a>
                                 </h5>
                                 <br />
                                 <p>
@@ -78,11 +83,16 @@
                         <b-col>
                             <b-card-text v-if="githubProfile">
                                 <h4>
-                                  <a :href="'https://github.com/' + githubProfile.login">
-                                    <i
-                                        class="fab fa-github-alt fa-1x fa-fw"
-                                    ></i>
-                                    github
+                                    <a
+                                        :href="
+                                            'https://github.com/' +
+                                                githubProfile.login
+                                        "
+                                    >
+                                        <i
+                                            class="fab fa-github-alt fa-1x fa-fw"
+                                        ></i>
+                                        GitHub
                                     </a>
                                 </h4>
                                 <br />
@@ -128,8 +138,38 @@
                         </b-col>
                     </b-row>
                 </b-tab>
-                <b-tab title="data"><p>I'm the second tab</p></b-tab>
-                <b-tab title="flows"><p>I'm the second tab</p></b-tab>
+                <b-tab title="Data"><p>I'm the second tab</p></b-tab>
+                <b-tab title="Flows">
+                    <b-row
+                        v-if="currentUserGitHubProfile === null"
+                        align-v="center"
+                        align-h="center"
+                    >
+                        <b-col md="auto">
+                            <b-button
+                                variant="success"
+                                href="/apis/v1/users/github_request_identity/"
+                                class="mr-0"
+                            >
+                                <i class="fab fa-github"></i>
+                                Login to GitHub
+                            </b-button>
+                        </b-col>
+                        <b-col md="auto" class="ml-0 pl-0">
+                            <b class="text-center align-center ml-0 pl-0"
+                                >to load flows</b
+                            >
+                        </b-col>
+                    </b-row>
+                    <flows
+                        v-else
+                        :github-user="currentUserGitHubProfile.login"
+                        :github-token="
+                            currentUserDjangoProfile.profile.github_token
+                        "
+                    >
+                    </flows>
+                </b-tab>
                 <b-tab title="runs"><p>I'm a disabled tab!</p></b-tab>
             </b-tabs>
         </b-card>
@@ -137,12 +177,17 @@
 </template>
 
 <script>
+import router from '../router';
 import { mapGetters } from 'vuex';
+import flows from '@/components/flows.vue';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'User',
+    components: {
+        flows
+    },
     data: function() {
         return {
             djangoProfile: null,
@@ -178,9 +223,15 @@ export default {
                     if (error.response.status === 500) throw error;
                 });
         },
-        async loadData() {},
-        async loadWorkflows() {},
-        async loadRuns() {}
+        workflowSelected: function(workflow) {
+            router.push({
+                name: 'workflow',
+                params: {
+                    owner: workflow['repo']['owner']['login'],
+                    name: workflow['repo']['name']
+                }
+            });
+        }
     }
 };
 </script>

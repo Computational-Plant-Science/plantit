@@ -13,7 +13,7 @@
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item class="m-0 p-0">
                                     <b-button
-                                        variant="success"
+                                        variant="outline-dark"
                                         block
                                         class="text-left m-0"
                                         @click="hide"
@@ -26,7 +26,7 @@
                                 </b-nav-item>
                                 <b-nav-item
                                     v-if="!loggedIn"
-                                    href="/login/?next=/workflows/"
+                                    href="/login/?next=/profile/"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -57,7 +57,7 @@
                                     disabled
                                 >
                                     <b-button disabled variant="white">
-                                        <small>learn</small>
+                                        <small>navigate</small>
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/" class="m-0 p-0">
@@ -248,8 +248,7 @@
                     <b-nav-item
                         v-if="
                             loggedIn
-                                ? currentUserDjangoProfile.profile
-                                      .github_token === ''
+                                ? currentUserGitHubProfile === null
                                 : false
                         "
                         title="Link GitHub Account"
@@ -279,7 +278,7 @@
                             <i class="fab fa-github fa-2x fa-fw"></i>
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item
+                    <!--<b-nav-item
                         href="https://de.cyverse.org/de/"
                         class="pl-1 pr-1"
                     >
@@ -297,11 +296,11 @@
                                 alt="Cyverse"
                             ></b-img>
                         </b-button>
-                    </b-nav-item>
+                    </b-nav-item>-->
                     <b-nav-item
                         right
                         v-if="loggedIn"
-                        :title="currentUserDjangoProfile.username"
+                        title="User"
                         class="m-0 ml-1 p-0"
                         style="font-size: 12pt"
                         :to="
@@ -437,8 +436,8 @@ a
 
 
 .avatar
-  max-height: 35px
-  border: 1px solid $success
+  max-height: 34px
+  border: 1px solid $dark
 
 a
   font-weight: 300

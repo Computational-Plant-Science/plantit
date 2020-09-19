@@ -32,7 +32,7 @@
                 >
                     <WorkflowBlurb
                         :showPublic="false"
-                        :workflow="workflow"
+                        flow="workflow"
                         :selectable="false"
                     ></WorkflowBlurb>
                 </b-card>
@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import WorkflowBlurb from '@/components/WorkflowBlurb.vue';
+import WorkflowBlurb from '@/components/flow-blurb.vue';
 
 export default {
     name: 'RunBlurb',
