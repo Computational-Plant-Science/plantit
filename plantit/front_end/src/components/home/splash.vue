@@ -6,7 +6,7 @@
                 class="p-2 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
-                border-variant="dark"
+                border-variant="light"
                 text-variant="white"
                 bg-variant="white"
                 style="max-width: 400px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
@@ -15,22 +15,16 @@
                     <b-col>
                         <b-img
                             :src="require('@/assets/logo.png')"
-                            width="100px"
+                            width="120px"
                             alt="Plant IT"
                         ></b-img>
                         <h1>plantit</h1>
                     </b-col>
                 </b-row>
+                <br />
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
-                            <b-nav-item to="about" class="m-0 p-0">
-                                <b-button variant="outline-dark">
-                                    <i class="fas fa-seedling fa-2x"></i>
-                                    <br />
-                                    about
-                                </b-button>
-                            </b-nav-item>
                             <b-nav-item to="/guide" class="m-0 p-0">
                                 <b-button variant="outline-dark">
                                     <i class="fas fa-map-signs fa-2x"></i>
@@ -45,30 +39,56 @@
                                     docs
                                 </b-button>
                             </b-nav-item>
+                            <b-nav-item class="m-0 p-0">
+                                <b-button variant="outline-dark" title="Slack">
+                                    <i class="fab fa-slack fa-2x"></i>
+                                    <br />
+                                    slack
+                                </b-button>
+                            </b-nav-item>
+                            <b-nav-item class="m-0 p-0">
+                                <b-button
+                                    variant="outline-dark"
+                                    href="https://github.com/Computational-Plant-Science/plantit"
+                                    title="GitHub"
+                                >
+                                    <i class="fab fa-github fa-2x"></i>
+                                    <br />
+                                    github
+                                </b-button>
+                            </b-nav-item>
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
+                <br />
                 <b-row class="m-0 p-0">
                     <b-col class="m-0 p-0">
                         <b-button
-                            variant="outline-white"
+                            variant="white"
                             block
                             class="text-center"
                             href="/login/?next=/workflows/"
                         >
-                            log in with <b-img
+                            log in with
+                            <b-img
                                 :src="
                                     require('@/assets/sponsors/cyversebw-notext.png')
                                 "
                                 height="18px"
                                 alt="Cyverse"
-                            ></b-img> <b>CyVerse</b>
+                            ></b-img>
+                            <b>cyverse</b>
                         </b-button>
                     </b-col>
                 </b-row>
             </b-card>
         </b-container>
-        <i class="fas fa-chevron-down fa-7x" id="about-down-arrow"></i>
+        <div style="position: absolute; bottom: 0; left: 49%">
+            <i
+                class="fas fa-chevron-down fa-5x fa-fw"
+                id="about-down-arrow"
+            ></i>
+        </div>
     </div>
 </template>
 

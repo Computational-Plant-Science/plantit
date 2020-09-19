@@ -1,4 +1,4 @@
-### what is plantit?
+### what is it?
 
 plantit is a web workflow automation platform for plant phenomics: a science gateway for both data and software
 
@@ -19,11 +19,11 @@ plantit is software-as-a-service allowing plant scientists and professionals to:
 
 ##### plantit is for programmers and developers
 
-plantit is a platform-as-a-service for programmers and research software developers, integrated tightly with GitHub: just add a `plantit.yaml` file to your repository to deploy a developed developed with your tools of choice &mdash; if it runs in Docker or Singularity, it will run on PlantIT
+plantit is a platform-as-a-service for programmers and research software developers, integrated tightly with GitHub: just add a `plantit.yaml` file to your repository to deploy a workflow developed with your tools of choice &mdash; if it runs in Docker or Singularity, it will run on PlantIT
 
 <br/>
 
-### why does plantit exist? 
+### why does it exist? 
 
 ##### ideas
 
@@ -47,7 +47,7 @@ plantit is a platform-as-a-service for programmers and research software develop
 - sticking notes to computer monitors
 - remembering which directory yesterday's data is in
 
-##### things you can do with plantit
+##### things you can do with it
 
 - access public datasets
 - access or upload your own datasets
@@ -62,13 +62,13 @@ plantit is a platform-as-a-service for programmers and research software develop
 
 <br/>
 
-### is plantit a bioinformatics gateway?
+### is it a bioinformatics gateway?
 
 - plantit is flexible enough to run nearly any container-friendly workload, but if you want to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit
 
 <br/>
  
-### plantit is not a
+### it is not a
 
 - computational pipeline framework (e.g., [Snakemake](https://snakemake.readthedocs.io/en/stable/), [Nextflow](https://www.nextflow.io/), [Luigi](https://luigi.readthedocs.io/en/stable/), [Airflow](https://airflow.apache.org/), [Metaflow](https://metaflow.org/))
 - distributed queue or task scheduler (e.g., [Celery](https://docs.celeryproject.org/en/stable/index.html) or [Dask](https://dask.org/), respectively)

@@ -8,9 +8,22 @@
         >
             <template v-slot:default="{ hide }">
                 <b-container class="p-1">
-                    <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
+                    <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="start">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
+                                <b-nav-item class="m-0 p-0">
+                                    <b-button
+                                        variant="success"
+                                        block
+                                        class="text-left m-0"
+                                        @click="hide"
+                                    >
+                                        <i
+                                            class="fas fa-arrow-left fa-1x fa-fw"
+                                        ></i>
+                                        hide sidebar
+                                    </b-button>
+                                </b-nav-item>
                                 <b-nav-item
                                     v-if="!loggedIn"
                                     href="/login/?next=/workflows/"
@@ -32,22 +45,11 @@
                                         <b>CyVerse</b>
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item class="m-0 p-0">
-                                    <b-button
-                                        variant="success"
-                                        block
-                                        class="text-left m-0"
-                                        @click="hide"
-                                        title="hide sidebar"
-                                    >
-                                        <i
-                                            class="fas fa-arrow-left fa-1x fa-fw"
-                                        ></i>
-                                        hide
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                            <hr />
+                              </b-nav>
+                        </b-col>
+                    </b-row>
+                  <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0" align-self="middle">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item
                                     v-if="loggedIn"
@@ -91,19 +93,17 @@
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
-                            <hr />
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item
-                                    v-if="loggedIn"
-                                    class="m-0 p-0"
-                                    disabled
-                                >
+                            <b-nav
+                                vertical
+                                class="ml-0 mr-0 pl-0 pr-0"
+                                v-if="loggedIn"
+                            >
+                                <b-nav-item class="m-0 p-0" disabled>
                                     <b-button disabled variant="white">
                                         <small>explore</small>
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
-                                    v-if="loggedIn"
                                     title="users"
                                     to="/users"
                                     class="m-0 p-0"
@@ -118,7 +118,6 @@
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
-                                    v-if="loggedIn"
                                     title="data"
                                     to="/data"
                                     class="m-0 p-0"
@@ -135,7 +134,6 @@
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
-                                    v-if="loggedIn"
                                     title="flows"
                                     to="/flows"
                                     class="m-0 p-0"
@@ -149,26 +147,6 @@
                                             class="fas fa-stream fa-1x fa-fw"
                                         ></i>
                                         flows
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                            <hr />
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item
-                                    v-if="loggedIn"
-                                    title="log out"
-                                    to="/logout"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="outline-danger"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-door-closed fa-1x fa-fw"
-                                        ></i>
-                                        log out
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -192,6 +170,27 @@
                         </b-col>
                     </b-row>
                 </b-container>
+            </template>
+            <template v-slot:footer>
+              <b-container class="p-1">
+                    <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0">
+                <b-nav vertical class="ml-0 mr-0 pl-0 pr-0 mb-2" v-if="loggedIn">
+                    <hr />
+                    <b-nav-item title="log out" to="/logout" class="m-0 p-0">
+                        <b-button
+                            variant="outline-danger"
+                            block
+                            class="text-left"
+                        >
+                            <i class="fas fa-door-closed fa-1x fa-fw"></i>
+                            log out
+                        </b-button>
+                    </b-nav-item>
+                </b-nav>
+                        </b-col>
+                    </b-row>
+              </b-container>
             </template>
         </b-sidebar>
         <b-navbar
@@ -222,7 +221,7 @@
                 </b-navbar-nav>
                 <transition name="component-fade" mode="out-in">
                     <b-breadcrumb
-                        class="m-o p-0 ml-4"
+                        class="m-o p-0"
                         style="background-color: transparent;"
                         v-if="titleContent === 'sidebar'"
                     >
@@ -265,26 +264,28 @@
                     <b-nav-item>
                         <b-button
                             variant="outline-dark"
-                            class="text-left m-0"
+                            class="text-left m-0 pl-1 pr-1"
                             title="Slack"
                         >
                             <i class="fab fa-slack fa-2x fa-fw"></i>
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item>
+                    <b-nav-item href="https://github.com/Computational-Plant-Science/plantit">
                         <b-button
                             variant="outline-dark"
-                            href="https://github.com/Computational-Plant-Science/plantit"
                             title="GitHub"
-                            class="text-left github-hover m-0"
+                            class="text-left github-hover m-0 pl-1 pr-1"
                         >
                             <i class="fab fa-github fa-2x fa-fw"></i>
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item href="https://de.cyverse.org/de/">
+                    <b-nav-item
+                        href="https://de.cyverse.org/de/"
+                        class="pl-1 pr-1"
+                    >
                         <b-button
                             variant="white"
-                            class="m-0"
+                            class="m-0 p-1"
                             href="https://de.cyverse.org/de/"
                             title="CyVerse Discovery Environment"
                         >
@@ -292,7 +293,7 @@
                                 :src="
                                     require('../assets/sponsors/cyversebw-notext.png')
                                 "
-                                height="35px"
+                                height="38px"
                                 alt="Cyverse"
                             ></b-img>
                         </b-button>
@@ -301,7 +302,7 @@
                         right
                         v-if="loggedIn"
                         :title="currentUserDjangoProfile.username"
-                        class="m-0 ml-2 p-0"
+                        class="m-0 ml-1 p-0"
                         style="font-size: 12pt"
                         :to="
                             '/users/' + currentUserDjangoProfile.username + '/'
@@ -396,21 +397,21 @@ a
 .breadcrumb > li
     text-align: end
     color: $dark !important
-    margin-top: 14px !important
-    font-size: 14pt !important
+    margin-top: 15px !important
+    font-size: 15pt !important
     font-weight: 200
     content: " /"
 
 .breadcrumb > li + li::marker
     color: $dark !important
-    margin-top: 14px !important
-    font-size: 14pt !important
+    margin-top: 15px !important
+    font-size: 15pt !important
     font-weight: 200
 
 .breadcrumb > li + li:before + li::marker
     color: $dark !important
-    margin-top: 11px !important
-    font-size: 11pt !important
+    margin-top: 15px !important
+    font-size: 15pt !important
     font-weight: 200
     content: " /"
 

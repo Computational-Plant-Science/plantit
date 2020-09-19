@@ -17,18 +17,18 @@
                             right
                             class="avatar "
                             rounded="circle"
-                            style="max-height: 8rem; max-width: 8rem; position: relative;"
+                            style="max-height: 7rem; max-width: 7rem; position: relative;"
                             :src="githubProfile ? githubProfile.avatar_url : ''"
                         ></b-img>
                     </b-col>
                     <b-col style="color: white" align-self="end">
-                        <h1>
+                        <h2>
                             {{
                                 currentUserCyVerseProfile
                                     ? `${currentUserCyVerseProfile.first_name} (${djangoProfile.username})`
                                     : currentUserDjangoProfile.username
                             }}
-                        </h1>
+                        </h2>
                     </b-col>
                 </b-row>
             </template>
@@ -45,7 +45,7 @@
                                         height="29px"
                                         alt="Cyverse"
                                     ></b-img>
-                                    CyVerse
+                                    cyverse
                                 </h5>
                                 <br />
                                 <p>
@@ -78,10 +78,12 @@
                         <b-col>
                             <b-card-text v-if="githubProfile">
                                 <h4>
+                                  <a :href="'https://github.com/' + githubProfile.login">
                                     <i
                                         class="fab fa-github-alt fa-1x fa-fw"
                                     ></i>
-                                    Github
+                                    github
+                                    </a>
                                 </h4>
                                 <br />
                                 <p>

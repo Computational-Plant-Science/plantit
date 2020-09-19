@@ -9,9 +9,22 @@
             header-border-variant="dark"
         >
             <template slot="header" style="border: none">
-                <h2 class="text-white mt-5">
-                    plant science workflow automation in the browser
-                </h2>
+                <br />
+
+                <br />
+                <b-row align-v="center" class="justify-content-md-center">
+                    <b-col>
+                        <b-img
+                    style="max-width: 8rem;transform: translate(0px, 20px);"
+                    :src="require('../../assets/logo.png')"
+                    center
+                    class="m-0 p-0"
+                ></b-img>
+                        <h1 class="text-white mt-5">
+                            plant science workflow automation in the browser
+                        </h1>
+                    </b-col>
+                </b-row>
             </template>
             <b-container>
                 <br />
@@ -153,8 +166,8 @@
                     <b class="text-dark">about plantit</b>
                 </h1>
             </div>
-          <br/>
-          <br/>
+            <br />
+            <br />
             <b-container>
                 <b-row align-content="center">
                     <b-col class="text-left">
@@ -162,8 +175,9 @@
                     </b-col>
                 </b-row>
             </b-container>
-          <br/>
-          <br/>
+            <br />
+            <br />
+            <br />
         </b-card>
     </div>
 </template>

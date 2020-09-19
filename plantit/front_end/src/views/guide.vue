@@ -13,7 +13,7 @@
         </div>
         <div class="p-1 pt-2 background-dark">
             <h2 class="text-center text-white">
-                <b class="text-success">User Guide</b>
+                <b class="text-success">user guide</b>
             </h2>
         </div>
         <div class="p-5 m-0" style="min-height: 100%">
