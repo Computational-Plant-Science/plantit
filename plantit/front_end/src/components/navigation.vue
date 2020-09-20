@@ -226,7 +226,7 @@
                         v-if="titleContent === 'sidebar'"
                     >
                         <b-breadcrumb-item disabled class="ml-1">
-                            Show Sidebar
+                            show sidebar
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                     <b-breadcrumb

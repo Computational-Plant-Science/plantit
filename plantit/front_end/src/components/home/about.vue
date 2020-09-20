@@ -15,7 +15,7 @@
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
                         <b-img
-                            style="max-width: 8rem;transform: translate(0px, 20px);"
+                            style="max-width: 5rem;transform: translate(0px, 20px);"
                             :src="require('../../assets/logo.png')"
                             center
                             class="m-0 p-0"
@@ -158,7 +158,7 @@
             <br />
             <div class="p-0 m-0 background-white text-white">
                 <b-img
-                    style="max-width: 8rem;transform: translate(0px, 20px);"
+                    style="max-width: 5rem;transform: translate(0px, 20px);"
                     :src="require('../../assets/logo.png')"
                     center
                     class="m-0 p-0"
@@ -184,7 +184,7 @@
             <b-container class="text-center">
                 <div class="p-0 m-0 background-white text-white">
                     <b-img
-                        style="max-width: 8rem;transform: translate(0px, 20px);"
+                        style="max-width: 5rem;transform: translate(0px, 20px);"
                         :src="require('../../assets/logo.png')"
                         center
                         class="m-0 p-0"

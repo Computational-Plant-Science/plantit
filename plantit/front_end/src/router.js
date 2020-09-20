@@ -12,7 +12,6 @@ import user from './views/user.vue';
 import users from './views/users.vue';
 import login from './views/log-in.vue';
 import logout from './views/log-out.vue';
-import store from './store/store';
 
 Vue.use(Router);
 
@@ -41,7 +40,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Guide',
+                        text: 'guide',
                         href: '/guide'
                     }
                 ]
@@ -59,7 +58,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Docs',
+                        text: 'docs',
                         href: '/docs'
                     }
                 ]
@@ -77,7 +76,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Log In',
+                        text: 'log in',
                         href: '/login/?next=/workflows/'
                     }
                 ]
@@ -95,7 +94,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Log Out',
+                        text: 'log out',
                         href: '/logout'
                     }
                 ]
@@ -113,7 +112,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Data',
+                        text: 'data',
                         href: '/data'
                     }
                 ]
@@ -131,7 +130,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Flows',
+                        text: 'flows',
                         href: '/flows'
                     }
                 ]
@@ -150,7 +149,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Flows',
+                        text: 'flows',
                         href: '/flows'
                     }
                 ]
@@ -168,7 +167,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Runs',
+                        text: 'runs',
                         href: '/runs'
                     }
                 ]
@@ -187,7 +186,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Runs',
+                        text: 'runs',
                         href: '/runs'
                     }
                 ]
@@ -205,7 +204,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Users',
+                        text: 'users',
                         href: '/users'
                     }
                 ]
@@ -224,7 +223,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'Users',
+                        text: 'users',
                         href: '/users'
                     }
                 ],

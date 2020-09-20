@@ -14,10 +14,11 @@
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
                         <b-img
-                            :src="require('@/assets/logo.png')"
-                            width="120px"
-                            alt="Plant IT"
-                        ></b-img>
+                        style="max-width: 5rem;transform: translate(0px, 20px);"
+                        :src="require('../../assets/logo.png')"
+                        center
+                        class="m-0 p-0"
+                    ></b-img>
                         <h1>plantit</h1>
                     </b-col>
                 </b-row>
