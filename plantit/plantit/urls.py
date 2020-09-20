@@ -31,6 +31,6 @@ urlpatterns = [
     url('auth/login/', login_view),
     url('auth/logout/', logout_view),
     url('runs/', include("plantit.runs.urls")),
-    url('workflows/', include("plantit.workflows.urls")),
+    url('flows/', include("plantit.workflows.urls")),
     url('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'))),
 ]

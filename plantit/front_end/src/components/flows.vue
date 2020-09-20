@@ -82,8 +82,8 @@ export default {
             router.push({
                 name: 'flow',
                 params: {
-                    owner: flow['repo']['owner']['login'],
-                    name: flow['repo']['name']
+                    owner: flow['repository']['owner']['login'],
+                    name: flow['repository']['name']
                 }
             });
         }

@@ -139,9 +139,9 @@
                     </b-row>
                 </b-tab>
                 <b-tab title="Data">
-                  <b-card border-variant="default">
-                  <datatree :node="data"></datatree></b-card></b-tab>
-
+                    <b-card border-variant="white">
+                        <datatree :node="data"></datatree></b-card
+                ></b-tab>
                 <b-tab title="Flows">
                     <b-row
                         v-if="currentUserGitHubProfile === null"

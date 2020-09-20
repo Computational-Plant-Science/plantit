@@ -212,7 +212,7 @@
                             <b-img
                                 class="m-0 p-0 mb-1"
                                 center
-                                width="20px"
+                                width="38px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>

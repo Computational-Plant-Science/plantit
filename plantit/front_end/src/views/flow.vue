@@ -13,19 +13,19 @@
                     header-border-variant="white"
                     class="overflow-hidden"
                 >
-                    <WorkflowDetail
+                    <flowdetail
                         :show-public="
-                            workflow.repo.owner.login ===
-                                user.profile.github_username
+                            flow.repository.owner.login ===
+                                currentUserDjangoProfile.profile.github_username
                         "
-                        :workflow="workflow"
+                        :workflow="flow"
                         :selectable="false"
-                    ></WorkflowDetail>
+                    ></flowdetail>
                 </b-card>
             </b-col>
         </b-row>
         <br />
-        <b-row v-if="params.length !== 0">
+        <b-row v-if="flow.config.params.length !== 0">
             <b-col>
                 <b-card
                     bg-variant="white"
@@ -33,31 +33,23 @@
                     footer-bg-variant="white"
                     border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="white"
+                    header-border-variant="default"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
                             <b-col style="color: white">
-                                <h2>
-                                    Configure <b>Parameters</b>
-                                    <i
-                                        class="ml-2 fas fa-exclamation text-warning"
-                                        v-if="parametersUnready"
-                                    ></i>
-                                    <i
-                                        class="ml-2 fas fa-check text-success"
-                                        v-if="!parametersUnready"
-                                    ></i>
-                                </h2>
+                                <h4>
+                                    Params
+                                </h4>
                             </b-col>
                         </b-row>
                     </template>
-                    <EditParameters :params="params"></EditParameters>
+                    <runparams :params="flow.config.params"></runparams>
                 </b-card>
                 <br />
             </b-col>
         </b-row>
-        <b-row v-if="workflow && workflow.config.from">
+        <b-row v-if="flow && flow.config.from">
             <b-col>
                 <b-card
                     bg-variant="white"
@@ -65,38 +57,27 @@
                     footer-bg-variant="white"
                     border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="white"
+                    header-border-variant="default"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
                             <b-col style="color: white">
-                                <h2>
-                                    Configure <b>Input</b>
-                                    <!--<b>{{
-                                        workflow.config.from.capitalize()
-                                    }}</b>-->
-                                    <i
-                                        class="ml-2 fas fa-exclamation text-warning"
-                                        v-if="inputUnready"
-                                    ></i>
-                                    <i
-                                        class="ml-2 fas fa-check text-success"
-                                        v-if="!inputUnready"
-                                    ></i>
-                                </h2>
+                                <h4>
+                                    Input
+                                </h4>
                             </b-col>
                         </b-row>
                     </template>
-                    <EditInput
+                    <runinput
                         :user="user"
-                        :kind="workflow.config.from"
+                        :kind="flow.config.from"
                         v-on:inputSelected="onInputSelected"
-                    ></EditInput>
+                    ></runinput>
                 </b-card>
                 <br />
             </b-col>
         </b-row>
-        <b-row v-if="workflow.config && workflow.config.to">
+        <b-row v-if="flow.config && flow.config.to">
             <b-col>
                 <b-card
                     bg-variant="white"
@@ -104,30 +85,21 @@
                     footer-bg-variant="white"
                     border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="white"
+                    header-border-variant="default"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
                             <b-col style="color: white">
-                                <h2>
-                                    Configure <b>Output</b>
-                                    <!--<b>{{ workflow.config.to.capitalize() }}</b>-->
-                                    <i
-                                        class="ml-2 fas fa-exclamation text-warning"
-                                        v-if="outputUnready"
-                                    ></i>
-                                    <i
-                                        class="ml-2 fas fa-check text-success"
-                                        v-if="!outputUnready"
-                                    ></i>
-                                </h2>
+                                <h4>
+                                    Output
+                                </h4>
                             </b-col>
                         </b-row>
                     </template>
-                    <EditOutput
+                    <runoutput
                         :user="user"
                         v-on:outputSelected="onOutputSelected"
-                    ></EditOutput>
+                    ></runoutput>
                 </b-card>
                 <br />
             </b-col>
@@ -140,31 +112,21 @@
                     footer-bg-variant="white"
                     border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="white"
+                    header-border-variant="default"
                 >
                     <template v-slot:header style="background-color: white">
                         <b-row align-v="center">
                             <b-col style="color: white">
-                                <h2>
-                                    Deployment <b>Target</b>
-                                    <i
-                                        class="ml-2 fas fa-exclamation text-warning"
-                                        v-if="targetUnready"
-                                    ></i>
-                                    <i
-                                        class="ml-2 fas fa-check text-success"
-                                        v-if="!targetUnready"
-                                    ></i>
-                                </h2>
+                                <h4>
+                                    Target
+                                </h4>
                             </b-col>
                         </b-row>
                     </template>
-                    <b-card-body>
-                        <SelectTarget
-                            :selected="target"
-                            v-on:targetSelected="onTargetSelected"
-                        ></SelectTarget>
-                    </b-card-body>
+                    <runtarget
+                        :selected="target"
+                        v-on:targetSelected="onTargetSelected"
+                    ></runtarget>
                 </b-card>
             </b-col>
         </b-row>
@@ -180,12 +142,13 @@
 </template>
 
 <script>
-import WorkflowDetail from '../components/WorkflowDetail';
-import EditParameters from '../components/RunParams';
-import EditInput from '../components/RunInput';
-import EditOutput from '../components/RunOutput';
-import SelectTarget from '../components/RunTarget';
+import flowdetail from '../components/flow-detail';
+import runparams from '../components/run-params';
+import runinput from '../components/run-input';
+import runoutput from '../components/run-output';
+import runtarget from '../components/run-target';
 import { mapGetters } from 'vuex';
+import axios from 'axios';
 // import router from '../router';
 
 String.prototype.capitalize = function() {
@@ -193,13 +156,13 @@ String.prototype.capitalize = function() {
 };
 
 export default {
-    name: 'Workflow',
+    name: 'flow',
     components: {
-        WorkflowDetail,
-        EditParameters,
-        EditInput,
-        EditOutput,
-        SelectTarget
+        flowdetail,
+        runparams,
+        runinput,
+        runoutput,
+        runtarget
     },
     props: {
         owner: {
@@ -211,7 +174,7 @@ export default {
     },
     data: function() {
         return {
-            workflow: null,
+            flow: null,
             params: [],
             input: {
                 files: []
@@ -223,6 +186,7 @@ export default {
         };
     },
     mounted: function() {
+        this.loadFlow();
         // TODO load workflows
         // Workflows.get(this.owner, this.name).then(pipeline => {
         //     this.workflow = pipeline;
@@ -237,7 +201,24 @@ export default {
         // });
     },
     methods: {
-        ...mapGetters(['currentUserDjangoProfile']),
+        loadFlow() {
+            axios
+                .get(`/apis/v1/flows/${this.owner}/${this.name}/`, {
+                    headers: {
+                        Authorization: 'Bearer ' + this.githubToken
+                    }
+                })
+                .then(response => {
+                    this.flow = response.data;
+                })
+                .catch(error => {
+                    if (error.status_code === 401) {
+                        this.login = true;
+                    } else {
+                        throw error;
+                    }
+                });
+        },
         onInputSelected(input) {
             this.input = input;
         },
@@ -272,6 +253,7 @@ export default {
         }
     },
     computed: {
+        ...mapGetters(['currentUserDjangoProfile']),
         parametersUnready() {
             return this.params.some(param => param.value === '');
         },

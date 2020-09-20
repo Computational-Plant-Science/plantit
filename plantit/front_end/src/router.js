@@ -34,14 +34,14 @@ let router = new Router({
             name: 'guide',
             component: guide,
             meta: {
-                title: 'guide',
+                title: 'Guide',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'guide',
+                        text: 'Guide',
                         href: '/guide'
                     }
                 ]
@@ -52,14 +52,14 @@ let router = new Router({
             name: 'docs',
             component: docs,
             meta: {
-                title: 'docs',
+                title: 'Docs',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'docs',
+                        text: 'Docs',
                         href: '/docs'
                     }
                 ]
@@ -70,14 +70,14 @@ let router = new Router({
             name: 'login',
             component: login,
             meta: {
-                title: 'log in',
+                title: 'Log In',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'log in',
+                        text: 'Log In',
                         href: '/login/?next=/workflows/'
                     }
                 ]
@@ -88,14 +88,14 @@ let router = new Router({
             name: 'logout',
             component: logout,
             meta: {
-                title: 'log out',
+                title: 'Log Out',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'log out',
+                        text: 'Log Out',
                         href: '/logout'
                     }
                 ]
@@ -106,14 +106,14 @@ let router = new Router({
             name: 'data',
             component: data,
             meta: {
-                title: 'data',
+                title: 'Data',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'data',
+                        text: 'Data',
                         href: '/data'
                     }
                 ]
@@ -124,14 +124,14 @@ let router = new Router({
             name: 'flows',
             component: flows,
             meta: {
-                title: 'flows',
+                title: 'Flows',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'flows',
+                        text: 'Flows',
                         href: '/flows'
                     }
                 ]
@@ -143,14 +143,14 @@ let router = new Router({
             props: true,
             component: flow,
             meta: {
-                title: 'flow',
+                title: 'Flow',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'flows',
+                        text: 'Flows',
                         href: '/flows'
                     }
                 ]
@@ -161,14 +161,14 @@ let router = new Router({
             name: 'runs',
             component: runs,
             meta: {
-                title: 'runs',
+                title: 'Runs',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'runs',
+                        text: 'Runs',
                         href: '/runs'
                     }
                 ]
@@ -180,14 +180,14 @@ let router = new Router({
             props: true,
             component: run,
             meta: {
-                title: 'run',
+                title: 'Run',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'runs',
+                        text: 'Runs',
                         href: '/runs'
                     }
                 ]
@@ -198,14 +198,14 @@ let router = new Router({
             name: 'users',
             component: users,
             meta: {
-                title: 'users',
+                title: 'Users',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'users',
+                        text: 'Users',
                         href: '/users'
                     }
                 ]
@@ -217,14 +217,14 @@ let router = new Router({
             props: true,
             component: user,
             meta: {
-                title: 'user',
+                title: 'User',
                 crumb: [
                     {
                         text: 'plantit',
                         href: '/'
                     },
                     {
-                        text: 'users',
+                        text: 'Users',
                         href: '/users'
                     }
                 ],
@@ -253,55 +253,60 @@ let router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
-    if (to.name === 'workflow') {
-        to.meta.title = `flow ${to.params.name}`;
+    if (to.name === 'flow') {
+        to.meta.title = `Flow ${to.params.name}`;
     }
     if (to.name === 'run') {
-        to.meta.title = `run ${to.params.id}`;
+        to.meta.title = `Run ${to.params.id}`;
     }
     if (to.name === 'user') {
-        to.meta.title = `user ${to.params.username}`;
+        to.meta.title = `User ${to.params.username}`;
     }
     if (to.meta.name !== null) {
         document.title = to.meta.title;
     }
-    if (to.matched.some(record => record.name === 'workflow')) {
-        if (to.meta.crumb.length === 5) {
-            to.meta.crumb.pop();
-            to.meta.crumb.pop();
-        }
+    if (to.matched.some(record => record.name === 'flow')) {
+        while (to.meta.crumb.length > 1) to.meta.crumb.pop();
         to.meta.crumb.push(
             {
+                text: 'Flows',
+                href: `/flows/`
+            },
+            {
                 text: to.params.owner,
-                href: `/workflows/${to.params.owner}`
+                href: `/flows/${to.params.owner}`
             },
             {
                 text: to.params.name,
-                href: `/workflows/${to.params.owner}/${to.params.name}`
+                href: `/flows/${to.params.owner}/${to.params.name}`
             }
         );
     }
     if (to.matched.some(record => record.name === 'run')) {
         while (to.meta.crumb.length > 1) to.meta.crumb.pop();
-        to.meta.crumb.push({
-            text: 'runs',
-            href: `/runs/`
-        });
-        to.meta.crumb.push({
-            text: to.params.id,
-            href: `/runs/${to.params.id}`
-        });
+        to.meta.crumb.push(
+            {
+                text: 'Runs',
+                href: `/runs/`
+            },
+            {
+                text: to.params.id,
+                href: `/runs/${to.params.id}`
+            }
+        );
     }
     if (to.matched.some(record => record.name === 'user')) {
         while (to.meta.crumb.length > 1) to.meta.crumb.pop();
-        to.meta.crumb.push({
-            text: 'users',
-            href: `/users/`
-        });
-        to.meta.crumb.push({
-            text: to.params.username,
-            href: `/users/${to.params.username}`
-        });
+        to.meta.crumb.push(
+            {
+                text: 'users',
+                href: `/users/`
+            },
+            {
+                text: to.params.username,
+                href: `/users/${to.params.username}`
+            }
+        );
     }
     // if (to.matched.some(record => record.meta.requiresAuth)) {
     //     if (!store.getters.loggedIn) {
@@ -310,7 +315,7 @@ router.beforeEach((to, from, next) => {
     //     next();
     //     }
     // } else {
-        next();
+    next();
     // }
 });
 

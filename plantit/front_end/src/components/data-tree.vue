@@ -1,24 +1,127 @@
 <template>
     <b-list-group flush>
-        <div v-if="isDir && internalLoad" :class="{ bold: isDir }" @click="toggle">
-            {{ internalLoad ? internalNode.label : node.label }}
-            <span>[{{ isOpen ? '-' : '+' }}]</span>
-        </div>
-        <div
-            v-if="isDir && !internalLoad"
-            @click="
-                loadDirectory(
-                    internalLoad ? internalNode.path : node.path,
-                    currentUserDjangoProfile.profile.cyverse_token
-                )
-            "
-        >
-            {{ internalLoad ? internalNode.label : node.label }}
-            <span>[load]</span>
-        </div>
-        <span v-else-if="isDir && !internalLoad">[load]</span>
+        <b-row v-if="isDir && internalLoaded">
+            <b-col
+                :style="{
+                    'font-weight': isDir ? '500' : '300'
+                }"
+            >
+                <i class="fas fa-folder fa-fw"></i>
+                {{ internalLoaded ? internalNode.label : node.label }}
+            </b-col>
+            <b-col md="auto" class="mt-1">
+                {{
+                    isDir
+                        ? `${subDirCount} ${
+                              subDirCount === 1
+                                  ? 'subdirectory'
+                                  : 'subdirectories'
+                          }, ${fileCount} ${fileCount === 1 ? 'file' : 'files'}`
+                        : ''
+                }}
+            </b-col>
+            <b-col class="ml-0 mr-0" md="auto">
+                <b-button
+                    v-if="internalLoaded && !internalLoading"
+                    class="ml-0 mr-0"
+                    title="Refresh Directory"
+                    size="sm"
+                    variant="outline-dark"
+                    @click="refresh"
+                >
+                    <i class="fas fa-sync-alt fa-fw"></i>
+                </b-button>
+                <b-spinner
+                    small
+                    v-else-if="internalLoaded && internalLoading"
+                    variant="dark"
+                    type="grow"
+                    label="Loading"
+                ></b-spinner>
+            </b-col>
+            <b-col class="ml-0 mr-0" md="auto">
+                <b-button
+                    class="ml-0 mr-0"
+                    title="Expand Directory"
+                    v-if="!isOpen"
+                    size="sm"
+                    variant="outline-dark"
+                    @click="toggle"
+                >
+                    <i class="fas fa-caret-up fa-fw"></i> </b-button
+                ><b-button
+                    class="ml-0 mr-0"
+                    title="Collapse Directory"
+                    v-else
+                    size="sm"
+                    variant="outline-dark"
+                    @click="toggle"
+                >
+                    <i class="fas fa-caret-down fa-fw"></i>
+                </b-button>
+            </b-col>
+            <b-col class="ml-0 mr-0" md="auto">
+                <b-button
+                    class="ml-0 mr-0"
+                    title="Select"
+                    size="sm"
+                    variant="outline-white"
+                    @click="
+                        selectPath(
+                            internalLoaded ? internalNode.path : node.path
+                        )
+                    "
+                >
+                    Select
+                </b-button>
+            </b-col>
+        </b-row>
+        <b-row v-if="isDir && !internalLoaded">
+            <b-col>
+                <i class="fas fa-folder fa-fw"></i>
+                {{ internalLoaded ? internalNode.label : node.label }}
+            </b-col>
+            <b-col md="auto">
+                <b-button
+                    size="sm"
+                    variant="outline-dark"
+                    @click="
+                        loadDirectory(
+                            internalLoaded ? internalNode.path : node.path,
+                            currentUserDjangoProfile.profile.cyverse_token
+                        )
+                    "
+                    ><i
+                        v-if="!internalLoaded && !internalLoading"
+                        class="fas fa-caret-up fa-fw"
+                    ></i>
+                    <b-spinner
+                        small
+                        v-else-if="!internalLoaded && internalLoading"
+                        variant="dark"
+                        type="grow"
+                        label="Loading"
+                    ></b-spinner
+                ></b-button>
+            </b-col>
+            <b-col class="ml-0 mr-0" md="auto">
+                <b-button
+                    class="ml-0 mr-0"
+                    title="Select"
+                    size="sm"
+                    variant="outline-white"
+                    @click="
+                        selectPath(
+                            internalLoaded ? internalNode.path : node.path
+                        )
+                    "
+                >
+                    Select
+                </b-button>
+            </b-col>
+        </b-row>
         <b-list-group-item
-            v-for="(child, index) in internalLoad
+            v-for="(child, index) in internalLoaded
                 ? internalNode.folders
                 : node.folders"
             v-bind:key="index"
@@ -29,17 +132,30 @@
         </b-list-group-item>
         <b-list-group-item
             v-show="isOpen"
-            v-if="isDir && internalLoad"
+            v-if="isDir && internalLoaded"
             variant="light"
         >
-            <div
-                v-for="(child, index) in internalLoad
+            <b-row
+                v-for="(child, index) in internalLoaded
                     ? internalNode.files
                     : node.files"
                 :key="index"
             >
-                {{ child.label }}
-            </div>
+                <b-col>
+                    <i class="fas fa-file fa-fw"></i> {{ child.label }}
+                </b-col>
+                <b-col class="ml-0 mr-0" md="auto">
+                    <b-button
+                        class="ml-0 mr-0"
+                        title="Select"
+                        size="sm"
+                        variant="outline-white"
+                        @click="selectPath(child.path)"
+                    >
+                        Select
+                    </b-button>
+                </b-col>
+            </b-row>
         </b-list-group-item>
     </b-list-group>
 </template>
@@ -50,12 +166,20 @@ import * as Sentry from '@sentry/browser';
 export default {
     name: 'data-tree',
     props: {
-        node: Object
+        node: {
+            required: true,
+            type: Object
+        },
+        selectable: {
+            required: false,
+            type: Boolean
+        }
     },
     data: function() {
         return {
             internalNode: null,
-            internalLoad: false,
+            internalLoading: false,
+            internalLoaded: false,
             isOpen: false
         };
     },
@@ -69,13 +193,38 @@ export default {
         isDir: function() {
             return !('file-size' in this);
         },
+        subDirCount: function() {
+            return this.internalLoaded
+                ? this.internalNode.folders
+                    ? this.internalNode.folders.length
+                    : 0
+                : this.node.folders
+                ? this.node.folders.length
+                : 0;
+        },
+        fileCount: function() {
+            return this.internalLoaded
+                ? this.internalNode.files
+                    ? this.internalNode.files.length
+                    : 0
+                : this.node.files
+                ? this.node.files.length
+                : 0;
+        }
     },
     methods: {
         toggle: function() {
-            if (this.internalLoad) this.isOpen = !this.isOpen;
+            if (this.internalLoaded) this.isOpen = !this.isOpen;
             else this.loadDirectory();
         },
+        refresh: function() {
+            this.loadDirectory(
+                this.internalLoaded ? this.internalNode.path : this.node.path,
+                this.currentUserDjangoProfile.profile.cyverse_token
+            );
+        },
         loadDirectory(path, token) {
+            this.internalLoading = true;
             axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
@@ -83,20 +232,20 @@ export default {
                 )
                 .then(response => {
                     this.internalNode = response.data;
-                    this.internalLoad = true;
-                    this.toggle();
+                    this.internalLoading = false;
+                    this.internalLoaded = true;
+                    if (!this.isOpen) this.isOpen = true;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    this.internalLoading = false;
                     throw error;
                 });
+        },
+        selectPath: function(path) {
+            this.$parent.$emit('selectPath', path);
+            this.$emit('selectPath', path);
         }
-        // createDir: function() {
-        //     if (!this.isDir) {
-        //         this.$emit('addDirectory', this.node.path);
-        //         this.isOpen = true;
-        //     }
-        // }
     }
 };
 </script>

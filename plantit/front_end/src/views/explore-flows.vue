@@ -13,7 +13,7 @@
                     <b-col style="color: white">
                         <p class="text-dark">
                             Flows curated by the Computational Plant
-                            Science lab. To explore user flows, <a class="hvr" @click="users()">see the user page</a> .
+                            Science lab. To explore user flows, <a class="hvr" @click="users()">see the Users page</a> .
                         </p>
                     </b-col>
                     <!--<b-col md="auto" class="b-form-col">

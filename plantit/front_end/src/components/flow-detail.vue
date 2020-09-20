@@ -19,9 +19,9 @@
             <b-col>
                 <b-row>
                     <b-col md="auto" class="mr-0">
-                        <h1>
-                            Workflow <b>{{ workflow.config.name }}</b>
-                        </h1>
+                        <h2>
+                            {{ workflow.config.name }}
+                        </h2>
                     </b-col>
                     <b-col class="ml-0 pl-0" v-if="showPublic">
                         <h5>
@@ -47,13 +47,14 @@
                                 class="text-dark"
                                 :href="
                                     'https://github.com/' +
-                                        workflow.repo.owner.login +
+                                        workflow.repository.owner.login +
                                         '/' +
-                                        workflow.repo.name
+                                        workflow.repository.name
                                 "
                             >
-                                {{ workflow.repo.owner.login }}/{{
-                                    workflow.repo.name
+                              <i class="fab fa-github fa-fw"></i>
+                                {{ workflow.repository.owner.login }}/{{
+                                    workflow.repository.name
                                 }}
                             </b-link>
                         </small>
@@ -65,7 +66,7 @@
                         <b-col>
                             <b-row>
                                 <b-col>
-                                    {{ workflow.repo.description }}
+                                    {{ workflow.repository.description }}
                                 </b-col>
                             </b-row>
                             <br />
@@ -179,7 +180,7 @@
 
 <script>
 export default {
-    name: 'WorkflowDetail',
+    name: 'flow-detail',
     props: {
         showPublic: {
             type: Boolean,
@@ -196,7 +197,7 @@ export default {
     },
     methods: {
         workflowSelected: function(workflow) {
-            this.$emit('workflowSelected', workflow);
+            this.$emit('flowSelected', workflow);
         }
     }
 };
