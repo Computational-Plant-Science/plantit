@@ -100,7 +100,7 @@
                     <runinput
                         :user="user"
                         :kind="flow.config.from"
-                        v-on:inputSelected="onInputSelected"
+                        v-on:inputSelected="inputSelected"
                     ></runinput>
                 </b-card>
                 <br />
@@ -127,8 +127,8 @@
                     </template>
                     <runoutput
                         :user="user"
-                        v-on:outputSelected="onOutputSelected"
-                     :kind="output.kind"></runoutput>
+                        v-on:outputSelected="outputSelected"
+                    ></runoutput>
                 </b-card>
                 <br />
             </b-col>
@@ -154,7 +154,7 @@
                     </template>
                     <runtarget
                         :selected="target"
-                        v-on:targetSelected="onTargetSelected"
+                        v-on:targetSelected="targetSelected"
                     ></runtarget>
                 </b-card>
             </b-col>
@@ -265,13 +265,20 @@ export default {
                     }
                 });
         },
-        onInputSelected(input) {
-            this.input = input;
+        inputSelected(path) {
+            this.input = {
+                path: path,
+                kind: this.flow.config.from
+            };
         },
-        onOutputSelected(output) {
-            this.output = output;
+        outputSelected(path) {
+            this.output = {
+                irods_path: path,
+                local_path: '.',
+                kind: this.flow.config.to
+            };
         },
-        onTargetSelected(target) {
+        targetSelected(target) {
             this.target = target;
         },
         onStart() {
@@ -286,18 +293,8 @@ export default {
                         name: this.flow.config.name,
                         image: this.flow.config.image,
                         clone: this.flow.config.clone,
-                        input: this.input
-                            ? {
-                                  kind: this.input.kind,
-                                  path: this.input.path
-                              }
-                            : null,
-                        output: this.output
-                            ? {
-                                  kind: this.output.kind,
-                                  path: this.output.path
-                              }
-                            : null,
+                        input: this.input,
+                        output: this.output,
                         params: this.params,
                         target: this.target,
                         commands: this.flow.config.commands
