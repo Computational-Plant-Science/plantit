@@ -108,8 +108,8 @@ export default {
                 name: 'user',
                 params: {
                     username:
-                        user.username === 'Computational Plant Science Lab' ||
-                        user.username === 'van der Knaap Lab'
+                        user.username === 'Computational-Plant-Science' ||
+                        user.username === 'van-der-knaap-lab'
                             ? user.github_username
                             : user.username
                 }

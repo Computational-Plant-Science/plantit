@@ -28,10 +28,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'])
     def get_all(self, request):
         users = [{
-            'username': 'Computational Plant Science Lab',
+            'username': 'Computational-Plant-Science',
             'github_username': 'Computational-Plant-Science'
         }, {
-            'username': 'van der Knaap Lab',
+            'username': 'van-der-knaap-lab',
             'github_username': 'van-der-knaap-lab'
         }] + [{
             'username': user.username,

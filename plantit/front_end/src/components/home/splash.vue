@@ -19,6 +19,7 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
+                      <br/>
                         <h1>plantit</h1>
                     </b-col>
                 </b-row>
