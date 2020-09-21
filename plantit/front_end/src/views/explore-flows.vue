@@ -1,6 +1,5 @@
 <template>
-    <div class="w-100 p-4">
-        <br />
+    <div class="w-100 p-5">
         <br />
         <b-card
             header-bg-variant="white"
@@ -8,15 +7,16 @@
             header-border-variant="white"
             text-variant="dark"
         >
-            <template v-slot:header style="background-color: white">
-                <b-row align-v="center">
-                    <b-col style="color: white">
-                        <p class="text-dark">
-                            Flows curated by the Computational Plant
-                            Science lab. To explore user flows, <a class="hvr" @click="users()">see the Users page</a> .
-                        </p>
-                    </b-col>
-                    <!--<b-col md="auto" class="b-form-col">
+            <b-row align-v="center">
+                <b-col style="color: white">
+                    <p class="text-dark">
+                        Explore curated flows here. To explore user-developed
+                        flows,
+                        <a class="hvr" @click="users()">see the users page</a>
+                        .
+                    </p>
+                </b-col>
+                <!--<b-col md="auto" class="b-form-col">
                         <b-input-group>
                             <b-form-input
                                 v-model="communityWorkflowsFilter"
@@ -33,8 +33,7 @@
                             </b-input-group-append>
                         </b-input-group>
                     </b-col>-->
-                </b-row>
-            </template>
+            </b-row>
             <b-row
                 v-if="currentUserGitHubProfile === null"
                 align-v="center"
@@ -56,12 +55,38 @@
                     >
                 </b-col>
             </b-row>
-            <flows
-                v-else
-                github-user="computational-plant-science"
-                :github-token="currentUserDjangoProfile.profile.github_token"
-            >
-            </flows>
+            <b-row v-else align-v="left" align-h="left">
+                <b-col>
+                    <b-tabs>
+                        <b-tab title="Computational Plant Science Lab" active>
+                            <br />
+                            <b-card-text>
+                                <flows
+                                    github-user="computational-plant-science"
+                                    :github-token="
+                                        currentUserDjangoProfile.profile
+                                            .github_token
+                                    "
+                                >
+                                </flows>
+                            </b-card-text>
+                        </b-tab>
+                        <b-tab title="van der Knaap Lab">
+                            <br />
+                            <b-card-text>
+                                <flows
+                                    github-user="van-der-knaap-lab"
+                                    :github-token="
+                                        currentUserDjangoProfile.profile
+                                            .github_token
+                                    "
+                                >
+                                </flows>
+                            </b-card-text>
+                        </b-tab>
+                    </b-tabs>
+                </b-col>
+            </b-row>
         </b-card>
     </div>
 </template>
@@ -88,16 +113,16 @@ export default {
     ]),
     methods: {
         users() {
-          router.push({
-            name: 'users'
-          })
-        },
-        workflowSelected: function(workflow) {
             router.push({
-                name: 'workflow',
+                name: 'users'
+            });
+        },
+        flowSelected: function(flow) {
+            router.push({
+                name: 'flow',
                 params: {
-                    owner: workflow['repo']['owner']['login'],
-                    name: workflow['repo']['name']
+                    username: flow['repository']['owner']['login'],
+                    name: flow['repository']['name']
                 }
             });
         }
@@ -125,6 +150,3 @@ export default {
   padding: 10px
 </style>
 
-<style scoped lang="sass">
-@import '../scss/_colors.sass'
-</style>

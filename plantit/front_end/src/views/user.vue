@@ -1,9 +1,8 @@
 <template>
     <div class="w-100 p-5 m-0">
         <br />
-        <br />
         <b-card
-            v-if="djangoProfile"
+            v-if="githubProfile"
             bg-variant="white"
             border-variant="white"
             header-border-variant="white"
@@ -24,156 +23,176 @@
                     <b-col style="color: white" align-self="end">
                         <h2>
                             {{
-                                currentUserCyVerseProfile
-                                    ? `${currentUserCyVerseProfile.first_name} (${djangoProfile.username})`
-                                    : currentUserDjangoProfile.username
+                                cyverseProfile
+                                    ? `${cyverseProfile.first_name} (${djangoProfile.username})`
+                                    : githubProfile.login
                             }}
                         </h2>
+                    </b-col>
+                    <b-col md="auto" align-self="end">
+                        <b-button
+                            variant="outline-dark"
+                            :href="'https://github.com/' + githubProfile.login"
+                        >
+                            <i class="fab fa-github fa-2x fa-fw"></i>
+                        </b-button>
                     </b-col>
                 </b-row>
             </template>
             <b-tabs content-class="mt-3">
-                <b-tab title="Profile" active>
-                    <b-row align-h="center">
-                        <b-col md="auto">
-                            <b-card-text v-if="cyverseProfile">
-                                <h5>
-                                    <b-img
-                                        :src="
-                                            require('../assets/sponsors/cyversebw-notext.png')
-                                        "
-                                        height="29px"
-                                        alt="Cyverse"
-                                    ></b-img>
-                                    <a
-                                        href="https://de.cyverse.org/de/"
-                                        title="CyVerse Discovery Environment"
-                                    >
-                                        CyVerse
-                                    </a>
-                                </h5>
-                                <br />
-                                <p>
-                                    <b>username:</b>
-                                    {{ djangoProfile.username }}
-                                </p>
-                                <p>
-                                    <b>email:</b>
-                                    {{ cyverseProfile.email }}
-                                </p>
-                                <p>
-                                    <b>first name:</b>
-                                    {{ cyverseProfile.first_name }}
-                                </p>
-                                <p>
-                                    <b>last name:</b>
-                                    {{ cyverseProfile.last_name }}
-                                </p>
-                                <p>
-                                    <b>affiliation:</b>
-                                    {{
-                                        cyverseProfile === undefined
-                                            ? ''
-                                            : cyverseProfile.institution
-                                    }}
-                                </p>
-                                <br />
-                            </b-card-text>
-                        </b-col>
-                        <b-col>
-                            <b-card-text v-if="githubProfile">
-                                <h4>
-                                    <a
-                                        :href="
-                                            'https://github.com/' +
-                                                githubProfile.login
-                                        "
-                                    >
-                                        <i
-                                            class="fab fa-github-alt fa-1x fa-fw"
-                                        ></i>
-                                        GitHub
-                                    </a>
-                                </h4>
-                                <br />
-                                <p>
-                                    <b>username:</b>
-                                    {{
-                                        githubProfile === undefined ||
-                                        githubProfile.login === ''
-                                            ? 'None'
-                                            : this.githubProfile.login
-                                    }}
-                                </p>
-                                <p>
-                                    <b>email:</b>
-                                    {{ githubProfile.email }}
-                                </p>
-                                <p>
-                                    <b>bio:</b>
-                                    {{
-                                        githubProfile === undefined
-                                            ? ''
-                                            : githubProfile.bio
-                                    }}
-                                </p>
-                                <p>
-                                    <b>location:</b>
-                                    {{
-                                        githubProfile === undefined
-                                            ? ''
-                                            : githubProfile.location
-                                    }}
-                                </p>
-                                <p>
-                                    <b>affiliation:</b>
-                                    {{
-                                        githubProfile === undefined
-                                            ? ''
-                                            : githubProfile.company
-                                    }}
-                                </p>
-                                <br />
-                            </b-card-text>
-                        </b-col>
-                    </b-row>
+                <b-tab v-if="djangoProfile" title="Profile" active>
+                    <b-card
+                        header-bg-variant="white"
+                        border-variant="white"
+                        header-border-variant="white"
+                    >
+                        <b-row align-h="left">
+                            <b-col md="auto">
+                                <b-card-text v-if="cyverseProfile">
+                                    <p>
+                                        <b>Name</b>
+                                        <br />
+                                        {{ cyverseProfile.first_name }}
+                                        {{ cyverseProfile.last_name }}
+                                    </p>
+                                    <p>
+                                        <b>Email</b>
+                                        <br />
+                                        {{ cyverseProfile.email }}
+                                        <br />
+                                        {{ githubProfile.email }}
+                                    </p>
+                                    <p>
+                                        <b>Affiliation:</b>
+                                        <br />
+                                        {{
+                                            cyverseProfile === undefined
+                                                ? ''
+                                                : cyverseProfile.institution
+                                        }}
+                                    </p>
+                                    <p>
+                                        <b>Bio</b>
+                                        <br />
+                                        {{
+                                            githubProfile === undefined
+                                                ? ''
+                                                : githubProfile.bio
+                                        }}
+                                    </p>
+                                    <p>
+                                        <b>Location:</b>
+                                        <br />
+                                        {{
+                                            githubProfile === undefined
+                                                ? ''
+                                                : githubProfile.location
+                                        }}
+                                    </p>
+                                </b-card-text>
+                            </b-col>
+                        </b-row>
+                    </b-card>
                 </b-tab>
-                <b-tab title="Data">
+                <b-tab v-if="djangoProfile" title="Data">
                     <b-card border-variant="white">
                         <datatree :node="data"></datatree></b-card
                 ></b-tab>
                 <b-tab title="Flows">
-                    <b-row
-                        v-if="currentUserGitHubProfile === null"
-                        align-v="center"
-                        align-h="center"
+                    <b-card
+                        header-bg-variant="white"
+                        border-variant="white"
+                        header-border-variant="white"
                     >
-                        <b-col md="auto">
-                            <b-button
-                                variant="success"
-                                href="/apis/v1/users/github_request_identity/"
-                                class="mr-0"
-                            >
-                                <i class="fab fa-github"></i>
-                                Login to GitHub
-                            </b-button>
-                        </b-col>
-                        <b-col md="auto" class="ml-0 pl-0">
-                            <b class="text-center align-center ml-0 pl-0"
-                                >to load flows</b
-                            >
-                        </b-col>
-                    </b-row>
-                    <flows
-                        v-else
-                        :github-user="currentUserGitHubProfile.login"
-                        :github-token="
-                            currentUserDjangoProfile.profile.github_token
-                        "
-                    >
-                    </flows>
+                        <b-row
+                            v-if="currentUserGitHubProfile === null"
+                            align-v="center"
+                            align-h="center"
+                        >
+                            <b-col md="auto">
+                                <b-button
+                                    variant="success"
+                                    href="/apis/v1/users/github_request_identity/"
+                                    class="mr-0"
+                                >
+                                    <i class="fab fa-github"></i>
+                                    Login to GitHub
+                                </b-button>
+                            </b-col>
+                            <b-col md="auto" class="ml-0 pl-0">
+                                <b class="text-center align-center ml-0 pl-0"
+                                    >to load flows</b
+                                >
+                            </b-col>
+                        </b-row>
+                        <flows
+                            v-else
+                            :github-user="githubProfile.login"
+                            :github-token="
+                                currentUserDjangoProfile.profile.github_token
+                            "
+                        >
+                        </flows>
+                    </b-card>
                 </b-tab>
-                <b-tab title="Runs"><p>I'm a disabled tab!</p></b-tab>
+                <b-tab v-if="djangoProfile" title="Runs">
+                    <b-card
+                        header-bg-variant="white"
+                        border-variant="white"
+                        header-border-variant="white"
+                    >
+                        <b-row align-v="center" align-h="center">
+                            <b-col align-self="end" class="text-center">
+                                <b-button
+                                    block
+                                    v-if="!loadingRuns"
+                                    variant="white"
+                                    @click="loadRuns"
+                                >
+                                    <i class="fas fa-sync-alt fa-fw"></i>
+                                    Refresh
+                                </b-button>
+                              <b-spinner
+                                  v-if="loadingRuns"
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="dark"
+                                ></b-spinner>
+                            </b-col>
+                        </b-row>
+                        <br />
+                        <b-table
+                            v-if="!loadingRuns"
+                            show-empty
+                            sticky-header="true"
+                            selectable
+                            hover
+                            small
+                            responsive="sm"
+                            sort-by.sync="date"
+                            sort-desc.sync="true"
+                            :items="runs"
+                            :fields="fields"
+                            borderless
+                            select-mode="single"
+                            :filter="filter"
+                            @row-selected="onRunSelected"
+                        >
+                            <template v-slot:cell(state)="run">
+                                <h4>
+                                    <b-badge
+                                        :variant="
+                                            run.item.state === 2
+                                                ? 'danger'
+                                                : 'success'
+                                        "
+                                        >{{ statusToString(run.item.state) }}
+                                    </b-badge>
+                                </h4>
+                            </template>
+                        </b-table>
+                    </b-card>
+                </b-tab>
             </b-tabs>
         </b-card>
     </div>
@@ -186,6 +205,7 @@ import flows from '@/components/flows.vue';
 import datatree from '@/components/data-tree.vue';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
+import moment from 'moment';
 
 export default {
     name: 'User',
@@ -199,8 +219,34 @@ export default {
             cyverseProfile: null,
             githubProfile: null,
             data: {},
-            workflows: [],
-            runs: []
+            flows: [],
+            runs: [],
+            loadingRuns: false,
+            fields: [
+                {
+                    key: 'id',
+                    label: 'Id',
+                    sortable: true
+                },
+                {
+                    key: 'state',
+                    label: 'State'
+                },
+                {
+                    key: 'created',
+                    sortable: true,
+                    formatter: value => {
+                        return `${moment(value).fromNow()} (${moment(
+                            value
+                        ).format('MMMM Do YYYY, h:mm a')})`;
+                    }
+                },
+                {
+                    key: 'workflow_name',
+                    label: 'Workflow',
+                    sortable: true
+                }
+            ]
         };
     },
     computed: mapGetters([
@@ -215,16 +261,40 @@ export default {
             `/iplant/home/${this.currentUserDjangoProfile.username}/`,
             this.currentUserDjangoProfile.profile.cyverse_token
         );
+        await this.loadRuns();
     },
     methods: {
+        statusToString(status) {
+            switch (status) {
+                case 1:
+                    return 'Completed';
+                case 2:
+                    return 'Failed';
+                case 3:
+                    return 'Running';
+                case 4:
+                    return 'Created';
+            }
+        },
+        onRunSelected: function(items) {
+            router.push({
+                name: 'run',
+                params: {
+                    id: items[0].id,
+                    username: this.currentUserDjangoProfile.username
+                }
+            });
+        },
         async loadUser() {
             return axios
                 .get(
                     `/apis/v1/users/get_by_username/?username=${this.$router.currentRoute.params.username}`
                 )
                 .then(response => {
-                    this.djangoProfile = response.data.django_profile;
-                    this.cyverseProfile = response.data.cyverse_profile;
+                    if (response.data.django_profile)
+                        this.djangoProfile = response.data.django_profile;
+                    if (response.data.cyverse_profile)
+                        this.cyverseProfile = response.data.cyverse_profile;
                     this.githubProfile = response.data.github_profile;
                 })
                 .catch(error => {
@@ -234,15 +304,15 @@ export default {
         },
         workflowSelected: function(workflow) {
             router.push({
-                name: 'workflow',
+                name: 'flow',
                 params: {
                     owner: workflow['repo']['owner']['login'],
                     name: workflow['repo']['name']
                 }
             });
         },
-        loadDirectory(path, token) {
-            axios
+        async loadDirectory(path, token) {
+            return axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
                     { headers: { Authorization: 'Bearer ' + token } }
@@ -254,6 +324,24 @@ export default {
                     Sentry.captureException(error);
                     throw error;
                 });
+        },
+        async loadRuns() {
+            this.loadingRuns = true;
+            return axios
+                .get('/apis/v1/runs/')
+                .then(response => {
+                    this.runs = response.data;
+                    this.loadingRuns = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        }
+    },
+    filters: {
+        format_date(value) {
+            return moment(value).format('MM/DD/YY hh:mm');
         }
     }
 };

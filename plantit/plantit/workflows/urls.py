@@ -4,5 +4,5 @@ from . import views
 
 urlpatterns = [
     path(r'', views.list),
-    path(r'<owner>/<name>/', views.get),
+    path(r'<username>/<name>/', views.get),
 ]

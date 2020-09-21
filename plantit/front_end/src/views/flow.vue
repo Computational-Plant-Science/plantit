@@ -44,7 +44,36 @@
                             </b-col>
                         </b-row>
                     </template>
-                    <runparams :params="flow.config.params"></runparams>
+                    <b-card
+                        border-variant="white"
+                        footer-bg-variant="white"
+                        sub-title="Configure parameters."
+                    >
+                        <b-table
+                            :items="params"
+                            :fields="fields"
+                            responsive="sm"
+                            borderless
+                            small
+                            sticky-header="true"
+                            caption-top
+                        >
+                            <template v-slot:cell(name)="param">
+                                {{ param.item.key.toLowerCase() }}
+                            </template>
+                            <template v-slot:cell(value)="param">
+                                <b-form-input
+                                    size="sm"
+                                    v-model="param.item.value"
+                                    :placeholder="
+                                        'Enter a value for \'' +
+                                            param.item.key.toLowerCase() +
+                                            '\''
+                                    "
+                                ></b-form-input>
+                            </template>
+                        </b-table>
+                    </b-card>
                 </b-card>
                 <br />
             </b-col>
@@ -99,7 +128,7 @@
                     <runoutput
                         :user="user"
                         v-on:outputSelected="onOutputSelected"
-                    ></runoutput>
+                     :kind="output.kind"></runoutput>
                 </b-card>
                 <br />
             </b-col>
@@ -143,13 +172,13 @@
 
 <script>
 import flowdetail from '../components/flow-detail';
-import runparams from '../components/run-params';
 import runinput from '../components/run-input';
 import runoutput from '../components/run-output';
 import runtarget from '../components/run-target';
 import { mapGetters } from 'vuex';
 import axios from 'axios';
-// import router from '../router';
+import * as Sentry from '@sentry/browser';
+import router from '../router';
 
 String.prototype.capitalize = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
@@ -159,13 +188,12 @@ export default {
     name: 'flow',
     components: {
         flowdetail,
-        runparams,
         runinput,
         runoutput,
         runtarget
     },
     props: {
-        owner: {
+        username: {
             required: true
         },
         name: {
@@ -182,7 +210,17 @@ export default {
             output: null,
             target: {
                 name: ''
-            }
+            },
+            fields: [
+                {
+                    key: 'name',
+                    label: 'Name'
+                },
+                {
+                    key: 'value',
+                    label: 'Value'
+                }
+            ]
         };
     },
     mounted: function() {
@@ -203,13 +241,21 @@ export default {
     methods: {
         loadFlow() {
             axios
-                .get(`/apis/v1/flows/${this.owner}/${this.name}/`, {
+                .get(`/apis/v1/flows/${this.username}/${this.name}/`, {
                     headers: {
                         Authorization: 'Bearer ' + this.githubToken
                     }
                 })
                 .then(response => {
                     this.flow = response.data;
+                    this.params = response.data['config']['params'].map(
+                        param => {
+                            return {
+                                key: param,
+                                value: ''
+                            };
+                        }
+                    );
                 })
                 .catch(error => {
                     if (error.status_code === 401) {
@@ -229,27 +275,49 @@ export default {
             this.target = target;
         },
         onStart() {
-            // TODO start workflow
-            // Workflows.start({
-            //     repo: this.workflow.repo,
-            //     config: {
-            //         name: this.workflow.config.name,
-            //         image: this.workflow.config.image,
-            //         clone: this.workflow.config.clone,
-            //         input: this.input.irods_path ? this.input : null,
-            //         output: this.output,
-            //         params: this.params,
-            //         target: this.target,
-            //         commands: this.workflow.config.commands
-            //     }
-            // }).then(result => {
-            //     router.push({
-            //         name: 'run',
-            //         params: {
-            //             id: result.data.id
-            //         }
-            //     });
-            // });
+            this.params['config'] = {};
+            this.params['config']['api_url'] = '/apis/v1/runs/status/';
+            axios({
+                method: 'post',
+                url: `/apis/v1/runs/`,
+                data: {
+                    repository: this.flow.repository,
+                    config: {
+                        name: this.flow.config.name,
+                        image: this.flow.config.image,
+                        clone: this.flow.config.clone,
+                        input: this.input
+                            ? {
+                                  kind: this.input.kind,
+                                  path: this.input.path
+                              }
+                            : null,
+                        output: this.output
+                            ? {
+                                  kind: this.output.kind,
+                                  path: this.output.path
+                              }
+                            : null,
+                        params: this.params,
+                        target: this.target,
+                        commands: this.flow.config.commands
+                    }
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    router.push({
+                        name: 'run',
+                        params: {
+                            username: this.currentUserDjangoProfile.username,
+                            id: response.data.id
+                        }
+                    });
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
         }
     },
     computed: {

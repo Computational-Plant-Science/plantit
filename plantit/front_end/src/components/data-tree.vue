@@ -6,8 +6,23 @@
                     'font-weight': isDir ? '500' : '300'
                 }"
             >
-                <i class="fas fa-folder fa-fw"></i>
-                {{ internalLoaded ? internalNode.label : node.label }}
+                <b-button
+                    variant="white"
+                    v-if="select === 'Directory' || select === 'File'"
+                    @click="
+                        selectPath(
+                            internalLoaded ? internalNode.path : node.path
+                        )
+                    "
+                    ><i class="fas fa-folder fa-fw mr-2"></i>
+                    {{
+                        internalLoaded ? internalNode.label : node.label
+                    }}</b-button
+                >
+                <b-button v-else disabled variant="white">
+                    <i class="fas fa-folder fa-fw mr-2"></i
+                    >{{ internalLoaded ? internalNode.label : node.label }}
+                </b-button>
             </b-col>
             <b-col md="auto" class="mt-1">
                 {{
@@ -60,26 +75,26 @@
                     <i class="fas fa-caret-down fa-fw"></i>
                 </b-button>
             </b-col>
-            <b-col class="ml-0 mr-0" md="auto">
+        </b-row>
+        <b-row v-if="isDir && !internalLoaded">
+            <b-col>
                 <b-button
-                    class="ml-0 mr-0"
-                    title="Select"
-                    size="sm"
-                    variant="outline-white"
+                    variant="white"
+                    v-if="select === 'Directory' || select === 'File'"
                     @click="
                         selectPath(
                             internalLoaded ? internalNode.path : node.path
                         )
                     "
+                    ><i class="fas fa-folder fa-fw mr-2"></i
+                    >{{
+                        internalLoaded ? internalNode.label : node.label
+                    }}</b-button
                 >
-                    Select
+                <b-button v-else disabled variant="white">
+                    <i class="fas fa-folder fa-fw mr-2"></i
+                    >{{ internalLoaded ? internalNode.label : node.label }}
                 </b-button>
-            </b-col>
-        </b-row>
-        <b-row v-if="isDir && !internalLoaded">
-            <b-col>
-                <i class="fas fa-folder fa-fw"></i>
-                {{ internalLoaded ? internalNode.label : node.label }}
             </b-col>
             <b-col md="auto">
                 <b-button
@@ -104,21 +119,6 @@
                     ></b-spinner
                 ></b-button>
             </b-col>
-            <b-col class="ml-0 mr-0" md="auto">
-                <b-button
-                    class="ml-0 mr-0"
-                    title="Select"
-                    size="sm"
-                    variant="outline-white"
-                    @click="
-                        selectPath(
-                            internalLoaded ? internalNode.path : node.path
-                        )
-                    "
-                >
-                    Select
-                </b-button>
-            </b-col>
         </b-row>
         <b-list-group-item
             v-for="(child, index) in internalLoaded
@@ -128,7 +128,7 @@
             v-show="isOpen"
             variant="white"
         >
-            <data-tree :key="index" :node="child"></data-tree>
+            <data-tree :select="select" :key="index" :node="child"></data-tree>
         </b-list-group-item>
         <b-list-group-item
             v-show="isOpen"
@@ -141,19 +141,12 @@
                     : node.files"
                 :key="index"
             >
-                <b-col>
+                <b-button v-if="select === 'file'" @click="select"
+                    ><i class="fas fa-file fa-fw"></i>
+                    {{ child.label }}</b-button
+                >
+                <b-col v-else>
                     <i class="fas fa-file fa-fw"></i> {{ child.label }}
-                </b-col>
-                <b-col class="ml-0 mr-0" md="auto">
-                    <b-button
-                        class="ml-0 mr-0"
-                        title="Select"
-                        size="sm"
-                        variant="outline-white"
-                        @click="selectPath(child.path)"
-                    >
-                        Select
-                    </b-button>
                 </b-col>
             </b-row>
         </b-list-group-item>
@@ -170,9 +163,9 @@ export default {
             required: true,
             type: Object
         },
-        selectable: {
+        select: {
             required: false,
-            type: Boolean
+            type: String
         }
     },
     data: function() {
@@ -180,7 +173,7 @@ export default {
             internalNode: null,
             internalLoading: false,
             internalLoaded: false,
-            isOpen: false
+            isOpen: false,
         };
     },
     computed: {

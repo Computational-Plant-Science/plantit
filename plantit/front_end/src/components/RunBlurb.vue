@@ -1,14 +1,13 @@
 <template>
-    <div v-if="workflow.config">
+    <div v-if="flow.config">
         <b-row>
             <b-col>
-                <h1>
-                    Run
-                    <b
-                        ><small>{{ run.id }}</small></b
-                    >
-                </h1>
-                <h2>
+                <h3>
+                    <b>{{ run.id }}</b>
+                </h3>
+            </b-col>
+            <b-col md="auto">
+                <h4>
                     <b-badge :variant="run.state === 2 ? 'danger' : 'success'"
                         >{{ statusToString(run.state) }}
                     </b-badge>
@@ -16,10 +15,9 @@
                     <b-badge variant="secondary" class="text-white">{{
                         run.cluster
                     }}</b-badge>
-                </h2>
+                </h4>
             </b-col>
         </b-row>
-        <br />
         <b-row>
             <b-col>
                 <b-card
@@ -27,13 +25,13 @@
                     footer-bg-variant="white"
                     border-variant="dark"
                     footer-border-variant="white"
-                    style="min-height: 5rem; max-height: 15rem;"
+                    style="min-height: 5rem;"
                     class="overflow-hidden"
                 >
                     <WorkflowBlurb
                         :showPublic="false"
-                        flow="workflow"
-                        :selectable="false"
+                        :flow="flow"
+                        selectable="Restart"
                     ></WorkflowBlurb>
                 </b-card>
             </b-col>
@@ -43,6 +41,7 @@
 
 <script>
 import WorkflowBlurb from '@/components/flow-blurb.vue';
+import router from '@/router';
 
 export default {
     name: 'RunBlurb',
@@ -50,7 +49,7 @@ export default {
         WorkflowBlurb
     },
     props: {
-        workflow: {
+        flow: {
             type: Object,
             required: true
         },
@@ -58,10 +57,6 @@ export default {
             type: Object,
             required: true
         },
-        selectable: {
-            type: Boolean,
-            required: true
-        }
     },
     methods: {
         statusToString(status) {
@@ -75,6 +70,15 @@ export default {
                 case 4:
                     return 'Created';
             }
+        },
+        flowSelected: function(flow) {
+            router.push({
+                name: 'flow',
+                params: {
+                    username: flow['repository']['owner']['login'],
+                    name: flow['repository']['name']
+                }
+            });
         }
     }
 };

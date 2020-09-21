@@ -6,7 +6,7 @@
                 class="p-2 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
-                border-variant="light"
+                border-variant="default"
                 text-variant="white"
                 bg-variant="white"
                 style="max-width: 400px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
@@ -14,11 +14,11 @@
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
                         <b-img
-                        style="max-width: 5rem;transform: translate(0px, 20px);"
-                        :src="require('../../assets/logo.png')"
-                        center
-                        class="m-0 p-0"
-                    ></b-img>
+                            style="max-width: 5rem;transform: translate(0px, 20px);"
+                            :src="require('../../assets/logo.png')"
+                            center
+                            class="m-0 p-0"
+                        ></b-img>
                         <h1>plantit</h1>
                     </b-col>
                 </b-row>
@@ -68,7 +68,7 @@
                             variant="white"
                             block
                             class="text-center"
-                            href="/login/?next=/profile/"
+                            href="/login/?next=/"
                         >
                             Log in with
                             <b-img
@@ -106,7 +106,7 @@
                                 title="User"
                                 style="font-size: 12pt"
                                 :to="
-                                    '/users/' +
+                                    '/' +
                                         currentUserDjangoProfile.username +
                                         '/'
                                 "

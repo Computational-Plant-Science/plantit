@@ -32,14 +32,12 @@
                         </b-row>
                         <RunBlurb
                             v-else
-                            :workflow="workflow"
+                            :flow="flow"
                             :run="run"
-                            :selectable="false"
                         ></RunBlurb>
                     </b-card>
                 </b-col>
             </b-row>
-            <br />
             <b-row>
                 <b-col>
                     <b-card
@@ -48,7 +46,7 @@
                         footer-bg-variant="white"
                         border-variant="white"
                         footer-border-variant="white"
-                        header-border-variant="white"
+                        header-border-variant="default"
                     >
                         <template slot="header">
                             <b-row>
@@ -57,7 +55,7 @@
                                     align-self="center"
                                     class="mr-0"
                                 >
-                                    <h2>Logs</h2>
+                                    <h4>Logs</h4>
                                 </b-col>
                                 <b-col md="auto" class="m-0">
                                     <b-button
@@ -97,7 +95,7 @@
                                             <b-badge
                                                 v-if="
                                                     status.item.location ===
-                                                        'PlantIT'
+                                                        'plantit'
                                                 "
                                                 variant="dark"
                                                 class="text-success"
@@ -121,7 +119,7 @@
                                                 :variant="
                                                     status.item.state === 2
                                                         ? 'danger'
-                                                        : 'success'
+                                                        : status.item.state === 1 ? 'success' : 'warning'
                                                 "
                                                 >{{
                                                     statusToString(
@@ -149,12 +147,13 @@
 
 <script>
 import RunBlurb from '../components/RunBlurb';
-import Runs from '@/services/Runs.js';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 
 export default {
-    name: 'Run',
+    name: 'run',
     components: {
         RunBlurb
     },
@@ -163,7 +162,7 @@ export default {
             reloadAlertDismissSeconds: 2,
             reloadAlertDismissCountdown: 0,
             showReloadAlert: false,
-            workflow: null,
+            flow: null,
             loadingRun: true,
             runNotFound: false,
             run: null,
@@ -216,35 +215,62 @@ export default {
     methods: {
         reloadRun(toast) {
             this.loadingRun = true;
-            Runs.getRun(this.$router.currentRoute.params.id).then(run => {
-                if (run.response && run.response.status === 404) {
-                    this.runNotFound = true;
-                } else {
-                    this.runNotFound = false;
-                    this.run = run;
-                }
-                this.reloadLogs(toast);
-                this.run.workflow =
-                Users.getCurrentUser().then(user => {
-                    this.user = user;
-                    Workflows.get(
-                        this.run.workflow_owner,
-                        this.run.workflow_name
-                    ).then(workflow => {
-                        this.workflow = workflow;
-                        this.loadingRun = false;
-                    });
+            axios
+                .get(`/apis/v1/runs/${this.$router.currentRoute.params.id}/`)
+                .then(response => {
+                    if (response && response.status === 404) {
+                        this.runNotFound = true;
+                    } else {
+                        this.runNotFound = false;
+                        this.run = response.data;
+                    }
+                    this.reloadLogs(toast);
+                    this.loadFlow(
+                        response.data.workflow_owner,
+                        response.data.workflow_name
+                    );
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
                 });
-            });
+        },
+        loadFlow(owner, name) {
+            this.loadingRun = true;
+            axios
+                .get(`/apis/v1/flows/${owner}/${name}/`, {
+                    headers: {
+                        Authorization: 'Bearer ' + this.githubToken
+                    }
+                })
+                .then(response => {
+                    this.flow = response.data;
+                    this.loadingRun = false;
+                })
+                .catch(error => {
+                    if (error.status_code === 401) {
+                        this.login = true;
+                    } else {
+                        throw error;
+                    }
+                });
         },
         reloadLogs(toast) {
-            Runs.getStatus(this.$router.currentRoute.params.id).then(logs => {
-                if (logs.response && logs.response.status === 404) {
-                    return;
-                }
-                this.logs = logs;
-                if (toast) this.showAlert();
-            });
+            axios
+                .get(
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/status/`
+                )
+                .then(response => {
+                    if (response && response.status === 404) {
+                        return;
+                    }
+                    this.logs = response.data;
+                    if (toast) this.showAlert();
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
         },
         countDownChanged(dismissCountDown) {
             this.reloadAlertDismissCountdown = dismissCountDown;
@@ -269,6 +295,12 @@ export default {
         this.reloadRun(false);
     },
     computed: {
+        ...mapGetters([
+            'currentUserDjangoProfile',
+            'currentUserCyVerseProfile',
+            'currentUserGitHubProfile',
+            'loggedIn'
+        ]),
         runStatus() {
             if (this.run.runstatus_set.length > 0) {
                 return this.run.runstatus_set[0].state;
@@ -280,10 +312,10 @@ export default {
     filters: {
         format_date(value) {
             return moment(value).format('MM/DD/YY HH:mm');
-        },
-        resultsLink() {
-            return Runs.resultsLink(this.pk);
         }
+        // resultsLink() {
+        //     return Runs.resultsLink(this.pk);
+        // }
     }
 };
 </script>

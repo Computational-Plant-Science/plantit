@@ -6,12 +6,16 @@
             sub-title="Select an input file or directory."
         >
             <br />
-            <datatree @selectPath="selectPath" :node="data"></datatree>
+            <datatree
+                :select="kind"
+                @selectPath="selectPath"
+                :node="data"
+            ></datatree>
             <template v-slot:footer
                 >Selected:
                 <b
-                    >{{ selected ? selected : 'None' }}
-                    <i v-if="selected" class="fas fa-check text-success"></i>
+                    >{{ path ? path : 'None' }}
+                  <i v-if="path" class="fas fa-check text-success"></i>
                     <i v-else class="fas fa-exclamation text-warning"></i> </b
             ></template>
         </b-card>
@@ -38,7 +42,7 @@ export default {
     data() {
         return {
             data: null,
-            selected: null
+            path: null
         };
     },
     computed: mapGetters([
@@ -69,7 +73,7 @@ export default {
                 });
         },
         selectPath(path) {
-            this.selected = path;
+            this.path = path;
             this.$emit('inputSelected', path);
         }
     }

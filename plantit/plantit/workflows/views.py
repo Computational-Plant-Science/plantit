@@ -20,8 +20,8 @@ def list(request):
 
 
 @login_required
-def get(request, owner, name):
-    repo = requests.get(f"https://api.github.com/repos/{owner}/{name}",
+def get(request, username, name):
+    repo = requests.get(f"https://api.github.com/repos/{username}/{name}",
                         headers={"Authorization": f"token {request.user.profile.github_token}"}).json()
 
     return JsonResponse({

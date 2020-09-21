@@ -28,6 +28,19 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'])
     def get_by_username(self, request):
         username = request.GET.get('username', None)
+
+        # TODO move to configuration file
+        if username == 'Computational-Plant-Science' or username == 'van-der-knaap-lab':
+            if request.user.profile.github_token is not '':
+                github_response = requests.get(f"https://api.github.com/users/{username}",
+                                               headers={'Authorization':
+                                                            f"Bearer {request.user.profile.github_token}"})
+            return JsonResponse({
+                'django_profile': None,
+                'cyverse_profile': None,
+                'github_profile': github_response.json()
+            })
+
         user = self.queryset.get(username=username)
         response = {
             'django_profile': {
@@ -37,10 +50,14 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'last_name': user.last_name,
             }
         }
+
         if request.user.username == user.username:
             response['django_profile']['cyverse_token'] = user.profile.cyverse_token
+
         if request.user.profile.cyverse_token is not '':
-            cyverse_response = requests.get(f"https://de.cyverse.org/terrain/secured/user-info?username={user.username}", headers={'Authorization': f"Bearer {request.user.profile.cyverse_token}"})
+            cyverse_response = requests.get(
+                f"https://de.cyverse.org/terrain/secured/user-info?username={user.username}",
+                headers={'Authorization': f"Bearer {request.user.profile.cyverse_token}"})
             if cyverse_response.status_code == 401:
                 response['cyverse_profile'] = 'expired token'
             else:
@@ -49,8 +66,9 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 user.last_name = response['cyverse_profile']['last_name']
                 user.save()
         if request.user.profile.github_token is not '':
-            github_response = requests.get(f"https://api.github.com/users/{user.profile.github_username}", headers={'Authorization':
-                                                     f"Bearer {request.user.profile.github_token}"})
+            github_response = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
+                                           headers={'Authorization':
+                                                        f"Bearer {request.user.profile.github_token}"})
             response['github_profile'] = github_response.json()
         return JsonResponse(response)
 

@@ -21,9 +21,9 @@ def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, d
     stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
     stdin.close()
     for line in iter(lambda: stdout.readline(2048), ""):
-        print(f"Received stout from remote command: '{clean_html(line)}'")
+        print(f"Received stdout from remote command: '{clean_html(line)}'")
     for line in iter(lambda: stderr.readline(2048), ""):
-        print(f"Received sterr from remote command: '{clean_html(line)}'")
+        print(f"Received stderr from remote command: '{clean_html(line)}'")
 
     if stdout.channel.recv_exit_status():
         raise Exception(f"Received non-zero exit status from remote command")
@@ -32,21 +32,18 @@ def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, d
 
 
 @app.task()
-def execute(workflow, run_id, token):
+def execute(workflow, run_id, plantit_token, cyverse_token):
     run = Run.objects.get(identifier=run_id)
     run.status_set.create(description=f"Run started.",
                           state=Status.RUNNING,
-                          location='PlantIT')
+                          location='plantit')
     run.save()
 
     try:
         work_dir = join(run.cluster.workdir, run.work_dir)
         ssh_client = SSH(run.cluster.hostname,
                          run.cluster.port,
-                         run.cluster.username,
-                         run.cluster.password) if run.cluster.password else SSH(run.cluster.hostname,
-                                                                                run.cluster.port,
-                                                                                run.cluster.username)
+                         run.cluster.username)
 
         with ssh_client:
             execute_command(run=run, ssh_client=ssh_client, pre_command=':', command=f"mkdir {work_dir}",
@@ -55,7 +52,7 @@ def execute(workflow, run_id, token):
             run.status_set.create(
                 description=f"Created working directory. Uploading workflow definition...",
                 state=Status.RUNNING,
-                location='PlantIT')
+                location='plantit')
             run.save()
 
             with ssh_client.client.open_sftp() as sftp:
@@ -66,24 +63,24 @@ def execute(workflow, run_id, token):
             run.status_set.create(
                 description=f"Uploaded workflow definition. Running workflow...",
                 state=Status.RUNNING,
-                location='PlantIT')
+                location='plantit')
             run.save()
 
             execute_command(run=run, ssh_client=ssh_client, pre_command='; '.join(
                 str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
-                            command=f"plantit workflow.yaml --token {token}",
+                            command=f"plantit workflow.yaml --plantit_token {plantit_token} --cyverse_token {cyverse_token}",
                             directory=work_dir)
             print(f"Run completed.")
             if run.status.state != 2:
                 run.status_set.create(
                     description=f"Run completed.",
                     state=Status.COMPLETED,
-                    location='PlantIT')
+                    location='plantit')
             else:
                 run.status_set.create(
                     description=f"Run failed.",
                     state=Status.FAILED,
-                    location='PlantIT')
+                    location='plantit')
             run.save()
 
     except Exception:

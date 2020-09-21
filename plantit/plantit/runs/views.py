@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import action, api_view
 
 from plantit.runs.models import Run, Status
@@ -35,11 +36,11 @@ def runs(request):
         now = timezone.now()
         now_str = now.strftime('%s')
         cluster = Target.objects.get(name=workflow['config']['target']['name'])
-        workflow_path = f"{workflow['repo']['owner']['login']}/{workflow['repo']['name']}"
+        workflow_path = f"{workflow['repository']['owner']['login']}/{workflow['repository']['name']}"
         run = Run.objects.create(
             user=User.objects.get(username=user.username),
-            workflow_owner=workflow['repo']['owner']['login'],
-            workflow_name=workflow['repo']['name'],
+            workflow_owner=workflow['repository']['owner']['login'],
+            workflow_name=workflow['repository']['name'],
             cluster=cluster,
             created=now,
             work_dir=now_str + "/",
@@ -49,12 +50,12 @@ def runs(request):
 
         run.status_set.create(description=f"Workflow '{workflow_path}' run '{run.identifier}' created.",
                               state=Status.CREATED,
-                              location='PlantIT')
+                              location='plantit')
         run.save()
 
         config = {
             'identifier': run.identifier,
-            'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/update_status/",
+            'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/status/",
             'workdir': join(cluster.workdir, now_str),
             'clone': f"https://github.com/{workflow_path}" if workflow['config']['clone'] else None,
             'image': workflow['config']['image'],
@@ -68,9 +69,9 @@ def runs(request):
             config['output'] = workflow['config']['output']
 
         execute.delay({
-            'repo': workflow['repo'],
+            'repository': workflow['repository'],
             'config': config
-        }, run.identifier, run.token) # request.session._session['csrfToken']
+        }, run.identifier, run.token, request.user.profile.cyverse_token) # request.session._session['csrfToken']
 
         return JsonResponse({
             'id': run.identifier
@@ -98,6 +99,7 @@ def run(request, id):
 
 @api_view(['GET', 'POST'])
 @login_required
+@csrf_exempt
 def status(request, id):
     if request.method == 'GET':
         try:

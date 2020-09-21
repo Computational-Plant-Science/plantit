@@ -1,6 +1,7 @@
 <template>
     <b-row align-h="center">
-        <b-card-group deck class="justify-content-center">
+      <b-col class="text-center" v-if="flows.length === 0">None to show.</b-col>
+        <b-card-group columns class="justify-content-center">
             <b-card
                 v-for="flow in flows"
                 :key="flow.repository.name"
@@ -8,13 +9,13 @@
                 footer-bg-variant="white"
                 border-variant="default"
                 footer-border-variant="white"
-                style="min-width: 30rem; max-width: 30rem; min-height: 5rem; max-height: 15rem;"
+                style="min-width: 15rem; max-width: 40rem;"
                 class="overflow-hidden mb-4"
             >
                 <blurb
                     :showPublic="false"
                     :flow="flow"
-                    :selectable="true"
+                    selectable="Start"
                     v-on:flowSelected="flowSelected"
                 ></blurb>
             </b-card>
@@ -82,7 +83,7 @@ export default {
             router.push({
                 name: 'flow',
                 params: {
-                    owner: flow['repository']['owner']['login'],
+                    username: flow['repository']['owner']['login'],
                     name: flow['repository']['name']
                 }
             });

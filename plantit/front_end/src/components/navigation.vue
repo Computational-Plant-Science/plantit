@@ -45,10 +45,10 @@
                                         <b>CyVerse</b>
                                     </b-button>
                                 </b-nav-item>
-                              </b-nav>
+                            </b-nav>
                         </b-col>
                     </b-row>
-                  <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
+                    <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
                         <b-col class="ml-0 mr-0 pl-0 pr-0" align-self="middle">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item
@@ -172,31 +172,41 @@
                 </b-container>
             </template>
             <template v-slot:footer>
-              <b-container class="p-1">
+                <b-container class="p-1">
                     <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
-                <b-nav vertical class="ml-0 mr-0 pl-0 pr-0 mb-2" v-if="loggedIn">
-                    <hr />
-                    <b-nav-item title="log out" to="/logout" class="m-0 p-0">
-                        <b-button
-                            variant="outline-danger"
-                            block
-                            class="text-left"
-                        >
-                            <i class="fas fa-door-closed fa-1x fa-fw"></i>
-                            Log Out
-                        </b-button>
-                    </b-nav-item>
-                </b-nav>
+                            <b-nav
+                                vertical
+                                class="ml-0 mr-0 pl-0 pr-0 mb-2"
+                                v-if="loggedIn"
+                            >
+                                <hr />
+                                <b-nav-item
+                                    title="log out"
+                                    to="/logout"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button
+                                        variant="outline-danger"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i
+                                            class="fas fa-door-closed fa-1x fa-fw"
+                                        ></i>
+                                        Log Out
+                                    </b-button>
+                                </b-nav-item>
+                            </b-nav>
                         </b-col>
                     </b-row>
-              </b-container>
+                </b-container>
             </template>
         </b-sidebar>
         <b-navbar
             toggleable="sm"
             class="logo p-0 overflow-hidden"
-            style="min-height: 40px; max-height: 60px; z-index: 1000"
+            style="min-height: 40px; max-height: 50px; z-index: 1000"
             fixed="top"
         >
             <b-collapse class="m-0 p-0" is-nav>
@@ -210,7 +220,7 @@
                             @mouseleave="titleContent = 'breadcrumb'"
                         >
                             <b-img
-                                class="m-0 p-0 mb-1"
+                                class="m-0 p-0 mb-3"
                                 center
                                 width="38px"
                                 :src="require('../assets/logo.png')"
@@ -221,7 +231,7 @@
                 </b-navbar-nav>
                 <transition name="component-fade" mode="out-in">
                     <b-breadcrumb
-                        class="m-o p-0"
+                        class="m-o p-0 mt-1"
                         style="background-color: transparent;"
                         v-if="titleContent === 'sidebar'"
                     >
@@ -230,15 +240,16 @@
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                     <b-breadcrumb
-                        class="m-o p-0 ml-0 pl-0"
+                        class="m-o p-0 mt-1"
                         style="background-color: transparent"
                         v-if="titleContent === 'breadcrumb'"
                     >
                         <b-breadcrumb-item
                             v-for="crumb in crumbs"
                             :key="crumb.text"
-                            class="background-transparent title mr-1"
+                            class="background-transparent title"
                             :to="crumb.href"
+                            :disabled="crumb.text === 'runs'"
                         >
                             {{ crumb.text }}
                         </b-breadcrumb-item>
@@ -247,9 +258,7 @@
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
                         v-if="
-                            loggedIn
-                                ? currentUserGitHubProfile === null
-                                : false
+                            loggedIn ? currentUserGitHubProfile === null : false
                         "
                         title="Link GitHub Account"
                         href="/apis/v1/users/github_request_identity/"
@@ -266,16 +275,36 @@
                             class="text-left m-0 pl-1 pr-1"
                             title="Slack"
                         >
-                            <i class="fab fa-slack fa-2x fa-fw"></i>
+                            <i class="fab fa-slack fa-1x fa-fw"></i>
+                            Slack
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item href="https://github.com/Computational-Plant-Science/plantit">
+                    <b-nav-item
+                        href="https://github.com/Computational-Plant-Science/plantit"
+                    >
                         <b-button
                             variant="outline-dark"
                             title="GitHub"
                             class="text-left github-hover m-0 pl-1 pr-1"
                         >
-                            <i class="fab fa-github fa-2x fa-fw"></i>
+                            <i class="fab fa-github fa-1x fa-fw"></i>
+                            GitHub
+                        </b-button>
+                    </b-nav-item>
+                  <b-nav-item href="https://de.cyverse.org/de/">
+                        <b-button
+                            variant="white"
+                            title="CyVerse Discovery Environment"
+                            class="text-left m-0 pl-1 pr-1"
+                        >
+                            <b-img
+                                :src="
+                                    require('../assets/sponsors/cyversebw-notext.png')
+                                "
+                                height="20px"
+                                alt="Cyverse"
+                            ></b-img>
+                          CyVerse
                         </b-button>
                     </b-nav-item>
                     <!--<b-nav-item
@@ -301,16 +330,19 @@
                         right
                         v-if="loggedIn"
                         title="User"
-                        class="m-0 ml-1 p-0"
+                        class="m-0 p-0"
                         style="font-size: 12pt"
                         :to="
-                            '/users/' + currentUserDjangoProfile.username + '/'
+                            '/' + currentUserDjangoProfile.username + '/'
                         "
                     >
-                        <b-button variant="white" class="m-0">
+                        <b-button
+                            v-if="currentUserGitHubProfile"
+                            variant="white"
+                            class="m-0"
+                        >
                             <b-img
-                                v-if="currentUserGitHubProfile"
-                                class="avatar m-0 p-0"
+                                class="avatar m-0 mb-1 p-0"
                                 rounded="circle"
                                 :src="
                                     currentUserGitHubProfile
@@ -318,14 +350,12 @@
                                         : ''
                                 "
                             ></b-img>
-                            <b v-else
-                                >(
-                                {{
-                                    currentUserCyVerseProfile
-                                        ? currentUserCyVerseProfile.first_name
-                                        : currentUserDjangoProfile.username
-                                }})</b
-                            >
+
+                            {{
+                                currentUserCyVerseProfile
+                                    ? currentUserCyVerseProfile.first_name
+                                    : currentUserDjangoProfile.username
+                            }}
                         </b-button>
                     </b-nav-item>
                 </b-navbar-nav>
@@ -396,21 +426,21 @@ a
 .breadcrumb > li
     text-align: end
     color: $dark !important
-    margin-top: 15px !important
-    font-size: 15pt !important
+    margin-top: 12px !important
+    font-size: 12pt !important
     font-weight: 200
     content: " /"
 
 .breadcrumb > li + li::marker
     color: $dark !important
-    margin-top: 15px !important
-    font-size: 15pt !important
+    margin-top: 12px !important
+    font-size: 12pt !important
     font-weight: 200
 
 .breadcrumb > li + li:before + li::marker
     color: $dark !important
-    margin-top: 15px !important
-    font-size: 15pt !important
+    margin-top: 12px !important
+    font-size: 12pt !important
     font-weight: 200
     content: " /"
 
@@ -436,7 +466,7 @@ a
 
 
 .avatar
-  max-height: 34px
+  max-height: 15px
   border: 1px solid $dark
 
 a

@@ -2,39 +2,40 @@
     <div class="w-100 p-4">
         <br />
         <br />
-        <b-row>
-            <b-col>
-                <b-card
-                    header-bg-variant="white"
-                    border-variant="white"
-                    header-border-variant="white"
-                >
-                    <template v-slot:header style="background-color: white">
-                        <b-row align-v="center">
-                            <b-col style="color: white">
-                                <h1>
-                                    Your Runs
-                                </h1>
-                            </b-col>
-                            <b-col md="auto" class="b-form-col">
-                                <b-input-group>
-                                    <b-form-input
-                                        v-model="runs_query"
-                                        placeholder="Filter..."
-                                        class="b-form-input"
-                                    ></b-form-input>
-                                    <b-input-group-append>
-                                        <b-button
-                                            :disabled="!runs_query"
-                                            @click="runs_query = ''"
-                                            variant="white"
-                                            >Clear
-                                        </b-button>
-                                    </b-input-group-append>
-                                </b-input-group>
-                            </b-col>
-                        </b-row>
-                    </template>
+        <b-card
+            header-bg-variant="white"
+            border-variant="white"
+            header-border-variant="white"
+        >
+            <b-row align-v="center">
+                <b-col style="color: white" align-self="end">
+                    <p class="text-dark">
+                        Your flow runs are shown here.
+                    </p>
+                </b-col>
+                <b-col align-self="end" md="auto">
+                    <b-button
+                        :disabled="loadingRuns"
+                        variant="white"
+                        @click="loadRuns"
+                    >
+                        <i class="fas fa-sync-alt fa-fw"></i>
+                        Refresh
+                    </b-button>
+                </b-col>
+            </b-row>
+            <b-row align-h="center" v-if="loadingRuns">
+                <b-col>
+                    <b-spinner
+                        type="grow"
+                        label="Loading..."
+                        variant="dark"
+                    ></b-spinner>
+                </b-col>
+            </b-row>
+            <br />
+            <b-row align-h="center">
+                <b-col>
                     <b-table
                         show-empty
                         sticky-header="true"
@@ -42,8 +43,8 @@
                         hover
                         small
                         responsive="sm"
-                        :sort-by.sync="sortBy"
-                        :sort-desc.sync="sortDesc"
+                        sort-by.sync="date"
+                        sort-desc.sync="true"
                         :items="runs"
                         :fields="fields"
                         borderless
@@ -57,16 +58,18 @@
                                     :variant="
                                         run.item.state === 2
                                             ? 'danger'
-                                            : 'success'
+                                            : run.item.state === 1
+                                            ? 'success'
+                                            : 'warning'
                                     "
                                     >{{ statusToString(run.item.state) }}
                                 </b-badge>
                             </h4>
                         </template>
                     </b-table>
-                </b-card>
-            </b-col>
-        </b-row>
+                </b-col>
+            </b-row>
+        </b-card>
     </div>
 </template>
 
@@ -74,6 +77,8 @@
 import Runs from '@/services/Runs.js';
 import moment from 'moment';
 import router from '../router';
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'Runs',
@@ -131,14 +136,23 @@ export default {
                         });
                     }
                 });
+        },
+        async loadRuns() {
+            this.loadingRuns = true;
+            return axios
+                .get('/apis/v1/runs/')
+                .then(response => {
+                    this.runs = response.data;
+                    this.loadingRuns = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
         }
     },
     data() {
         return {
-            sortBy: 'date',
-            sortDesc: true,
-            filter: '',
-            runs_query: '',
             fields: [
                 {
                     key: 'id',
@@ -164,13 +178,12 @@ export default {
                     sortable: true
                 }
             ],
+            loadingRuns: false,
             runs: []
         };
     },
-    mounted: function() {
-        Runs.list().then(runs => {
-            this.runs = runs;
-        });
+    async mounted() {
+        await this.loadRuns();
     },
     filters: {
         format_date(value) {

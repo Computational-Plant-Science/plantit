@@ -6,7 +6,6 @@ import docs from './views/docs.vue';
 import data from './views/data.vue';
 import flows from './views/explore-flows.vue';
 import flow from './views/flow.vue';
-import runs from './views/user-runs.vue';
 import run from './views/run.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
@@ -40,7 +39,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'guide',
+                        text: 'user guide',
                         href: '/guide'
                     }
                 ]
@@ -58,7 +57,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'docs',
+                        text: 'developer docs',
                         href: '/docs'
                     }
                 ]
@@ -101,6 +100,24 @@ let router = new Router({
             }
         },
         {
+            path: '/users',
+            name: 'users',
+            component: users,
+            meta: {
+                title: 'Users',
+                crumb: [
+                    {
+                        text: 'plantit',
+                        href: '/'
+                    },
+                    {
+                        text: 'users',
+                        href: '/users'
+                    }
+                ]
+            }
+        },
+        {
             path: '/data',
             name: 'data',
             component: data,
@@ -112,7 +129,7 @@ let router = new Router({
                         href: '/'
                     },
                     {
-                        text: 'data',
+                        text: 'explore data',
                         href: '/data'
                     }
                 ]
@@ -137,7 +154,7 @@ let router = new Router({
             }
         },
         {
-            path: '/flows/:owner/:name',
+            path: '/:username/:name',
             name: 'flow',
             props: true,
             component: flow,
@@ -147,34 +164,12 @@ let router = new Router({
                     {
                         text: 'plantit',
                         href: '/'
-                    },
-                    {
-                        text: 'flows',
-                        href: '/flows'
                     }
                 ]
             }
         },
         {
-            path: '/runs',
-            name: 'runs',
-            component: runs,
-            meta: {
-                title: 'Runs',
-                crumb: [
-                    {
-                        text: 'plantit',
-                        href: '/'
-                    },
-                    {
-                        text: 'runs',
-                        href: '/runs'
-                    }
-                ]
-            }
-        },
-        {
-            path: '/runs/:id',
+            path: '/:username/runs/:id',
             name: 'run',
             props: true,
             component: run,
@@ -184,34 +179,12 @@ let router = new Router({
                     {
                         text: 'plantit',
                         href: '/'
-                    },
-                    {
-                        text: 'runs',
-                        href: '/runs'
                     }
                 ]
             }
         },
         {
-            path: '/users',
-            name: 'users',
-            component: users,
-            meta: {
-                title: 'Users',
-                crumb: [
-                    {
-                        text: 'plantit',
-                        href: '/'
-                    },
-                    {
-                        text: 'users',
-                        href: '/users'
-                    }
-                ]
-            }
-        },
-        {
-            path: '/users/:username',
+            path: '/:username',
             name: 'user',
             props: true,
             component: user,
@@ -221,10 +194,6 @@ let router = new Router({
                     {
                         text: 'plantit',
                         href: '/'
-                    },
-                    {
-                        text: 'users',
-                        href: '/users'
                     }
                 ],
                 requiresAuth: true
@@ -268,16 +237,12 @@ router.beforeEach((to, from, next) => {
         while (to.meta.crumb.length > 1) to.meta.crumb.pop();
         to.meta.crumb.push(
             {
-                text: 'Flows',
-                href: `/flows/`
-            },
-            {
-                text: to.params.owner,
-                href: `/flows/${to.params.owner}`
+                text: to.params.username,
+                href: `/${to.params.username}`
             },
             {
                 text: to.params.name,
-                href: `/flows/${to.params.owner}/${to.params.name}`
+                href: `/${to.params.username}/${to.params.name}`
             }
         );
     }
@@ -285,27 +250,25 @@ router.beforeEach((to, from, next) => {
         while (to.meta.crumb.length > 1) to.meta.crumb.pop();
         to.meta.crumb.push(
             {
-                text: 'Runs',
-                href: `/runs/`
+                text: to.params.username,
+                href: `/${to.params.username}`
+            },
+            {
+                text: 'runs',
+                href: `/${to.params.username}`
             },
             {
                 text: to.params.id,
-                href: `/runs/${to.params.id}`
+                href: `/${to.params.username}/runs/${to.params.id}`
             }
         );
     }
     if (to.matched.some(record => record.name === 'user')) {
         while (to.meta.crumb.length > 1) to.meta.crumb.pop();
-        to.meta.crumb.push(
-            {
-                text: 'users',
-                href: `/users/`
-            },
-            {
-                text: to.params.username,
-                href: `/users/${to.params.username}`
-            }
-        );
+        to.meta.crumb.push({
+            text: to.params.username,
+            href: `/${to.params.username}`
+        });
     }
     // if (to.matched.some(record => record.meta.requiresAuth)) {
     //     if (!store.getters.loggedIn) {
