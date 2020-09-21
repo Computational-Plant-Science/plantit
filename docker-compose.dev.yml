@@ -26,17 +26,10 @@ services:
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
       - GITHUB_SECRET=${GITHUB_SECRET}
-      - IRODS_HOST=${IRODS_HOST}
-      - IRODS_PORT=${IRODS_PORT}
-      - IRODS_ZONE=${IRODS_ZONE}
-      - IRODS_USERNAME=${IRODS_USERNAME}
-      - IRODS_PASSWORD=${IRODS_PASSWORD}
-      - IRODS_BASEPATH=${IRODS_BASEPATH}
     command: ["python", "manage.py", "runserver", "0.0.0.0:80"]
     depends_on:
       - celery
       - sandbox
-      - irods
     ports:
       - "80:80"
     healthcheck:
@@ -81,12 +74,6 @@ services:
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
       - GITHUB_SECRET=${GITHUB_SECRET}
-      - IRODS_HOST=${IRODS_HOST}
-      - IRODS_PORT=${IRODS_PORT}
-      - IRODS_ZONE=${IRODS_ZONE}
-      - IRODS_USERNAME=${IRODS_USERNAME}
-      - IRODS_PASSWORD=${IRODS_PASSWORD}
-      - IRODS_BASEPATH=${IRODS_BASEPATH}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
@@ -98,5 +85,3 @@ services:
       context: .
       dockerfile: scripts/dockerfiles/sandbox/Dockerfile
     privileged: true
-  irods:
-    image: mjstealey/irods-provider-postgres:4.2.3

@@ -14,7 +14,6 @@ RUN mkdir /code
 WORKDIR /code
 COPY . ./
 RUN pip install -r scripts/dockerfiles/plantit/requirements.txt
-RUN chmod +x scripts/configure-irods.sh
 RUN chmod +x scripts/configure-sandbox.sh
 RUN chmod +x scripts/configure-superuser.sh
 RUN chmod +x scripts/ssh-copy-id.expect

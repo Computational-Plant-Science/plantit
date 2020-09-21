@@ -51,7 +51,6 @@ To set up a new (or restore a clean) development environment, run `scripts/boots
 - Run migrations
 - If a Django superuser does not exist, create one (username and password specified in `.env`)
 - Configure a sandbox container to act as a test deployment target (creates a public/private keypair in `config/ssh` if one does not exist, then configures SSH key authentication between the web application container and the sandbox environment)
-- Configure a mock iRODS server
 - Build the Vue front end
 
 Bring everything up with `docker-compose -f docker-compose.dev.yml up` (`-d` for detached mode).
@@ -62,7 +61,6 @@ This will start a number of containers:
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `celery`: Celery worker
 - `sandbox`: test deployment target
-- `irods`: mock IRODS server
 
 To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and use the values for `DJANGO_ADMIN_USERNAME` and `DJANGO_ADMIN_PASSWORD` configured in `.env`.
 

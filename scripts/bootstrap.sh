@@ -65,7 +65,3 @@ if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
   $compose exec plantit bash -c "/code/scripts/ssh-copy-id.expect"
 fi
-
-echo "Configuring iRODS container..."
-$compose up -d irods
-$compose exec sandbox /bin/bash /root/wait-for-it.sh irods:1247 -- /root/configure-irods.sh

@@ -272,7 +272,7 @@
                     <b-nav-item>
                         <b-button
                             variant="outline-dark"
-                            class="text-left m-0 pl-1 pr-1"
+                            class="text-left m-0"
                             title="Slack"
                         >
                             <i class="fab fa-slack fa-1x fa-fw"></i>
@@ -285,7 +285,7 @@
                         <b-button
                             variant="outline-dark"
                             title="GitHub"
-                            class="text-left github-hover m-0 pl-1 pr-1"
+                            class="text-left github-hover m-0 "
                         >
                             <i class="fab fa-github fa-1x fa-fw"></i>
                             GitHub
@@ -295,7 +295,7 @@
                         <b-button
                             variant="white"
                             title="CyVerse Discovery Environment"
-                            class="text-left m-0 pl-1 pr-1"
+                            class="text-left m-0"
                         >
                             <b-img
                                 :src="
