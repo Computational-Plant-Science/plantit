@@ -17,7 +17,7 @@ Imagine:
 
 - a field biologist collects a dataset, associates it with metadata, preprocesses it, acquires a DOI, and publishes it to the community
 - a breeder deploys an automated imaging mechanism and generates thousands of 3D reconstructions, each described by hundreds of images
-- a researcher develops a growth model and runs embarrassingly parallel Monte Carlo simulations to explore the corresponding phenotype space
+- a researcher develops a growth model and runs embarrassingly parallel simulations to explore the corresponding phenotype space
 - a computer scientist shares an algorithm with biologists who may be unfamiliar with the command line and may use a variety of operating systems
 
 These tasks can involve annoying sub-tasks:
@@ -31,23 +31,6 @@ These tasks can involve annoying sub-tasks:
 - remembering which directory yesterday's data is in
 
 Can't the computer do some of the painful bits?
-
-### What can I do with it?
-
----
-
-- access public datasets
-- access or upload your own datasets
-- associate metadata with your datasets
-- acquire a DOI for and publish your datasets
-- deploy a workflow to a HPC/HTC cluster
-- download workflow results
-- upload workflow results as a new dataset
-- trigger a workflow to run when it or your dataset changes
-- develop a new workflow
-- publish workflows to the community
-
-<br/>
 
 ### Is it a bioinformatics gateway?
 

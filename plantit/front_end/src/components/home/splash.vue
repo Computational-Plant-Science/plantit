@@ -104,7 +104,7 @@
                             <b-nav-item
                                 right
                                 v-if="loggedIn"
-                                title="User"
+                                title="Log In"
                                 style="font-size: 12pt"
                                 :to="
                                     '/' +
@@ -112,11 +112,7 @@
                                         '/'
                                 "
                             >
-                                Welcome,
-                                <b>{{ currentUserDjangoProfile.username }}.</b>
-                                <br />
-                                <br />
-                                <b-button variant="outline-dark" block>
+                                <b-button variant="white" block>
                                     <b-img
                                         v-if="currentUserGitHubProfile"
                                         class="avatar m-0 p-0"
