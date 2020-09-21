@@ -18,37 +18,40 @@
             </b-row>
             <b-row align-v="center">
                 <b-col>
-                    <b-card-group columns deck>
+                    <b-card-group columns>
                         <b-card
-                            v-for="user in allUsers"
+                            v-for="user in users"
                             :key="user.username"
                             bg-variant="white"
-                            border-variant="white"
-                            header-border-variant="default"
+                            border-variant="default"
                             header-bg-variant="white"
-                            style="margin: 0 auto;"
+                            style="margin: 0 auto; min-width: 25rem"
                         >
-                            <template
-                                v-slot:header
-                                style="background-color: white"
-                            >
-                                <b-row align-v="center">
-                                    <b-col style="color: white">
-                                        <h3>{{ user.username }}</h3>
-                                    </b-col>
-                                    <b-col md="auto">
-                                        <b-button
-                                            class="text-left"
-                                            variant="outline-dark"
-                                            v-b-tooltip.hover
-                                            @click="userSelected(user)"
-                                        >
-                                            <i class="far fa-user"></i>
-                                            view
-                                        </b-button>
-                                    </b-col>
-                                </b-row>
-                            </template>
+                            <b-row align-v="center">
+                                <b-col
+                                    style="color: white; cursor: pointer"
+                                    @click="userSelected(user)"
+                                >
+                                    <h5>{{ user.username }}</h5>
+                                </b-col>
+                            </b-row>
+                            <b-row align-v="center">
+                                <b-col>
+                                    <b-link
+                                        :href="
+                                            'https://github.com/' +
+                                                user.github_username
+                                        "
+                                    >
+                                        <i
+                                            class="fab fa-github fa-fw fa-1x mr-1"
+                                        ></i>
+                                        <small>{{
+                                            user.github_username
+                                        }}</small>
+                                    </b-link>
+                                </b-col>
+                            </b-row>
                         </b-card>
                     </b-card-group>
                 </b-col>
@@ -60,13 +63,16 @@
 <script>
 import { mapGetters } from 'vuex';
 import router from '@/router';
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 // import axios from 'axios';
 // import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'Users',
-    created() {
-        this.$store.dispatch('loadAllUsers');
+    mounted() {
+        this.loadAll();
+        // this.$store.dispatch('loadAllUsers');
     },
     computed: mapGetters([
         'currentUserDjangoProfile',
@@ -75,17 +81,37 @@ export default {
         'loggedIn',
         'allUsers'
     ]),
+    data: function() {
+        return {
+            users: []
+        };
+    },
     methods: {
         flows() {
             router.push({
                 name: 'flows'
             });
         },
+        loadAll() {
+            axios
+                .get('/apis/v1/users/get_all/')
+                .then(response => {
+                    this.users = response.data.users;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
         userSelected(user) {
             router.push({
                 name: 'user',
                 params: {
-                    username: user.username
+                    username:
+                        user.username === 'Computational Plant Science Lab' ||
+                        user.username === 'van der Knaap Lab'
+                            ? user.github_username
+                            : user.username
                 }
             });
         }

@@ -67,7 +67,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-home fa-1x fa-fw"></i>
-                                        Home
+                                        about
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/guide" class="m-0 p-0">
@@ -79,7 +79,7 @@
                                         <i
                                             class="fas fa-map-signs fa-1x fa-fw"
                                         ></i>
-                                        Guide
+                                        guide
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/docs" class="m-0 p-0">
@@ -89,7 +89,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-book fa-1x fa-fw"></i>
-                                        Docs
+                                        docs
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -114,10 +114,10 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-user fa-1x fa-fw"></i>
-                                        Users
+                                        users
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item
+                                <!--<b-nav-item
                                     title="data"
                                     to="/data"
                                     class="m-0 p-0"
@@ -132,7 +132,7 @@
                                         ></i>
                                         Data
                                     </b-button>
-                                </b-nav-item>
+                                </b-nav-item>-->
                                 <b-nav-item
                                     title="flows"
                                     to="/flows"
@@ -146,7 +146,7 @@
                                         <i
                                             class="fas fa-stream fa-1x fa-fw"
                                         ></i>
-                                        Flows
+                                        flows
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -262,14 +262,14 @@
                         "
                         title="Link GitHub Account"
                         href="/apis/v1/users/github_request_identity/"
-                        class="m-0 p-0"
+                        class="ml-0 mr-0"
                     >
                         <b-button class="text-left" variant="success">
                             <i class="fab fa-github"></i>
                             Link GitHub Account
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item>
+                    <b-nav-item class="ml-0 mr-0">
                         <b-button
                             variant="outline-dark"
                             class="text-left m-0"
@@ -280,6 +280,7 @@
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
+                        class="ml-0 mr-0"
                         href="https://github.com/Computational-Plant-Science/plantit"
                     >
                         <b-button
@@ -291,7 +292,7 @@
                             GitHub
                         </b-button>
                     </b-nav-item>
-                  <b-nav-item href="https://de.cyverse.org/de/">
+                    <b-nav-item href="https://de.cyverse.org/de/" class="ml-0 mr-0">
                         <b-button
                             variant="white"
                             title="CyVerse Discovery Environment"
@@ -304,7 +305,7 @@
                                 height="20px"
                                 alt="Cyverse"
                             ></b-img>
-                          CyVerse
+                            CyVerse
                         </b-button>
                     </b-nav-item>
                     <!--<b-nav-item
@@ -332,9 +333,7 @@
                         title="User"
                         class="m-0 p-0"
                         style="font-size: 12pt"
-                        :to="
-                            '/' + currentUserDjangoProfile.username + '/'
-                        "
+                        :to="'/' + currentUserDjangoProfile.username + '/'"
                     >
                         <b-button
                             v-if="currentUserGitHubProfile"

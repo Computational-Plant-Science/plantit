@@ -26,6 +26,22 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return self.request.user
 
     @action(detail=False, methods=['get'])
+    def get_all(self, request):
+        users = [{
+            'username': 'Computational Plant Science Lab',
+            'github_username': 'Computational-Plant-Science'
+        }, {
+            'username': 'van der Knaap Lab',
+            'github_username': 'van-der-knaap-lab'
+        }] + [{
+            'username': user.username,
+            'github_username': user.profile.github_username
+        } for user in list(self.queryset)]
+        return JsonResponse({
+            'users': users
+        })
+
+    @action(detail=False, methods=['get'])
     def get_by_username(self, request):
         username = request.GET.get('username', None)
 

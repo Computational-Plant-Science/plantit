@@ -85,3 +85,5 @@ services:
       context: .
       dockerfile: scripts/dockerfiles/sandbox/Dockerfile
     privileged: true
+    volumes:
+      - .:/code

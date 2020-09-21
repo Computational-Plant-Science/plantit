@@ -1,4 +1,5 @@
 # DIRT Specific
+Singularity
 plantit/files/
 plantit/public/
 **/migrations/*.py

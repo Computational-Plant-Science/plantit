@@ -11,31 +11,50 @@
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center" align-h="start">
-                    <b-col md="auto" class="mr-0 pr-0" align-self="center">
+                    <b-col md="auto" class="ml-0 mr-0 pr-0" align-self="center">
                         <b-img
                             right
                             class="avatar "
                             rounded="circle"
-                            style="max-height: 7rem; max-width: 7rem; position: relative;"
+                            style="max-height: 8rem; max-width: 8rem; position: relative;"
                             :src="githubProfile ? githubProfile.avatar_url : ''"
                         ></b-img>
                     </b-col>
-                    <b-col style="color: white" align-self="end">
-                        <h2>
-                            {{
-                                cyverseProfile
-                                    ? `${cyverseProfile.first_name} (${djangoProfile.username})`
-                                    : githubProfile.login
-                            }}
-                        </h2>
-                    </b-col>
-                    <b-col md="auto" align-self="end">
-                        <b-button
-                            variant="outline-dark"
-                            :href="'https://github.com/' + githubProfile.login"
-                        >
-                            <i class="fab fa-github fa-2x fa-fw"></i>
-                        </b-button>
+                    <b-col
+                        md="auto"
+                        style="color: white"
+                        align-self="center"
+                        class="ml-0 mr-0"
+                    >
+                        <b-row>
+                            <b-col>
+                                <h2>
+                                    {{
+                                        cyverseProfile
+                                            ? `${cyverseProfile.first_name} (${djangoProfile.username})`
+                                            : githubProfile.login
+                                    }}
+                                </h2>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col md="auto" align-self="end" class="ml-0 mr-0">
+                                <a
+                                    variant="outline-dark"
+                                    class="ml-0"
+                                    :href="
+                                        'https://github.com/' +
+                                            githubProfile.login
+                                    "
+                                >
+                                    <i class="fab fa-github fa-1x fa-fw"></i>
+                                    {{
+                                        'https://github.com/' +
+                                            githubProfile.login
+                                    }}
+                                </a>
+                            </b-col>
+                        </b-row>
                     </b-col>
                 </b-row>
             </template>
@@ -152,8 +171,8 @@
                                     <i class="fas fa-sync-alt fa-fw"></i>
                                     Refresh
                                 </b-button>
-                              <b-spinner
-                                  v-if="loadingRuns"
+                                <b-spinner
+                                    v-if="loadingRuns"
                                     type="grow"
                                     label="Loading..."
                                     variant="dark"
