@@ -46,19 +46,19 @@ env_file=".env"
 admin_password=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_PASSWORD" "$env_file")" )
 admin_username=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_USERNAME" "$env_file")" )
 admin_email=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_EMAIL" "$env_file")" )
-$compose exec plantit /code/dev/configure-superuser.sh -u "$admin_username" -p "$admin_password" -e "$admin_email"
+$compose exec plantit /code/scripts/configure-superuser.sh -u "$admin_username" -p "$admin_password" -e "$admin_email"
 
 echo "Configuring sandbox deployment target container (if not already configured)..."
 $compose up -d sandbox
 if [ ! -d config/ssh ]; then
   mkdir config/ssh
 fi
-$compose exec plantit /bin/bash /code/dev/configure-sandbox.sh
+$compose exec plantit /bin/bash /code/scripts/configure-sandbox.sh
 if [ ! -f config/ssh/known_hosts ]; then
   touch config/ssh/known_hosts
   $compose exec plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
 fi
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
-  $compose exec plantit bash -c "/code/dev/ssh-copy-id.expect"
+  $compose exec plantit bash -c "/code/scripts/ssh-copy-id.expect"
 fi
