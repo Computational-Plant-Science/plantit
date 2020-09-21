@@ -26,7 +26,7 @@ These tasks can involve annoying sub-tasks:
 - shell scripting
 - emailing strangers
 - juggling job submission scripts
-- answering support request at 2am
+- answering support requests at 2am
 - sticking notes to computer monitors
 - remembering which directory yesterday's data is in
 
