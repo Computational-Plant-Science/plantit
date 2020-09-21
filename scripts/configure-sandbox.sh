@@ -12,7 +12,7 @@ username = 'root'
 password = 'root'
 port = 22
 hostname = 'sandbox'
-pre_commands = 'export LC_ALL=C.UTF-8 \\n export LANG=C.UTF-8'
+pre_commands = 'export LC_ALL=C.UTF-8 \\\n export LANG=C.UTF-8'
 
 if Target.objects.filter(name=name).count()==0:
     Target.objects.create(name=name, description=description, workdir=workdir, username=username, password=password, port=port, hostname=hostname, pre_commands=pre_commands)
