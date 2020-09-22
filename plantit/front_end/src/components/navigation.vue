@@ -183,7 +183,7 @@
                                 <hr />
                                 <b-nav-item
                                     title="log out"
-                                    to="/logout"
+                                    to="/accounts/logout"
                                     class="m-0 p-0"
                                 >
                                     <b-button
