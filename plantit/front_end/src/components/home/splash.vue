@@ -68,7 +68,7 @@
                             variant="white"
                             block
                             class="text-center"
-                            href="/login/?next=/flows"
+                            href="/accounts/login/?next=/flows"
                         >
                             Log in with
                             <b-img
