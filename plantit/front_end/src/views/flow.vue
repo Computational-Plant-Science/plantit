@@ -25,7 +25,7 @@
             </b-col>
         </b-row>
         <br />
-        <b-row v-if="flow.config.params.length !== 0">
+        <b-row v-if="flow.config.params !== undefined ? flow.config.params.length !== 0 : false">
             <b-col>
                 <b-card
                     bg-variant="white"
@@ -248,14 +248,15 @@ export default {
                 })
                 .then(response => {
                     this.flow = response.data;
-                    this.params = response.data['config']['params'].map(
-                        param => {
-                            return {
-                                key: param,
-                                value: ''
-                            };
-                        }
-                    );
+                    if ('params' in response.data['config'])
+                        this.params = response.data['config']['params'].map(
+                            param => {
+                                return {
+                                    key: param,
+                                    value: ''
+                                };
+                            }
+                        );
                 })
                 .catch(error => {
                     if (error.status_code === 401) {

@@ -19,10 +19,10 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                      <br/>
                         <h1>plantit</h1>
                     </b-col>
                 </b-row>
+              <br/>
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
@@ -68,7 +68,7 @@
                             variant="white"
                             block
                             class="text-center"
-                            href="/login/?next=/"
+                            href="/login/?next=/flows"
                         >
                             Log in with
                             <b-img
