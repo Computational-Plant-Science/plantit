@@ -42,7 +42,7 @@ export default {
     data() {
         return {
             data: null,
-            path: null
+            path: null,
         };
     },
     computed: mapGetters([
@@ -75,7 +75,7 @@ export default {
         selectPath(path) {
             this.path = path;
             this.$emit('outputSelected', path);
-        }
+        },
     }
 };
 </script>

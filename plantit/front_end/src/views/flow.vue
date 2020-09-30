@@ -25,7 +25,13 @@
             </b-col>
         </b-row>
         <br />
-        <b-row v-if="flow.config.params !== undefined ? flow.config.params.length !== 0 : false">
+        <b-row
+            v-if="
+                flow.config.params !== undefined
+                    ? flow.config.params.length !== 0
+                    : false
+            "
+        >
             <b-col>
                 <b-card
                     bg-variant="white"
@@ -97,6 +103,17 @@
                             </b-col>
                         </b-row>
                     </template>
+                    <b-card
+                        border-variant="white"
+                        footer-bg-variant="white"
+                        sub-title="Enter an input file pattern (optional)."
+                    >
+                        <b-form-input
+                            size="sm"
+                            v-model="input.pattern"
+                            :placeholder="'Enter a file pattern'"
+                        ></b-form-input>
+                    </b-card>
                     <runinput
                         :user="user"
                         :kind="flow.config.from"
@@ -125,8 +142,20 @@
                             </b-col>
                         </b-row>
                     </template>
+                  <b-card
+                        border-variant="white"
+                        footer-bg-variant="white"
+                        sub-title="Enter an output file pattern (recommended)."
+                    >
+                        <b-form-input
+                            size="sm"
+                            v-model="output.pattern"
+                            :placeholder="'Enter a file pattern'"
+                        ></b-form-input>
+                    </b-card>
                     <runoutput
                         :user="user"
+                        kind="Directory"
                         v-on:outputSelected="outputSelected"
                     ></runoutput>
                 </b-card>
@@ -205,9 +234,15 @@ export default {
             flow: null,
             params: [],
             input: {
-                files: []
+                kind: '',
+                from: '',
+                pattern: ''
             },
-            output: null,
+            output: {
+                from: '.',
+                to: '',
+                pattern: ''
+            },
             target: {
                 name: ''
             },
@@ -225,18 +260,6 @@ export default {
     },
     mounted: function() {
         this.loadFlow();
-        // TODO load workflows
-        // Workflows.get(this.owner, this.name).then(pipeline => {
-        //     this.workflow = pipeline;
-        //     if (pipeline.config.params != null) {
-        //         this.params = pipeline.config.params.map(function(param) {
-        //             return {
-        //                 key: param,
-        //                 value: ''
-        //             };
-        //         });
-        //     }
-        // });
     },
     methods: {
         loadFlow() {
@@ -267,17 +290,11 @@ export default {
                 });
         },
         inputSelected(path) {
-            this.input = {
-                path: path,
-                kind: this.flow.config.from
-            };
+            this.input.from = path;
+            this.input.kind = this.flow.config.from;
         },
         outputSelected(path) {
-            this.output = {
-                irods_path: path,
-                local_path: '.',
-                kind: this.flow.config.to
-            };
+            this.output.to = path;
         },
         targetSelected(target) {
             this.target = target;

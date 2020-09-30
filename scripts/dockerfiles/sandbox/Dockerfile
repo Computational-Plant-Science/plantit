@@ -2,7 +2,15 @@ FROM ubuntu:18.04
 
 RUN apt-get -y update && apt-get install -y \
     openssh-server \
-    singularity-container \
+    build-essential \
+    libssl-dev \
+    uuid-dev \
+    libgpgme11-dev \
+    squashfs-tools \
+    libseccomp-dev \
+    wget \
+    pkg-config \
+    # singularity-container \
     git \
     python-pip \
     python3-pip \
@@ -22,6 +30,23 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
+
+RUN export VERSION=1.15.2 OS=linux ARCH=amd64 &&
+  wget https://dl.google.com/go/go$VERSION.$OS-$ARCH.tar.gz && \
+  sudo tar -C /usr/local -xzvf go$VERSION.$OS-$ARCH.tar.gz && \
+  rm go$VERSION.$OS-$ARCH.tar.gz
+
+RUN echo 'export PATH=/usr/local/go/bin:$PATH' >> ~/.bashrc && \
+  source ~/.bashrc
+
+RUN export VERSION=3.3.0 && \
+    wget https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-${VERSION}.tar.gz && \
+    tar -xzf singularity-${VERSION}.tar.gz && \
+    cd singularity
+
+RUN ./mconfig && \
+    make -C builddir && \
+    sudo make -C builddir install
 
 RUN mkdir /test
 

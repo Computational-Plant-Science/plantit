@@ -3,9 +3,12 @@
         <b-card
             border-variant="white"
             footer-bg-variant="white"
-            sub-title="Select an input file or directory."
+            :sub-title="
+                `Select an input ${
+                    kind.toLowerCase() === 'file' ? 'file' : 'directory'
+                }.`
+            "
         >
-            <br />
             <datatree
                 :select="kind"
                 @selectPath="selectPath"
@@ -15,7 +18,7 @@
                 >Selected:
                 <b
                     >{{ path ? path : 'None' }}
-                  <i v-if="path" class="fas fa-check text-success"></i>
+                    <i v-if="path" class="fas fa-check text-success"></i>
                     <i v-else class="fas fa-exclamation text-warning"></i> </b
             ></template>
         </b-card>
@@ -37,7 +40,7 @@ export default {
         kind: {
             required: true,
             type: String
-        }
+        },
     },
     data() {
         return {
@@ -45,12 +48,14 @@ export default {
             path: null
         };
     },
-    computed: mapGetters([
-        'currentUserDjangoProfile',
-        'currentUserGitHubProfile',
-        'currentUserCyVerseProfile',
-        'loggedIn'
-    ]),
+    computed: {
+        ...mapGetters([
+            'currentUserDjangoProfile',
+            'currentUserGitHubProfile',
+            'currentUserCyVerseProfile',
+            'loggedIn'
+        ]),
+    },
     async mounted() {
         await this.loadDirectory(
             `/iplant/home/${this.currentUserDjangoProfile.username}/`,

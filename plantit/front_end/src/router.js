@@ -23,7 +23,7 @@ let router = new Router({
             name: 'home',
             component: home,
             meta: {
-                title: 'home',
+                title: 'PlantIT',
                 crumb: []
             }
         },
