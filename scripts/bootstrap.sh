@@ -28,29 +28,32 @@ else
   echo "Environment variable file '$env_file' already exists. Continuing..."
 fi
 
-echo "Building front end..."
-cd plantit/front_end || exit
-npm install
-npm run build
-cd ../..
+#echo "Building front end..."
+#cd plantit/front_end || exit
+#npm install
+#npm run build
+#cd ../..
 
 if [[ "$nocache" -eq 0 ]]; then
   echo "Building..."
   if [[ "$quiet" -eq 0 ]]; then
+    echo "Building..."
     docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
   else
-    docker build -q -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
+    echo "Building quietly..."
+    docker build -t computationalplantscience/plantit -q -f scripts/dockerfiles/plantit/Dockerfile .
   fi
 else
-  echo "Building with cache disabled..."
   if [[ "$quiet" -eq 0 ]]; then
+    echo "Building with cache disabled..."
     docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
   else
-    docker build -q -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
+    echo "Building quietly with cache disabled..."
+    docker build -t computationalplantscience/plantit -q -f scripts/dockerfiles/plantit/Dockerfile .
   fi
   docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile --no-cache .
 fi
-$compose up -d --force-recreate
+$compose up -d
 
 echo "Running migrations..."
 $compose exec plantit python manage.py makemigrations
