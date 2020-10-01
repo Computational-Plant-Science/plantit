@@ -35,7 +35,7 @@ find .env -type f -exec sed -i "s/DJANGO_CSRF_COOKIE_SECURE=False/DJANGO_CSRF_CO
 find .env -type f -exec sed -i "s/NODE_ENV=development/NODE_ENV=production/g" {} \;
 
 echo "Bringing containers up..."
-$compose up -d
+$compose up -d --quiet-pull
 
 echo "Running migrations..."
 $compose exec plantit python manage.py makemigrations

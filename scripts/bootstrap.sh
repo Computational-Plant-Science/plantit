@@ -51,7 +51,7 @@ else
     docker build -t computationalplantscience/plantit -q -f scripts/dockerfiles/plantit/Dockerfile .
   fi
 fi
-$compose up -d
+$compose up -d --quiet-pull
 
 echo "Running migrations..."
 $compose exec plantit python manage.py makemigrations
