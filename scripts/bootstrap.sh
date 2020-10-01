@@ -43,6 +43,11 @@ if [[ "$nocache" -eq 0 ]]; then
   fi
 else
   echo "Building with cache disabled..."
+  if [[ "$quiet" -eq 0 ]]; then
+    docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
+  else
+    docker build -q -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
+  fi
   docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile --no-cache .
 fi
 $compose up -d --force-recreate
