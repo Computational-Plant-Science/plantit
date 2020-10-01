@@ -35,7 +35,6 @@ npm run build
 cd ../..
 
 if [[ "$nocache" -eq 0 ]]; then
-  echo "Building..."
   if [[ "$quiet" -eq 0 ]]; then
     echo "Building..."
     docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
@@ -51,7 +50,6 @@ else
     echo "Building quietly with cache disabled..."
     docker build -t computationalplantscience/plantit -q -f scripts/dockerfiles/plantit/Dockerfile .
   fi
-  docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile --no-cache .
 fi
 $compose up -d
 

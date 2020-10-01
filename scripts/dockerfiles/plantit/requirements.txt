@@ -8,7 +8,7 @@ djangorestframework
 psycopg2-binary
 markdown
 paramiko
-Celery
+Celery==4.4.7
 docutils
 humanize
 Sphinx
