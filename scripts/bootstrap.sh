@@ -22,17 +22,17 @@ env_file=".env"
 echo "Checking for environment variable file '$env_file'..."
 if [ ! -f $env_file ]; then
   echo "Environment variable file '$env_file' does not exist. Creating it..."
-  chmod +x dev/create-env-file.sh
+  chmod +x scripts/create-env-file.sh
   ./scripts/create-env-file.sh
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."
 fi
 
-#echo "Building front end..."
-#cd plantit/front_end || exit
-#npm install
-#npm run build
-#cd ../..
+echo "Building front end..."
+cd plantit/front_end || exit
+npm install
+npm run build
+cd ../..
 
 if [[ "$nocache" -eq 0 ]]; then
   echo "Building..."
