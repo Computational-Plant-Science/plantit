@@ -3,10 +3,12 @@
 echo "Bootstrapping ${PWD##*/} development environment..."
 compose="docker-compose -f docker-compose.dev.yml"
 nocache=0
+quiet=0
 
-while getopts 'np' opt; do
+while getopts 'nq' opt; do
     case $opt in
         n) nocache=1 ;;
+        q) quiet=1 ;;
         *) echo 'Error in command line parsing' >&2
            exit 1
     esac
@@ -34,7 +36,11 @@ cd ../..
 
 if [[ "$nocache" -eq 0 ]]; then
   echo "Building..."
-  docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
+  if [[ "$quiet" -eq 0 ]]; then
+    docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
+  else
+    docker build -q -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
+  fi
 else
   echo "Building with cache disabled..."
   docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile --no-cache .

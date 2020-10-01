@@ -5,7 +5,7 @@ before_install:
 - openssl aes-256-cbc -K $encrypted_1d8c94bea0f3_key -iv $encrypted_1d8c94bea0f3_iv -in id_rsa.enc -out ~/.ssh/id_rsa -d
 - chmod +x scripts/bootstrap.sh
 script:
-- bash scripts/bootstrap.sh
+- bash scripts/bootstrap.sh -nq
 - docker-compose -f docker-compose.dev.yml plantit exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coverage run --source='.' ./manage.py test
 - docker-compose -f docker-compose.dev.yml plantit exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
