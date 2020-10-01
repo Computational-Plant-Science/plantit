@@ -81,9 +81,8 @@ services:
       retries: 2
       start_period: 20s
   sandbox:
-    build:
-      context: .
-      dockerfile: scripts/dockerfiles/sandbox/Dockerfile
+    image: computationalplantscience/plantit-sandbox
+    working_dir: /opt/plantit-cli-home
     privileged: true
     volumes:
       - .:/code

@@ -83,9 +83,8 @@ services:
       start_period: 20s
     restart: always
   sandbox:
-    build:
-      context: .
-      dockerfile: scripts/dockerfiles/sandbox/Dockerfile
+    image: computationalplantscience/plantit-sandbox
+    working_dir: /opt/plantit-cli-home
     privileged: true
     restart: always
   nginx:

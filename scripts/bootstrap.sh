@@ -36,21 +36,26 @@ cd ../..
 
 if [[ "$nocache" -eq 0 ]]; then
   if [[ "$quiet" -eq 0 ]]; then
-    echo "Building..."
+    echo "Building containers..."
     docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
+    docker build -t computationalplantscience/plantit-sandbox -f scripts/dockerfiles/sandbox/Dockerfile .
   else
-    echo "Building quietly..."
+    echo "Building containers quietly..."
     docker build -t computationalplantscience/plantit -q -f scripts/dockerfiles/plantit/Dockerfile .
+    docker build -t computationalplantscience/plantit-sandbox -q -f scripts/dockerfiles/sandbox/Dockerfile .
   fi
 else
   if [[ "$quiet" -eq 0 ]]; then
-    echo "Building with cache disabled..."
-    docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
+    echo "Building containers with cache disabled..."
+    docker build -t computationalplantscience/plantit --no-cache -f scripts/dockerfiles/plantit/Dockerfile .
+    docker build -t computationalplantscience/plantit-sandbox --no-cache -f scripts/dockerfiles/sandbox/Dockerfile .
   else
-    echo "Building quietly with cache disabled..."
-    docker build -t computationalplantscience/plantit -q -f scripts/dockerfiles/plantit/Dockerfile .
+    echo "Building containers quietly with cache disabled..."
+    docker build -t computationalplantscience/plantit -q --no-cache -f scripts/dockerfiles/plantit/Dockerfile .
+    docker build -t computationalplantscience/plantit-sandbox -q --no-cache -f scripts/dockerfiles/sandbox/Dockerfile .
   fi
 fi
+echo "Pulling 3rd-party images and bringing containers up..."
 $compose up -d --quiet-pull
 
 echo "Running migrations..."
