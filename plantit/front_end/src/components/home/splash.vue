@@ -78,7 +78,7 @@
                                 height="18px"
                                 alt="Cyverse"
                             ></b-img>
-                            <b>cyverse</b>
+                            <b>CyVerse</b>
                         </b-button>
                     </b-col>
                 </b-row>

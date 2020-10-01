@@ -52,7 +52,6 @@ admin_email=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_EMAIL" "$env_file")" )
 $compose exec plantit /code/scripts/configure-superuser.sh -u "$admin_username" -p "$admin_password" -e "$admin_email"
 
 echo "Configuring sandbox deployment target container..."
-$compose up -d sandbox
 $compose exec plantit /bin/bash /code/scripts/configure-sandbox.sh
 if [ ! -d config/ssh ]; then
   mkdir config/ssh
