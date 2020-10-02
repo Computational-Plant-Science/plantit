@@ -26,7 +26,7 @@
                                 </b-nav-item>
                                 <b-nav-item
                                     v-if="!loggedIn"
-                                    href="/login/?next=/profile/"
+                                    href="/cas_login/?next=/flows/"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -183,7 +183,7 @@
                                 <hr />
                                 <b-nav-item
                                     title="log out"
-                                    to="/accounts/logout"
+                                    to="/cas_logout"
                                     class="m-0 p-0"
                                 >
                                     <b-button

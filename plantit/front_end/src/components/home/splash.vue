@@ -68,7 +68,7 @@
                             variant="white"
                             block
                             class="text-center"
-                            href="/accounts/login/"
+                            href="/cas_login/"
                         >
                             Log in with
                             <b-img
