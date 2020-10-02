@@ -11,8 +11,8 @@ from django_cas_ng import views
 urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + [
         re_path(r'^admin/', admin.site.urls),
         re_path(r'^accounts/', include('django.contrib.auth.urls')),
-        re_path(r'^cas_login/', views.LoginView.as_view(), name="cas_ng_login"),
-        re_path(r'^cas_logout/', views.LogoutView.as_view(), name="cas_ng_logout"),
+        re_path(r'^login/', views.LoginView.as_view(), name="cas_ng_login"),
+        re_path(r'^logout/', views.LogoutView.as_view(), name="cas_ng_logout"),
         re_path(r'^cas_callback/', views.CallbackView.as_view(), name='cas_ng_proxy_callback'),
         re_path(r'^apis/v1/', include('plantit.urls')),
         re_path(r'^ping/', (lambda x:HttpResponse("pong"))),
