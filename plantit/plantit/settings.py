@@ -10,10 +10,12 @@ assert 'DJANGO_SECURE_SSL_REDIRECT' in os.environ, f"{missing_variable}: DJANGO_
 assert 'DJANGO_SESSION_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_SESSION_COOKIE_SECURE"
 assert 'DJANGO_CSRF_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_CSRF_COOKIE_SECURE"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
-assert 'DJANGO_CAS_VERSION' in os.environ, f"{missing_variable}: DJANGO_CAS_VERSION"
-assert 'DJANGO_CAS_SERVER_URL' in os.environ, f"{missing_variable}: DJANGO_CAS_SERVER_URL"
-assert 'DJANGO_CAS_PROXY_CALLBACK' in os.environ, f"{missing_variable}: DJANGO_CAS_PROXY_CALLBACK"
-assert 'DJANGO_CAS_FORCE_SSL_SERVICE_URL' in os.environ, f"{missing_variable}: DJANGO_CAS_FORCE_SSL_SERVICE_URL"
+assert 'CAS_VERSION' in os.environ, f"{missing_variable}: CAS_VERSION"
+assert 'CAS_SERVER_URL' in os.environ, f"{missing_variable}: CAS_SERVER_URL"
+assert 'CAS_REDIRECT_URL' in os.environ, f"{missing_variable}: CAS_REDIRECT_URL"
+assert 'CAS_PROXY_CALLBACK' in os.environ, f"{missing_variable}: CAS_PROXY_CALLBACK"
+assert 'CAS_ROOT_PROXIED_AS' in os.environ, f"{missing_variable}: CAS_ROOT_PROXIED_AS"
+assert 'CAS_FORCE_SSL_SERVICE_URL' in os.environ, f"{missing_variable}: CAS_FORCE_SSL_SERVICE_URL"
 assert 'GITHUB_AUTH_URI' in os.environ, f"{missing_variable}: GITHUB_AUTH_URI"
 assert 'GITHUB_REDIRECT_URI' in os.environ, f"{missing_variable}: GITHUB_REDIRECT_URI"
 assert 'GITHUB_KEY' in os.environ, f"{missing_variable}: GITHUB_KEY"
@@ -80,11 +82,13 @@ AUTHENTICATION_BACKENDS = (
     'django_cas_ng.backends.CASBackend',
 )
 
-CAS_VERSION = os.environ.get('DJANGO_CAS_VERSION')
-CAS_SERVER_URL = os.environ.get('DJANGO_CAS_SERVER_URL')
+CAS_VERSION = os.environ.get('CAS_VERSION')
+CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL')
+CAS_REDIRECT_URL = os.environ.get('CAS_REDIRECT_URL')
 CAS_APPLY_ATTRIBUTES_TO_USER = True
-CAS_PROXY_CALLBACK = os.environ.get('DJANGO_CAS_PROXY_CALLBACK')
-CAS_FORCE_SSL_SERVICE_URL = os.environ.get('DJANGO_CAS_FORCE_SSL_SERVICE_URL')
+#CAS_PROXY_CALLBACK = os.environ.get('CAS_PROXY_CALLBACK')
+CAS_FORCE_SSL_SERVICE_URL = os.environ.get('CAS_FORCE_SSL_SERVICE_URL')
+CAS_ROOT_PROXIED_AS = os.environ.get('CAS_ROOT_PROXIED_AS')
 
 ROOT_URLCONF = 'urls'
 
