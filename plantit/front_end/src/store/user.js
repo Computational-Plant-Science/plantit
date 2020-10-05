@@ -6,8 +6,10 @@ export const user = {
         currentUserDjangoProfile: null,
         currentUserCyVerseProfile: null,
         currentUserGitHubProfile: null,
+        keycloak: null
     }),
     getters: {
+        keycloak: state => state.keycloak,
         currentUserDjangoProfile: state => state.currentUserDjangoProfile,
         currentUserCyVerseProfile: state => state.currentUserCyVerseProfile,
         currentUserGitHubProfile: state => state.currentUserGitHubProfile,

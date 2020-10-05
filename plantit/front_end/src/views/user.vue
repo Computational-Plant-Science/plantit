@@ -2,7 +2,7 @@
     <div class="w-100 p-5 m-0">
         <br />
         <b-card
-            v-if="githubProfile"
+            v-if="cyverseProfile"
             bg-variant="white"
             border-variant="white"
             header-border-variant="white"
@@ -32,12 +32,12 @@
                                     {{
                                         cyverseProfile
                                             ? `${cyverseProfile.first_name} (${djangoProfile.username})`
-                                            : githubProfile.login
+                                            : githubProfile ? githubProfile.login : ''
                                     }}
                                 </h2>
                             </b-col>
                         </b-row>
-                        <b-row>
+                        <b-row v-if="githubProfile">
                             <b-col md="auto" align-self="end" class="ml-0 mr-0">
                                 <a
                                     variant="outline-dark"
@@ -79,10 +79,10 @@
                                         <br />
                                         {{ cyverseProfile.email }}
                                         <br />
-                                        {{ githubProfile.email }}
+                                        {{ githubProfile ? githubProfile.email : '' }}
                                     </p>
                                     <p>
-                                        <b>Affiliation:</b>
+                                        <b>Affiliation</b>
                                         <br />
                                         {{
                                             cyverseProfile === undefined
@@ -95,16 +95,16 @@
                                         <br />
                                         {{
                                             githubProfile === undefined
-                                                ? ''
+                                                ? 'None'
                                                 : githubProfile.bio
                                         }}
                                     </p>
                                     <p>
-                                        <b>Location:</b>
+                                        <b>Location</b>
                                         <br />
                                         {{
                                             githubProfile === undefined
-                                                ? ''
+                                                ? 'None'
                                                 : githubProfile.location
                                         }}
                                     </p>
@@ -128,19 +128,19 @@
                             align-v="center"
                             align-h="center"
                         >
-                            <b-col md="auto">
+                            <b-col md="auto" class="mr-2 pr-0">
                                 <b-button
                                     variant="success"
                                     href="/apis/v1/users/github_request_identity/"
                                     class="mr-0"
                                 >
                                     <i class="fab fa-github"></i>
-                                    Login to GitHub
+                                    Log in to GitHub
                                 </b-button>
                             </b-col>
                             <b-col md="auto" class="ml-0 pl-0">
                                 <b class="text-center align-center ml-0 pl-0"
-                                    >to load flows</b
+                                    >to load flows.</b
                                 >
                             </b-col>
                         </b-row>

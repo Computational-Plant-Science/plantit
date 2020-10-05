@@ -30,14 +30,14 @@ services:
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
       - GITHUB_SECRET=${GITHUB_SECRET}
-    command: ["python", "manage.py", "runserver", "0.0.0.0:80"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - celery
       - sandbox
     ports:
-      - "80:80"
+      - "3000:3000"
     healthcheck:
-      test: curl -f http://localhost:80/ping/
+      test: curl -f http://localhost:3000/ping/
       interval: 20s
       timeout: 20s
       retries: 2

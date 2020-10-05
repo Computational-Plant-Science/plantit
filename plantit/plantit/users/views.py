@@ -8,7 +8,7 @@ from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from github import Github
 from rest_framework import viewsets, mixins
-from rest_framework.decorators import action
+from rest_framework.decorators import action, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_cas_ng.models import ProxyGrantingTicket
@@ -51,11 +51,16 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 github_response = requests.get(f"https://api.github.com/users/{username}",
                                                headers={'Authorization':
                                                             f"Bearer {request.user.profile.github_token}"})
-            return JsonResponse({
-                'django_profile': None,
-                'cyverse_profile': None,
-                'github_profile': github_response.json()
-            })
+                return JsonResponse({
+                    'django_profile': None,
+                    'cyverse_profile': None,
+                    'github_profile': github_response.json()
+                })
+            else:
+                return JsonResponse({
+                    'django_profile': None,
+                    'cyverse_profile': None,
+                })
 
         user = self.queryset.get(username=username)
         response = {
@@ -96,6 +101,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             'state': csrf_token(request)}))
 
     @action(methods=['get'], detail=False)
+    @authentication_classes([])
     def github_handle_temporary_code(self, request):
         state = request.GET.get('state', None)
         error = request.GET.get('error', None)

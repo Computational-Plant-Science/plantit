@@ -260,27 +260,26 @@
                         v-if="
                             loggedIn ? currentUserGitHubProfile === null : false
                         "
-                        title="Link GitHub Account"
+                        title="Log in to GitHub"
                         href="/apis/v1/users/github_request_identity/"
                         class="ml-0 mr-0"
                     >
                         <b-button class="text-left" variant="success">
                             <i class="fab fa-github"></i>
-                            Link GitHub Account
+                            Log in to GitHub
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item class="ml-0 mr-0">
+                    <b-nav-item class="ml-0 mr-0 pl-0 pr-0">
                         <b-button
                             variant="outline-dark"
                             class="text-left m-0"
                             title="Slack"
                         >
                             <i class="fab fa-slack fa-1x fa-fw"></i>
-                            Slack
                         </b-button>
                     </b-nav-item>
                     <b-nav-item
-                        class="ml-0 mr-0"
+                        class="ml-0 mr-0 pl-0 pr-0"
                         href="https://github.com/Computational-Plant-Science/plantit"
                     >
                         <b-button
@@ -289,10 +288,12 @@
                             class="text-left github-hover m-0 "
                         >
                             <i class="fab fa-github fa-1x fa-fw"></i>
-                            GitHub
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item href="https://de.cyverse.org/de/" class="ml-0 mr-0">
+                    <b-nav-item
+                        href="https://de.cyverse.org/de/"
+                        class="ml-0 mr-0 pl-0 pr-0"
+                    >
                         <b-button
                             variant="white"
                             title="CyVerse Discovery Environment"
@@ -305,28 +306,8 @@
                                 height="20px"
                                 alt="Cyverse"
                             ></b-img>
-                            CyVerse
                         </b-button>
                     </b-nav-item>
-                    <!--<b-nav-item
-                        href="https://de.cyverse.org/de/"
-                        class="pl-1 pr-1"
-                    >
-                        <b-button
-                            variant="white"
-                            class="m-0 p-1"
-                            href="https://de.cyverse.org/de/"
-                            title="CyVerse Discovery Environment"
-                        >
-                            <b-img
-                                :src="
-                                    require('../assets/sponsors/cyversebw-notext.png')
-                                "
-                                height="38px"
-                                alt="Cyverse"
-                            ></b-img>
-                        </b-button>
-                    </b-nav-item>-->
                     <b-nav-item
                         right
                         v-if="loggedIn"
@@ -335,12 +316,9 @@
                         style="font-size: 12pt"
                         :to="'/' + currentUserDjangoProfile.username + '/'"
                     >
-                        <b-button
-                            v-if="currentUserGitHubProfile"
-                            variant="white"
-                            class="m-0"
-                        >
+                        <b-button variant="white" class="m-0">
                             <b-img
+                                v-if="currentUserGitHubProfile"
                                 class="avatar m-0 mb-1 p-0"
                                 rounded="circle"
                                 :src="
@@ -349,7 +327,7 @@
                                         : ''
                                 "
                             ></b-img>
-
+                            <i v-else class="far fa-user"></i>
                             {{
                                 currentUserCyVerseProfile
                                     ? currentUserCyVerseProfile.first_name

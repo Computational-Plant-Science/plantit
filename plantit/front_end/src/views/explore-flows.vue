@@ -34,25 +34,19 @@
                         </b-input-group>
                     </b-col>-->
             </b-row>
-            <b-row
-                v-if="currentUserGitHubProfile === null"
-                align-v="center"
-                align-h="center"
-            >
-                <b-col md="auto">
+            <b-row v-if="currentUserGitHubProfile === null" align-v="center">
+                <b-col md="auto" class="mr-2 pr-0">
                     <b-button
                         variant="success"
                         href="/apis/v1/users/github_request_identity/"
                         class="mr-0"
                     >
                         <i class="fab fa-github"></i>
-                        Login to GitHub
+                        Log in to GitHub
                     </b-button>
                 </b-col>
                 <b-col md="auto" class="ml-0 pl-0">
-                    <b class="text-center align-center ml-0 pl-0"
-                        >to load flows</b
-                    >
+                    <b class="ml-0 pl-0">to load flows.</b>
                 </b-col>
             </b-row>
             <b-row v-else align-v="left" align-h="left">

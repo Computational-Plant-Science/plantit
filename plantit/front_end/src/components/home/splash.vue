@@ -68,7 +68,7 @@
                             variant="white"
                             block
                             class="text-center"
-                            href="/login/?next=/flows/"
+                            href="https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=local-testing&redirect_uri=http://localhost:3000/flows/&response_type=code"
                         >
                             Log in with
                             <b-img
@@ -85,21 +85,6 @@
                 <b-navbar toggleable="sm" class="m-0 p-0" v-else>
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
-                            <b-nav-item
-                                v-if="
-                                    loggedIn
-                                        ? currentUserGitHubProfile === null
-                                        : false
-                                "
-                                title="Link GitHub Account"
-                                href="/apis/v1/users/github_request_identity/"
-                                class="m-0 p-0"
-                            >
-                                <b-button class="text-left" variant="success">
-                                    <i class="fab fa-github"></i>
-                                    Link GitHub Account
-                                </b-button>
-                            </b-nav-item>
                             <b-nav-item
                                 right
                                 v-if="loggedIn"

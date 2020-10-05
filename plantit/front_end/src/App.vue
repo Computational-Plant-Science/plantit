@@ -2,6 +2,12 @@
     <div id="app" class="m-0 p-0">
         <b-container fluid class="m-0 p-0">
             <Navigation v-if="$route.path != '/'"></Navigation>
+            <!--{{ keycloak.idToken }}
+            <br />
+            {{ keycloak.clientId }}
+            <br />
+            {{ keycloak.authServerUrl }}-->
+
             <router-view class="m-0 p-0"></router-view>
         </b-container>
     </div>
@@ -18,6 +24,7 @@ export default {
     data() {
         return {};
     },
+
 };
 </script>
 
