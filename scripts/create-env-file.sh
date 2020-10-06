@@ -12,18 +12,18 @@ else
   github_secret="${GITHUB_SECRET}"
 fi
 
-if [[ -z "${VUE_APP_CYVERSE_CLIENT_ID}" ]]; then
+if [[ -z "${CYVERSE_CLIENT_ID}" ]]; then
   cyverse_client_id="some_cyverse_client_id"
-  echo "Warning: VUE_APP_CYVERSE_CLIENT_ID environment variable missing"
+  echo "Warning: CYVERSE_CLIENT_ID environment variable missing"
 else
-  cyverse_client_id="${VUE_APP_CYVERSE_CLIENT_ID}"
+  cyverse_client_id="${CYVERSE_CLIENT_ID}"
 f
 
-if [[ -z "${VUE_APP_CYVERSE_CLIENT_SECRET}" ]]; then
+if [[ -z "${CYVERSE_CLIENT_SECRET}" ]]; then
   cyverse_secret="some_cyverse_secret"
-  echo "Warning: VUE_APP_CYVERSE_CLIENT_SECRET environment variable missing"
+  echo "Warning: CYVERSE_CLIENT_SECRET environment variable missing"
 else
-  cyverse_secret="${VUE_APP_CYVERSE_CLIENT_SECRET}"
+  cyverse_secret="${CYVERSE_CLIENT_SECRET}"
 fi
 
 cat <<EOT >>".env"
