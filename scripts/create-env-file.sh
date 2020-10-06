@@ -12,13 +12,6 @@ else
   github_secret="${GITHUB_SECRET}"
 fi
 
-if [[ -z "${CAS_SERVER_URL}" ]]; then
-  cas_server_url="some_cas_server_url"
-  echo "Warning: CAS_SERVER_URL environment variable missing"
-else
-  cas_server_url="${CAS_SERVER_URL}"
-fi
-
 cat <<EOT >>".env"
 VUE_APP_TITLE=plantit
 NODE_ENV=development
@@ -34,13 +27,10 @@ DJANGO_ADMIN_PASSWORD=$admin_password
 DJANGO_SECURE_SSL_REDIRECT=False
 DJANGO_SESSION_COOKIE_SECURE=False
 DJANGO_CSRF_COOKIE_SECURE=False
-DJANGO_CAS_VERSION=3.0
-DJANGO_CAS_SERVER_URL=$cas_server_url
-DJANGO_CAS_PROXY_CALLBACK=http://localhost/accounts/callback/
-DJANGO_CAS_FORCE_SSL_SERVICE_URL=False
+CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
 SQL_ENGINE=django.db.backends.sqlite3
 GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
-GITHUB_REDIRECT_URI=http://localhost/apis/v1/profiles/github_handle_temporary_code/
+GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/profiles/github_handle_temporary_code/
 GITHUB_KEY=d15df2f5710e9597290f
 GITHUB_SECRET=$github_secret
 EOT

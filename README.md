@@ -62,7 +62,7 @@ This will start a number of containers:
 - `celery`: Celery worker
 - `sandbox`: test deployment target
 
-To bypass CAS login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and use the values for `DJANGO_ADMIN_USERNAME` and `DJANGO_ADMIN_PASSWORD` configured in `.env`.
+To bypass KeyCloak login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and use the values for `DJANGO_ADMIN_USERNAME` and `DJANGO_ADMIN_PASSWORD` configured in `.env`.
 
 The Django admin interface is at `http://localhost/admin/`.
 

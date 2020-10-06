@@ -26,7 +26,7 @@
                                 </b-nav-item>
                                 <b-nav-item
                                     v-if="!loggedIn"
-                                    href="/cas_login/?next=/flows/"
+                                    href="https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=local-testing&redirect_uri=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/&response_type=code"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -363,6 +363,7 @@ export default {
     created: function() {
         this.crumbs = this.$route.meta.crumb;
         this.$store.dispatch('loadCurrentUser');
+        this.$store.dispatch('load');
     },
     watch: {
         $route() {

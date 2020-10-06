@@ -62,13 +62,13 @@
                     </b-collapse>
                 </b-navbar>
                 <br />
-                <b-row class="m-0 p-0" v-if="!loggedIn">
+                <b-row class="m-0 p-0">
                     <b-col class="m-0 p-0">
                         <b-button
                             variant="white"
                             block
                             class="text-center"
-                            href="https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=local-testing&redirect_uri=http://localhost:3000/flows/&response_type=code"
+                            href="https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=local-testing&redirect_uri=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/&response_type=code"
                         >
                             Log in with
                             <b-img
@@ -82,7 +82,7 @@
                         </b-button>
                     </b-col>
                 </b-row>
-                <b-navbar toggleable="sm" class="m-0 p-0" v-else>
+                <!-- <b-navbar toggleable="sm" class="m-0 p-0" v-else>
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
                             <b-nav-item
@@ -109,19 +109,19 @@
                                         "
                                     ></b-img>
                                     Log In
-                                    <!--<b v-else
+                                    <b v-else
                                         >(
                                         {{
                                             currentUserCyVerseProfile
                                                 ? currentUserCyVerseProfile.first_name
                                                 : currentUserDjangoProfile.username
                                         }})</b
-                                    >-->
+                                    >
                                 </b-button>
                             </b-nav-item>
                         </b-navbar-nav>
                     </b-collapse>
-                </b-navbar>
+                </b-navbar>-->
             </b-card>
         </b-container>
         <div style="position: absolute; bottom: 0; left: 49%">
