@@ -17,7 +17,7 @@ if [[ -z "${CYVERSE_CLIENT_ID}" ]]; then
   echo "Warning: CYVERSE_CLIENT_ID environment variable missing"
 else
   cyverse_client_id="${CYVERSE_CLIENT_ID}"
-f
+fi
 
 if [[ -z "${CYVERSE_CLIENT_SECRET}" ]]; then
   cyverse_secret="some_cyverse_secret"
