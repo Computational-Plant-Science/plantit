@@ -46,7 +46,7 @@ DJANGO_SESSION_COOKIE_SECURE=False
 DJANGO_CSRF_COOKIE_SECURE=False
 SQL_ENGINE=django.db.backends.sqlite3
 GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
-GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/profiles/github_handle_temporary_code/
+GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/users/github_handle_temporary_code/
 GITHUB_KEY=d15df2f5710e9597290f
 GITHUB_SECRET=$github_secret
 EOT

@@ -142,7 +142,7 @@
                             </b-col>
                         </b-row>
                     </template>
-                  <b-card
+                    <b-card
                         border-variant="white"
                         footer-bg-variant="white"
                         sub-title="Enter an output file pattern (recommended)."
@@ -302,21 +302,22 @@ export default {
         onStart() {
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
+            let config = {
+                name: this.flow.config.name,
+                image: this.flow.config.image,
+                clone: this.flow.config.clone !== null ? this.flow.config.clone : false,
+                params: this.params,
+                target: this.target,
+                commands: this.flow.config.commands
+            };
+            if (this.flow.config.from) config.input = this.input;
+            if (this.flow.config.to) config.output = this.output;
             axios({
                 method: 'post',
                 url: `/apis/v1/runs/`,
                 data: {
                     repository: this.flow.repository,
-                    config: {
-                        name: this.flow.config.name,
-                        image: this.flow.config.image,
-                        clone: this.flow.config.clone,
-                        input: this.input,
-                        output: this.output,
-                        params: this.params,
-                        target: this.target,
-                        commands: this.flow.config.commands
-                    }
+                    config: config
                 },
                 headers: { 'Content-Type': 'application/json' }
             })
