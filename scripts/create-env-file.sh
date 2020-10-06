@@ -28,9 +28,9 @@ fi
 
 cat <<EOT >>".env"
 VUE_APP_TITLE=plantit
-VUE_APP_CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
-VUE_APP_CYVERSE_CLIENT_ID=$cyverse_client_id
-VUE_APP_CYVERSE_CLIENT_SECRET=$cyverse_secret
+CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
+CYVERSE_CLIENT_ID=$cyverse_client_id
+CYVERSE_CLIENT_SECRET=$cyverse_secret
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=$secret_key
