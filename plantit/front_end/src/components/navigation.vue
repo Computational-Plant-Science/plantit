@@ -26,7 +26,7 @@
                                 </b-nav-item>
                                 <b-nav-item
                                     v-if="!loggedIn"
-                                    href="https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=local-testing&redirect_uri=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/&response_type=code"
+                                    href="/apis/v1/users/cyverse_login/"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -351,7 +351,7 @@ export default {
         return {
             crumbs: [],
             notFound: false,
-            titleContent: 'breadcrumb'
+            titleContent: 'breadcrumb',
         };
     },
     computed: mapGetters([

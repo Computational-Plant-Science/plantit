@@ -1,8 +1,12 @@
-const GoogleFontsPlugin = require('google-fonts-webpack-plugin');
+// const GoogleFontsPlugin = require('google-fonts-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
 
 module.exports = {
     assetsDir: 'assets/',
     pluginOptions: {
+        'dotenv-webpack': {
+            path: ''
+        },
         'style-resources-loader': {
             preProcessor: 'sass',
             patterns: []

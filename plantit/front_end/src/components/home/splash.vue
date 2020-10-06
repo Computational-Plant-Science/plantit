@@ -22,7 +22,7 @@
                         <h1>plantit</h1>
                     </b-col>
                 </b-row>
-              <br/>
+                <br />
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
@@ -68,7 +68,7 @@
                             variant="white"
                             block
                             class="text-center"
-                            href="https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=local-testing&redirect_uri=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/&response_type=code"
+                            href="/apis/v1/users/cyverse_login/"
                         >
                             Log in with
                             <b-img

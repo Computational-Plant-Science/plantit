@@ -1,5 +1,5 @@
-import json
 import os
+import jwt
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
@@ -101,17 +101,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @authentication_classes([AllowAny])
     @action(methods=['get'], detail=False)
-    def cyverse_request_identity(self, request):
-        session_state = request.GET.get('session_state', None)
-        code = request.GET.get('code', None)
-        response = requests.post("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/token", data={
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': os.environ.get('CYVERSE_REDIRECT_URL')})
-        print(response.status_code)
-        print(response.json())
-        return HttpResponse(status=200)
-        pass
+    def cyverse_login(self, request):
+        return redirect('https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=' +
+                        os.environ.get('CYVERSE_CLIENT_ID') +
+                        '&redirect_uri=' +
+                        os.environ.get('CYVERSE_REDIRECT_URL') +
+                        '&response_type=code')
 
     @authentication_classes([])
     @action(methods=['get'], detail=False)
@@ -126,9 +121,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         response = requests.post("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/token", data={
             'grant_type': 'authorization_code',
-            'client_id': 'local-testing',
+            'client_id': os.environ.get('CYVERSE_CLIENT_ID'),
             'code': code,
-            'redirect_uri': os.environ.get('CYVERSE_REDIRECT_URL')}, auth=HTTPBasicAuth(request.user.username, '191a6ceb-931a-444d-b960-7982111b179f'))
+            'redirect_uri': os.environ.get('CYVERSE_REDIRECT_URL')},
+                                 auth=HTTPBasicAuth(request.user.username, os.environ.get('CYVERSE_CLIENT_SECRET')))
 
         if response.status_code == 400:
             return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
@@ -142,12 +138,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             return HttpResponseBadRequest("Missing param on token response: 'access_token'")
 
         token = content['access_token']
-        print(token)
-
-        import jwt
-        import json
         decoded = jwt.decode(token, verify=False)
-        print(json.dumps(decoded))
 
         user, created = User.objects.get_or_create(username=decoded['preferred_username'])
 
@@ -157,10 +148,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         user.save()
 
         if created:
-            print('Created user: ' + user.username)
             profile = Profile.objects.create(user=user, cyverse_token=token)
         else:
-            print('Retrieved user: ' + user.username)
             profile = Profile.objects.get(user=user)
             profile.cyverse_token = token
 

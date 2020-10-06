@@ -12,8 +12,25 @@ else
   github_secret="${GITHUB_SECRET}"
 fi
 
+if [[ -z "${VUE_APP_CYVERSE_CLIENT_ID}" ]]; then
+  cyverse_client_id="some_cyverse_client_id"
+  echo "Warning: VUE_APP_CYVERSE_CLIENT_ID environment variable missing"
+else
+  cyverse_client_id="${VUE_APP_CYVERSE_CLIENT_ID}"
+f
+
+if [[ -z "${VUE_APP_CYVERSE_CLIENT_SECRET}" ]]; then
+  cyverse_secret="some_cyverse_secret"
+  echo "Warning: VUE_APP_CYVERSE_CLIENT_SECRET environment variable missing"
+else
+  cyverse_secret="${VUE_APP_CYVERSE_CLIENT_SECRET}"
+fi
+
 cat <<EOT >>".env"
 VUE_APP_TITLE=plantit
+VUE_APP_CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
+VUE_APP_CYVERSE_CLIENT_ID=$cyverse_client_id
+VUE_APP_CYVERSE_CLIENT_SECRET=$cyverse_secret
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=$secret_key
@@ -27,7 +44,6 @@ DJANGO_ADMIN_PASSWORD=$admin_password
 DJANGO_SECURE_SSL_REDIRECT=False
 DJANGO_SESSION_COOKIE_SECURE=False
 DJANGO_CSRF_COOKIE_SECURE=False
-CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
 SQL_ENGINE=django.db.backends.sqlite3
 GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
 GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/profiles/github_handle_temporary_code/
