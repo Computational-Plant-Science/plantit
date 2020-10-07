@@ -3,14 +3,13 @@ import Router from 'vue-router';
 import home from './views/home.vue';
 import guide from './views/guide.vue';
 import docs from './views/docs.vue';
-import data from './views/data.vue';
 import flows from './views/explore-flows.vue';
 import flow from './views/flow.vue';
 import run from './views/run.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
-import login from './views/log-in.vue';
-import logout from './views/log-out.vue';
+
+import store from './store/store';
 
 Vue.use(Router);
 
@@ -24,7 +23,8 @@ let router = new Router({
             component: home,
             meta: {
                 title: 'PlantIT',
-                crumb: []
+                crumb: [],
+                requiresAuth: false
             }
         },
         {
@@ -42,7 +42,8 @@ let router = new Router({
                         text: 'Guide',
                         href: '/guide'
                     }
-                ]
+                ],
+                requiresAuth: false
             }
         },
         {
@@ -60,7 +61,8 @@ let router = new Router({
                         text: 'Docs',
                         href: '/docs'
                     }
-                ]
+                ],
+                requiresAuth: false
             }
         },
         {
@@ -78,7 +80,8 @@ let router = new Router({
                         text: 'Users',
                         href: '/users'
                     }
-                ]
+                ],
+                requiresAuth: true
             }
         },
         {
@@ -96,7 +99,8 @@ let router = new Router({
                         text: 'Flows',
                         href: '/flows'
                     }
-                ]
+                ],
+                requiresAuth: true
             }
         },
         {
@@ -111,7 +115,8 @@ let router = new Router({
                         text: 'PLANTIT',
                         href: '/'
                     }
-                ]
+                ],
+                requiresAuth: true
             }
         },
         {
@@ -126,7 +131,8 @@ let router = new Router({
                         text: 'PLANTIT',
                         href: '/'
                     }
-                ]
+                ],
+                requiresAuth: true
             }
         },
         {
@@ -160,7 +166,8 @@ let router = new Router({
                     {
                         text: '404'
                     }
-                ]
+                ],
+                requiresAuth: false
             }
         }
     ]
@@ -216,15 +223,15 @@ router.beforeEach((to, from, next) => {
             href: `/${to.params.username}`
         });
     }
-    // if (to.matched.some(record => record.meta.requiresAuth)) {
-    //     if (!store.getters.loggedIn) {
-    //         window.location = '/login/?next=' + to.fullPath;
-    //     } else {
-    //     next();
-    //     }
-    // } else {
-    next();
-    // }
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+        if (!store.getters.loggedIn) {
+            next('/apis/v1/idp/cyverse_login/');
+        } else {
+            next();
+        }
+    } else {
+        next();
+    }
 });
 
 export default router;

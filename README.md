@@ -57,7 +57,7 @@ Bring everything up with `docker-compose -f docker-compose.dev.yml up` (`-d` for
 
 This will start a number of containers:
 
-- `plantit`: Django web application (`http://localhost:80`)
+- `plantit`: Django web application (`http://localhost:3000`)
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `celery`: Celery worker
 - `sandbox`: test deployment target

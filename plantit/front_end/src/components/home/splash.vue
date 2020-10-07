@@ -62,7 +62,7 @@
                     </b-collapse>
                 </b-navbar>
                 <br />
-                <b-row class="m-0 p-0">
+                <b-row class="m-0 p-0" v-if="!loggedIn">
                     <b-col class="m-0 p-0">
                         <b-button
                             variant="white"
@@ -82,13 +82,13 @@
                         </b-button>
                     </b-col>
                 </b-row>
-                <!-- <b-navbar toggleable="sm" class="m-0 p-0" v-else>
+                <b-navbar toggleable="sm" class="m-0 p-0" v-else>
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
                             <b-nav-item
                                 right
                                 v-if="loggedIn"
-                                title="Log In"
+                                title="Enter PlantIT"
                                 style="font-size: 12pt"
                                 :to="
                                     '/' +
@@ -108,20 +108,20 @@
                                                 : ''
                                         "
                                     ></b-img>
-                                    Log In
-                                    <b v-else
+                                    Enter
+                                    <!--<b v-else
                                         >(
                                         {{
                                             currentUserCyVerseProfile
                                                 ? currentUserCyVerseProfile.first_name
                                                 : currentUserDjangoProfile.username
                                         }})</b
-                                    >
+                                    >-->
                                 </b-button>
                             </b-nav-item>
                         </b-navbar-nav>
                     </b-collapse>
-                </b-navbar>-->
+                </b-navbar>
             </b-card>
         </b-container>
         <div style="position: absolute; bottom: 0; left: 49%">

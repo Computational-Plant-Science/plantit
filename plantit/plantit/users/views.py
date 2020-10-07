@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 import jwt
 import requests
 from django.conf import settings
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
@@ -30,6 +30,12 @@ class IDPViewSet(viewsets.ViewSet):
                         '&redirect_uri=' +
                         os.environ.get('CYVERSE_REDIRECT_URL') +
                         '&response_type=code')
+
+    @action(methods=['get'], detail=False)
+    def cyverse_logout(self, request):
+        logout(request)
+        return redirect("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https"
+                        "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
 
     @action(methods=['get'], detail=False)
     def cyverse_handle_temporary_code(self, request):
@@ -80,7 +86,8 @@ class IDPViewSet(viewsets.ViewSet):
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-        return redirect(f"/{user.username}/")
+        # return redirect(f"/{user.username}/")
+        return redirect("/")
 
     @action(methods=['get'], detail=False)
     def github_request_identity(self, request):

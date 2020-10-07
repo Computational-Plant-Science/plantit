@@ -183,7 +183,7 @@
                                 <hr />
                                 <b-nav-item
                                     title="log out"
-                                    href="https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F"
+                                    href="/apis/v1/idp/cyverse_logout/"
                                     class="m-0 p-0"
                                 >
                                     <b-button
