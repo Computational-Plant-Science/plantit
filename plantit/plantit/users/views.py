@@ -1,37 +1,134 @@
 import os
-import jwt
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
-from django.contrib.auth import login
-
+import jwt
 import requests
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from github import Github
 from requests.auth import HTTPBasicAuth
 from rest_framework import viewsets, mixins
-from rest_framework.decorators import action, authentication_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
 from plantit.util import csrf_token
 
 
+class IDPViewSet(viewsets.ViewSet):
+    permission_classes = (AllowAny,)
+
+    @action(methods=['get'], detail=False)
+    def cyverse_login(self, request):
+        return redirect('https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=' +
+                        os.environ.get('CYVERSE_CLIENT_ID') +
+                        '&redirect_uri=' +
+                        os.environ.get('CYVERSE_REDIRECT_URL') +
+                        '&response_type=code')
+
+    @action(methods=['get'], detail=False)
+    def cyverse_handle_temporary_code(self, request):
+        session_state = request.GET.get('session_state', None)
+        code = request.GET.get('code', None)
+
+        if session_state is None:
+            return HttpResponseBadRequest("Missing param: 'session_state'")
+        if code is None:
+            return HttpResponseBadRequest("Missing param: 'code'")
+
+        response = requests.post("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/token", data={
+            'grant_type': 'authorization_code',
+            'client_id': os.environ.get('CYVERSE_CLIENT_ID'),
+            'code': code,
+            'redirect_uri': os.environ.get('CYVERSE_REDIRECT_URL')},
+                                 auth=HTTPBasicAuth(request.user.username, os.environ.get('CYVERSE_CLIENT_SECRET')))
+
+        if response.status_code == 400:
+            return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
+
+        if response.status_code != 200:
+            return HttpResponse('Bad response from KeyCloak token endpoint', status=500)
+
+        content = response.json()
+
+        if 'access_token' not in content:
+            return HttpResponseBadRequest("Missing param on token response: 'access_token'")
+
+        token = content['access_token']
+        decoded = jwt.decode(token, verify=False)
+
+        user, created = User.objects.get_or_create(username=decoded['preferred_username'])
+
+        user.first_name = decoded['given_name']
+        user.last_name = decoded['family_name']
+        user.email = decoded['email']
+        user.save()
+
+        if created:
+            profile = Profile.objects.create(user=user, cyverse_token=token)
+        else:
+            profile = Profile.objects.get(user=user)
+            profile.cyverse_token = token
+
+        profile.save()
+        user.save()
+
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        return redirect(f"/{user.username}/")
+
+    @action(methods=['get'], detail=False)
+    def github_request_identity(self, request):
+        return redirect(settings.GITHUB_AUTH_URI + '?' + urlencode({
+            'client_id': settings.GITHUB_KEY,
+            'redirect_uri': settings.GITHUB_REDIRECT_URI,
+            'state': csrf_token(request)}))
+
+    @action(methods=['get'], detail=False)
+    def github_handle_temporary_code(self, request):
+        state = request.GET.get('state', None)
+        error = request.GET.get('error', None)
+        if error == 'access_denied':
+            return HttpResponseBadRequest()
+        if state is None:
+            return HttpResponseBadRequest()
+        elif state != csrf_token(request):
+            return HttpResponse('unauthorized', status=401)
+
+        code = request.GET.get('code', None)
+        if code is None:
+            return HttpResponseBadRequest()
+
+        response = requests.post('https://github.com/login/oauth/access_token', data={
+            'client_id': settings.GITHUB_KEY,
+            'client_secret': settings.GITHUB_SECRET,
+            'redirect_uri': settings.GITHUB_REDIRECT_URI,
+            'code': code})
+
+        token = parse_qs(response.text)['access_token'][0]
+        user = self.get_object()
+        user.profile.github_username = Github(token).get_user().login
+        user.profile.github_token = token
+        user.profile.save()
+        user.save()
+
+        return redirect(f"/{user.username}/")
+
+
 class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def get_object(self):
         return self.request.user
 
     @action(detail=False, methods=['get'])
-    @login_required
     def get_all(self, request):
         users = [{
             'username': 'Computational-Plant-Science',
@@ -98,102 +195,3 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                                                         f"Bearer {request.user.profile.github_token}"})
             response['github_profile'] = github_response.json()
         return JsonResponse(response)
-
-    @authentication_classes([AllowAny])
-    @action(methods=['get'], detail=False)
-    def cyverse_login(self, request):
-        return redirect('https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=' +
-                        os.environ.get('CYVERSE_CLIENT_ID') +
-                        '&redirect_uri=' +
-                        os.environ.get('CYVERSE_REDIRECT_URL') +
-                        '&response_type=code')
-
-    @authentication_classes([])
-    @action(methods=['get'], detail=False)
-    def cyverse_handle_temporary_code(self, request):
-        session_state = request.GET.get('session_state', None)
-        code = request.GET.get('code', None)
-
-        if session_state is None:
-            return HttpResponseBadRequest("Missing param: 'session_state'")
-        if code is None:
-            return HttpResponseBadRequest("Missing param: 'code'")
-
-        response = requests.post("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/token", data={
-            'grant_type': 'authorization_code',
-            'client_id': os.environ.get('CYVERSE_CLIENT_ID'),
-            'code': code,
-            'redirect_uri': os.environ.get('CYVERSE_REDIRECT_URL')},
-                                 auth=HTTPBasicAuth(request.user.username, os.environ.get('CYVERSE_CLIENT_SECRET')))
-
-        if response.status_code == 400:
-            return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
-
-        if response.status_code != 200:
-            return HttpResponse('Bad response from KeyCloak token endpoint', status=500)
-
-        content = response.json()
-
-        if 'access_token' not in content:
-            return HttpResponseBadRequest("Missing param on token response: 'access_token'")
-
-        token = content['access_token']
-        decoded = jwt.decode(token, verify=False)
-
-        user, created = User.objects.get_or_create(username=decoded['preferred_username'])
-
-        user.first_name = decoded['given_name']
-        user.last_name = decoded['family_name']
-        user.email = decoded['email']
-        user.save()
-
-        if created:
-            profile = Profile.objects.create(user=user, cyverse_token=token)
-        else:
-            profile = Profile.objects.get(user=user)
-            profile.cyverse_token = token
-
-        profile.save()
-        user.save()
-
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-
-        return redirect(f"/{user.username}/")
-
-    @action(methods=['get'], detail=False)
-    def github_request_identity(self, request):
-        return redirect(settings.GITHUB_AUTH_URI + '?' + urlencode({
-            'client_id': settings.GITHUB_KEY,
-            'redirect_uri': settings.GITHUB_REDIRECT_URI,
-            'state': csrf_token(request)}))
-
-    @action(methods=['get'], detail=False)
-    @authentication_classes([])
-    def github_handle_temporary_code(self, request):
-        state = request.GET.get('state', None)
-        error = request.GET.get('error', None)
-        if error == 'access_denied':
-            return HttpResponseBadRequest()
-        if state is None:
-            return HttpResponseBadRequest()
-        elif state != csrf_token(request):
-            return HttpResponse('unauthorized', status=401)
-
-        code = request.GET.get('code', None)
-        if code is None:
-            return HttpResponseBadRequest()
-
-        response = requests.post('https://github.com/login/oauth/access_token', data={
-            'client_id': settings.GITHUB_KEY,
-            'client_secret': settings.GITHUB_SECRET,
-            'redirect_uri': settings.GITHUB_REDIRECT_URI,
-            'code': code})
-
-        token = parse_qs(response.text)['access_token'][0]
-        user = self.get_object()
-        user.profile.github_username = Github(token).get_user().login
-        user.profile.github_token = token
-        user.profile.save()
-        user.save()
-
-        return redirect(f"/{user.username}/")

@@ -6,10 +6,11 @@ from rest_framework import routers
 from .auth.views import login_view, logout_view
 from .miappe.views import *
 from .targets.views import TargetsViewSet
-from .users.views import UsersViewSet
+from .users.views import UsersViewSet, IDPViewSet
 
 router = routers.DefaultRouter()
 router.register('users', UsersViewSet)
+router.register('idp', IDPViewSet, basename='idp')
 router.register('targets', TargetsViewSet)
 router.register('miappe/investigations', InvestigationViewSet)
 router.register('miappe/studies', StudyViewSet)

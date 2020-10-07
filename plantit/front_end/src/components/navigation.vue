@@ -26,7 +26,7 @@
                                 </b-nav-item>
                                 <b-nav-item
                                     v-if="!loggedIn"
-                                    href="/apis/v1/users/cyverse_login/"
+                                    href="/apis/v1/idp/cyverse_login/"
                                     class="m-0 p-0"
                                 >
                                     <b-button
@@ -261,7 +261,7 @@
                             loggedIn ? currentUserGitHubProfile === null : false
                         "
                         title="Log in to GitHub"
-                        href="/apis/v1/users/github_request_identity/"
+                        href="/apis/v1/idp/github_request_identity/"
                         class="ml-0 mr-0"
                     >
                         <b-button class="text-left" variant="success">

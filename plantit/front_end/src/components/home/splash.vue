@@ -68,7 +68,7 @@
                             variant="white"
                             block
                             class="text-center"
-                            href="/apis/v1/users/cyverse_login/"
+                            href="/apis/v1/idp/cyverse_login/"
                         >
                             Log in with
                             <b-img
