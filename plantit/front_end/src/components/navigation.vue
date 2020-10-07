@@ -67,7 +67,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-home fa-1x fa-fw"></i>
-                                        about
+                                        About
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/guide" class="m-0 p-0">
@@ -79,7 +79,7 @@
                                         <i
                                             class="fas fa-map-signs fa-1x fa-fw"
                                         ></i>
-                                        guide
+                                        Guide
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/docs" class="m-0 p-0">
@@ -89,7 +89,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-book fa-1x fa-fw"></i>
-                                        docs
+                                        Docs
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -114,7 +114,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-user fa-1x fa-fw"></i>
-                                        users
+                                        Users
                                     </b-button>
                                 </b-nav-item>
                                 <!--<b-nav-item
@@ -146,7 +146,7 @@
                                         <i
                                             class="fas fa-stream fa-1x fa-fw"
                                         ></i>
-                                        flows
+                                        Flows
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -363,7 +363,6 @@ export default {
     created: function() {
         this.crumbs = this.$route.meta.crumb;
         this.$store.dispatch('loadCurrentUser');
-        this.$store.dispatch('load');
     },
     watch: {
         $route() {

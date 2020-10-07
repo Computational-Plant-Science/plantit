@@ -2,7 +2,6 @@
     <div class="w-100 p-5 m-0">
         <br />
         <b-card
-            v-if="cyverseProfile"
             bg-variant="white"
             border-variant="white"
             header-border-variant="white"

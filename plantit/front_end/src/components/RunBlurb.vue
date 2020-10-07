@@ -8,7 +8,14 @@
             </b-col>
             <b-col md="auto">
                 <h4>
-                    <b-badge :variant="run.state === 2 ? 'danger' : 'success'"
+                    <b-badge
+                        :variant="
+                            run.state === 2
+                                ? 'danger'
+                                : run.state === 1
+                                ? 'success'
+                                : 'warning'
+                        "
                         >{{ statusToString(run.state) }}
                     </b-badge>
                     on
@@ -56,7 +63,7 @@ export default {
         run: {
             type: Object,
             required: true
-        },
+        }
     },
     methods: {
         statusToString(status) {

@@ -68,7 +68,7 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
 
             execute_command(run=run, ssh_client=ssh_client, pre_command='; '.join(
                 str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
-                            command=f"plantit workflow.yaml --plantit_token {plantit_token} --cyverse_token {cyverse_token}",
+                            command=f"plantit workflow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'",
                             directory=work_dir)
             print(f"Run completed.")
             if run.status.state != 2:
