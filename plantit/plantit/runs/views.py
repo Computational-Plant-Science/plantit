@@ -66,6 +66,7 @@ def runs(request):
         if 'input' in workflow['config']:
             config['input'] = workflow['config']['input']
         if 'output' in workflow['config']:
+            workflow['config']['output']['from'] = join(run.work_dir, workflow['config']['output']['from'])
             config['output'] = workflow['config']['output']
 
         execute.delay({

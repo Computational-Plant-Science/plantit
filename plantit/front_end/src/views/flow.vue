@@ -368,7 +368,6 @@ export default {
             };
             if (this.flow.config.from) config.input = this.input;
             if (this.flow.config.to) {
-                this.output.to = this.target.workdir + '/' + this.output.to;
                 config.output = this.output;
             }
             axios({
