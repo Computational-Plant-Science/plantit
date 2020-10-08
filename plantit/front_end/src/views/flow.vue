@@ -113,7 +113,7 @@
                         footer-bg-variant="white"
                         sub-title="Enter an input file pattern (optional)."
                     >
-                      <br/>
+                        <br />
                         <b-form-group
                             description="All files in the input directory matching this pattern will be selected."
                         >
@@ -210,7 +210,7 @@
                         footer-bg-variant="white"
                         sub-title="Configure resource requests."
                     >
-                      <br/>
+                        <br />
                         <b-form-group
                             :state="target.walltime <= target.max_walltime"
                             description="Walltime to be requested from the cluster resource scheduler."
@@ -367,7 +367,10 @@ export default {
                 commands: this.flow.config.commands
             };
             if (this.flow.config.from) config.input = this.input;
-            if (this.flow.config.to) config.output = this.output;
+            if (this.flow.config.to) {
+                this.output.to = this.target.workdir + '/' + this.output.to;
+                config.output = this.output;
+            }
             axios({
                 method: 'post',
                 url: `/apis/v1/runs/`,
