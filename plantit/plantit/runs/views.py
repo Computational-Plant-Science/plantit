@@ -35,13 +35,13 @@ def runs(request):
         workflow = request.data
         now = timezone.now()
         now_str = now.strftime('%s')
-        cluster = Target.objects.get(name=workflow['config']['target']['name'])
+        target = Target.objects.get(name=workflow['config']['target']['name'])
         workflow_path = f"{workflow['repository']['owner']['login']}/{workflow['repository']['name']}"
         run = Run.objects.create(
             user=User.objects.get(username=user.username),
             workflow_owner=workflow['repository']['owner']['login'],
             workflow_name=workflow['repository']['name'],
-            cluster=cluster,
+            cluster=target,
             created=now,
             work_dir=now_str + "/",
             remote_results_path=now_str + "/",
@@ -56,17 +56,18 @@ def runs(request):
         config = {
             'identifier': run.identifier,
             'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/status/",
-            'workdir': join(cluster.workdir, now_str),
+            'workdir': join(target.workdir, now_str),
             'clone': f"https://github.com/{workflow_path}" if workflow['config']['clone'] else None,
             'image': workflow['config']['image'],
             'command': workflow['config']['commands'],
             'params': workflow['config']['params'],
-            'executor': 'local' if cluster.executor.lower() == 'lo' else 'local' # TODO impl pbs/slurm
+            'executor': 'local' if target.executor.lower() == 'lo' else 'local' # TODO impl pbs/slurm
         }
         if 'input' in workflow['config']:
             config['input'] = workflow['config']['input']
         if 'output' in workflow['config']:
-            workflow['config']['output']['from'] = join(run.work_dir, workflow['config']['output']['from'])
+            workflow['config']['output']['from'] = join(target.workdir, run.work_dir, workflow['config']['output']['from'])
+            print(workflow['config']['output']['from'])
             config['output'] = workflow['config']['output']
 
         execute.delay({
