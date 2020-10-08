@@ -15,7 +15,8 @@ RUN apt-get -y update && apt-get install -y \
     python-pip \
     python3-pip \
     libfuse2 \
-    vim
+    vim \
+    tzdata
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:root' | chpasswd

@@ -81,6 +81,7 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
                     description=f"Run failed.",
                     state=Status.FAILED,
                     location='plantit')
+
             run.save()
 
     except Exception:

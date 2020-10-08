@@ -1,26 +1,17 @@
 <template>
-    <div class="w-100 p-5 m-0">
-        <br />
+    <div class="w-100 p-4">
+      <br/>
+      <br/>
         <b-card
             bg-variant="white"
-            border-variant="white"
+            border-variant="dark"
             header-border-variant="white"
             header-bg-variant="white"
             style="margin: 0 auto;"
         >
             <template v-slot:header style="background-color: white">
                 <b-row align-v="center" align-h="start">
-                    <b-col md="auto" class="ml-0 mr-0 pr-0" align-self="center">
-                        <b-img
-                            right
-                            class="avatar "
-                            rounded="circle"
-                            style="max-height: 8rem; max-width: 8rem; position: relative;"
-                            :src="githubProfile ? githubProfile.avatar_url : ''"
-                        ></b-img>
-                    </b-col>
                     <b-col
-                        md="auto"
                         style="color: white"
                         align-self="center"
                         class="ml-0 mr-0"
@@ -55,9 +46,18 @@
                             </b-col>
                         </b-row>
                     </b-col>
+                  <b-col md="auto" class="ml-0 mr-0" align-self="right">
+                        <b-img
+                            right
+                            class="avatar "
+                            rounded="circle"
+                            style="max-height: 5rem; max-width: 5rem; position: relative;"
+                            :src="githubProfile ? githubProfile.avatar_url : ''"
+                        ></b-img>
+                    </b-col>
                 </b-row>
             </template>
-            <b-tabs content-class="mt-3">
+            <b-tabs content-class="mt-0">
                 <b-tab v-if="djangoProfile" title="Profile" active>
                     <b-card
                         header-bg-variant="white"

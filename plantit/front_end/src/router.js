@@ -9,7 +9,7 @@ import run from './views/run.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
 
-import store from './store/store';
+// import store from './store/store';
 
 Vue.use(Router);
 
@@ -223,15 +223,15 @@ router.beforeEach((to, from, next) => {
             href: `/${to.params.username}`
         });
     }
-    if (to.matched.some(record => record.meta.requiresAuth)) {
-        if (!store.getters.loggedIn) {
-            next('/apis/v1/idp/cyverse_login/');
-        } else {
-            next();
-        }
-    } else {
+    // if (to.matched.some(record => record.meta.requiresAuth)) {
+    //     if (!store.getters.loggedIn) {
+    //         next('/apis/v1/idp/cyverse_login/');
+    //     } else {
+    //         next();
+    //     }
+    // } else {
         next();
-    }
+    // }
 });
 
 export default router;

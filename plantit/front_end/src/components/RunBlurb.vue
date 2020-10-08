@@ -3,7 +3,7 @@
         <b-row>
             <b-col>
                 <h3>
-                    <b>{{ run.id }}</b>
+                    Run <b>{{ run.id }}</b>
                 </h3>
             </b-col>
             <b-col md="auto">

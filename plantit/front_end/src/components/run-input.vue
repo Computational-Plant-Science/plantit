@@ -3,12 +3,14 @@
         <b-card
             border-variant="white"
             footer-bg-variant="white"
+            footer-border-variant="white"
             :sub-title="
-                `Select an input ${
+                `Select a ${
                     kind.toLowerCase() === 'file' ? 'file' : 'directory'
-                }.`
+                } in the CyVerse Data Store${kind.toLowerCase() === 'file' ? ' to use as input' : ' to pull input files from'}.`
             "
         >
+          <br/>
             <datatree
                 :select="kind"
                 @selectPath="selectPath"

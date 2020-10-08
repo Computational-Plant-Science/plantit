@@ -8,7 +8,7 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
                     header-border-variant="white"
                     class="overflow-hidden"
@@ -37,7 +37,7 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
                     header-border-variant="default"
                 >
@@ -90,7 +90,7 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
                     header-border-variant="default"
                 >
@@ -103,22 +103,27 @@
                             </b-col>
                         </b-row>
                     </template>
-                    <b-card
-                        border-variant="white"
-                        footer-bg-variant="white"
-                        sub-title="Enter an input file pattern (optional)."
-                    >
-                        <b-form-input
-                            size="sm"
-                            v-model="input.pattern"
-                            :placeholder="'Enter a file pattern'"
-                        ></b-form-input>
-                    </b-card>
                     <runinput
                         :user="user"
                         :kind="flow.config.from"
                         v-on:inputSelected="inputSelected"
                     ></runinput>
+                    <b-card
+                        border-variant="white"
+                        footer-bg-variant="white"
+                        sub-title="Enter an input file pattern (optional)."
+                    >
+                      <br/>
+                        <b-form-group
+                            description="All files in the input directory matching this pattern will be selected."
+                        >
+                            <b-form-input
+                                size="sm"
+                                v-model="input.pattern"
+                                :placeholder="'Enter a file pattern'"
+                            ></b-form-input>
+                        </b-form-group>
+                    </b-card>
                 </b-card>
                 <br />
             </b-col>
@@ -129,7 +134,7 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
                     header-border-variant="default"
                 >
@@ -142,22 +147,36 @@
                             </b-col>
                         </b-row>
                     </template>
-                    <b-card
-                        border-variant="white"
-                        footer-bg-variant="white"
-                        sub-title="Enter an output file pattern (recommended)."
-                    >
-                        <b-form-input
-                            size="sm"
-                            v-model="output.pattern"
-                            :placeholder="'Enter a file pattern'"
-                        ></b-form-input>
-                    </b-card>
                     <runoutput
                         :user="user"
                         kind="Directory"
                         v-on:outputSelected="outputSelected"
                     ></runoutput>
+                    <b-card
+                        border-variant="white"
+                        footer-bg-variant="white"
+                        sub-title="Specify an output path (required) and file pattern (optional)."
+                    >
+                        <br />
+                        <b-form-group
+                            description="The directory in which the flow will deposit output files."
+                        >
+                            <b-form-input
+                                size="sm"
+                                v-model="output.from"
+                                :placeholder="'Enter a filesystem path'"
+                            ></b-form-input>
+                        </b-form-group>
+                        <b-form-group
+                            description="All files in the output directory matching this pattern will be selected."
+                        >
+                            <b-form-input
+                                size="sm"
+                                v-model="output.pattern"
+                                :placeholder="'Enter a file pattern'"
+                            ></b-form-input>
+                        </b-form-group>
+                    </b-card>
                 </b-card>
                 <br />
             </b-col>
@@ -168,7 +187,7 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="white"
+                    border-variant="dark"
                     footer-border-variant="white"
                     header-border-variant="default"
                 >
@@ -185,6 +204,40 @@
                         :selected="target"
                         v-on:targetSelected="targetSelected"
                     ></runtarget>
+                    <b-card
+                        v-if="target.max_walltime && target.name !== 'Sandbox'"
+                        border-variant="white"
+                        footer-bg-variant="white"
+                        sub-title="Configure resource requests."
+                    >
+                      <br/>
+                        <b-form-group
+                            :state="target.walltime <= target.max_walltime"
+                            description="Walltime to be requested from the cluster resource scheduler."
+                            label="Walltime (minutes)"
+                        >
+                            <b-form-input
+                                size="sm"
+                                v-model="target.walltime"
+                                :placeholder="
+                                    'Max: ' + target.max_walltime + ' minutes'
+                                "
+                            ></b-form-input>
+                        </b-form-group>
+                        <b-form-group
+                            :state="target.mem <= target.max_mem"
+                            description="Memory to be requested from the cluster resource scheduler."
+                            label="Memory (GB)"
+                        >
+                            <b-form-input
+                                size="sm"
+                                v-model="target.mem"
+                                :placeholder="
+                                    'Max: ' + target.max_mem + ' gigabytes'
+                                "
+                            ></b-form-input>
+                        </b-form-group>
+                    </b-card>
                 </b-card>
             </b-col>
         </b-row>
@@ -305,7 +358,10 @@ export default {
             let config = {
                 name: this.flow.config.name,
                 image: this.flow.config.image,
-                clone: this.flow.config.clone !== null ? this.flow.config.clone : false,
+                clone:
+                    this.flow.config.clone !== null
+                        ? this.flow.config.clone
+                        : false,
                 params: this.params,
                 target: this.target,
                 commands: this.flow.config.commands

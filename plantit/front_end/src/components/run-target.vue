@@ -12,6 +12,7 @@
                 borderless
                 small
                 selectable
+                select-mode="single"
                 @row-selected="rowSelected"
                 sticky-header="true"
                 caption-top
@@ -64,6 +65,16 @@ export default {
                 {
                     key: 'description',
                     label: 'Description'
+                },
+                {
+                    key: 'max_walltime',
+                    label: 'Max Walltime',
+                    formatter: value => value + ' (minutes)'
+                },
+                {
+                    key: 'max_mem',
+                    label: 'Max Memory',
+                    formatter: value => value + ' (gigabytes)'
                 }
             ],
             targets: [],

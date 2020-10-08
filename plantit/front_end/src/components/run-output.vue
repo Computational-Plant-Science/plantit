@@ -3,7 +3,8 @@
         <b-card
             border-variant="white"
             footer-bg-variant="white"
-            sub-title="Select an output file or directory."
+            footer-border-variant="white"
+            sub-title="Select a directory in the CyVerse Data Store to push output files to."
         >
             <br />
             <datatree

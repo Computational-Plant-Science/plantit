@@ -14,37 +14,24 @@
         <div v-if="!runNotFound">
             <b-row>
                 <b-col>
-                    <b-card
-                        bg-variant="white"
-                        header-bg-variant="white"
-                        footer-bg-variant="white"
-                        border-variant="white"
-                        footer-border-variant="white"
-                        header-border-variant="dark"
-                        class="overflow-hidden"
-                    >
-                        <b-row align-h="center" v-if="loadingRun">
-                            <b-spinner
-                                type="grow"
-                                label="Loading..."
-                                variant="dark"
-                            ></b-spinner>
-                        </b-row>
-                        <RunBlurb
-                            v-else
-                            :flow="flow"
-                            :run="run"
-                        ></RunBlurb>
-                    </b-card>
+                    <b-row align-h="center" v-if="loadingRun">
+                        <b-spinner
+                            type="grow"
+                            label="Loading..."
+                            variant="dark"
+                        ></b-spinner>
+                    </b-row>
+                    <RunBlurb v-else :flow="flow" :run="run"></RunBlurb>
                 </b-col>
             </b-row>
+            <br />
             <b-row>
                 <b-col>
                     <b-card
                         bg-variant="white"
                         header-bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="white"
+                        border-variant="dark"
                         footer-border-variant="white"
                         header-border-variant="default"
                     >
@@ -119,7 +106,10 @@
                                                 :variant="
                                                     status.item.state === 2
                                                         ? 'danger'
-                                                        : status.item.state === 1 ? 'success' : 'warning'
+                                                        : status.item.state ===
+                                                          1
+                                                        ? 'success'
+                                                        : 'warning'
                                                 "
                                                 >{{
                                                     statusToString(
