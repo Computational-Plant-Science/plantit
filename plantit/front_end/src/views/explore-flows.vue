@@ -53,7 +53,7 @@
                                         style="z-index: 1000"
                                     ></i>
                                     Computational Plant Science Lab's website</a
-                                >
+                                >,
                                 or check out the code on
                                 <a
                                     class="hvr"
@@ -85,7 +85,7 @@
                                         style="z-index: 1000"
                                     ></i>
                                     van der Knaap Lab's website</a
-                                >
+                                >,
                                 or check out the code on
                                 <a
                                     class="hvr"
@@ -117,7 +117,7 @@
                                         style="z-index: 1000"
                                     ></i>
                                     Burke Lab's website</a
-                                >
+                                >,
                                 or check out the code on
                                 <a
                                     class="hvr"

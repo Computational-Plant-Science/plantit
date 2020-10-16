@@ -39,7 +39,7 @@ def get(request, username, name):
                         headers={"Authorization": f"token {request.user.profile.github_token}"}).json()
 
     return JsonResponse({
-        'repository': repo,
+        'repo': repo,
         'config': get_config(repo, request.user.profile.github_token)
     })
 

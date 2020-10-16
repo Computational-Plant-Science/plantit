@@ -62,7 +62,7 @@
                                             :src="
                                                 require('../assets/sponsors/cyversebw-notext.png')
                                             "
-                                            height="19px"
+                                            height="20px"
                                             alt="Cyverse"
                                             class="m-1"
                                         ></b-img>
@@ -93,7 +93,7 @@
                                         right
                                         rounded="circle"
                                         class="avatar card-img-right"
-                                        style="max-height: 5rem; max-width: 5rem; opacity: 0.8; position: absolute; right: -15px; top: -30px; z-index:1"
+                                        style="max-height: 5rem; max-width: 5rem; opacity: 0.8; position: absolute; right: -15px; top: -25px; z-index:1"
                                         :src="
                                             user.github_profile
                                                 ? user.github_profile.avatar_url
