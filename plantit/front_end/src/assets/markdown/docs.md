@@ -2,7 +2,7 @@
 
 ---
 
-Before we start, a few basics:
+First, some basics:
 
 - Because PlantIT supports deployments to shared computing environments (e.g., HPC clusters), PlantIT workflows are *containerized*: every workflow runs in one or more [Singularity](https://sylabs.io/singularity/) containers. We recommend getting familiar with containers in general and Singularity in particular before moving on.
 - PlantIT doesn't care what your workflow looks like. If it runs in Docker or Singularity, it will run on PlantIT. Use any software stack you like.
@@ -57,7 +57,7 @@ This will cause the value of `message`, specified by the user in the browser, to
 
 PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) (or any other iRODS instance) onto the file system in your deployment environment, then push output files back to the store after your workflow runs. To enable this behavior, add `from` and `to` sections to your configuration.
 
-The following workflow prints the contents of an input file and writes a message to an ouput file:
+The following workflow prints the contents of an input file and writes a message to an output file:
 
 ```yaml
 name: Hello File
@@ -72,19 +72,4 @@ params:
 commands: cat "$INPUT" && echo "$MESSAGE" >> "$OUTPUT"
 ```
 
-PlantIT will prompt users of this workflow to select input and ouput paths in the browser. Note that this configuration maps a single input file to a single output file. If the user provides a directory containing multiple input files, PlantIT will automagically spawn multiple containers to process them in parallel. To indicate that your code accepts an entire *directory* as input (and should not be parallelized), use `from: directory` instead.
-
-#### Test Dataset
-
-This section is under construction.
-
-#### Publication DOI
-
-If you've published your algorithm or workflow, you can link PlantIT users to your publication with a `doi` attribute:
-
-```yaml
-doi: https://doi.org/10.1186/s13007-015-0093-3
-```
-
-The link will then be displayed in the browser.
-
+PlantIT will prompt users of this workflow to select input and output paths in the browser. Note that this configuration maps a single input file to a single output file. If the user provides a directory containing multiple input files, PlantIT will automagically spawn multiple containers to process them in parallel. To indicate that your code accepts an entire *directory* as input (and should not be parallelized), use `from: directory` instead.

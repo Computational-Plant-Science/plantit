@@ -1,10 +1,21 @@
 <template>
-    <b-row align-h="center">
-      <b-col class="text-center" v-if="flows.length === 0">None to show.</b-col>
+    <b-row align-v="center" align-h="center" v-if="loading">
+        <b-col align-self="end" class="text-center">
+            <b-spinner
+                type="grow"
+                label="Loading..."
+                variant="dark"
+            ></b-spinner>
+        </b-col>
+    </b-row>
+    <b-row align-h="center" v-else>
+        <b-col class="text-center" v-if="flows.length === 0 && !loading"
+            >None to show.</b-col
+        >
         <b-card-group columns class="justify-content-center">
             <b-card
                 v-for="flow in flows"
-                :key="flow.repository.name"
+                :key="flow.repo.name"
                 bg-variant="white"
                 footer-bg-variant="white"
                 border-variant="default"
@@ -46,7 +57,8 @@ export default {
     data: function() {
         return {
             flows: [],
-            login: false
+            login: false,
+            loading: true
         };
     },
     mounted: function() {
@@ -56,17 +68,21 @@ export default {
         loadFlows() {
             axios
                 .get(
-                    `https://api.github.com/search/code?q=filename:plantit.yaml+user:${this.githubUser}`,
-                    {
-                        headers: {
-                            Authorization: 'Bearer ' + this.githubToken
-                        }
-                    }
+                    '/apis/v1/flows/' +
+                        (this.githubUser !== '' ? `${this.githubUser}/` : '')
+                    // `https://api.github.com/search/code?q=filename:plantit.yaml+user:${this.githubUser}`,
+                    // {
+                    //     headers: {
+                    //         Authorization: 'Bearer ' + this.githubToken
+                    //     }
+                    // }
                 )
                 .then(response => {
-                    this.flows = response.data.items;
+                    this.flows = response.data.pipelines;
+                    this.loading = false;
                 })
                 .catch(error => {
+                    this.loading = false;
                     if (error.status_code === 401) {
                         this.login = true;
                     } else {
@@ -83,8 +99,8 @@ export default {
             router.push({
                 name: 'flow',
                 params: {
-                    username: flow['repository']['owner']['login'],
-                    name: flow['repository']['name']
+                    username: flow['repo']['owner']['login'],
+                    name: flow['repo']['name']
                 }
             });
         }

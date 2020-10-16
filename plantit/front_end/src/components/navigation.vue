@@ -79,7 +79,7 @@
                                         <i
                                             class="fas fa-map-signs fa-1x fa-fw"
                                         ></i>
-                                        Guide
+                                        User Guide
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/docs" class="m-0 p-0">
@@ -89,7 +89,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-book fa-1x fa-fw"></i>
-                                        Docs
+                                        Developer Docs
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
@@ -314,7 +314,7 @@
                         title="User"
                         class="m-0 p-0"
                         style="font-size: 12pt"
-                        :to="'/' + currentUserDjangoProfile.username + '/'"
+                        :href="'/' + currentUserDjangoProfile.username + '/'"
                     >
                         <b-button variant="white" class="m-0">
                             <b-img
@@ -428,7 +428,7 @@ a
     opacity: 0
 
 .brand-img
-    -webkit-transition: -webkit-transform .2s ease-in-out
+    -webkit-transition: -webkit-transform .1s ease-in-out
         transition: transform .2s ease-in-out
 
 .brand-img:hover

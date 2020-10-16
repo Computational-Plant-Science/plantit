@@ -137,15 +137,22 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
+        # users = [{
+        #     'username': 'Computational-Plant-Science',
+        #     'github_username': 'Computational-Plant-Science'
+        # }, {
+        #     'username': 'van-der-knaap-lab',
+        #     'github_username': 'van-der-knaap-lab'
+        # }] +
+
         users = [{
-            'username': 'Computational-Plant-Science',
-            'github_username': 'Computational-Plant-Science'
-        }, {
-            'username': 'van-der-knaap-lab',
-            'github_username': 'van-der-knaap-lab'
-        }] + [{
             'username': user.username,
-            'github_username': user.profile.github_username
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'github_username': user.profile.github_username,
+            'github_profile': requests.get(f"https://api.github.com/users/{user.profile.github_username}",
+                                       headers={'Authorization':
+                                                    f"Bearer {request.user.profile.github_token}"}).json()
         } for user in list(self.queryset)]
         return JsonResponse({
             'users': users

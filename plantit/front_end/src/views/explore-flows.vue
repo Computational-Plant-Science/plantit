@@ -1,5 +1,5 @@
 <template>
-    <div class="w-100 p-5">
+    <div class="w-100 p-4">
         <br />
         <b-card
             header-bg-variant="white"
@@ -7,16 +7,7 @@
             header-border-variant="white"
             text-variant="dark"
         >
-            <b-row align-v="center">
-                <b-col style="color: white">
-                    <p class="text-dark">
-                        Explore curated flows here. To explore user-developed
-                        flows,
-                        <a class="hvr" @click="users()">see the users page</a>
-                        .
-                    </p>
-                </b-col>
-                <!--<b-col md="auto" class="b-form-col">
+            <!--<b-col md="auto" class="b-form-col">
                         <b-input-group>
                             <b-form-input
                                 v-model="communityWorkflowsFilter"
@@ -33,7 +24,6 @@
                             </b-input-group-append>
                         </b-input-group>
                     </b-col>-->
-            </b-row>
             <b-row v-if="currentUserGitHubProfile === null" align-v="center">
                 <b-col md="auto" class="mr-2 pr-0">
                     <b-button
@@ -49,12 +39,31 @@
                     <b class="ml-0 pl-0">to load flows.</b>
                 </b-col>
             </b-row>
-            <b-row v-else align-v="left" align-h="left">
+            <b-row v-else align-v="center" align-h="center">
                 <b-col>
                     <b-tabs>
                         <b-tab title="Computational Plant Science Lab" active>
-                            <br />
-                            <b-card-text>
+                            <p class="text-dark mt-3">
+                                Select a flow, go to the
+                                <a
+                                    class="hvr"
+                                    href="https://computational-plant-science.org"
+                                    ><i
+                                        class="fas fa-vial fa-fw"
+                                        style="z-index: 1000"
+                                    ></i>
+                                    Computational Plant Science Lab's website</a
+                                >
+                                or check out the code on
+                                <a
+                                    class="hvr"
+                                    href="https://github.com/Computational-Plant-Science/"
+                                    ><i class="fab fa-github fa-fw"></i
+                                    >GitHub</a
+                                >
+                                .
+                            </p>
+                            <b-card-text class="m-3">
                                 <flows
                                     github-user="computational-plant-science"
                                     :github-token="
@@ -66,10 +75,74 @@
                             </b-card-text>
                         </b-tab>
                         <b-tab title="van der Knaap Lab">
-                            <br />
-                            <b-card-text>
+                            <p class="text-dark mt-3">
+                                Select a flow, go to the
+                                <a
+                                    class="hvr"
+                                    href="http://vanderknaaplab.uga.edu/index.html"
+                                    ><i
+                                        class="fas fa-vial fa-fw"
+                                        style="z-index: 1000"
+                                    ></i>
+                                    van der Knaap Lab's website</a
+                                >
+                                or check out the code on
+                                <a
+                                    class="hvr"
+                                    href="https://github.com/van-der-knaap-lab/"
+                                    ><i class="fab fa-github fa-fw"></i
+                                    >GitHub</a
+                                >
+                                .
+                            </p>
+                            <b-card-text class="m-3">
                                 <flows
                                     github-user="van-der-knaap-lab"
+                                    :github-token="
+                                        currentUserDjangoProfile.profile
+                                            .github_token
+                                    "
+                                >
+                                </flows>
+                            </b-card-text>
+                        </b-tab>
+                        <b-tab title="Burke Lab">
+                            <p class="text-dark mt-3">
+                                Select a flow, go to the
+                                <a
+                                    class="hvr"
+                                    href="http://www.theburkelab.org/"
+                                    ><i
+                                        class="fas fa-vial fa-fw"
+                                        style="z-index: 1000"
+                                    ></i>
+                                    Burke Lab's website</a
+                                >
+                                or check out the code on
+                                <a
+                                    class="hvr"
+                                    href="https://github.com/burkelab/"
+                                    ><i class="fab fa-github fa-fw"></i
+                                    >GitHub</a
+                                >
+                                .
+                            </p>
+                            <b-card-text class="m-">
+                                <flows
+                                    github-user="burke-lab"
+                                    :github-token="
+                                        currentUserDjangoProfile.profile
+                                            .github_token
+                                    "
+                                >
+                                </flows>
+                            </b-card-text>
+                        </b-tab>
+                        <b-tab title="Community">
+                            <br />
+                            <b-card-text class="m-3">
+                                <flows
+                                    github-user=""
                                     :github-token="
                                         currentUserDjangoProfile.profile
                                             .github_token
@@ -143,4 +216,3 @@ export default {
   background-color: $color-box-background
   padding: 10px
 </style>
-

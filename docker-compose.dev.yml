@@ -88,3 +88,5 @@ services:
     privileged: true
     volumes:
       - .:/code
+  slackin:
+    image: node

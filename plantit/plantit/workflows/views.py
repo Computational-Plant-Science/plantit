@@ -2,14 +2,28 @@ import requests
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
+from rest_framework.decorators import api_view
 
 from plantit.util import get_config
 
 
 @login_required
-def list(request):
+def list_all(request):
     response = requests.get(
-        f"https://api.github.com/search/code?q=filename:plantit.yaml+org:computational-plant-science+user:@me",
+        f"https://api.github.com/search/code?q=filename:plantit.yaml-user:Computational-Plant-Science-user:van-der-knaap-lab-user:burke-lab",
+        headers={"Authorization": f"token {request.user.profile.github_token}"})
+    pipelines = [{
+        'repo': item['repository'],
+        'config': get_config(item['repository'], request.user.profile.github_token)
+    } for item in response.json()['items']]
+
+    return JsonResponse({'pipelines': [pipeline for pipeline in pipelines if pipeline['config']['public']]})
+
+
+@login_required
+def list(request, username):
+    response = requests.get(
+        f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
         headers={"Authorization": f"token {request.user.profile.github_token}"})
     pipelines = [{
         'repo': item['repository'],

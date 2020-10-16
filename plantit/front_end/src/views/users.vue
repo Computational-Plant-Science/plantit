@@ -1,5 +1,5 @@
 <template>
-    <div class="w-100 p-5 m-0">
+    <div class="w-100 p-4">
         <br />
         <b-card
             header-bg-variant="white"
@@ -7,15 +7,6 @@
             header-border-variant="white"
             text-variant="dark"
         >
-            <b-row align-v="center">
-                <b-col style="color: white">
-                    <p class="text-dark">
-                        Explore users here. To explore curated flows,
-                        <a class="hvr" @click="flows()">see the flows page</a>
-                        .
-                    </p>
-                </b-col>
-            </b-row>
             <b-row v-if="currentUserGitHubProfile === null" align-v="center">
                 <b-col md="auto" class="mr-2 pr-0">
                     <b-button
@@ -40,18 +31,49 @@
                             bg-variant="white"
                             border-variant="default"
                             header-bg-variant="white"
-                            style="margin: 0 auto; min-width: 25rem"
+                            style="min-width: 25rem"
+                            class="overflow-hidden"
                         >
                             <b-row align-v="center">
                                 <b-col
                                     style="color: white; cursor: pointer"
                                     @click="userSelected(user)"
                                 >
-                                    <h5>{{ user.username }}</h5>
+                                    <h5>
+                                        {{ user.first_name }}
+                                        {{ user.last_name }}
+                                    </h5>
                                 </b-col>
                             </b-row>
                             <b-row align-v="center">
+                                <b-col class="mr=3">
+                                    {{
+                                        user.github_profile
+                                            ? user.github_profile.bio
+                                            : ''
+                                    }}
+                                </b-col>
+                            </b-row>
+                            <br />
+                            <b-row align-v="center">
                                 <b-col>
+                                    <b-link disabled>
+                                        <b-img
+                                            :src="
+                                                require('../assets/sponsors/cyversebw-notext.png')
+                                            "
+                                            height="19px"
+                                            alt="Cyverse"
+                                            class="m-1"
+                                        ></b-img>
+                                        <small>{{
+                                            user.username
+                                        }}</small></b-link
+                                    ></b-col
+                                >
+                            </b-row>
+                            <b-row align-v="top">
+                                <b-col md="auto">
                                     <b-link
                                         :href="
                                             'https://github.com/' +
@@ -59,12 +81,25 @@
                                         "
                                     >
                                         <i
-                                            class="fab fa-github fa-fw fa-1x mr-1"
+                                            class="fab fa-github fa-fw fa-1x mr-2 ml-1"
                                         ></i>
                                         <small>{{
                                             user.github_username
                                         }}</small>
                                     </b-link>
+                                </b-col>
+                                <b-col class="ml-0 mr-0" align-self="left">
+                                    <b-img
+                                        right
+                                        rounded="circle"
+                                        class="avatar card-img-right"
+                                        style="max-height: 5rem; max-width: 5rem; opacity: 0.8; position: absolute; right: -15px; top: -30px; z-index:1"
+                                        :src="
+                                            user.github_profile
+                                                ? user.github_profile.avatar_url
+                                                : ''
+                                        "
+                                    ></b-img>
                                 </b-col>
                             </b-row>
                         </b-card>
