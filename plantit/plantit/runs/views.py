@@ -15,6 +15,26 @@ from plantit.targets.models import Target
 from plantit.runs.execute import execute
 
 
+@api_view(['GET'])
+@login_required
+def get_runs_by_user(request, username):
+    try:
+        user = User.objects.get(username=username)
+        runs = Run.objects.filter(user=user)
+        return JsonResponse([{
+            'id': run.identifier,
+            'work_dir': run.work_dir,
+            'cluster': run.cluster.name,
+            'created': run.created,
+            'state': run.status.state if run.status is not None else 'Unknown',
+            'workflow_owner': run.workflow_owner,
+            'workflow_name': run.workflow_name
+        } for run in runs], safe=False)
+    except:
+        return HttpResponseNotFound()
+
+
+
 @api_view(['GET', 'POST'])
 @login_required
 def runs(request):

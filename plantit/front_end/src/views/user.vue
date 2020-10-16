@@ -352,7 +352,11 @@ export default {
         async loadRuns() {
             this.loadingRuns = true;
             return axios
-                .get('/apis/v1/runs/')
+                .get(
+                    '/apis/v1/runs/' +
+                        this.djangoProfile.username +
+                        '/get_by_user/'
+                )
                 .then(response => {
                     this.runs = response.data;
                     this.loadingRuns = false;
