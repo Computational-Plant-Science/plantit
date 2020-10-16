@@ -1,5 +1,5 @@
 <template>
-    <div class="w-100 p-4">
+    <div class="w-100 p-3">
         <br />
         <br />
         <b-row>
@@ -8,9 +8,9 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="white"
+                    header-border-variant="default"
                     class="overflow-hidden"
                 >
                     <flowdetail
@@ -24,7 +24,6 @@
                 </b-card>
             </b-col>
         </b-row>
-        <br />
         <b-row
             v-if="
                 flow.config.params !== undefined
@@ -37,51 +36,47 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
-                    header-border-variant="default"
+                    header-border-variant="white"
                 >
-                    <template v-slot:header style="background-color: white">
-                        <b-row align-v="center">
-                            <b-col style="color: white">
-                                <h4>
-                                    Params
-                                </h4>
-                            </b-col>
-                        </b-row>
-                    </template>
-                    <b-card
-                        border-variant="white"
-                        footer-bg-variant="white"
-                        sub-title="Configure parameters."
+                    <b-row align-v="center">
+                        <b-col style="color: white">
+                            <h4>
+                                Parameters
+                            </h4>
+                        </b-col>
+                    </b-row>
+                    <hr />
+                    <b-row
+                        ><b-col>Configure this flow's parameters.</b-col></b-row
                     >
-                        <b-table
-                            :items="params"
-                            :fields="fields"
-                            responsive="sm"
-                            borderless
-                            small
-                            sticky-header="true"
-                            caption-top
-                        >
-                            <template v-slot:cell(name)="param">
-                                {{ param.item.key.toLowerCase() }}
-                            </template>
-                            <template v-slot:cell(value)="param">
-                                <b-form-input
-                                    size="sm"
-                                    v-model="param.item.value"
-                                    :placeholder="
-                                        'Enter a value for \'' +
-                                            param.item.key.toLowerCase() +
-                                            '\''
-                                    "
-                                ></b-form-input>
-                            </template>
-                        </b-table>
-                    </b-card>
+                    <br />
+                    <b-table
+                        :items="params"
+                        :fields="fields"
+                        responsive="sm"
+                        borderless
+                        small
+                        sticky-header="true"
+                        caption-top
+                    >
+                        <template v-slot:cell(name)="param">
+                            {{ param.item.key.toLowerCase() }}
+                        </template>
+                        <template v-slot:cell(value)="param">
+                            <b-form-input
+                                size="sm"
+                                v-model="param.item.value"
+                                :placeholder="
+                                    'Enter a value for \'' +
+                                        param.item.key.toLowerCase() +
+                                        '\''
+                                "
+                            ></b-form-input>
+                        </template>
+                    </b-table>
                 </b-card>
-                <br />
             </b-col>
         </b-row>
         <b-row v-if="flow && flow.config.from">
@@ -90,42 +85,40 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
                     header-border-variant="default"
                 >
-                    <template v-slot:header style="background-color: white">
-                        <b-row align-v="center">
-                            <b-col style="color: white">
-                                <h4>
-                                    Input
-                                </h4>
-                            </b-col>
-                        </b-row>
-                    </template>
+                    <b-row align-v="center">
+                        <b-col style="color: white">
+                            <h4>
+                                Input {{ flow.config.from }}
+                            </h4>
+                        </b-col>
+                    </b-row>
+                    <hr />
                     <runinput
                         :user="user"
                         :kind="flow.config.from"
                         v-on:inputSelected="inputSelected"
                     ></runinput>
-                    <b-card
-                        border-variant="white"
-                        footer-bg-variant="white"
-                        sub-title="Enter an input file pattern (optional)."
+                    <br/>
+                    <b-row
+                        ><b-col
+                            >Enter an input file pattern (optional).</b-col
+                        ></b-row
                     >
-                        <br />
-                        <b-form-group
-                            description="All files in the input directory matching this pattern will be selected."
-                        >
-                            <b-form-input
-                                size="sm"
-                                v-model="input.pattern"
-                                :placeholder="'Enter a file pattern'"
-                            ></b-form-input>
-                        </b-form-group>
-                    </b-card>
+                    <br />
+                    <b-form-group
+                        description="All files in the input directory matching this pattern will be selected."
+                    >
+                        <b-form-input
+                            size="sm"
+                            v-model="input.pattern"
+                            :placeholder="'Enter a file pattern'"
+                        ></b-form-input>
+                    </b-form-group>
                 </b-card>
-                <br />
             </b-col>
         </b-row>
         <b-row v-if="flow.config && flow.config.to">
@@ -134,51 +127,50 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
                     header-border-variant="default"
                 >
-                    <template v-slot:header style="background-color: white">
-                        <b-row align-v="center">
-                            <b-col style="color: white">
-                                <h4>
-                                    Output
-                                </h4>
-                            </b-col>
-                        </b-row>
-                    </template>
+                    <b-row align-v="center">
+                        <b-col style="color: white">
+                            <h4>
+                                Output {{ flow.config.to }}
+                            </h4>
+                        </b-col>
+                    </b-row>
+                    <hr />
                     <runoutput
                         :user="user"
                         kind="Directory"
                         v-on:outputSelected="outputSelected"
                     ></runoutput>
-                    <b-card
-                        border-variant="white"
-                        footer-bg-variant="white"
-                        sub-title="Specify an output path (required) and file pattern (optional)."
+                    <br />
+                    <b-row
+                        ><b-col
+                            >Specify an output path (required) and file pattern
+                            (optional).</b-col
+                        ></b-row
                     >
-                        <br />
-                        <b-form-group
-                            description="The directory in which the flow will deposit output files."
-                        >
-                            <b-form-input
-                                size="sm"
-                                v-model="output.from"
-                                :placeholder="'Enter a filesystem path'"
-                            ></b-form-input>
-                        </b-form-group>
-                        <b-form-group
-                            description="All files in the output directory matching this pattern will be selected."
-                        >
-                            <b-form-input
-                                size="sm"
-                                v-model="output.pattern"
-                                :placeholder="'Enter a file pattern'"
-                            ></b-form-input>
-                        </b-form-group>
-                    </b-card>
+                    <br />
+                    <b-form-group
+                        description="The directory in which the flow will deposit output files."
+                    >
+                        <b-form-input
+                            size="sm"
+                            v-model="output.from"
+                            :placeholder="'Enter a filesystem path'"
+                        ></b-form-input>
+                    </b-form-group>
+                    <b-form-group
+                        description="All files in the output directory matching this pattern will be selected."
+                    >
+                        <b-form-input
+                            size="sm"
+                            v-model="output.pattern"
+                            :placeholder="'Enter a file pattern'"
+                        ></b-form-input>
+                    </b-form-group>
                 </b-card>
-                <br />
             </b-col>
         </b-row>
         <b-row>
@@ -187,19 +179,18 @@
                     bg-variant="white"
                     header-bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="white"
                     footer-border-variant="white"
                     header-border-variant="default"
                 >
-                    <template v-slot:header style="background-color: white">
-                        <b-row align-v="center">
-                            <b-col style="color: white">
-                                <h4>
-                                    Target
-                                </h4>
-                            </b-col>
-                        </b-row>
-                    </template>
+                    <b-row align-v="center">
+                        <b-col style="color: white">
+                            <h4>
+                                Deployment Target
+                            </h4>
+                        </b-col>
+                    </b-row>
+                    <hr />
                     <runtarget
                         :selected="target"
                         v-on:targetSelected="targetSelected"
@@ -292,7 +283,7 @@ export default {
                 pattern: ''
             },
             output: {
-                from: '.',
+                from: '',
                 to: '',
                 pattern: ''
             },

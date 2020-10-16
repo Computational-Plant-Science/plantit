@@ -11,7 +11,7 @@
         <b-img
             v-else
             class="card-img-left"
-            style="max-width: 30rem"
+            style="max-width: 7rem"
             right
             :src="require('../assets/logo.png')"
         ></b-img>
@@ -47,132 +47,124 @@
                                 class="text-dark"
                                 :href="
                                     'https://github.com/' +
-                                        workflow.repository.owner.login +
+                                        workflow.repo.owner.login +
                                         '/' +
-                                        workflow.repository.name
+                                        workflow.repo.name
                                 "
                             >
-                              <i class="fab fa-github fa-fw"></i>
-                                {{ workflow.repository.owner.login }}/{{
-                                    workflow.repository.name
+                                <i class="fab fa-github fa-fw"></i>
+                                {{ workflow.repo.owner.login }}/{{
+                                    workflow.repo.name
                                 }}
                             </b-link>
                         </small>
                     </b-col>
                 </b-row>
-                <br />
-                <b-card-body>
-                    <b-row>
-                        <b-col>
-                            <b-row>
-                                <b-col>
-                                    {{ workflow.repository.description }}
-                                </b-col>
-                            </b-row>
-                            <br />
-                            <b-row>
-                                <b-col>
-                                    <b-row>
-                                        <b-col>
-                                            Author:
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b>{{ workflow.config.author }}</b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            Clone:
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b>{{
-                                                workflow.config.clone
-                                                    ? 'Yes'
-                                                    : 'No'
-                                            }}</b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            Image:
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b>{{ workflow.config.image }}</b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            From:
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b>{{
-                                                workflow.config.from
-                                                    ? workflow.config.from.capitalize()
-                                                    : 'None'
-                                            }}</b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            To:
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b>{{
-                                                workflow.config.to
-                                                    ? workflow.config.to.capitalize()
-                                                    : 'None'
-                                            }}</b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            Parameters:
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b>{{
-                                                workflow.config.params
-                                                    ? workflow.config.params
-                                                          .length
-                                                    : 'None'
-                                            }}</b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            Command:
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b
-                                                ><code>{{
-                                                    ' ' +
-                                                        workflow.config.commands
-                                                }}</code></b
-                                            >
-                                        </b-col>
-                                    </b-row>
-                                    <b-row v-if="selectable">
-                                        <b-col>
-                                            <br />
-                                            <br />
-                                            <b-button
-                                                block
-                                                class="text-left"
-                                                variant="success"
-                                                v-b-tooltip.hover
-                                                @click="
-                                                    workflowSelected(workflow)
-                                                "
-                                            >
-                                                <i class="fas fa-terminal"></i>
-                                                Run
-                                            </b-button>
-                                        </b-col>
-                                    </b-row>
-                                </b-col>
-                            </b-row>
-                        </b-col>
-                    </b-row>
-                </b-card-body>
+                <hr />
+                <b-row>
+                    <b-col>
+                        <b-row>
+                            <b-col>
+                                {{ workflow.repo.description }}
+                            </b-col>
+                        </b-row>
+                        <br />
+                        <b-row>
+                            <b-col>
+                                <b-row>
+                                    <b-col>
+                                        <small>Author</small>
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{ workflow.config.author }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                      <small>Clone</small>
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{
+                                            workflow.config.clone ? 'Yes' : 'No'
+                                        }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        <small>Image</small>
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{ workflow.config.image }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        <small>From</small>
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{
+                                            workflow.config.from
+                                                ? workflow.config.from.capitalize()
+                                                : 'None'
+                                        }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        <small>To</small>
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{
+                                            workflow.config.to
+                                                ? workflow.config.to.capitalize()
+                                                : 'None'
+                                        }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        <small>Parameters</small>
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b>{{
+                                            workflow.config.params
+                                                ? workflow.config.params.length
+                                                : 'None'
+                                        }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        <small>Command</small>
+                                    </b-col>
+                                    <b-col cols="11">
+                                        <b
+                                            ><code>{{
+                                                ' ' + workflow.config.commands
+                                            }}</code></b
+                                        >
+                                    </b-col>
+                                </b-row>
+                                <b-row v-if="selectable">
+                                    <b-col>
+                                        <br />
+                                        <br />
+                                        <b-button
+                                            block
+                                            class="text-left"
+                                            variant="success"
+                                            v-b-tooltip.hover
+                                            @click="workflowSelected(workflow)"
+                                        >
+                                            <i class="fas fa-terminal"></i>
+                                            Run
+                                        </b-button>
+                                    </b-col>
+                                </b-row>
+                            </b-col>
+                        </b-row>
+                    </b-col>
+                </b-row>
             </b-col>
         </b-row>
     </div>

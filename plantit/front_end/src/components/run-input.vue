@@ -1,29 +1,29 @@
 <template>
     <div>
-        <b-card
-            border-variant="white"
-            footer-bg-variant="white"
-            footer-border-variant="white"
-            :sub-title="
+        <b-row
+            ><b-col>{{
                 `Select a ${
                     kind.toLowerCase() === 'file' ? 'file' : 'directory'
-                } in the CyVerse Data Store${kind.toLowerCase() === 'file' ? ' to use as input' : ' to pull input files from'}.`
-            "
+                } in the CyVerse Data Store${
+                    kind.toLowerCase() === 'file'
+                        ? ' to use as input'
+                        : ' to pull input files from'
+                }.`
+            }}</b-col></b-row
         >
-          <br/>
-            <datatree
-                :select="kind"
-                @selectPath="selectPath"
-                :node="data"
-            ></datatree>
-            <template v-slot:footer
-                >Selected:
-                <b
-                    >{{ path ? path : 'None' }}
-                    <i v-if="path" class="fas fa-check text-success"></i>
-                    <i v-else class="fas fa-exclamation text-warning"></i> </b
-            ></template>
-        </b-card>
+        <br />
+        <datatree
+            :select="kind"
+            @selectPath="selectPath"
+            :node="data"
+        ></datatree>
+        <br/>
+        Selected:
+        <b
+            >{{ path ? path : 'None' }}
+            <i v-if="path" class="fas fa-check text-success"></i>
+            <i v-else class="fas fa-exclamation text-danger"></i>
+        </b>
     </div>
 </template>
 
@@ -42,7 +42,7 @@ export default {
         kind: {
             required: true,
             type: String
-        },
+        }
     },
     data() {
         return {
@@ -56,7 +56,7 @@ export default {
             'currentUserGitHubProfile',
             'currentUserCyVerseProfile',
             'loggedIn'
-        ]),
+        ])
     },
     async mounted() {
         await this.loadDirectory(

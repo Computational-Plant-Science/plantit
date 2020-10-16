@@ -26,7 +26,6 @@
                 <blurb
                     :showPublic="false"
                     :flow="flow"
-                    selectable="Start"
                     v-on:flowSelected="flowSelected"
                 ></blurb>
             </b-card>
@@ -70,12 +69,6 @@ export default {
                 .get(
                     '/apis/v1/flows/' +
                         (this.githubUser !== '' ? `${this.githubUser}/` : '')
-                    // `https://api.github.com/search/code?q=filename:plantit.yaml+user:${this.githubUser}`,
-                    // {
-                    //     headers: {
-                    //         Authorization: 'Bearer ' + this.githubToken
-                    //     }
-                    // }
                 )
                 .then(response => {
                     this.flows = response.data.pipelines;

@@ -1,5 +1,6 @@
 <template>
-    <div class="w-100 p-4">
+    <div class="w-100 p-3">
+        <br />
         <br />
         <b-card
             header-bg-variant="white"

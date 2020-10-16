@@ -1,25 +1,24 @@
 <template>
     <div>
-        <b-card
-            border-variant="white"
-            footer-bg-variant="white"
-            footer-border-variant="white"
-            sub-title="Select a directory in the CyVerse Data Store to push output files to."
+        <b-row
+            ><b-col
+                >Select a directory in the CyVerse Data Store to push output
+                files to.</b-col
+            ></b-row
         >
-            <br />
-            <datatree
-                select="Directory"
-                @selectPath="selectPath"
-                :node="data"
-            ></datatree>
-            <template v-slot:footer
-                >Selected:
-                <b
-                    >{{ path ? path : 'None' }}
-                  <i v-if="path" class="fas fa-check text-success"></i>
-                    <i v-else class="fas fa-exclamation text-warning"></i> </b
-            ></template>
-        </b-card>
+        <br />
+        <datatree
+            select="Directory"
+            @selectPath="selectPath"
+            :node="data"
+        ></datatree>
+        <br />
+        Selected:
+        <b
+            >{{ path ? path : 'None' }}
+            <i v-if="path" class="fas fa-check text-success"></i>
+            <i v-else class="fas fa-exclamation text-danger"></i>
+        </b>
     </div>
 </template>
 
@@ -43,7 +42,7 @@ export default {
     data() {
         return {
             data: null,
-            path: null,
+            path: null
         };
     },
     computed: mapGetters([
@@ -76,7 +75,7 @@ export default {
         selectPath(path) {
             this.path = path;
             this.$emit('outputSelected', path);
-        },
+        }
     }
 };
 </script>

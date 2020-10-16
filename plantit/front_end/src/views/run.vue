@@ -24,14 +24,13 @@
                     <RunBlurb v-else :flow="flow" :run="run"></RunBlurb>
                 </b-col>
             </b-row>
-            <br />
             <b-row>
                 <b-col>
                     <b-card
                         bg-variant="white"
                         header-bg-variant="white"
                         footer-bg-variant="white"
-                        border-variant="dark"
+                        border-variant="white"
                         footer-border-variant="white"
                         header-border-variant="default"
                     >
@@ -42,13 +41,13 @@
                                     align-self="center"
                                     class="mr-0"
                                 >
-                                    <h4>Logs</h4>
+                                    <h5>Logs</h5>
                                 </b-col>
                                 <b-col md="auto" class="m-0">
                                     <b-button
                                         variant="outline-dark"
                                         v-b-tooltip.hover
-                                        title="Refresh"
+                                        title="Refresh Logs"
                                         @click="reloadRun(true)"
                                     >
                                         <i class="fas fa-redo"></i>
@@ -72,6 +71,7 @@
                             <b-col>
                                 <b-table
                                     borderless
+                                    small
                                     responsive="sm"
                                     :items="logs ? logs : []"
                                     :fields="status_table.fields"
@@ -136,7 +136,7 @@
 </template>
 
 <script>
-import RunBlurb from '../components/RunBlurb';
+import RunBlurb from '../components/run-blurb';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import axios from 'axios';

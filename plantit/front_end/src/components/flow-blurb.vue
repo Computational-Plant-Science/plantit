@@ -4,7 +4,7 @@
             <b-col>
                 <h4>
                     <b-link
-                        v-if="selectable"
+                        :disabled="selectable"
                         class="text-left"
                         variant="outline-dark"
                         v-b-tooltip.hover
@@ -13,16 +13,6 @@
                         {{ flow.config.name }}
                     </b-link>
                 </h4>
-                <!--<b-button
-                    size="lg"
-                    v-if="selectable"
-                    class="text-left"
-                    variant="outline-dark"
-                    v-b-tooltip.hover
-                    @click="flowSelected"
-                >
-                    {{ flow.config.name }}
-                </b-button>-->
                 <small>
                     <b-link
                         variant="outline-dark"
@@ -40,6 +30,11 @@
                 <br />
                 <br />
                 {{ flow.repo.description }}
+                <br />
+                <br />
+                <b-button v-if="selectable" @click="flowSelected" variant="warning">
+                    {{ selectable }}
+                </b-button>
             </b-col>
         </b-row>
         <b-img

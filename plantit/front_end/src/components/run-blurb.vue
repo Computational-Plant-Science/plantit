@@ -1,9 +1,9 @@
 <template>
     <div v-if="flow.config">
         <b-row>
-            <b-col>
+          <b-col>
                 <h3>
-                    Run <b>{{ run.id }}</b>
+                    <small>Run </small> <i>{{ run.id }}</i>
                 </h3>
             </b-col>
             <b-col md="auto">
@@ -30,7 +30,7 @@
                 <b-card
                     bg-variant="white"
                     footer-bg-variant="white"
-                    border-variant="dark"
+                    border-variant="default"
                     footer-border-variant="white"
                     style="min-height: 5rem;"
                     class="overflow-hidden"

@@ -316,10 +316,11 @@
                         style="font-size: 12pt"
                         :href="'/' + currentUserDjangoProfile.username + '/'"
                     >
-                        <b-button variant="white" class="m-0">
+                        <b-button variant="white" class="m-0 ml-3 mr-2">
                             <b-img
                                 v-if="currentUserGitHubProfile"
                                 class="avatar m-0 mb-1 p-0"
+                                style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 2px;"
                                 rounded="circle"
                                 :src="
                                     currentUserGitHubProfile

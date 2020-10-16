@@ -36,11 +36,11 @@ def runs(request):
         now = timezone.now()
         now_str = now.strftime('%s')
         target = Target.objects.get(name=workflow['config']['target']['name'])
-        workflow_path = f"{workflow['repository']['owner']['login']}/{workflow['repository']['name']}"
+        workflow_path = f"{workflow['repo']['owner']['login']}/{workflow['repo']['name']}"
         run = Run.objects.create(
             user=User.objects.get(username=user.username),
-            workflow_owner=workflow['repository']['owner']['login'],
-            workflow_name=workflow['repository']['name'],
+            workflow_owner=workflow['repo']['owner']['login'],
+            workflow_name=workflow['repo']['name'],
             cluster=target,
             created=now,
             work_dir=now_str + "/",
@@ -71,7 +71,7 @@ def runs(request):
             config['output'] = workflow['config']['output']
 
         execute.delay({
-            'repository': workflow['repository'],
+            'repo': workflow['repo'],
             'config': config
         }, run.identifier, run.token, request.user.profile.cyverse_token) # request.session._session['csrfToken']
 

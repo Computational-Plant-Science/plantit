@@ -1,46 +1,42 @@
 <template>
     <div>
-        <b-card
-            border-variant="white"
-            footer-bg-variant="white"
-            sub-title="Select deployment target."
+      <b-row><b-col>Select a deployment target for this flow.</b-col></b-row>
+        <br />
+        <b-table
+            :items="targets"
+            :fields="fields"
+            responsive="sm"
+            borderless
+            small
+            selectable
+            select-mode="single"
+            @row-selected="rowSelected"
+            sticky-header="true"
+            caption-top
         >
-            <b-table
-                :items="targets"
-                :fields="fields"
-                responsive="sm"
-                borderless
-                small
-                selectable
-                select-mode="single"
-                @row-selected="rowSelected"
-                sticky-header="true"
-                caption-top
-            >
-                <template v-slot:cell(name)="target">
-                    {{ target.item.name }}
-                </template>
-                <template v-slot:cell(host)="target">
-                    {{ target.item.host }}
-                </template>
-            </b-table>
-            <b-row align-h="center" v-if="targetsLoading">
-                <b-spinner
-                    type="grow"
-                    label="Loading..."
-                    variant="dark"
-                ></b-spinner>
-            </b-row>
-            <b-row
-                align-h="center"
-                class="text-center"
-                v-if="!targetsLoading && targets.length === 0"
-            >
-                <b-col>
-                    None to show.
-                </b-col>
-            </b-row>
-        </b-card>
+            <template v-slot:cell(name)="target">
+                {{ target.item.name }}
+            </template>
+            <template v-slot:cell(host)="target">
+                {{ target.item.host }}
+            </template>
+        </b-table>
+        <b-row align-h="center" v-if="targetsLoading">
+            <b-spinner
+                type="grow"
+                label="Loading..."
+                variant="dark"
+            ></b-spinner>
+        </b-row>
+        <b-row
+            align-h="center"
+            class="text-center"
+            v-if="!targetsLoading && targets.length === 0"
+        >
+            <b-col>
+                None to show.
+            </b-col>
+        </b-row>
     </div>
 </template>
 
