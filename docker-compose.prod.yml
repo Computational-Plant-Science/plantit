@@ -99,7 +99,8 @@ services:
     volumes:
       - ./config/ssl/:/opt/plantit/config/ssl/
       - ./config/nginx/conf.d:/etc/nginx/conf.d
-      - /etc/letsencrypt/:/etc/letsencrypt/
+      - ./config/certbot/conf:/etc/letsencrypt/
+      - ./config/certbot/www:/var/www/certbot
       - ./plantit/static/:/opt/plantit/static/:ro
       - ./plantit/files/public/:/opt/plantit/public/:ro
     depends_on:
@@ -108,7 +109,10 @@ services:
       - ngnix_network
     restart: always
   certbot:
-    image: certbot
+    image: certbot/certbot
+  volumes:
+    - ./config/certbot/conf:/etc/letsencrypt/
+    - ./config/certbot/www:/var/www/certbot
 networks:
   ngnix_network:
     driver: bridge

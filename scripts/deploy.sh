@@ -2,6 +2,7 @@
 
 echo "Deploying ${PWD##*/}..."
 host="$1"
+email="$2"
 compose="docker-compose -f docker-compose.prod.yml"
 
 echo "Bringing containers down..."
@@ -33,6 +34,9 @@ find .env -type f -exec sed -i "s/DJANGO_SECURE_SSL_REDIRECT=False/DJANGO_SECURE
 find .env -type f -exec sed -i "s/DJANGO_SESSION_COOKIE_SECURE=False/DJANGO_SESSION_COOKIE_SECURE=True/g" {} \;
 find .env -type f -exec sed -i "s/DJANGO_CSRF_COOKIE_SECURE=False/DJANGO_CSRF_COOKIE_SECURE=True/g" {} \;
 find .env -type f -exec sed -i "s/NODE_ENV=development/NODE_ENV=production/g" {} \;
+
+echo "Configuring SSL certificate..."
+./scripts/init-letsencrypt.sh $host $email
 
 echo "Bringing containers up..."
 $compose up -d --quiet-pull
