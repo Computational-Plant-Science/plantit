@@ -15,7 +15,7 @@
                 >
                     <flowdetail
                         :show-public="
-                            flow.repository.owner.login ===
+                            flow.repo.owner.login ===
                                 currentUserDjangoProfile.profile.github_username
                         "
                         :workflow="flow"
@@ -374,7 +374,7 @@ export default {
                 method: 'post',
                 url: `/apis/v1/runs/`,
                 data: {
-                    repository: this.flow.repository,
+                    repo: this.flow.repo,
                     config: config
                 },
                 headers: { 'Content-Type': 'application/json' }
