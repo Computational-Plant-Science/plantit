@@ -100,7 +100,6 @@ services:
       - ./config/ssl/:/opt/plantit/config/ssl/
       - ./config/nginx/conf.d:/etc/nginx/conf.d
       - /etc/letsencrypt/:/etc/letsencrypt/
-      -
       - ./plantit/static/:/opt/plantit/static/:ro
       - ./plantit/files/public/:/opt/plantit/public/:ro
     depends_on:
