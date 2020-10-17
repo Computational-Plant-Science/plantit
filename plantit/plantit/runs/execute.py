@@ -16,7 +16,7 @@ def clean_html(raw_html):
 
 
 def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, directory: str):
-    cmd = f"cd {directory}; {pre_command}; {command}" if directory else command
+    cmd = f"{pre_command} && cd {directory} && {command}" if directory else command
     print(f"Executing remote command: '{cmd}'")
     stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
     stdin.close()
@@ -66,10 +66,17 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
                 location='plantit')
             run.save()
 
-            execute_command(run=run, ssh_client=ssh_client, pre_command='; '.join(
-                str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
+            pre_commands = '; '.join(
+                str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':'
+
+            print(f"Pre-commands: {pre_commands}")
+
+            execute_command(run=run,
+                            ssh_client=ssh_client,
+                            pre_command=pre_commands,
                             command=f"plantit workflow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'",
                             directory=work_dir)
+
             print(f"Run completed.")
             if run.status.state != 2:
                 run.status_set.create(

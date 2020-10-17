@@ -35,6 +35,28 @@ def get_runs_by_user(request, username):
 
 
 
+def get_executor(config, executor):
+    if executor == 'lo':
+        return 'local'
+    elif executor == 'pb':
+        return {
+            'pbs': {
+                'mem': config['mem'],
+                'walltime': config['walltime'],
+            }
+        }
+    elif executor == 'sl':
+        return {
+            'slrum': {
+                'mem': config['mem'],
+                'walltime': config['walltime'],
+            }
+        }
+    else:
+        raise ValueError(f'Unrecognized executor: {executor}')
+
+
+
 @api_view(['GET', 'POST'])
 @login_required
 def runs(request):
@@ -81,7 +103,7 @@ def runs(request):
             'image': workflow['config']['image'],
             'command': workflow['config']['commands'],
             'params': workflow['config']['params'],
-            'executor': 'local' if target.executor.lower() == 'lo' else 'local' # TODO impl pbs/slurm
+            'executor': get_executor(workflow['config']['target'], target.executor.lower())
         }
         if 'input' in workflow['config']:
             config['input'] = workflow['config']['input']

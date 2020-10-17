@@ -10,7 +10,7 @@ $compose down --remove-orphans
 
 echo "Fetching latest source from git..."
 git fetch origin master
-git reset --hard origin/master
+# git reset --hard origin/master
 
 echo "Pulling new image definitions..."
 $compose pull
@@ -35,7 +35,7 @@ find .env -type f -exec sed -i "s/DJANGO_SESSION_COOKIE_SECURE=False/DJANGO_SESS
 find .env -type f -exec sed -i "s/DJANGO_CSRF_COOKIE_SECURE=False/DJANGO_CSRF_COOKIE_SECURE=True/g" {} \;
 find .env -type f -exec sed -i "s/NODE_ENV=development/NODE_ENV=production/g" {} \;
 
-echo "Configuring LetsEncrypt SSL certs..."
+echo "Configuring Let's Encrypt SSL certs..."
 chmod +x scripts/configure-letsencrypt.sh
 ./scripts/configure-letsencrypt.sh $host $email
 
@@ -63,23 +63,7 @@ if [ -f config/ssh/known_hosts ]; then
   touch config/ssh/known_hosts
 fi
 $compose exec plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
-fi
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
 fi
 $compose exec plantit bash -c "/code/scripts/ssh-copy-id.expect"
-
-echo "Configuring sandbox deployment target container (if not already configured)..."
-$compose up -d sandbox
-if [ ! -d config/ssh ]; then
-  mkdir config/ssh
-fi
-$compose exec plantit /bin/bash /code/scripts/configure-sandbox.sh
-if [ ! -f config/ssh/known_hosts ]; then
-  touch config/ssh/known_hosts
-  $compose exec plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
-fi
-if [ ! -f config/ssh/id_rsa.pub ]; then
-  ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
-  $compose exec plantit bash -c "/code/scripts/ssh-copy-id.expect"
-fi
