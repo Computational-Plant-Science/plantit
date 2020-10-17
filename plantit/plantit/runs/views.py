@@ -41,14 +41,16 @@ def get_executor(config, executor):
     elif executor == 'pb':
         return {
             'pbs': {
-                'mem': config['mem'],
+                'cores': 1,
+                'memory': config['memory'],
                 'walltime': config['walltime'],
             }
         }
     elif executor == 'sl':
         return {
             'slrum': {
-                'mem': config['mem'],
+                'cores': 1,
+                'memory': config['memory'],
                 'walltime': config['walltime'],
             }
         }

@@ -14,14 +14,18 @@
             caption-top
         >
             <template v-slot:cell(name)="param">
-                {{ param.item.toLowerCase() }}
+                {{ param.item.split('=')[0].toLowerCase() }}
             </template>
             <template v-slot:cell(value)="param">
                 <b-form-input
                     size="sm"
                     v-model="param.item.value"
                     :placeholder="
-                        'Enter a value for \'' + param.item.toLowerCase() + '\''
+                        param.item.split('=').length() === 1
+                            ? 'Enter a value for \'' +
+                              param.item.split('=')[0].toLowerCase() +
+                              '\''
+                            : param.item.split('=')[1].toLowerCase()
                     "
                 ></b-form-input>
             </template>

@@ -62,16 +62,20 @@
                         caption-top
                     >
                         <template v-slot:cell(name)="param">
-                            {{ param.item.key.toLowerCase() }}
+                            {{ param.item.key.split('=')[0].toLowerCase() }}
                         </template>
                         <template v-slot:cell(value)="param">
                             <b-form-input
                                 size="sm"
                                 v-model="param.item.value"
                                 :placeholder="
-                                    'Enter a value for \'' +
-                                        param.item.key.toLowerCase() +
-                                        '\''
+                                    param.item.key.split('=').length === 1
+                                        ? 'Enter a value for \'' +
+                                          param.item.key
+                                              .split('=')[0]
+                                              .toLowerCase() +
+                                          '\''
+                                        : param.item.key.split('=')[1].toLowerCase()
                                 "
                             ></b-form-input>
                         </template>
@@ -91,9 +95,7 @@
                 >
                     <b-row align-v="center">
                         <b-col style="color: white">
-                            <h4>
-                                Input {{ flow.config.from }}
-                            </h4>
+                            <h4>Input {{ flow.config.from }}</h4>
                         </b-col>
                     </b-row>
                     <hr />
@@ -102,7 +104,7 @@
                         :kind="flow.config.from"
                         v-on:inputSelected="inputSelected"
                     ></runinput>
-                    <br/>
+                    <br />
                     <b-row
                         ><b-col
                             >Enter an input file pattern (optional).</b-col
@@ -133,9 +135,7 @@
                 >
                     <b-row align-v="center">
                         <b-col style="color: white">
-                            <h4>
-                                Output {{ flow.config.to }}
-                            </h4>
+                            <h4>Output {{ flow.config.to }}</h4>
                         </b-col>
                     </b-row>
                     <hr />
@@ -205,26 +205,24 @@
                         <b-form-group
                             :state="target.walltime <= target.max_walltime"
                             description="Walltime to be requested from the cluster resource scheduler."
-                            label="Walltime (minutes)"
+                            label="Walltime"
                         >
                             <b-form-input
                                 size="sm"
                                 v-model="target.walltime"
-                                :placeholder="
-                                    'Max: ' + target.max_walltime + ' minutes'
-                                "
+                                :placeholder="'Max: 01:00:00'"
                             ></b-form-input>
                         </b-form-group>
                         <b-form-group
-                            :state="target.mem <= target.max_mem"
+                            :state="target.memory <= target.max_mem"
                             description="Memory to be requested from the cluster resource scheduler."
-                            label="Memory (GB)"
+                            label="Memory"
                         >
                             <b-form-input
                                 size="sm"
-                                v-model="target.mem"
+                                v-model="target.memory"
                                 :placeholder="
-                                    'Max: ' + target.max_mem + ' gigabytes'
+                                    'Max: ' + target.max_mem + 'GB'
                                 "
                             ></b-form-input>
                         </b-form-group>
@@ -318,9 +316,10 @@ export default {
                     if ('params' in response.data['config'])
                         this.params = response.data['config']['params'].map(
                             param => {
+                                let split = param.split('=');
                                 return {
-                                    key: param,
-                                    value: ''
+                                    key: split[0],
+                                    value: split.length === 2 ? split[1] : ''
                                 };
                             }
                         );
