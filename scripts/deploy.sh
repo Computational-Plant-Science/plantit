@@ -35,8 +35,9 @@ find .env -type f -exec sed -i "s/DJANGO_SESSION_COOKIE_SECURE=False/DJANGO_SESS
 find .env -type f -exec sed -i "s/DJANGO_CSRF_COOKIE_SECURE=False/DJANGO_CSRF_COOKIE_SECURE=True/g" {} \;
 find .env -type f -exec sed -i "s/NODE_ENV=development/NODE_ENV=production/g" {} \;
 
-# echo "Configuring SSL certificate..."
-# ./scripts/init-letsencrypt.sh $host $email
+echo "Configuring LetsEncrypt SSL certs..."
+chmod +x scripts/configure-letsencrypt.sh
+./scripts/configure-letsencrypt.sh $host $email
 
 echo "Bringing containers up..."
 $compose up -d --quiet-pull
@@ -51,6 +52,22 @@ admin_password=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_PASSWORD" "$env_file"
 admin_username=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_USERNAME" "$env_file")" )
 admin_email=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_EMAIL" "$env_file")" )
 $compose exec plantit /code/scripts/configure-superuser.sh -u "$admin_username" -p "$admin_password" -e "$admin_email"
+
+echo "Configuring sandbox container deployment target..."
+$compose exec plantit /bin/bash /code/scripts/configure-sandbox.sh
+if [ ! -d config/ssh ]; then
+  mkdir config/ssh
+fi
+if [ -f config/ssh/known_hosts ]; then
+  rm config/ssh/known_hosts
+  touch config/ssh/known_hosts
+fi
+$compose exec plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
+fi
+if [ ! -f config/ssh/id_rsa.pub ]; then
+  ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
+fi
+$compose exec plantit bash -c "/code/scripts/ssh-copy-id.expect"
 
 echo "Configuring sandbox deployment target container (if not already configured)..."
 $compose up -d sandbox

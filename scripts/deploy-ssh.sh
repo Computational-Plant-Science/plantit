@@ -8,6 +8,5 @@ echo "Running deploy script..."
 ssh -o StrictHostKeyChecking=no -p $SSH_PORT "$SSH_USER@$SSH_HOST" <<EOF
   cd $SSH_DIRECTORY
   chmod +x scripts/deploy.sh
-  chmod +x scripts/init-letsencrypt.sh
   scripts/deploy.sh $SSH_HOST $EMAIL
 EOF

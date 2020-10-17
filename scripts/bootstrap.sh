@@ -37,22 +37,22 @@ cd ../..
 if [[ "$nocache" -eq 0 ]]; then
   if [[ "$quiet" -eq 0 ]]; then
     echo "Building containers..."
-    docker build -t computationalplantscience/plantit -f scripts/dockerfiles/plantit/Dockerfile .
-    docker build -t computationalplantscience/plantit-sandbox -f scripts/dockerfiles/sandbox/Dockerfile .
+    docker build -t computationalplantscience/plantit -f dockerfiles/plantit/Dockerfile .
+    docker build -t computationalplantscience/plantit-sandbox -f dockerfiles/sandbox/Dockerfile .
   else
     echo "Building containers quietly..."
-    docker build -t computationalplantscience/plantit -q -f scripts/dockerfiles/plantit/Dockerfile .
-    docker build -t computationalplantscience/plantit-sandbox -q -f scripts/dockerfiles/sandbox/Dockerfile .
+    docker build -t computationalplantscience/plantit -q -f dockerfiles/plantit/Dockerfile .
+    docker build -t computationalplantscience/plantit-sandbox -q -f dockerfiles/sandbox/Dockerfile .
   fi
 else
   if [[ "$quiet" -eq 0 ]]; then
     echo "Building containers with cache disabled..."
-    docker build -t computationalplantscience/plantit --no-cache -f scripts/dockerfiles/plantit/Dockerfile .
-    docker build -t computationalplantscience/plantit-sandbox --no-cache -f scripts/dockerfiles/sandbox/Dockerfile .
+    docker build -t computationalplantscience/plantit --no-cache -f dockerfiles/plantit/Dockerfile .
+    docker build -t computationalplantscience/plantit-sandbox --no-cache -f dockerfiles/sandbox/Dockerfile .
   else
     echo "Building containers quietly with cache disabled..."
-    docker build -t computationalplantscience/plantit -q --no-cache -f scripts/dockerfiles/plantit/Dockerfile .
-    docker build -t computationalplantscience/plantit-sandbox -q --no-cache -f scripts/dockerfiles/sandbox/Dockerfile .
+    docker build -t computationalplantscience/plantit -q --no-cache -f dockerfiles/plantit/Dockerfile .
+    docker build -t computationalplantscience/plantit-sandbox -q --no-cache -f dockerfiles/sandbox/Dockerfile .
   fi
 fi
 echo "Pulling 3rd-party images and bringing containers up..."
@@ -68,7 +68,7 @@ admin_username=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_USERNAME" "$env_file"
 admin_email=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_EMAIL" "$env_file")" )
 $compose exec plantit /code/scripts/configure-superuser.sh -u "$admin_username" -p "$admin_password" -e "$admin_email"
 
-echo "Configuring sandbox deployment target container..."
+echo "Configuring sandbox container deployment target..."
 $compose exec plantit /bin/bash /code/scripts/configure-sandbox.sh
 if [ ! -d config/ssh ]; then
   mkdir config/ssh
