@@ -22,8 +22,8 @@ env_file=".env"
 echo "Checking for environment variable file '$env_file'..."
 if [ ! -f $env_file ]; then
   echo "Environment variable file '$env_file' does not exist. Creating it..."
-  chmod +x scripts/create-env-file.sh
-  ./scripts/create-env-file.sh
+  chmod +x scripts/configure-environment.sh
+  ./scripts/configure-environment.sh
 else
   echo "Environment variable file '$env_file' already exists. Continuing..."
 fi

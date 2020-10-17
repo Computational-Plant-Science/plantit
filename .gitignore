@@ -254,4 +254,4 @@ db/
 dagster.yaml
 
 plantit/.telemetry
-!/scripts/dockerfiles/nginx/
+!/dockerfiles/nginx/
