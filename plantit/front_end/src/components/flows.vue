@@ -9,8 +9,8 @@
         </b-col>
     </b-row>
     <b-row align-h="center" v-else>
-        <b-col class="text-center" v-if="flows.length === 0 && !loading"
-            >None to show.</b-col
+        <b-col v-if="flows.length === 0 && !loading"
+            >No flows to show!</b-col
         >
         <b-card-group columns class="justify-content-center">
             <b-card
