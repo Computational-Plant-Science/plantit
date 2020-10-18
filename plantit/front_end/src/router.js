@@ -35,7 +35,7 @@ let router = new Router({
                 title: 'Guide',
                 crumb: [
                     {
-                        text: 'PLANTIT',
+                        text: 'PlantIT',
                         href: '/'
                     },
                     {
@@ -54,7 +54,7 @@ let router = new Router({
                 title: 'Docs',
                 crumb: [
                     {
-                        text: 'PLANTIT',
+                        text: 'PlantIT',
                         href: '/'
                     },
                     {
@@ -73,7 +73,7 @@ let router = new Router({
                 title: 'Users',
                 crumb: [
                     {
-                        text: 'PLANTIT',
+                        text: 'PlantIT',
                         href: '/'
                     },
                     {
@@ -92,7 +92,7 @@ let router = new Router({
                 title: 'Flows',
                 crumb: [
                     {
-                        text: 'PLANTIT',
+                        text: 'PlantIT',
                         href: '/'
                     },
                     {
@@ -112,7 +112,7 @@ let router = new Router({
                 title: 'Flow',
                 crumb: [
                     {
-                        text: 'PLANTIT',
+                        text: 'PlantIT',
                         href: '/'
                     }
                 ],
@@ -128,7 +128,7 @@ let router = new Router({
                 title: 'Run',
                 crumb: [
                     {
-                        text: 'PLANTIT',
+                        text: 'PlantIT',
                         href: '/'
                     }
                 ],
@@ -144,7 +144,7 @@ let router = new Router({
                 title: 'User',
                 crumb: [
                     {
-                        text: 'PLANTIT',
+                        text: 'PlantIT',
                         href: '/'
                     }
                 ],
@@ -160,7 +160,7 @@ let router = new Router({
                 title: 'Not Found',
                 crumb: [
                     {
-                        text: 'PLANTIT',
+                        text: 'PlantIT',
                         href: '/'
                     },
                     {

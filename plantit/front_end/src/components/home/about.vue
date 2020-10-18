@@ -10,7 +10,6 @@
         >
             <template slot="header" style="border: none">
                 <br />
-
                 <br />
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -21,12 +20,28 @@
                             class="m-0 p-0"
                         ></b-img>
                         <h1 class="text-success">
-                            plantit
+                            PlantIT
                         </h1>
                         <h5 class="text-white mt-4">
-                            plant science workflow automation in the browser
+                            Plant science workflow automation in the browser.
                         </h5>
                     </b-col>
+                </b-row>
+                <br />
+                <br />
+                <b-row>
+                    <b-col align-self="end" class="text-right"
+                        ><h3 class="text-success">
+                            {{ users.length }}
+                        </h3></b-col
+                    >
+                    <b-col align-self="middle" class="text-left">users</b-col>
+                </b-row>
+                <b-row>
+                    <b-col align-self="end" class="text-right"
+                        ><h3 class="text-success">{{ runs }}</h3></b-col
+                    >
+                    <b-col align-self="middle" class="text-left">jobs</b-col>
                 </b-row>
             </template>
             <b-container>
@@ -50,7 +65,7 @@
                         >
                             <b-card-text class="ml-4">
                                 <h4 class="text-white">
-                                    access or upload data
+                                    Access or upload data.
                                 </h4>
                                 Upload, store, and publish datasets with
                                 <b-link
@@ -87,7 +102,7 @@
                         >
                             <b-card-text class="ml-4">
                                 <h4 class="text-white">
-                                    find or share software
+                                    Find or share software.
                                 </h4>
                                 Run code from
                                 <b-link
@@ -133,7 +148,7 @@
                         >
                             <b-card-text class="ml-4">
                                 <h4 class="text-white">
-                                    workflows on the web
+                                    Workflows on the web.
                                 </h4>
                                 Configure parameters, deploy to a cluster, and
                                 get notified when results are ready &mdash; all
@@ -167,7 +182,7 @@
             </div>
             <div class="p-1 pt-2 background-dark">
                 <h1 class="text-center text-white">
-                    <b class="text-dark">about</b>
+                    <b class="text-dark">About</b>
                 </h1>
             </div>
             <br />
@@ -192,7 +207,7 @@
                     ></b-img>
                 </div>
                 <h1 class="text-center">
-                    <b>people</b>
+                    <b>People</b>
                 </h1>
                 <br />
                 <br />
@@ -440,16 +455,48 @@
 <script>
 import VueMarkdown from 'vue-markdown';
 import about from '@/assets/markdown/about.md';
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'home-about',
     components: {
         VueMarkdown
     },
+    async mounted() {
+        this.loadAllUsers();
+        await this.loadRuns();
+    },
     data: function() {
         return {
-            source: about
+            source: about,
+            users: [],
+            runs: 0
         };
+    },
+    methods: {
+        loadAllUsers() {
+            axios
+                .get('/apis/v1/users/get_all/')
+                .then(response => {
+                    this.users = response.data.users;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
+        async loadRuns() {
+            return axios
+                .get('/apis/v1/runs/get_total_count/')
+                .then(response => {
+                    this.runs = response.data.count;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        }
     }
 };
 </script>

@@ -34,6 +34,11 @@ def get_runs_by_user(request, username):
         return HttpResponseNotFound()
 
 
+@api_view(['GET'])
+def get_total_count(request):
+    runs = Run.objects.all()
+    return JsonResponse({'count': len(runs)})
+
 
 def get_executor(config, executor):
     if executor == 'lo':

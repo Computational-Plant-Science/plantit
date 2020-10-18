@@ -13,7 +13,7 @@
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item class="m-0 p-0">
                                     <b-button
-                                        variant="outline-dark"
+                                        variant="warning"
                                         block
                                         class="text-left m-0"
                                         @click="hide"
@@ -22,6 +22,16 @@
                                             class="fas fa-arrow-left fa-1x fa-fw"
                                         ></i>
                                         Hide Sidebar
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item to="/" class="m-0 p-0">
+                                    <b-button
+                                        variant="outline-dark"
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i class="fas fa-home fa-1x fa-fw"></i>
+                                        PlantIT Home
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
@@ -58,16 +68,6 @@
                                 >
                                     <b-button disabled variant="white">
                                         <small>Learn</small>
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item to="/" class="m-0 p-0">
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i class="fas fa-home fa-1x fa-fw"></i>
-                                        About
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/guide" class="m-0 p-0">
@@ -352,7 +352,7 @@ export default {
         return {
             crumbs: [],
             notFound: false,
-            titleContent: 'breadcrumb',
+            titleContent: 'breadcrumb'
         };
     },
     computed: mapGetters([

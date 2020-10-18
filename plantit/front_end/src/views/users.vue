@@ -119,7 +119,6 @@ export default {
     name: 'Users',
     mounted() {
         this.loadAll();
-        // this.$store.dispatch('loadAllUsers');
     },
     computed: mapGetters([
         'currentUserDjangoProfile',

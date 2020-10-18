@@ -11,7 +11,6 @@
         >
             <template slot="header" style="border: none">
                 <br />
-
                 <br />
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -22,7 +21,7 @@
                             class="m-0 p-0"
                         ></b-img>
                         <h1>
-                            sponsors
+                            Sponsors
                         </h1>
                         <br />
                     </b-col>

@@ -19,10 +19,9 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h1>plantit</h1>
+                        <h1>PlantIT</h1>
                     </b-col>
                 </b-row>
-                <br />
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
@@ -61,7 +60,6 @@
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <br />
                 <b-row class="m-0 p-0" v-if="!loggedIn">
                     <b-col class="m-0 p-0">
                         <b-button
