@@ -1,13 +1,15 @@
 <template>
     <div v-if="workflow.config">
         <b-img
-            class="card-img-left"
-            v-if="workflow.icon_url"
-            style="max-width: 20rem;"
+            v-if="workflow.config.logo"
+            rounded="circle"
+            class="card-img-right"
+            style="max-width: 10rem;opacity: 0.8;position: absolute;right: 20px;top: 20px;z-index:1"
             right
-            :src="workflow.icon_url"
-        >
-        </b-img>
+            :src="
+                `https://raw.githubusercontent.com/${workflow.repo.owner.login}/${workflow.repo.name}/master/${workflow.config.logo}`
+            "
+        ></b-img>
         <b-img
             v-else
             class="card-img-left"
@@ -81,7 +83,7 @@
                                 </b-row>
                                 <b-row>
                                     <b-col>
-                                      <small>Clone</small>
+                                        <small>Clone</small>
                                     </b-col>
                                     <b-col cols="11">
                                         <b>{{

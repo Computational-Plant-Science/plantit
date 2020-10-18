@@ -79,7 +79,7 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
             execute_command(run=run,
                             ssh_client=ssh_client,
                             pre_command=pre_commands,
-                            command=f"sbatch job.sh",
+                            command=f"{'chmod +x job.sh && ./job.sh' if 'local' in workflow['config']['executor'] else 'sbatch job.sh' if 'slurm' in workflow['config']['executor'] else 'qsub job.sh' if 'pbs' in workflow['config']['executor'] else '' }",
                             directory=work_dir)
 
             print(f"Run completed.")

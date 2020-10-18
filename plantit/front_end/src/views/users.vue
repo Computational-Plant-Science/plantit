@@ -71,6 +71,7 @@
                                             user.username
                                         }}</small></b-link
                                     >
+                                    <br />
                                     <b-link
                                         :href="
                                             'https://github.com/' +
@@ -78,7 +79,7 @@
                                         "
                                     >
                                         <i
-                                            class="fab fa-github fa-fw fa-1x mr-2 ml-2"
+                                            class="fab fa-github fa-fw fa-1x mr-2 ml-1 pl-1"
                                         ></i>
                                         <small>{{
                                             user.github_username
@@ -90,7 +91,7 @@
                                         right
                                         rounded="circle"
                                         class="avatar card-img-right"
-                                        style="max-height: 5rem; max-width: 5rem; opacity: 0.8; position: absolute; right: -15px; top: -35px; z-index:1"
+                                        style="max-height: 7rem; max-width: 7rem; opacity: 0.9; position: absolute; right: -15px; top: -50px; z-index:1"
                                         :src="
                                             user.github_profile
                                                 ? user.github_profile.avatar_url
