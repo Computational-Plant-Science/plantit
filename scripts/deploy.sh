@@ -36,10 +36,6 @@ find .env -type f -exec sed -i "s/DJANGO_SESSION_COOKIE_SECURE=False/DJANGO_SESS
 find .env -type f -exec sed -i "s/DJANGO_CSRF_COOKIE_SECURE=False/DJANGO_CSRF_COOKIE_SECURE=True/g" {} \;
 find .env -type f -exec sed -i "s/NODE_ENV=development/NODE_ENV=production/g" {} \;
 
-echo "Configuring Let's Encrypt SSL certs..."
-chmod +x scripts/configure-ssl.sh
-./scripts/configure-ssl.sh $host $email
-
 echo "Bringing containers up..."
 $compose up -d --quiet-pull
 

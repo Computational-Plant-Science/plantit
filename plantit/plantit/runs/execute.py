@@ -36,7 +36,7 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
     run = Run.objects.get(identifier=run_id)
     run.status_set.create(description=f"Run started.",
                           state=Status.RUNNING,
-                          location='plantit')
+                          location='PlantIT')
     run.save()
 
     try:
@@ -52,7 +52,7 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
             run.status_set.create(
                 description=f"Created working directory '{work_dir}'. Uploading workflow definition...",
                 state=Status.RUNNING,
-                location='plantit')
+                location='PlantIT')
             run.save()
 
             with ssh_client.client.open_sftp() as sftp:
@@ -68,7 +68,7 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
             run.status_set.create(
                 description=f"Uploaded workflow definition to '{work_dir}'. Running workflow...",
                 state=Status.RUNNING,
-                location='plantit')
+                location='PlantIT')
             run.save()
 
             pre_commands = '; '.join(
@@ -87,12 +87,12 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
                 run.status_set.create(
                     description=f"Run completed.",
                     state=Status.COMPLETED,
-                    location='plantit')
+                    location='PlantIT')
             else:
                 run.status_set.create(
                     description=f"Run failed.",
                     state=Status.FAILED,
-                    location='plantit')
+                    location='PlantIT')
 
             run.save()
 

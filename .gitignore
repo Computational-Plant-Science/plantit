@@ -255,3 +255,5 @@ dagster.yaml
 
 plantit/.telemetry
 !/dockerfiles/nginx/
+
+sandbox/*

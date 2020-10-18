@@ -91,6 +91,8 @@ services:
     working_dir: /opt/plantit-cli-home
     privileged: true
     restart: always
+    volumes:
+      - ./sandbox/:/test/
   nginx:
     image: nginx
     ports:
