@@ -10,7 +10,7 @@ $compose down --remove-orphans
 
 echo "Fetching latest source from git..."
 git fetch origin master
-# git reset --hard origin/master
+git checkout origin/master
 
 echo "Pulling new image definitions..."
 $compose pull
