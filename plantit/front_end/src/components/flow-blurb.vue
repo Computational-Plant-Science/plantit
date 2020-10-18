@@ -45,7 +45,7 @@
         <b-img
             rounded="circle"
             class="card-img-right"
-            style="max-width: 7rem;opacity: 0.2;position: absolute;right: -25px;top: -15px;z-index:1"
+            style="max-width: 7rem;opacity: 0.8;position: absolute;right: -25px;top: -15px;z-index:1"
             right
             :src="
                 `https://raw.githubusercontent.com/${flow.repo.owner.login}/${flow.repo.name}/master/${flow.config.logo}`
