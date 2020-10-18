@@ -11,6 +11,7 @@ $compose down --remove-orphans
 echo "Fetching latest source from git..."
 git fetch origin master
 git checkout -- scripts/configure-ssl.sh
+git checkout -- scripts/deploy.sh
 git checkout origin/master
 
 echo "Pulling new image definitions..."

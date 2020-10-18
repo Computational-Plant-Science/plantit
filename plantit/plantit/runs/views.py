@@ -47,16 +47,16 @@ def get_executor(config, executor):
         return {
             'pbs': {
                 'cores': 1,
-                'memory': config['memory'],
-                'walltime': config['walltime'],
+                'memory': config['memory'] if 'memory' in config else '20GB',
+                'walltime': config['walltime'] if 'walltime' in config else '01:00:00',
             }
         }
     elif executor == 'sl':
         return {
             'slurm': {
                 'cores': 1,
-                'memory': config['memory'],
-                'walltime': config['walltime'],
+                'memory': config['memory'] if 'memory' in config else '20G',
+                'walltime': config['walltime'] if 'walltime' in config else '01:00:00',
             }
         }
     else:
@@ -104,7 +104,7 @@ def runs(request):
 
         config = {
             'identifier': run.identifier,
-            'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/status/",
+            # 'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/status/",
             'workdir': join(target.workdir, now_str),
             'clone': f"https://github.com/{workflow_path}" if workflow['config']['clone'] else None,
             'image': workflow['config']['image'],
