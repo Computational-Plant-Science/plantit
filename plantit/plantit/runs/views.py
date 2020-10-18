@@ -48,7 +48,7 @@ def get_executor(config, executor):
         }
     elif executor == 'sl':
         return {
-            'slrum': {
+            'slurm': {
                 'cores': 1,
                 'memory': config['memory'],
                 'walltime': config['walltime'],

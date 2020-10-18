@@ -1,10 +1,10 @@
 <template>
     <div v-if="flow.config">
         <b-row>
-          <b-col>
-                <h3>
+            <b-col>
+                <h2>
                     <small>Run </small> <i>{{ run.id }}</i>
-                </h3>
+                </h2>
             </b-col>
             <b-col md="auto">
                 <h4>

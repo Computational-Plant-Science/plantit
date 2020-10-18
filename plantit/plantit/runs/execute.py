@@ -50,18 +50,23 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
                             directory=run.cluster.workdir)
             print(f"Created working directory '{work_dir}'. Uploading workflow definition...")
             run.status_set.create(
-                description=f"Created working directory. Uploading workflow definition...",
+                description=f"Created working directory '{work_dir}'. Uploading workflow definition...",
                 state=Status.RUNNING,
                 location='plantit')
             run.save()
 
             with ssh_client.client.open_sftp() as sftp:
                 sftp.chdir(work_dir)
-                with sftp.open('workflow.yaml', 'w') as file:
-                    yaml.dump(workflow['config'], file, default_flow_style=False)
+                with sftp.open('workflow.yaml', 'w') as workflow_def:
+                    yaml.dump(workflow['config'], workflow_def, default_flow_style=False)
+                with sftp.open('../job.sh', 'r') as template_script, sftp.open('job.sh', 'w') as script:
+                    for line in template_script:
+                        script.write(line)
+                    script.write(f"plantit workflow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
+
             print(f"Uploaded workflow definition to '{work_dir}'. Running workflow...")
             run.status_set.create(
-                description=f"Uploaded workflow definition. Running workflow...",
+                description=f"Uploaded workflow definition to '{work_dir}'. Running workflow...",
                 state=Status.RUNNING,
                 location='plantit')
             run.save()
@@ -74,7 +79,7 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
             execute_command(run=run,
                             ssh_client=ssh_client,
                             pre_command=pre_commands,
-                            command=f"plantit workflow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'",
+                            command=f"sbatch job.sh",
                             directory=work_dir)
 
             print(f"Run completed.")

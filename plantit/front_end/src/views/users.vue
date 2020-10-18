@@ -58,7 +58,7 @@
                             <br />
                             <b-row align-v="center">
                                 <b-col>
-                                    <b-link disabled>
+                                    <b-link disabled class="mr-1">
                                         <b-img
                                             :src="
                                                 require('../assets/sponsors/cyversebw-notext.png')
@@ -70,11 +70,7 @@
                                         <small>{{
                                             user.username
                                         }}</small></b-link
-                                    ></b-col
-                                >
-                            </b-row>
-                            <b-row align-v="top">
-                                <b-col md="auto">
+                                    >
                                     <b-link
                                         :href="
                                             'https://github.com/' +
@@ -82,7 +78,7 @@
                                         "
                                     >
                                         <i
-                                            class="fab fa-github fa-fw fa-1x mr-2 ml-1"
+                                            class="fab fa-github fa-fw fa-1x mr-2 ml-2"
                                         ></i>
                                         <small>{{
                                             user.github_username
@@ -94,7 +90,7 @@
                                         right
                                         rounded="circle"
                                         class="avatar card-img-right"
-                                        style="max-height: 5rem; max-width: 5rem; opacity: 0.8; position: absolute; right: -15px; top: -25px; z-index:1"
+                                        style="max-height: 5rem; max-width: 5rem; opacity: 0.8; position: absolute; right: -15px; top: -35px; z-index:1"
                                         :src="
                                             user.github_profile
                                                 ? user.github_profile.avatar_url

@@ -139,7 +139,7 @@
                                 </flows>
                             </b-card-text>
                         </b-tab>
-                        <b-tab title="Community">
+                        <!--<b-tab title="Community">
                             <br />
                             <b-card-text class="m-3">
                                 <flows
@@ -151,7 +151,7 @@
                                 >
                                 </flows>
                             </b-card-text>
-                        </b-tab>
+                        </b-tab>-->
                     </b-tabs>
                 </b-col>
             </b-row>

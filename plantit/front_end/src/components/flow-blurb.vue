@@ -1,7 +1,7 @@
 <template>
     <div>
         <b-row style="z-index: 10">
-            <b-col>
+            <b-col cols="10">
                 <h4>
                     <b-link
                         :disabled="selectable"
@@ -32,16 +32,24 @@
                 {{ flow.repo.description }}
                 <br />
                 <br />
-                <b-button v-if="selectable" @click="flowSelected" variant="warning">
+                <b-button
+                    v-if="selectable"
+                    @click="flowSelected"
+                    variant="warning"
+                >
                     {{ selectable }}
                 </b-button>
             </b-col>
+            <b-col cols="1"></b-col>
         </b-row>
         <b-img
+            rounded="circle"
             class="card-img-right"
-            style="max-width: 14rem;opacity: 0.1;position: absolute;right: -25px;top: -25px;z-index:1"
+            style="max-width: 7rem;opacity: 0.2;position: absolute;right: -25px;top: -15px;z-index:1"
             right
-            :src="require('../assets/logo.png')"
+            :src="
+                `https://raw.githubusercontent.com/${flow.repo.owner.login}/${flow.repo.name}/master/${flow.config.logo}`
+            "
         ></b-img>
     </div>
 </template>
