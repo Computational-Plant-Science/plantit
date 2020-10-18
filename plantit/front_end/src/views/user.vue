@@ -118,7 +118,7 @@
                         </b-row>
                     </b-card>
                 </b-tab>
-                <b-tab v-if="djangoProfile" title="Data">
+                <b-tab v-if="this.currentUserDjangoProfile.username === this.$router.currentRoute.params.username" title="Data">
                     <b-card border-variant="white">
                         <datatree :node="data"></datatree></b-card
                 ></b-tab>
