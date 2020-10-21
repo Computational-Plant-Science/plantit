@@ -10,7 +10,6 @@ script:
 - docker-compose -f docker-compose.dev.yml exec -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 - docker push computationalplantscience/plantit
-- docker push computationalplantscience/plantit-sandbox
 deploy:
 - provider: script
   script: bash scripts/deploy-ssh.sh

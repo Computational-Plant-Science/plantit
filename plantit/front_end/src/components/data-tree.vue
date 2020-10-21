@@ -8,7 +8,10 @@
             >
                 <b-button
                     variant="white"
-                    v-if="select === 'Directory' || select === 'File'"
+                    v-if="
+                        select.toLowerCase() === 'directory' ||
+                            select.toLowerCase() === 'file'
+                    "
                     @click="
                         selectPath(
                             internalLoaded ? internalNode.path : node.path
@@ -80,7 +83,10 @@
             <b-col>
                 <b-button
                     variant="white"
-                    v-if="select === 'Directory' || select === 'File'"
+                    v-if="
+                        select.toLowerCase() === 'directory' ||
+                            select.toLowerCase() === 'file'
+                    "
                     @click="
                         selectPath(
                             internalLoaded ? internalNode.path : node.path
@@ -128,7 +134,11 @@
             v-show="isOpen"
             variant="white"
         >
-            <data-tree :select="select" :key="index" :node="child"></data-tree>
+            <data-tree
+                :select="'directory'"
+                :key="index"
+                :node="child"
+            ></data-tree>
         </b-list-group-item>
         <b-list-group-item
             v-show="isOpen"
@@ -173,7 +183,7 @@ export default {
             internalNode: null,
             internalLoading: false,
             internalLoaded: false,
-            isOpen: false,
+            isOpen: false
         };
     },
     computed: {

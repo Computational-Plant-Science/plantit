@@ -29,7 +29,7 @@
                 </b-row>
                 <br />
                 <br />
-                <b-row>
+                <!--<b-row>
                     <b-col align-self="end" class="text-right"
                         ><h3 class="text-success">
                             {{ users.length }}
@@ -42,7 +42,7 @@
                         ><h3 class="text-success">{{ runs }}</h3></b-col
                     >
                     <b-col align-self="middle" class="text-left">jobs</b-col>
-                </b-row>
+                </b-row>-->
             </template>
             <b-container>
                 <br />

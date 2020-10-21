@@ -88,11 +88,11 @@ services:
     restart: always
   sandbox:
     image: computationalplantscience/plantit-sandbox
-    working_dir: /opt/plantit-cli-home
+    working_dir: /opt/plantit-cli
     privileged: true
     restart: always
     volumes:
-      - ./sandbox/:/test/
+      - ./opt/plantit-cli/runs/:/opt/plantit-cli/runs/
   nginx:
     image: nginx
     ports:
