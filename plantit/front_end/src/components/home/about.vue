@@ -19,17 +19,17 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h1 class="text-success">
+                        <h1 class="text-white">
                             PlantIT
                         </h1>
-                        <h5 class="text-white mt-4">
-                            Plant science workflow automation in the browser.
+                        <h5 class="text-success mt-4">
+                            Plant phenomics pipelines in the browser.
                         </h5>
                     </b-col>
                 </b-row>
+                <!--
                 <br />
-                <br />
-                <!--<b-row>
+                <b-row>
                     <b-col align-self="end" class="text-right"
                         ><h3 class="text-success">
                             {{ users.length }}
@@ -65,9 +65,9 @@
                         >
                             <b-card-text class="ml-4">
                                 <h4 class="text-white">
-                                    Access or upload data.
+                                    Plug in your data.
                                 </h4>
-                                Upload, store, and publish datasets with
+                                Store, analyze, and publish datasets with
                                 <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
@@ -100,9 +100,9 @@
                             img-left
                             style="border: none;"
                         >
-                            <b-card-text class="ml-4">
+                            <b-card-text class="ml-4 text-success">
                                 <h4 class="text-white">
-                                    Find or share software.
+                                    Host your software.
                                 </h4>
                                 Run code from
                                 <b-link
@@ -123,7 +123,7 @@
                                     href="https://sylabs.io/docs/"
                                     >Singularity</b-link
                                 >, it will run on
-                                <b-link class="text-white">plantit</b-link>.
+                                <b-link class="text-white">PlantIT</b-link>.
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -180,7 +180,7 @@
                     class="m-0 p-0"
                 ></b-img>
             </div>
-            <div class="p-1 pt-2 background-dark">
+            <div class="p-1 pt-2">
                 <h1 class="text-center text-white">
                     <b class="text-dark">About</b>
                 </h1>
@@ -501,9 +501,9 @@ export default {
 };
 </script>
 
-<style scoped lang="sass">
-@import '../../scss/_colors.sass'
-
+<style lang="sass">
+@import "../../scss/_colors.sass"
+@import "../../scss/main.sass"
 h1
-    color: $color-highlight
+    color: $success
 </style>

@@ -2,8 +2,9 @@
     <div class="m-0 p-0">
         <b-sidebar
             id="sidebar-left"
-            shadow="sm"
-            bg-variant="white"
+            shadow="lg"
+            :bg-variant="darkMode ? 'dark' : 'light'"
+            :text-variant="darkMode ? 'dark' : 'light'"
             no-header-close
         >
             <template v-slot:default="{ hide }">
@@ -13,7 +14,11 @@
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item class="m-0 p-0">
                                     <b-button
-                                        variant="warning"
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-warning'
+                                                : 'warning'
+                                        "
                                         block
                                         class="text-left m-0"
                                         @click="hide"
@@ -24,14 +29,27 @@
                                         Hide Sidebar
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item to="/" class="m-0 p-0">
+                                <b-nav-item class="m-0 p-0">
                                     <b-button
-                                        variant="outline-dark"
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
                                         block
-                                        class="text-left"
+                                        class="text-left m-0"
+                                        @click="toggleDarkMode"
                                     >
-                                        <i class="fas fa-home fa-1x fa-fw"></i>
-                                        PlantIT Home
+                                        <i
+                                            v-if="darkMode"
+                                            class="fas fa-sun fa-1x fa-fw"
+                                        ></i>
+                                        <i
+                                            v-else
+                                            class="fas fa-moon fa-1x fa-fw"
+                                        ></i>
+                                        {{ darkMode ? 'Disable' : 'Enable' }}
+                                        Dark Mode
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
@@ -66,13 +84,36 @@
                                     class="m-0 p-0"
                                     disabled
                                 >
-                                    <b-button disabled variant="white">
-                                        <small>Learn</small>
+                                    <small
+                                        :class="
+                                            darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Navigation</small
+                                    >
+                                </b-nav-item>
+                                <b-nav-item to="/" class="m-0 p-0">
+                                    <b-button
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i class="fas fa-home fa-1x fa-fw"></i>
+                                        About
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/guide" class="m-0 p-0">
                                     <b-button
-                                        variant="outline-dark"
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
                                         block
                                         class="text-left"
                                     >
@@ -84,7 +125,11 @@
                                 </b-nav-item>
                                 <b-nav-item to="/docs" class="m-0 p-0">
                                     <b-button
-                                        variant="outline-dark"
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
                                         block
                                         class="text-left"
                                     >
@@ -99,9 +144,65 @@
                                 v-if="loggedIn"
                             >
                                 <b-nav-item class="m-0 p-0" disabled>
-                                    <b-button disabled variant="white">
-                                        <small>Explore</small>
+                                    <small
+                                        :class="
+                                            darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Connect</small
+                                    >
+                                </b-nav-item>
+                                <b-nav-item class="ml-0 mr-0 pl-0 pr-0">
+                                    <b-button
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
+                                        class="text-left m-0"
+                                        title="Slack"
+                                        block
+                                    >
+                                        <i class="fab fa-slack fa-1x fa-fw"></i>
+                                        Slack
                                     </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    class="ml-0 mr-0 pl-0 pr-0"
+                                    href="https://github.com/Computational-Plant-Science/plantit"
+                                >
+                                    <b-button
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
+                                        block
+                                        title="GitHub"
+                                        class="text-left m-0 "
+                                    >
+                                        <i
+                                            class="fab fa-github fa-1x fa-fw"
+                                        ></i>
+                                        GitHub
+                                    </b-button>
+                                </b-nav-item>
+                            </b-nav>
+                            <b-nav
+                                vertical
+                                class="ml-0 mr-0 pl-0 pr-0"
+                                v-if="loggedIn"
+                            >
+                                <b-nav-item class="m-0 p-0" disabled>
+                                    <small
+                                        :class="
+                                            darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Resources</small
+                                    >
                                 </b-nav-item>
                                 <b-nav-item
                                     title="users"
@@ -109,7 +210,11 @@
                                     class="m-0 p-0"
                                 >
                                     <b-button
-                                        variant="outline-dark"
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
                                         block
                                         class="text-left"
                                     >
@@ -139,7 +244,11 @@
                                     class="m-0 p-0"
                                 >
                                     <b-button
-                                        variant="outline-dark"
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
                                         block
                                         class="text-left"
                                     >
@@ -206,8 +315,9 @@
         <b-navbar
             toggleable="sm"
             class="logo p-0 overflow-hidden"
-            style="min-height: 40px; max-height: 50px; z-index: 1000"
+            style="min-height: 40px; max-height: 42px; z-index: 1000"
             fixed="top"
+            :variant="darkMode ? 'dark' : 'white'"
         >
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-1 mr-1">
@@ -231,27 +341,42 @@
                 </b-navbar-nav>
                 <transition name="component-fade" mode="out-in">
                     <b-breadcrumb
-                        class="m-o p-0 mt-1"
+                        class="m-o p-0 mt-2"
                         style="background-color: transparent;"
                         v-if="titleContent === 'sidebar'"
                     >
-                        <b-breadcrumb-item disabled class="ml-1">
-                            Show Sidebar
+                        <b-breadcrumb-item
+                            disabled
+                            class="ml-2"
+                            :class="darkMode ? 'crumb-dark' : 'crumb-light'"
+                        >
+                            <h5>
+                                <b-badge variant="info">Sidebar</b-badge>
+                            </h5>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                     <b-breadcrumb
-                        class="m-o p-0 mt-1"
+                        class="m-o p-0 mt-2 text-warning"
                         style="background-color: transparent"
                         v-if="titleContent === 'breadcrumb'"
                     >
                         <b-breadcrumb-item
                             v-for="crumb in crumbs"
                             :key="crumb.text"
-                            class="background-transparent title"
                             :to="crumb.href"
                             :disabled="crumb.text === 'runs'"
+                            :class="darkMode ? 'crumb-dark' : 'crumb-light'"
                         >
-                            {{ crumb.text }}
+                            <h5>
+                                <b-badge
+                                    variant="white"
+                                    :class="
+                                        darkMode ? 'text-warning' : 'text-dark'
+                                    "
+                                >
+                                    {{ crumb.text }}
+                                </b-badge>
+                            </h5>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                 </transition>
@@ -269,45 +394,6 @@
                             Log in to GitHub
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item class="ml-0 mr-0 pl-0 pr-0">
-                        <b-button
-                            variant="outline-dark"
-                            class="text-left m-0"
-                            title="Slack"
-                        >
-                            <i class="fab fa-slack fa-1x fa-fw"></i>
-                        </b-button>
-                    </b-nav-item>
-                    <b-nav-item
-                        class="ml-0 mr-0 pl-0 pr-0"
-                        href="https://github.com/Computational-Plant-Science/plantit"
-                    >
-                        <b-button
-                            variant="outline-dark"
-                            title="GitHub"
-                            class="text-left github-hover m-0 "
-                        >
-                            <i class="fab fa-github fa-1x fa-fw"></i>
-                        </b-button>
-                    </b-nav-item>
-                    <b-nav-item
-                        href="https://de.cyverse.org/de/"
-                        class="ml-0 mr-0 pl-0 pr-0"
-                    >
-                        <b-button
-                            variant="white"
-                            title="CyVerse Discovery Environment"
-                            class="text-left m-0"
-                        >
-                            <b-img
-                                :src="
-                                    require('../assets/sponsors/cyversebw-notext.png')
-                                "
-                                height="20px"
-                                alt="Cyverse"
-                            ></b-img>
-                        </b-button>
-                    </b-nav-item>
                     <b-nav-item
                         right
                         v-if="loggedIn"
@@ -316,11 +402,14 @@
                         style="font-size: 12pt"
                         :href="'/' + currentUserDjangoProfile.username + '/'"
                     >
-                        <b-button variant="white" class="m-0 ml-3 mr-2">
+                        <b-button
+                            :variant="darkMode ? 'outline-light' : 'white'"
+                            class="m-0 ml-3 mr-2"
+                        >
                             <b-img
                                 v-if="currentUserGitHubProfile"
-                                class="avatar m-0 mb-1 p-0"
-                                style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 2px;"
+                                class="avatar m-0 mb-1 p-0 github-hover logo"
+                                style="min-width: 21px; min-height: 21px; position: relative; left: -3px; top: 1.5px; border: 1px solid white;"
                                 rounded="circle"
                                 :src="
                                     currentUserGitHubProfile
@@ -356,6 +445,7 @@ export default {
         };
     },
     computed: mapGetters([
+        'darkMode',
         'currentUserDjangoProfile',
         'currentUserCyVerseProfile',
         'currentUserGitHubProfile',
@@ -368,6 +458,11 @@ export default {
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
+        }
+    },
+    methods: {
+        toggleDarkMode: function() {
+            this.$store.dispatch('toggleDarkMode');
         }
     }
 };
@@ -389,11 +484,6 @@ export default {
     -webkit-transform: rotate(90deg)
         transform: rotate(90deg)
 
-a
-    color: $dark !important
-    border: none !important
-
-
 .mirror
     -moz-transform: scale(-1, 1)
     -webkit-transform: scale(-1, 1)
@@ -403,20 +493,17 @@ a
 
 .breadcrumb > li
     text-align: end
-    color: $dark !important
     margin-top: 12px !important
     font-size: 12pt !important
     font-weight: 200
     content: " /"
 
 .breadcrumb > li + li::marker
-    color: $dark !important
     margin-top: 12px !important
     font-size: 12pt !important
     font-weight: 200
 
 .breadcrumb > li + li:before + li::marker
-    color: $dark !important
     margin-top: 12px !important
     font-size: 12pt !important
     font-weight: 200
@@ -447,9 +534,16 @@ a
   max-height: 15px
   border: 1px solid $dark
 
-a
+.crumb-dark
   font-weight: 300
-  color: $dark // !important
+  color: white !important
   // text-decoration: underline
   // text-decoration-color: $color-button
+
+.crumb-light
+  font-weight: 300
+  color: $dark !important
+
+.darkk
+  background-color: #292b2c
 </style>

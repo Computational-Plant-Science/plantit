@@ -6,16 +6,21 @@ export const user = {
         currentUserDjangoProfile: null,
         currentUserCyVerseProfile: null,
         currentUserGitHubProfile: null,
-        keycloak: null
+        keycloak: null,
+        darkMode: false
     }),
     getters: {
         keycloak: state => state.keycloak,
+        darkMode: state => state.darkMode,
         currentUserDjangoProfile: state => state.currentUserDjangoProfile,
         currentUserCyVerseProfile: state => state.currentUserCyVerseProfile,
         currentUserGitHubProfile: state => state.currentUserGitHubProfile,
         loggedIn: state => state.currentUserDjangoProfile !== null
     },
     mutations: {
+        setDarkMode(state, mode) {
+            state.darkMode = mode;
+        },
         setCurrentUserDjangoProfile(state, profile) {
             state.currentUserDjangoProfile = profile;
         },
@@ -24,9 +29,20 @@ export const user = {
         },
         setCurrentUserGitHubProfile(state, profile) {
             state.currentUserGitHubProfile = profile;
-        },
+        }
     },
     actions: {
+        toggleDarkMode({ commit }) {
+            axios
+                .get('/apis/v1/users/toggle_dark_mode/')
+                .then(resp => {
+                    commit('setDarkMode', resp.data['dark_mode']);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
         loadCurrentUser({ commit }) {
             axios
                 .get('/apis/v1/users/retrieve/')
@@ -44,12 +60,16 @@ export const user = {
                                     }
                                 }
                             )
-                            .then(cyverse =>
+                            .then(cyverse => {
                                 commit(
                                     'setCurrentUserCyVerseProfile',
                                     cyverse.data[django.data.username]
-                                )
-                            )
+                                );
+                                commit(
+                                    'setDarkMode',
+                                    django.data.profile.dark_mode
+                                );
+                            })
                             .catch(error => {
                                 Sentry.captureException(error);
                                 if (error.response.status === 500) throw error;
@@ -70,7 +90,10 @@ export const user = {
                                 }
                             )
                             .then(github =>
-                                commit('setCurrentUserGitHubProfile', github.data)
+                                commit(
+                                    'setCurrentUserGitHubProfile',
+                                    github.data
+                                )
                             )
                             .catch(error => {
                                 Sentry.captureException(error);
@@ -81,6 +104,6 @@ export const user = {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
-        },
+        }
     }
 };

@@ -1,109 +1,123 @@
 <template>
-    <div class="w-100 p-4">
+    <div
+        class="w-100 h-100 p-3"
+        :style="
+            darkMode
+                ? 'background-color: #616163'
+                : 'background-color: white' + '; min-height: 100%'
+        "
+    >
         <br />
-        <br />
-        <div v-if="runNotFound">
-            <b-row align-content="center">
-                <b-col>
-                    <h5 class="text-center">
-                        This page does not exist.
-                    </h5>
-                </b-col>
-            </b-row>
-        </div>
-        <div v-if="!runNotFound">
-            <b-row>
-                <b-col>
-                    <b-row align-h="center" v-if="loadingRun">
-                        <b-spinner
-                            type="grow"
-                            label="Loading..."
-                            variant="dark"
-                        ></b-spinner>
-                    </b-row>
-                    <RunBlurb v-else :flow="flow" :run="run"></RunBlurb>
-                </b-col>
-            </b-row>
-            <br />
-            <b-row>
-                <b-col md="auto" align-self="end" class="mr-0">
-                    <h5>Logs</h5>
-                </b-col>
-                <b-col md="auto" class="m-0">
-                    <b-button
-                        variant="outline-dark"
-                        v-b-tooltip.hover
-                        title="Refresh Logs"
-                        @click="reloadRun(true)"
-                    >
-                        <i class="fas fa-redo"></i>
-                    </b-button> </b-col
-                ><b-col md="auto" class="ml-0">
-                    <b-alert
-                        class="m-0 pt-2 pb-2"
-                        :show="reloadAlertDismissCountdown"
-                        variant="success"
-                        @dismissed="reloadAlertDismissCountdown = 0"
-                        @dismiss-count-down="countDownChanged"
-                    >
-                        Logs refreshed.
-                    </b-alert>
-                </b-col>
-            </b-row>
-            <hr />
-            <b-row>
-                <b-col>
-                    <b-table
-                        borderless
-                        small
-                        responsive="sm"
-                        :items="logs ? logs : []"
-                        :fields="status_table.fields"
-                        :sort-by.sync="status_table.sortBy"
-                    >
-                        <template v-slot:cell(location)="status">
-                            <h4>
-                                <b-badge
-                                    v-if="status.item.location === 'plantit'"
-                                    variant="dark"
-                                    class="text-success"
-                                    >{{ status.item.location }}</b-badge
-                                >
-                                <b-badge
-                                    v-else
-                                    variant="secondary"
-                                    class="text-white"
-                                    >{{ status.item.location }}</b-badge
-                                >
-                            </h4>
-                        </template>
-                        <template v-slot:cell(state)="status">
-                            <h4>
-                                <b-badge
-                                    :variant="
-                                        status.item.state === 2
-                                            ? 'danger'
-                                            : status.item.state === 1
-                                            ? 'success'
-                                            : 'warning'
-                                    "
-                                    >{{ statusToString(status.item.state) }}
-                                </b-badge>
-                            </h4>
-                        </template>
-                        <span
-                            slot="description"
-                            slot-scope="data"
-                            v-html="data.value"
-                            class="align-left"
-                        ></span>
-                    </b-table>
-                </b-col>
-            </b-row>
-        </div>
+        <b-container class="p-3">
+            <div v-if="runNotFound">
+                <b-row align-content="center">
+                    <b-col>
+                        <h5 class="text-center">
+                            This page does not exist.
+                        </h5>
+                    </b-col>
+                </b-row>
+            </div>
+            <div v-if="!runNotFound">
+                <b-row>
+                    <b-col>
+                        <b-row align-h="center" v-if="loadingRun">
+                            <b-spinner
+                                type="grow"
+                                label="Loading..."
+                                variant="dark"
+                            ></b-spinner>
+                        </b-row>
+                        <RunBlurb v-else :flow="flow" :run="run"></RunBlurb>
+                    </b-col>
+                </b-row>
+                <br />
+                <b-row>
+                    <b-col md="auto" align-self="end" class="mr-0">
+                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">
+                            Logs
+                        </h5>
+                    </b-col>
+                    <b-col md="auto" class="m-0">
+                        <b-button
+                            :variant="
+                                darkMode ? 'outline-light' : 'outline-dark'
+                            "
+                            v-b-tooltip.hover
+                            title="Refresh Logs"
+                            @click="reloadRun(true)"
+                        >
+                            <i class="fas fa-redo"></i>
+                        </b-button> </b-col
+                    ><b-col md="auto" class="ml-0">
+                        <b-alert
+                            class="m-0 pt-1 pb-1"
+                            :show="reloadAlertDismissCountdown"
+                            variant="success"
+                            @dismissed="reloadAlertDismissCountdown = 0"
+                            @dismiss-count-down="countDownChanged"
+                        >
+                            Logs refreshed.
+                        </b-alert>
+                    </b-col>
+                </b-row>
+                <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
+                <b-row>
+                    <b-col>
+                        <b-table
+                            borderless
+                            small
+                            responsive="sm"
+                            :items="logs ? logs : []"
+                            :fields="status_table.fields"
+                            :sort-by.sync="status_table.sortBy"
+                            :table-variant="darkMode ? 'dark' : 'light'"
+                        >
+                            <template v-slot:cell(location)="status">
+                                <h4>
+                                    <b-badge
+                                        v-if="
+                                            status.item.location === 'PlantIT'
+                                        "
+                                        variant="dark"
+                                        class="text-success"
+                                        >{{ status.item.location }}</b-badge
+                                    >
+                                    <b-badge
+                                        v-else
+                                        variant="secondary"
+                                        class="text-white"
+                                        >{{ status.item.location }}</b-badge
+                                    >
+                                </h4>
+                            </template>
+                            <template v-slot:cell(state)="status">
+                                <h4>
+                                    <b-badge
+                                        :variant="
+                                            status.item.state === 2
+                                                ? 'danger'
+                                                : status.item.state === 1
+                                                ? 'success'
+                                                : 'warning'
+                                        "
+                                        >{{ statusToString(status.item.state) }}
+                                    </b-badge>
+                                </h4>
+                            </template>
+                            <span
+                                slot="description"
+                                slot-scope="data"
+                                v-html="data.value"
+                                class="align-left"
+                            ></span>
+                        </b-table>
+                    </b-col>
+                </b-row>
+            </div>
+        </b-container>
     </div>
 </template>
-
 <script>
 import RunBlurb from '../components/run-blurb';
 import { mapGetters } from 'vuex';
@@ -258,7 +272,8 @@ export default {
             'currentUserDjangoProfile',
             'currentUserCyVerseProfile',
             'currentUserGitHubProfile',
-            'loggedIn'
+            'loggedIn',
+            'darkMode'
         ]),
         runStatus() {
             if (this.run.runstatus_set.length > 0) {

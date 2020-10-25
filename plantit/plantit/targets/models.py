@@ -33,8 +33,7 @@ class Target(models.Model):
 
     class Executor(models.TextChoices):
         LOCAL = 'LO', gettext_lazy('Local')
-        SLURM = 'SL', gettext_lazy('SLURM')
-        PBS = 'PB', gettext_lazy('PBS')
+        SLURM = 'JQ', gettext_lazy('Job Queue')
 
     executor = models.CharField(
         max_length=2,

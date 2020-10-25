@@ -24,7 +24,7 @@ def get_runs_by_user(request, username):
         return JsonResponse([{
             'id': run.identifier,
             'work_dir': run.work_dir,
-            'cluster': run.cluster.name,
+            'target': run.target.name,
             'created': run.created,
             'state': run.status.state if run.status is not None else 'Unknown',
             'workflow_owner': run.workflow_owner,
@@ -43,11 +43,11 @@ def get_total_count(request):
 def get_executor(config, executor):
     if executor == 'lo':
         return 'local'
-    elif executor == 'pb':
+    elif executor == 'jq':
         return {
-            'pbs': {
+            'slurm': {
                 'cores': 1,
-                'memory': config['memory'] if 'memory' in config else '20GB',
+                #'memory': config['memory'] if 'memory' in config else '20GB',
                 'walltime': config['walltime'] if 'walltime' in config else '01:00:00',
             }
         }
@@ -72,7 +72,7 @@ def runs(request):
         return JsonResponse([{
             'id': run.identifier,
             'work_dir': run.work_dir,
-            'cluster': run.cluster.name,
+            'target': run.target.name,
             'created': run.created,
             'state': run.status.state if run.status is not None else 'Unknown',
             'workflow_owner': run.workflow_owner,
@@ -90,21 +90,21 @@ def runs(request):
             user=User.objects.get(username=user.username),
             workflow_owner=workflow['repo']['owner']['login'],
             workflow_name=workflow['repo']['name'],
-            cluster=target,
+            target=target,
             created=now,
             work_dir=now_str + "/",
             remote_results_path=now_str + "/",
             identifier=uuid.uuid4(),
             token=binascii.hexlify(os.urandom(20)).decode())
 
-        run.status_set.create(description=f"Workflow '{workflow_path}' run '{run.identifier}' created.",
+        run.status_set.create(description=f"Flow '{workflow_path}' run '{run.identifier}' created.",
                               state=Status.CREATED,
-                              location='plantit')
+                              location='PlantIT')
         run.save()
 
         config = {
             'identifier': run.identifier,
-            # 'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/status/",
+            'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/status/",
             'workdir': join(target.workdir, now_str),
             'clone': f"https://github.com/{workflow_path}" if workflow['config']['clone'] else None,
             'image': workflow['config']['image'],
@@ -140,7 +140,7 @@ def run(request, id):
     return JsonResponse({
         'id': run.identifier,
         'work_dir': run.work_dir,
-        'cluster': run.cluster.name,
+        'target': run.target.name,
         'created': run.created,
         'state': run.status.state if run.status is not None else 'Unknown',
         'workflow_owner': run.workflow_owner,
@@ -188,7 +188,7 @@ def status(request, id):
             for line in chunk.split('\n'):
                 if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
                     continue
-                run.status_set.create(description=line, state=state, location=run.cluster.name)
+                run.status_set.create(description=line, state=state, location=run.target.name)
 
         run.save()
         return HttpResponse(status=200)

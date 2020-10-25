@@ -13,7 +13,7 @@ RUN apt-get -y update && apt-get install -y \
 RUN mkdir /code
 WORKDIR /code
 COPY . ./
-RUN pip install -r scripts/dockerfiles/plantit/requirements.txt
+RUN pip install -r dockerfiles/plantit/requirements.txt
 RUN chmod +x scripts/configure-sandbox.sh
 RUN chmod +x scripts/configure-superuser.sh
 RUN chmod +x scripts/ssh-copy-id.expect

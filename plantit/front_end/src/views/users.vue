@@ -1,13 +1,22 @@
 <template>
-    <div class="w-100 p-3">
+    <div
+        class="w-100 h-100 p-3"
+        :style="
+            darkMode
+                ? 'background-color: #616163'
+                : 'background-color: white' + '; min-height: 100%'
+        "
+    >
         <br />
-        <br />
-        <b-card
-            header-bg-variant="white"
-            border-variant="white"
-            header-border-variant="white"
-            text-variant="dark"
-        >
+        <b-container class="p-3">
+            <p :class="darkMode ? 'text-light' : 'text-dark'">
+                Explore users here. To explore curated flows, see the
+                <b-link
+                    :class="darkMode ? 'text-warning' : 'text-dark'"
+                    to="/flows"
+                    >Flows page</b-link
+                >.
+            </p>
             <b-row v-if="currentUserGitHubProfile === null" align-v="center">
                 <b-col md="auto" class="mr-2 pr-0">
                     <b-button
@@ -29,9 +38,13 @@
                         <b-card
                             v-for="user in users"
                             :key="user.username"
-                            bg-variant="white"
-                            border-variant="default"
-                            header-bg-variant="white"
+                            :bg-variant="darkMode ? 'dark' : 'white'"
+                            :header-bg-variant="darkMode ? 'dark' : 'white'"
+                            :border-variant="darkMode ? 'secondary' : 'default'"
+                            :header-border-variant="
+                                darkMode ? 'secondary' : 'default'
+                            "
+                            :text-variant="darkMode ? 'white' : 'dark'"
                             style="min-width: 25rem"
                             class="overflow-hidden"
                         >
@@ -40,14 +53,32 @@
                                     style="color: white; cursor: pointer"
                                     @click="userSelected(user)"
                                 >
-                                    <h5>
+                                    <h5
+                                        :class="
+                                            darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                    >
                                         {{ user.first_name }}
                                         {{ user.last_name }}
+                                        <small
+                                            :class="
+                                                darkMode
+                                                    ? 'text-warning'
+                                                    : 'text-dark'
+                                            "
+                                            >({{ user.username }})</small
+                                        >
                                     </h5>
                                 </b-col>
                             </b-row>
                             <b-row align-v="center">
-                                <b-col class="mr=3">
+                                <b-col
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                >
                                     {{
                                         user.github_profile
                                             ? user.github_profile.bio
@@ -58,21 +89,12 @@
                             <br />
                             <b-row align-v="center">
                                 <b-col>
-                                    <b-link disabled class="mr-1">
-                                        <b-img
-                                            :src="
-                                                require('../assets/sponsors/cyversebw-notext.png')
-                                            "
-                                            height="20px"
-                                            alt="Cyverse"
-                                            class="m-1"
-                                        ></b-img>
-                                        <small>{{
-                                            user.username
-                                        }}</small></b-link
-                                    >
-                                    <br />
                                     <b-link
+                                        :class="
+                                            darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
                                         :href="
                                             'https://github.com/' +
                                                 user.github_username
@@ -91,7 +113,7 @@
                                         right
                                         rounded="circle"
                                         class="avatar card-img-right"
-                                        style="max-height: 7rem; max-width: 7rem; opacity: 0.9; position: absolute; right: -15px; top: -50px; z-index:1"
+                                        style="max-height: 6rem; max-width: 6rem; opacity: 0.9; position: absolute; right: -25px; top: -40px; z-index:1;"
                                         :src="
                                             user.github_profile
                                                 ? user.github_profile.avatar_url
@@ -104,7 +126,7 @@
                     </b-card-group>
                 </b-col>
             </b-row>
-        </b-card>
+        </b-container>
     </div>
 </template>
 
@@ -126,7 +148,8 @@ export default {
         'currentUserGitHubProfile',
         'currentUserCyVerseProfile',
         'loggedIn',
-        'allUsers'
+        'allUsers',
+        'darkMode'
     ]),
     data: function() {
         return {

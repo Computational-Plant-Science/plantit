@@ -7,3 +7,4 @@ class Profile(models.Model):
     github_username: str = models.CharField(max_length=255, blank=True, default='')
     github_token: str = models.CharField(max_length=255, blank=True, default='')
     cyverse_token: str = models.CharField(max_length=255, blank=True, default='')
+    dark_mode: bool = models.BooleanField(default=False)

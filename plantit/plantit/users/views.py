@@ -23,6 +23,9 @@ from plantit.util import csrf_token
 class IDPViewSet(viewsets.ViewSet):
     permission_classes = (AllowAny,)
 
+    def get_object(self):
+        return self.request.user
+
     @action(methods=['get'], detail=False)
     def cyverse_login(self, request):
         return redirect('https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/auth?client_id=' +
@@ -136,6 +139,16 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return self.request.user
 
     @action(detail=False, methods=['get'])
+    def toggle_dark_mode(self, request):
+        user = request.user
+        user.profile.dark_mode = not user.profile.dark_mode
+        user.profile.save()
+        user.save()
+        return JsonResponse({
+            'dark_mode': user.profile.dark_mode
+        })
+
+    @action(detail=False, methods=['get'])
     def get_all(self, request):
         # users = [{
         #     'username': 'Computational-Plant-Science',
@@ -163,7 +176,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         username = request.GET.get('username', None)
 
         # TODO move to configuration file
-        if username == 'Computational-Plant-Science' or username == 'van-der-knaap-lab':
+        if username == 'Computational-Plant-Science' or username == 'van-der-knaap-lab' or username == 'burkelab':
             if request.user.profile.github_token != '':
                 github_response = requests.get(f"https://api.github.com/users/{username}",
                                                headers={'Authorization':

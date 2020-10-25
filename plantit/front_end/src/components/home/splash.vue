@@ -6,9 +6,9 @@
                 class="p-2 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
-                border-variant="default"
-                text-variant="white"
-                bg-variant="white"
+                :border-variant="darkMode ? 'secondary' : 'default'"
+                :text-variant="darkMode ? 'dark' : 'white'"
+                :bg-variant="darkMode ? 'dark' : 'white'"
                 style="max-width: 400px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
             >
                 <b-row align-v="center" class="justify-content-md-center">
@@ -19,37 +19,64 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h1>PlantIT</h1>
+                        <h1 :class="darkMode ? 'text-white' : 'text-dark'">
+                            PlantIT
+                        </h1>
                     </b-col>
                 </b-row>
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
                             <b-nav-item to="/guide" class="m-0 p-0">
-                                <b-button variant="outline-dark">
+                                <b-button
+                                    :variant="
+                                        darkMode
+                                            ? 'outline-light'
+                                            : 'outline-dark'
+                                    "
+                                >
                                     <i class="fas fa-map-signs fa-2x"></i>
                                     <br />
                                     Guide
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item to="/docs" class="m-0 p-0">
-                                <b-button variant="outline-dark">
+                                <b-button
+                                    :variant="
+                                        darkMode
+                                            ? 'outline-light'
+                                            : 'outline-dark'
+                                    "
+                                >
                                     <i class="fas fa-book fa-2x"></i>
                                     <br />
                                     Docs
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item class="m-0 p-0">
-                                <b-button variant="outline-dark" title="Slack">
+                                <b-button
+                                    :variant="
+                                        darkMode
+                                            ? 'outline-light'
+                                            : 'outline-dark'
+                                    "
+                                    title="Slack"
+                                >
                                     <i class="fab fa-slack fa-2x"></i>
                                     <br />
                                     Slack
                                 </b-button>
                             </b-nav-item>
-                            <b-nav-item class="m-0 p-0">
+                            <b-nav-item
+                                class="m-0 p-0"
+                                href="https://github.com/Computational-Plant-Science/plantit"
+                            >
                                 <b-button
-                                    variant="outline-dark"
-                                    href="https://github.com/Computational-Plant-Science/plantit"
+                                    :variant="
+                                        darkMode
+                                            ? 'outline-light'
+                                            : 'outline-dark'
+                                    "
                                     title="GitHub"
                                 >
                                     <i class="fab fa-github fa-2x"></i>
@@ -63,7 +90,7 @@
                 <b-row class="m-0 p-0" v-if="!loggedIn">
                     <b-col class="m-0 p-0">
                         <b-button
-                            variant="white"
+                            :variant="darkMode ? 'outline-light' : 'white'"
                             block
                             class="text-center"
                             href="/apis/v1/idp/cyverse_login/"
@@ -94,7 +121,12 @@
                                         '/'
                                 "
                             >
-                                <b-button variant="white" block>
+                                <b-button
+                                    :variant="
+                                        darkMode ? 'outline-light' : 'white'
+                                    "
+                                    block
+                                >
                                     <b-img
                                         v-if="currentUserGitHubProfile"
                                         class="avatar m-0 p-0"
@@ -140,7 +172,8 @@ export default {
         'currentUserDjangoProfile',
         'currentUserCyVerseProfile',
         'currentUserGitHubProfile',
-        'loggedIn'
+        'loggedIn',
+        'darkMode'
     ]),
     created: function() {
         this.crumbs = this.$route.meta.crumb;
@@ -166,7 +199,7 @@ export default {
 #background
     background-image: url('../../assets/frontpage/index_bg.png')
     background-blend-mode: overlay
-    background-color: hsla(0, 0%, 100%, 0.1)
+    background-color: hsla(0, 0%, 100%, 0)
     background-repeat: no-repeat
     background-position: center
     background-size: cover

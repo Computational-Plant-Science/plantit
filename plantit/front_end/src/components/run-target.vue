@@ -1,6 +1,6 @@
 <template>
     <div>
-      <b-row><b-col>Select a deployment target for this flow.</b-col></b-row>
+        <b-row><b-col>Select a deployment target for this flow.</b-col></b-row>
         <br />
         <b-table
             :items="targets"
@@ -13,6 +13,7 @@
             @row-selected="rowSelected"
             sticky-header="true"
             caption-top
+            :table-variant="darkMode ? 'dark' : 'white'"
         >
             <template v-slot:cell(name)="target">
                 {{ target.item.name }}
@@ -25,7 +26,7 @@
             <b-spinner
                 type="grow"
                 label="Loading..."
-                variant="dark"
+                variant="darkMode ? 'warning' : 'dark'"
             ></b-spinner>
         </b-row>
         <b-row
@@ -43,6 +44,7 @@
 <script>
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
+import { mapGetters } from 'vuex';
 export default {
     name: 'run-target',
     props: {
@@ -97,8 +99,32 @@ export default {
         rowSelected: function(items) {
             this.$emit('targetSelected', items[0]);
         }
+    },
+    computed: {
+        ...mapGetters([
+            'currentUserDjangoProfile',
+            'currentUserGitHubProfile',
+            'currentUserCyVerseProfile',
+            'loggedIn',
+            'darkMode'
+        ])
     }
 };
 </script>
+<style scoped lang="sass">
+@import "../scss/_colors.sass"
+@import "../scss/main.sass"
 
-<style scoped></style>
+.workflow-icon
+    width: 200px
+    height: 200px
+    margin: 0 auto
+    margin-bottom: -10px
+    background-color: white
+    padding: 24px
+
+    img
+        margin-top: 20px
+        max-width: 140px
+        max-height: 190px
+</style>

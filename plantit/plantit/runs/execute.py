@@ -40,46 +40,47 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
     run.save()
 
     try:
-        work_dir = join(run.cluster.workdir, run.work_dir)
-        ssh_client = SSH(run.cluster.hostname,
-                         run.cluster.port,
-                         run.cluster.username)
+        work_dir = join(run.target.workdir, run.work_dir)
+        ssh_client = SSH(run.target.hostname,
+                         run.target.port,
+                         run.target.username)
 
         with ssh_client:
             execute_command(run=run, ssh_client=ssh_client, pre_command=':', command=f"mkdir {work_dir}",
-                            directory=run.cluster.workdir)
-            print(f"Created working directory '{work_dir}'. Uploading workflow definition...")
-            run.status_set.create(
-                description=f"Created working directory '{work_dir}'. Uploading workflow definition...",
-                state=Status.RUNNING,
-                location='PlantIT')
+                            directory=run.target.workdir)
+            msg = f"Created working directory '{work_dir}'. Uploading workflow definition..."
+            print(msg)
+            run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()
 
             with ssh_client.client.open_sftp() as sftp:
                 sftp.chdir(work_dir)
                 with sftp.open('workflow.yaml', 'w') as workflow_def:
                     yaml.dump(workflow['config'], workflow_def, default_flow_style=False)
-                with sftp.open('../job.sh', 'r') as template_script, sftp.open('job.sh', 'w') as script:
-                    for line in template_script:
-                        script.write(line)
-                    script.write(f"plantit workflow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
+                msg = f"Uploaded flow definition.{'Uploading job script...' if run.target.executor == 'JQ' else ''}"
+                print(msg)
+                run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
+                run.save()
 
-            print(f"Uploaded workflow definition to '{work_dir}'. Running workflow...")
-            run.status_set.create(
-                description=f"Uploaded workflow definition to '{work_dir}'. Running workflow...",
-                state=Status.RUNNING,
-                location='PlantIT')
+                if run.target.executor == 'JQ':
+                    with sftp.open('../job.sh', 'r') as template_script, sftp.open('job.sh', 'w') as script:
+                        for line in template_script:
+                            script.write(line)
+                        script.write(f"plantit workflow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
+
+            msg = f"Uploaded workflow definition to '{work_dir}'. Running workflow..."
+            print(msg)
+            run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()
 
             pre_commands = '; '.join(
-                str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':'
-
+                str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':'
             print(f"Pre-commands: {pre_commands}")
 
             execute_command(run=run,
                             ssh_client=ssh_client,
                             pre_command=pre_commands,
-                            command=f"{'chmod +x job.sh && ./job.sh' if 'local' in workflow['config']['executor'] else 'sbatch job.sh' if 'slurm' in workflow['config']['executor'] else 'qsub job.sh' if 'pbs' in workflow['config']['executor'] else '' }",
+                            command=f"{'plantit workflow.yaml --plantit_token ' + plantit_token + ' --cyverse_token ' + cyverse_token if 'local' in workflow['config']['executor'] else 'chmod +x job.sh && sbatch job.sh'}",
                             directory=work_dir)
 
             print(f"Run completed.")

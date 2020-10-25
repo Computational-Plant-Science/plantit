@@ -5,7 +5,7 @@
                 <h4>
                     <b-link
                         :disabled="selectable"
-                        class="text-left"
+                        :class="darkMode ? 'text-white' : 'text-dark'"
                         variant="outline-dark"
                         v-b-tooltip.hover
                         @click="flowSelected"
@@ -15,12 +15,14 @@
                 </h4>
                 <small>
                     <b-link
-                        variant="outline-dark"
-                        :href="
-                            'https://github.com/' +
-                                flow.repo.owner.login +
-                                '/' +
-                                flow.repo.name
+                        :class="darkMode ? 'text-warning' : 'text-dark'"
+                        @click="
+                            openRepo(
+                                'https://github.com/' +
+                                    flow.repo.owner.login +
+                                    '/' +
+                                    flow.repo.name
+                            )
                         "
                     >
                         <i class="fab fa-github fa-fw"></i>
@@ -45,7 +47,7 @@
         <b-img
             rounded="circle"
             class="card-img-right"
-            style="max-width: 7rem;opacity: 0.8;position: absolute;right: -25px;top: -15px;z-index:1"
+            style="max-width: 6rem;opacity: 0.8;position: absolute;right: -25px;top: -15px;z-index:1;"
             right
             :src="
                 `https://raw.githubusercontent.com/${flow.repo.owner.login}/${flow.repo.name}/master/${flow.config.logo}`
@@ -56,6 +58,7 @@
 
 <script>
 import router from '@/router';
+import { mapGetters } from 'vuex';
 
 export default {
     name: 'flow-blurb',
@@ -82,9 +85,21 @@ export default {
                     name: this.flow['repo']['name']
                 }
             });
+        },
+        openRepo(url) {
+            window.open(url);
         }
-    }
+    },
+    computed: mapGetters([
+        'currentUserDjangoProfile',
+        'currentUserGitHubProfile',
+        'currentUserCyVerseProfile',
+        'loggedIn',
+        'darkMode'
+    ])
 };
 </script>
-
-<style scoped></style>
+<style scoped lang="sass">
+@import "../scss/_colors.sass"
+@import "../scss/main.sass"
+</style>

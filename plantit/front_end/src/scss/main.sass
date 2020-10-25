@@ -26,7 +26,7 @@ $pink: #e83e8c !default
 $red: #ff7272 // #dc3545 !default
 $orange: #fd7e14 !default
 $yellow: #ffc107 !default
-$green: #D6DF5D // #28a745 !default
+$green: #d6df5D // #28a745 !default
 $teal: #20c997 !default
 $cyan: #17a2b8 !default
 
@@ -34,11 +34,11 @@ $cyan: #17a2b8 !default
 $primary: $blue !default
 $secondary: $color-box-background
 $success: $green !default
-$info: $cyan !default
+$info: $color-highlight !default
 $warning: #e2e3b0!default
 $danger: $red !default
 $light: $gray-100 !default
-$dark: $color-disabled
+$dark: $gray-800 !default // $color-disabled
 
 // This table defines the theme colors (variant names)
 $theme-colors: () !default
@@ -57,8 +57,8 @@ $theme-colors: map-merge(('primary': $primary, 'secondary': $secondary, 'success
 
 .logo
   background-color: white
-  // border-bottom: 1px solid $success // $color-button
-  box-shadow: 0px 1px 2px $gray-300
+  border-bottom: 1px solid $secondary // $color-button
+  // box-shadow: 1px 1px 2px 0 $secondary // 0 1px 2px $success
 
 .dropdown-toggle:after
     display: none
@@ -93,11 +93,19 @@ $theme-colors: map-merge(('primary': $primary, 'secondary': $secondary, 'success
 
 .btn-outline-danger:hover
   color: $red
-  background-color: $dark
-  border: 1px solid $dark !important
+  background-color: transparent
+  border: 1px solid $red !important
+
+.btn-outline-light
+  border: 1px solid transparent !important
+
+.btn-outline-light:hover
+  color: $success
+  background-color: transparent
+  border: 1px solid transparent !important
 
 .btn-outline-dark
-    border: 1px solid transparent !important
+  border: 1px solid transparent !important
 
 .btn-outline-dark:hover
   color: $color-highlight
@@ -150,10 +158,6 @@ $theme-colors: map-merge(('primary': $primary, 'secondary': $secondary, 'success
 
 .dark-card
   background-color: $color-disabled
-
-b-card
-  background-color: $color-box-background
-  border-radius: 10px
 
 body
   font-family: 'Helvetica Neue', "Courier New", serif
@@ -311,10 +315,36 @@ h5
   font-family: "Roboto", "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif
   color: $dark !important
 
-a
+a:link
   font-weight: 300
   font-family: "Roboto", "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif
-  color: $dark // !important
-  //text-decoration: underline
+  color: $dark
+  // text-decoration: underline
   // text-decoration-color: $color-button
 
+.text-dark2
+  color: $dark !important
+
+.text-light2
+  color: $light !important
+
+.bg-light2
+  background-color: $dark !important
+
+.bg-light2
+  background-color: $light !important
+
+.theme-dark
+  color: $white !important
+  background-color: $dark !important
+  border-color: $white
+
+.theme-secondary
+  color: $white !important
+  background-color: $secondary !important
+  border-color: $secondary
+
+.theme-light
+  color: $dark !important
+  background-color: $white !important
+  border-color: $dark

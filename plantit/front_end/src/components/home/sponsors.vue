@@ -1,5 +1,5 @@
 <template>
-    <b-container>
+    <div>
         <b-card
             align="center"
             class="rounded-0 text-center"
@@ -108,7 +108,7 @@
                 </b-card>
             </b-card-group>
         </b-card>
-    </b-container>
+    </div>
 </template>
 
 <script>
@@ -117,11 +117,11 @@ export default {
 };
 </script>
 
-<style lang="sass" scoped>
-@import '../../scss/_colors.sass'
-
+<style scoped lang="sass">
+@import "../../scss/_colors.sass"
+@import "../../scss/main.sass"
 h1
-    color: $color-highlight
+    color: $dark
 
 .sponsors
     text-align: center

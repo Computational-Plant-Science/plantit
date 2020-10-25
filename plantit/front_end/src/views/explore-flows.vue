@@ -1,14 +1,14 @@
 <template>
-    <div class="w-100 p-3">
+    <div
+        class="w-100 h-100 p-3"
+        :style="
+            darkMode
+                ? 'background-color: #616163'
+                : 'background-color: white' + '; min-height: 100%'
+        "
+    >
         <br />
-        <br />
-        <b-card
-            header-bg-variant="white"
-            border-variant="white"
-            header-border-variant="white"
-            text-variant="dark"
-        >
-            <!--<b-col md="auto" class="b-form-col">
+        <!--<b-col md="auto" class="b-form-col">
                         <b-input-group>
                             <b-form-input
                                 v-model="communityWorkflowsFilter"
@@ -25,6 +25,16 @@
                             </b-input-group-append>
                         </b-input-group>
                     </b-col>-->
+        <b-container class="p-3">
+            <p :class="darkMode ? 'text-light' : 'text-dark'">
+                Explore curated flows here. To explore user-contributed flows,
+                see the
+                <b-link
+                    :class="darkMode ? 'text-warning' : 'text-dark'"
+                    to="/users"
+                    >Users page</b-link
+                >.
+            </p>
             <b-row v-if="currentUserGitHubProfile === null" align-v="center">
                 <b-col md="auto" class="mr-2 pr-0">
                     <b-button
@@ -42,28 +52,18 @@
             </b-row>
             <b-row v-else align-v="center" align-h="center">
                 <b-col>
-                    <b-tabs>
-                        <b-tab title="Computational Plant Science Lab" active>
-                            <p class="text-dark mt-3">
-                                Select a flow, go to the
-                                <a
-                                    class="hvr"
-                                    href="https://computational-plant-science.org"
-                                    ><i
-                                        class="fas fa-vial fa-fw"
-                                        style="z-index: 1000"
-                                    ></i>
-                                    Computational Plant Science Lab's website</a
-                                >,
-                                or check out the code on
-                                <a
-                                    class="hvr"
-                                    href="https://github.com/Computational-Plant-Science/"
-                                    ><i class="fab fa-github fa-fw"></i
-                                    >GitHub</a
+                    <b-tabs
+                        v-model="currentTab"
+                        active-nav-item-class="background-success text-dark"
+                        active-tab-class="background-white text-dark"
+                        pills
+                    >
+                        <b-tab active :title-link-class="tabLinkClass(0)">
+                            <template v-slot:title>
+                                <b :class="tabLinkClass(0)"
+                                    >Computational Plant Science Lab</b
                                 >
-                                .
-                            </p>
+                            </template>
                             <b-card-text class="m-3">
                                 <flows
                                     github-user="computational-plant-science"
@@ -75,27 +75,12 @@
                                 </flows>
                             </b-card-text>
                         </b-tab>
-                        <b-tab title="van der Knaap Lab">
-                            <p class="text-dark mt-3">
-                                Select a flow, go to the
-                                <a
-                                    class="hvr"
-                                    href="http://vanderknaaplab.uga.edu/index.html"
-                                    ><i
-                                        class="fas fa-vial fa-fw"
-                                        style="z-index: 1000"
-                                    ></i>
-                                    van der Knaap Lab's website</a
-                                >,
-                                or check out the code on
-                                <a
-                                    class="hvr"
-                                    href="https://github.com/van-der-knaap-lab/"
-                                    ><i class="fab fa-github fa-fw"></i
-                                    >GitHub</a
+                        <b-tab :title-link-class="tabLinkClass(1)">
+                            <template v-slot:title>
+                                <b :class="tabLinkClass(1)"
+                                    >van der Knaap Lab</b
                                 >
-                                .
-                            </p>
+                            </template>
                             <b-card-text class="m-3">
                                 <flows
                                     github-user="van-der-knaap-lab"
@@ -107,27 +92,10 @@
                                 </flows>
                             </b-card-text>
                         </b-tab>
-                        <b-tab title="Burke Lab">
-                            <p class="text-dark mt-3">
-                                Select a flow, go to the
-                                <a
-                                    class="hvr"
-                                    href="http://www.theburkelab.org/"
-                                    ><i
-                                        class="fas fa-vial fa-fw"
-                                        style="z-index: 1000"
-                                    ></i>
-                                    Burke Lab's website</a
-                                >,
-                                or check out the code on
-                                <a
-                                    class="hvr"
-                                    href="https://github.com/burkelab/"
-                                    ><i class="fab fa-github fa-fw"></i
-                                    >GitHub</a
-                                >
-                                .
-                            </p>
+                        <b-tab :title-link-class="tabLinkClass(2)">
+                            <template v-slot:title>
+                                <b :class="tabLinkClass(2)">Burke Lab</b>
+                            </template>
                             <b-card-text class="m-">
                                 <flows
                                     github-user="burke-lab"
@@ -155,7 +123,7 @@
                     </b-tabs>
                 </b-col>
             </b-row>
-        </b-card>
+        </b-container>
     </div>
 </template>
 
@@ -170,6 +138,11 @@ String.prototype.capitalize = function() {
 
 export default {
     name: 'explore-flows',
+    data() {
+        return {
+            currentTab: 0
+        };
+    },
     components: {
         flows
     },
@@ -177,9 +150,22 @@ export default {
         'currentUserDjangoProfile',
         'currentUserGitHubProfile',
         'currentUserCyVerseProfile',
-        'loggedIn'
+        'loggedIn',
+        'darkMode'
     ]),
     methods: {
+        tabLinkClass(idx) {
+            if (this.currentTab === idx) {
+                // return this.darkMode
+                //     ? 'background-dark text-success'
+                //     : 'bg-light text-dark';
+                return this.darkMode ? '' : 'text-dark';
+            } else {
+                return this.darkMode
+                    ? 'background-dark text-light'
+                    : 'text-dark';
+            }
+        },
         users() {
             router.push({
                 name: 'users'
@@ -198,12 +184,9 @@ export default {
 };
 </script>
 
-<style scoped lang="sass">
+<style lang="sass">
 @import "../scss/_colors.sass"
 @import "../scss/main.sass"
-
-.green
-  color: $color-button
 
 .pipeline
   width: 300px
@@ -213,7 +196,11 @@ export default {
   text-underline-color: $dark
   cursor: pointer
 
-.workflow-text
-  background-color: $color-box-background
-  padding: 10px
+.background-dark
+  background-color: $dark !important
+  color: $light
+
+.background-success
+  background-color: $success !important
+  color: $dark !important
 </style>

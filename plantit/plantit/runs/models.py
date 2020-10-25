@@ -18,10 +18,10 @@ class Run(models.Model):
     identifier = models.CharField(max_length=36, null=False, blank=False)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
-    cluster = models.ForeignKey(Target,
-                                null=True,
-                                blank=True,
-                                on_delete=models.SET_NULL)
+    target = models.ForeignKey(Target,
+                               null=True,
+                               blank=True,
+                               on_delete=models.SET_NULL)
     work_dir = models.CharField(max_length=100,
                                 null=True,
                                 blank=True,

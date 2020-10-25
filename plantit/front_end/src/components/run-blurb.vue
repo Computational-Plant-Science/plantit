@@ -2,12 +2,16 @@
     <div v-if="flow.config">
         <b-row>
             <b-col>
-                <h2>
-                    <small>Run </small> <i>{{ run.id }}</i>
+                <h2 :class="darkMode ? 'theme-dark' : 'theme-light'">
+                    {{ run.id }}
                 </h2>
             </b-col>
             <b-col md="auto">
-                <h4>
+                <h4 :class="darkMode ? 'theme-dark' : 'theme-light'">
+                    <b-badge variant="white"
+                        ><i class="fas fa-terminal fa-1x fa-fw"></i>
+                        Run</b-badge
+                    >
                     <b-badge
                         :variant="
                             run.state === 2
@@ -20,7 +24,7 @@
                     </b-badge>
                     on
                     <b-badge variant="secondary" class="text-white">{{
-                        run.cluster
+                        run.target
                     }}</b-badge>
                 </h4>
             </b-col>
@@ -28,10 +32,10 @@
         <b-row>
             <b-col>
                 <b-card
-                    bg-variant="white"
-                    footer-bg-variant="white"
-                    border-variant="default"
-                    footer-border-variant="white"
+                    :bg-variant="darkMode ? 'dark' : 'white'"
+                    :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                    border-variant="secondary"
+                    :footer-border-variant="darkMode ? 'dark' : 'white'"
                     style="min-height: 5rem;"
                     class="overflow-hidden"
                 >
@@ -49,6 +53,7 @@
 <script>
 import WorkflowBlurb from '@/components/flow-blurb.vue';
 import router from '@/router';
+import { mapGetters } from 'vuex';
 
 export default {
     name: 'RunBlurb',
@@ -87,8 +92,20 @@ export default {
                 }
             });
         }
+    },
+    computed: {
+        ...mapGetters([
+            'currentUserDjangoProfile',
+            'currentUserCyVerseProfile',
+            'currentUserGitHubProfile',
+            'loggedIn',
+            'darkMode'
+        ])
     }
 };
 </script>
 
-<style scoped></style>
+<style scoped lang="sass">
+@import "../scss/_colors.sass"
+@import "../scss/main.sass"
+</style>

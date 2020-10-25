@@ -4,22 +4,25 @@
             <b-spinner
                 type="grow"
                 label="Loading..."
-                variant="dark"
+                :variant="darkMode ? 'warning' : 'dark'"
             ></b-spinner>
         </b-col>
     </b-row>
     <b-row align-h="center" v-else>
-        <b-col v-if="flows.length === 0 && !loading"
+        <b-col
+            :class="darkMode ? 'text-light' : 'text-dark'"
+            v-if="flows.length === 0 && !loading"
             >No flows to show!</b-col
         >
         <b-card-group columns class="justify-content-center">
             <b-card
                 v-for="flow in flows"
                 :key="flow.repo.name"
-                bg-variant="white"
-                footer-bg-variant="white"
-                border-variant="default"
-                footer-border-variant="white"
+                :bg-variant="darkMode ? 'dark' : 'white'"
+                :header-bg-variant="darkMode ? 'dark' : 'white'"
+                border-variant="secondary"
+                :header-border-variant="darkMode ? 'secondary' : 'default'"
+                :text-variant="darkMode ? 'white' : 'dark'"
                 style="min-width: 15rem; max-width: 40rem;"
                 class="overflow-hidden mb-4"
             >
@@ -37,6 +40,7 @@
 import axios from 'axios';
 import blurb from '@/components/flow-blurb.vue';
 import router from '@/router';
+import { mapGetters } from 'vuex';
 
 export default {
     name: 'flows',
@@ -97,8 +101,17 @@ export default {
                 }
             });
         }
-    }
+    },
+    computed: mapGetters([
+        'currentUserDjangoProfile',
+        'currentUserGitHubProfile',
+        'currentUserCyVerseProfile',
+        'loggedIn',
+        'darkMode'
+    ])
 };
 </script>
-
-<style scoped></style>
+<style scoped lang="sass">
+@import "../scss/_colors.sass"
+@import "../scss/main.sass"
+</style>

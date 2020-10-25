@@ -1,243 +1,275 @@
 <template>
-    <div class="w-100 p-3">
+    <div
+        class="w-100 h-100 p-3"
+        :style="
+            darkMode
+                ? 'background-color: #616163'
+                : 'background-color: white' + '; min-height: 100%'
+        "
+    >
         <br />
-        <br />
-        <b-row>
-            <b-col>
-                <b-card
-                    bg-variant="white"
-                    header-bg-variant="white"
-                    footer-bg-variant="white"
-                    border-variant="white"
-                    footer-border-variant="white"
-                    header-border-variant="default"
-                    class="overflow-hidden"
-                >
-                    <flowdetail
-                        :show-public="
-                            flow.repo.owner.login ===
-                                currentUserDjangoProfile.profile.github_username
-                        "
-                        :workflow="flow"
-                        :selectable="false"
-                    ></flowdetail>
-                </b-card>
-            </b-col>
-        </b-row>
-        <b-row
-            v-if="
-                flow.config.params !== undefined
-                    ? flow.config.params.length !== 0
-                    : false
-            "
-        >
-            <b-col>
-                <b-card
-                    bg-variant="white"
-                    header-bg-variant="white"
-                    footer-bg-variant="white"
-                    border-variant="white"
-                    footer-border-variant="white"
-                    header-border-variant="white"
-                >
-                    <b-row align-v="center">
-                        <b-col style="color: white">
-                            <h4>
-                                Parameters
-                            </h4>
-                        </b-col>
-                    </b-row>
-                    <hr />
-                    <b-row
-                        ><b-col>Configure this flow's parameters.</b-col></b-row
-                    >
-                    <br />
-                    <b-table
-                        :items="params"
-                        :fields="fields"
-                        responsive="sm"
-                        borderless
-                        small
-                        sticky-header="true"
-                        caption-top
-                    >
-                        <template v-slot:cell(name)="param">
-                            {{ param.item.key.split('=')[0].toLowerCase() }}
-                        </template>
-                        <template v-slot:cell(value)="param">
-                            <b-form-input
-                                size="sm"
-                                v-model="param.item.value"
-                                :placeholder="
-                                    param.item.key.split('=').length === 1
-                                        ? 'Enter a value for \'' +
-                                          param.item.key
-                                              .split('=')[0]
-                                              .toLowerCase() +
-                                          '\''
-                                        : param.item.key.split('=')[1].toLowerCase()
-                                "
-                            ></b-form-input>
-                        </template>
-                    </b-table>
-                </b-card>
-            </b-col>
-        </b-row>
-        <b-row v-if="flow && flow.config.from">
-            <b-col>
-                <b-card
-                    bg-variant="white"
-                    header-bg-variant="white"
-                    footer-bg-variant="white"
-                    border-variant="white"
-                    footer-border-variant="white"
-                    header-border-variant="default"
-                >
-                    <b-row align-v="center">
-                        <b-col style="color: white">
-                            <h4>Input {{ flow.config.from }}</h4>
-                        </b-col>
-                    </b-row>
-                    <hr />
-                    <runinput
-                        :user="user"
-                        :kind="flow.config.from"
-                        v-on:inputSelected="inputSelected"
-                    ></runinput>
-                    <br />
-                    <b-row
-                        ><b-col
-                            >Enter an input file pattern (optional).</b-col
-                        ></b-row
-                    >
-                    <br />
-                    <b-form-group
-                        description="All files in the input directory matching this pattern will be selected."
-                    >
-                        <b-form-input
-                            size="sm"
-                            v-model="input.pattern"
-                            :placeholder="'Enter a file pattern'"
-                        ></b-form-input>
-                    </b-form-group>
-                </b-card>
-            </b-col>
-        </b-row>
-        <b-row v-if="flow.config && flow.config.to">
-            <b-col>
-                <b-card
-                    bg-variant="white"
-                    header-bg-variant="white"
-                    footer-bg-variant="white"
-                    border-variant="white"
-                    footer-border-variant="white"
-                    header-border-variant="default"
-                >
-                    <b-row align-v="center">
-                        <b-col style="color: white">
-                            <h4>Output {{ flow.config.to }}</h4>
-                        </b-col>
-                    </b-row>
-                    <hr />
-                    <runoutput
-                        :user="user"
-                        kind="Directory"
-                        v-on:outputSelected="outputSelected"
-                    ></runoutput>
-                    <br />
-                    <b-row
-                        ><b-col
-                            >Specify an output path (required) and file pattern
-                            (optional).</b-col
-                        ></b-row
-                    >
-                    <br />
-                    <b-form-group
-                        description="The directory in which the flow will deposit output files."
-                    >
-                        <b-form-input
-                            size="sm"
-                            v-model="output.from"
-                            :placeholder="'Enter a filesystem path'"
-                        ></b-form-input>
-                    </b-form-group>
-                    <b-form-group
-                        description="All files in the output directory matching this pattern will be selected."
-                    >
-                        <b-form-input
-                            size="sm"
-                            v-model="output.pattern"
-                            :placeholder="'Enter a file pattern'"
-                        ></b-form-input>
-                    </b-form-group>
-                </b-card>
-            </b-col>
-        </b-row>
-        <b-row>
-            <b-col>
-                <b-card
-                    bg-variant="white"
-                    header-bg-variant="white"
-                    footer-bg-variant="white"
-                    border-variant="white"
-                    footer-border-variant="white"
-                    header-border-variant="default"
-                >
-                    <b-row align-v="center">
-                        <b-col style="color: white">
-                            <h4>
-                                Deployment Target
-                            </h4>
-                        </b-col>
-                    </b-row>
-                    <hr />
-                    <runtarget
-                        :selected="target"
-                        v-on:targetSelected="targetSelected"
-                    ></runtarget>
+        <b-container>
+            <b-row>
+                <b-col>
                     <b-card
-                        v-if="target.max_walltime && target.name !== 'Sandbox'"
-                        border-variant="white"
-                        footer-bg-variant="white"
-                        sub-title="Configure resource requests."
+                        :bg-variant="darkMode ? 'dark' : 'white'"
+                        :header-bg-variant="darkMode ? 'dark' : 'white'"
+                        :border-variant="darkMode ? 'dark' : 'white'"
+                        :header-border-variant="darkMode ? 'dark' : 'white'"
+                        :text-variant="darkMode ? 'white' : 'dark'"
+                        class="overflow-hidden"
                     >
+                        <flowdetail
+                            :show-public="true"
+                            :workflow="flow"
+                            :selectable="false"
+                        ></flowdetail>
+                    </b-card>
+                </b-col>
+            </b-row>
+            <b-row
+                v-if="
+                    flow.config.params !== undefined
+                        ? flow.config.params.length !== 0
+                        : false
+                "
+            >
+                <b-col>
+                    <b-card
+                        :bg-variant="darkMode ? 'dark' : 'white'"
+                        :header-bg-variant="darkMode ? 'dark' : 'white'"
+                        :border-variant="darkMode ? 'dark' : 'white'"
+                        :header-border-variant="darkMode ? 'dark' : 'white'"
+                        :text-variant="darkMode ? 'white' : 'dark'"
+                    >
+                        <b-row align-v="center">
+                            <b-col>
+                                <h4
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                >
+                                    Parameters
+                                </h4>
+                            </b-col>
+                        </b-row>
+                        <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
+                        <b-row
+                            ><b-col
+                                >Configure this flow's parameters.</b-col
+                            ></b-row
+                        >
+                        <br />
+                        <b-table
+                            :items="params"
+                            :fields="fields"
+                            responsive="sm"
+                            borderless
+                            small
+                            sticky-header="true"
+                            caption-top
+                            :table-variant="darkMode ? 'dark' : 'white'"
+                        >
+                            <template v-slot:cell(name)="param">
+                                {{ param.item.key.split('=')[0].toLowerCase() }}
+                            </template>
+                            <template v-slot:cell(value)="param">
+                                <b-form-input
+                                    size="sm"
+                                    v-model="param.item.value"
+                                    :placeholder="
+                                        param.item.key.split('=').length === 1
+                                            ? 'Enter a value for \'' +
+                                              param.item.key
+                                                  .split('=')[0]
+                                                  .toLowerCase() +
+                                              '\''
+                                            : param.item.key
+                                                  .split('=')[1]
+                                                  .toLowerCase()
+                                    "
+                                ></b-form-input>
+                            </template>
+                        </b-table>
+                    </b-card>
+                </b-col>
+            </b-row>
+            <b-row v-if="flow && flow.config.from">
+                <b-col>
+                    <b-card
+                        :bg-variant="darkMode ? 'dark' : 'white'"
+                        :header-bg-variant="darkMode ? 'dark' : 'white'"
+                        :border-variant="darkMode ? 'dark' : 'white'"
+                        :header-border-variant="darkMode ? 'dark' : 'white'"
+                        :text-variant="darkMode ? 'white' : 'dark'"
+                    >
+                        <b-row align-v="center">
+                            <b-col>
+                                <h4
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                >
+                                    Input {{ flow.config.from }}
+                                </h4>
+                            </b-col>
+                        </b-row>
+                        <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
+                        <runinput
+                            :user="user"
+                            :kind="flow.config.from"
+                            v-on:inputSelected="inputSelected"
+                        ></runinput>
+                        <br />
+                        <b-row
+                            ><b-col
+                                >Enter an input file pattern (optional).</b-col
+                            ></b-row
+                        >
                         <br />
                         <b-form-group
-                            :state="target.walltime <= target.max_walltime"
-                            description="Walltime to be requested from the cluster resource scheduler."
-                            label="Walltime"
+                            description="All files in the input directory matching this pattern will be selected."
                         >
                             <b-form-input
                                 size="sm"
-                                v-model="target.walltime"
-                                :placeholder="'Max: 01:00:00'"
-                            ></b-form-input>
-                        </b-form-group>
-                        <b-form-group
-                            :state="target.memory <= target.max_mem"
-                            description="Memory to be requested from the cluster resource scheduler."
-                            label="Memory"
-                        >
-                            <b-form-input
-                                size="sm"
-                                v-model="target.memory"
-                                :placeholder="
-                                    'Max: ' + target.max_mem + 'GB'
-                                "
+                                v-model="input.pattern"
+                                :placeholder="'Enter a file pattern'"
                             ></b-form-input>
                         </b-form-group>
                     </b-card>
-                </b-card>
-            </b-col>
-        </b-row>
-        <br />
-        <b-row>
-            <b-col>
-                <b-button @click="onStart" variant="success" block>
-                    Start
-                </b-button>
-            </b-col>
-        </b-row>
+                </b-col>
+            </b-row>
+            <b-row v-if="flow.config && flow.config.to">
+                <b-col>
+                    <b-card
+                        :bg-variant="darkMode ? 'dark' : 'white'"
+                        :header-bg-variant="darkMode ? 'dark' : 'white'"
+                        :border-variant="darkMode ? 'dark' : 'white'"
+                        :header-border-variant="darkMode ? 'dark' : 'white'"
+                        :text-variant="darkMode ? 'white' : 'dark'"
+                    >
+                        <b-row align-v="center">
+                            <b-col>
+                                <h4
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                >
+                                    Output {{ flow.config.to }}
+                                </h4>
+                            </b-col>
+                        </b-row>
+                        <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
+                        <runoutput
+                            :user="user"
+                            kind="Directory"
+                            v-on:outputSelected="outputSelected"
+                        ></runoutput>
+                        <br />
+                        <b-row
+                            ><b-col
+                                >Specify an output path (required) and file
+                                pattern (optional).</b-col
+                            ></b-row
+                        >
+                        <br />
+                        <b-form-group
+                            description="The directory in which the flow will deposit output files."
+                        >
+                            <b-form-input
+                                size="sm"
+                                v-model="output.from"
+                                :placeholder="'Enter a filesystem path'"
+                            ></b-form-input>
+                        </b-form-group>
+                        <b-form-group
+                            description="All files in the output directory matching this pattern will be selected."
+                        >
+                            <b-form-input
+                                size="sm"
+                                v-model="output.pattern"
+                                :placeholder="'Enter a file pattern'"
+                            ></b-form-input>
+                        </b-form-group>
+                    </b-card>
+                </b-col>
+            </b-row>
+            <b-row>
+                <b-col>
+                    <b-card
+                        :bg-variant="darkMode ? 'dark' : 'white'"
+                        :header-bg-variant="darkMode ? 'dark' : 'white'"
+                        :border-variant="darkMode ? 'dark' : 'white'"
+                        :header-border-variant="darkMode ? 'dark' : 'white'"
+                        :text-variant="darkMode ? 'white' : 'dark'"
+                    >
+                        <b-row align-v="center">
+                            <b-col>
+                                <h4
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                >
+                                    Deployment Target
+                                </h4>
+                            </b-col>
+                        </b-row>
+                        <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
+                        <runtarget
+                            :selected="target"
+                            v-on:targetSelected="targetSelected"
+                        ></runtarget>
+                        <b-card
+                            v-if="
+                                target.max_walltime && target.name !== 'Sandbox'
+                            "
+                            :border-variant="darkMode ? 'dark' : 'white'"
+                            :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                            :bg-variant="darkMode ? 'dark' : 'white'"
+                            :text-variant="darkMode ? 'white' : 'dark'"
+                            :sub-title-text-variant="
+                                darkMode ? 'white' : 'dark'
+                            "
+                            sub-title="Configure resource requests."
+                        >
+                            <br />
+                            <b-form-group
+                                :state="target.walltime <= target.max_walltime"
+                                description="Walltime to be requested from the cluster resource scheduler."
+                                label="Walltime"
+                            >
+                                <b-form-input
+                                    size="sm"
+                                    v-model="target.walltime"
+                                    :placeholder="'Max: 01:00:00'"
+                                ></b-form-input>
+                            </b-form-group>
+                            <b-form-group
+                                :state="target.memory <= target.max_mem"
+                                description="Memory to be requested from the cluster resource scheduler."
+                                label="Memory"
+                            >
+                                <b-form-input
+                                    size="sm"
+                                    v-model="target.memory"
+                                    :placeholder="
+                                        'Max: ' + target.max_mem + 'GB'
+                                    "
+                                ></b-form-input>
+                            </b-form-group>
+                        </b-card>
+                    </b-card>
+                </b-col>
+            </b-row>
+            <br />
+            <b-row>
+                <b-col>
+                    <b-button @click="onStart" variant="success" block>
+                        Start
+                    </b-button>
+                </b-col>
+            </b-row>
+        </b-container>
     </div>
 </template>
 
@@ -384,8 +416,15 @@ export default {
                 });
         }
     },
+
     computed: {
-        ...mapGetters(['currentUserDjangoProfile']),
+        ...mapGetters([
+            'currentUserDjangoProfile',
+            'currentUserGitHubProfile',
+            'currentUserCyVerseProfile',
+            'loggedIn',
+            'darkMode'
+        ]),
         parametersUnready() {
             return this.params.some(param => param.value === '');
         },

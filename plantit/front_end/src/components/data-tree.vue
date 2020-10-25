@@ -1,13 +1,17 @@
 <template>
-    <b-list-group flush>
-        <b-row v-if="isDir && internalLoaded">
+    <b-list-group flush :class="darkMode ? 'theme-dark' : 'theme-light'">
+        <b-row
+            v-if="isDir && internalLoaded"
+            :class="darkMode ? 'theme-dark' : 'theme-light'"
+        >
             <b-col
                 :style="{
                     'font-weight': isDir ? '500' : '300'
                 }"
+                :class="darkMode ? 'theme-dark' : 'theme-light'"
             >
                 <b-button
-                    variant="white"
+                    :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="
                         select.toLowerCase() === 'directory' ||
                             select.toLowerCase() === 'file'
@@ -22,7 +26,11 @@
                         internalLoaded ? internalNode.label : node.label
                     }}</b-button
                 >
-                <b-button v-else disabled variant="white">
+                <b-button
+                    v-else
+                    disabled
+                    :variant="darkMode ? 'outline-light' : 'white'"
+                >
                     <i class="fas fa-folder fa-fw mr-2"></i
                     >{{ internalLoaded ? internalNode.label : node.label }}
                 </b-button>
@@ -44,7 +52,7 @@
                     class="ml-0 mr-0"
                     title="Refresh Directory"
                     size="sm"
-                    variant="outline-dark"
+                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
                     @click="refresh"
                 >
                     <i class="fas fa-sync-alt fa-fw"></i>
@@ -52,7 +60,7 @@
                 <b-spinner
                     small
                     v-else-if="internalLoaded && internalLoading"
-                    variant="dark"
+                    :variant="darkMode ? 'warning' : 'dark'"
                     type="grow"
                     label="Loading"
                 ></b-spinner>
@@ -63,7 +71,7 @@
                     title="Expand Directory"
                     v-if="!isOpen"
                     size="sm"
-                    variant="outline-dark"
+                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
                     @click="toggle"
                 >
                     <i class="fas fa-caret-up fa-fw"></i> </b-button
@@ -72,17 +80,20 @@
                     title="Collapse Directory"
                     v-else
                     size="sm"
-                    variant="outline-dark"
+                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
                     @click="toggle"
                 >
                     <i class="fas fa-caret-down fa-fw"></i>
                 </b-button>
             </b-col>
         </b-row>
-        <b-row v-if="isDir && !internalLoaded">
-            <b-col>
+        <b-row
+            v-if="isDir && !internalLoaded"
+            :class="darkMode ? 'theme-dark' : 'theme-light'"
+        >
+            <b-col :class="darkMode ? 'theme-dark' : 'theme-light'">
                 <b-button
-                    variant="white"
+                    :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="
                         select.toLowerCase() === 'directory' ||
                             select.toLowerCase() === 'file'
@@ -97,7 +108,11 @@
                         internalLoaded ? internalNode.label : node.label
                     }}</b-button
                 >
-                <b-button v-else disabled variant="white">
+                <b-button
+                    v-else
+                    disabled
+                    :variant="darkMode ? 'outline-light' : 'white'"
+                >
                     <i class="fas fa-folder fa-fw mr-2"></i
                     >{{ internalLoaded ? internalNode.label : node.label }}
                 </b-button>
@@ -105,7 +120,7 @@
             <b-col md="auto">
                 <b-button
                     size="sm"
-                    variant="outline-dark"
+                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
                     @click="
                         loadDirectory(
                             internalLoaded ? internalNode.path : node.path,
@@ -119,7 +134,7 @@
                     <b-spinner
                         small
                         v-else-if="!internalLoaded && internalLoading"
-                        variant="dark"
+                        :variant="darkMode ? 'warning' : 'dark'"
                         type="grow"
                         label="Loading"
                     ></b-spinner
@@ -127,12 +142,13 @@
             </b-col>
         </b-row>
         <b-list-group-item
+            :class="darkMode ? 'theme-dark' : 'theme-light'"
             v-for="(child, index) in internalLoaded
                 ? internalNode.folders
                 : node.folders"
             v-bind:key="index"
             v-show="isOpen"
-            variant="white"
+            :variant="darkMode ? 'outline-light' : 'white'"
         >
             <data-tree
                 :select="'directory'"
@@ -143,13 +159,15 @@
         <b-list-group-item
             v-show="isOpen"
             v-if="isDir && internalLoaded"
-            variant="light"
+            :variant="darkMode ? 'outline-light' : 'white'"
+            :class="darkMode ? 'theme-dark' : 'theme-light'"
         >
             <b-row
                 v-for="(child, index) in internalLoaded
                     ? internalNode.files
                     : node.files"
                 :key="index"
+                :class="darkMode ? 'theme-dark' : 'theme-light'"
             >
                 <b-button v-if="select === 'file'" @click="select"
                     ><i class="fas fa-file fa-fw"></i>
@@ -191,7 +209,8 @@ export default {
             'currentUserDjangoProfile',
             'currentUserGitHubProfile',
             'currentUserCyVerseProfile',
-            'loggedIn'
+            'loggedIn',
+            'darkMode'
         ]),
         isDir: function() {
             return !('file-size' in this);
