@@ -44,7 +44,7 @@
                         right
                         class="avatar"
                         rounded="circle"
-                        style="max-height: 4rem; max-width: 4rem; position: relative; border: 1px solid white"
+                        style="max-height: 4rem; max-width: 4rem; position: relative; border: 2px solid white"
                         :src="githubProfile ? githubProfile.avatar_url : ''"
                     ></b-img>
                 </b-col>

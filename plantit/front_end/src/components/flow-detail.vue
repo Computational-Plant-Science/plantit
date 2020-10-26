@@ -1,16 +1,16 @@
 <template>
     <div
-        v-if="workflow.config"
+        v-if="flow.config"
         :class="darkMode ? 'theme-dark' : 'theme-light'"
     >
         <b-img
-            v-if="workflow.config.logo"
+            v-if="flow.config.logo"
             rounded="circle"
             class="card-img-right"
             style="max-width: 10rem;position: absolute;right: 20px;top: 20px;z-index:1"
             right
             :src="
-                `https://raw.githubusercontent.com/${workflow.repo.owner.login}/${workflow.repo.name}/master/${workflow.config.logo}`
+                `https://raw.githubusercontent.com/${flow.repo.owner.login}/${flow.repo.name}/master/${flow.config.logo}`
             "
         ></b-img>
         <b-img
@@ -25,7 +25,7 @@
                 <b-row>
                     <b-col md="auto" class="mr-0">
                         <h2 :class="darkMode ? 'text-white' : 'text-dark'">
-                            {{ workflow.config.name }}
+                            {{ flow.config.name }}
                         </h2>
                     </b-col>
                     <b-col class="ml-0 pl-0" v-if="showPublic">
@@ -37,12 +37,12 @@
                             <b-badge
                                 class="mr-2"
                                 :variant="
-                                    workflow.config.public
+                                    flow.config.public
                                         ? 'success'
                                         : 'warning'
                                 "
                                 >{{
-                                    workflow.config.public
+                                    flow.config.public
                                         ? 'Public'
                                         : 'Private'
                                 }}</b-badge
@@ -57,14 +57,14 @@
                                 :class="darkMode ? 'text-warning' : 'text-dark'"
                                 :href="
                                     'https://github.com/' +
-                                        workflow.repo.owner.login +
+                                        flow.repo.owner.login +
                                         '/' +
-                                        workflow.repo.name
+                                        flow.repo.name
                                 "
                             >
                                 <i class="fab fa-github fa-fw"></i>
-                                {{ workflow.repo.owner.login }}/{{
-                                    workflow.repo.name
+                                {{ flow.repo.owner.login }}/{{
+                                    flow.repo.name
                                 }}
                             </b-link>
                         </small>
@@ -75,7 +75,7 @@
                     <b-col>
                         <b-row>
                             <b-col>
-                                {{ workflow.repo.description }}
+                                {{ flow.repo.description }}
                             </b-col>
                         </b-row>
                         <br />
@@ -86,7 +86,7 @@
                                         <small>Author</small>
                                     </b-col>
                                     <b-col cols="10">
-                                        <b>{{ workflow.config.author }}</b>
+                                        <b>{{ flow.config.author }}</b>
                                     </b-col>
                                 </b-row>
                                 <b-row>
@@ -95,7 +95,7 @@
                                     </b-col>
                                     <b-col cols="10">
                                         <b>{{
-                                            workflow.config.clone ? 'Yes' : 'No'
+                                            flow.config.clone ? 'Yes' : 'No'
                                         }}</b>
                                     </b-col>
                                 </b-row>
@@ -104,7 +104,7 @@
                                         <small>Image</small>
                                     </b-col>
                                     <b-col cols="10">
-                                        <b>{{ workflow.config.image }}</b>
+                                        <b>{{ flow.config.image }}</b>
                                     </b-col>
                                 </b-row>
                                 <b-row>
@@ -113,8 +113,8 @@
                                     </b-col>
                                     <b-col cols="10">
                                         <b>{{
-                                            workflow.config.from
-                                                ? workflow.config.from.capitalize()
+                                            flow.config.from
+                                                ? flow.config.from.capitalize()
                                                 : 'None'
                                         }}</b>
                                     </b-col>
@@ -125,8 +125,8 @@
                                     </b-col>
                                     <b-col cols="10">
                                         <b>{{
-                                            workflow.config.to
-                                                ? workflow.config.to.capitalize()
+                                            flow.config.to
+                                                ? flow.config.to.capitalize()
                                                 : 'None'
                                         }}</b>
                                     </b-col>
@@ -137,8 +137,8 @@
                                     </b-col>
                                     <b-col cols="10">
                                         <b>{{
-                                            workflow.config.params
-                                                ? workflow.config.params.length
+                                            flow.config.params
+                                                ? flow.config.params.length
                                                 : 'None'
                                         }}</b>
                                     </b-col>
@@ -150,7 +150,7 @@
                                     <b-col cols="10">
                                         <b
                                             ><code>{{
-                                                ' ' + workflow.config.commands
+                                                ' ' + flow.config.commands
                                             }}</code></b
                                         >
                                     </b-col>
@@ -164,7 +164,7 @@
                                             class="text-left"
                                             variant="success"
                                             v-b-tooltip.hover
-                                            @click="workflowSelected(workflow)"
+                                            @click="flowSelected(flow)"
                                         >
                                             <i class="fas fa-terminal"></i>
                                             Run
@@ -190,7 +190,7 @@ export default {
             type: Boolean,
             required: true
         },
-        workflow: {
+        flow: {
             type: Object,
             required: true
         },
@@ -209,8 +209,8 @@ export default {
         ])
     },
     methods: {
-        workflowSelected: function(workflow) {
-            this.$emit('flowSelected', workflow);
+        flowSelected: function(flow) {
+            this.$emit('flowSelected', flow);
         }
     }
 };
@@ -219,7 +219,7 @@ export default {
 @import "../scss/_colors.sass"
 @import "../scss/main.sass"
 
-.workflow-icon
+.flow-icon
     width: 200px
     height: 200px
     margin: 0 auto

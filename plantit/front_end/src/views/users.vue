@@ -45,8 +45,8 @@
                                 darkMode ? 'secondary' : 'default'
                             "
                             :text-variant="darkMode ? 'white' : 'dark'"
-                            style="min-width: 25rem"
-                            class="overflow-hidden"
+                            style="min-width: 15rem; max-width: 40rem;"
+                            class="overflow-hidden mb-4"
                         >
                             <b-row align-v="center">
                                 <b-col

@@ -398,7 +398,7 @@
                     <b-nav-item
                         right
                         v-if="loggedIn"
-                        title="User"
+                        :title="currentUserDjangoProfile.username"
                         class="m-0 p-0"
                         style="font-size: 12pt"
                         :href="'/' + currentUserDjangoProfile.username + '/'"

@@ -21,7 +21,7 @@
                     >
                         <flowdetail
                             :show-public="true"
-                            :workflow="flow"
+                            :flow="flow"
                             :selectable="false"
                         ></flowdetail>
                     </b-card>

@@ -32,6 +32,7 @@
                     </b-col>
                 </b-row>
                 <br />
+                <br />
                 <b-row>
                     <b-col md="auto" align-self="end" class="mr-0">
                         <h5 :class="darkMode ? 'text-light' : 'text-dark'">
@@ -114,6 +115,14 @@
                         </b-table>
                     </b-col>
                 </b-row>
+                <b-row v-if="flow.config.to && (run.state === 2 || run.state === 1)">
+                    <b-col md="auto" align-self="end" class="mr-0">
+                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">
+                            Output
+                        </h5>
+                    </b-col>
+                </b-row>
+                <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
             </div>
         </b-container>
     </div>
