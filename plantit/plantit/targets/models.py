@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy
 
 
 class Target(models.Model):
-
     name = models.CharField(max_length=20,
                             help_text="Human-readable name.")
 
@@ -27,20 +26,35 @@ class Target(models.Model):
                                     null=True,
                                     default=None)
 
-    max_walltime = models.PositiveIntegerField(help_text="Maximum walltime for runs (minutes).", blank=True, null=True, default=10)
+    max_walltime = models.PositiveIntegerField(help_text="Maximum walltime for runs (minutes).", blank=True, null=True,
+                                               default=10)
 
-    max_mem = models.PositiveIntegerField(help_text="Maximum memory for runs (GB)", blank=True, null=True, default=10)
+    max_mem = models.IntegerField(help_text="Maximum memory (GB)", blank=True, null=True, default=10)
+
+    max_cores = models.IntegerField(help_text="Maximum cores per node", blank=True, null=True,
+                                    default=1)
+
+    max_processes = models.IntegerField(help_text="Maximum processes per core", blank=True, null=True, default=1)
+
+    default_queue = models.CharField(max_length=250,
+                                     help_text="Default queue.",
+                                     null=True,
+                                     blank=True)
+
+    default_project = models.CharField(max_length=250,
+                                       help_text="Default queue.",
+                                       null=True,
+                                       blank=True)
 
     class Executor(models.TextChoices):
-        LOCAL = 'LO', gettext_lazy('Local')
-        SLURM = 'JQ', gettext_lazy('Job Queue')
+        LOCAL = 'local', gettext_lazy('Local')
+        SLURM = 'slurm', gettext_lazy('SLURM')
+        PBS = 'pbs', gettext_lazy('PBS')
 
     executor = models.CharField(
-        max_length=2,
+        max_length=10,
         choices=Executor.choices,
         default=Executor.LOCAL)
 
     def __str__(self):
         return self.name
-
-

@@ -230,23 +230,22 @@
                             :sub-title-text-variant="
                                 darkMode ? 'white' : 'dark'
                             "
-                            sub-title="Configure resource requests."
+                            sub-title="Configure resources to request from the cluster scheduler."
                         >
                             <br />
                             <b-form-group
                                 :state="target.walltime <= target.max_walltime"
-                                description="Walltime to be requested from the cluster resource scheduler."
                                 label="Walltime"
                             >
                                 <b-form-input
                                     size="sm"
                                     v-model="target.walltime"
-                                    :placeholder="'Max: 01:00:00'"
+                                    :placeholder="'Max: ' + target.max_walltime"
                                 ></b-form-input>
                             </b-form-group>
                             <b-form-group
+                                v-if="target.max_mem !== -1"
                                 :state="target.memory <= target.max_mem"
-                                description="Memory to be requested from the cluster resource scheduler."
                                 label="Memory"
                             >
                                 <b-form-input
@@ -254,6 +253,53 @@
                                     v-model="target.memory"
                                     :placeholder="
                                         'Max: ' + target.max_mem + 'GB'
+                                    "
+                                ></b-form-input>
+                            </b-form-group>
+                            <b-form-group
+                                :state="target.cores <= target.max_cores"
+                                label="Cores"
+                            >
+                                <b-form-input
+                                    size="sm"
+                                    v-model="target.cores"
+                                    :placeholder="'Max: ' + target.max_cores"
+                                ></b-form-input>
+                            </b-form-group>
+                            <b-form-group
+                                :state="
+                                    target.processes <= target.max_processes
+                                "
+                                label="Processes"
+                            >
+                                <b-form-input
+                                    size="sm"
+                                    v-model="target.processes"
+                                    :placeholder="
+                                        'Max: ' + target.max_processes
+                                    "
+                                ></b-form-input>
+                            </b-form-group>
+                            <b-form-group
+                                :state="target.queue !== ''"
+                                label="Queue"
+                            >
+                                <b-form-input
+                                    size="sm"
+                                    v-model="target.queue"
+                                    :placeholder="'Queue: normal'"
+                                ></b-form-input>
+                            </b-form-group>
+                            <b-form-group
+                                v-if="target.default_project !== null"
+                                :state="target.project !== ''"
+                                label="Project"
+                            >
+                                <b-form-input
+                                    size="sm"
+                                    v-model="target.project"
+                                    :placeholder="
+                                        'Default: ' + target.default_project
                                     "
                                 ></b-form-input>
                             </b-form-group>
@@ -372,11 +418,74 @@ export default {
             this.output.to = path;
         },
         targetSelected(target) {
+            if (this.targetIsJobqueue) {
+                this.target.walltime = this.target.max_walltime;
+                this.target.mem = this.target.max_mem;
+                this.target.cores = this.target_max_cores;
+                this.target.processes = this.target.max_processes;
+                this.target.queue = this.target.default_queue;
+                this.target.project = this.target.default_project;
+            }
             this.target = target;
         },
         onStart() {
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
+            let executor = {
+                name: this.target.name,
+                config: {}
+            };
+            if (this.targetIsJobqueue) {
+                executor.config =
+                    this.target.executor === 'slurm'
+                        ? {
+                              jobqueue: {
+                                  slurm: {
+                                      walltime: this.target.walltime
+                                          ? this.target.walltime
+                                          : '01:00:00',
+                                      cores: this.target.cores
+                                          ? this.target.cores
+                                          : 1,
+                                      processes: this.target.processes
+                                          ? this.target.cores
+                                          : 1,
+                                      queue: this.target.queue
+                                          ? this.target.queue
+                                          : this.target.default_queue
+                                  }
+                              }
+                          }
+                        : {
+                              jobqueue: {
+                                  pbs: {
+                                      walltime: this.target.walltime
+                                          ? this.target.walltime
+                                          : '01:00:00',
+                                      cores: this.target.cores
+                                          ? this.target.cores
+                                          : 1,
+                                      processes: this.target.processes
+                                          ? this.target.cores
+                                          : 1,
+                                      queue: this.target.queue
+                                          ? this.target.queue
+                                          : this.target.default_queue
+                                  }
+                              }
+                          };
+                if (this.target.mem !== undefined && this.target.mem > 0)
+                    executor.config.jobqueue['mem'] = this.target.mem;
+                if (
+                    this.target.project !== undefined &&
+                    this.target.project !== ''
+                )
+                    executor.config.jobqueue['project'] = this.target.project;
+            } else {
+                executor['config'] = {
+                    local: {}
+                };
+            }
             let config = {
                 name: this.flow.config.name,
                 image: this.flow.config.image,
@@ -385,7 +494,7 @@ export default {
                         ? this.flow.config.clone
                         : false,
                 params: this.params,
-                target: this.target,
+                target: executor,
                 commands: this.flow.config.commands
             };
             if (this.flow.config.from) config.input = this.input;
@@ -425,6 +534,12 @@ export default {
             'loggedIn',
             'darkMode'
         ]),
+        targetIsJobqueue() {
+            return (
+                this.target.executor === 'slurm' ||
+                this.target.executor === 'pbs'
+            );
+        },
         parametersUnready() {
             return this.params.some(param => param.value === '');
         },

@@ -34,10 +34,6 @@ def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, d
 @app.task()
 def execute(workflow, run_id, plantit_token, cyverse_token):
     run = Run.objects.get(identifier=run_id)
-    run.status_set.create(description=f"Run started.",
-                          state=Status.RUNNING,
-                          location='PlantIT')
-    run.save()
 
     try:
         work_dir = join(run.target.workdir, run.work_dir)
@@ -48,7 +44,7 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
         with ssh_client:
             execute_command(run=run, ssh_client=ssh_client, pre_command=':', command=f"mkdir {work_dir}",
                             directory=run.target.workdir)
-            msg = f"Created working directory '{work_dir}'. Uploading workflow definition..."
+            msg = f"Created working directory '{work_dir}'. Uploading flow definition..."
             print(msg)
             run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()
@@ -57,18 +53,26 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
                 sftp.chdir(work_dir)
                 with sftp.open('workflow.yaml', 'w') as workflow_def:
                     yaml.dump(workflow['config'], workflow_def, default_flow_style=False)
-                msg = f"Uploaded flow definition.{'Uploading job script...' if run.target.executor == 'JQ' else ''}"
-                print(msg)
-                run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
-                run.save()
 
-                if run.target.executor == 'JQ':
+                if run.target.executor == 'slurm':
+                    msg = "Uploading job script..."
+                    print(msg)
+                    run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
+                    run.save()
                     with sftp.open('../job.sh', 'r') as template_script, sftp.open('job.sh', 'w') as script:
                         for line in template_script:
+                            if 'SBATCH --partition' in line and 'queue' in workflow['config']['executor']['jobqueue']['slurm']:
+                                line = line.split('=')[0] + '=' + workflow['config']['executor']['jobqueue']['slurm']['queue'] + '\n'
+                            if 'SBATCH --ntasks' in line and 'processes' in workflow['config']['executor']['jobqueue']['slurm']:
+                                line = line.split('=')[0] + '=' + str(workflow['config']['executor']['jobqueue']['slurm']['processes']) + '\n'
+                            if 'SBATCH --time' in line and 'walltime' in workflow['config']['executor']['jobqueue']['slurm']:
+                                line = line.split('=')[0] + '=' + workflow['config']['executor']['jobqueue']['slurm']['walltime'] + '\n'
+                            if 'SBATCH -A' in line and 'project' in workflow['config']['executor']['jobqueue']['slurm']:
+                                line = line.split('=')[0] + '=' + workflow['config']['executor']['jobqueue']['slurm']['project']+ '\n'
                             script.write(line)
                         script.write(f"plantit workflow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
 
-            msg = f"Uploaded workflow definition to '{work_dir}'. Running workflow..."
+            msg = "Running flow..."
             print(msg)
             run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()

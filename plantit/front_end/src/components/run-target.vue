@@ -72,7 +72,8 @@ export default {
                 {
                     key: 'max_mem',
                     label: 'Max Memory',
-                    formatter: value => value + ' (gigabytes)'
+                    formatter: value =>
+                        value === -1 ? 'NA' : value + ' (gigabytes)'
                 }
             ],
             targets: [],

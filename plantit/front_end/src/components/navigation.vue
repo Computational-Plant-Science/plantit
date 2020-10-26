@@ -31,6 +31,7 @@
                                 </b-nav-item>
                                 <b-nav-item class="m-0 p-0">
                                     <b-button
+                                        v-if="loggedIn"
                                         :variant="
                                             darkMode
                                                 ? 'outline-light'
@@ -104,7 +105,7 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-home fa-1x fa-fw"></i>
-                                        About
+                                        PlantIT
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item to="/guide" class="m-0 p-0">

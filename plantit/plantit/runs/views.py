@@ -40,30 +40,6 @@ def get_total_count(request):
     return JsonResponse({'count': len(runs)})
 
 
-def get_executor(config, executor):
-    if executor == 'lo':
-        return 'local'
-    elif executor == 'jq':
-        return {
-            'slurm': {
-                'cores': 1,
-                #'memory': config['memory'] if 'memory' in config else '20GB',
-                'walltime': config['walltime'] if 'walltime' in config else '01:00:00',
-            }
-        }
-    elif executor == 'sl':
-        return {
-            'slurm': {
-                'cores': 1,
-                'memory': config['memory'] if 'memory' in config else '20G',
-                'walltime': config['walltime'] if 'walltime' in config else '01:00:00',
-            }
-        }
-    else:
-        raise ValueError(f'Unrecognized executor: {executor}')
-
-
-
 @api_view(['GET', 'POST'])
 @login_required
 def runs(request):
@@ -110,7 +86,7 @@ def runs(request):
             'image': workflow['config']['image'],
             'command': workflow['config']['commands'],
             'params': workflow['config']['params'],
-            'executor': get_executor(workflow['config']['target'], target.executor.lower())
+            'executor': workflow['config']['target']['config']
         }
         if 'input' in workflow['config']:
             config['input'] = workflow['config']['input']
