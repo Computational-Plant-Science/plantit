@@ -54,7 +54,7 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
                 with sftp.open('workflow.yaml', 'w') as workflow_def:
                     yaml.dump(workflow['config'], workflow_def, default_flow_style=False)
 
-                if run.target.executor == 'slurm':
+                if run.target.executor == 'slurm' or run.target.executor == 'jobqueue':
                     msg = "Uploading job script..."
                     print(msg)
                     run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
