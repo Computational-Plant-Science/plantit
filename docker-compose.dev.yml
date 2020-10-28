@@ -50,41 +50,9 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-  celery1:
+  celery:
     image: computationalplantscience/plantit
     command: ["celery", "-A", "plantit", "worker", "--loglevel=INFO"]
-    volumes:
-      - .:/code
-    working_dir: /code/plantit
-    depends_on:
-      - rabbitmq
-    environment:
-      - CYVERSE_REDIRECT_URL=${CYVERSE_REDIRECT_URL}
-      - CYVERSE_CLIENT_ID=${CYVERSE_CLIENT_ID}
-      - CYVERSE_CLIENT_SECRET=${CYVERSE_CLIENT_SECRET}
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG}
-      - DJANGO_FIELD_ENCRYPTION_KEY=${DJANGO_FIELD_ENCRYPTION_KEY}
-      - DJANGO_API_URL=${DJANGO_API_URL}
-      - DJANGO_ALLOWED_HOSTS=*
-      - DJANGO_SECURE_SSL_REDIRECT=${DJANGO_SECURE_SSL_REDIRECT}
-      - DJANGO_SESSION_COOKIE_SECURE=${DJANGO_SESSION_COOKIE_SECURE}
-      - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
-      - SQL_ENGINE=${SQL_ENGINE}
-      - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
-      - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
-      - GITHUB_KEY=${GITHUB_KEY}
-      - GITHUB_SECRET=${GITHUB_SECRET}
-    healthcheck:
-      test: celery -A plantit status | grep "OK"
-      interval: 60s
-      timeout: 60s
-      retries: 2
-      start_period: 20s
-  celery2:
-    image: computationalplantscience/plantit
-    command: [ "celery", "-A", "plantit", "worker", "--loglevel=INFO" ]
     volumes:
       - .:/code
     working_dir: /code/plantit
