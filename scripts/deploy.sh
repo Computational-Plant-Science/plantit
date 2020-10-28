@@ -14,7 +14,7 @@ git checkout origin/master scripts/configure-ssl.sh
 git checkout origin/master scripts/deploy.sh
 git checkout origin/master plantit/
 git checkout origin/master scripts/
-git checkout docker-compose.*
+git checkout docker-compose.prod.yml
 
 echo "Pulling new image definitions..."
 $compose pull
