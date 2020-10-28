@@ -28,34 +28,21 @@
                 </b-row>
             </template>
             <b-card-group columns>
-                <b-card
+              <b-card
                     align="right"
                     bg-variant="transparent"
                     border-variant="white"
                 >
-                    <b-link href="http://www.computational-plant-science.org">
+                    <b-link href="https://www.nsf.gov/">
                         <b-img
-                            :src="require('@/assets/sponsors/cps-black.png')"
+                            :src="require('@/assets/sponsors/nsf.png')"
                             height="50px"
-                            alt="Computational Plant Science Lab"
+                            alt="National Science Foundation"
                         ></b-img>
                     </b-link>
                 </b-card>
                 <b-card
                     align="right"
-                    bg-variant="transparent"
-                    border-variant="white"
-                >
-                    <b-link href="http://www.cyverse.org/">
-                        <b-img
-                            :src="require('@/assets/sponsors/cyversebw.png')"
-                            height="40px"
-                            alt="Cyverse"
-                        ></b-img>
-                    </b-link>
-                </b-card>
-                <b-card
-                    align="center"
                     bg-variant="transparent"
                     border-variant="white"
                 >
@@ -75,8 +62,21 @@
                     <b-link href="http://www.xsede.org/">
                         <b-img
                             :src="require('@/assets/sponsors/xsede.png')"
-                            height="55px"
+                            height="60px"
                             alt="XSEDE"
+                        ></b-img>
+                    </b-link>
+                </b-card>
+                <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                >
+                    <b-link href="http://www.cyverse.org/">
+                        <b-img
+                            :src="require('@/assets/sponsors/cyversebw.png')"
+                            height="42px"
+                            alt="Cyverse"
                         ></b-img>
                     </b-link>
                 </b-card>

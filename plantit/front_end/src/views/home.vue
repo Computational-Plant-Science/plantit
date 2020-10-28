@@ -1,5 +1,5 @@
 <template>
-    <b-container fluid>
+    <b-container fluid class="m-0 p-0">
         <b-row no-gutters>
             <b-col>
                 <splash></splash>
