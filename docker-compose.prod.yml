@@ -4,7 +4,8 @@ services:
     image: computationalplantscience/plantit
     working_dir: /code/plantit
     depends_on:
-      - celery
+      - celery1
+      - celery2
       - sandbox
     volumes:
       - .:/code
