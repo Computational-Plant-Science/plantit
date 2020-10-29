@@ -431,60 +431,24 @@ export default {
         onStart() {
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
-            let executor = {
-                name: this.target.name,
-                config: {}
-            };
             if (this.targetIsJobqueue) {
-                executor.config =
-                    this.target.executor === 'slurm'
-                        ? {
-                              jobqueue: {
-                                  slurm: {
-                                      walltime: this.target.walltime
-                                          ? this.target.walltime
-                                          : '01:00:00',
-                                      cores: this.target.cores
-                                          ? this.target.cores
-                                          : 1,
-                                      processes: this.target.processes
-                                          ? this.target.cores
-                                          : 1,
-                                      queue: this.target.queue
-                                          ? this.target.queue
-                                          : this.target.default_queue
-                                  }
-                              }
-                          }
-                        : {
-                              jobqueue: {
-                                  pbs: {
-                                      walltime: this.target.walltime
-                                          ? this.target.walltime
-                                          : '01:00:00',
-                                      cores: this.target.cores
-                                          ? this.target.cores
-                                          : 1,
-                                      processes: this.target.processes
-                                          ? this.target.cores
-                                          : 1,
-                                      queue: this.target.queue
-                                          ? this.target.queue
-                                          : this.target.default_queue
-                                  }
-                              }
-                          };
+                this.target.jobqueue = {
+                    walltime: this.target.walltime
+                        ? this.target.walltime
+                        : '01:00:00',
+                    cores: this.target.cores ? this.target.cores : 1,
+                    processes: this.target.processes ? this.target.cores : 1,
+                    queue: this.target.queue
+                        ? this.target.queue
+                        : this.target.default_queue
+                };
                 if (this.target.mem !== undefined && this.target.mem > 0)
-                    executor.config.jobqueue['mem'] = this.target.mem;
+                    this.target.jobqueue['mem'] = this.target.mem;
                 if (
                     this.target.project !== undefined &&
                     this.target.project !== ''
                 )
-                    executor.config.jobqueue['project'] = this.target.project;
-            } else {
-                executor['config'] = {
-                    local: {}
-                };
+                    this.target.jobqueue['project'] = this.target.project;
             }
             let config = {
                 name: this.flow.config.name,
@@ -494,7 +458,7 @@ export default {
                         ? this.flow.config.clone
                         : false,
                 params: this.params,
-                target: executor,
+                target: this.target,
                 commands: this.flow.config.commands
             };
             if (this.flow.config.from) config.input = this.input;

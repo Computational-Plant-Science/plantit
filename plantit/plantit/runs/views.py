@@ -86,7 +86,7 @@ def runs(request):
             'image': workflow['config']['image'],
             'command': workflow['config']['commands'],
             'params': workflow['config']['params'],
-            'executor': workflow['config']['target']['config']
+            'target': workflow['config']['target']
         }
         if 'input' in workflow['config']:
             config['input'] = workflow['config']['input']

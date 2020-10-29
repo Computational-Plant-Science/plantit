@@ -28,19 +28,6 @@
                 </b-row>
             </template>
             <b-card-group columns>
-              <b-card
-                    align="right"
-                    bg-variant="transparent"
-                    border-variant="white"
-                >
-                    <b-link href="https://www.nsf.gov/">
-                        <b-img
-                            :src="require('@/assets/sponsors/nsf.png')"
-                            height="50px"
-                            alt="National Science Foundation"
-                        ></b-img>
-                    </b-link>
-                </b-card>
                 <b-card
                     align="right"
                     bg-variant="transparent"
@@ -51,6 +38,20 @@
                             :src="require('@/assets/sponsors/arpa_e.png')"
                             height="47px"
                             alt="ARPA-E"
+                        ></b-img>
+                    </b-link>
+                </b-card>
+              <b-card
+                    align="right"
+                    bg-variant="transparent"
+                    border-variant="white"
+                >
+                    <b-link href="https://www.nsf.gov/">
+                        <b-img
+                            :src="require('@/assets/sponsors/nsf.png')"
+                            height="60px"
+                            alt="National Science Foundation"
+                            class="mr-5"
                         ></b-img>
                     </b-link>
                 </b-card>

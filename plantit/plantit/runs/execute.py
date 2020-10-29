@@ -1,3 +1,4 @@
+import os
 import re
 import traceback
 from os.path import join
@@ -42,8 +43,12 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
                          run.target.username)
 
         with ssh_client:
-            execute_command(run=run, ssh_client=ssh_client, pre_command=':', command=f"mkdir {work_dir}",
+            execute_command(run=run,
+                            ssh_client=ssh_client,
+                            pre_command=':',
+                            command=f"mkdir {work_dir}",
                             directory=run.target.workdir)
+
             msg = f"Created working directory '{work_dir}'. Uploading flow definition..."
             print(msg)
             run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
@@ -54,56 +59,59 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
                 with sftp.open('workflow.yaml', 'w') as workflow_def:
                     yaml.dump(workflow['config'], workflow_def, default_flow_style=False)
 
-                if run.target.executor == 'slurm' or run.target.executor == 'jobqueue':
-                    msg = "Uploading job script..."
+                    msg = "Uploading script..."
                     print(msg)
                     run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
                     run.save()
-                    with sftp.open('../job.sh', 'r') as template_script, sftp.open('job.sh', 'w') as script:
-                        for line in template_script:
-                            if 'SBATCH --partition' in line and 'queue' in workflow['config']['executor']['jobqueue']['slurm']:
-                                line = line.split('=')[0] + '=' + workflow['config']['executor']['jobqueue']['slurm']['queue'] + '\n'
-                            if 'SBATCH --ntasks' in line and 'processes' in workflow['config']['executor']['jobqueue']['slurm']:
-                                line = line.split('=')[0] + '=' + str(workflow['config']['executor']['jobqueue']['slurm']['processes']) + '\n'
-                            if 'SBATCH --time' in line and 'walltime' in workflow['config']['executor']['jobqueue']['slurm']:
-                                line = line.split('=')[0] + '=' + workflow['config']['executor']['jobqueue']['slurm']['walltime'] + '\n'
-                            if 'SBATCH -A' in line and 'project' in workflow['config']['executor']['jobqueue']['slurm']:
-                                line = line.split('=')[0] + '=' + workflow['config']['executor']['jobqueue']['slurm']['project']+ '\n'
-                            script.write(line)
-                        script.write(f"plantit workflow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
 
-            msg = "Running flow..."
+                    sandbox = run.target.name == 'Sandbox'
+                    template = os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else os.environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
+                    template_name = template.split('/')[-1]
+                    with sftp.open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
+                        for line in template_script:
+                            if sandbox:
+                                if 'SBATCH --partition' in line and 'queue' in workflow['config']['target']:
+                                    line = line.split('=')[0] + '=' + workflow['config']['target']['queue'] + '\n'
+                                if 'SBATCH --ntasks' in line and 'processes' in workflow['config']['target']:
+                                    line = line.split('=')[0] + '=' + str(workflow['config']['target']['processes']) + '\n'
+                                if 'SBATCH --time' in line and 'walltime' in workflow['config']['target']:
+                                    line = line.split('=')[0] + '=' + workflow['config']['target']['walltime'] + '\n'
+                                if 'SBATCH -A' in line and 'project' in workflow['config']['target']:
+                                    line = line.split('=')[0] + '=' + workflow['config']['target']['project']+ '\n'
+                            script.write(line)
+                        script.write(f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
+
+            msg = f"Running {run.identifier}..."
             print(msg)
             run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()
 
-            pre_commands = '; '.join(
-                str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':'
-            print(f"Pre-commands: {pre_commands}")
-
             execute_command(run=run,
                             ssh_client=ssh_client,
-                            pre_command=pre_commands,
-                            command=f"{'plantit workflow.yaml --plantit_token ' + plantit_token + ' --cyverse_token ' + cyverse_token if 'local' in workflow['config']['executor'] else 'chmod +x job.sh && sbatch job.sh'}",
+                            pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
+                            command=f"'chmod +x {template_name} && ./{template_name}'" if sandbox else f"'chmod +x {template_name} && sbatch {template_name}'",
                             directory=work_dir)
 
-            print(f"Run completed.")
             if run.status.state != 2:
+                msg = f"Run completed."
                 run.status_set.create(
-                    description=f"Run completed.",
+                    description=msg,
                     state=Status.COMPLETED,
                     location='PlantIT')
             else:
+                msg = f"Run failed."
+                print(msg)
                 run.status_set.create(
-                    description=f"Run failed.",
+                    description=msg,
                     state=Status.FAILED,
                     location='PlantIT')
 
             run.save()
 
     except Exception:
+        msg = f"Run failed: {traceback.format_exc()}."
         run.status_set.create(
-            description=f"Run failed: {traceback.format_exc()}.",
+            description=msg,
             state=Status.FAILED,
             location='PlantIT')
         run.save()
