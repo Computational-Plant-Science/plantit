@@ -372,7 +372,7 @@
                                 <b-badge
                                     variant="white"
                                     :class="
-                                        darkMode ? 'text-warning' : 'text-dark'
+                                        darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
                                     {{ crumb.text }}

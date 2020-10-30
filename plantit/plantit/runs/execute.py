@@ -33,7 +33,7 @@ def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, d
 
 
 @app.task()
-def execute(workflow, run_id, plantit_token, cyverse_token):
+def execute(flow, run_id, plantit_token, cyverse_token):
     run = Run.objects.get(identifier=run_id)
 
     try:
@@ -56,8 +56,8 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
 
             with ssh_client.client.open_sftp() as sftp:
                 sftp.chdir(work_dir)
-                with sftp.open('workflow.yaml', 'w') as workflow_def:
-                    yaml.dump(workflow['config'], workflow_def, default_flow_style=False)
+                with sftp.open('flow.yaml', 'w') as flow_def:
+                    yaml.dump(flow['config'], flow_def, default_flow_style=False)
 
                     msg = "Uploading script..."
                     print(msg)
@@ -66,19 +66,21 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
 
                     sandbox = run.target.name == 'Sandbox'
                     template = os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else os.environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
+                    print(f"Template: {template}")
                     template_name = template.split('/')[-1]
-                    with sftp.open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
+                    with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
                         for line in template_script:
                             if sandbox:
-                                if 'SBATCH --partition' in line and 'queue' in workflow['config']['target']:
-                                    line = line.split('=')[0] + '=' + workflow['config']['target']['queue'] + '\n'
-                                if 'SBATCH --ntasks' in line and 'processes' in workflow['config']['target']:
-                                    line = line.split('=')[0] + '=' + str(workflow['config']['target']['processes']) + '\n'
-                                if 'SBATCH --time' in line and 'walltime' in workflow['config']['target']:
-                                    line = line.split('=')[0] + '=' + workflow['config']['target']['walltime'] + '\n'
-                                if 'SBATCH -A' in line and 'project' in workflow['config']['target']:
-                                    line = line.split('=')[0] + '=' + workflow['config']['target']['project']+ '\n'
+                                if 'SBATCH --partition' in line and 'queue' in flow['config']['target']:
+                                    line = line.split('=')[0] + '=' + flow['config']['target']['queue'] + '\n'
+                                elif 'SBATCH --ntasks' in line and 'processes' in flow['config']['target']:
+                                    line = line.split('=')[0] + '=' + str(flow['config']['target']['processes']) + '\n'
+                                elif 'SBATCH --time' in line and 'walltime' in flow['config']['target']:
+                                    line = line.split('=')[0] + '=' + flow['config']['target']['walltime'] + '\n'
+                                elif 'SBATCH -A' in line and 'project' in flow['config']['target']:
+                                    line = line.split('=')[0] + '=' + flow['config']['target']['project'] + '\n'
                             script.write(line)
+                        script.write(run.target.pre_commands + '\n')
                         script.write(f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
 
             msg = f"Running {run.identifier}..."
@@ -89,14 +91,14 @@ def execute(workflow, run_id, plantit_token, cyverse_token):
             execute_command(run=run,
                             ssh_client=ssh_client,
                             pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
-                            command=f"'chmod +x {template_name} && ./{template_name}'" if sandbox else f"'chmod +x {template_name} && sbatch {template_name}'",
+                            command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
                             directory=work_dir)
 
             if run.status.state != 2:
-                msg = f"Run completed."
+                msg = f"Run submitted."
                 run.status_set.create(
                     description=msg,
-                    state=Status.COMPLETED,
+                    state=Status.RUNNING,
                     location='PlantIT')
             else:
                 msg = f"Run failed."

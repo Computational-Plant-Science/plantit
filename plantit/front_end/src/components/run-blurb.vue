@@ -5,9 +5,9 @@
                 <b-badge variant="white"
                     ><i class="fas fa-terminal fa-1x fa-fw"></i> Run</b-badge
                 >
-                <h2 :class="darkMode ? 'theme-dark' : 'theme-light'">
+                <h3 :class="darkMode ? 'theme-dark' : 'theme-light'">
                     {{ run.id }}
-                </h2>
+                </h3>
             </b-col>
             <b-col md="auto" align-self="end" class="mb-2">
                 <h4 :class="darkMode ? 'theme-dark' : 'theme-light'">
