@@ -10,8 +10,6 @@ $compose down --remove-orphans
 
 echo "Fetching latest source from git..."
 git fetch origin master
-git checkout origin/master scripts/configure-ssl.sh
-git checkout origin/master scripts/deploy.sh
 git checkout origin/master plantit/
 git checkout origin/master scripts/
 git checkout origin/master docker-compose.prod.yml
@@ -46,23 +44,15 @@ echo "Running migrations..."
 $compose exec plantit python manage.py makemigrations
 $compose exec plantit python manage.py migrate
 
-echo "Creating superuser (if one does not already exist)..."
-env_file=".env"
-admin_password=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_PASSWORD" "$env_file")" )
-admin_username=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_USERNAME" "$env_file")" )
-admin_email=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_EMAIL" "$env_file")" )
-$compose exec plantit /code/scripts/configure-superuser.sh -u "$admin_username" -p "$admin_password" -e "$admin_email"
-
 echo "Configuring sandbox container deployment target..."
 $compose exec plantit /bin/bash /code/scripts/configure-sandbox.sh
 if [ ! -d config/ssh ]; then
   mkdir config/ssh
 fi
-if [ -f config/ssh/known_hosts ]; then
-  rm config/ssh/known_hosts
+if [ ! -f config/ssh/known_hosts ]; then
   touch config/ssh/known_hosts
+  $compose exec plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
 fi
-$compose exec plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
 fi

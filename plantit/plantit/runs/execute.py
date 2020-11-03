@@ -83,11 +83,6 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         script.write(run.target.pre_commands + '\n')
                         script.write(f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
 
-            msg = f"Running {run.identifier}..."
-            print(msg)
-            run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
-            run.save()
-
             execute_command(run=run,
                             ssh_client=ssh_client,
                             pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
@@ -95,13 +90,13 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             directory=work_dir)
 
             if run.status.state != 2:
-                msg = f"Run submitted."
+                msg = f"Run '{run.identifier}' submitted."
                 run.status_set.create(
                     description=msg,
                     state=Status.RUNNING,
                     location='PlantIT')
             else:
-                msg = f"Run failed."
+                msg = f"Run '{run.identifier}' failed."
                 print(msg)
                 run.status_set.create(
                     description=msg,
