@@ -21,7 +21,7 @@ config/ssh/*
 __pycache__/
 *.py[cod]
 *$py.class
-plantit/**/__pycache__/
+*.pyc
 
 # C extensions
 *.so
