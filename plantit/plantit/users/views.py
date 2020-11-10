@@ -158,15 +158,28 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         #     'github_username': 'van-der-knaap-lab'
         # }] +
 
-        users = [{
-            'username': user.username,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'github_username': user.profile.github_username,
-            'github_profile': requests.get(f"https://api.github.com/users/{user.profile.github_username}",
+        users = []
+        for user in list(self.queryset):
+            if user.profile.github_username:
+                github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
                                        headers={'Authorization':
                                                     f"Bearer {request.user.profile.github_token}"}).json()
-        } for user in list(self.queryset)]
+                if 'Bad credentials' not in github_profile.message:
+                    users.append({
+                        'username': user.username,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'github_username': user.profile.github_username,
+                        'github_profile': github_profile
+                    })
+            else:
+                users.append({
+                    'username': user.username,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'github_username': user.profile.github_username,
+                })
+
         return JsonResponse({
             'users': users
         })

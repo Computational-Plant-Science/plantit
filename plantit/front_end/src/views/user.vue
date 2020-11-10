@@ -3,9 +3,24 @@
         <br />
         <b-container class="p-3">
             <b-row align-v="start" align-h="center" class="mb-2">
-                <b-col style="color: white" align-self="end" class="ml-0 mr-0 ">
+                <b-col style="color: white" align-self="end" class="ml-0 mr-0">
                     <b-row>
-                        <b-col>
+                        <b-col md="auto" class="ml-0 mr-0" align-self="left">
+                            <b-img
+                                right
+                                class="avatar"
+                                rounded="circle"
+                                style="max-height: 6rem; max-width: 6rem; position: relative; border: 2px solid white"
+                                :src="
+                                    githubProfile
+                                        ? githubProfile.avatar_url
+                                        : ''
+                                "
+                                v-if="githubProfile"
+                            ></b-img>
+                            <i v-else class="fas fa-user fa-fw fa-4x"></i>
+                        </b-col>
+                        <b-col class="ml-0 mr-0">
                             <h2 :class="darkMode ? 'text-light' : 'text-dark'">
                                 {{
                                     cyverseProfile
@@ -21,11 +36,11 @@
                                     >({{ djangoProfile.username }})</small
                                 >
                             </h2>
-                        </b-col>
-                    </b-row>
-                    <b-row v-if="githubProfile">
-                        <b-col md="auto" align-self="end" class="ml-0 mr-0">
+                            <hr
+                                :class="darkMode ? 'theme-dark' : 'theme-light'"
+                            />
                             <a
+                                v-if="githubProfile"
                                 :class="darkMode ? 'text-light' : 'text-dark'"
                                 :href="
                                     'https://github.com/' + githubProfile.login
@@ -39,16 +54,8 @@
                         </b-col>
                     </b-row>
                 </b-col>
-                <b-col md="auto" class="ml-0 mr-0" align-self="right">
-                    <b-img
-                        right
-                        class="avatar"
-                        rounded="circle"
-                        style="max-height: 4rem; max-width: 4rem; position: relative; border: 2px solid white"
-                        :src="githubProfile ? githubProfile.avatar_url : ''"
-                    ></b-img>
-                </b-col>
             </b-row>
+            <br/>
             <b-row align-v="center" align-h="center"
                 ><b-col>
                     <b-tabs
@@ -367,7 +374,8 @@ export default {
     },
     methods: {
         tabLinkClass(idx) {
-            if (this.djangoProfile === null) return this.darkMode ? '' : 'text-dark';
+            if (this.djangoProfile === null)
+                return this.darkMode ? '' : 'text-dark';
             if (this.currentTab === idx) {
                 // return this.darkMode
                 //     ? 'background-dark text-success'

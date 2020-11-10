@@ -17,22 +17,7 @@
                     >Flows page</b-link
                 >.
             </p>
-            <b-row v-if="currentUserGitHubProfile === null" align-v="center">
-                <b-col md="auto" class="mr-2 pr-0">
-                    <b-button
-                        variant="success"
-                        href="/apis/v1/users/github_request_identity/"
-                        class="mr-0"
-                    >
-                        <i class="fab fa-github"></i>
-                        Log in to GitHub
-                    </b-button>
-                </b-col>
-                <b-col md="auto" class="ml-0 pl-0">
-                    <b class="ml-0 pl-0">to load users.</b>
-                </b-col>
-            </b-row>
-            <b-row align-v="center" v-else>
+            <b-row align-v="center">
                 <b-col>
                     <b-card-group columns>
                         <b-card
@@ -87,7 +72,7 @@
                                 </b-col>
                             </b-row>
                             <br />
-                            <b-row align-v="center">
+                            <b-row v-if="user.github_username === null" align-v="center">
                                 <b-col>
                                     <b-link
                                         :class="
