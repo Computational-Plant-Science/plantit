@@ -64,17 +64,6 @@ export default {
                     key: 'description',
                     label: 'Description'
                 },
-                {
-                    key: 'max_walltime',
-                    label: 'Max Walltime',
-                    formatter: value => value + ' (minutes)'
-                },
-                {
-                    key: 'max_mem',
-                    label: 'Max Memory',
-                    formatter: value =>
-                        value === -1 ? 'NA' : value + ' (gigabytes)'
-                }
             ],
             targets: [],
             targetsLoading: false

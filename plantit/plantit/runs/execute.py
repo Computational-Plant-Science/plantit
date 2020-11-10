@@ -65,7 +65,8 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                     run.save()
 
                     sandbox = run.target.name == 'Sandbox'
-                    template = os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else os.environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
+                    template = os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else os.environ.get(
+                        'CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
                     print(f"Template: {template}")
                     template_name = template.split('/')[-1]
                     with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
@@ -73,27 +74,38 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             if sandbox:
                                 if 'SBATCH --partition' in line and 'queue' in flow['config']['target']:
                                     line = line.split('=')[0] + '=' + flow['config']['target']['queue'] + '\n'
-                                elif 'SBATCH --ntasks' in line and 'processes' in flow['config']['target']:
-                                    line = line.split('=')[0] + '=' + str(flow['config']['target']['processes']) + '\n'
-                                elif 'SBATCH --time' in line and 'walltime' in flow['config']['target']:
-                                    line = line.split('=')[0] + '=' + flow['config']['target']['walltime'] + '\n'
                                 elif 'SBATCH -A' in line and 'project' in flow['config']['target']:
                                     line = line.split('=')[0] + '=' + flow['config']['target']['project'] + '\n'
+
+                                elif 'SBATCH --ntasks' in line and 'processes' in flow['config']['target']:
+                                    line = line.split('=')[0] + '=' + str(flow['config']['target']['processes']) + '\n'
+                                elif 'SBATCH --cpus-per-task' in line and 'cores' in flow['config']['target']:
+                                    line = line.split('=')[0] + '=' + str(flow['config']['target']['cores']) + '\n'
+                                elif 'SBATCH --time' in line and 'walltime' in flow['config']['target']:
+                                    line = line.split('=')[0] + '=' + flow['config']['target']['walltime'] + '\n'
+                            script.write(f"""
+                                # SBATCH --mail-type=END,FAIL
+                                # SBATCH --mail-user={run.user.email}
+                                # SBATCH --output=PlantIT.%j.out
+                                # SBATCH --error=PlantIT.%j.err
+                            """)
                             script.write(line)
                         script.write(run.target.pre_commands + '\n')
-                        script.write(f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
+                        script.write(
+                            f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
 
             execute_command(run=run,
                             ssh_client=ssh_client,
-                            pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
+                            pre_command='; '.join(
+                                str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
                             command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
                             directory=work_dir)
 
             if run.status.state != 2:
-                msg = f"Run '{run.identifier}' submitted."
+                msg = f"Run '{run.identifier}' {'completed' if sandbox else 'submitted'}."
                 run.status_set.create(
                     description=msg,
-                    state=Status.RUNNING,
+                    state=Status.COMPLETED if sandbox else Status.RUNNING,
                     location='PlantIT')
             else:
                 msg = f"Run '{run.identifier}' failed."

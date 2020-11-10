@@ -219,91 +219,6 @@
                             :selected="target"
                             v-on:targetSelected="targetSelected"
                         ></runtarget>
-                        <b-card
-                            v-if="
-                                target.max_walltime && target.name !== 'Sandbox'
-                            "
-                            :border-variant="darkMode ? 'dark' : 'white'"
-                            :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                            :bg-variant="darkMode ? 'dark' : 'white'"
-                            :text-variant="darkMode ? 'white' : 'dark'"
-                            :sub-title-text-variant="
-                                darkMode ? 'white' : 'dark'
-                            "
-                            sub-title="Configure resources to request from the cluster scheduler."
-                        >
-                            <br />
-                            <b-form-group
-                                :state="target.walltime <= target.max_walltime"
-                                label="Walltime"
-                            >
-                                <b-form-input
-                                    size="sm"
-                                    v-model="target.walltime"
-                                    :placeholder="'Max: ' + target.max_walltime"
-                                ></b-form-input>
-                            </b-form-group>
-                            <b-form-group
-                                v-if="target.max_mem !== -1"
-                                :state="target.memory <= target.max_mem"
-                                label="Memory"
-                            >
-                                <b-form-input
-                                    size="sm"
-                                    v-model="target.memory"
-                                    :placeholder="
-                                        'Max: ' + target.max_mem + 'GB'
-                                    "
-                                ></b-form-input>
-                            </b-form-group>
-                            <b-form-group
-                                :state="target.cores <= target.max_cores"
-                                label="Cores"
-                            >
-                                <b-form-input
-                                    size="sm"
-                                    v-model="target.cores"
-                                    :placeholder="'Max: ' + target.max_cores"
-                                ></b-form-input>
-                            </b-form-group>
-                            <b-form-group
-                                :state="
-                                    target.processes <= target.max_processes
-                                "
-                                label="Processes"
-                            >
-                                <b-form-input
-                                    size="sm"
-                                    v-model="target.processes"
-                                    :placeholder="
-                                        'Max: ' + target.max_processes
-                                    "
-                                ></b-form-input>
-                            </b-form-group>
-                            <b-form-group
-                                :state="target.queue !== ''"
-                                label="Queue"
-                            >
-                                <b-form-input
-                                    size="sm"
-                                    v-model="target.queue"
-                                    :placeholder="'Queue: normal'"
-                                ></b-form-input>
-                            </b-form-group>
-                            <b-form-group
-                                v-if="target.default_project !== null"
-                                :state="target.project !== ''"
-                                label="Project"
-                            >
-                                <b-form-input
-                                    size="sm"
-                                    v-model="target.project"
-                                    :placeholder="
-                                        'Default: ' + target.default_project
-                                    "
-                                ></b-form-input>
-                            </b-form-group>
-                        </b-card>
                     </b-card>
                 </b-col>
             </b-row>
@@ -423,8 +338,8 @@ export default {
                 this.target.mem = this.target.max_mem;
                 this.target.cores = this.target_max_cores;
                 this.target.processes = this.target.max_processes;
-                this.target.queue = this.target.default_queue;
-                this.target.project = this.target.default_project;
+                this.target.queue = this.target.queue;
+                this.target.project = this.target.project;
             }
             this.target = target;
         },
@@ -440,7 +355,7 @@ export default {
                     processes: this.target.processes ? this.target.cores : 1,
                     queue: this.target.queue
                         ? this.target.queue
-                        : this.target.default_queue
+                        : this.target.queue
                 };
                 if (this.target.mem !== undefined && this.target.mem > 0)
                     this.target.jobqueue['mem'] = this.target.mem;

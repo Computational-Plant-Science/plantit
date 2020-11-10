@@ -26,25 +26,35 @@ class Target(models.Model):
                                     null=True,
                                     default=None)
 
-    max_walltime = models.PositiveIntegerField(help_text="Maximum walltime for runs (minutes).", blank=True, null=True,
+    max_walltime = models.PositiveIntegerField(help_text="Maximum walltime for runs (minutes).",
+                                               blank=True,
+                                               null=True,
                                                default=10)
 
-    max_mem = models.IntegerField(help_text="Maximum memory (GB)", blank=True, null=True, default=10)
+    max_mem = models.IntegerField(help_text="Maximum memory (GB)",
+                                  blank=True,
+                                  null=True,
+                                  default=10)
 
-    max_cores = models.IntegerField(help_text="Maximum cores per node", blank=True, null=True,
+    max_cores = models.IntegerField(help_text="Maximum cores per node",
+                                    blank=True,
+                                    null=True,
                                     default=1)
 
-    max_processes = models.IntegerField(help_text="Maximum processes per core", blank=True, null=True, default=1)
+    max_processes = models.IntegerField(help_text="Maximum processes per core",
+                                        blank=True,
+                                        null=True,
+                                        default=1)
 
-    default_queue = models.CharField(max_length=250,
-                                     help_text="Default queue.",
-                                     null=True,
-                                     blank=True)
+    queue = models.CharField(max_length=250,
+                             help_text="Default queue.",
+                             null=True,
+                             blank=True)
 
-    default_project = models.CharField(max_length=250,
-                                       help_text="Default queue.",
-                                       null=True,
-                                       blank=True)
+    project = models.CharField(max_length=250,
+                               help_text="Default queue.",
+                               null=True,
+                               blank=True)
 
     class Executor(models.TextChoices):
         LOCAL = 'local', gettext_lazy('Local')

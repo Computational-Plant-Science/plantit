@@ -16,25 +16,34 @@ All you need to host your own workflows on PlantIT is a [GitHub](https://github.
 
 ---
 
-Hosting a workflow on PlantIT is as easy as adding a `plantit.yaml` file to your repository. At its simplest, the file should look something like this:
+Hosting code on PlantIT is as easy as adding a `plantit.yaml` file to your GitHub repository. At its simplest, the file should look something like this:
 
 ```yaml
 name: Hello Groot
 author: Groot
-public: True
-clone: False
-image: docker://alpine
-commands: echo "I am Groot!"
+public: True                  # should this workflow be visible to other users of PlantIT?
+clone: False                  # should this workflow's repository be cloned to the deployment target before running?
+image: docker://alpine        # the Docker or Singularity image your workflow's container(s) will be built from
+commands: echo "I am Groot!"  # the commands to run inside your container(s)
 ```
 
-The workflow's `name` and `author` are self-explanatory. Let's walk through the rest of the settings:
+Note that this flow definition does not specify resource requirements. PlantIT presently supports 3 deployment targets:
+ 
+ - **Sandbox**: a light-weight container environment, good for test runs on very small datasets.
+ - **Sapelo2**: the Georgia Advanced Computing Research Center's Sapelo2 cluster.
+ - **Stampede2**: the Texas Advanced Computing Center's Stampede2 cluster.
+ 
+In the **Sandbox** your code will run in a very resource-constrained environment. Please keep your runs small.
 
-- `public`: should this workflow be visible to other users of PlantIT?
-- `clone`: should this workflow's repository be cloned to the deployment target before running?
-- `image`: the Docker or Singularity image your workflow's container(s) will be built from
-- `commands`: the commands to run inside your container(s)
+To deploy your code on clusters, you must add a `resources` section to your `plantit.yaml` file:
 
-For more complex workflows, you'll want to add a few more sections to your `plantit.yaml`.
+```yaml
+resources:
+    time: "01:00:00",
+    mem: "1GB",
+    tasks: 1,
+    cores: 1
+```
 
 #### Parameters
 
