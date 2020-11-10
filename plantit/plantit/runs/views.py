@@ -12,7 +12,7 @@ from rest_framework.decorators import action, api_view
 
 from plantit.runs.models import Run, Status
 from plantit.targets.models import Target
-from plantit.runs.execute import execute
+from plantit.runs.utils import execute
 
 
 @api_view(['GET'])

@@ -3,7 +3,10 @@ import re
 import traceback
 from os.path import join
 
+from datetime import datetime, timedelta
+
 import yaml
+from celery.schedules import crontab
 
 from plantit.celery import app
 from plantit.runs.models import Run, Status
@@ -124,3 +127,21 @@ def execute(flow, run_id, plantit_token, cyverse_token):
             state=Status.FAILED,
             location='PlantIT')
         run.save()
+
+
+@app.task()
+def remove_old_runs():
+    epoch = datetime.fromordinal(0)
+    threshold = datetime.now() - timedelta(days=30)
+    epoch_ts = f"{epoch.year}-{epoch.month}-{epoch.day}"
+    threshold_ts = f"{threshold.year}-{threshold.month}-{threshold.day}"
+    print(f"Removing runs created before {threshold.strftime('%d/%m/%Y %H:%M:%S')}")
+    Run.objects.filter(date__range=[epoch_ts, threshold_ts]).delete()
+
+
+@app.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    # Executes every morning at 7:30 a.m.
+    sender.add_periodic_task(
+        crontab(hour=7, minute=30),
+        remove_old_runs.s())

@@ -25,7 +25,7 @@
                             </b-input-group-append>
                         </b-input-group>
                     </b-col>-->
-        <b-container class="p-3">
+        <b-container class="p-3" fluid>
             <p :class="darkMode ? 'text-light' : 'text-dark'">
                 Explore curated flows here. To explore user-contributed flows,
                 see the

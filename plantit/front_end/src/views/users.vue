@@ -8,7 +8,7 @@
         "
     >
         <br />
-        <b-container class="p-3">
+        <b-container class="p-3" fluid>
             <p :class="darkMode ? 'text-light' : 'text-dark'">
                 Explore users here. To explore curated flows, see the
                 <b-link

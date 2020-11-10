@@ -8,7 +8,7 @@
         "
     >
         <br />
-        <b-container>
+        <b-container fluid>
             <b-row>
                 <b-col>
                     <b-card

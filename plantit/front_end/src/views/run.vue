@@ -8,7 +8,7 @@
         "
     >
         <br />
-        <b-container class="p-3">
+        <b-container class="p-3" fluid>
             <div v-if="runNotFound">
                 <b-row align-content="center">
                     <b-col>

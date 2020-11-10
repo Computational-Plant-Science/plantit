@@ -33,7 +33,7 @@ Note that this flow definition does not specify resource requirements. PlantIT p
  - **Sapelo2**: the Georgia Advanced Computing Research Center's Sapelo2 cluster.
  - **Stampede2**: the Texas Advanced Computing Center's Stampede2 cluster.
  
-In the **Sandbox** your code will run in a very resource-constrained environment. Please keep your runs small.
+In the **Sandbox** your code will run in a very resource-constrained environment. Please keep your requests small (<1GB memory and disk space), and be aware your runs will fail if the environment cannot service them.
 
 To deploy your code on clusters, you must add a `resources` section to your `plantit.yaml` file:
 
