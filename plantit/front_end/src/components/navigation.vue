@@ -390,7 +390,7 @@
                         href="/apis/v1/idp/github_request_identity/"
                         class="ml-0 mr-0"
                     >
-                        <b-button class="text-left" variant="success">
+                        <b-button class="text-left" variant="success" size="sm">
                             <i class="fab fa-github"></i>
                             Log in to GitHub
                         </b-button>
@@ -399,18 +399,19 @@
                         right
                         v-if="loggedIn"
                         :title="currentUserDjangoProfile.username"
-                        class="m-0 p-0"
+                        class="m-0 p-0 mt-1"
                         style="font-size: 12pt"
                         :href="'/' + currentUserDjangoProfile.username + '/'"
                     >
                         <b-button
                             :variant="darkMode ? 'outline-light' : 'white'"
-                            class="m-0 ml-3 mr-2"
+                            class="m-0 ml-0 mr-2 text-left"
+                            size="sm"
                         >
                             <b-img
                                 v-if="currentUserGitHubProfile"
                                 class="avatar m-0 mb-1 p-0 github-hover logo"
-                                style="min-width: 21px; min-height: 21px; position: relative; left: -3px; top: 1.5px; border: 1px solid white;"
+                                style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 1.5px; border: 1px solid white;"
                                 rounded="circle"
                                 :src="
                                     currentUserGitHubProfile

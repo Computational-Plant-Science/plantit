@@ -1,10 +1,11 @@
 <template>
     <div class="w-100 h-100 p-3" style="background-color: transparent">
         <br />
-        <b-container class="p-3">
+        <b-spinner align="center" v-if="loadingUser" type="grow" variant="success"></b-spinner>
+        <b-container v-else class="p-3" fluid="">
             <b-row align-v="start" align-h="center" class="mb-2">
                 <b-col style="color: white" align-self="end" class="ml-0 mr-0">
-                    <b-row>
+                    <b-row :class="darkMode ? 'text-light' : 'text-secondary'">
                         <b-col md="auto" class="ml-0 mr-0" align-self="left">
                             <b-img
                                 right
@@ -55,7 +56,7 @@
                     </b-row>
                 </b-col>
             </b-row>
-            <br/>
+            <br />
             <b-row align-v="center" align-h="center"
                 ><b-col>
                     <b-tabs
@@ -329,6 +330,7 @@ export default {
             data: {},
             flows: [],
             runs: [],
+            loadingUser: true,
             loadingRuns: false,
             fields: [
                 {
@@ -366,6 +368,7 @@ export default {
     ]),
     async mounted() {
         await this.loadUser();
+        this.loadingUser = false;
         await this.loadDirectory(
             `/iplant/home/${this.currentUserDjangoProfile.username}/`,
             this.currentUserDjangoProfile.profile.cyverse_token

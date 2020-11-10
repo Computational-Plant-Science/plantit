@@ -162,15 +162,21 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         for user in list(self.queryset):
             if user.profile.github_username:
                 github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
-                                       headers={'Authorization':
-                                                    f"Bearer {request.user.profile.github_token}"}).json()
-                if 'message' not in github_profile or 'Bad credentials' not in github_profile['message']:
+                                              headers={'Authorization':
+                                                           f"Bearer {request.user.profile.github_token}"}).json()
+                if 'login' in github_profile:
                     users.append({
                         'username': user.username,
                         'first_name': user.first_name,
                         'last_name': user.last_name,
                         'github_username': user.profile.github_username,
                         'github_profile': github_profile
+                    })
+                else:
+                    users.append({
+                        'username': user.username,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
                     })
             else:
                 users.append({

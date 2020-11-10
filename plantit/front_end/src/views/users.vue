@@ -72,7 +72,7 @@
                                 </b-col>
                             </b-row>
                             <br />
-                            <b-row v-if="user.github_username === null" align-v="center">
+                            <b-row v-if="user.github_username" align-v="center">
                                 <b-col>
                                     <b-link
                                         :class="
@@ -99,11 +99,7 @@
                                         rounded="circle"
                                         class="avatar card-img-right"
                                         style="max-height: 6rem; max-width: 6rem; opacity: 0.9; position: absolute; right: -25px; top: -40px; z-index:1;"
-                                        :src="
-                                            user.github_profile
-                                                ? user.github_profile.avatar_url
-                                                : ''
-                                        "
+                                        :src="user.github_profile.avatar_url"
                                     ></b-img>
                                 </b-col>
                             </b-row>
