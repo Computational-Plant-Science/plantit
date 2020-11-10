@@ -164,7 +164,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
                                        headers={'Authorization':
                                                     f"Bearer {request.user.profile.github_token}"}).json()
-                if 'Bad credentials' not in github_profile.message:
+                if 'message' not in github_profile or 'Bad credentials' not in github_profile['message']:
                     users.append({
                         'username': user.username,
                         'first_name': user.first_name,
