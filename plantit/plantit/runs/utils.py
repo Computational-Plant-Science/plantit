@@ -60,6 +60,8 @@ def execute(flow, run_id, plantit_token, cyverse_token):
             with ssh_client.client.open_sftp() as sftp:
                 sftp.chdir(work_dir)
                 with sftp.open('flow.yaml', 'w') as flow_def:
+                    flow['config']['resources'] = flow['config']['target']['resources']
+                    del flow['config']['target']
                     yaml.dump(flow['config'], flow_def, default_flow_style=False)
 
                     msg = "Uploading script..."
@@ -75,16 +77,16 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                     with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
                         for line in template_script:
                             if not sandbox:
-                                if 'SBATCH --partition' in line and 'queue' in flow['config']['target']:
-                                    line = line.split('=')[0] + '=' + flow['config']['target']['queue'] + '\n'
-                                elif 'SBATCH -A' in line and 'project' in flow['config']['target']:
-                                    line = line.split('=')[0] + '=' + flow['config']['target']['project'] + '\n'
-                                elif 'SBATCH --ntasks' in line and 'processes' in flow['config']['target']:
-                                    line = line.split('=')[0] + '=' + str(flow['config']['target']['processes']) + '\n'
-                                elif 'SBATCH --cpus-per-task' in line and 'cores' in flow['config']['target']:
-                                    line = line.split('=')[0] + '=' + str(flow['config']['target']['cores']) + '\n'
-                                elif 'SBATCH --time' in line and 'walltime' in flow['config']['target']:
-                                    line = line.split('=')[0] + '=' + flow['config']['target']['walltime'] + '\n'
+                                if 'SBATCH --partition' in line and 'queue' in flow['config']['resources']:
+                                    line = line.split('=')[0] + '=' + flow['config']['resources']['queue'] + '\n'
+                                elif 'SBATCH -A' in line and 'project' in flow['config']['resources']:
+                                    line = line.split('=')[0] + '=' + flow['config']['resources']['project'] + '\n'
+                                elif 'SBATCH --ntasks' in line and 'processes' in flow['config']['resources']:
+                                    line = line.split('=')[0] + '=' + str(flow['config']['resources']['processes']) + '\n'
+                                elif 'SBATCH --cpus-per-task' in line and 'cores' in flow['config']['resources']:
+                                    line = line.split('=')[0] + '=' + str(flow['config']['resources']['cores']) + '\n'
+                                elif 'SBATCH --time' in line and 'walltime' in flow['config']['resources']:
+                                    line = line.split('=')[0] + '=' + flow['config']['resources']['walltime'] + '\n'
                             script.write(f"""
                                 # SBATCH --mail-type=END,FAIL
                                 # SBATCH --mail-user={run.user.email}
