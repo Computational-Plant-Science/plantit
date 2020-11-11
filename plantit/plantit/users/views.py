@@ -234,7 +234,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 user.first_name = response['cyverse_profile']['first_name']
                 user.last_name = response['cyverse_profile']['last_name']
                 user.save()
-        if request.user.profile.github_token != '':
+        if request.user.profile.github_token != '' and user.profile.github_username != '':
             github_response = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
                                            headers={'Authorization':
                                                         f"Bearer {request.user.profile.github_token}"})
