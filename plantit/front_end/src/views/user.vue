@@ -123,9 +123,8 @@
                                                 >
                                                 <br />
                                                 {{
-                                                    githubProfile === undefined
-                                                        ? 'None'
-                                                        : githubProfile.bio
+                                                    githubProfile
+                                                        ?  githubProfile.bio : 'None'
                                                 }}
                                             </p>
                                             <p>
@@ -134,9 +133,8 @@
                                                 >
                                                 <br />
                                                 {{
-                                                    githubProfile === undefined
-                                                        ? 'None'
-                                                        : githubProfile.location
+                                                    githubProfile
+                                                        ? githubProfile.location : 'None'
                                                 }}
                                             </p>
                                         </b-card-text>
@@ -206,7 +204,7 @@
                                     </b-col>
                                 </b-row>
                                 <flows
-                                    v-else
+                                    v-else-if="githubProfile"
                                     :github-user="githubProfile.login"
                                     :github-token="
                                         currentUserDjangoProfile.profile
