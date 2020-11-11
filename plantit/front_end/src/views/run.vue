@@ -211,8 +211,8 @@ export default {
                     }
                     this.reloadLogs(toast);
                     this.loadFlow(
-                        response.data.workflow_owner,
-                        response.data.workflow_name
+                        response.data.flow_owner,
+                        response.data.flow_name
                     );
                 })
                 .catch(error => {

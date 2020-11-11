@@ -8,9 +8,7 @@ plantit/plantit/secret.py
 plantit/front_end/node_modules
 plantit/front_end/dist
 plantit/static/
-plantit/workflows/
 plantit/settings.py
-plantit/plantit/static/workflow_icons/*.png
 config/ssh/*
 
 #Documentation

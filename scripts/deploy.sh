@@ -41,19 +41,19 @@ echo "Bringing containers up..."
 $compose up -d --quiet-pull
 
 echo "Running migrations..."
-$compose exec plantit python manage.py makemigrations
-$compose exec plantit python manage.py migrate
+$compose exec -T plantit python manage.py makemigrations
+$compose exec -T plantit python manage.py migrate
 
 echo "Configuring sandbox container deployment target..."
-$compose exec plantit /bin/bash /code/scripts/configure-sandbox.sh
+$compose exec -T plantit /bin/bash /code/scripts/configure-sandbox.sh
 if [ ! -d config/ssh ]; then
   mkdir config/ssh
 fi
 if [ ! -f config/ssh/known_hosts ]; then
   touch config/ssh/known_hosts
-  $compose exec plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
+  $compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
+  $compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
 fi
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
 fi
-$compose exec plantit bash -c "/code/scripts/ssh-copy-id.expect"

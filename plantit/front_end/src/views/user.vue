@@ -350,7 +350,7 @@ export default {
                     }
                 },
                 {
-                    key: 'workflow_name',
+                    key: 'flow_name',
                     label: 'Workflow',
                     sortable: true
                 }
@@ -426,12 +426,12 @@ export default {
                     if (error.response.status === 500) throw error;
                 });
         },
-        workflowSelected: function(workflow) {
+        flowSelected: function(flow) {
             router.push({
                 name: 'flow',
                 params: {
-                    owner: workflow['repo']['owner']['login'],
-                    name: workflow['repo']['name']
+                    owner: flow['repo']['owner']['login'],
+                    name: flow['repo']['name']
                 }
             });
         },

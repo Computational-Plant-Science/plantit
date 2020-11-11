@@ -16,8 +16,8 @@ class Run(models.Model):
     token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     identifier = models.CharField(max_length=36, null=False, blank=False)
-    workflow_owner = models.CharField(max_length=280, null=True, blank=True)
-    workflow_name = models.CharField(max_length=280, null=True, blank=True)
+    flow_owner = models.CharField(max_length=280, null=True, blank=True)
+    flow_name = models.CharField(max_length=280, null=True, blank=True)
     target = models.ForeignKey(Target,
                                null=True,
                                blank=True,

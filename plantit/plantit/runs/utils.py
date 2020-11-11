@@ -74,12 +74,11 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                     template_name = template.split('/')[-1]
                     with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
                         for line in template_script:
-                            if sandbox:
+                            if not sandbox:
                                 if 'SBATCH --partition' in line and 'queue' in flow['config']['target']:
                                     line = line.split('=')[0] + '=' + flow['config']['target']['queue'] + '\n'
                                 elif 'SBATCH -A' in line and 'project' in flow['config']['target']:
                                     line = line.split('=')[0] + '=' + flow['config']['target']['project'] + '\n'
-
                                 elif 'SBATCH --ntasks' in line and 'processes' in flow['config']['target']:
                                     line = line.split('=')[0] + '=' + str(flow['config']['target']['processes']) + '\n'
                                 elif 'SBATCH --cpus-per-task' in line and 'cores' in flow['config']['target']:

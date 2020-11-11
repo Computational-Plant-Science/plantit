@@ -27,8 +27,8 @@ def get_runs_by_user(request, username):
             'target': run.target.name,
             'created': run.created,
             'state': run.status.state if run.status is not None else 'Unknown',
-            'workflow_owner': run.workflow_owner,
-            'workflow_name': run.workflow_name
+            'flow_owner': run.flow_owner,
+            'flow_name': run.flow_name
         } for run in runs], safe=False)
     except:
         return HttpResponseNotFound()
@@ -51,21 +51,21 @@ def runs(request):
             'target': run.target.name,
             'created': run.created,
             'state': run.status.state if run.status is not None else 'Unknown',
-            'workflow_owner': run.workflow_owner,
-            'workflow_name': run.workflow_name
+            'flow_owner': run.flow_owner,
+            'flow_name': run.flow_name
         } for run in runs], safe=False)
 
     elif request.method == 'POST':
         user = request.user
-        workflow = request.data
+        flow = request.data
         now = timezone.now()
         now_str = now.strftime('%s')
-        target = Target.objects.get(name=workflow['config']['target']['name'])
-        workflow_path = f"{workflow['repo']['owner']['login']}/{workflow['repo']['name']}"
+        target = Target.objects.get(name=flow['config']['target']['name'])
+        flow_path = f"{flow['repo']['owner']['login']}/{flow['repo']['name']}"
         run = Run.objects.create(
             user=User.objects.get(username=user.username),
-            workflow_owner=workflow['repo']['owner']['login'],
-            workflow_name=workflow['repo']['name'],
+            flow_owner=flow['repo']['owner']['login'],
+            flow_name=flow['repo']['name'],
             target=target,
             created=now,
             work_dir=now_str + "/",
@@ -73,7 +73,7 @@ def runs(request):
             identifier=uuid.uuid4(),
             token=binascii.hexlify(os.urandom(20)).decode())
 
-        run.status_set.create(description=f"Flow '{workflow_path}' run '{run.identifier}' created.",
+        run.status_set.create(description=f"Flow '{flow_path}' run '{run.identifier}' created.",
                               state=Status.CREATED,
                               location='PlantIT')
         run.save()
@@ -82,21 +82,21 @@ def runs(request):
             'identifier': run.identifier,
             'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/status/",
             'workdir': join(target.workdir, now_str),
-            'clone': f"https://github.com/{workflow_path}" if workflow['config']['clone'] else None,
-            'image': workflow['config']['image'],
-            'command': workflow['config']['commands'],
-            'params': workflow['config']['params'],
-            # 'target': workflow['config']['target']
+            'clone': f"https://github.com/{flow_path}" if flow['config']['clone'] else None,
+            'image': flow['config']['image'],
+            'command': flow['config']['commands'],
+            'params': flow['config']['params'],
+            'target': flow['config']['target']
         }
-        if 'input' in workflow['config']:
-            config['input'] = workflow['config']['input']
-        if 'output' in workflow['config']:
-            workflow['config']['output']['from'] = join(target.workdir, run.work_dir, workflow['config']['output']['from'])
-            print(workflow['config']['output']['from'])
-            config['output'] = workflow['config']['output']
+        if 'input' in flow['config']:
+            config['input'] = flow['config']['input']
+        if 'output' in flow['config']:
+            flow['config']['output']['from'] = join(target.workdir, run.work_dir, flow['config']['output']['from'])
+            print(flow['config']['output']['from'])
+            config['output'] = flow['config']['output']
 
         execute.delay({
-            'repo': workflow['repo'],
+            'repo': flow['repo'],
             'config': config
         }, run.identifier, run.token, request.user.profile.cyverse_token) # request.session._session['csrfToken']
 
@@ -119,8 +119,8 @@ def run(request, id):
         'target': run.target.name,
         'created': run.created,
         'state': run.status.state if run.status is not None else 'Unknown',
-        'workflow_owner': run.workflow_owner,
-        'workflow_name': run.workflow_name
+        'flow_owner': run.flow_owner,
+        'flow_name': run.flow_name
     })
 
 

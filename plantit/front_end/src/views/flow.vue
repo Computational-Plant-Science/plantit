@@ -333,38 +333,14 @@ export default {
             this.output.to = path;
         },
         targetSelected(target) {
-            if (this.targetIsJobqueue) {
-                this.target.walltime = this.target.max_walltime;
-                this.target.mem = this.target.max_mem;
-                this.target.cores = this.target_max_cores;
-                this.target.processes = this.target.max_processes;
-                this.target.queue = this.target.queue;
-                this.target.project = this.target.project;
-            }
             this.target = target;
         },
         onStart() {
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
-            if (this.targetIsJobqueue) {
-                this.target.jobqueue = {
-                    walltime: this.target.walltime
-                        ? this.target.walltime
-                        : '01:00:00',
-                    cores: this.target.cores ? this.target.cores : 1,
-                    processes: this.target.processes ? this.target.cores : 1,
-                    queue: this.target.queue
-                        ? this.target.queue
-                        : this.target.queue
-                };
-                if (this.target.mem !== undefined && this.target.mem > 0)
-                    this.target.jobqueue['mem'] = this.target.mem;
-                if (
-                    this.target.project !== undefined &&
-                    this.target.project !== ''
-                )
-                    this.target.jobqueue['project'] = this.target.project;
-            }
+            let target = this.target;
+            if (this.flow.config.resources)
+                target['resources'] = this.flow.config.resources;
             let config = {
                 name: this.flow.config.name,
                 image: this.flow.config.image,
@@ -373,7 +349,7 @@ export default {
                         ? this.flow.config.clone
                         : false,
                 params: this.params,
-                target: this.target,
+                target: target,
                 commands: this.flow.config.commands
             };
             if (this.flow.config.from) config.input = this.input;
@@ -413,12 +389,6 @@ export default {
             'loggedIn',
             'darkMode'
         ]),
-        targetIsJobqueue() {
-            return (
-                this.target.executor === 'slurm' ||
-                this.target.executor === 'pbs'
-            );
-        },
         parametersUnready() {
             return this.params.some(param => param.value === '');
         },
