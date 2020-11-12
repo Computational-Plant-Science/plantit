@@ -230,10 +230,14 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             if cyverse_response.status_code == 401:
                 response['cyverse_profile'] = 'expired token'
             else:
-                response['cyverse_profile'] = cyverse_response.json()[user.username]
-                user.first_name = response['cyverse_profile']['first_name']
-                user.last_name = response['cyverse_profile']['last_name']
-                user.save()
+                cyverse_profile = cyverse_response.json()
+                if user.username in cyverse_profile:
+                    response['cyverse_profile'] = cyverse_response.json()[user.username]
+                    user.first_name = response['cyverse_profile']['first_name']
+                    user.last_name = response['cyverse_profile']['last_name']
+                    user.save()
+                else:
+                    print(f"No CyVerse profile")
         if request.user.profile.github_token != '' and user.profile.github_username != '':
             github_response = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
                                            headers={'Authorization':

@@ -54,11 +54,7 @@
                             </b-col>
                         </b-row>
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
-                        <b-row
-                            ><b-col
-                                >Configure this flow's parameters.</b-col
-                            ></b-row
-                        >
+                        <b-row><b-col>Configure parameters.</b-col></b-row>
                         <br />
                         <b-table
                             :items="params"
@@ -210,7 +206,7 @@
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    Deployment Target
+                                    Deployment target
                                 </h4>
                             </b-col>
                         </b-row>
@@ -336,6 +332,10 @@ export default {
             this.target = target;
         },
         onStart() {
+            if (!this.flow.config.resources && this.target.name !== 'Sandbox') {
+                alert('This flow can only run in the Sandbox.');
+                return;
+            }
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
             let target = this.target;

@@ -4,11 +4,11 @@
 
 First, some basics:
 
-- Because PlantIT supports deployments to shared computing environments (e.g., HPC clusters), PlantIT workflows are *containerized*: every workflow runs in one or more [Singularity](https://sylabs.io/singularity/) containers. We recommend getting familiar with containers in general and Singularity in particular before moving on.
-- PlantIT doesn't care what your workflow looks like. If it runs in Docker or Singularity, it will run on PlantIT. Use any software stack you like.
-- PlantIT doesn't care what your data looks like. If it fits in a file or directory on your deployment target, PlantIT will feed it to your workflow.
+- Because PlantIT supports deployments to shared computing environments (e.g., HPC clusters), PlantIT workflows are *containerized*: code runs in one or more [Singularity](https://sylabs.io/singularity/) containers.
+- PlantIT doesn't care what your code looks like. If it runs in Docker or Singularity, it will run on PlantIT. Use any stack you like.
+- PlantIT doesn't care what your data looks like. If it fits in a file or directory on your deployment target, PlantIT will feed it to your code.
 
-All you need to host your own workflows on PlantIT is a [GitHub](https://github.com/) account. Create one if you need to, otherwise you're ready to go!
+To deploy your own <i class="fas fa-stream fa-1x fa-fw"></i> **Flow**s on PlantIT, you'll need a [GitHub](https://github.com/) account.
 
 <br>
 
@@ -16,26 +16,26 @@ All you need to host your own workflows on PlantIT is a [GitHub](https://github.
 
 ---
 
-Hosting code on PlantIT is as easy as adding a `plantit.yaml` file to your GitHub repository. At its simplest, the file should look something like this:
+To host code (that is, a <i class="fas fa-stream fa-1x fa-fw"></i> **Flow**) on PlantIT, just add a `plantit.yaml` file to your GitHub repository. It should look something like this:
 
 ```yaml
 name: Hello Groot
 author: Groot
-public: True                  # should this workflow be visible to other users of PlantIT?
+public: True                  # should this flow be visible to other users of PlantIT?
 clone: False                  # should this workflow's repository be cloned to the deployment target before running?
 image: docker://alpine        # the Docker or Singularity image your workflow's container(s) will be built from
 commands: echo "I am Groot!"  # the commands to run inside your container(s)
 ```
 
-Note that this flow definition does not specify resource requirements. PlantIT presently supports 3 deployment targets:
+Note that no resource requirements are specified. PlantIT supports 3 deployment targets:
  
  - **Sandbox**: a light-weight container environment, good for test runs on very small datasets.
  - **Sapelo2**: the Georgia Advanced Computing Research Center's Sapelo2 cluster.
  - **Stampede2**: the Texas Advanced Computing Center's Stampede2 cluster.
  
-In the **Sandbox** your code will run in a very resource-constrained environment. Please keep your requests small (<1GB memory and disk space), and be aware your runs will fail if the environment cannot service them.
+In the **Sandbox** your code will run in a very resource-constrained environment. Please keep your runs small (<1GB memory and disk space), and be aware that they will fail if the environment cannot service them.
 
-To deploy your code on clusters, you must add a `resources` section to your `plantit.yaml` file:
+To deploy your <i class="fas fa-stream fa-1x fa-fw"></i> **Flow** on one of the clusters, add a `resources` section to your `plantit.yaml` file. For example, to request 1 processor on 1 node and 1GB of memory for 1 hour:
 
 ```yaml
 resources:
@@ -45,9 +45,13 @@ resources:
     cores: 1
 ```
 
+Note that the **Stampede2** cluster is equipped with virtual memory (up to ?? GB), and will ignore `mem` values specified.
+
+Note also that your runs will fail if they do not complete within the requested `time`, or if they exceed their memory allotment on **Sapelo2**.
+
 #### Parameters
 
-To parametrize your workflow, add a `params` section. For example, to allow the user to configure the message printed by the trivial workflow above:
+To parametrize your <i class="fas fa-stream fa-1x fa-fw"></i> **Flow**, add a `params` section. For example, to allow the user to configure the message printed by the trivial workflow above:
 
 ```yaml
 name: Hello Who?
@@ -64,7 +68,7 @@ This will cause the value of `message`, specified by the user in the browser, to
 
 #### Input/Output
 
-PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) (or any other iRODS instance) onto the file system in your deployment environment, then push output files back to the store after your workflow runs. To enable this behavior, add `from` and `to` sections to your configuration.
+PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) onto the file system in your deployment environment, then push output files back to the Data Store after your code runs. To configure inputs and outputs for your <i class="fas fa-stream fa-1x fa-fw"></i> **Flow**, add `from` and `to` sections to your configuration.
 
 The following workflow prints the contents of an input file and writes a message to an output file:
 
@@ -81,4 +85,4 @@ params:
 commands: cat "$INPUT" && echo "$MESSAGE" >> "$OUTPUT"
 ```
 
-PlantIT will prompt users of this workflow to select input and output paths in the browser. Note that this configuration maps a single input file to a single output file. If the user provides a directory containing multiple input files, PlantIT will automagically spawn multiple containers to process them in parallel. To indicate that your code accepts an entire *directory* as input (and should not be parallelized), use `from: directory` instead.
+PlantIT will prompt users of this <i class="fas fa-stream fa-1x fa-fw"></i> **Flow** to select input and output paths in the browser. Note that this configuration maps a single input file to a single output file. If the user provides a directory containing multiple input files, PlantIT will automagically spawn multiple containers, one for each input file. To indicate that your code accepts an entire *directory* as input (and should not be parallelized), use `from: directory` instead.

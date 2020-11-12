@@ -60,7 +60,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
             with ssh_client.client.open_sftp() as sftp:
                 sftp.chdir(work_dir)
                 with sftp.open('flow.yaml', 'w') as flow_def:
-                    flow['config']['resources'] = flow['config']['target']['resources']
+                    resources = flow['config']['target']['resources']
                     del flow['config']['target']
                     yaml.dump(flow['config'], flow_def, default_flow_style=False)
 
@@ -76,27 +76,25 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                     template_name = template.split('/')[-1]
                     with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
                         for line in template_script:
-                            if not sandbox:
-                                if 'SBATCH --partition' in line and 'queue' in flow['config']['resources']:
-                                    line = line.split('=')[0] + '=' + flow['config']['resources']['queue'] + '\n'
-                                elif 'SBATCH -A' in line and 'project' in flow['config']['resources']:
-                                    line = line.split('=')[0] + '=' + flow['config']['resources']['project'] + '\n'
-                                elif 'SBATCH --ntasks' in line and 'processes' in flow['config']['resources']:
-                                    line = line.split('=')[0] + '=' + str(flow['config']['resources']['processes']) + '\n'
-                                elif 'SBATCH --cpus-per-task' in line and 'cores' in flow['config']['resources']:
-                                    line = line.split('=')[0] + '=' + str(flow['config']['resources']['cores']) + '\n'
-                                elif 'SBATCH --time' in line and 'walltime' in flow['config']['resources']:
-                                    line = line.split('=')[0] + '=' + flow['config']['resources']['walltime'] + '\n'
-                            script.write(f"""
-                                # SBATCH --mail-type=END,FAIL
-                                # SBATCH --mail-user={run.user.email}
-                                # SBATCH --output=PlantIT.%j.out
-                                # SBATCH --error=PlantIT.%j.err
-                            """)
                             script.write(line)
+                        if not sandbox:
+                            if 'SBATCH --partition' in line and 'queue' in resources:
+                                script.write(line.split('=')[0] + '=' + resources['queue'] + '\n')
+                            elif 'SBATCH -A' in line and 'project' in resources:
+                                script.write(line.split('=')[0] + '=' + resources['project'] + '\n')
+                            elif 'SBATCH --ntasks' in line and 'processes' in resources:
+                                script.write(line.split('=')[0] + '=' + str(resources['processes']) + '\n')
+                            elif 'SBATCH --cpus-per-task' in line and 'cores' in resources:
+                                script.write(line.split('=')[0] + '=' + str(resources['cores']) + '\n')
+                            elif 'SBATCH --time' in line and 'walltime' in resources:
+                                script.write(line.split('=')[0] + '=' + resources['walltime'] + '\n')
+                            script.write("#SBATCH --mail-type=END,FAIL\n")
+                            script.write(f"#SBATCH --mail-user={run.user.email}\n")
+                            script.write("#SBATCH --output=PlantIT.%j.out\n")
+                            script.write("#SBATCH --error=PlantIT.%j.err\n")
                         script.write(run.target.pre_commands + '\n')
                         script.write(
-                            f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'")
+                            f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'\n")
 
             execute_command(run=run,
                             ssh_client=ssh_client,

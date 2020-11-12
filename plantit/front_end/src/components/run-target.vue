@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-row><b-col>Select a deployment target for this flow.</b-col></b-row>
+        <b-row><b-col>Select a deployment target.</b-col></b-row>
         <br />
         <b-table
             :items="targets"

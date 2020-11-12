@@ -1,13 +1,10 @@
 <template>
-    <div
-        v-if="flow.config"
-        :class="darkMode ? 'theme-dark' : 'theme-light'"
-    >
+    <div v-if="flow.config" :class="darkMode ? 'theme-dark' : 'theme-light'">
         <b-img
             v-if="flow.config.logo"
             rounded="circle"
             class="card-img-right"
-            style="max-width: 10rem;position: absolute;right: 20px;top: 20px;z-index:1"
+            style="max-width: 9rem;position: absolute;right: 20px;top: 20px;z-index:1"
             right
             :src="
                 `https://raw.githubusercontent.com/${flow.repo.owner.login}/${flow.repo.name}/master/${flow.config.logo}`
@@ -24,30 +21,22 @@
             <b-col>
                 <b-row>
                     <b-col md="auto" class="mr-0">
+                      <b-badge
+                            class="mr-1"
+                            :variant="
+                                flow.config.public ? 'success' : 'warning'
+                            "
+                            >{{
+                                flow.config.public ? 'Public' : 'Private'
+                            }}</b-badge
+                        >
+                        <b-badge variant="white" class="mr-1"
+                            ><i class="fas fa-stream fa-1x fa-fw"></i>
+                            Flow</b-badge
+                        >
                         <h2 :class="darkMode ? 'text-white' : 'text-dark'">
                             {{ flow.config.name }}
                         </h2>
-                    </b-col>
-                    <b-col class="ml-0 pl-0" v-if="showPublic">
-                        <h5 :class="darkMode ? 'text-white' : 'text-dark'">
-                            <b-badge variant="white" class="mr-2"
-                                ><i class="fas fa-stream fa-1x fa-fw"></i>
-                                Flow</b-badge
-                            >
-                            <b-badge
-                                class="mr-2"
-                                :variant="
-                                    flow.config.public
-                                        ? 'success'
-                                        : 'warning'
-                                "
-                                >{{
-                                    flow.config.public
-                                        ? 'Public'
-                                        : 'Private'
-                                }}</b-badge
-                            >
-                        </h5>
                     </b-col>
                 </b-row>
                 <b-row>
@@ -63,9 +52,7 @@
                                 "
                             >
                                 <i class="fab fa-github fa-fw"></i>
-                                {{ flow.repo.owner.login }}/{{
-                                    flow.repo.name
-                                }}
+                                {{ flow.repo.owner.login }}/{{ flow.repo.name }}
                             </b-link>
                         </small>
                     </b-col>
@@ -171,6 +158,62 @@
                                         </b-button>
                                     </b-col>
                                 </b-row>
+                            </b-col>
+                        </b-row>
+                    </b-col>
+                    <b-col
+                        align-self="end"
+                        md="auto"
+                        class="text-right"
+                        v-if="!flow.config.resources"
+                    >
+                        <b-alert show variant="warning"
+                            >This flow does not specify cluster resources and
+                            can only be run in the <b>Sandbox</b>.</b-alert
+                        >
+                    </b-col>
+                    <b-col align-self="end" class="text-right" v-else>
+                        <b>Cluster Resources</b>
+                        <br />
+                        <br />
+                        <b-row align-v="right" align-h="right">
+                            <b-col>
+                                <b
+                                    ><code>{{
+                                        ' ' + flow.config.resources.time
+                                    }}</code></b
+                                >
+                                <small> time</small>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                <b
+                                    ><code>{{
+                                        ' ' + flow.config.resources.mem
+                                    }}</code></b
+                                >
+                                <small> memory</small>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                <b
+                                    ><code>{{
+                                        ' ' + flow.config.resources.tasks
+                                    }}</code></b
+                                >
+                                <small> task(s)</small>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                <b
+                                    ><code>{{
+                                        ' ' + flow.config.resources.cores
+                                    }}</code></b
+                                >
+                                <small> core(s)</small>
                             </b-col>
                         </b-row>
                     </b-col>
