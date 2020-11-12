@@ -247,7 +247,7 @@
                                             ></i>
                                             Refresh
                                         </b-button>
-                                        <b-button
+                                        <!--<b-button
                                             v-if="!loadingRuns"
                                             :variant="
                                                 darkMode
@@ -260,7 +260,7 @@
                                                 class="fas fa-sync-alt fa-fw"
                                             ></i>
                                             Clear
-                                        </b-button>
+                                        </b-button>-->
                                         <b-spinner
                                             v-if="loadingRuns"
                                             type="grow"
