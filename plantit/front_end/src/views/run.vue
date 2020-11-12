@@ -8,7 +8,7 @@
         "
     >
         <br />
-        <b-container class="p-3" fluid>
+        <b-container class="p-3 vl" fluid>
             <div v-if="runNotFound">
                 <b-row align-content="center">
                     <b-col>
@@ -74,7 +74,7 @@
                             :table-variant="darkMode ? 'dark' : 'light'"
                         >
                             <template v-slot:cell(location)="status">
-                                <h4>
+                                <h5>
                                     <b-badge
                                         v-if="
                                             status.item.location === 'PlantIT'
@@ -89,10 +89,10 @@
                                         class="text-white"
                                         >{{ status.item.location }}</b-badge
                                     >
-                                </h4>
+                                </h5>
                             </template>
                             <template v-slot:cell(state)="status">
-                                <h4>
+                                <h5>
                                     <b-badge
                                         :variant="
                                             status.item.state === 2
@@ -103,7 +103,7 @@
                                         "
                                         >{{ statusToString(status.item.state) }}
                                     </b-badge>
-                                </h4>
+                                </h5>
                             </template>
                             <span
                                 slot="description"

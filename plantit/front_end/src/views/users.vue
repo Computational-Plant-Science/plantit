@@ -1,14 +1,14 @@
 <template>
     <div
-        class="w-100 h-100 p-3"
+        class="w-100 h-100 pl-3 pt-3"
         :style="
             darkMode
-                ? 'background-color: #616163'
+                ? 'background-color: #d6df5D'
                 : 'background-color: white' + '; min-height: 100%'
         "
     >
         <br />
-        <b-container class="p-3" fluid>
+        <b-container class="pl-3 pt-3 vl" fluid>
             <p :class="darkMode ? 'text-light' : 'text-dark'">
                 Explore users here. To explore curated flows, see the
                 <b-link
@@ -25,7 +25,7 @@
                             :key="user.username"
                             :bg-variant="darkMode ? 'dark' : 'white'"
                             :header-bg-variant="darkMode ? 'dark' : 'white'"
-                            :border-variant="darkMode ? 'secondary' : 'default'"
+                            :border-variant="darkMode ? 'light' : 'dark'"
                             :header-border-variant="
                                 darkMode ? 'secondary' : 'default'
                             "
@@ -98,7 +98,7 @@
                                         right
                                         rounded="circle"
                                         class="avatar card-img-right"
-                                        style="max-height: 6rem; max-width: 6rem; opacity: 0.9; position: absolute; right: -25px; top: -40px; z-index:1;"
+                                        style="max-height: 4rem; max-width: 4rem; opacity: 0.9; position: absolute; right: -20px; top: -40px; z-index:1;"
                                         :src="user.github_profile.avatar_url"
                                     ></b-img>
                                 </b-col>

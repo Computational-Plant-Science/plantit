@@ -1,9 +1,9 @@
 <template>
-    <div id="app" class="m-0 p-0" style="width: 100vw; min-height: 100vh;">
+    <div id="app" class="m-0 p-0" style="width: 100vw; min-height: 100vh; background-color: #343a40">
         <b-container
             fluid
             class="m-0 p-0"
-            style="width: 100vw; min-height: 100vh;"
+            style="width: 100vw; min-height: 100vh; background-color: transparent;"
         >
             <Navigation v-if="$route.path !== '/'"></Navigation>
             <!--{{ keycloak.idToken }}
@@ -14,7 +14,7 @@
 
             <router-view
                 :class="darkMode ? 'theme-dark' : 'theme-light'"
-                style="width: 100vw; min-height: 100vh;"
+                style="width: 100vw; border-bottom: 2px solid #616163"
             ></router-view>
         </b-container>
     </div>

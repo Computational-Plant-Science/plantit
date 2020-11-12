@@ -8,7 +8,7 @@
         "
     >
         <br />
-        <b-container fluid>
+        <b-container fluid class="p-3 vl">
             <b-row>
                 <b-col>
                     <b-card

@@ -11,7 +11,7 @@
                 class="m-0 p-0"
             ></b-img>
         </div>
-        <div class="p-1 pt-2 background-dark">
+        <div class="p-1 pt-2" style="background-color: #616163">
             <h2 class="text-center text-white">
                 <b class="text-success">Developer Docs</b>
             </h2>
@@ -54,7 +54,7 @@ export default {
     margin: 0px
 
 .background-dark
-    background-color: $dark
+    background-color: $gray-500
 
 .success
     color: $success
@@ -62,6 +62,9 @@ export default {
 .selected
     background-color: $color-button
     color: $dark
+
+code
+  color: $success !important
 
 a
     font-weight: 400

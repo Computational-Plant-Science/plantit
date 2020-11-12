@@ -11,7 +11,7 @@
                 class="m-0 p-0"
             ></b-img>
         </div>
-        <div class="p-1 pt-2 background-dark">
+        <div class="p-1 pt-2" style="background-color: #616163">
             <h2 class="text-center text-white">
                 <b class="text-success">User Guide</b>
             </h2>

@@ -1,8 +1,8 @@
 <template>
-    <div class="w-100 h-100 p-3" style="background-color: transparent">
+    <div class="w-100 h-100 pl-3 pt-3" style="background-color: transparent">
         <br />
         <b-spinner align="center" v-if="loadingUser" type="grow" variant="success"></b-spinner>
-        <b-container v-else class="p-3" fluid="">
+        <b-container v-else class="p-3 vl" fluid="">
             <b-row align-v="start" align-h="center" class="mb-2">
                 <b-col style="color: white" align-self="end" class="ml-0 mr-0">
                     <b-row :class="darkMode ? 'text-light' : 'text-secondary'">
@@ -11,7 +11,7 @@
                                 right
                                 class="avatar"
                                 rounded="circle"
-                                style="max-height: 6rem; max-width: 6rem; position: relative; border: 2px solid white"
+                                style="max-height: 6rem; max-width: 6rem; position: relative; border: 2px solid #d6df5D"
                                 :src="
                                     githubProfile
                                         ? githubProfile.avatar_url
@@ -204,6 +204,7 @@
                                     </b-col>
                                 </b-row>
                                 <flows
+                                    class="m-1"
                                     v-else-if="githubProfile"
                                     :github-user="githubProfile.login"
                                     :github-token="

@@ -1,16 +1,14 @@
 <template>
     <div v-if="flow.config">
         <b-row>
-            <b-col align-self="end">
+            <b-col align-self="end" md="auto">
                 <b-badge variant="white"
                     ><i class="fas fa-terminal fa-1x fa-fw"></i> Run</b-badge
                 >
-                <h3 :class="darkMode ? 'theme-dark' : 'theme-light'">
-                    {{ run.id }}
-                </h3>
-            </b-col>
-            <b-col md="auto" align-self="end" class="mb-2">
                 <h4 :class="darkMode ? 'theme-dark' : 'theme-light'">
+                    {{ run.id }}
+                </h4>
+              <h4 :class="darkMode ? 'theme-dark' : 'theme-light'">
                     <b-badge
                         :variant="
                             run.state === 2

@@ -1,6 +1,6 @@
 <template>
     <div
-        class="w-100 h-100 p-3"
+        class="w-100 h-100 pl-3 pt-3 pr-0 m-0"
         :style="
             darkMode
                 ? 'background-color: #616163'
@@ -25,7 +25,7 @@
                             </b-input-group-append>
                         </b-input-group>
                     </b-col>-->
-        <b-container class="p-3" fluid>
+        <b-container class="pl-3 pt-3 mr-3 vl" fluid>
             <p :class="darkMode ? 'text-light' : 'text-dark'">
                 Explore curated flows here. To explore user-contributed flows,
                 see the
@@ -35,7 +35,7 @@
                     >Users page</b-link
                 >.
             </p>
-            <b-row v-if="currentUserGitHubProfile === null" align-v="center">
+            <b-row v-if="currentUserGitHubProfile === null" align-v="center" class="p-2">
                 <b-col md="auto" class="mr-2 pr-0">
                     <b-button
                         variant="success"

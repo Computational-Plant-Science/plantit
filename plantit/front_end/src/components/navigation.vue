@@ -151,6 +151,60 @@
                                                 ? 'text-light'
                                                 : 'text-dark'
                                         "
+                                        >Resources</small
+                                    >
+                                </b-nav-item>
+                                <b-nav-item
+                                    title="users"
+                                    to="/users"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i class="fas fa-user fa-1x fa-fw"></i>
+                                        Users
+                                    </b-button>
+                                </b-nav-item>
+                                <b-nav-item
+                                    title="flows"
+                                    to="/flows"
+                                    class="m-0 p-0"
+                                >
+                                    <b-button
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
+                                        block
+                                        class="text-left"
+                                    >
+                                        <i
+                                            class="fas fa-stream fa-1x fa-fw"
+                                        ></i>
+                                        Flows
+                                    </b-button>
+                                </b-nav-item>
+                            </b-nav>
+                            <b-nav
+                                vertical
+                                class="ml-0 mr-0 pl-0 pr-0"
+                                v-if="loggedIn"
+                            >
+                                <b-nav-item class="m-0 p-0" disabled>
+                                    <small
+                                        :class="
+                                            darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
                                         >Connect</small
                                     >
                                 </b-nav-item>
@@ -190,93 +244,6 @@
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
-                            <b-nav
-                                vertical
-                                class="ml-0 mr-0 pl-0 pr-0"
-                                v-if="loggedIn"
-                            >
-                                <b-nav-item class="m-0 p-0" disabled>
-                                    <small
-                                        :class="
-                                            darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
-                                        >Resources</small
-                                    >
-                                </b-nav-item>
-                                <b-nav-item
-                                    title="users"
-                                    to="/users"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i class="fas fa-user fa-1x fa-fw"></i>
-                                        Users
-                                    </b-button>
-                                </b-nav-item>
-                                <!--<b-nav-item
-                                    title="data"
-                                    to="/data"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="outline-dark"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-database fa-1x fa-fw"
-                                        ></i>
-                                        Data
-                                    </b-button>
-                                </b-nav-item>-->
-                                <b-nav-item
-                                    title="flows"
-                                    to="/flows"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-stream fa-1x fa-fw"
-                                        ></i>
-                                        Flows
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                            <!--<hr />
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item class="m-0 p-0">
-                                    <b-button
-                                        variant="white"
-                                        block
-                                        class="text-left m-0"
-                                        @click="hide"
-                                        title="Hide Sidebar"
-                                    >
-                                        <i
-                                            class="fas fa-arrow-left fa-1x fa-fw"
-                                        ></i>
-                                        Close Sidebar
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>-->
                         </b-col>
                     </b-row>
                 </b-container>
@@ -316,7 +283,7 @@
         <b-navbar
             toggleable="sm"
             class="logo p-0 overflow-hidden"
-            style="min-height: 40px; max-height: 42px; z-index: 1000"
+            style="min-height: 44px; max-height: 44px; z-index: 1000"
             fixed="top"
             :variant="darkMode ? 'dark' : 'white'"
         >
@@ -333,7 +300,7 @@
                             <b-img
                                 class="m-0 p-0 mb-3"
                                 center
-                                width="38px"
+                                width="39px"
                                 :src="require('../assets/logo.png')"
                                 alt="Plant IT"
                             ></b-img>
@@ -411,7 +378,7 @@
                             <b-img
                                 v-if="currentUserGitHubProfile"
                                 class="avatar m-0 mb-1 p-0 github-hover logo"
-                                style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 1.5px; border: 1px solid white;"
+                                style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 1.5px; border: 1px solid #d6df5D;"
                                 rounded="circle"
                                 :src="
                                     currentUserGitHubProfile

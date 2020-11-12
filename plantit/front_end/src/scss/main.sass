@@ -55,6 +55,11 @@ $theme-colors: map-merge(('primary': $primary, 'secondary': $secondary, 'success
 .icon
   color: $dark
 
+.vl
+  border-left: 2.5px solid #616163 // $success // $gray-500 // #616163 // $success // #616163
+  margin-left: 15px
+  height: 100%
+
 .logo
   background-color: white
   // border-bottom: 1px solid $white // $color-button
@@ -337,14 +342,14 @@ a:link
 .theme-dark
   color: $white !important
   background-color: $dark !important
-  border-color: $white
+  border-color: $color-disabled
 
 .theme-secondary
-  color: $white !important
+  color: $success !important
   background-color: $secondary !important
-  border-color: $secondary
+  border-color: $color-disabled
 
 .theme-light
   color: $dark !important
   background-color: $white !important
-  border-color: $secondary
+  border-color: $color-disabled
