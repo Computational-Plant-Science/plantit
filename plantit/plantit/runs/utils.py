@@ -60,7 +60,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
             with ssh_client.client.open_sftp() as sftp:
                 sftp.chdir(work_dir)
                 with sftp.open('flow.yaml', 'w') as flow_def:
-                    if ['resources'] not in flow['config']['target']:
+                    if 'resources' not in flow['config']['target']:
                         resources = None
                     else:
                         resources = flow['config']['target']['resources']
