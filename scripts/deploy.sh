@@ -49,11 +49,12 @@ $compose exec -T plantit /bin/bash /code/scripts/configure-sandbox.sh
 if [ ! -d config/ssh ]; then
   mkdir config/ssh
 fi
-if [ ! -f config/ssh/known_hosts ]; then
-  touch config/ssh/known_hosts
-  $compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
-  $compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
-fi
+rm config/ssh/known_hosts
+touch config/ssh/known_hosts
+$compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
+$compose exec -T plantit bash -c "ssh-keyscan -H stampede2.tacc.utexas.edu >> /code/config/ssh/known_hosts"
+$compose exec -T plantit bash -c "ssh-keyscan -H sapelo2.gacrc.uga.edu >> /code/config/ssh/known_hosts"
+$compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
 fi
