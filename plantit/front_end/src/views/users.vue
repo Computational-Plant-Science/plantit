@@ -8,7 +8,7 @@
         "
     >
         <br />
-        <b-container class="pl-3 pt-3 vl" fluid>
+        <b-container class="pl-3 pt-3" fluid>
             <p :class="darkMode ? 'text-light' : 'text-dark'">
                 Explore users here. To explore curated flows, see the
                 <b-link
@@ -98,7 +98,7 @@
                                         right
                                         rounded="circle"
                                         class="avatar card-img-right"
-                                        style="max-height: 4rem; max-width: 4rem; opacity: 0.9; position: absolute; right: -20px; top: -40px; z-index:1;"
+                                        style="max-height: 4rem; max-width: 4rem; opacity: 0.9; position: absolute; right: -20px; top: -25px; z-index:1;"
                                         :src="user.github_profile.avatar_url"
                                     ></b-img>
                                 </b-col>

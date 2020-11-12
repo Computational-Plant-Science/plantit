@@ -231,15 +231,14 @@
                                 "
                                 no-body
                             >
-                                <b-row align-v="center" align-h="center">
-                                    <b-col align-self="end" class="text-center">
+                                <b-row align-v="left" align-h="left">
+                                    <b-col align-self="end" class="text-left">
                                         <b-button
-                                            block
                                             v-if="!loadingRuns"
                                             :variant="
                                                 darkMode
                                                     ? 'outline-light'
-                                                    : 'outline-dark'
+                                                    : 'success'
                                             "
                                             @click="loadRuns"
                                         >
@@ -247,6 +246,20 @@
                                                 class="fas fa-sync-alt fa-fw"
                                             ></i>
                                             Refresh
+                                        </b-button>
+                                        <b-button
+                                            v-if="!loadingRuns"
+                                            :variant="
+                                                darkMode
+                                                    ? 'outline-light'
+                                                    : 'success'
+                                            "
+                                            @click="clearRuns"
+                                        >
+                                            <i
+                                                class="fas fa-sync-alt fa-fw"
+                                            ></i>
+                                            Clear
                                         </b-button>
                                         <b-spinner
                                             v-if="loadingRuns"
@@ -466,7 +479,8 @@ export default {
                     Sentry.captureException(error);
                     throw error;
                 });
-        }
+        },
+        async clearRuns() {}
     },
     filters: {
         format_date(value) {

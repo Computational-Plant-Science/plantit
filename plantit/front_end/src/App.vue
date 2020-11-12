@@ -1,20 +1,18 @@
 <template>
-    <div id="app" class="m-0 p-0" style="width: 100vw; min-height: 100vh; background-color: #343a40">
+    <div
+        id="app"
+        :class="darkMode ? 'theme-dark' : 'theme-light' + ' m-0'"
+        style="width: 100vw; min-height: 100vh;"
+    >
         <b-container
             fluid
             class="m-0 p-0"
-            style="width: 100vw; min-height: 100vh; background-color: transparent;"
+            style="min-height: 98vh; background-color: transparent;"
         >
             <Navigation v-if="$route.path !== '/'"></Navigation>
-            <!--{{ keycloak.idToken }}
-            <br />
-            {{ keycloak.clientId }}
-            <br />
-            {{ keycloak.authServerUrl }}-->
-
             <router-view
                 :class="darkMode ? 'theme-dark' : 'theme-light'"
-                style="width: 100vw; border-bottom: 2px solid #616163"
+                style="border-bottom: 2px solid #616163"
             ></router-view>
         </b-container>
     </div>
