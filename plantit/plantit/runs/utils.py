@@ -81,16 +81,14 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         for line in template_script:
                             script.write(line)
                         if not sandbox:
-                            if 'SBATCH --partition' in line and 'queue' in resources:
-                                script.write(line.split('=')[0] + '=' + resources['queue'] + '\n')
-                            elif 'SBATCH -A' in line and 'project' in resources:
-                                script.write(line.split('=')[0] + '=' + resources['project'] + '\n')
-                            elif 'SBATCH --ntasks' in line and 'processes' in resources:
-                                script.write(line.split('=')[0] + '=' + str(resources['processes']) + '\n')
-                            elif 'SBATCH --cpus-per-task' in line and 'cores' in resources:
-                                script.write(line.split('=')[0] + '=' + str(resources['cores']) + '\n')
-                            elif 'SBATCH --time' in line and 'walltime' in resources:
-                                script.write(line.split('=')[0] + '=' + resources['walltime'] + '\n')
+                            if 'tasks' in resources:
+                                script.write(f"#SBATCH --ntasks={resources['tasks']}\n")
+                            elif 'cores' in resources:
+                                script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
+                            elif 'time' in resources:
+                                script.write(f"#SBATCH --time={resources['time']}\n")
+                            elif 'mem' in resources and run.target.name != 'Stampede2': # Stampede2 has KNL virtual memory and will reject jobs specifying memory resources
+                                script.write(f"#SBATCH --mem={resources['mem']}\n")
                             script.write("#SBATCH --mail-type=END,FAIL\n")
                             script.write(f"#SBATCH --mail-user={run.user.email}\n")
                             script.write("#SBATCH --output=PlantIT.%j.out\n")
