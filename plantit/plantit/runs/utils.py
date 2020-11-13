@@ -81,6 +81,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         for line in template_script:
                             script.write(line)
                         if not sandbox:
+                            script.write("#SBATCH -N 1\n")
                             if 'tasks' in resources:
                                 script.write(f"#SBATCH --ntasks={resources['tasks']}\n")
                             elif 'cores' in resources:
