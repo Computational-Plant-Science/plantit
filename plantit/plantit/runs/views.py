@@ -146,14 +146,16 @@ def status(request, id):
         status = request.data
         state = int(status['state'])
 
-        if state == 2:
+        if state == 1:
+            state = Status.COMPLETED
+        elif state == 2:
             state = Status.FAILED
         elif state == 3:
             state = Status.RUNNING
         elif state == 4:
             state = Status.CREATED
         else:
-            raise ValueError(f"Invalid value for state '{status['state']}' (expected 2 - 4)")
+            raise ValueError(f"Invalid value for state '{status['state']}' (expected 1 - 4)")
 
         try:
             run = Run.objects.get(identifier=id)

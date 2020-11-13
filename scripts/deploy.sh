@@ -44,8 +44,9 @@ echo "Running migrations..."
 $compose exec -T plantit python manage.py makemigrations
 $compose exec -T plantit python manage.py migrate
 
-echo "Configuring sandbox container deployment target..."
+echo "Configuring sandbox deployment target..."
 $compose exec -T plantit /bin/bash /code/scripts/configure-sandbox.sh
+$compose exec -T sandbox mkdir /test
 if [ ! -d config/ssh ]; then
   mkdir config/ssh
 fi
