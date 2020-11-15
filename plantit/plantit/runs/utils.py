@@ -84,11 +84,11 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             script.write("#SBATCH -N 1\n")
                             if 'tasks' in resources:
                                 script.write(f"#SBATCH --ntasks={resources['tasks']}\n")
-                            elif 'cores' in resources:
+                            if 'cores' in resources:
                                 script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
-                            elif 'time' in resources:
+                            if 'time' in resources:
                                 script.write(f"#SBATCH --time={resources['time']}\n")
-                            elif 'mem' in resources and run.target.name != 'Stampede2': # Stampede2 has KNL virtual memory and will reject jobs specifying memory resources
+                            if 'mem' in resources and run.target.name != 'Stampede2': # Stampede2 has KNL virtual memory and will reject jobs specifying memory resources
                                 script.write(f"#SBATCH --mem={resources['mem']}\n")
                             script.write("#SBATCH --mail-type=END,FAIL\n")
                             script.write(f"#SBATCH --mail-user={run.user.email}\n")
