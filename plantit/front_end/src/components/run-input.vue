@@ -17,7 +17,7 @@
             @selectPath="selectPath"
             :node="data"
         ></datatree>
-        <br/>
+        <br />
         Selected:
         <b
             >{{ path ? path : 'None' }}
@@ -55,6 +55,7 @@ export default {
             'currentUserDjangoProfile',
             'currentUserGitHubProfile',
             'currentUserCyVerseProfile',
+            'lastFlow',
             'loggedIn'
         ])
     },
@@ -63,6 +64,14 @@ export default {
             `/iplant/home/${this.currentUserDjangoProfile.username}/`,
             this.currentUserDjangoProfile.profile.cyverse_token
         );
+        if (
+            this.lastFlow !== undefined &&
+            this.lastFlow !== null &&
+            this.lastFlow.input !== undefined &&
+            this.lastFlow.input.from !== undefined
+        ) {
+            this.path = this.lastFlow.input.from;
+        }
     },
     methods: {
         loadDirectory(path, token) {

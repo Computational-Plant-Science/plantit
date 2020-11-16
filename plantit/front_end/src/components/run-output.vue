@@ -49,6 +49,7 @@ export default {
         'currentUserDjangoProfile',
         'currentUserGitHubProfile',
         'currentUserCyVerseProfile',
+        'lastFlow',
         'loggedIn'
     ]),
     async mounted() {
@@ -56,6 +57,14 @@ export default {
             `/iplant/home/${this.currentUserDjangoProfile.username}/`,
             this.currentUserDjangoProfile.profile.cyverse_token
         );
+        if (
+            this.lastFlow !== undefined &&
+            this.lastFlow !== null &&
+            this.lastFlow.output !== undefined &&
+            this.lastFlow.output.to !== undefined
+        ) {
+            this.path = this.lastFlow.output.to;
+        }
     },
     methods: {
         loadDirectory(path, token) {

@@ -312,6 +312,16 @@ export default {
                                 };
                             }
                         );
+                    if (
+                        this.lastFlow !== null &&
+                        this.lastFlow !== undefined &&
+                        response.data.config.name === this.lastFlow.name
+                    ) {
+                        this.params = this.lastFlow.params;
+                        this.input = this.lastFlow.input;
+                        this.output = this.lastFlow.output;
+                        this.target = this.lastFlow.target;
+                    }
                 })
                 .catch(error => {
                     if (error.status_code === 401) {
@@ -336,6 +346,8 @@ export default {
                 alert('This flow can only run in the Sandbox.');
                 return;
             }
+
+            // prepare run definition
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
             let target = this.target;
@@ -356,6 +368,11 @@ export default {
             if (this.flow.config.to) {
                 config.output = this.output;
             }
+
+            // save config
+            this.$store.dispatch('setLastFlow', config);
+
+            // submit run
             axios({
                 method: 'post',
                 url: `/apis/v1/runs/`,
@@ -386,6 +403,7 @@ export default {
             'currentUserDjangoProfile',
             'currentUserGitHubProfile',
             'currentUserCyVerseProfile',
+            'lastFlow',
             'loggedIn',
             'darkMode'
         ]),

@@ -1,14 +1,17 @@
 import axios from 'axios';
-import * as Utils from '@/utils';
 import * as Sentry from '@sentry/browser';
 
 export const workflows = {
     state: () => ({
-        workflows: []
+        workflows: [],
+        lastFlow: null
     }),
     mutations: {
         setWorkflows(state, workflows) {
             state.workflows = workflows;
+        },
+        setLastFlow(state, flow) {
+            state.lastFlow = flow;
         }
     },
     actions: {
@@ -34,6 +37,9 @@ export const workflows = {
             } else {
                 return [];
             }
+        },
+        setLastFlow({ commit }, flow) {
+            commit('setLastFlow', flow);
         }
     },
     getters: {
@@ -44,6 +50,7 @@ export const workflows = {
                     owner === repo.repository.owner.login &&
                     name === repo.repository.name
             );
-        }
+        },
+        lastFlow: state => state.lastFlow
     }
 };
