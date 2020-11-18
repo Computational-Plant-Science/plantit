@@ -12,7 +12,6 @@
             <Navigation v-if="$route.path !== '/'"></Navigation>
             <router-view
                 :class="darkMode ? 'theme-dark' : 'theme-light'"
-                style="border-bottom: 2px solid #616163"
             ></router-view>
         </b-container>
     </div>

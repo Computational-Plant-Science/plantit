@@ -56,6 +56,8 @@ class Target(models.Model):
                                null=True,
                                blank=True)
 
+    disabled: bool = models.BooleanField(default=False)
+
     class Executor(models.TextChoices):
         LOCAL = 'local', gettext_lazy('Local')
         SLURM = 'slurm', gettext_lazy('SLURM')

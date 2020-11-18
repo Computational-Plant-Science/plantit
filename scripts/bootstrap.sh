@@ -36,18 +36,18 @@ cd ../..
 
 if [[ "$nocache" -eq 0 ]]; then
   if [[ "$quiet" -eq 0 ]]; then
-    echo "Building containers..."
+    echo "Building images..."
     docker build -t computationalplantscience/plantit -f dockerfiles/plantit/Dockerfile .
   else
-    echo "Building containers quietly..."
+    echo "Building images quietly..."
     docker build -t computationalplantscience/plantit -q -f dockerfiles/plantit/Dockerfile .
   fi
 else
   if [[ "$quiet" -eq 0 ]]; then
-    echo "Building containers with cache disabled..."
+    echo "Building images with cache disabled..."
     docker build -t computationalplantscience/plantit --no-cache -f dockerfiles/plantit/Dockerfile .
   else
-    echo "Building containers quietly with cache disabled..."
+    echo "Building images quietly with cache disabled..."
     docker build -t computationalplantscience/plantit -q --no-cache -f dockerfiles/plantit/Dockerfile .
   fi
 fi

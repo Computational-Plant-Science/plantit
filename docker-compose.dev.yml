@@ -89,5 +89,3 @@ services:
     command: ["/usr/sbin/sshd", "-D"]
     working_dir: /opt/plantit-cli
     privileged: true
-  slackin:
-    image: node
