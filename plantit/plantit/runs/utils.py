@@ -39,6 +39,15 @@ def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, d
 def execute(flow, run_id, plantit_token, cyverse_token):
     run = Run.objects.get(identifier=run_id)
 
+    # if this flow has outputs, make sure we don't push the definition, hidden files or job scripts
+    if 'output' in flow['config']:
+        flow['config']['output']['exclude'] = [
+            ".nvm",
+            "flow.yaml",
+            os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT', "template_local_run.sh"),
+            os.environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT', "template_slurm_run.sh"),
+        ]
+
     try:
         work_dir = join(run.target.workdir, run.work_dir)
         ssh_client = SSH(run.target.hostname,
@@ -46,13 +55,18 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                          run.target.username)
 
         with ssh_client:
+            msg = f"Creating working directory ('{work_dir}')..."
+            print(msg)
+            run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
+            run.save()
+
             execute_command(run=run,
                             ssh_client=ssh_client,
                             pre_command=':',
                             command=f"mkdir {work_dir}",
                             directory=run.target.workdir)
 
-            msg = f"Created working directory '{work_dir}'. Uploading flow definition..."
+            msg = "Uploading configuration..."
             print(msg)
             run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()
@@ -75,7 +89,6 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                     sandbox = run.target.name == 'Sandbox'
                     template = os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else os.environ.get(
                         'CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
-                    print(f"Template: {template}")
                     template_name = template.split('/')[-1]
                     with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
                         for line in template_script:
@@ -97,6 +110,11 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         script.write(run.target.pre_commands + '\n')
                         script.write(
                             f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'\n")
+
+            msg = f"{'Starting' if sandbox else 'Submitting'} script..."
+            print(msg)
+            run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
+            run.save()
 
             execute_command(run=run,
                             ssh_client=ssh_client,

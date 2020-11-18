@@ -158,7 +158,7 @@ export default {
                 fields: [
                     {
                         key: 'state',
-                        label: 'State',
+                        label: 'Status',
                         formatter: value => {
                             switch (value) {
                                 case 1:
@@ -178,16 +178,19 @@ export default {
                     },
                     {
                         key: 'date',
-                        label: 'Timestamp',
+                        label: 'When',
                         sortable: true,
                         formatter: value => {
-                            return `${moment(value).fromNow()} (${moment(
-                                value
-                            ).format('MMMM Do YYYY, h:mm a')})`;
+                            // return `${moment(value).fromNow()} (${moment(
+                            //     value
+                            // ).format('MMMM Do YYYY, h:mm a')})`;
+
+                            return `${moment(value).fromNow()}`;
                         }
                     },
                     {
                         key: 'description',
+                        label: 'Message',
                         formatter: value => {
                             return value.replace(/(?:\r\n|\r|\n)/g, '<br>');
                         },
