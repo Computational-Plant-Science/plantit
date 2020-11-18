@@ -106,7 +106,7 @@
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    Input {{ flow.config.from }}
+                                    Input
                                 </h4>
                             </b-col>
                         </b-row>
@@ -151,7 +151,7 @@
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    Output {{ flow.config.to }}
+                                    Output
                                 </h4>
                             </b-col>
                         </b-row>
@@ -206,7 +206,7 @@
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    Deployment target
+                                    Target
                                 </h4>
                             </b-col>
                         </b-row>

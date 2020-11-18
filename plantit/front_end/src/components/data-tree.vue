@@ -12,10 +12,7 @@
             >
                 <b-button
                     :variant="darkMode ? 'outline-light' : 'white'"
-                    v-if="
-                        select.toLowerCase() === 'directory' ||
-                            select.toLowerCase() === 'file'
-                    "
+                    v-if="select"
                     @click="
                         selectPath(
                             internalLoaded ? internalNode.path : node.path
@@ -94,10 +91,7 @@
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'">
                 <b-button
                     :variant="darkMode ? 'outline-light' : 'white'"
-                    v-if="
-                        select.toLowerCase() === 'directory' ||
-                            select.toLowerCase() === 'file'
-                    "
+                    v-if="select"
                     @click="
                         selectPath(
                             internalLoaded ? internalNode.path : node.path
@@ -151,7 +145,7 @@
             :variant="darkMode ? 'outline-light' : 'white'"
         >
             <data-tree
-                :select="'directory'"
+                :select="true"
                 @selectPath="selectPath"
                 :key="index"
                 :node="child"
@@ -170,7 +164,12 @@
                 :key="index"
                 :class="darkMode ? 'theme-dark' : 'theme-light'"
             >
-                <b-button v-if="select === 'file'" @click="select"
+                <b-button
+                    class="ml-2"
+                    v-if="select"
+                    size="sm"
+                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                    @click="selectPath(child.path)"
                     ><i class="fas fa-file fa-fw"></i>
                     {{ child.label }}</b-button
                 >
@@ -194,7 +193,7 @@ export default {
         },
         select: {
             required: false,
-            type: String
+            type: Boolean
         }
     },
     data: function() {

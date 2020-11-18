@@ -3,7 +3,7 @@
         <b-row
             ><b-col>{{
                 `Select a ${
-                    kind.toLowerCase() === 'file' ? 'file' : 'directory'
+                    kind.toLowerCase() === 'file' ? 'file or directory' : 'directory'
                 } in the CyVerse Data Store${
                     kind.toLowerCase() === 'file'
                         ? ' to use as input'
