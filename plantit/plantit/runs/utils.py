@@ -124,12 +124,11 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             directory=work_dir)
 
             if run.status.state != 2:
-                if not sandbox:
-                    msg = f"'{run.identifier}' submitted"
-                    run.status_set.create(
-                        description=msg,
-                        state=Status.COMPLETED if sandbox else Status.RUNNING,
-                        location='PlantIT')
+                msg = f"'{run.identifier}' {'completed' if sandbox else 'submitted'}"
+                run.status_set.create(
+                    description=msg,
+                    state=Status.COMPLETED if sandbox else Status.RUNNING,
+                    location='PlantIT')
             else:
                 msg = f"'{run.identifier}' failed"
                 print(msg)
