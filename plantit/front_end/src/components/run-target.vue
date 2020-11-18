@@ -3,7 +3,7 @@
         <b-row><b-col>Select a deployment target.</b-col></b-row>
         <br />
         <b-table
-            :items="targets"
+            :items="targets.filter(target => !target.disabled)"
             :fields="fields"
             responsive="sm"
             borderless
