@@ -39,7 +39,7 @@ def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, d
 def execute(flow, run_id, plantit_token, cyverse_token):
     run = Run.objects.get(identifier=run_id)
 
-    # if this flow has outputs, make sure we don't push the definition, hidden files or job scripts
+    # if flow has outputs, don't push the definition, hidden files or job scripts
     if 'output' in flow['config']:
         flow['config']['output']['exclude'] = [
             ".nvm",
@@ -55,7 +55,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                          run.target.username)
 
         with ssh_client:
-            msg = f"Creating working directory ('{work_dir}')..."
+            msg = f"Creating working directory ('{work_dir}')"
             print(msg)
             run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()
@@ -66,7 +66,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             command=f"mkdir {work_dir}",
                             directory=run.target.workdir)
 
-            msg = "Uploading configuration..."
+            msg = "Uploading configuration"
             print(msg)
             run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()
@@ -81,7 +81,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                     del flow['config']['target']
                     yaml.dump(flow['config'], flow_def, default_flow_style=False)
 
-                    msg = "Uploading script..."
+                    msg = "Uploading script"
                     print(msg)
                     run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
                     run.save()
@@ -111,7 +111,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         script.write(
                             f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'\n")
 
-            msg = f"{'Starting' if sandbox else 'Submitting'} script..."
+            msg = f"{'Running' if sandbox else 'Submitting'} script"
             print(msg)
             run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()
@@ -123,14 +123,14 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
                             directory=work_dir)
 
-            if run.status.state != 2:
-                msg = f"Run '{run.identifier}' {'completed' if sandbox else 'submitted'}."
+            if run.status.state != 2 and not sandbox:
+                msg = f"'{run.identifier}' submitted"
                 run.status_set.create(
                     description=msg,
                     state=Status.COMPLETED if sandbox else Status.RUNNING,
                     location='PlantIT')
             else:
-                msg = f"Run '{run.identifier}' failed."
+                msg = f"'{run.identifier}' failed"
                 print(msg)
                 run.status_set.create(
                     description=msg,
