@@ -152,6 +152,7 @@
         >
             <data-tree
                 :select="'directory'"
+                @selectPath="selectPath"
                 :key="index"
                 :node="child"
             ></data-tree>
