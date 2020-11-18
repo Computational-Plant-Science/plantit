@@ -55,7 +55,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                          run.target.username)
 
         with ssh_client:
-            msg = f"Creating working directory ('{work_dir}')"
+            msg = f"Creating working directory '{work_dir}'"
             print(msg)
             run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
             run.save()
@@ -123,12 +123,13 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
                             directory=work_dir)
 
-            if run.status.state != 2 and not sandbox:
-                msg = f"'{run.identifier}' submitted"
-                run.status_set.create(
-                    description=msg,
-                    state=Status.COMPLETED if sandbox else Status.RUNNING,
-                    location='PlantIT')
+            if run.status.state != 2:
+                if not sandbox:
+                    msg = f"'{run.identifier}' submitted"
+                    run.status_set.create(
+                        description=msg,
+                        state=Status.COMPLETED if sandbox else Status.RUNNING,
+                        location='PlantIT')
             else:
                 msg = f"'{run.identifier}' failed"
                 print(msg)

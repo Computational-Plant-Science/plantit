@@ -118,6 +118,8 @@ services:
     volumes:
       - ./config/certbot/conf:/etc/letsencrypt/
       - ./config/certbot/www:/var/www/certbot
+  slackin:
+    image: node
 networks:
   ngnix_network:
     driver: bridge
