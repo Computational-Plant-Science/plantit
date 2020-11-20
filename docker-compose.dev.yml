@@ -25,6 +25,7 @@ services:
       - SQL_ENGINE=${SQL_ENGINE}
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_KEY=${GITHUB_KEY}
       - GITHUB_SECRET=${GITHUB_SECRET}
     command: ["python", "manage.py", "runserver", "0.0.0.0:3000"]
@@ -77,6 +78,7 @@ services:
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_SECRET=${GITHUB_SECRET}
     healthcheck:
       test: celery -A plantit status | grep "OK"

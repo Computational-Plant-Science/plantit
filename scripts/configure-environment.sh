@@ -5,6 +5,13 @@ secret_key=$(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.Syste
 sql_password=$(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)))\")")
 field_encryption_key=$(python2 -c "exec(\"import cryptography.fernet\nprint('%s' % cryptography.fernet.Fernet.generate_key())\")")
 
+if [[ -z "${GITHUB_CLIENT_ID}" ]]; then
+  github_client_id="some_github_client_id"
+  echo "Warning: GITHUB_CLIENT_ID environment variable missing"
+else
+  github_client_id="${GITHUB_CLIENT_ID}"
+fi
+
 if [[ -z "${GITHUB_SECRET}" ]]; then
   github_secret="some_github_secret"
   echo "Warning: GITHUB_SECRET environment variable missing"
@@ -47,6 +54,6 @@ DJANGO_CSRF_COOKIE_SECURE=False
 SQL_ENGINE=django.db.backends.sqlite3
 GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
 GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/users/github_handle_temporary_code/
-GITHUB_KEY=d15df2f5710e9597290f
+GITHUB_KEY=$github_client_id
 GITHUB_SECRET=$github_secret
 EOT

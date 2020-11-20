@@ -29,6 +29,7 @@ services:
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_SECRET=${GITHUB_SECRET}
     command: ["gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
     networks:
@@ -68,6 +69,7 @@ services:
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_KEY=${GITHUB_KEY}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_SECRET=${GITHUB_SECRET}
     healthcheck:
       test: celery -A plantit status | grep "OK"
