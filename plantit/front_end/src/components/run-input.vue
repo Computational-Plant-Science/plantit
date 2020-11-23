@@ -3,7 +3,9 @@
         <b-row
             ><b-col>{{
                 `Select a ${
-                    kind.toLowerCase() === 'file' ? 'file or directory' : 'directory'
+                    kind.toLowerCase() === 'file'
+                        ? 'file or directory'
+                        : 'directory'
                 } in the CyVerse Data Store${
                     kind.toLowerCase() === 'file'
                         ? ' to use as input'
@@ -13,7 +15,7 @@
         >
         <br />
         <datatree
-            :select="kind"
+            :select="true"
             @selectPath="selectPath"
             :node="data"
         ></datatree>
@@ -55,22 +57,26 @@ export default {
             'currentUserDjangoProfile',
             'currentUserGitHubProfile',
             'currentUserCyVerseProfile',
-            'lastFlow',
+            'flowConfigs',
             'loggedIn'
-        ])
+        ]),
+        flowKey: function() {
+            return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
+        }
     },
     async mounted() {
         await this.loadDirectory(
             `/iplant/home/${this.currentUserDjangoProfile.username}/`,
             this.currentUserDjangoProfile.profile.cyverse_token
         );
-        if (
-            this.lastFlow !== undefined &&
-            this.lastFlow !== null &&
-            this.lastFlow.input !== undefined &&
-            this.lastFlow.input.from !== undefined
-        ) {
-            this.path = this.lastFlow.input.from;
+        if (this.flowKey in this.flowConfigs) {
+            let flowConfig = this.flowConfigs[this.flowKey];
+            if (
+                flowConfig.input !== undefined &&
+                flowConfig.input.from !== undefined
+            ) {
+                this.path = flowConfig.input.from;
+            }
         }
     },
     methods: {

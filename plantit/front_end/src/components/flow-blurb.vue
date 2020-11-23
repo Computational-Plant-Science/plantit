@@ -4,7 +4,11 @@
             <b-col cols="10">
                 <h4>
                     <b-link
-                        :disabled="selectable"
+                        :disabled="
+                            selectable !== null &&
+                                selectable !== undefined &&
+                                selectable !== ''
+                        "
                         :class="darkMode ? 'text-white' : 'text-dark'"
                         variant="outline-dark"
                         v-b-tooltip.hover
@@ -35,7 +39,11 @@
                 <br />
                 <br />
                 <b-button
-                    v-if="selectable"
+                    v-if="
+                        selectable !== null &&
+                            selectable !== undefined &&
+                            selectable !== ''
+                    "
                     @click="flowSelected"
                     variant="warning"
                 >

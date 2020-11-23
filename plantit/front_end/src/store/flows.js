@@ -1,21 +1,21 @@
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
-export const workflows = {
+export const flows = {
     state: () => ({
-        workflows: [],
-        lastFlow: null
+        flows: [],
+        flowConfigs: {}
     }),
     mutations: {
-        setWorkflows(state, workflows) {
-            state.workflows = workflows;
+        setFlows(state, flows) {
+            state.flows = flows;
         },
-        setLastFlow(state, flow) {
-            state.lastFlow = flow;
+        setFlowConfig(state, { name, config }) {
+            state.flowConfigs[name] = config;
         }
     },
     actions: {
-        loadWorkflows({ commit, state }) {
+        loadFlows({ commit, state }) {
             if (state.user.github_token !== '') {
                 axios
                     .get(
@@ -28,7 +28,7 @@ export const workflows = {
                         }
                     )
                     .then(response => {
-                        commit('setWorkflows', response.data);
+                        commit('setFlows', response.data);
                     })
                     .catch(error => {
                         Sentry.captureException(error);
@@ -38,19 +38,19 @@ export const workflows = {
                 return [];
             }
         },
-        setLastFlow({ commit }, flow) {
-            commit('setLastFlow', flow);
+        setFlowConfig({ commit }, payload) {
+            commit('setFlowConfig', payload);
         }
     },
     getters: {
-        workflows: state => state.workflows,
-        workflow: state => (owner, name) => {
-            return state.workflows.find(
+        flows: state => state.flows,
+        flow: state => (owner, name) => {
+            return state.flows.find(
                 repo =>
                     owner === repo.repository.owner.login &&
                     name === repo.repository.name
             );
         },
-        lastFlow: state => state.lastFlow
+        flowConfigs: state => state.flowConfigs
     }
 };

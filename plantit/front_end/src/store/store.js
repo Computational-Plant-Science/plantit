@@ -4,7 +4,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { user } from '@/store/user';
 import { users } from '@/store/users';
-import { workflows } from '@/store/workflows';
+import { flows } from '@/store/flows';
 import { data } from '@/store/data';
 
 Vue.use(Vuex);
@@ -19,7 +19,7 @@ const store = new Vuex.Store({
     modules: {
         user,
         users,
-        workflows,
+        flows,
         data
     }
 });

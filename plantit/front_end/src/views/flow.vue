@@ -312,15 +312,14 @@ export default {
                                 };
                             }
                         );
-                    if (
-                        this.lastFlow !== null &&
-                        this.lastFlow !== undefined &&
-                        response.data.config.name === this.lastFlow.name
-                    ) {
-                        this.params = this.lastFlow.params;
-                        this.input = this.lastFlow.input;
-                        this.output = this.lastFlow.output;
-                        this.target = this.lastFlow.target;
+                    if (`${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}` in this.flowConfigs) {
+                        let flowConfig = this.flowConfigs[
+                            `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`
+                        ];
+                        this.params = flowConfig.params;
+                        this.input = flowConfig.input;
+                        this.output = flowConfig.output;
+                        this.target = flowConfig.target;
                     }
                 })
                 .catch(error => {
@@ -370,7 +369,10 @@ export default {
             }
 
             // save config
-            this.$store.dispatch('setLastFlow', config);
+            this.$store.dispatch('setFlowConfig', {
+                name: this.flowKey,
+                config: config
+            });
 
             // submit run
             axios({
@@ -397,35 +399,17 @@ export default {
                 });
         }
     },
-
     computed: {
         ...mapGetters([
             'currentUserDjangoProfile',
             'currentUserGitHubProfile',
             'currentUserCyVerseProfile',
-            'lastFlow',
+            'flowConfigs',
             'loggedIn',
             'darkMode'
         ]),
-        parametersUnready() {
-            return this.params.some(param => param.value === '');
-        },
-        inputUnready() {
-            return (
-                this.input.irods_path === null || this.input.irods_path === ''
-            );
-        },
-        outputUnready() {
-            return (
-                this.output === null ||
-                this.output.path === null ||
-                this.output.path === '' ||
-                this.output.name === null ||
-                this.output.name === ''
-            );
-        },
-        targetUnready() {
-            return this.target.name === '';
+        flowKey: function() {
+            return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }
     }
 };

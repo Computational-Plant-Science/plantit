@@ -8,7 +8,7 @@
         >
         <br />
         <datatree
-            select="Directory"
+            :select="true"
             @selectPath="selectPath"
             :node="data"
         ></datatree>
@@ -45,25 +45,31 @@ export default {
             path: null
         };
     },
-    computed: mapGetters([
-        'currentUserDjangoProfile',
-        'currentUserGitHubProfile',
-        'currentUserCyVerseProfile',
-        'lastFlow',
-        'loggedIn'
-    ]),
+    computed: {
+        ...mapGetters([
+            'currentUserDjangoProfile',
+            'currentUserGitHubProfile',
+            'currentUserCyVerseProfile',
+            'flowConfigs',
+            'loggedIn'
+        ]),
+        flowKey: function() {
+            return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
+        }
+    },
     async mounted() {
         await this.loadDirectory(
             `/iplant/home/${this.currentUserDjangoProfile.username}/`,
             this.currentUserDjangoProfile.profile.cyverse_token
         );
-        if (
-            this.lastFlow !== undefined &&
-            this.lastFlow !== null &&
-            this.lastFlow.output !== undefined &&
-            this.lastFlow.output.to !== undefined
-        ) {
-            this.path = this.lastFlow.output.to;
+        if (this.flowKey in this.flowConfigs) {
+            let flowConfig = this.flowConfigs[this.flowKey];
+            if (
+                flowConfig.output !== undefined &&
+                flowConfig.output.to !== undefined
+            ) {
+                this.path = flowConfig.output.to;
+            }
         }
     },
     methods: {
