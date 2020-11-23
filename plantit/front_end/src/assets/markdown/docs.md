@@ -66,11 +66,29 @@ params:
 
 This will cause the value of `message`, specified by the user in the browser, to be substituted into the `command` at runtime.
 
-#### Input/Output
+#### Flow input/output
 
-PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) onto the file system in your deployment environment, then push output files back to the Data Store after your code runs. To configure inputs and outputs for your <i class="fas fa-stream fa-1x fa-fw"></i> **Flow**, add `from` and `to` sections to your configuration.
+PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) onto the file system in your deployment environment, then push output files back to the Data Store after your code runs. To configure inputs and outputs for your <i class="fas fa-stream fa-1x fa-fw"></i> **Flow**, add `from` and `to` attributes to your configuration.
 
-The following workflow prints the contents of an input file and writes a message to an output file:
+##### Flow input: the `from` attribute
+
+If your flow requires inputs, add a `from` attribute to your configuration file (pointing either to a directory- or file-path in the CyVerse Data Store or Data Commons, or left blank). We recommend specifying a public dataset stored in the CyVerse Data Commons, so prospective users can test your flow on real data. For example:
+
+```yaml
+from: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt
+```
+
+##### Flow output: the `to` attribute
+
+If your flow produces outputs, add a `to` attribute to your configuration file. This attribute may be left blank if your flow allows users to configure the location of output files produced; otherwise the value should be a directory path, relative to the working directory within which your flow will run. For example, to indicate that your flow will deposit output files in a directory `output` relative to the flow working directory:
+
+```yaml
+to: output
+```
+
+##### Full example
+
+The following workflow prints the content of an input file and then writes it to an output file:
 
 ```yaml
 name: Hello File
@@ -78,11 +96,9 @@ author: Groot
 image: docker://alpine
 public: True
 clone: False
-from: file
-to: file
-params:
-  - message
-commands: cat "$INPUT" && echo "$MESSAGE" >> "$OUTPUT"
+from: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt
+to:
+commands: cat "$INPUT" && cat "$INPUT" >> cowsaid.txt
 ```
 
 PlantIT will prompt users of this <i class="fas fa-stream fa-1x fa-fw"></i> **Flow** to select input and output paths in the browser. Note that this configuration maps a single input file to a single output file. If the user provides a directory containing multiple input files, PlantIT will automagically spawn multiple containers, one for each input file. To indicate that your code accepts an entire *directory* as input (and should not be parallelized), use `from: directory` instead.

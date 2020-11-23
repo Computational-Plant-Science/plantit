@@ -1,8 +1,6 @@
 import requests
-
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
-from rest_framework.decorators import api_view
+from django.http import JsonResponse
 
 from plantit.util import get_config
 

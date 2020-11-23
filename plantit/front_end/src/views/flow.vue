@@ -112,18 +112,14 @@
                         </b-row>
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
                         <runinput
+                            :default-path="flow.config.from"
                             :user="user"
                             :kind="flow.config.from"
                             v-on:inputSelected="inputSelected"
                         ></runinput>
                         <br />
-                        <b-row
-                            ><b-col
-                                >Enter an input file pattern (optional).</b-col
-                            ></b-row
-                        >
-                        <br />
                         <b-form-group
+                            v-if="inputDir"
                             description="All files in the input directory matching this pattern will be selected."
                         >
                             <b-form-input
@@ -135,7 +131,7 @@
                     </b-card>
                 </b-col>
             </b-row>
-            <b-row v-if="flow.config && flow.config.to">
+            <b-row v-if="flow.config && flow.config.to !== undefined">
                 <b-col>
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"
@@ -160,32 +156,34 @@
                             :user="user"
                             v-on:outputSelected="outputSelected"
                         ></runoutput>
-                        <br />
-                        <b-row
-                            ><b-col
-                                >Specify an output path (required) and file
-                                pattern (optional).</b-col
-                            ></b-row
-                        >
-                        <br />
-                        <b-form-group
-                            description="The directory in which the flow will deposit output files."
-                        >
-                            <b-form-input
-                                size="sm"
-                                v-model="output.from"
-                                :placeholder="'Enter a filesystem path'"
-                            ></b-form-input>
-                        </b-form-group>
-                        <b-form-group
-                            description="All files in the output directory matching this pattern will be selected."
-                        >
-                            <b-form-input
-                                size="sm"
-                                v-model="output.pattern"
-                                :placeholder="'Enter a file pattern'"
-                            ></b-form-input>
-                        </b-form-group>
+                        <div v-if="!outputSpecified">
+                            <br />
+                            <b-row
+                                ><b-col
+                                    >Specify an output path (required) and file
+                                    pattern (optional).</b-col
+                                ></b-row
+                            >
+                            <br />
+                            <b-form-group
+                                description="The directory in which the flow will deposit output files."
+                            >
+                                <b-form-input
+                                    size="sm"
+                                    v-model="output.from"
+                                    :placeholder="'Enter a filesystem path'"
+                                ></b-form-input>
+                            </b-form-group>
+                            <b-form-group
+                                description="All files in the output directory matching this pattern will be selected."
+                            >
+                                <b-form-input
+                                    size="sm"
+                                    v-model="output.pattern"
+                                    :placeholder="'Enter a file pattern'"
+                                ></b-form-input>
+                            </b-form-group>
+                        </div>
                     </b-card>
                 </b-col>
             </b-row>
@@ -263,11 +261,13 @@ export default {
         return {
             flow: null,
             params: [],
+            inputDir: false,
             input: {
                 kind: '',
                 from: '',
                 pattern: ''
             },
+            outputSpecified: false,
             output: {
                 from: '',
                 to: '',
@@ -301,6 +301,27 @@ export default {
                 })
                 .then(response => {
                     this.flow = response.data;
+
+                    // if a local input path is specified, set it
+                    if (
+                        'from' in response.data.config &&
+                        response.data.config.from !== undefined &&
+                        response.data.config.from !== null
+                    ) {
+                        this.input.from = response.data.config.from;
+                    }
+
+                    // if a local output path is specified, set it and don't show options
+                    if (
+                        'to' in response.data.config &&
+                        response.data.config.to !== undefined &&
+                        response.data.config.to !== null
+                    ) {
+                        this.output.from = response.data.config.to;
+                        this.outputSpecified = true;
+                    }
+
+                    // if params are specified, set them
                     if ('params' in response.data['config'])
                         this.params = response.data['config']['params'].map(
                             param => {
@@ -311,7 +332,12 @@ export default {
                                 };
                             }
                         );
-                    if (`${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}` in this.flowConfigs) {
+
+                    // if we have pre-configured values for this flow, populate them
+                    if (
+                        `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}` in
+                        this.flowConfigs
+                    ) {
                         let flowConfig = this.flowConfigs[
                             `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`
                         ];
@@ -329,12 +355,12 @@ export default {
                     }
                 });
         },
-        inputSelected(path) {
-            this.input.from = path;
-            this.input.kind = this.flow.config.from;
+        inputSelected(node) {
+            this.input.from = node.path;
+            this.inputDir = node.hasSubDirs !== undefined;
         },
-        outputSelected(path) {
-            this.output.to = path;
+        outputSelected(node) {
+            this.output.to = node.path;
         },
         targetSelected(target) {
             this.target = target;

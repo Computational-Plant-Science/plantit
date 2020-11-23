@@ -175,13 +175,13 @@ let router = new Router({
 
 router.beforeEach((to, from, next) => {
     if (to.name === 'flow') {
-        to.meta.title = `Flow ${to.params.name}`;
+        to.meta.title = `Flow: ${to.params.name}`;
     }
     if (to.name === 'run') {
-        to.meta.title = `Run ${to.params.id}`;
+        to.meta.title = `Run: ${to.params.id}`;
     }
     if (to.name === 'user') {
-        to.meta.title = `User ${to.params.username}`;
+        to.meta.title = `User: ${to.params.username}`;
     }
     if (to.meta.name !== null) {
         document.title = to.meta.title;
@@ -215,7 +215,7 @@ router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.name === 'user')) {
         while (to.meta.crumb.length > 1) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: to.params.username,
+            text: `User: ${to.params.username}`,
             href: `/${to.params.username}`
         });
     }

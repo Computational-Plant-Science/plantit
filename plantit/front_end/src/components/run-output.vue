@@ -9,7 +9,7 @@
         <br />
         <datatree
             :select="true"
-            @selectPath="selectPath"
+            @selectNode="selectNode"
             :node="data"
         ></datatree>
         <br />
@@ -81,9 +81,9 @@ export default {
                     throw error;
                 });
         },
-        selectPath(path) {
-            this.path = path;
-            this.$emit('outputSelected', path);
+        selectNode(node) {
+            this.path = node.path;
+            this.$emit('outputSelected', node);
         }
     }
 };

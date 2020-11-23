@@ -14,8 +14,8 @@
                     :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="select"
                     @click="
-                        selectPath(
-                            internalLoaded ? internalNode.path : node.path
+                        selectNode(
+                            internalLoaded ? internalNode : node
                         )
                     "
                     ><i class="fas fa-folder fa-fw mr-2"></i>
@@ -93,8 +93,8 @@
                     :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="select"
                     @click="
-                        selectPath(
-                            internalLoaded ? internalNode.path : node.path
+                        selectNode(
+                            internalLoaded ? internalNode : node
                         )
                     "
                     ><i class="fas fa-folder fa-fw mr-2"></i
@@ -146,7 +146,7 @@
         >
             <data-tree
                 :select="true"
-                @selectPath="selectPath"
+                @selectPath="selectNode"
                 :key="index"
                 :node="child"
             ></data-tree>
@@ -169,7 +169,7 @@
                     v-if="select"
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                    @click="selectPath(child.path)"
+                    @click="selectNode(child)"
                     ><i class="fas fa-file fa-fw"></i>
                     {{ child.label }}</b-button
                 >
@@ -264,9 +264,13 @@ export default {
                     throw error;
                 });
         },
-        selectPath: function(path) {
-            this.$parent.$emit('selectPath', path);
-            this.$emit('selectPath', path);
+        selectNode: function(node) {
+            this.$parent.$parent.$parent.$parent.$parent.$emit('selectNode', node);
+            this.$parent.$parent.$parent.$parent.$emit('selectNode', node);
+            this.$parent.$parent.$parent.$emit('selectNode', node);
+            this.$parent.$parent.$emit('selectNode', node);
+            this.$parent.$emit('selectNode', node);
+            this.$emit('selectNode', node);
         }
     }
 };

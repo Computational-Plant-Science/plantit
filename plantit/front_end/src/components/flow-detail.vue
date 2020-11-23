@@ -94,7 +94,7 @@
                                         <b>{{ flow.config.image }}</b>
                                     </b-col>
                                 </b-row>
-                                <b-row>
+                                <!--<b-row>
                                     <b-col>
                                         <small>From</small>
                                     </b-col>
@@ -117,7 +117,7 @@
                                                 : 'None'
                                         }}</b>
                                     </b-col>
-                                </b-row>
+                                </b-row>-->
                                 <b-row>
                                     <b-col>
                                         <small>Parameters</small>
@@ -172,7 +172,7 @@
                             can only be run in the <b>Sandbox</b>.</b-alert
                         >
                     </b-col>
-                    <b-col align-self="end" class="text-right" v-else>
+                    <b-col align-self="end" class="text-left" v-else>
                         <b>Cluster Resources</b>
                         <br />
                         <br />
