@@ -42,10 +42,9 @@ def execute(flow, run_id, plantit_token, cyverse_token):
     # if flow has outputs, don't push the definition, hidden files or job scripts
     if 'output' in flow['config']:
         flow['config']['output']['exclude'] = [
-            ".nvm",
             "flow.yaml",
-            os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT', "template_local_run.sh"),
-            os.environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT', "template_slurm_run.sh"),
+            "template_local_run.sh",
+            "template_slurm_run.sh",
         ]
 
     try:

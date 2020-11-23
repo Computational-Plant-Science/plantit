@@ -194,7 +194,7 @@ router.beforeEach((to, from, next) => {
                 href: `/${to.params.username}`
             },
             {
-                text: to.params.name,
+                text: `Flow: ${to.params.name}`,
                 href: `/${to.params.username}/${to.params.name}`
             }
         );
@@ -207,11 +207,7 @@ router.beforeEach((to, from, next) => {
                 href: `/${to.params.username}`
             },
             {
-                text: 'runs',
-                href: `/${to.params.username}`
-            },
-            {
-                text: to.params.id,
+                text: `Run: ${to.params.id}`,
                 href: `/${to.params.username}/runs/${to.params.id}`
             }
         );
@@ -223,15 +219,7 @@ router.beforeEach((to, from, next) => {
             href: `/${to.params.username}`
         });
     }
-    // if (to.matched.some(record => record.meta.requiresAuth)) {
-    //     if (!store.getters.loggedIn) {
-    //         next('/apis/v1/idp/cyverse_login/');
-    //     } else {
-    //         next();
-    //     }
-    // } else {
-        next();
-    // }
+    next();
 });
 
 export default router;

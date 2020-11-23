@@ -33,12 +33,6 @@ export default {
     components: {
         datatree
     },
-    props: {
-        kind: {
-            required: true,
-            type: String
-        }
-    },
     data() {
         return {
             data: null,

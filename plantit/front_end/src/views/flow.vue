@@ -158,7 +158,6 @@
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
                         <runoutput
                             :user="user"
-                            kind="Directory"
                             v-on:outputSelected="outputSelected"
                         ></runoutput>
                         <br />
