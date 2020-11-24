@@ -119,7 +119,7 @@
                         ></runinput>
                         <br />
                         <b-form-group
-                            v-if="inputDir"
+                            v-if="input.kind === 'directory'"
                             description="All files in the input directory matching this pattern will be selected."
                         >
                             <b-form-input
@@ -261,7 +261,6 @@ export default {
         return {
             flow: null,
             params: [],
-            inputDir: false,
             input: {
                 kind: '',
                 from: '',
@@ -357,7 +356,8 @@ export default {
         },
         inputSelected(node) {
             this.input.from = node.path;
-            this.inputDir = node.hasSubDirs !== undefined;
+            this.input.kind =
+                node.hasSubDirs !== undefined ? 'directory' : 'file';
         },
         outputSelected(node) {
             this.output.to = node.path;
