@@ -4,7 +4,7 @@
 
 # PlantIT
 
-[![Build Status](https://travis-ci.com/Computational-Plant-Science/plantit.svg?branch=master)](https://travis-ci.com/Computational-Plant-Science/plantit)
+![Build](https://github.com/Computational-Plant-Science/plantit/workflows/Build/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/Computational-Plant-Science/plantit/badge.svg?branch=HEAD)](https://coveralls.io/github/Computational-Plant-Science/plantit?branch=HEAD)
 
 Plant science workflow automation in the browser.
