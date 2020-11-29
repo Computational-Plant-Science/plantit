@@ -29,6 +29,7 @@ jobs:
         run: |
           chmod +x scripts/bootstrap.sh
           bash scripts/bootstrap.sh -n
+          docker-compose -f docker-compose.dev.yml exec -T -e plantit pip install coveralls coverage
           docker-compose -f docker-compose.dev.yml exec -T -e plantit coverage run --source='.' ./manage.py test
           docker-compose -f docker-compose.dev.yml exec -T -e plantit coveralls
           docker push computationalplantscience/plantit
