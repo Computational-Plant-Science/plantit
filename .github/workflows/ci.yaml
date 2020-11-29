@@ -29,8 +29,8 @@ jobs:
         run: |
           chmod +x scripts/bootstrap.sh
           bash scripts/bootstrap.sh -n
-          docker-compose -f docker-compose.dev.yml exec -T plantit coverage run --source='.' ./manage.py test
-          docker-compose -f docker-compose.dev.yml exec -T plantit coveralls
+          docker-compose -f docker-compose.dev.yml exec -T -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coverage run --source='.' ./manage.py test
+          docker-compose -f docker-compose.dev.yml exec -T -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN plantit coveralls
           docker push computationalplantscience/plantit
       - name: Deploy
         env:
