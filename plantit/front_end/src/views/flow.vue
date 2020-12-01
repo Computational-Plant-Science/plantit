@@ -356,6 +356,7 @@ export default {
         },
         inputSelected(node) {
             this.input.from = node.path;
+            this.input.many = this.flow.config.from_directory;
             this.input.kind =
                 node.hasSubDirs !== undefined ? 'directory' : 'file';
         },

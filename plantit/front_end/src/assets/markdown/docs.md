@@ -101,4 +101,4 @@ to:
 commands: cat "$INPUT" && cat "$INPUT" >> cowsaid.txt
 ```
 
-PlantIT will prompt users of this <i class="fas fa-stream fa-1x fa-fw"></i> **Flow** to select input and output paths in the browser. Note that this configuration maps a single input file to a single output file. If the user provides a directory containing multiple input files, PlantIT will automagically spawn multiple containers, one for each input file. To indicate that your code accepts an entire *directory* as input (and should not be parallelized), use `from: directory` instead.
+PlantIT will prompt users of this <i class="fas fa-stream fa-1x fa-fw"></i> **Flow** to select input and output paths in the browser. Note that this configuration maps a single input file to a single output file. If the user provides a directory containing multiple input files, PlantIT will automagically spawn multiple containers, one for each input file. To indicate that your code accepts an entire *directory* as input (and should not be parallelized), use `from_directory: true`.
