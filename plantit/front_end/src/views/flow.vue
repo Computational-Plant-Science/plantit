@@ -389,7 +389,13 @@ export default {
                 target: target,
                 commands: this.flow.config.commands
             };
-            if (this.flow.config.from) config.input = this.input;
+            if (this.flow.config.from) {
+                config.input = this.input;
+                config.input.many =
+                    'from_directory' in this.flow.config
+                        ? this.flow.config.from_directory
+                        : false;
+            }
             if (this.flow.config.to) {
                 config.output = this.output;
             }
