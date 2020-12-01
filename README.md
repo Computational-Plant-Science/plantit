@@ -4,7 +4,7 @@
 
 # PlantIT
 
-![Build](https://github.com/Computational-Plant-Science/plantit/workflows/Build/badge.svg)
+![CI](https://github.com/Computational-Plant-Science/plantit/workflows/CI/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/Computational-Plant-Science/plantit/badge.svg?branch=HEAD)](https://coveralls.io/github/Computational-Plant-Science/plantit?branch=HEAD)
 
 Plant science workflow automation in the browser.
