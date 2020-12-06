@@ -22,3 +22,5 @@ PyGithub
 requests
 pyaml
 channels
+sphinx
+recommonmark
