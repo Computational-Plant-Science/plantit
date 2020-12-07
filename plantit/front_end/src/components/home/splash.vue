@@ -9,7 +9,7 @@
                 :border-variant="darkMode ? 'secondary' : 'default'"
                 :text-variant="darkMode ? 'dark' : 'white'"
                 :bg-variant="darkMode ? 'dark' : 'white'"
-                style="max-width: 400px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
+                style="max-width: 300px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -27,20 +27,10 @@
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
-                            <b-nav-item to="/guide" class="m-0 p-0">
-                                <b-button
-                                    :variant="
-                                        darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
-                                >
-                                    <i class="fas fa-map-signs fa-2x"></i>
-                                    <br />
-                                    Guide
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item to="/docs" class="m-0 p-0">
+                            <b-nav-item
+                                href="https://plantit.readthedocs.io/en/latest"
+                                class="m-0 p-0"
+                            >
                                 <b-button
                                     :variant="
                                         darkMode
@@ -51,20 +41,6 @@
                                     <i class="fas fa-book fa-2x"></i>
                                     <br />
                                     Docs
-                                </b-button>
-                            </b-nav-item>
-                            <b-nav-item class="m-0 p-0">
-                                <b-button
-                                    :variant="
-                                        darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
-                                    title="Slack"
-                                >
-                                    <i class="fab fa-slack fa-2x"></i>
-                                    <br />
-                                    Slack
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item
@@ -84,6 +60,20 @@
                                     Github
                                 </b-button>
                             </b-nav-item>
+                            <!--<b-nav-item class="m-0 p-0">
+                                <b-button
+                                    :variant="
+                                        darkMode
+                                            ? 'outline-light'
+                                            : 'outline-dark'
+                                    "
+                                    title="Slack"
+                                >
+                                    <i class="fab fa-slack fa-2x"></i>
+                                    <br />
+                                    Slack
+                                </b-button>
+                            </b-nav-item>-->
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>

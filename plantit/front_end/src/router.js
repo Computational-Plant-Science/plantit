@@ -1,8 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import home from './views/home.vue';
-import guide from './views/guide.vue';
-import docs from './views/docs.vue';
 import flows from './views/explore-flows.vue';
 import flow from './views/flow.vue';
 import run from './views/run.vue';
@@ -24,44 +22,6 @@ let router = new Router({
             meta: {
                 title: 'PlantIT',
                 crumb: [],
-                requiresAuth: false
-            }
-        },
-        {
-            path: '/guide',
-            name: 'guide',
-            component: guide,
-            meta: {
-                title: 'Guide',
-                crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Guide',
-                        href: '/guide'
-                    }
-                ],
-                requiresAuth: false
-            }
-        },
-        {
-            path: '/docs',
-            name: 'docs',
-            component: docs,
-            meta: {
-                title: 'Docs',
-                crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
-                        text: 'Docs',
-                        href: '/docs'
-                    }
-                ],
                 requiresAuth: false
             }
         },

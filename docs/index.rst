@@ -7,14 +7,21 @@ Welcome to PlantIT's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+   :caption: User Guide
 
+   md/user_guide/user_quickstart.md
+   md/user_guide/running_flows.md
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Developer Docs
+
+   md/developer_docs/developer_quickstart.md
+   md/developer_docs/defining_flows.md
 
 
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
