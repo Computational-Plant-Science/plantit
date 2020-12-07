@@ -19,6 +19,21 @@
                         :text-variant="darkMode ? 'white' : 'dark'"
                         class="overflow-hidden"
                     >
+                        <b-alert :show="flowIsValid" variant="danger"
+                            >This flow's configuration is invalid. It cannot be
+                            run in this state.
+                            <b-link
+                                :href="
+                                    'https://github.com/' +
+                                        this.username +
+                                        '/' +
+                                        this.name +
+                                        '/issues/new'
+                                "
+                                ><i class="fab fa-github fa-1x mr-1 fa-fw"></i
+                                >File an issue?</b-link
+                            ></b-alert
+                        >
                         <flowdetail
                             :show-public="true"
                             :flow="flow"
@@ -218,7 +233,12 @@
             <br />
             <b-row>
                 <b-col>
-                    <b-button @click="onStart" variant="success" block>
+                    <b-button
+                        :disabled="!flowIsValid"
+                        @click="onStart"
+                        variant="success"
+                        block
+                    >
                         Start
                     </b-button>
                 </b-col>
@@ -260,6 +280,8 @@ export default {
     data: function() {
         return {
             flow: null,
+            flowLoading: true,
+            flowValidated: false,
             params: [],
             input: {
                 kind: '',
@@ -291,6 +313,25 @@ export default {
         this.loadFlow();
     },
     methods: {
+        validate() {
+            axios
+                .get(`/apis/v1/flows/${this.username}/${this.name}/validate/`, {
+                    headers: {
+                        Authorization: 'Bearer ' + this.githubToken
+                    }
+                })
+                .then(response => {
+                    this.flowValidated = response.data.result;
+                    this.flowLoading = false;
+                })
+                .catch(error => {
+                    if (error.status_code === 401) {
+                        this.login = true;
+                    } else {
+                        throw error;
+                    }
+                });
+        },
         loadFlow() {
             axios
                 .get(`/apis/v1/flows/${this.username}/${this.name}/`, {
@@ -300,6 +341,8 @@ export default {
                 })
                 .then(response => {
                     this.flow = response.data;
+
+                    this.validate();
 
                     // if a local input path is specified, set it
                     if (
@@ -440,6 +483,9 @@ export default {
             'loggedIn',
             'darkMode'
         ]),
+        flowIsValid: function() {
+            return !this.flowLoading && !this.flowValidated;
+        },
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }

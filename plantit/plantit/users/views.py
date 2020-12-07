@@ -17,7 +17,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.util import csrf_token
+from plantit.utils import csrf_token
 
 
 class IDPViewSet(viewsets.ViewSet):

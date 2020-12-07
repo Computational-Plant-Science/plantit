@@ -2,7 +2,7 @@ import requests
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from plantit.util import get_config, validate_config
+from plantit.utils import get_config, validate_config
 
 
 @login_required
@@ -47,4 +47,6 @@ def validate(request, username, name):
     repo = requests.get(f"https://api.github.com/repos/{username}/{name}",
                         headers={"Authorization": f"token {request.user.profile.github_token}"}).json()
     config = get_config(repo, request.user.profile.github_token)
-    return JsonResponse(validate_config(config))
+    return JsonResponse({
+        'result': validate_config(config)
+    })
