@@ -35,7 +35,7 @@
                                 ><i class="fab fa-github fa-1x mr-1 fa-fw"></i
                                 >File an issue?</b-link
                             ><br />
-                            Errors: {{ this.flowValidationErrors.join(', ')}}
+                            Errors: {{ this.flowValidationErrors.join(', ') }}
                         </b-alert>
                         <flowdetail
                             :show-public="true"
@@ -326,7 +326,13 @@ export default {
                 })
                 .then(response => {
                     this.flowValidated = response.data.result;
-                    if (!this.flowValidated) {
+                    if (this.flowValidated) {
+                        if (response.data.from !== 'none') {
+                            this.input.from = this.flow.config.from;
+                            this.input.many = response.data.from === 'files';
+                            this.input.kind = response.data.from;
+                        }
+                    } else {
                         this.flowValidationErrors = response.data.errors;
                     }
 
@@ -349,7 +355,6 @@ export default {
                 })
                 .then(response => {
                     this.flow = response.data;
-
                     this.validate();
 
                     // if a local input path is specified, set it

@@ -36,13 +36,18 @@ class UtilsTest(TestCase):
         self.assertFalse(docker_container_exists('notacontainer'))
 
     def test_cyverse_path_exists_when_doesnt_exist_is_false(self):
-        self.assertFalse(cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsaid.txt', Token.get()))
+        result = cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsaid.txt', Token.get())
+        self.assertFalse(result)
 
     def test_cyverse_path_exists_when_is_a_file_is_true(self):
-        self.assertTrue(cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt', Token.get()))
+        result = cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt', Token.get())
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'file')
 
     def test_cyverse_path_exists_when_is_a_directory_is_true(self):
-        self.assertTrue(cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay', Token.get()))
+        result = cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay', Token.get())
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'directory')
 
     def test_validate_config_when_is_not_valid_missing_name(self):
         result = validate_config({
@@ -203,7 +208,8 @@ class UtilsTest(TestCase):
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
-        self.assertTrue(result)
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'none')
 
     def test_validate_config_when_is_valid_with_no_input_and_empty_output(self):
         result = validate_config({
@@ -215,7 +221,8 @@ class UtilsTest(TestCase):
             'commands': 'echo "Hello, world!"',
             'to': ''
         }, Token.get())
-        self.assertTrue(result)
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'none')
 
     def test_validate_config_when_is_valid_with_no_input_and_nonempty_output(self):
         result = validate_config({
@@ -227,7 +234,8 @@ class UtilsTest(TestCase):
             'commands': 'echo "Hello, world!"',
             'to': 'outputdir'
         }, Token.get())
-        self.assertTrue(result)
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'none')
 
     def test_validate_config_when_is_valid_with_input_file_and_empty_output(self):
         result = validate_config({
@@ -240,7 +248,8 @@ class UtilsTest(TestCase):
             'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt',
             'to': ''
         }, Token.get())
-        self.assertTrue(result)
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'file')
 
     def test_validate_config_when_is_valid_with_input_file_and_nonempty_output(self):
         result = validate_config({
@@ -253,7 +262,8 @@ class UtilsTest(TestCase):
             'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt',
             'to': 'outputdir'
         }, Token.get())
-        self.assertTrue(result)
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'file')
 
     def test_validate_config_when_is_valid_with_input_files_and_empty_output(self):
         result = validate_config({
@@ -266,7 +276,8 @@ class UtilsTest(TestCase):
             'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
             'to': ''
         }, Token.get())
-        self.assertTrue(result)
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'files')
 
     def test_validate_config_when_is_valid_with_input_files_and_nonempty_output(self):
         result = validate_config({
@@ -279,7 +290,8 @@ class UtilsTest(TestCase):
             'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
             'to': 'outputdir'
         }, Token.get())
-        self.assertTrue(result)
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'files')
 
     def test_validate_config_when_is_valid_with_input_directory_and_empty_output(self):
         result = validate_config({
@@ -293,7 +305,8 @@ class UtilsTest(TestCase):
             'from_directory': True,
             'to': ''
         }, Token.get())
-        self.assertTrue(result)
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'directory')
 
     def test_validate_config_when_is_valid_with_input_directory_and_nonempty_output(self):
         result = validate_config({
@@ -307,4 +320,5 @@ class UtilsTest(TestCase):
             'from_directory': True,
             'to': 'outputdir'
         }, Token.get())
-        self.assertTrue(result)
+        self.assertTrue(result[0])
+        self.assertEqual(result[1], 'directory')

@@ -28,6 +28,7 @@ def docker_container_exists(name, owner=None):
 def cyverse_path_exists(path, token):
     response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}", headers={"Authorization": f"Bearer {token}"})
     content = response.json()
+    input_type = 'directory'
     if response.status_code != 200:
         if 'error_code' not in content or ('error_code' in content and content['error_code'] == 'ERR_DOES_NOT_EXIST'):
             path_split = path.rpartition('/')
@@ -52,11 +53,13 @@ def cyverse_path_exists(path, token):
             elif up_content['files'][0]['label'] != file:
                 print(f"File '{file}' does not exist in directory '{base}'")
                 return False
+            else:
+                input_type = 'file'
         # elif content['error_code'] == 'ERR_UNCHECKED_EXCEPTION':
         #     return False
         else:
             return False
-    return True
+    return True, input_type
 
 
 def validate_config(config, token):
@@ -99,9 +102,14 @@ def validate_config(config, token):
     elif type(config['commands']) is not str:
         errors.append('Attribute \'commands\' must be a str')
     # input
+    input_type = 'none'
     if 'from' in config:
-        if config['from'] != '' and not cyverse_path_exists(config['from'], token):
-            errors.append('Attribute \'from\' must be a string (either empty or a valid path in the CyVerse Data Store)')
+        if config['from'] != '':
+            cyverse_path_result = cyverse_path_exists(config['from'], token)
+            if type(cyverse_path_result) is bool and not cyverse_path_result:
+                errors.append('Attribute \'from\' must be a string (either empty or a valid path in the CyVerse Data Store)')
+            else:
+                input_type = cyverse_path_result[1] if cyverse_path_result[1] == 'file' else ('directory' if 'from_directory' in config and config['from_directory'] else 'files')
         if 'from_directory' in config and type(config['from_directory']) is not bool:
             errors.append('Attribute \'from_directory\' must be a bool')
     elif 'from_directory' in config:
@@ -110,7 +118,7 @@ def validate_config(config, token):
     if 'to' in config and type(config['to']) is not str:
         errors.append('Attribute \'to\' must be a str')
 
-    return True if len(errors) == 0 else (False, errors)
+    return (True, input_type) if len(errors) == 0 else (False, errors)
 
 
 def csrf_token(request):
