@@ -1,3 +1,4 @@
+from pprint import pprint
 from random import choice
 
 import requests
@@ -24,7 +25,41 @@ def docker_container_exists(name, owner=None):
     return True
 
 
-def validate_config(config):
+def cyverse_path_exists(path, token):
+    response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}", headers={"Authorization": f"Bearer {token}"})
+    content = response.json()
+    if response.status_code != 200:
+        if 'error_code' not in content or ('error_code' in content and content['error_code'] == 'ERR_DOES_NOT_EXIST'):
+            path_split = path.rpartition('/')
+            base = path_split[0]
+            file = path_split[2]
+            up_response = requests.get(f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={base}",
+                         headers={"Authorization": f"Bearer {token}"})
+            up_content = up_response.json()
+            if up_response.status_code != 200:
+                if 'error_code' not in up_content:
+                    print(f"Unknown error: {up_content}")
+                    return False
+                elif 'error_code' in up_content:
+                    print(f"Error: {up_content['error_code']}")
+                    return False
+            elif 'files' not in up_content:
+                print(f"Directory '{base}' does not exist")
+                return False
+            elif len(up_content['files']) != 1:
+                print(f"Multiple files found in directory '{base}' matching name '{file}'")
+                return False
+            elif up_content['files'][0]['label'] != file:
+                print(f"File '{file}' does not exist in directory '{base}'")
+                return False
+        # elif content['error_code'] == 'ERR_UNCHECKED_EXCEPTION':
+        #     return False
+        else:
+            return False
+    return True
+
+
+def validate_config(config, token):
     errors = []
 
     # name
@@ -51,7 +86,7 @@ def validate_config(config):
     if 'image' not in config:
         errors.append('Missing attribute \'image\'')
     elif type(config['image']) is not str:
-        errors.append('Attribute \'image\' must be a string')
+        errors.append('Attribute \'image\' must be a str')
     else:
         container_split = config['image'].split('/')
         container_name = container_split[-1]
@@ -62,7 +97,18 @@ def validate_config(config):
     if 'commands' not in config:
         errors.append('Missing attribute \'commands\'')
     elif type(config['commands']) is not str:
-        errors.append('Attribute \'commands\' must be a string')
+        errors.append('Attribute \'commands\' must be a str')
+    # input
+    if 'from' in config:
+        if config['from'] != '' and not cyverse_path_exists(config['from'], token):
+            errors.append('Attribute \'from\' must be a string (either empty or a valid path in the CyVerse Data Store)')
+        if 'from_directory' in config and type(config['from_directory']) is not bool:
+            errors.append('Attribute \'from_directory\' must be a bool')
+    elif 'from_directory' in config:
+        errors.append('Attribute \'from_directory\' may only be configured in combination with attribute \'from\'')
+    # output
+    if 'to' in config and type(config['to']) is not str:
+        errors.append('Attribute \'to\' must be a str')
 
     return True if len(errors) == 0 else (False, errors)
 

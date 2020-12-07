@@ -33,11 +33,27 @@ else
   cyverse_secret="${CYVERSE_CLIENT_SECRET}"
 fi
 
+if [[ -z "${CYVERSE_USERNAME}" ]]; then
+  cyverse_username="some_cyverse_username"
+  echo "Warning: CYVERSE_USERNAME environment variable missing"
+else
+  cyverse_username="${CYVERSE_USERNAME}"
+fi
+
+if [[ -z "${CYVERSE_PASSWORD}" ]]; then
+  cyverse_password="some_cyverse_password"
+  echo "Warning: CYVERSE_PASSWORD environment variable missing"
+else
+  cyverse_username="${CYVERSE_PASSWORD}"
+fi
+
 cat <<EOT >>".env"
 VUE_APP_TITLE=plantit
 CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
 CYVERSE_CLIENT_ID=$cyverse_client_id
 CYVERSE_CLIENT_SECRET=$cyverse_secret
+CYVERSE_USERNAME=$cyverse_username
+CYVERSE_PASSWORD=$cyverse_password
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=$secret_key
