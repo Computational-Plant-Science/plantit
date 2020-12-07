@@ -47,6 +47,8 @@ def validate(request, username, name):
     repo = requests.get(f"https://api.github.com/repos/{username}/{name}",
                         headers={"Authorization": f"token {request.user.profile.github_token}"}).json()
     config = get_config(repo, request.user.profile.github_token)
-    return JsonResponse({
-        'result': validate_config(config)
-    })
+    result = validate_config(config)
+    if type(result) is bool and result:
+        return JsonResponse({'result': result})
+    else:
+        return JsonResponse({'result': result[0], 'errors': result[1]})

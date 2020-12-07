@@ -19,7 +19,9 @@
                         :text-variant="darkMode ? 'white' : 'dark'"
                         class="overflow-hidden"
                     >
-                        <b-alert :show="flowIsValid" variant="danger"
+                        <b-alert
+                            :show="!this.flowLoading && !this.flowValidated"
+                            variant="danger"
                             >This flow's configuration is invalid. It cannot be
                             run in this state.
                             <b-link
@@ -32,8 +34,9 @@
                                 "
                                 ><i class="fab fa-github fa-1x mr-1 fa-fw"></i
                                 >File an issue?</b-link
-                            ></b-alert
-                        >
+                            ><br />
+                            Errors: {{ this.flowValidationErrors.join(', ')}}
+                        </b-alert>
                         <flowdetail
                             :show-public="true"
                             :flow="flow"
@@ -234,7 +237,7 @@
             <b-row>
                 <b-col>
                     <b-button
-                        :disabled="!flowIsValid"
+                        :disabled="!this.flowLoading && !this.flowValidated"
                         @click="onStart"
                         variant="success"
                         block
@@ -282,6 +285,7 @@ export default {
             flow: null,
             flowLoading: true,
             flowValidated: false,
+            flowValidationErrors: [],
             params: [],
             input: {
                 kind: '',
@@ -322,6 +326,10 @@ export default {
                 })
                 .then(response => {
                     this.flowValidated = response.data.result;
+                    if (!this.flowValidated) {
+                        this.flowValidationErrors = response.data.errors;
+                    }
+
                     this.flowLoading = false;
                 })
                 .catch(error => {
@@ -483,9 +491,6 @@ export default {
             'loggedIn',
             'darkMode'
         ]),
-        flowIsValid: function() {
-            return !this.flowLoading && !this.flowValidated;
-        },
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }
