@@ -187,15 +187,6 @@
             </div>
             <br />
             <br />
-            <b-container>
-                <b-row align-content="center">
-                    <b-col class="text-left">
-                        <VueMarkdown :source="source"> </VueMarkdown>
-                    </b-col>
-                </b-row>
-            </b-container>
-            <br />
-            <br />
             <br />
             <b-container class="text-center">
                 <div class="p-0 m-0 background-white text-white">
@@ -211,7 +202,6 @@
                 </h1>
                 <br />
                 <br />
-
                 <b-row class="justify-content-md-center mb-4">
                     <b-col>
                         <b-tabs
@@ -454,7 +444,6 @@
 
 <script>
 import VueMarkdown from 'vue-markdown';
-import about from '@/assets/markdown/about.md';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
@@ -469,7 +458,6 @@ export default {
     },
     data: function() {
         return {
-            source: about,
             users: [],
             runs: 0
         };

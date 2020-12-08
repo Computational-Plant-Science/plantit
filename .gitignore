@@ -256,3 +256,4 @@ plantit/.telemetry
 !/dockerfiles/nginx/
 
 sandbox/*
+node_modules/

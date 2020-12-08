@@ -20,6 +20,7 @@
                         class="overflow-hidden"
                     >
                         <b-alert
+                            id="flowInvalid"
                             :show="!this.flowLoading && !this.flowValidated"
                             variant="danger"
                             >This flow's configuration is invalid. It cannot be
@@ -47,7 +48,7 @@
             </b-row>
             <b-row
                 v-if="
-                    flow.config.params !== undefined
+                    flow !== null && flow.config.params !== undefined
                         ? flow.config.params.length !== 0
                         : false
                 "
@@ -108,7 +109,7 @@
                     </b-card>
                 </b-col>
             </b-row>
-            <b-row v-if="flow && flow.config.from">
+            <b-row v-if="flow !== null && flow.config.from">
                 <b-col>
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"

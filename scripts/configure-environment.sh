@@ -44,7 +44,7 @@ if [[ -z "${CYVERSE_PASSWORD}" ]]; then
   cyverse_password="some_cyverse_password"
   echo "Warning: CYVERSE_PASSWORD environment variable missing"
 else
-  cyverse_username="${CYVERSE_PASSWORD}"
+  cyverse_password="${CYVERSE_PASSWORD}"
 fi
 
 cat <<EOT >>".env"

@@ -8,6 +8,12 @@ Welcome to PlantIT's documentation!
 
 .. toctree::
    :maxdepth: 3
+   :caption: About
+
+   md/about/md
+
+.. toctree::
+   :maxdepth: 3
    :caption: User Guide
 
    md/user_guide/user_quickstart.md
