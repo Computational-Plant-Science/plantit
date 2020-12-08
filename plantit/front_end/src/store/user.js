@@ -71,6 +71,14 @@ export const user = {
                                 );
                             })
                             .catch(error => {
+                                if (
+                                    error.response.data.error_code ===
+                                    'ERR_FORBIDDEN'
+                                ) {
+                                    this.$router.push(
+                                        '/apis/v1/idp/cyverse_logout/'
+                                    );
+                                }
                                 Sentry.captureException(error);
                                 if (error.response.status === 500) throw error;
                             });

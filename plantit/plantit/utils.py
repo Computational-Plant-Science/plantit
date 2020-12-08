@@ -104,7 +104,7 @@ def validate_config(config, token):
     # input
     input_type = 'none'
     if 'from' in config:
-        if config['from'] != '':
+        if config['from'] != '' and config['from'] is not None:
             cyverse_path_result = cyverse_path_exists(config['from'], token)
             if type(cyverse_path_result) is bool and not cyverse_path_result:
                 errors.append('Attribute \'from\' must be a string (either empty or a valid path in the CyVerse Data Store)')
