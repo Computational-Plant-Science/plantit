@@ -16,18 +16,23 @@
                 :title-link-class="tabLinkClass(0)"
             >
                 <br />
-                <b-row
+                <b-row align-v="center" align-h="center"
                     ><b-col
                         >Select a public file or dataset from the CyVerse Data
-                        Commons.</b-col
-                    ></b-row
-                >
-                <br />
-                <datatree
-                    :select="true"
-                    @selectNode="selectNode"
-                    :node="publicData"
-                ></datatree>
+                        Commons.
+                        <br />
+                        <b-spinner
+                            v-if="publicDataLoading"
+                            type="grow"
+                            variant="success"
+                        ></b-spinner>
+                        <datatree
+                            v-else
+                            :select="true"
+                            @selectNode="selectNode"
+                            :node="publicData"
+                        ></datatree></b-col
+                ></b-row>
                 <br />
                 Selected:
                 <b
@@ -42,18 +47,23 @@
                 :title-link-class="tabLinkClass(1)"
             >
                 <br />
-                <b-row
+                <b-row align-v="center" align-h="center"
                     ><b-col
                         >Select your own file or dataset from the CyVerse Data
-                        Store.</b-col
-                    ></b-row
-                >
-                <br />
-                <datatree
-                    :select="true"
-                    @selectNode="selectNode"
-                    :node="userData"
-                ></datatree>
+                        Store.
+                        <br />
+                        <b-spinner
+                            v-if="userDataLoading"
+                            type="grow"
+                            variant="success"
+                        ></b-spinner>
+                        <datatree
+                            v-else
+                            :select="true"
+                            @selectNode="selectNode"
+                            :node="userData"
+                        ></datatree></b-col
+                ></b-row>
                 <br />
                 Selected:
                 <b
@@ -89,6 +99,8 @@ export default {
     },
     data() {
         return {
+            publicDataLoading: true,
+            userDataLoading: true,
             publicData: null,
             userData: null,
             path: '',
@@ -127,25 +139,25 @@ export default {
                 Sentry.captureException(error);
                 throw error;
             });
+        this.userDataLoading = false;
         await axios
-                .get(
-                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/shared/`,
-                    {
-                        headers: {
-                            Authorization:
-                                'Bearer ' +
-                                this.currentUserDjangoProfile.profile
-                                    .cyverse_token
-                        }
+            .get(
+                `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=100&path=/iplant/home/shared/`,
+                {
+                    headers: {
+                        Authorization:
+                            'Bearer ' +
+                            this.currentUserDjangoProfile.profile.cyverse_token
                     }
-                )
-                .then(response => {
-                    this.publicData = response.data;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
+                }
+            )
+            .then(response => {
+                this.publicData = response.data;
+            })
+            .catch(error => {
+                Sentry.captureException(error);
+                throw error;
+            });
         if (this.flowKey in this.flowConfigs) {
             let flowConfig = this.flowConfigs[this.flowKey];
             if (
@@ -158,6 +170,7 @@ export default {
         if (this.defaultPath !== undefined && this.defaultPath !== null) {
             this.path = this.defaultPath;
         }
+        this.publicDataLoading = false;
     },
     methods: {
         selectNode(node) {

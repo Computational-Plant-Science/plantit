@@ -78,7 +78,7 @@
                         </b-col>
                     </b-row>
                     <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
-                        <b-col class="ml-0 mr-0 pl-0 pr-0" align-self="middle">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item
                                     v-if="loggedIn"

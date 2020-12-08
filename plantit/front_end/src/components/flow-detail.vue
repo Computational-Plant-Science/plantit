@@ -1,5 +1,8 @@
 <template>
-    <div v-if="flow.config" :class="darkMode ? 'theme-dark' : 'theme-light'">
+    <div
+        v-if="flow && flow.config"
+        :class="darkMode ? 'theme-dark' : 'theme-light'"
+    >
         <b-img
             v-if="flow.config.logo"
             rounded="circle"
@@ -21,7 +24,7 @@
             <b-col>
                 <b-row>
                     <b-col md="auto" class="mr-0">
-                      <b-badge
+                        <b-badge
                             class="mr-1"
                             :variant="
                                 flow.config.public ? 'success' : 'warning'

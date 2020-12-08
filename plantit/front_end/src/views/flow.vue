@@ -150,7 +150,7 @@
                     </b-card>
                 </b-col>
             </b-row>
-            <b-row v-if="flow.config && flow.config.to !== undefined">
+            <b-row v-if="flow && flow.config && flow.config.to !== undefined">
                 <b-col>
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"

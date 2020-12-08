@@ -26,7 +26,7 @@
             <b-spinner
                 type="grow"
                 label="Loading..."
-                variant="darkMode ? 'warning' : 'dark'"
+                variant="success"
             ></b-spinner>
         </b-row>
         <b-row

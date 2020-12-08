@@ -1,5 +1,10 @@
 <template>
     <b-list-group flush :class="darkMode ? 'theme-dark' : 'theme-light'">
+        <b-spinner
+            v-if="internalLoading"
+            type="grow"
+            variant="success"
+        ></b-spinner>
         <b-row
             v-if="isDir && internalLoaded"
             :class="darkMode ? 'theme-dark' : 'theme-light'"
@@ -13,11 +18,7 @@
                 <b-button
                     :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="select"
-                    @click="
-                        selectNode(
-                            internalLoaded ? internalNode : node
-                        )
-                    "
+                    @click="selectNode(internalLoaded ? internalNode : node)"
                     ><i class="fas fa-folder fa-fw mr-2"></i>
                     {{
                         internalLoaded ? internalNode.label : node.label
@@ -92,11 +93,7 @@
                 <b-button
                     :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="select"
-                    @click="
-                        selectNode(
-                            internalLoaded ? internalNode : node
-                        )
-                    "
+                    @click="selectNode(internalLoaded ? internalNode : node)"
                     ><i class="fas fa-folder fa-fw mr-2"></i
                     >{{
                         internalLoaded ? internalNode.label : node.label
@@ -265,7 +262,10 @@ export default {
                 });
         },
         selectNode: function(node) {
-            this.$parent.$parent.$parent.$parent.$parent.$emit('selectNode', node);
+            this.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
             this.$parent.$parent.$parent.$parent.$emit('selectNode', node);
             this.$parent.$parent.$parent.$emit('selectNode', node);
             this.$parent.$parent.$emit('selectNode', node);

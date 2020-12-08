@@ -1,7 +1,11 @@
 <template>
     <div class="w-100 h-100 pl-3 pt-3" style="background-color: transparent">
         <br />
-        <b-spinner align="center" v-if="loadingUser" type="grow" variant="success"></b-spinner>
+        <b-spinner
+            v-if="loadingUser"
+            type="grow"
+            variant="success"
+        ></b-spinner>
         <b-container v-else class="p-3 vl" fluid="">
             <b-row align-v="start" align-h="center" class="mb-2">
                 <b-col style="color: white" align-self="end" class="ml-0 mr-0">
@@ -124,7 +128,8 @@
                                                 <br />
                                                 {{
                                                     githubProfile
-                                                        ?  githubProfile.bio : 'None'
+                                                        ? githubProfile.bio
+                                                        : 'None'
                                                 }}
                                             </p>
                                             <p>
@@ -134,7 +139,8 @@
                                                 <br />
                                                 {{
                                                     githubProfile
-                                                        ? githubProfile.location : 'None'
+                                                        ? githubProfile.location
+                                                        : 'None'
                                                 }}
                                             </p>
                                         </b-card-text>

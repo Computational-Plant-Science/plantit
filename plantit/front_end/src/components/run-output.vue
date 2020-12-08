@@ -1,12 +1,23 @@
 <template>
     <div>
-        <b-row
+        <br />
+        <b-row align-v="center" align-h="center"
             ><b-col
                 >Select a directory in the CyVerse Data Store to push output
-                files to.</b-col
-            ></b-row
-        >
-        <br />
+                files to.
+                <br />
+                <b-spinner
+                    v-if="dataLoading"
+                    type="grow"
+                    variant="success"
+                ></b-spinner>
+                <datatree
+                    v-else
+                    :select="true"
+                    @selectNode="selectNode"
+                    :node="data"
+                ></datatree></b-col
+        ></b-row>
         <datatree
             :select="true"
             @selectNode="selectNode"
@@ -36,6 +47,7 @@ export default {
     data() {
         return {
             data: null,
+            dataLoading: true,
             path: null
         };
     },
@@ -75,9 +87,11 @@ export default {
                 )
                 .then(response => {
                     this.data = response.data;
+                    this.dataLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    this.dataLoading = false;
                     throw error;
                 });
         },
