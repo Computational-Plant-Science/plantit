@@ -328,9 +328,12 @@ export default {
                 .then(response => {
                     this.flowValidated = response.data.result;
                     if (this.flowValidated) {
-                        if (response.data.from !== 'none') {
+                        if (
+                            response.data.from !== 'none' &&
+                            this.input.from === '' &&
+                            this.input.kind === ''
+                        ) {
                             this.input.from = this.flow.config.from;
-                            this.input.many = response.data.from === 'files';
                             this.input.kind = response.data.from;
                         }
                     } else {
@@ -361,10 +364,12 @@ export default {
                     // if a local input path is specified, set it
                     if (
                         'from' in response.data.config &&
-                        response.data.config.from !== undefined &&
-                        response.data.config.from !== null
+                        response.data.config.from !== undefined
                     ) {
-                        this.input.from = response.data.config.from;
+                        this.input.from =
+                            response.data.config.from !== null
+                                ? response.data.config.from
+                                : '';
                     }
 
                     // if a local output path is specified, set it and don't show options
@@ -415,7 +420,11 @@ export default {
             this.input.from = node.path;
             this.input.many = this.flow.config.from_directory;
             this.input.kind =
-                node.hasSubDirs !== undefined ? 'directory' : 'file';
+                node['kind'] === 'directory'
+                    ? this.flow.config.from_directory
+                        ? 'directory'
+                        : 'files'
+                    : 'file';
         },
         outputSelected(node) {
             this.output.to = node.path;
@@ -446,14 +455,14 @@ export default {
                 target: target,
                 commands: this.flow.config.commands
             };
-            if (this.flow.config.from) {
+            if (this.input.from) {
                 config.input = this.input;
-                config.input.many =
-                    'from_directory' in this.flow.config
-                        ? this.flow.config.from_directory
-                        : false;
+                // config.input.kind =
+                //     'from_directory' in this.flow.config
+                //         ? this.flow.config.from_directory
+                //         : false;
             }
-            if (this.flow.config.to) {
+            if (this.output.to) {
                 config.output = this.output;
             }
 

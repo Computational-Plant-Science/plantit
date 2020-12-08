@@ -18,7 +18,12 @@
                 <b-button
                     :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="select"
-                    @click="selectNode(internalLoaded ? internalNode : node)"
+                    @click="
+                        selectNode(
+                            internalLoaded ? internalNode : node,
+                            'directory'
+                        )
+                    "
                     ><i class="fas fa-folder fa-fw mr-2"></i>
                     {{
                         internalLoaded ? internalNode.label : node.label
@@ -93,7 +98,12 @@
                 <b-button
                     :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="select"
-                    @click="selectNode(internalLoaded ? internalNode : node)"
+                    @click="
+                        selectNode(
+                            internalLoaded ? internalNode : node,
+                            'directory'
+                        )
+                    "
                     ><i class="fas fa-folder fa-fw mr-2"></i
                     >{{
                         internalLoaded ? internalNode.label : node.label
@@ -143,7 +153,7 @@
         >
             <data-tree
                 :select="true"
-                @selectPath="selectNode"
+                @selectPath="selectNode(child, 'directory')"
                 :key="index"
                 :node="child"
             ></data-tree>
@@ -166,7 +176,7 @@
                     v-if="select"
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                    @click="selectNode(child)"
+                    @click="selectNode(child, 'file')"
                     ><i class="fas fa-file fa-fw"></i>
                     {{ child.label }}</b-button
                 >
@@ -261,7 +271,8 @@ export default {
                     throw error;
                 });
         },
-        selectNode: function(node) {
+        selectNode: function(node, kind) {
+            node['kind'] = kind;
             this.$parent.$parent.$parent.$parent.$parent.$emit(
                 'selectNode',
                 node

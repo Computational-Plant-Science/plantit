@@ -18,11 +18,6 @@
                     :node="data"
                 ></datatree></b-col
         ></b-row>
-        <datatree
-            :select="true"
-            @selectNode="selectNode"
-            :node="data"
-        ></datatree>
         <br />
         Selected:
         <b
