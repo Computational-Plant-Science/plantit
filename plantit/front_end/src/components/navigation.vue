@@ -196,7 +196,7 @@
                                 </b-nav-item>
                                 <b-nav-item
                                     class="ml-0 mr-0 pl-0 pr-0"
-                                    href="https://github.com/Computational-Plant-Science/plantit"
+                                    href="https://github.com/Computational-Plant-Science/plantit/discussions/63"
                                 >
                                     <b-button
                                         :variant="
