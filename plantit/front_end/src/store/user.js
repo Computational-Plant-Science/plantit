@@ -64,7 +64,7 @@ export const user = {
                         let now = Math.floor(Date.now() / 1000);
                         if (now > decoded.exp) {
                             commit('setLoggedIn', false);
-                            window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F'
+                            //window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F'
                         }
                         axios
                             .get(
