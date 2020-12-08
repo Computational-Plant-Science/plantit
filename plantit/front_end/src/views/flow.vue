@@ -109,7 +109,7 @@
                     </b-card>
                 </b-col>
             </b-row>
-            <b-row v-if="flow !== null && flow.config.from">
+            <b-row v-if="flow !== null && flow.config.from !== undefined">
                 <b-col>
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"
@@ -133,7 +133,7 @@
                         <runinput
                             :default-path="flow.config.from"
                             :user="user"
-                            :kind="flow.config.from"
+                            :kind="input.kind"
                             v-on:inputSelected="inputSelected"
                         ></runinput>
                         <br />

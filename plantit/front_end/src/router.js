@@ -179,15 +179,15 @@ router.beforeEach((to, from, next) => {
             href: `/${to.params.username}`
         });
     }
-    if (to.matched.some(record => record.meta.requiresAuth)) {
-        if (!store.getters.loggedIn) {
-            window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F'
-        } else {
-            next(); // go to wherever I'm going
-        }
-    } else {
+    // if (to.matched.some(record => record.meta.requiresAuth)) {
+    //     if (!store.getters.loggedIn) {
+    //         window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F'
+    //     } else {
+    //         next(); // go to wherever I'm going
+    //     }
+    // } else {
         next(); // does not require auth, make sure to always call next()!
-    }
+    // }
 });
 
 export default router;

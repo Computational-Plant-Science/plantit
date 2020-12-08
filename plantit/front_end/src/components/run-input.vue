@@ -91,7 +91,7 @@ export default {
         return {
             publicData: null,
             userData: null,
-            path: null,
+            path: '',
             currentTab: 0
         };
     },
@@ -127,18 +127,7 @@ export default {
                 Sentry.captureException(error);
                 throw error;
             });
-        if (this.flowKey in this.flowConfigs) {
-            let flowConfig = this.flowConfigs[this.flowKey];
-            if (
-                flowConfig.input !== undefined &&
-                flowConfig.input.from !== undefined
-            ) {
-                this.path = flowConfig.input.from;
-            }
-        }
-        if (this.defaultPath !== undefined && this.defaultPath !== null) {
-            this.path = this.defaultPath;
-            await axios
+        await axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/shared/`,
                     {
@@ -157,6 +146,17 @@ export default {
                     Sentry.captureException(error);
                     throw error;
                 });
+        if (this.flowKey in this.flowConfigs) {
+            let flowConfig = this.flowConfigs[this.flowKey];
+            if (
+                flowConfig.input !== undefined &&
+                flowConfig.input.from !== undefined
+            ) {
+                this.path = flowConfig.input.from;
+            }
+        }
+        if (this.defaultPath !== undefined && this.defaultPath !== null) {
+            this.path = this.defaultPath;
         }
     },
     methods: {

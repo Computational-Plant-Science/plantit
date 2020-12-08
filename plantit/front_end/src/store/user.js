@@ -1,5 +1,4 @@
 import axios from 'axios';
-import router from '../router';
 import * as Sentry from '@sentry/browser';
 import jwtDecode from 'jwt-decode';
 
@@ -9,7 +8,8 @@ export const user = {
         currentUserCyVerseProfile: null,
         currentUserGitHubProfile: null,
         keycloak: null,
-        darkMode: false
+        darkMode: false,
+        loggedIn: false
     }),
     getters: {
         keycloak: state => state.keycloak,
@@ -17,11 +17,14 @@ export const user = {
         currentUserDjangoProfile: state => state.currentUserDjangoProfile,
         currentUserCyVerseProfile: state => state.currentUserCyVerseProfile,
         currentUserGitHubProfile: state => state.currentUserGitHubProfile,
-        loggedIn: state => state.currentUserDjangoProfile !== null
+        loggedIn: state => state.loggedIn
     },
     mutations: {
         setDarkMode(state, mode) {
             state.darkMode = mode;
+        },
+        setLoggedIn(state, loggedIn) {
+            state.loggedIn = loggedIn;
         },
         setCurrentUserDjangoProfile(state, profile) {
             state.currentUserDjangoProfile = profile;
@@ -51,7 +54,8 @@ export const user = {
                 .then(django => {
                     commit('setCurrentUserDjangoProfile', django.data);
                     if (django.data.profile.cyverse_token === '') {
-                        router.push('/apis/v1/idp/cyverse_login/');
+                        commit('setLoggedIn', false);
+                        window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F';
                     }
                     if (django.data.profile.cyverse_token !== '') {
                         let decoded = jwtDecode(
@@ -59,6 +63,7 @@ export const user = {
                         );
                         let now = Math.floor(Date.now() / 1000);
                         if (now > decoded.exp) {
+                            commit('setLoggedIn', false);
                             window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F'
                         }
                         axios
@@ -73,6 +78,7 @@ export const user = {
                                 }
                             )
                             .then(cyverse => {
+                                commit('setLoggedIn', true);
                                 commit(
                                     'setCurrentUserCyVerseProfile',
                                     cyverse.data[django.data.username]
