@@ -1,5 +1,7 @@
 import axios from 'axios';
+import router from '../router';
 import * as Sentry from '@sentry/browser';
+import jwtDecode from 'jwt-decode';
 
 export const user = {
     state: () => ({
@@ -48,7 +50,17 @@ export const user = {
                 .get('/apis/v1/users/retrieve/')
                 .then(django => {
                     commit('setCurrentUserDjangoProfile', django.data);
-                    if (django.data.profile.cyverse_token !== '')
+                    if (django.data.profile.cyverse_token === '') {
+                        router.push('/apis/v1/idp/cyverse_login/');
+                    }
+                    if (django.data.profile.cyverse_token !== '') {
+                        let decoded = jwtDecode(
+                            django.data.profile.cyverse_token
+                        );
+                        let now = Math.floor(Date.now() / 1000);
+                        if (now > decoded.exp) {
+                            window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F'
+                        }
                         axios
                             .get(
                                 `https://de.cyverse.org/terrain/secured/user-info?username=${django.data.username}`,
@@ -71,17 +83,10 @@ export const user = {
                                 );
                             })
                             .catch(error => {
-                                if (
-                                    error.response.data.error_code ===
-                                    'ERR_FORBIDDEN'
-                                ) {
-                                    this.$router.push(
-                                        '/apis/v1/idp/cyverse_logout/'
-                                    );
-                                }
                                 Sentry.captureException(error);
                                 if (error.response.status === 500) throw error;
                             });
+                    }
                     if (
                         django.data.profile.github_username !== '' &&
                         django.data.profile.github_token !== ''

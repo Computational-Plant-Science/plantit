@@ -24,6 +24,7 @@
     "jest-serializer-vue": "^2.0.2",
     "jquery": "^3.5.1",
     "js-cookie": "^2.2.0",
+    "jwt-decode": "^3.1.2",
     "keycloak-js": "^11.0.2",
     "lodash": "^4.17.20",
     "mocha": "^8.1.3",

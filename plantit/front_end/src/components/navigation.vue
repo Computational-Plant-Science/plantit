@@ -108,7 +108,10 @@
                                         PlantIT
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item href="https://plantit.readthedocs.io/en/latest" class="m-0 p-0">
+                                <b-nav-item
+                                    href="https://plantit.readthedocs.io/en/latest"
+                                    class="m-0 p-0"
+                                >
                                     <b-button
                                         :variant="
                                             darkMode
@@ -388,9 +391,12 @@ export default {
         'currentUserGitHubProfile',
         'loggedIn'
     ]),
-    created: function() {
+    created: async function() {
         this.crumbs = this.$route.meta.crumb;
-        this.$store.dispatch('loadCurrentUser');
+        await this.$store.dispatch('loadCurrentUser');
+        if (!this.loggedIn) {
+          window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F';
+        }
     },
     watch: {
         $route() {
