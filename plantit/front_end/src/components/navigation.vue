@@ -108,23 +108,7 @@
                                         PlantIT
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item to="/guide" class="m-0 p-0">
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-map-signs fa-1x fa-fw"
-                                        ></i>
-                                        User Guide
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item to="/docs" class="m-0 p-0">
+                                <b-nav-item href="https://plantit.readthedocs.io/en/latest" class="m-0 p-0">
                                     <b-button
                                         :variant="
                                             darkMode
@@ -135,24 +119,8 @@
                                         class="text-left"
                                     >
                                         <i class="fas fa-book fa-1x fa-fw"></i>
-                                        Developer Docs
+                                        Docs
                                     </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                            <b-nav
-                                vertical
-                                class="ml-0 mr-0 pl-0 pr-0"
-                                v-if="loggedIn"
-                            >
-                                <b-nav-item class="m-0 p-0" disabled>
-                                    <small
-                                        :class="
-                                            darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
-                                        >Resources</small
-                                    >
                                 </b-nav-item>
                                 <b-nav-item
                                     title="users"
