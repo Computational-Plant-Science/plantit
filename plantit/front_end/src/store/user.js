@@ -55,7 +55,7 @@ export const user = {
                     commit('setCurrentUserDjangoProfile', django.data);
                     if (django.data.profile.cyverse_token === '') {
                         commit('setLoggedIn', false);
-                        window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F';
+                        //window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F';
                     }
                     if (django.data.profile.cyverse_token !== '') {
                         let decoded = jwtDecode(
