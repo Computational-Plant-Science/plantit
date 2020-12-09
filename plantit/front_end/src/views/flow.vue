@@ -465,7 +465,9 @@ export default {
                                 : '.' in this.input.from
                                 ? 'file'
                                 : 'files'
-                            : false;
+                            : '.' in this.input.from
+                            ? 'file'
+                            : 'files';
             }
             if (this.output.to) {
                 config.output = this.output;
