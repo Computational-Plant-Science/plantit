@@ -457,10 +457,15 @@ export default {
             };
             if (this.input.from) {
                 config.input = this.input;
-                // config.input.kind =
-                //     'from_directory' in this.flow.config
-                //         ? this.flow.config.from_directory
-                //         : false;
+                if (config.input.kind === '')
+                    config.input.kind =
+                        'from_directory' in this.flow.config
+                            ? this.flow.config.from_directory
+                                ? 'directory'
+                                : '.' in this.input.from
+                                ? 'file'
+                                : 'files'
+                            : false;
             }
             if (this.output.to) {
                 config.output = this.output;
