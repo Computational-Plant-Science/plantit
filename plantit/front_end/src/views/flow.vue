@@ -465,7 +465,7 @@ export default {
                                 : '.' in this.input.from
                                 ? 'file'
                                 : 'files'
-                            : '.' in this.input.from
+                            : this.input.from.indexOf('.') !== -1
                             ? 'file'
                             : 'files';
             }
