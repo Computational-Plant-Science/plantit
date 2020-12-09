@@ -379,7 +379,7 @@ export default {
                         response.data.config.to !== null
                     ) {
                         this.output.from = response.data.config.to;
-                        this.outputSpecified = true;
+                        //this.outputSpecified = true;
                     }
 
                     // if params are specified, set them
