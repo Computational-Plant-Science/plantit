@@ -28,14 +28,14 @@
                     </b-col>
                 </b-row>
                 <br />
-                <b-row>
+                <!--<b-row>
                     <b-col align-self="end" class="text-right mr-0"
                         ><h3 class="text-success">
                             {{ users.length }}
                         </h3></b-col
                     >
                     <b-col align-self="middle" class="text-left ml-0 pl-0">users</b-col>
-                </b-row>
+                </b-row>-->
                 <b-row>
                     <b-col align-self="end" class="text-right mr-0"
                         ><h2 class="text-success">{{ runs }}</h2></b-col
