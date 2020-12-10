@@ -22,27 +22,28 @@
                         <h1 class="text-white">
                             PlantIT
                         </h1>
-                        <h5 class="text-success mt-4">
+                        <h5 class="text-white mt-4">
                             Plant phenomics pipelines in the browser.
                         </h5>
                     </b-col>
                 </b-row>
-                <!--
                 <br />
                 <b-row>
-                    <b-col align-self="end" class="text-right"
+                    <b-col align-self="end" class="text-right mr-0"
                         ><h3 class="text-success">
                             {{ users.length }}
                         </h3></b-col
                     >
-                    <b-col align-self="middle" class="text-left">users</b-col>
+                    <b-col align-self="middle" class="text-left ml-0 pl-0">users</b-col>
                 </b-row>
                 <b-row>
-                    <b-col align-self="end" class="text-right"
-                        ><h3 class="text-success">{{ runs }}</h3></b-col
+                    <b-col align-self="end" class="text-right mr-0"
+                        ><h2 class="text-success">{{ runs }}</h2></b-col
                     >
-                    <b-col align-self="middle" class="text-left">jobs</b-col>
-                </b-row>-->
+                    <b-col align-self="middle" class="text-left ml-0 pl-0"
+                        >jobs (and counting!)</b-col
+                    >
+                </b-row>
             </template>
             <b-container>
                 <br />
@@ -169,22 +170,6 @@
             header-bg-variant="dark"
             header-border-variant="dark"
         >
-            <br />
-            <br />
-            <br />
-            <div class="p-0 m-0 background-white text-white">
-                <b-img
-                    style="max-width: 5rem;transform: translate(0px, 20px);"
-                    :src="require('../../assets/logo.png')"
-                    center
-                    class="m-0 p-0"
-                ></b-img>
-            </div>
-            <div class="p-1 pt-2">
-                <h1 class="text-center text-white">
-                    <b class="text-dark">About</b>
-                </h1>
-            </div>
             <br />
             <br />
             <br />
@@ -443,15 +428,11 @@
 </template>
 
 <script>
-import VueMarkdown from 'vue-markdown';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'home-about',
-    components: {
-        VueMarkdown
-    },
     async mounted() {
         this.loadAllUsers();
         await this.loadRuns();

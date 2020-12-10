@@ -78,7 +78,7 @@ In production configuration:
 - Django runs behind Gunicorn (both in the same container) which runs behind NGINX (in a separate container)
 - NGINX serves static assets and acts as a reverse proxy
 
-To configure PlantIT for deployment, first clone the repo, then run `./scripts/deploy.sh <host IP or FQDN>` from the root directory. This script is idempotent and may safely be triggered to run by e.g., a CI/CD server. This will:
+To configure PlantIT for deployment, first clone the repo, then run `./scripts/deploy.sh <host IP or FQDN> <admin email address>` from the root directory. This script is idempotent and may safely be triggered to run by e.g., a CI/CD server. This will:
 
 - Bring containers down
 - Fetch the latest version of the project
