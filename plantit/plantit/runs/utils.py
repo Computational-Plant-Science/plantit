@@ -102,6 +102,10 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                                 script.write(f"#SBATCH --time={resources['time']}\n")
                             if 'mem' in resources and run.target.name != 'Stampede2': # Stampede2 has KNL virtual memory and will reject jobs specifying memory resources
                                 script.write(f"#SBATCH --mem={resources['mem']}\n")
+                            if run.target.queue is not None and run.target.queue != '':
+                                script.write(f"#SBATCH --partition={run.target.queue}\n")
+                            if run.target.project is not None and run.target.project != '':
+                                script.write(f"#SBATCH -A {run.target.project}\n")
                             script.write("#SBATCH --mail-type=END,FAIL\n")
                             script.write(f"#SBATCH --mail-user={run.user.email}\n")
                             script.write("#SBATCH --output=PlantIT.%j.out\n")
