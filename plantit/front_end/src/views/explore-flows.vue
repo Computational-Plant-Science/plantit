@@ -27,7 +27,7 @@
                     </b-col>-->
         <b-container class="pl-3 pt-3 mr-3" fluid>
             <p :class="darkMode ? 'text-light' : 'text-dark'">
-                Explore curated flows here. To explore user-contributed flows,
+                Explore flows here. To explore user-contributed flows,
                 see the
                 <b-link
                     :class="darkMode ? 'text-warning' : 'text-dark'"

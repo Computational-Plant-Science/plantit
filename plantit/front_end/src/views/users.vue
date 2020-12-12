@@ -10,7 +10,7 @@
         <br />
         <b-container class="pl-3 pt-3" fluid>
             <p :class="darkMode ? 'text-light' : 'text-dark'">
-                Explore users here. To explore curated flows, see the
+                Explore users here. To explore flows, see the
                 <b-link
                     :class="darkMode ? 'text-warning' : 'text-dark'"
                     to="/flows"
