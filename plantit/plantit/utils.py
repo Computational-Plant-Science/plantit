@@ -115,8 +115,9 @@ def validate_config(config, token):
     elif 'from_directory' in config:
         errors.append('Attribute \'from_directory\' may only be configured in combination with attribute \'from\'')
     # output
-    if 'to' in config and type(config['to']) is not str:
-        errors.append('Attribute \'to\' must be a str')
+    if 'to' in config:
+        if config['to'] is not None and type(config['to']) is not str:
+            errors.append('Attribute \'to\' must be a str')
 
     return (True, input_type) if len(errors) == 0 else (False, errors)
 
