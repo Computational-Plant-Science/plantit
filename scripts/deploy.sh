@@ -44,7 +44,7 @@ echo "Running migrations..."
 $compose exec -T plantit python manage.py makemigrations
 $compose exec -T plantit python manage.py migrate
 
-echo "Configuring sandbox deployment target..."
+echo "Configuring deployment targets..."
 $compose exec -T plantit /bin/bash /code/scripts/configure-sandbox.sh
 $compose exec -T sandbox mkdir /test
 if [ ! -d config/ssh ]; then
@@ -54,8 +54,9 @@ rm config/ssh/known_hosts
 touch config/ssh/known_hosts
 $compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
 $compose exec -T plantit bash -c "ssh-keyscan -H stampede2.tacc.utexas.edu >> /code/config/ssh/known_hosts"
-$compose exec -T plantit bash -c "ssh-keyscan -H sapelo2.gacrc.uga.edu >> /code/config/ssh/known_hosts"
+$compose exec -T plantit bash -c "ssh-keyscan -H sapelo2-droid.gacrc.uga.edu >> /code/config/ssh/known_hosts"
 $compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
+$compose exec -T celery bash -c "cp /code/config/ssh/id_rsa.pub ~/.ssh/id_rsa.pub"
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
 fi
