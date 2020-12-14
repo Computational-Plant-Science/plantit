@@ -189,6 +189,45 @@ class UtilsTest(TestCase):
         self.assertFalse(result[0])
         self.assertTrue('Attribute \'commands\' must be a str' in result[1])
 
+    def test_validate_config_when_is_not_valid_mount_wrong_type(self):
+        result = validate_config({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'public': True,
+            'clone': False,
+            'image': True,
+            'commands': 'echo "Hello, world!"',
+            'mount': True,
+        }, Token.get())
+        self.assertFalse(result[0])
+        self.assertTrue('Attribute \'mount\' must be a str' in result[1])
+
+    def test_validate_config_when_is_not_valid_mount_none(self):
+        result = validate_config({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'public': True,
+            'clone': False,
+            'image': True,
+            'commands': 'echo "Hello, world!"',
+            'mount': None,
+        }, Token.get())
+        self.assertFalse(result[0])
+        self.assertTrue('Attribute \'mount\' must be a str' in result[1])
+
+    def test_validate_config_when_is_not_valid_mount_empty(self):
+        result = validate_config({
+            'name': 'Test Flow',
+            'author': 'Computational Plant Science Lab',
+            'public': True,
+            'clone': False,
+            'image': True,
+            'commands': 'echo "Hello, world!"',
+            'mount': '',
+        }, Token.get())
+        self.assertFalse(result[0])
+        self.assertTrue('Attribute \'mount\' must not be empty' in result[1])
+
     def test_validate_config_when_is_not_valid_with_no_input_but_from_directory(self):
         result = validate_config({
             'name': 'Test Flow',

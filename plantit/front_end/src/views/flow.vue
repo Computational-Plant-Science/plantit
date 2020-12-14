@@ -455,6 +455,8 @@ export default {
                 target: target,
                 commands: this.flow.config.commands
             };
+            if (this.flow.config.mount !== null)
+                config['mount'] = this.flow.config.mount;
             if (this.input.from) {
                 config.input = this.input;
                 if (config.input.kind === '')

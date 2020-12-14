@@ -97,6 +97,18 @@
                                         <b>{{ flow.config.image }}</b>
                                     </b-col>
                                 </b-row>
+                                <b-row v-if="flow.config.mount !== undefined">
+                                    <b-col>
+                                        <small>Mount</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        {{
+                                            flow.config.mount
+                                                ? flow.config.mount
+                                                : 'None'
+                                        }}
+                                    </b-col>
+                                </b-row>
                                 <!--<b-row>
                                     <b-col>
                                         <small>From</small>

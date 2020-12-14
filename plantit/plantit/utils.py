@@ -101,6 +101,12 @@ def validate_config(config, token):
         errors.append('Missing attribute \'commands\'')
     elif type(config['commands']) is not str:
         errors.append('Attribute \'commands\' must be a str')
+    # mount
+    if 'mount' in config:
+        if type(config['mount']) is not str:
+            errors.append('Attribute \'mount\' must be a str')
+        elif config['mount'] is None or config['mount'] == '':
+            errors.append('Attribute \'mount\' must not be empty')
     # input
     input_type = 'none'
     if 'from' in config:
