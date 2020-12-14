@@ -86,8 +86,10 @@ def runs(request):
             'image': flow['config']['image'],
             'command': flow['config']['commands'],
             'params': flow['config']['params'],
-            'target': flow['config']['target']
+            'target': flow['config']['target'],
         }
+        if 'mount' in flow['config']:
+            config['mount'] = flow['config']['mount']
         if 'input' in flow['config']:
             config['input'] = flow['config']['input']
         if 'output' in flow['config']:
@@ -148,7 +150,7 @@ def status(request, id):
 
         if state == 1:
             state = Status.COMPLETED
-        elif state == 2:
+        elif state == 2 or 'error' in status['description'].lower():
             state = Status.FAILED
         elif state == 3:
             state = Status.RUNNING
