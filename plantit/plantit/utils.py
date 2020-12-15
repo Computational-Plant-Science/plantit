@@ -103,9 +103,9 @@ def validate_config(config, token):
         errors.append('Attribute \'commands\' must be a str')
     # mount
     if 'mount' in config:
-        if type(config['mount']) is not str:
-            errors.append('Attribute \'mount\' must be a str')
-        elif config['mount'] is None or config['mount'] == '':
+        if type(config['mount']) is not list:
+            errors.append('Attribute \'mount\' must be a list')
+        elif config['mount'] is None or len(config['mount']) == 0:
             errors.append('Attribute \'mount\' must not be empty')
     # input
     input_type = 'none'

@@ -3,8 +3,10 @@
         <br />
         <b-row align-v="center" align-h="center"
             ><b-col
-                >Select a directory in the CyVerse Data Store to push output
-                files to.
+                ><h5>
+                    Select a directory in the CyVerse Data Store to push output
+                    files to.
+                </h5>
                 <br />
                 <b-spinner
                     v-if="dataLoading"

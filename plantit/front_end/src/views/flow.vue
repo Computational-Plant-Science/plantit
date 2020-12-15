@@ -177,31 +177,131 @@
                         ></runoutput>
                         <div v-if="!outputSpecified">
                             <br />
-                            <b-row
-                                ><b-col
-                                    >Specify an output path (required) and file
-                                    pattern (optional).</b-col
-                                ></b-row
-                            >
-                            <br />
+                            <h5>
+                                Specify an output path (defaults to your run's
+                                working directory).
+                            </h5>
                             <b-form-group
-                                description="The directory in which the flow will deposit output files."
+                                description="The directory to write output files to."
                             >
                                 <b-form-input
                                     size="sm"
                                     v-model="output.from"
-                                    :placeholder="'Enter a filesystem path'"
+                                    :placeholder="'Enter a directory path'"
                                 ></b-form-input>
                             </b-form-group>
+                            <h5>Specify files to include.</h5>
                             <b-form-group
-                                description="All files in the output directory matching this pattern will be selected."
+                                description="All files in the output directory matching this pattern will be included."
                             >
                                 <b-form-input
                                     size="sm"
-                                    v-model="output.pattern"
+                                    v-model="output.include_pattern"
                                     :placeholder="'Enter a file pattern'"
                                 ></b-form-input>
                             </b-form-group>
+                            <b-row
+                                ><b-col md="auto"
+                                    ><b-button
+                                        variant="success"
+                                        @click="addIncludedFile(includedFile)"
+                                        ><i class="fas fa-plus fa-1x fa-fw"></i>
+                                        Add included file</b-button
+                                    ></b-col
+                                ><b-col
+                                    ><b-form-group>
+                                        <b-form-input
+                                            v-model="includedFile"
+                                            :placeholder="
+                                                'Enter a file name to include'
+                                            "
+                                        ></b-form-input> </b-form-group></b-col
+                            ></b-row>
+                            <b-table
+                                v-if="output.include.length > 0"
+                                :items="output.include"
+                                :fields="output_include_fields"
+                                class="text-left"
+                                responsive="sm"
+                                borderless
+                                small
+                                sticky-header="true"
+                                caption-top
+                                :table-variant="darkMode ? 'dark' : 'white'"
+                            >
+                                <template v-slot:cell(name)="include">
+                                    {{ include.item }}
+                                </template>
+                                <template v-slot:cell(actions)="include">
+                                    <b-button
+                                        size="sm"
+                                        variant="outline-danger"
+                                        @click="
+                                            removeIncludedFile(include.item)
+                                        "
+                                        ><i
+                                            class="fas fa-trash fa-1x fa-fw"
+                                        ></i>
+                                        Remove</b-button
+                                    >
+                                </template>
+                            </b-table>
+                            <h5>Specify files to exclude.</h5>
+                            <b-form-group
+                                description="All files in the output directory matching this pattern will be excluded."
+                            >
+                                <b-form-input
+                                    size="sm"
+                                    v-model="output.exclude_pattern"
+                                    :placeholder="'Enter a file pattern'"
+                                ></b-form-input>
+                            </b-form-group>
+                            <b-row
+                                ><b-col md="auto"
+                                    ><b-button
+                                        variant="success"
+                                        @click="addExcludedFile(excludedFile)"
+                                        ><i class="fas fa-plus fa-1x fa-fw"></i>
+                                        Add excluded file</b-button
+                                    ></b-col
+                                ><b-col
+                                    ><b-form-group>
+                                        <b-form-input
+                                            v-model="excludedFile"
+                                            :placeholder="
+                                                'Enter a file name to exclude'
+                                            "
+                                        ></b-form-input> </b-form-group></b-col
+                            ></b-row>
+                            <b-table
+                                v-if="output.exclude.length > 0"
+                                :items="output.exclude"
+                                :fields="output_exclude_fields"
+                                class="text-left"
+                                responsive="sm"
+                                borderless
+                                small
+                                sticky-header="true"
+                                caption-top
+                                :table-variant="darkMode ? 'dark' : 'white'"
+                            >
+                                <template v-slot:cell(name)="exclude">
+                                    {{ exclude.item }}
+                                </template>
+                                <template v-slot:cell(actions)="exclude">
+                                    <b-button
+                                        size="sm"
+                                        variant="outline-danger"
+                                        @click="
+                                            removeExcludedFile(exclude.item)
+                                        "
+                                        ><i
+                                            class="fas fa-trash fa-1x fa-fw"
+                                        ></i>
+                                        Remove</b-button
+                                    >
+                                </template>
+                            </b-table>
                         </div>
                     </b-card>
                 </b-col>
@@ -297,8 +397,33 @@ export default {
             output: {
                 from: '',
                 to: '',
-                pattern: ''
+                include_pattern: '',
+                include: [],
+                exclude_pattern: '',
+                exclude: []
             },
+            includedFile: '',
+            excludedFile: '',
+            output_include_fields: [
+                {
+                    key: 'name',
+                    label: 'Included'
+                },
+                {
+                    key: 'actions',
+                    label: 'Actions'
+                }
+            ],
+            output_exclude_fields: [
+                {
+                    key: 'name',
+                    label: 'Excluded'
+                },
+                {
+                    key: 'actions',
+                    label: 'Actions'
+                }
+            ],
             target: {
                 name: ''
             },
@@ -318,6 +443,30 @@ export default {
         this.loadFlow();
     },
     methods: {
+        addIncludedFile(path) {
+            let index = this.output.include.indexOf(path);
+            if (index > -1) {
+                alert("You've already included this file.");
+                return;
+            }
+            this.output.include.push(path);
+        },
+        removeIncludedFile(path) {
+            let index = this.output.include.indexOf(path);
+            if (index > -1) this.output.include.splice(index, 1);
+        },
+        addExcludedFile(path) {
+            let index = this.output.exclude.indexOf(path);
+            if (index > -1) {
+                alert("You've already excluded this file.");
+                return;
+            }
+            this.output.exclude.push(path);
+        },
+        removeExcludedFile(path) {
+            let index = this.output.exclude.indexOf(path);
+            if (index > -1) this.output.exclude.splice(index, 1);
+        },
         validate() {
             axios
                 .get(`/apis/v1/flows/${this.username}/${this.name}/validate/`, {
