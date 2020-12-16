@@ -7,7 +7,7 @@
             v-if="flow.config.logo"
             rounded="circle"
             class="card-img-right"
-            style="max-width: 9rem;position: absolute;right: 20px;top: 20px;z-index:1"
+            style="max-width: 18rem;position: absolute;right: 20px;top: 20px;z-index:1"
             right
             :src="
                 `https://raw.githubusercontent.com/${flow.repo.owner.login}/${flow.repo.name}/master/${flow.config.logo}`
@@ -33,13 +33,9 @@
                                 flow.config.public ? 'Public' : 'Private'
                             }}</b-badge
                         >
-                        <b-badge variant="white" class="mr-1"
-                            ><i class="fas fa-stream fa-1x fa-fw"></i>
-                            Flow</b-badge
-                        >
-                        <h2 :class="darkMode ? 'text-white' : 'text-dark'">
+                        <h1 :class="darkMode ? 'text-white' : 'text-dark'">
                             {{ flow.config.name }}
-                        </h2>
+                        </h1>
                     </b-col>
                 </b-row>
                 <b-row>

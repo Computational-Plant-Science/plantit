@@ -3,7 +3,9 @@
         <br />
         <b-row align-v="center" align-h="center"
             ><b-col
-                ><h5>
+                ><h5 :class="darkMode
+                    ? 'text-white'
+                    : 'text-dark'">
                     Select a directory in the CyVerse Data Store to push output
                     files to.
                 </h5>
@@ -54,6 +56,7 @@ export default {
             'currentUserGitHubProfile',
             'currentUserCyVerseProfile',
             'flowConfigs',
+            'darkMode',
             'loggedIn'
         ]),
         flowKey: function() {

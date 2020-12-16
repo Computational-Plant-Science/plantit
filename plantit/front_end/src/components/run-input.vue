@@ -18,8 +18,10 @@
                 <br />
                 <b-row align-v="center" align-h="center"
                     ><b-col
-                        ><h5>Select a public file or dataset from the CyVerse Data
-                        Commons.</h5>
+                        ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                            Select a public file or dataset from the CyVerse
+                            Data Commons.
+                        </h5>
                         <br />
                         <b-spinner
                             v-if="publicDataLoading"
@@ -49,8 +51,10 @@
                 <br />
                 <b-row align-v="center" align-h="center"
                     ><b-col
-                        ><h5>Select your own file or dataset from the CyVerse Data
-                        Store.</h5>
+                        ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                            Select your own file or dataset from the CyVerse
+                            Data Store.
+                        </h5>
                         <br />
                         <b-spinner
                             v-if="userDataLoading"

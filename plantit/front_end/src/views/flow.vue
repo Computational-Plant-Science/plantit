@@ -63,17 +63,17 @@
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h4
+                                <h3
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    Parameters
-                                </h4>
+                                    <i class="fas fa-keyboard fa-fw"></i> Parameters
+                                </h3>
                             </b-col>
                         </b-row>
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
-                        <b-row><b-col>Configure parameters.</b-col></b-row>
+                        <h5 :class="darkMode ? 'text-white' : 'text-dark'">Configure parameters for this run.</h5>
                         <br />
                         <b-table
                             :items="params"
@@ -120,13 +120,13 @@
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h4
+                                <h3
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    Input
-                                </h4>
+                                    <i class="fas fa-download fa-fw"></i> Input
+                                </h3>
                             </b-col>
                         </b-row>
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
@@ -161,13 +161,13 @@
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h4
+                                <h3
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    Output
-                                </h4>
+                                    <i class="fas fa-upload fa-fw"></i> Output
+                                </h3>
                             </b-col>
                         </b-row>
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
@@ -177,12 +177,11 @@
                         ></runoutput>
                         <div v-if="!outputSpecified">
                             <br />
-                            <h5>
+                            <h5 :class="darkMode ? 'text-white' : 'text-dark'">
                                 Specify an output path (defaults to your run's
                                 working directory).
                             </h5>
                             <b-form-group
-                                description="The directory to write output files to."
                             >
                                 <b-form-input
                                     size="sm"
@@ -190,9 +189,8 @@
                                     :placeholder="'Enter a directory path'"
                                 ></b-form-input>
                             </b-form-group>
-                            <h5>Specify files to include.</h5>
+                            <h5 :class="darkMode ? 'text-white' : 'text-dark'">Specify a file pattern and/or names to include.</h5>
                             <b-form-group
-                                description="All files in the output directory matching this pattern will be included."
                             >
                                 <b-form-input
                                     size="sm"
@@ -213,7 +211,7 @@
                                         <b-form-input
                                             v-model="includedFile"
                                             :placeholder="
-                                                'Enter a file name to include'
+                                                'Enter a file name'
                                             "
                                         ></b-form-input> </b-form-group></b-col
                             ></b-row>
@@ -246,10 +244,8 @@
                                     >
                                 </template>
                             </b-table>
-                            <h5>Specify files to exclude.</h5>
-                            <b-form-group
-                                description="All files in the output directory matching this pattern will be excluded."
-                            >
+                            <h5 :class="darkMode ? 'text-white' : 'text-dark'">Specify a file pattern and/or names to exclude.</h5>
+                            <b-form-group>
                                 <b-form-input
                                     size="sm"
                                     v-model="output.exclude_pattern"
@@ -269,7 +265,7 @@
                                         <b-form-input
                                             v-model="excludedFile"
                                             :placeholder="
-                                                'Enter a file name to exclude'
+                                                'Enter a file name'
                                             "
                                         ></b-form-input> </b-form-group></b-col
                             ></b-row>
@@ -317,13 +313,13 @@
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h4
+                                <h3
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    Target
-                                </h4>
+                                    <i class="fas fa-server fa-fw"></i> Target
+                                </h3>
                             </b-col>
                         </b-row>
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
