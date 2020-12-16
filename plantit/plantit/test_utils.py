@@ -200,7 +200,7 @@ class UtilsTest(TestCase):
             'mount': True,
         }, Token.get())
         self.assertFalse(result[0])
-        self.assertTrue('Attribute \'mount\' must be a str' in result[1])
+        self.assertTrue('Attribute \'mount\' must be a list' in result[1])
 
     def test_validate_config_when_is_not_valid_mount_none(self):
         result = validate_config({
@@ -213,7 +213,7 @@ class UtilsTest(TestCase):
             'mount': None,
         }, Token.get())
         self.assertFalse(result[0])
-        self.assertTrue('Attribute \'mount\' must be a str' in result[1])
+        self.assertTrue('Attribute \'mount\' must be a list' in result[1])
 
     def test_validate_config_when_is_not_valid_mount_empty(self):
         result = validate_config({
@@ -223,7 +223,7 @@ class UtilsTest(TestCase):
             'clone': False,
             'image': True,
             'commands': 'echo "Hello, world!"',
-            'mount': '',
+            'mount': [],
         }, Token.get())
         self.assertFalse(result[0])
         self.assertTrue('Attribute \'mount\' must not be empty' in result[1])
