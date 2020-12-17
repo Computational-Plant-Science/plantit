@@ -41,7 +41,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
 
     # if flow has outputs, don't push the definition, hidden files or job scripts
     if 'output' in flow['config']:
-        flow['config']['output']['exclude'] = [
+        flow['config']['output']['exclude']['names'] = [
             "flow.yaml",
             "template_local_run.sh",
             "template_slurm_run.sh",
