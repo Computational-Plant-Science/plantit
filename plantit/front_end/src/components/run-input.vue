@@ -1,6 +1,12 @@
 <template>
     <div>
+        <b :class="darkMode ? 'text-white' : 'text-dark'">
+            Select a public file or dataset from the CyVerse Data Commons, or
+            your own data from the Data Store.
+        </b>
+        <br />
         <b-tabs
+            class="mt-2"
             active-nav-item-class="background-success text-dark"
             :active-tab-class="
                 darkMode
@@ -11,18 +17,15 @@
             v-model="currentTab"
         >
             <b-tab
-                :active="this.path.startsWith('/iplant/home/shared')"
+                :active="
+                    this.path === '' ||
+                        this.path.startsWith('/iplant/home/shared')
+                "
                 title="Community Data"
                 :title-link-class="tabLinkClass(0)"
             >
-                <br />
-                <b-row align-v="center" align-h="center"
-                    ><b-col
-                        ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
-                            Select a public file or dataset from the CyVerse
-                            Data Commons.
-                        </h5>
-                        <br />
+                <b-row
+                    ><b-col>
                         <b-spinner
                             v-if="publicDataLoading"
                             type="grow"
@@ -35,27 +38,19 @@
                             :node="publicData"
                         ></datatree></b-col
                 ></b-row>
-                <br />
-                Selected:
-                <b
-                    >{{ path ? path : 'None' }}
+                <b-alert :variant="path ? 'success' : 'danger'" :show="true"
+                    >Selected: {{ path ? path : 'None' }}
                     <i v-if="path" class="fas fa-check text-success"></i>
                     <i v-else class="fas fa-exclamation text-danger"></i>
-                </b>
+                </b-alert>
             </b-tab>
             <b-tab
                 :active="!this.path.startsWith('/iplant/home/shared')"
                 title="Your Data"
                 :title-link-class="tabLinkClass(1)"
             >
-                <br />
-                <b-row align-v="center" align-h="center"
-                    ><b-col
-                        ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
-                            Select your own file or dataset from the CyVerse
-                            Data Store.
-                        </h5>
-                        <br />
+                <b-row
+                    ><b-col>
                         <b-spinner
                             v-if="userDataLoading"
                             type="grow"
@@ -68,13 +63,11 @@
                             :node="userData"
                         ></datatree></b-col
                 ></b-row>
-                <br />
-                Selected:
-                <b
-                    >{{ path ? path : 'None' }}
+                <b-alert :variant="path ? 'success' : 'danger'" :show="true"
+                    >Selected: {{ path ? path : 'None' }}
                     <i v-if="path" class="fas fa-check text-success"></i>
                     <i v-else class="fas fa-exclamation text-danger"></i>
-                </b>
+                </b-alert>
             </b-tab>
         </b-tabs>
     </div>

@@ -1,15 +1,11 @@
 <template>
     <div>
-        <br />
-        <b-row align-v="center" align-h="center"
-            ><b-col
-                ><h5 :class="darkMode
-                    ? 'text-white'
-                    : 'text-dark'">
-                    Select a directory in the CyVerse Data Store to push output
-                    files to.
-                </h5>
-                <br />
+        <b :class="darkMode ? 'text-white' : 'text-dark'">
+            Select a directory in the CyVerse Data Store to push output files
+            to.
+        </b>
+        <b-row class="mt-2"
+            ><b-col>
                 <b-spinner
                     v-if="dataLoading"
                     type="grow"
@@ -22,13 +18,11 @@
                     :node="data"
                 ></datatree></b-col
         ></b-row>
-        <br />
-        Selected:
-        <b
-            >{{ path ? path : 'None' }}
+        <b-alert :variant="path ? 'success' : 'danger'" :show="true"
+            >Selected: {{ path ? path : 'None' }}
             <i v-if="path" class="fas fa-check text-success"></i>
             <i v-else class="fas fa-exclamation text-danger"></i>
-        </b>
+        </b-alert>
     </div>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-    <b-list-group flush :class="darkMode ? 'theme-dark' : 'theme-light'">
+    <b-list-group flush class="mt-0 mb-0">
         <b-spinner
             v-if="internalLoading"
             type="grow"
@@ -16,6 +16,7 @@
                 :class="darkMode ? 'theme-dark' : 'theme-light'"
             >
                 <b-button
+                    size="sm"
                     :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="select"
                     @click="
@@ -30,6 +31,7 @@
                     }}</b-button
                 >
                 <b-button
+                    size="sm"
                     v-else
                     disabled
                     :variant="darkMode ? 'outline-light' : 'white'"
@@ -38,8 +40,9 @@
                     >{{ internalLoaded ? internalNode.label : node.label }}
                 </b-button>
             </b-col>
-            <b-col md="auto" class="mt-1">
-                {{
+            <b-col md="auto">
+                <b-badge :variant="darkMode ? 'outline-light' : 'outline-dark'">
+                  {{
                     isDir
                         ? `${subDirCount} ${
                               subDirCount === 1
@@ -47,7 +50,7 @@
                                   : 'subdirectories'
                           }, ${fileCount} ${fileCount === 1 ? 'file' : 'files'}`
                         : ''
-                }}
+                  }}</b-badge>
             </b-col>
             <b-col class="ml-0 mr-0" md="auto">
                 <b-button
@@ -96,6 +99,7 @@
         >
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'">
                 <b-button
+                    size="sm"
                     :variant="darkMode ? 'outline-light' : 'white'"
                     v-if="select"
                     @click="
@@ -110,6 +114,7 @@
                     }}</b-button
                 >
                 <b-button
+                    size="sm"
                     v-else
                     disabled
                     :variant="darkMode ? 'outline-light' : 'white'"
@@ -143,13 +148,13 @@
             </b-col>
         </b-row>
         <b-list-group-item
-            :class="darkMode ? 'theme-dark' : 'theme-light'"
+            class="mt-0 mb-0"
             v-for="(child, index) in internalLoaded
                 ? internalNode.folders
                 : node.folders"
             v-bind:key="index"
             v-show="isOpen"
-            :variant="darkMode ? 'outline-light' : 'white'"
+            :variant="darkMode ? 'outline-light' : 'outline-dark'"
         >
             <data-tree
                 :select="true"
@@ -159,10 +164,10 @@
             ></data-tree>
         </b-list-group-item>
         <b-list-group-item
+            class="mt-0 mb-0"
             v-show="isOpen"
             v-if="isDir && internalLoaded"
-            :variant="darkMode ? 'outline-light' : 'white'"
-            :class="darkMode ? 'theme-dark' : 'theme-light'"
+            :variant="darkMode ? 'outline-light' : 'outline-dark'"
         >
             <b-row
                 v-for="(child, index) in internalLoaded

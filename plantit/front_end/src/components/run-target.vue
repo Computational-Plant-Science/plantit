@@ -1,6 +1,8 @@
 <template>
     <div>
-      <b-row><b-col><h5 :class="darkMode ? 'text-white' : 'text-dark'">Select a deployment target.</h5></b-col></b-row>
+      <b :class="darkMode ? 'text-white' : 'text-dark'">
+            Select a cluster or server to submit to.
+        </b>
         <br />
         <b-table
             :items="targets.filter(target => !target.disabled)"
