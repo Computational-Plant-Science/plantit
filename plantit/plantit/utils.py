@@ -119,10 +119,22 @@ def validate_config(config, token):
     # input
     if 'input' in config:
         # path
+        if 'path' not in config['input']:
+            errors.append('Missing attribute \'input.path\'')
         if config['input']['path'] != '' and config['input']['path'] is not None:
             cyverse_path_result = cyverse_path_exists(config['input']['path'], token)
             if type(cyverse_path_result) is bool and not cyverse_path_result:
-                errors.append('Attribute \'input.path\' must be a string (either empty or a valid path in the CyVerse Data Store)')
+                errors.append('Attribute \'input.path\' must be a str (either empty or a valid path in the CyVerse Data Store)')
+
+        # kind
+        if 'kind' not in config['input']:
+            errors.append('Missing attribute \'input.kind\'')
+        if not (config['input']['kind'] == 'file' or config['input']['kind'] == 'files' or config['input']['kind'] == 'directory'):
+            errors.append('Attribute \'input.kind\' must be a string (either \'file\', \'files\', or \'directory\')')
+
+        # patterns
+        if 'patterns' in config['input'] and type(config['input']['patterns']) is not list or not all(type(pattern) is str for pattern in config['input']['patterns']):
+            errors.append('Attribute \'input.patterns\' must be a list of str')
 
     # legacy output format
     if 'to' in config:

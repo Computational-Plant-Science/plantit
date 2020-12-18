@@ -74,41 +74,86 @@
                             </b-col>
                         </b-row>
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
-                        <h5 :class="darkMode ? 'text-white' : 'text-dark'">
-                            Configure parameters for this run.
-                        </h5>
-                        <br />
-                        <b-table
-                            :items="params"
-                            :fields="fields"
-                            responsive="sm"
-                            borderless
-                            small
-                            sticky-header="true"
-                            caption-top
-                            :table-variant="darkMode ? 'dark' : 'white'"
-                        >
-                            <template v-slot:cell(name)="param">
-                                {{ param.item.key.split('=')[0].toLowerCase() }}
-                            </template>
-                            <template v-slot:cell(value)="param">
-                                <b-form-input
-                                    size="sm"
-                                    v-model="param.item.value"
-                                    :placeholder="
-                                        param.item.key.split('=').length === 1
-                                            ? 'Enter a value for \'' +
-                                              param.item.key
-                                                  .split('=')[0]
-                                                  .toLowerCase() +
-                                              '\''
-                                            : param.item.key
-                                                  .split('=')[1]
-                                                  .toLowerCase()
+
+                        <b-row v-if="onlyFiletype">
+                            <b-col>
+                                <b
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
                                     "
-                                ></b-form-input>
-                            </template>
-                        </b-table>
+                                >
+                                    Select an input filetype for this run.
+                                </b>
+                                <multiselect
+                                    :multiple="true"
+                                    :close-on-select="false"
+                                    :clear-on-select="false"
+                                    :preserve-search="true"
+                                    :preselect-first="true"
+                                    v-model="inputSelectedPatterns"
+                                    :options="input.patterns"
+                                ></multiselect>
+                            </b-col>
+                        </b-row>
+                        <b-row v-else
+                            ><b-col
+                                ><b
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                >
+                                    Configure parameters for this run.
+                                </b>
+                                <br /><b-table
+                                    :items="params"
+                                    :fields="fields"
+                                    responsive="sm"
+                                    borderless
+                                    small
+                                    sticky-header="true"
+                                    caption-top
+                                    :table-variant="darkMode ? 'dark' : 'white'"
+                                >
+                                    <template v-slot:cell(name)="param">
+                                        {{
+                                            param.item.key
+                                                .split('=')[0]
+                                                .toLowerCase()
+                                        }}
+                                    </template>
+                                    <template v-slot:cell(value)="param">
+                                        <!--<multiselect
+                                            v-if="
+                                                param.key === 'filetype' &&
+                                                    this.input.patterns.length >
+                                                        0
+                                            "
+                                            :multiple="true"
+                                            :close-on-select="false"
+                                            :clear-on-select="false"
+                                            :preserve-search="true"
+                                            :preselect-first="true"
+                                            v-model="inputSelectedPatterns"
+                                            :options="input.patterns"
+                                        ></multiselect>-->
+                                        <b-form-input
+                                            size="sm"
+                                            v-model="param.item.value"
+                                            :placeholder="
+                                                param.item.key.split('=')
+                                                    .length === 1
+                                                    ? 'Enter a value for \'' +
+                                                      param.item.key
+                                                          .split('=')[0]
+                                                          .toLowerCase() +
+                                                      '\''
+                                                    : param.item.key
+                                                          .split('=')[1]
+                                                          .toLowerCase()
+                                            "
+                                        ></b-form-input>
+                                    </template> </b-table></b-col
+                        ></b-row>
                     </b-card>
                 </b-col>
             </b-row>
@@ -240,6 +285,7 @@ import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '../router';
+import Multiselect from 'vue-multiselect';
 
 String.prototype.capitalize = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
@@ -248,6 +294,7 @@ String.prototype.capitalize = function() {
 export default {
     name: 'flow',
     components: {
+        Multiselect,
         flowdetail,
         runinput,
         runoutput,
@@ -271,8 +318,9 @@ export default {
             input: {
                 kind: '',
                 from: '',
-                pattern: ''
+                patterns: []
             },
+            inputSelectedPatterns: [],
             outputSpecified: false,
             output: {
                 from: '',
@@ -441,6 +489,11 @@ export default {
                                 ? response.data.config.input.path
                                 : '';
                         this.input.kind = response.data.config.input.kind;
+                        this.input.patterns =
+                            response.data.config.input.patterns !== undefined &&
+                            response.data.config.input.patterns !== null
+                                ? response.data.config.input.patterns
+                                : [];
                     }
 
                     // if a local output path is specified, add it to included files
@@ -533,17 +586,18 @@ export default {
                 config['mount'] = this.flow.config.mount;
             if (this.input.from) {
                 config.input = this.input;
-                if (config.input.kind === '')
-                    config.input.kind =
-                        'from_directory' in this.flow.config
-                            ? this.flow.config.from_directory
-                                ? 'directory'
-                                : '.' in this.input.from
-                                ? 'file'
-                                : 'files'
-                            : this.input.from.indexOf('.') !== -1
-                            ? 'file'
-                            : 'files';
+                config.input.patterns = this.inputSelectedPatterns.length > 0 ? this.inputSelectedPatterns : this.input.patterns;
+                // if (config.input.kind === '')
+                //     config.input.kind =
+                //         'from_directory' in this.flow.config
+                //             ? this.flow.config.from_directory
+                //                 ? 'directory'
+                //                 : '.' in this.input.from
+                //                 ? 'file'
+                //                 : 'files'
+                //             : this.input.from.indexOf('.') !== -1
+                //             ? 'file'
+                //             : 'files';
             }
             if (this.output.to) {
                 config.output = this.output;
@@ -591,6 +645,11 @@ export default {
         ]),
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
+        },
+        onlyFiletype: function() {
+            return (
+                this.params.length === 1 && this.params[0].key === 'filetype'
+            );
         }
     }
 };
