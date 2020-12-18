@@ -133,8 +133,9 @@ def validate_config(config, token):
             errors.append('Attribute \'input.kind\' must be a string (either \'file\', \'files\', or \'directory\')')
 
         # patterns
-        if 'patterns' in config['input'] and type(config['input']['patterns']) is not list or not all(type(pattern) is str for pattern in config['input']['patterns']):
-            errors.append('Attribute \'input.patterns\' must be a list of str')
+        if 'patterns' in config['input']:
+            if type(config['input']['patterns']) is not list or not all(type(pattern) is str for pattern in config['input']['patterns']):
+                errors.append('Attribute \'input.patterns\' must be a list of str')
 
     # legacy output format
     if 'to' in config:
