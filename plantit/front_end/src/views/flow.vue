@@ -287,7 +287,7 @@
             <b-row>
                 <b-col>
                     <b-button
-                        :disabled="this.flowLoading || !this.flowValidated || !this.inputReady || !this.outputReady"
+                        :disabled="!flowReady"
                         @click="onStart"
                         variant="success"
                         block
@@ -514,7 +514,8 @@ export default {
                                 : '';
                         this.input.kind = response.data.config.input.kind;
                         this.input.filetypes =
-                            response.data.config.input.filetypes !== undefined &&
+                            response.data.config.input.filetypes !==
+                                undefined &&
                             response.data.config.input.filetypes !== null
                                 ? response.data.config.input.filetypes
                                 : [];
@@ -571,7 +572,6 @@ export default {
         },
         inputSelected(node) {
             this.input.from = node.path;
-            this.input.kind = this.flow.config.input.kind === 'directory';
         },
         outputSelected(node) {
             this.output.to = node.path;
@@ -680,7 +680,16 @@ export default {
             );
         },
         outputReady: function() {
-            return this.output.from !== '' && this.output.to !== '';
+            return this.output.to !== '';
+        },
+        flowReady: function() {
+            return (
+                !this.flowLoading &&
+                this.flowValidated &&
+                this.inputReady &&
+                this.outputReady &&
+                this.target.name !== ''
+            );
         }
     }
 };
