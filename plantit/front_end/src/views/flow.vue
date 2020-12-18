@@ -74,28 +74,7 @@
                             </b-col>
                         </b-row>
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
-
-                        <b-row v-if="onlyFiletype">
-                            <b-col>
-                                <b
-                                    :class="
-                                        darkMode ? 'text-white' : 'text-dark'
-                                    "
-                                >
-                                    Select an input filetype for this run.
-                                </b>
-                                <multiselect
-                                    :multiple="true"
-                                    :close-on-select="false"
-                                    :clear-on-select="false"
-                                    :preserve-search="true"
-                                    :preselect-first="true"
-                                    v-model="inputSelectedPatterns"
-                                    :options="input.patterns"
-                                ></multiselect>
-                            </b-col>
-                        </b-row>
-                        <b-row v-else
+                        <b-row
                             ><b-col
                                 ><b
                                     :class="
@@ -180,7 +159,7 @@
                                     "
                                 >
                                     <i class="fas fa-download fa-fw"></i>
-                                    Configure Inputs
+                                    Select Input {{ this.input.kind[0].toUpperCase() + this.input.kind.substr(1) }}
                                 </h4>
                             </b-col>
                         </b-row>
@@ -191,6 +170,26 @@
                             :kind="input.kind"
                             v-on:inputSelected="inputSelected"
                         ></runinput>
+                      <b-row v-if="input.patterns.length > 0">
+                            <b-col>
+                                <b
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                >
+                                    Select one or more input filetypes.
+                                </b>
+                                <multiselect
+                                    :multiple="true"
+                                    :close-on-select="false"
+                                    :clear-on-select="false"
+                                    :preserve-search="true"
+                                    :preselect-first="true"
+                                    v-model="inputSelectedPatterns"
+                                    :options="input.patterns"
+                                ></multiselect>
+                            </b-col>
+                        </b-row>
                     </b-card>
                 </b-col>
             </b-row>
@@ -218,7 +217,7 @@
                                     "
                                 >
                                     <i class="fas fa-upload fa-fw"></i>
-                                    Configure Outputs
+                                    Select Output Directory
                                 </h4>
                             </b-col>
                         </b-row>
@@ -586,7 +585,10 @@ export default {
                 config['mount'] = this.flow.config.mount;
             if (this.input.from) {
                 config.input = this.input;
-                config.input.patterns = this.inputSelectedPatterns.length > 0 ? this.inputSelectedPatterns : this.input.patterns;
+                config.input.patterns =
+                    this.inputSelectedPatterns.length > 0
+                        ? this.inputSelectedPatterns
+                        : this.input.patterns;
                 // if (config.input.kind === '')
                 //     config.input.kind =
                 //         'from_directory' in this.flow.config

@@ -1,8 +1,8 @@
 <template>
     <div>
         <b :class="darkMode ? 'text-white' : 'text-dark'">
-            Select a public file or dataset from the CyVerse Data Commons, or
-            your own data from the CyVerse Data Store.
+          Select {{ this.kind === 'files' ? '' : 'a ' }}public {{ this.kind }} from the CyVerse Data Commons or
+          your own {{ this.kind }} from the Data Store.
         </b>
         <br />
         <b-tabs

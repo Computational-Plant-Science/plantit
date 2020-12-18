@@ -96,7 +96,7 @@ def validate_config(config, token):
         container_split = config['image'].split('/')
         container_name = container_split[-1]
         container_owner = None if container_split[-2] == '' else container_split[-2]
-        if not docker_container_exists(container_name, container_owner):
+        if 'docker' in config['image'] and not docker_container_exists(container_name, container_owner):
             errors.append(f"Image '{config['image']}' not found on Docker Hub")
 
     # commands (required)
