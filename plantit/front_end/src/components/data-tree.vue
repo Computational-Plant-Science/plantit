@@ -95,7 +95,7 @@
         </b-row>
         <b-row
             v-if="isDir && !internalLoaded"
-            :class="darkMode ? 'theme-dark' : 'theme-light'"
+            class="m-0 p-0"
         >
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'">
                 <b-button
@@ -123,10 +123,10 @@
                     >{{ internalLoaded ? internalNode.label : node.label }}
                 </b-button>
             </b-col>
-            <b-col md="auto">
+            <b-col :class="darkMode ? 'theme-dark' : 'theme-light'" md="auto">
                 <b-button
                     size="sm"
-                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                    :variant="darkMode ? 'outline-light' : 'white'"
                     @click="
                         loadDirectory(
                             internalLoaded ? internalNode.path : node.path,
@@ -148,7 +148,7 @@
             </b-col>
         </b-row>
         <b-list-group-item
-            class="mt-0 mb-0"
+            class="mt-0 mb-0 ml-2 mr-0 p-0"
             v-for="(child, index) in internalLoaded
                 ? internalNode.folders
                 : node.folders"
@@ -164,12 +164,13 @@
             ></data-tree>
         </b-list-group-item>
         <b-list-group-item
-            class="mt-0 mb-0"
+            class="mt-0 mb-0 ml-2 mr-0 p-0"
             v-show="isOpen"
             v-if="isDir && internalLoaded"
             :variant="darkMode ? 'outline-light' : 'outline-dark'"
         >
             <b-row
+                class="m-0 p-0"
                 v-for="(child, index) in internalLoaded
                     ? internalNode.files
                     : node.files"

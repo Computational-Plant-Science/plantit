@@ -55,8 +55,6 @@ def cyverse_path_exists(path, token):
                 return False
             else:
                 input_type = 'file'
-        # elif content['error_code'] == 'ERR_UNCHECKED_EXCEPTION':
-        #     return False
         else:
             return False
     return True, input_type
@@ -65,27 +63,31 @@ def cyverse_path_exists(path, token):
 def validate_config(config, token):
     errors = []
 
-    # name
+    # name (required)
     if 'name' not in config:
         errors.append('Missing attribute \'name\'')
     elif type(config['name']) is not str:
         errors.append('Attribute \'name\' must be a str')
-    # author
+
+    # author (required)
     if 'author' not in config:
         errors.append('Missing attribute \'author\'')
     elif type(config['author']) is not str:
         errors.append('Attribute \'author\' must be a str')
-    # public
+
+    # public (required)
     if 'public' not in config:
         errors.append('Missing attribute \'public\'')
     elif type(config['public']) is not bool:
         errors.append('Attribute \'public\' must be a bool')
-    # clone
+
+    # clone (required)
     if 'clone' not in config:
         errors.append('Missing attribute \'clone\'')
     elif type(config['clone']) is not bool:
         errors.append('Attribute \'clone\' must be a bool')
-    # image
+
+    # image (required)
     if 'image' not in config:
         errors.append('Missing attribute \'image\'')
     elif type(config['image']) is not str:
@@ -95,37 +97,68 @@ def validate_config(config, token):
         container_name = container_split[-1]
         container_owner = None if container_split[-2] == '' else container_split[-2]
         if not docker_container_exists(container_name, container_owner):
-            errors.append(f"Image '{config['image']}' not found on Docker Hub or Sylabs Cloud")
-    # commands
+            errors.append(f"Image '{config['image']}' not found on Docker Hub")
+
+    # commands (required)
     if 'commands' not in config:
         errors.append('Missing attribute \'commands\'')
     elif type(config['commands']) is not str:
         errors.append('Attribute \'commands\' must be a str')
+
     # mount
     if 'mount' in config:
         if type(config['mount']) is not list:
             errors.append('Attribute \'mount\' must be a list')
         elif config['mount'] is None or len(config['mount']) == 0:
             errors.append('Attribute \'mount\' must not be empty')
-    # input
-    input_type = 'none'
-    if 'from' in config:
-        if config['from'] != '' and config['from'] is not None:
-            cyverse_path_result = cyverse_path_exists(config['from'], token)
-            if type(cyverse_path_result) is bool and not cyverse_path_result:
-                errors.append('Attribute \'from\' must be a string (either empty or a valid path in the CyVerse Data Store)')
-            else:
-                input_type = cyverse_path_result[1] if cyverse_path_result[1] == 'file' else ('directory' if 'from_directory' in config and config['from_directory'] else 'files')
-        if 'from_directory' in config and type(config['from_directory']) is not bool:
-            errors.append('Attribute \'from_directory\' must be a bool')
-    elif 'from_directory' in config:
-        errors.append('Attribute \'from_directory\' may only be configured in combination with attribute \'from\'')
-    # output
-    if 'to' in config:
-        if config['to'] is not None and type(config['to']) is not str:
-            errors.append('Attribute \'to\' must be a str')
 
-    return (True, input_type) if len(errors) == 0 else (False, errors)
+    # legacy input format
+    if 'from' in config:
+        errors.append('Attribute \'from\' is obsolete; use an \'input\' section instead')
+
+    # input
+    if 'input' in config:
+        # path
+        if config['input']['path'] != '' and config['input']['path'] is not None:
+            cyverse_path_result = cyverse_path_exists(config['input']['path'], token)
+            if type(cyverse_path_result) is bool and not cyverse_path_result:
+                errors.append('Attribute \'input.path\' must be a string (either empty or a valid path in the CyVerse Data Store)')
+
+    # legacy output format
+    if 'to' in config:
+        errors.append('Attribute \'to\' is obsolete; use an \'output\' section instead')
+
+    # output
+    if 'output' in config:
+        # path
+        if 'path' not in config['output']:
+            errors.append('Attribute \'output\' must include attribute \'path\'')
+        if config['output']['path'] is not None and type(config['output']['path']) is not str:
+            errors.append('Attribute \'output.path\' must be a str')
+
+        # include
+        if 'include' in config['output']:
+            if 'patterns' in config['output']['include']:
+                if type(config['output']['include']['patterns']) is not list or not all(
+                        type(pattern) is str for pattern in config['output']['include']['patterns']):
+                    errors.append('Attribute \'output.include.patterns\' must be a list of str')
+            if 'names' in config['output']['include']:
+                if type(config['output']['include']['names']) is not list or not all(
+                        type(name) is str for name in config['output']['include']['names']):
+                    errors.append('Attribute \'output.include.names\' must be a list of str')
+
+        # exclude
+        if 'exclude' in config['output']:
+            if 'patterns' in config['output']['exclude']:
+                if type(config['output']['exclude']['patterns']) is not list or not all(
+                        type(pattern) is str for pattern in config['output']['exclude']['patterns']):
+                    errors.append('Attribute \'output.exclude.patterns\' must be a list of str')
+            if 'names' in config['output']['exclude']:
+                if type(config['output']['exclude']['names']) is not list or not all(
+                        type(name) is str for name in config['output']['exclude']['names']):
+                    errors.append('Attribute \'output.exclude.names\' must be a list of str')
+
+    return True if len(errors) == 0 else (False, errors)
 
 
 def csrf_token(request):

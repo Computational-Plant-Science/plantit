@@ -56,23 +56,51 @@ This will cause the value of `message`, specified by the user in the browser, to
 
 PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) onto the file system in your deployment environment, then push output files back to the Data Store after your code runs. To configure inputs and outputs for your **Flow**, add `from` and `to` attributes to your configuration.
 
-#### Flow input: the `from` attribute
+#### Flow input
 
-If your flow requires inputs, add a `from` attribute to your configuration file (pointing either to a directory- or file-path in the CyVerse Data Store or Data Commons, or left blank). We recommend specifying a public dataset stored in the CyVerse Data Commons, so prospective users can test your flow on real data. For example:
+If your flow requires inputs, add an `input` section to your configuration file, containing at minimum a `path` attribute (pointing either to a directory- or file-path in the CyVerse Data Store or Data Commons, or left blank) and a `kind` attribute indicating whether this flow operates on a single `file`, multiple `files`, or an entire `directory`. For example:
 
-```yaml
-from: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt
-```
+##### Input types (`file`, `files`, and `directory`)
 
-#### Flow output: the `to` attribute
+To indicate that your flow should pull a single file from the Data Store and spawn a single container to process it, use `kind: file`. To pull a directory from the Data Store and spawn a container for each file, use `kind: files`. To pull a directory and spawn a single container to process it, use `kind: directory`.
 
-If your flow produces outputs, add a `to` attribute to your configuration file. This attribute may be left blank if your flow allows users to configure the location of output files produced; otherwise the value should be a directory path, relative to the working directory within which your flow will run. For example, to indicate that your flow will deposit output files in a directory `output` relative to the flow working directory:
+It's generally a good idea for `path` to reference a community-released or curated public dataset in the CyVerse Data Commons, so prospective users can test your flow on real data. For instance, a simple flow which operates on a single file:
 
 ```yaml
-to: output
+input:
+  path: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt
+  kind: file
 ```
 
-#### Full example
+#### Flow output
+
+If your flow produces outputs, add an `output` section with a `path` attribute to your configuration file. This attribute may be left blank if your flow writes output files to the working directory; otherwise the value should be a directory path relative to the working directory. For example, to indicate that your flow will deposit output files in a directory `output/directory` relative to the flow's working directory:
+
+```yaml
+output:
+  path: output/directory
+```
+
+By default, all files under the given `path` are uploaded to the location in the CyVerse Data Store provided by the user. To explicitly indicate which files to include/exclude (this is suggested especially if you flow deposits files in the working directory), add `include` and `exclude` sections under `output`:
+
+```yaml
+output:
+  path: output/directory
+  include:
+    patterns:                           # include excel files
+      - xlsx                            # and png files
+    names:                              
+      - important.jpg                   # but only this .jpg file
+  exclude:
+    patterns:
+      - temp                            # don't include anything marked temp
+    names:
+      - not_important.xlsx              # and exclude a particularexcel file
+```
+
+If only an `include` section is provided, only the file patterns and names specified will be included. If only an `exclude` section is present, all files except the patterns and names specified will be included. If you provide both `include` and `exclude` sections, the `include` rules will first be applied to generate a subset of files, which will then be filtered by the `exclude` rules.
+
+#### A super simple example
 
 The following workflow prints the content of an input file and then writes it to an output file:
 
@@ -82,9 +110,15 @@ author: Groot
 image: docker://alpine
 public: True
 clone: False
-from: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt
-to:
 commands: cat "$INPUT" && cat "$INPUT" >> cowsaid.txt
+input:
+  from: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt
+  kind: file
+output:
+  path: # blank to indicate working directory
+  include:
+    names:                              
+      - cowsaid.txt
 ```
 
-PlantIT will prompt users of this **Flow** to select input and output paths in the browser. Note that this configuration maps a single input file to a single output file. If the user provides a directory containing multiple input files, PlantIT will automagically spawn multiple containers, one for each input file. To indicate that your code accepts an entire *directory* as input (and should not be parallelized), use `from_directory: true`.
+PlantIT will prompt users of your flow to select input and output locations in the CyVerse Data Store.

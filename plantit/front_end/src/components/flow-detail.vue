@@ -153,6 +153,32 @@
                                         >
                                     </b-col>
                                 </b-row>
+                              <b-row v-if="flow.config.input !== undefined">
+                                    <b-col>
+                                        <small>Input</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        <b
+                                            >{{
+                                                flow.config.input.kind[0].toUpperCase() + flow.config.input.kind.substr(1)
+                                            }}</b
+                                        >
+                                    </b-col>
+                                </b-row>
+                              <b-row v-if="flow.config.output !== undefined">
+                                    <b-col>
+                                        <small>Output</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        <b
+                                            ><code>[working directory]/{{
+                                                flow.config.output.path ? flow.config.output.path + '/' : ''
+                                            }}{{ flow.config.output.include ? '[+ ' + (flow.config.output.include.patterns ? '*.' + flow.config.output.include.patterns.join(', *.') : []) + (flow.config.output.include.names ? flow.config.output.include.names.join(', ') : []) + ']' : '' }}
+                                          {{ flow.config.output.exclude ? '[- ' + (flow.config.output.exclude.patterns ? '*.' + flow.config.output.include.patterns.join(', *.') : []) + (flow.config.output.include.names ? flow.config.output.exclude.names.join(', ') : []) + ']' : '' }}
+                                        </code></b
+                                        >
+                                    </b-col>
+                                </b-row>
                                 <b-row v-if="selectable">
                                     <b-col>
                                         <br />

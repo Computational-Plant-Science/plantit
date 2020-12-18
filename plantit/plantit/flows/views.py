@@ -48,7 +48,7 @@ def validate(request, username, name):
                         headers={"Authorization": f"token {request.user.profile.github_token}"}).json()
     config = get_config(repo, request.user.profile.github_token)
     result = validate_config(config, request.user.profile.cyverse_token)
-    if result[0]:
-        return JsonResponse({'result': result[0], 'from': None if 'from' not in config else result[1]})
+    if isinstance(result, bool):
+        return JsonResponse({'result': result})
     else:
         return JsonResponse({'result': result[0], 'errors': result[1]})

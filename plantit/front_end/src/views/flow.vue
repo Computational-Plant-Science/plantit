@@ -112,7 +112,13 @@
                     </b-card>
                 </b-col>
             </b-row>
-            <b-row v-if="flow !== null && flow.config.from !== undefined">
+            <b-row
+                v-if="
+                    flow !== null &&
+                        flow.config.input !== undefined &&
+                        flow.config.input.path !== undefined
+                "
+            >
                 <b-col>
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"
@@ -135,27 +141,22 @@
                         </b-row>
                         <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
                         <runinput
-                            :default-path="flow.config.from"
+                            :default-path="flow.config.input.path"
                             :user="user"
                             :kind="input.kind"
                             v-on:inputSelected="inputSelected"
                         ></runinput>
-                        <b-row v-if="input.kind === 'directory'">
-                            <br />
-                            <b-form-group
-                                description="All files in the input directory matching this pattern will be selected."
-                            >
-                                <b-form-input
-                                    size="sm"
-                                    v-model="input.pattern"
-                                    :placeholder="'Enter a file pattern'"
-                                ></b-form-input>
-                            </b-form-group>
-                        </b-row>
                     </b-card>
                 </b-col>
             </b-row>
-            <b-row v-if="flow && flow.config && flow.config.to !== undefined">
+            <b-row
+                v-if="
+                    flow &&
+                        flow.config &&
+                        flow.config.input !== undefined &&
+                        flow.config.output.path !== undefined
+                "
+            >
                 <b-col>
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"
@@ -181,248 +182,6 @@
                             :user="user"
                             v-on:outputSelected="outputSelected"
                         ></runoutput>
-                        <div v-if="!outputSpecified">
-                            <b :class="darkMode ? 'text-white' : 'text-dark'">
-                                Specify a relative path for this flow's output
-                                files. If left blank, the run's working
-                                directory is selected by default.
-                            </b>
-                            <br />
-                            <br />
-                            <small
-                                :class="darkMode ? 'text-white' : 'text-dark'"
-                            >
-                                Specify an output path.
-                            </small>
-                            <b-form-group>
-                                <b-form-input
-                                    size="sm"
-                                    v-model="output.from"
-                                    :placeholder="'Enter a directory path'"
-                                ></b-form-input>
-                            </b-form-group>
-                            <b :class="darkMode ? 'text-white' : 'text-dark'">
-                                Configure file names and patterns to include
-                                and/or exclude when uploading output files to
-                                CyVerse after this flow runs. Included names and
-                                patterns are collected first, then filtered by
-                                excluded names and patterns.
-                            </b>
-                            <br />
-                            <br />
-                            <small
-                                :class="darkMode ? 'text-white' : 'text-dark'"
-                            >
-                                Specify file patterns to include.
-                            </small>
-                            <b-row
-                                ><b-col
-                                    ><b-form-group>
-                                        <b-form-input
-                                            v-model="includedPattern"
-                                            :placeholder="
-                                                'Enter a file pattern'
-                                            "
-                                        ></b-form-input> </b-form-group></b-col
-                                ><b-col md="auto"
-                                    ><b-button
-                                        variant="success"
-                                        @click="
-                                            addIncludedPattern(includedPattern)
-                                        "
-                                        ><i class="fas fa-plus fa-1x fa-fw"></i>
-                                        Include pattern</b-button
-                                    ></b-col
-                                ></b-row
-                            >
-                            <b-table
-                                v-if="output.include.patterns.length > 0"
-                                :items="output.include.patterns"
-                                :fields="output_include_pattern_fields"
-                                class="text-left"
-                                responsive="sm"
-                                borderless
-                                small
-                                sticky-header="true"
-                                caption-top
-                                :table-variant="darkMode ? 'dark' : 'white'"
-                            >
-                                <template v-slot:cell(name)="include">
-                                    {{ include.item }}
-                                </template>
-                                <template v-slot:cell(actions)="include">
-                                    <b-button
-                                        size="sm"
-                                        variant="outline-danger"
-                                        @click="
-                                            removeIncludedPattern(include.item)
-                                        "
-                                        ><i
-                                            class="fas fa-trash fa-1x fa-fw"
-                                        ></i>
-                                        Remove</b-button
-                                    >
-                                </template>
-                            </b-table>
-                            <small
-                                :class="darkMode ? 'text-white' : 'text-dark'"
-                            >
-                                Specify file names to include.
-                            </small>
-                            <b-row
-                                ><b-col
-                                    ><b-form-group>
-                                        <b-form-input
-                                            v-model="includedFile"
-                                            :placeholder="'Enter a file name'"
-                                        ></b-form-input> </b-form-group></b-col
-                                ><b-col md="auto"
-                                    ><b-button
-                                        variant="success"
-                                        @click="addIncludedFile(includedFile)"
-                                        ><i class="fas fa-plus fa-1x fa-fw"></i>
-                                        Include name</b-button
-                                    ></b-col
-                                ></b-row
-                            >
-                            <b-table
-                                v-if="output.include.names.length > 0"
-                                :items="output.include.names"
-                                :fields="output_include_fields"
-                                class="text-left"
-                                responsive="sm"
-                                borderless
-                                small
-                                sticky-header="true"
-                                caption-top
-                                :table-variant="darkMode ? 'dark' : 'white'"
-                            >
-                                <template v-slot:cell(name)="include">
-                                    {{ include.item }}
-                                </template>
-                                <template v-slot:cell(actions)="include">
-                                    <b-button
-                                        size="sm"
-                                        variant="outline-danger"
-                                        @click="
-                                            removeIncludedFile(include.item)
-                                        "
-                                        ><i
-                                            class="fas fa-trash fa-1x fa-fw"
-                                        ></i>
-                                        Remove</b-button
-                                    >
-                                </template>
-                            </b-table>
-                            <small
-                                :class="darkMode ? 'text-white' : 'text-dark'"
-                            >
-                                Specify file patterns to exclude.
-                            </small>
-                            <b-row
-                                ><b-col
-                                    ><b-form-group>
-                                        <b-form-input
-                                            v-model="excludedPattern"
-                                            :placeholder="
-                                                'Enter a file pattern'
-                                            "
-                                        ></b-form-input> </b-form-group></b-col
-                                ><b-col md="auto"
-                                    ><b-button
-                                        variant="warning"
-                                        @click="
-                                            addExcludedPattern(excludedPattern)
-                                        "
-                                        ><i
-                                            class="fas fa-minus fa-1x fa-fw"
-                                        ></i>
-                                        Exclude pattern</b-button
-                                    ></b-col
-                                ></b-row
-                            >
-                            <b-table
-                                v-if="output.exclude.patterns.length > 0"
-                                :items="output.exclude.patterns"
-                                :fields="output_exclude_pattern_fields"
-                                class="text-left"
-                                responsive="sm"
-                                borderless
-                                small
-                                sticky-header="true"
-                                caption-top
-                                :table-variant="darkMode ? 'dark' : 'white'"
-                            >
-                                <template v-slot:cell(name)="exclude">
-                                    {{ exclude.item }}
-                                </template>
-                                <template v-slot:cell(actions)="exclude">
-                                    <b-button
-                                        size="sm"
-                                        variant="outline-danger"
-                                        @click="
-                                            removeExcludedPattern(exclude.item)
-                                        "
-                                        ><i
-                                            class="fas fa-trash fa-1x fa-fw"
-                                        ></i>
-                                        Remove</b-button
-                                    >
-                                </template>
-                            </b-table>
-                            <small
-                                :class="darkMode ? 'text-white' : 'text-dark'"
-                            >
-                                Specify file names to exclude.
-                            </small>
-                            <b-row
-                                ><b-col
-                                    ><b-form-group>
-                                        <b-form-input
-                                            v-model="excludedFile"
-                                            :placeholder="'Enter a file name'"
-                                        ></b-form-input> </b-form-group></b-col
-                                ><b-col md="auto"
-                                    ><b-button
-                                        variant="warning"
-                                        @click="addExcludedFile(excludedFile)"
-                                        ><i
-                                            class="fas fa-minus fa-1x fa-fw"
-                                        ></i>
-                                        Exclude name</b-button
-                                    ></b-col
-                                ></b-row
-                            >
-                            <b-table
-                                v-if="output.exclude.names.length > 0"
-                                :items="output.exclude.names"
-                                :fields="output_exclude_fields"
-                                class="text-left"
-                                responsive="sm"
-                                borderless
-                                small
-                                sticky-header="true"
-                                caption-top
-                                :table-variant="darkMode ? 'dark' : 'white'"
-                            >
-                                <template v-slot:cell(name)="exclude">
-                                    {{ exclude.item }}
-                                </template>
-                                <template v-slot:cell(actions)="exclude">
-                                    <b-button
-                                        size="sm"
-                                        variant="outline-danger"
-                                        @click="
-                                            removeExcludedFile(exclude.item)
-                                        "
-                                        ><i
-                                            class="fas fa-trash fa-1x fa-fw"
-                                        ></i>
-                                        Remove</b-button
-                                    >
-                                </template>
-                            </b-table>
-                        </div>
                     </b-card>
                 </b-col>
             </b-row>
@@ -647,19 +406,8 @@ export default {
                 })
                 .then(response => {
                     this.flowValidated = response.data.result;
-                    if (this.flowValidated) {
-                        if (
-                            response.data.from !== 'none' &&
-                            this.input.from === '' &&
-                            this.input.kind === ''
-                        ) {
-                            this.input.from = this.flow.config.from;
-                            this.input.kind = response.data.from;
-                        }
-                    } else {
+                    if (!this.flowValidated)
                         this.flowValidationErrors = response.data.errors;
-                    }
-
                     this.flowLoading = false;
                 })
                 .catch(error => {
@@ -683,22 +431,28 @@ export default {
 
                     // if a local input path is specified, set it
                     if (
-                        'from' in response.data.config &&
-                        response.data.config.from !== undefined
+                        'input' in response.data.config &&
+                        response.data.config.input !== undefined &&
+                        response.data.config.input.path !== undefined &&
+                        response.data.config.input.kind !== undefined
                     ) {
                         this.input.from =
-                            response.data.config.from !== null
-                                ? response.data.config.from
+                            response.data.config.input.path !== null
+                                ? response.data.config.input.path
                                 : '';
+                        this.input.kind = response.data.config.input.kind;
                     }
 
                     // if a local output path is specified, add it to included files
                     if (
-                        'to' in response.data.config &&
-                        response.data.config.to !== undefined &&
-                        response.data.config.to !== null
+                        'output' in response.data.config &&
+                        response.data.config.output !== undefined &&
+                        response.data.config.output.path !== undefined &&
+                        response.data.config.output.path !== null
                     ) {
-                        this.output.include.names.push(response.data.config.to);
+                        this.output.include.names.push(
+                            response.data.config.output.path
+                        );
                         //this.outputSpecified = true;
                     }
 

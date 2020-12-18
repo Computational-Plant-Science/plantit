@@ -18,7 +18,7 @@
                     :node="data"
                 ></datatree></b-col
         ></b-row>
-        <b-alert :variant="path ? 'success' : 'danger'" :show="true"
+        <b-alert class="mt-1" :variant="path ? 'success' : 'danger'" :show="true"
             >Selected: {{ path ? path : 'None' }}
             <i v-if="path" class="fas fa-check text-success"></i>
             <i v-else class="fas fa-exclamation text-danger"></i>
