@@ -148,6 +148,7 @@
         </b-row>
         <b-list-group-item
             class="mt-0 mb-0 ml-2 mr-0 p-0"
+            style="background-color: transparent"
             v-for="(child, index) in internalLoaded
                 ? internalNode.folders
                 : node.folders"
