@@ -525,41 +525,30 @@ export default {
 
                     // if a local output path is specified, add it to included files
                     if (
-                        'output' in response.data.config &&
                         response.data.config.output !== undefined &&
-                        response.data.config.output.path !== undefined &&
-                        response.data.config.output.path !== null
+                        response.data.config.output.path !== undefined
                     ) {
-                        this.output.from = response.data.config.output.path;
+                        this.output.from = response.data.config.output.path !== null ? response.data.config.output.path : '';
                         if (
-                            'include' in response.data.config.output &&
-                            'names' in response.data.config.output.include
+                            response.data.config.output.include !== undefined &&
+                            response.data.config.output.include.names !== undefined
                         )
-                            this.output.include.names.push(
-                                ...response.data.config.output.include.names
-                            );
+                            this.output.include.names = response.data.config.output.include.names;
                         if (
-                            'include' in response.data.config.output &&
-                            'patterns' in response.data.config.output.include
+                            response.data.config.output.include !== undefined &&
+                            response.data.config.output.include.patterns !== undefined
                         )
-                            this.output.include.patterns.push(
-                                ...response.data.config.output.include.patterns
-                            );
+                            this.output.include.patterns = response.data.config.output.include.patterns;
                         if (
-                            'exclude' in response.data.config.output &&
-                            'names' in response.data.config.output.exclude
+                            response.data.config.output.exclude !== undefined &&
+                            response.data.config.output.exclude.names !== undefined
                         )
-                            this.output.exclude.names.push(
-                                ...response.data.config.output.exclude.names
-                            );
+                            this.output.exclude.names = response.data.config.output.exclude.names;
                         if (
-                            'exclude' in response.data.config.output &&
-                            'patterns' in response.data.config.output.exclude
+                            response.data.config.output.exclude !== undefined &&
+                            response.data.config.output.exclude.patterns !== undefined
                         )
-                            this.output.exclude.patterns.push(
-                                ...response.data.config.output.exclude.patterns
-                            );
-                        //this.outputSpecified = true;
+                            this.output.exclude.patterns = response.data.config.output.exclude.patterns;
                     }
 
                     // if params are specified, set them

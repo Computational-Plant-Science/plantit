@@ -87,7 +87,7 @@
                                 </b-row>
                                 <b-row>
                                     <b-col>
-                                        <small>Image</small>
+                                        <small>Container</small>
                                     </b-col>
                                     <b-col cols="10">
                                         <b>{{ flow.config.image }}</b>
@@ -230,7 +230,7 @@
                                 <small> memory</small>
                             </b-col>
                         </b-row>
-                        <b-row>
+                        <!--<b-row>
                             <b-col>
                                 <b
                                     ><code>{{
@@ -239,7 +239,7 @@
                                 >
                                 <small> task(s)</small>
                             </b-col>
-                        </b-row>
+                        </b-row>-->
                         <b-row>
                             <b-col>
                                 <b
