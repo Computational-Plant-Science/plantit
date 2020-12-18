@@ -13,7 +13,7 @@
                 ></b-spinner>
                 <datatree
                     v-else
-                    :select="true"
+                    select="directory"
                     @selectNode="selectNode"
                     :node="data"
                 ></datatree></b-col

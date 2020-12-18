@@ -159,7 +159,11 @@
                                     "
                                 >
                                     <i class="fas fa-download fa-fw"></i>
-                                    Select Input {{ this.input.kind[0].toUpperCase() + this.input.kind.substr(1) }}
+                                    Select Input
+                                    {{
+                                        this.input.kind[0].toUpperCase() +
+                                            this.input.kind.substr(1)
+                                    }}
                                 </h4>
                             </b-col>
                         </b-row>
@@ -170,7 +174,7 @@
                             :kind="input.kind"
                             v-on:inputSelected="inputSelected"
                         ></runinput>
-                      <b-row v-if="input.patterns.length > 0">
+                        <b-row v-if="input.filetypes.length > 0">
                             <b-col>
                                 <b
                                     :class="
@@ -186,10 +190,31 @@
                                     :preserve-search="true"
                                     :preselect-first="true"
                                     v-model="inputSelectedPatterns"
-                                    :options="input.patterns"
+                                    :options="input.filetypes"
                                 ></multiselect>
                             </b-col>
                         </b-row>
+                        <b-alert
+                            class="mt-1"
+                            :variant="
+                                inputFiletypeSelected ? 'success' : 'danger'
+                            "
+                            :show="true"
+                            >Selected:
+                            {{
+                                inputFiletypeSelected
+                                    ? '*.' + inputSelectedPatterns.join(', *.')
+                                    : 'None'
+                            }}
+                            <i
+                                v-if="inputFiletypeSelected"
+                                class="fas fa-check text-success"
+                            ></i>
+                            <i
+                                v-else
+                                class="fas fa-exclamation text-danger"
+                            ></i>
+                        </b-alert>
                     </b-card>
                 </b-col>
             </b-row>
@@ -262,7 +287,7 @@
             <b-row>
                 <b-col>
                     <b-button
-                        :disabled="!this.flowLoading && !this.flowValidated"
+                        :disabled="this.flowLoading || !this.flowValidated || !this.inputReady || !this.outputReady"
                         @click="onStart"
                         variant="success"
                         block
@@ -317,7 +342,7 @@ export default {
             input: {
                 kind: '',
                 from: '',
-                patterns: []
+                filetypes: []
             },
             inputSelectedPatterns: [],
             outputSpecified: false,
@@ -488,11 +513,13 @@ export default {
                                 ? response.data.config.input.path
                                 : '';
                         this.input.kind = response.data.config.input.kind;
-                        this.input.patterns =
-                            response.data.config.input.patterns !== undefined &&
-                            response.data.config.input.patterns !== null
-                                ? response.data.config.input.patterns
+                        this.input.filetypes =
+                            response.data.config.input.filetypes !== undefined &&
+                            response.data.config.input.filetypes !== null
+                                ? response.data.config.input.filetypes
                                 : [];
+                        if (this.input.filetypes.length > 0)
+                            this.inputSelectedPatterns = this.input.filetypes;
                     }
 
                     // if a local output path is specified, add it to included files
@@ -544,13 +571,7 @@ export default {
         },
         inputSelected(node) {
             this.input.from = node.path;
-            this.input.many = this.flow.config.from_directory;
-            this.input.kind =
-                node['kind'] === 'directory'
-                    ? this.flow.config.from_directory
-                        ? 'directory'
-                        : 'files'
-                    : 'file';
+            this.input.kind = this.flow.config.input.kind === 'directory';
         },
         outputSelected(node) {
             this.output.to = node.path;
@@ -588,7 +609,7 @@ export default {
                 config.input.patterns =
                     this.inputSelectedPatterns.length > 0
                         ? this.inputSelectedPatterns
-                        : this.input.patterns;
+                        : this.input.filetypes;
                 // if (config.input.kind === '')
                 //     config.input.kind =
                 //         'from_directory' in this.flow.config
@@ -648,10 +669,18 @@ export default {
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         },
-        onlyFiletype: function() {
+        inputFiletypeSelected: function() {
+            return this.inputSelectedPatterns.some(pattern => pattern !== '');
+        },
+        inputReady: function() {
             return (
-                this.params.length === 1 && this.params[0].key === 'filetype'
+                this.input.from !== '' &&
+                this.input.kind !== '' &&
+                this.inputFiletypeSelected
             );
+        },
+        outputReady: function() {
+            return this.output.from !== '' && this.output.to !== '';
         }
     }
 };

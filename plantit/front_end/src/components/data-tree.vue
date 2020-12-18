@@ -7,7 +7,7 @@
         ></b-spinner>
         <b-row
             v-if="isDir && internalLoaded"
-            :class="darkMode ? 'theme-dark' : 'theme-light'"
+            class="mt-0 mb-0 ml-2 mr-0 p-0"
         >
             <b-col
                 :style="{
@@ -18,7 +18,7 @@
                 <b-button
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'white'"
-                    v-if="select"
+                    :disabled="!select || (select !== 'directory' && select !== 'files')"
                     @click="
                         selectNode(
                             internalLoaded ? internalNode : node,
@@ -30,15 +30,14 @@
                         internalLoaded ? internalNode.label : node.label
                     }}</b-button
                 >
-                <b-button
+                <!--<b-button
                     size="sm"
                     v-else
-                    disabled
                     :variant="darkMode ? 'outline-light' : 'white'"
                 >
                     <i class="fas fa-folder fa-fw mr-2"></i
                     >{{ internalLoaded ? internalNode.label : node.label }}
-                </b-button>
+                </b-button>-->
             </b-col>
             <b-col md="auto">
                 <b-badge :variant="darkMode ? 'outline-light' : 'outline-dark'">
@@ -95,13 +94,13 @@
         </b-row>
         <b-row
             v-if="isDir && !internalLoaded"
-            class="m-0 p-0"
+            class="mt-0 mb-0 ml-2 mr-0 p-0"
         >
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'">
                 <b-button
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'white'"
-                    v-if="select"
+                    :disabled="!select || (select !== 'directory' && select !== 'files')"
                     @click="
                         selectNode(
                             internalLoaded ? internalNode : node,
@@ -113,15 +112,15 @@
                         internalLoaded ? internalNode.label : node.label
                     }}</b-button
                 >
-                <b-button
+                <!--<b-button
                     size="sm"
                     v-else
-                    disabled
+                    :disabled="select !== 'directory' && select !== 'files'"
                     :variant="darkMode ? 'outline-light' : 'white'"
                 >
                     <i class="fas fa-folder fa-fw mr-2"></i
                     >{{ internalLoaded ? internalNode.label : node.label }}
-                </b-button>
+                </b-button>-->
             </b-col>
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'" md="auto">
                 <b-button
@@ -157,7 +156,8 @@
             :variant="darkMode ? 'outline-light' : 'outline-dark'"
         >
             <data-tree
-                :select="true"
+                class="mt-0 mb-0 ml-2 mr-0 p-0"
+                :select="select"
                 @selectPath="selectNode(child, 'directory')"
                 :key="index"
                 :node="child"
@@ -170,7 +170,7 @@
             :variant="darkMode ? 'outline-light' : 'outline-dark'"
         >
             <b-row
-                class="m-0 p-0"
+                class="mt-0 mb-0 ml-2 mr-0 p-0"
                 v-for="(child, index) in internalLoaded
                     ? internalNode.files
                     : node.files"
@@ -178,17 +178,14 @@
                 :class="darkMode ? 'theme-dark' : 'theme-light'"
             >
                 <b-button
-                    class="ml-2"
-                    v-if="select"
+                    class="ml-4"
+                    :disabled="!select || select !== 'file'"
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'outline-dark'"
                     @click="selectNode(child, 'file')"
                     ><i class="fas fa-file fa-fw"></i>
                     {{ child.label }}</b-button
                 >
-                <b-col v-else>
-                    <i class="fas fa-file fa-fw"></i> {{ child.label }}
-                </b-col>
             </b-row>
         </b-list-group-item>
     </b-list-group>
@@ -206,7 +203,7 @@ export default {
         },
         select: {
             required: false,
-            type: Boolean
+            type: String
         }
     },
     data: function() {

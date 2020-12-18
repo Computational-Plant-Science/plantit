@@ -114,7 +114,7 @@ def validate_config(config, token):
 
     # legacy input format
     if 'from' in config:
-        errors.append('Attribute \'from\' is obsolete; use an \'input\' section instead')
+        errors.append('Attribute \'from\' is deprecated; use an \'input\' section instead')
 
     # input
     if 'input' in config:
@@ -132,14 +132,18 @@ def validate_config(config, token):
         if not (config['input']['kind'] == 'file' or config['input']['kind'] == 'files' or config['input']['kind'] == 'directory'):
             errors.append('Attribute \'input.kind\' must be a string (either \'file\', \'files\', or \'directory\')')
 
-        # patterns
+        # legacy filetypes format
         if 'patterns' in config['input']:
-            if type(config['input']['patterns']) is not list or not all(type(pattern) is str for pattern in config['input']['patterns']):
-                errors.append('Attribute \'input.patterns\' must be a list of str')
+            errors.append('Attribute \'input.patterns\' is deprecated; use \'input.filetypes\' instead')
+
+        # filetypes
+        if 'filetypes' in config['input']:
+            if type(config['input']['filetypes']) is not list or not all(type(pattern) is str for pattern in config['input']['filetypes']):
+                errors.append('Attribute \'input.filetypes\' must be a list of str')
 
     # legacy output format
     if 'to' in config:
-        errors.append('Attribute \'to\' is obsolete; use an \'output\' section instead')
+        errors.append('Attribute \'to\' is deprecated; use an \'output\' section instead')
 
     # output
     if 'output' in config:

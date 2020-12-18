@@ -72,6 +72,30 @@ input:
   kind: file
 ```
 
+##### Input filetypes
+
+To specify which filetypes your flow is permitted to accept, add a `filetypes` attribute to the `input` section:
+
+```yaml
+input:
+  path: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay
+  kind: file
+  filetypes:
+    - txt
+```
+
+Any values provided to `filetypes` will be joined (with `,`) and substituted for `$FILETYPES` in your flow's command. Use this to inform your code which filetypes to expect, e.g.:
+
+```yaml
+commands: ls "$INPUT"/*.{"$FILETYPES"} >> things_cow_say.txt
+input:
+  path: /iplant/home/shared/iplantcollaborative/testing_tools/cowsay
+  kind: file
+  filetypes:
+    - txt
+    - md     
+```
+
 #### Flow output
 
 If your flow produces outputs, add an `output` section with a `path` attribute to your configuration file. This attribute may be left blank if your flow writes output files to the working directory; otherwise the value should be a directory path relative to the working directory. For example, to indicate that your flow will deposit output files in a directory `output/directory` relative to the flow's working directory:

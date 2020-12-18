@@ -33,7 +33,7 @@
                         ></b-spinner>
                         <datatree
                             v-else
-                            :select="true"
+                            :select="kind"
                             @selectNode="selectNode"
                             :node="publicData"
                         ></datatree></b-col
@@ -58,7 +58,7 @@
                         ></b-spinner>
                         <datatree
                             v-else
-                            :select="true"
+                            :select="kind"
                             @selectNode="selectNode"
                             :node="userData"
                         ></datatree></b-col

@@ -159,9 +159,7 @@
                                     </b-col>
                                     <b-col cols="10">
                                         <b
-                                            >{{
-                                                flow.config.input.kind[0].toUpperCase() + flow.config.input.kind.substr(1)
-                                          }} <code>{{ flow.config.input.patterns ? '[' + (flow.config.input.patterns ? '*.' + flow.config.input.patterns.join(', *.') : []) + ']' : '' }}</code></b
+                                            ><code>[working directory]/input/{{ flow.config.input.filetypes ? '[' + (flow.config.input.filetypes ? '*.' + flow.config.input.filetypes.join(', *.') : []) + ']' : '' }}</code></b
                                         >
                                     </b-col>
                                 </b-row>
@@ -173,7 +171,7 @@
                                         <b
                                             ><code>[working directory]/{{
                                                 flow.config.output.path ? flow.config.output.path + '/' : ''
-                                            }}{{ flow.config.output.include ? '[+ ' + (flow.config.output.include.patterns ? '*.' + flow.config.output.include.patterns.join(', *.') : []) + (flow.config.output.include.names ? flow.config.output.include.names.join(', ') : []) + ']' : '' }}{{ flow.config.output.exclude ? '[- ' + (flow.config.output.exclude.patterns ? '*.' + flow.config.output.include.patterns.join(', *.') : []) + (flow.config.output.include.names ? flow.config.output.exclude.names.join(', ') : []) + ']' : '' }}
+                                            }}{{ flow.config.output.include ? '[' + (flow.config.output.exclude ? '+ ' : '') + (flow.config.output.include.patterns ? '*.' + flow.config.output.include.patterns.join(', *.') : []) + (flow.config.output.include.names ? flow.config.output.include.names.join(', ') : []) : '' }}{{ flow.config.output.exclude ? ' - ' + (flow.config.output.exclude.patterns ? '*.' + flow.config.output.exclude.patterns.join(', *.') : []) + (flow.config.output.exclude.names ? flow.config.output.exclude.names.join(', ') : []) : '' + ']' }}
                                         </code></b
                                         >
                                     </b-col>
