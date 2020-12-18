@@ -228,18 +228,6 @@ class UtilsTest(TestCase):
         self.assertFalse(result[0])
         self.assertTrue('Attribute \'mount\' must not be empty' in result[1])
 
-    def test_validate_config_when_is_not_valid_with_no_input_but_from_directory(self):
-        result = validate_config({
-            'name': 'Test Flow',
-            'author': 'Computational Plant Science Lab',
-            'public': True,
-            'clone': False,
-            'commands': 'echo "Hello, world!"',
-            'from_directory': True
-        }, Token.get())
-        self.assertFalse(result[0])
-        self.assertTrue('Attribute \'from_directory\' may only be configured in combination with attribute \'from\'' in result[1])
-
     def test_validate_config_when_is_valid_with_no_input_or_output(self):
         result = validate_config({
             'name': 'Test Flow',
@@ -249,10 +237,9 @@ class UtilsTest(TestCase):
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
-        self.assertTrue(result[0])
-        self.assertEqual(result[1], 'none')
+        self.assertTrue(result)
 
-    def test_validate_config_when_is_valid_with_no_input_and_empty_output(self):
+    def test_validate_config_when_is_valid_with_no_input_and_empty_file_output(self):
         result = validate_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
@@ -260,10 +247,11 @@ class UtilsTest(TestCase):
             'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"',
-            'to': ''
+            'output': {
+                'path': '',
+            }
         }, Token.get())
-        self.assertTrue(result[0])
-        self.assertEqual(result[1], 'none')
+        self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_no_input_and_nonempty_output(self):
         result = validate_config({
@@ -273,10 +261,11 @@ class UtilsTest(TestCase):
             'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"',
-            'to': 'outputdir'
+            'output': {
+                'path': 'outputdir',
+            }
         }, Token.get())
-        self.assertTrue(result[0])
-        self.assertEqual(result[1], 'none')
+        self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_file_and_empty_output(self):
         result = validate_config({
@@ -286,11 +275,10 @@ class UtilsTest(TestCase):
             'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"',
-            'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt',
-            'to': ''
+            'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt', 'kind' : 'file'},
+            'output': {'path': ''}
         }, Token.get())
-        self.assertTrue(result[0])
-        self.assertEqual(result[1], 'file')
+        self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_file_and_nonempty_output(self):
         result = validate_config({
@@ -300,11 +288,11 @@ class UtilsTest(TestCase):
             'clone': False,
             'image': 'docker://alpine',
             'commands': 'cat "$INPUT"',
-            'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt',
-            'to': 'outputdir'
+            'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt',
+                      'kind': 'file'},
+            'output': {'path': 'outputdir'}
         }, Token.get())
-        self.assertTrue(result[0])
-        self.assertEqual(result[1], 'file')
+        self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_files_and_empty_output(self):
         result = validate_config({
@@ -314,11 +302,11 @@ class UtilsTest(TestCase):
             'clone': False,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT"',
-            'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
-            'to': ''
+            'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
+                      'kind': 'files'},
+            'output': {'path': ''}
         }, Token.get())
-        self.assertTrue(result[0])
-        self.assertEqual(result[1], 'files')
+        self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_files_and_nonempty_output(self):
         result = validate_config({
@@ -328,11 +316,11 @@ class UtilsTest(TestCase):
             'clone': False,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT" | tee output.txt',
-            'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
-            'to': 'outputdir'
+            'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
+                      'kind': 'files'},
+            'output': {'path': 'outputdir'}
         }, Token.get())
-        self.assertTrue(result[0])
-        self.assertEqual(result[1], 'files')
+        self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_directory_and_empty_output(self):
         result = validate_config({
@@ -342,12 +330,11 @@ class UtilsTest(TestCase):
             'clone': False,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT"',
-            'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
-            'from_directory': True,
-            'to': ''
+            'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
+                      'kind': 'directory'},
+            'output': {'path': ''}
         }, Token.get())
-        self.assertTrue(result[0])
-        self.assertEqual(result[1], 'directory')
+        self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_directory_and_nonempty_output(self):
         result = validate_config({
@@ -357,9 +344,8 @@ class UtilsTest(TestCase):
             'clone': False,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT" | tee output.txt',
-            'from': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
-            'from_directory': True,
-            'to': 'outputdir'
+            'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
+                      'kind': 'directory'},
+            'output': {'path': 'outputdir'}
         }, Token.get())
-        self.assertTrue(result[0])
-        self.assertEqual(result[1], 'directory')
+        self.assertTrue(result)
