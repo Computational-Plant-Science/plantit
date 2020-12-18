@@ -530,9 +530,35 @@ export default {
                         response.data.config.output.path !== undefined &&
                         response.data.config.output.path !== null
                     ) {
-                        this.output.include.names.push(
-                            response.data.config.output.path
-                        );
+                        this.output.from = response.data.config.output.path;
+                        if (
+                            'include' in response.data.config.output &&
+                            'names' in response.data.config.output.include
+                        )
+                            this.output.include.names.push(
+                                ...response.data.config.output.include.names
+                            );
+                        if (
+                            'include' in response.data.config.output &&
+                            'patterns' in response.data.config.output.include
+                        )
+                            this.output.include.patterns.push(
+                                ...response.data.config.output.include.patterns
+                            );
+                        if (
+                            'exclude' in response.data.config.output &&
+                            'names' in response.data.config.output.exclude
+                        )
+                            this.output.exclude.names.push(
+                                ...response.data.config.output.exclude.names
+                            );
+                        if (
+                            'exclude' in response.data.config.output &&
+                            'patterns' in response.data.config.output.exclude
+                        )
+                            this.output.exclude.patterns.push(
+                                ...response.data.config.output.exclude.patterns
+                            );
                         //this.outputSpecified = true;
                     }
 
