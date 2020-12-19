@@ -1,10 +1,5 @@
 <template>
     <b-list-group flush class="mt-0 mb-0">
-        <!--<b-spinner
-            v-if="internalLoading"
-            type="grow"
-            variant="success"
-        ></b-spinner>-->
         <b-row v-if="isDir && internalLoaded" class="mt-1 mb-1 ml-2 mr-0 p-0">
             <b-col
                 :style="{
@@ -30,14 +25,6 @@
                         internalLoaded ? internalNode.label : node.label
                     }}</b-button
                 >
-                <!--<b-button
-                    size="sm"
-                    v-else
-                    :variant="darkMode ? 'outline-light' : 'white'"
-                >
-                    <i class="fas fa-folder fa-fw mr-2"></i
-                    >{{ internalLoaded ? internalNode.label : node.label }}
-                </b-button>-->
             </b-col>
             <b-col md="auto" class="mt-1">
                 <small :variant="darkMode ? 'outline-light' : 'outline-dark'">
@@ -80,6 +67,7 @@
                     <b-button
                         class="ml-1"
                         size="sm"
+                        :disabled="filesToUpload.length === 0"
                         @click="
                             uploadFile(
                                 filesToUpload,
@@ -89,8 +77,23 @@
                         "
                         :variant="darkMode ? 'outline-light' : 'outline-dark'"
                         ><i class="fas fa-plus fa-fw"></i> Upload</b-button
-                    ></b-input-group
-                ></b-col
+                    >
+                    <b-button
+                        v-if="
+                            (internalLoaded && internalNode.path.split('/').length > 4)
+                        "
+                        class="ml-1"
+                        size="sm"
+                        @click="
+                            deletePath(
+                                internalLoaded ? internalNode.path : node.path,
+                                currentUserDjangoProfile.profile.cyverse_token
+                            )
+                        "
+                        variant="outline-danger"
+                        ><i class="fas fa-trash fa-fw"></i> Delete</b-button
+                    >
+                </b-input-group></b-col
             >
             <b-col class="ml-0 mr-0" md="auto">
                 <b-button
@@ -138,6 +141,11 @@
                 <b-spinner v-if="uploading" variant="success" small></b-spinner>
             </b-col>
         </b-row>
+        <b-row align-h="center" align-v="center" class="text-center">
+            <b-col>
+                <b-spinner v-if="deleting" variant="danger" small></b-spinner>
+            </b-col>
+        </b-row>
         <b-row v-if="isDir && !internalLoaded" class="mt-0 mb-0 ml-2 mr-0 p-0">
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'">
                 <b-button
@@ -158,16 +166,22 @@
                         internalLoaded ? internalNode.label : node.label
                     }}</b-button
                 >
-                <!--<b-button
-                    size="sm"
-                    v-else
-                    :disabled="select !== 'directory' && select !== 'files'"
-                    :variant="darkMode ? 'outline-light' : 'white'"
-                >
-                    <i class="fas fa-folder fa-fw mr-2"></i
-                    >{{ internalLoaded ? internalNode.label : node.label }}
-                </b-button>-->
             </b-col>
+            <b-col md="auto"
+                   v-if="(node.path.split('/').length > 4)"
+                ><b-button
+                    class="ml-1"
+                    size="sm"
+                    @click="
+                        deletePath(
+                            internalLoaded ? internalNode.path : node.path,
+                            currentUserDjangoProfile.profile.cyverse_token
+                        )
+                    "
+                    variant="outline-danger"
+                    ><i class="fas fa-trash fa-fw"></i> Delete</b-button
+                ></b-col
+            >
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'" md="auto">
                 <b-button
                     size="sm"
@@ -193,13 +207,14 @@
             </b-col>
         </b-row>
         <b-list-group-item
-            class="mt-1 mb-1 ml-2 mr-0 p-0"
+            class="mt-2 mb-1 ml-2 mr-0 p-0"
             style="background-color: transparent;"
             v-show="isOpen"
             v-if="isDir && internalLoaded"
             :variant="darkMode ? 'outline-light' : 'outline-dark'"
         >
             <b-row
+                align-v="middle"
                 class="mt-1 mb-1 ml-2 mr-0 p-0"
                 style="border-top: 1px solid rgba(211, 211, 211, .5);"
                 v-for="(child, index) in internalLoaded
@@ -208,19 +223,35 @@
                 :key="index"
                 :class="darkMode ? 'theme-dark' : 'theme-light'"
             >
-                <b-button
-                    class="ml-4"
-                    :disabled="!select || select !== 'file'"
-                    size="sm"
-                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                    @click="selectNode(child, 'file')"
-                    ><i class="fas fa-file fa-fw"></i>
-                    {{ child.label }}</b-button
+                <b-col>
+                    <b-button
+                        class="ml-4"
+                        :disabled="!select || select !== 'file'"
+                        size="sm"
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        @click="selectNode(child, 'file')"
+                        ><i class="fas fa-file fa-fw"></i>
+                        {{ child.label }}</b-button
+                    >
+                </b-col>
+                <b-col md="auto"
+                    ><b-button
+                        class="ml-1"
+                        size="sm"
+                        @click="
+                            deletePath(
+                                child.path,
+                                currentUserDjangoProfile.profile.cyverse_token
+                            )
+                        "
+                        variant="outline-danger"
+                        ><i class="fas fa-trash fa-fw"></i> Delete</b-button
+                    ></b-col
                 >
             </b-row>
         </b-list-group-item>
         <b-list-group-item
-            class="mt-1 mb-1 ml-2 mr-0 p-0"
+            class="mt-2 mb-1 ml-2 mr-0 p-0"
             style="background-color: transparent;"
             v-for="(child, index) in internalLoaded
                 ? internalNode.folders
@@ -269,7 +300,8 @@ export default {
             isOpen: false,
             filesToUpload: [],
             filesToDownload: [],
-            uploading: false
+            uploading: false,
+            deleting: false
         };
     },
     computed: {
@@ -313,13 +345,53 @@ export default {
                 this.currentUserDjangoProfile.profile.cyverse_token
             );
         },
+        async deletePath(path, token) {
+            await this.$bvModal
+                .msgBoxConfirm(`Are you sure you want to delete '${path}'?`, {
+                    title: 'Confirm Deletion',
+                    size: 'sm',
+                    okVariant: 'outline-danger',
+                    cancelVariant: 'outline-dark',
+                    okTitle: 'Yes',
+                    cancelTitle: 'Cancel',
+                    centered: true
+                })
+                .then(async value => {
+                    if (value) {
+                        this.deleting = true;
+                        await axios
+                            .post(
+                                `https://de.cyverse.org/terrain/secured/filesystem/delete`,
+                                { paths: [path] },
+                                {
+                                    headers: {
+                                        Authorization: 'Bearer ' + token
+                                    }
+                                }
+                            )
+                            .then(response => {
+                                alert(`Path '${response.data.paths}' deleted`);
+                            })
+                            .catch(error => {
+                                Sentry.captureException(error);
+                                this.uploading = false;
+                                alert(`Failed to delete '${path}'`);
+                                throw error;
+                            });
+                        await this.loadDirectory(
+                            this.internalLoaded
+                                ? this.internalNode.path
+                                : this.node.path,
+                            this.currentUserDjangoProfile.profile.cyverse_token
+                        );
+                        this.deleting = false;
+                    }
+                })
+                .catch(err => {
+                    throw err;
+                });
+        },
         async uploadFile(files, to_path, token) {
-            // with open(from_path, 'rb') as file:
-            // with requests.post(f"https://de.cyverse.org/terrain/secured/fileio/upload?dest={to_path}",
-            //                    headers={'Authorization': f"Bearer {self.plan.cyverse_token}"},
-            //                    files={'file': (basename(from_path), file, 'application/octet-stream')}) as response:
-            //     response.raise_for_status()
-
             this.uploading = true;
             for (let file of files) {
                 let data = new FormData();
@@ -349,11 +421,12 @@ export default {
                         throw error;
                     });
             }
-            this.uploading = false;
+            await 1000;
             await this.loadDirectory(
                 to_path,
                 this.currentUserDjangoProfile.profile.cyverse_token
             );
+            this.uploading = false;
         },
         loadDirectory(path, token) {
             this.internalLoading = true;
