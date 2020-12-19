@@ -29,30 +29,6 @@
                                         Hide Sidebar
                                     </b-button>
                                 </b-nav-item>
-                                <b-nav-item class="m-0 p-0">
-                                    <b-button
-                                        v-if="loggedIn"
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        block
-                                        class="text-left m-0"
-                                        @click="toggleDarkMode"
-                                    >
-                                        <i
-                                            v-if="darkMode"
-                                            class="fas fa-sun fa-1x fa-fw"
-                                        ></i>
-                                        <i
-                                            v-else
-                                            class="fas fa-moon fa-1x fa-fw"
-                                        ></i>
-                                        {{ darkMode ? 'Disable' : 'Enable' }}
-                                        Dark Mode
-                                    </b-button>
-                                </b-nav-item>
                                 <b-nav-item
                                     v-if="!loggedIn"
                                     href="/apis/v1/idp/cyverse_login/"
@@ -77,14 +53,14 @@
                             </b-nav>
                         </b-col>
                     </b-row>
-                    <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
+                    <b-row
+                        v-if="!loggedIn"
+                        class="ml-0 mr-0 pl-0 pr-0"
+                        align-v="center"
+                    >
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item
-                                    v-if="loggedIn"
-                                    class="m-0 p-0"
-                                    disabled
-                                >
+                                <b-nav-item class="m-0 p-0" disabled>
                                     <small
                                         :class="
                                             darkMode
@@ -164,11 +140,7 @@
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
-                            <b-nav
-                                vertical
-                                class="ml-0 mr-0 pl-0 pr-0"
-                                v-if="loggedIn"
-                            >
+                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item class="m-0 p-0" disabled>
                                     <small
                                         :class="
@@ -217,9 +189,12 @@
                             </b-nav>
                         </b-col>
                     </b-row>
+                    <b-row>
+                      <!-- TODO recent run feed -->
+                    </b-row>
                 </b-container>
             </template>
-            <template v-slot:footer>
+            <!--<template v-slot:footer>
                 <b-container class="p-1">
                     <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
@@ -229,32 +204,17 @@
                                 v-if="loggedIn"
                             >
                                 <hr />
-                                <b-nav-item
-                                    title="log out"
-                                    href="/apis/v1/idp/cyverse_logout/"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="outline-danger"
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-door-closed fa-1x fa-fw"
-                                        ></i>
-                                        Log Out
-                                    </b-button>
-                                </b-nav-item>
+
                             </b-nav>
                         </b-col>
                     </b-row>
                 </b-container>
-            </template>
+            </template>-->
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo p-0 overflow-hidden"
-            style="min-height: 44px; max-height: 44px; z-index: 1000"
+            class="logo p-0"
+            style="min-height: 44px; max-height: 46px; z-index: 1000"
             fixed="top"
             :variant="darkMode ? 'dark' : 'white'"
         >
@@ -333,38 +293,139 @@
                             Log in to GitHub
                         </b-button>
                     </b-nav-item>
-                    <b-nav-item
+                    <b-nav-item-dropdown
                         right
                         v-if="loggedIn"
                         :title="currentUserDjangoProfile.username"
-                        class="m-0 p-0 mt-1"
-                        style="font-size: 12pt"
-                        :href="'/' + currentUserDjangoProfile.username + '/'"
+                        class="m-0 p-0 mt-1 dropdown-custom"
+                        :menu-class="darkMode ? 'theme-dark' : 'theme-light'"
+                        style="font-size: 12pt; z-index: 1001;"
                     >
-                        <b-button
-                            :variant="darkMode ? 'outline-light' : 'white'"
-                            class="m-0 ml-0 mr-2 text-left"
-                            size="sm"
+                        <template #button-content>
+                            <b-button
+                                :variant="darkMode ? 'outline-light' : 'white'"
+                                class="m-0 ml-0 mr-2 text-left"
+                                size="sm"
+                            >
+                                <b-img
+                                    v-if="currentUserGitHubProfile"
+                                    class="avatar m-0 mb-1 p-0 github-hover logo"
+                                    style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 1.5px; border: 1px solid #d6df5D;"
+                                    rounded="circle"
+                                    :src="
+                                        currentUserGitHubProfile
+                                            ? currentUserGitHubProfile.avatar_url
+                                            : ''
+                                    "
+                                ></b-img>
+                                <i v-else class="far fa-user"></i>
+                                {{
+                                    currentUserCyVerseProfile
+                                        ? currentUserCyVerseProfile.first_name
+                                        : currentUserDjangoProfile.username
+                                }}
+                                <i class="fas fa-caret-down fa-fw"></i>
+                            </b-button>
+                        </template>
+                        <b-dropdown-item
+                            v-if="loggedIn"
+                            class="m-0 p-0"
+                            disabled
                         >
-                            <b-img
-                                v-if="currentUserGitHubProfile"
-                                class="avatar m-0 mb-1 p-0 github-hover logo"
-                                style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 1.5px; border: 1px solid #d6df5D;"
-                                rounded="circle"
-                                :src="
-                                    currentUserGitHubProfile
-                                        ? currentUserGitHubProfile.avatar_url
-                                        : ''
-                                "
-                            ></b-img>
-                            <i v-else class="far fa-user"></i>
-                            {{
-                                currentUserCyVerseProfile
-                                    ? currentUserCyVerseProfile.first_name
-                                    : currentUserDjangoProfile.username
-                            }}
-                        </b-button>
-                    </b-nav-item>
+                            <small
+                                :class="darkMode ? 'text-light' : 'text-dark'"
+                                >Navigation</small
+                            >
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            to="/"
+                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :link-class="
+                                darkMode ? 'text-secondary' : 'text-dark'
+                            "
+                        >
+                            <i class="fas fa-home fa-1x fa-fw"></i>
+                            PlantIT
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            href="https://plantit.readthedocs.io/en/latest"
+                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :link-class="
+                                darkMode ? 'text-secondary' : 'text-dark'
+                            "
+                        >
+                            <i class="fas fa-book fa-1x fa-fw"></i>
+                            Docs
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            title="users"
+                            to="/users"
+                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :link-class="
+                                darkMode ? 'text-secondary' : 'text-dark'
+                            "
+                        >
+                            <i class="fas fa-user fa-1x fa-fw"></i>
+                            Users
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            title="flows"
+                            to="/flows"
+                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :link-class="
+                                darkMode ? 'text-secondary' : 'text-dark'
+                            "
+                        >
+                            <i class="fas fa-stream fa-1x fa-fw"></i>
+                            Flows
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            v-if="loggedIn"
+                            class="m-0 p-0"
+                            disabled
+                        >
+                            <small
+                                :class="darkMode ? 'text-light' : 'text-dark'"
+                                >Account</small
+                            >
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :link-class="
+                                darkMode ? 'text-secondary' : 'text-dark'
+                            "
+                            :href="
+                                '/' + currentUserDjangoProfile.username + '/'
+                            "
+                        >
+                            <i class="fas fa-user fa-1x fa-fw"></i>
+                            Profile
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :link-class="
+                                darkMode ? 'text-secondary' : 'text-dark'
+                            "
+                            @click="toggleDarkMode"
+                        >
+                            <i
+                                v-if="darkMode"
+                                class="fas fa-sun fa-1x fa-fw"
+                            ></i>
+                            <i v-else class="fas fa-moon fa-1x fa-fw"></i>
+                            {{ darkMode ? 'Disable' : 'Enable' }}
+                            Dark Mode
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            title="log out"
+                            href="/apis/v1/idp/cyverse_logout/"
+                            class="text-danger"
+                            link-class="text-danger"
+                        >
+                            <i class="fas fa-door-closed fa-1x fa-fw"></i>
+                            Log Out
+                        </b-dropdown-item>
+                    </b-nav-item-dropdown>
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
@@ -411,6 +472,8 @@ export default {
 <style scoped lang="sass">
 @import '../scss/main.sass'
 @import '../scss/_colors.sass'
+
+
 
 .not-found
     color: $red
@@ -479,6 +542,9 @@ export default {
   color: white !important
   // text-decoration: underline
   // text-decoration-color: $color-button
+
+.dropdown-custom:hover
+  background-color: transparent !important
 
 .crumb-light
   font-weight: 300

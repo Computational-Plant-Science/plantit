@@ -599,11 +599,13 @@ export default {
                     this.internalNode = response.data;
                     this.internalLoading = false;
                     this.internalLoaded = true;
+                    this.deleting = false;
                     if (!this.isOpen) this.isOpen = true;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     this.internalLoading = false;
+                    this.deleting = false;
                     throw error;
                 });
         },
