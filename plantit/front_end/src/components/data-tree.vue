@@ -41,8 +41,8 @@
                     }}</small
                 >
             </b-col>
-            <b-col v-if="upload">
-                <b-input-group size="sm">
+            <b-col md="auto">
+                <b-input-group size="sm" >
                     <b-button
                         v-if="internalLoaded && !internalLoading"
                         class="ml-1"
@@ -60,6 +60,7 @@
                         label="Loading"
                     ></b-spinner>
                     <b-form-file
+                        v-if="upload"
                         style="min-width: 15rem"
                         :class="darkMode ? 'theme-dark' : 'theme-light'"
                         multiple
@@ -81,6 +82,7 @@
                         "
                     ></b-form-file>
                     <b-button
+                        v-if="upload"
                         class="ml-1"
                         size="sm"
                         :disabled="filesToUpload.length === 0"
@@ -238,7 +240,7 @@
                 </b-col>
                 <b-col md="auto"
                     ><b-button
-                        class="ml-1"
+                        class="ml-1 mt-1"
                         size="sm"
                         @click="
                             deletePath(
