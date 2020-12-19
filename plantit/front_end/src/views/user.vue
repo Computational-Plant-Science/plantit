@@ -169,6 +169,8 @@
                                 <datatree
                                     :node="data"
                                     select="directory"
+                                    :upload="true"
+                                    :download="true"
                                     :class="
                                         darkMode ? 'theme-dark' : 'theme-light'
                                     "

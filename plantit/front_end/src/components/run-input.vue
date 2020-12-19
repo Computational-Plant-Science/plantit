@@ -1,8 +1,9 @@
 <template>
     <div>
         <b :class="darkMode ? 'text-white' : 'text-dark'">
-          Select {{ this.kind === 'files' ? '' : 'a ' }}public {{ this.kind }} from the CyVerse Data Commons or
-          your own {{ this.kind }} from the Data Store.
+            Select {{ this.kind === 'files' ? '' : 'a ' }}public
+            {{ this.kind }} from the CyVerse Data Commons or your own
+            {{ this.kind }} from the Data Store.
         </b>
         <br />
         <b-tabs
@@ -35,11 +36,15 @@
                             v-else
                             :select="kind"
                             :upload="true"
+                            :download="true"
                             @selectNode="selectNode"
                             :node="publicData"
                         ></datatree></b-col
                 ></b-row>
-                <b-alert class="mt-1" :variant="path ? 'success' : 'danger'" :show="true"
+                <b-alert
+                    class="mt-1"
+                    :variant="path ? 'success' : 'danger'"
+                    :show="true"
                     >Selected: {{ path ? path : 'None' }}
                     <i v-if="path" class="fas fa-check text-success"></i>
                     <i v-else class="fas fa-exclamation text-danger"></i>
@@ -61,11 +66,15 @@
                             v-else
                             :select="kind"
                             :upload="true"
+                            :download="true"
                             @selectNode="selectNode"
                             :node="userData"
                         ></datatree></b-col
                 ></b-row>
-                <b-alert class="mt-1"  :variant="path ? 'success' : 'danger'" :show="true"
+                <b-alert
+                    class="mt-1"
+                    :variant="path ? 'success' : 'danger'"
+                    :show="true"
                     >Selected: {{ path ? path : 'None' }}
                     <i v-if="path" class="fas fa-check text-success"></i>
                     <i v-else class="fas fa-exclamation text-danger"></i>

@@ -15,6 +15,7 @@
                     v-else
                     select="directory"
                     :upload="false"
+                    :download="false"
                     @selectNode="selectNode"
                     :node="data"
                 ></datatree></b-col

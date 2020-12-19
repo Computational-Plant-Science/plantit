@@ -56,7 +56,9 @@ $compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/kno
 $compose exec -T plantit bash -c "ssh-keyscan -H stampede2.tacc.utexas.edu >> /code/config/ssh/known_hosts"
 $compose exec -T plantit bash -c "ssh-keyscan -H sapelo2-droid.gacrc.uga.edu >> /code/config/ssh/known_hosts"
 $compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
-$compose exec -T celery bash -c "cp /code/config/ssh/id_rsa.pub ~/.ssh/id_rsa.pub"
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
 fi
+$compose exec -T celery bash -c "cp /code/config/ssh/id_rsa.pub ~/.ssh/id_rsa.pub"
+$compose exec -T celery bash -c "cp /code/config/ssh/id_rsa ~/.ssh/id_rsa"
+$compose exec -T celery bash -c "cp /code/config/ssh/known_hosts ~/.ssh/known_hosts"

@@ -1,6 +1,9 @@
 <template>
     <b-list-group flush class="mt-0 mb-0">
-        <b-row v-if="isDir && internalLoaded" class="mt-1 mb-1 ml-2 mr-0 p-0 text-left">
+        <b-row
+            v-if="isDir && internalLoaded"
+            class="mt-1 mb-1 ml-2 mr-0 p-0 text-left"
+        >
             <b-col
                 :style="{
                     'font-weight': isDir ? '500' : '300'
@@ -42,10 +45,10 @@
                 >
             </b-col>
             <b-col md="auto">
-                <b-input-group size="sm" >
+                <b-input-group size="sm">
                     <b-button
                         v-if="internalLoaded && !internalLoading"
-                        class="ml-1"
+                        class="ml-1 mr-1"
                         title="Refresh Directory"
                         size="sm"
                         :variant="darkMode ? 'outline-light' : 'outline-dark'"
@@ -94,8 +97,38 @@
                             )
                         "
                         :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                        ><i class="fas fa-plus fa-fw"></i> Upload</b-button
+                        ><i class="fas fa-upload fa-fw"></i> Upload</b-button
                     >
+                    <b-button
+                        class="ml-1"
+                        size="sm"
+                        v-b-modal.createDirectoryModal
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        ><i class="fas fa-plus fa-fw"></i> Directory</b-button
+                    >
+                    <b-modal
+                        id="createDirectoryModal"
+                        title="Create Directory"
+                        close
+                        @ok="
+                            createDirectory(
+                                (internalLoaded
+                                    ? internalNode.path
+                                    : node.path) +
+                                    '/' +
+                                    newDirectoryName,
+                                currentUserDjangoProfile.profile.cyverse_token
+                            )
+                        "
+                    >
+                        <b-form-group>
+                            <b-form-input
+                                size="sm"
+                                v-model="newDirectoryName"
+                                :placeholder="'Enter a directory name'"
+                            ></b-form-input>
+                        </b-form-group>
+                    </b-modal>
                     <b-button
                         v-if="
                             internalLoaded &&
@@ -133,23 +166,23 @@
                     </b-button> </b-input-group
             ></b-col>
         </b-row>
-        <b-row align-h="center" align-v="center" class="text-center">
-            <b-col>
-                <b-spinner v-if="uploading" variant="success" small></b-spinner>
+        <b-row align-h="center" align-v="center" class="text-center text-secondary">
+            <b-col v-if="uploading">
+                <small>Uploading...</small>
+                <b-spinner class="ml-1" variant="secondary" small></b-spinner>
             </b-col>
-            <b-col></b-col>
-            <b-col></b-col>
-            <b-col></b-col>
-            <b-col></b-col>
         </b-row>
-        <b-row align-h="center" align-v="center" class="text-center">
-            <b-col>
-                <b-spinner v-if="deleting" variant="danger" small></b-spinner>
+        <b-row align-h="center" align-v="center" class="text-center text-secondary">
+            <b-col v-if="creatingDirectory">
+                <small>Creating directory...</small>
+                <b-spinner class="ml-1" variant="secondary" small></b-spinner>
             </b-col>
-            <b-col></b-col>
-            <b-col></b-col>
-            <b-col></b-col>
-            <b-col></b-col>
+        </b-row>
+        <b-row align-h="center" align-v="center" class="text-center text-secondary">
+            <b-col v-if="deleting">
+                <small>Deleting...</small>
+                <b-spinner class="ml-1" variant="secondary" small></b-spinner>
+            </b-col>
         </b-row>
         <b-row v-if="isDir && !internalLoaded" class="mt-0 mb-0 ml-2 mr-0 p-0">
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'">
@@ -265,11 +298,18 @@
             :variant="darkMode ? 'outline-light' : 'outline'"
         >
             <data-tree
-                class="mt-0 mb-0 ml-2 mr-0 p-0"
+                class="pt-1 mb-0 ml-2 mr-0 p-0"
                 style="border-top: 1px solid rgba(211, 211, 211, .5); border-left: 2px solid rgba(211, 211, 211, .5)"
                 :select="select"
                 :upload="upload"
+                :download="download"
                 @selectPath="selectNode(child, 'directory')"
+                @deleted="
+                    loadDirectory(
+                        node.path,
+                        this.currentUserDjangoProfile.profile.cyverse_token
+                    )
+                "
                 :key="index"
                 :node="child"
             ></data-tree>
@@ -294,6 +334,10 @@ export default {
         upload: {
             required: false,
             type: Boolean
+        },
+        download: {
+            required: false,
+            type: Boolean
         }
     },
     data: function() {
@@ -305,7 +349,12 @@ export default {
             filesToUpload: [],
             filesToDownload: [],
             uploading: false,
-            deleting: false
+            deleting: false,
+            creatingDirectory: false,
+            newDirectoryName: '',
+            uploadingIntervalId: '',
+            creatingDirectoryIntervalId: '',
+            deletingIntervalId: ''
         };
     },
     computed: {
@@ -349,6 +398,20 @@ export default {
                 this.currentUserDjangoProfile.profile.cyverse_token
             );
         },
+        refreshAfterDeletion() {
+            this.$parent.$emit('deleted');
+            // this.deleting = false;
+            // this.checkDirectoryCreation(path, response);
+        },
+        checkDeletion(path, response) {
+            if (
+                !this.internalNode.folders.some(folder => folder.path === path)
+            ) {
+                clearInterval(this.deletingIntervalId);
+                this.deleting = false;
+                alert(`Path '${response.data.paths}' deleted`);
+            }
+        },
         async deletePath(path, token) {
             await this.$bvModal
                 .msgBoxConfirm(`Are you sure you want to delete '${path}'?`, {
@@ -373,26 +436,63 @@ export default {
                                     }
                                 }
                             )
-                            .then(response => {
-                                alert(`Path '${response.data.paths}' deleted`);
-                            })
+                            .then(() =>
+                                setTimeout(this.refreshAfterDeletion, 5000)
+                            )
                             .catch(error => {
                                 Sentry.captureException(error);
-                                this.uploading = false;
+                                this.deleting = false;
                                 alert(`Failed to delete '${path}'`);
                                 throw error;
                             });
-                        await this.loadDirectory(
-                            this.internalLoaded
-                                ? this.internalNode.path
-                                : this.node.path,
-                            this.currentUserDjangoProfile.profile.cyverse_token
-                        );
-                        this.deleting = false;
                     }
                 })
                 .catch(err => {
                     throw err;
+                });
+        },
+        refreshAfterDirectoryCreation() {
+            this.loadDirectory(
+                this.internalNode.path,
+                this.currentUserDjangoProfile.profile.cyverse_token
+            );
+            this.creatingDirectory = false;
+            // this.checkDirectoryCreation(path, response);
+        },
+        checkDirectoryCreation(path, response) {
+            if (
+                this.internalNode.folders.some(
+                    folder => folder.path === response.data.path
+                )
+            ) {
+                clearInterval(this.creatingDirectoryIntervalId);
+                this.creatingDirectory = false;
+                alert(`Path '${response.data.path}' created`);
+            }
+        },
+        async createDirectory(path, token) {
+            this.creatingDirectory = true;
+            this.$bvModal.hide('createDirectoryModal');
+            await axios
+                .post(
+                    `https://de.cyverse.org/terrain/secured/filesystem/directory/create`,
+                    {
+                        path: path
+                    },
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        }
+                    }
+                )
+                .then(() =>
+                    setTimeout(this.refreshAfterDirectoryCreation, 5000)
+                )
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.creatingDirectory = false;
+                    alert(`Failed to create directory '${path}''`);
+                    throw error;
                 });
         },
         async uploadFiles(files, to_path, token) {
@@ -415,6 +515,7 @@ export default {
                         alert(
                             `File '${response.data.file.label}' uploaded to '${response.data.file.path}'`
                         );
+                        this.uploading = false;
                     })
                     .catch(error => {
                         Sentry.captureException(error);
