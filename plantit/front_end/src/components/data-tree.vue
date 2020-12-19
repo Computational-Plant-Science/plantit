@@ -1,6 +1,6 @@
 <template>
     <b-list-group flush class="mt-0 mb-0">
-        <b-row v-if="isDir && internalLoaded" class="mt-1 mb-1 ml-2 mr-0 p-0">
+        <b-row v-if="isDir && internalLoaded" class="mt-1 mb-1 ml-2 mr-0 p-0 text-left">
             <b-col
                 :style="{
                     'font-weight': isDir ? '500' : '300'
@@ -26,7 +26,7 @@
                     }}</b-button
                 >
             </b-col>
-            <b-col md="auto" class="mt-1">
+            <b-col class="mt-1" md="auto">
                 <small :variant="darkMode ? 'outline-light' : 'outline-dark'">
                     {{
                         isDir
@@ -41,10 +41,26 @@
                     }}</small
                 >
             </b-col>
-            <b-col md="auto" v-if="upload">
+            <b-col v-if="upload">
                 <b-input-group size="sm">
+                    <b-button
+                        v-if="internalLoaded && !internalLoading"
+                        class="ml-1"
+                        title="Refresh Directory"
+                        size="sm"
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        @click="refresh"
+                    >
+                        <i class="fas fa-sync-alt fa-fw"></i>
+                    </b-button>
+                    <b-spinner
+                        v-else-if="internalLoaded && internalLoading"
+                        :variant="darkMode ? 'warning' : 'dark'"
+                        type="grow"
+                        label="Loading"
+                    ></b-spinner>
                     <b-form-file
-                        style="min-width: 20rem"
+                        style="min-width: 15rem"
                         :class="darkMode ? 'theme-dark' : 'theme-light'"
                         multiple
                         size="sm"
@@ -69,7 +85,7 @@
                         size="sm"
                         :disabled="filesToUpload.length === 0"
                         @click="
-                            uploadFile(
+                            uploadFiles(
                                 filesToUpload,
                                 internalLoaded ? internalNode.path : node.path,
                                 currentUserDjangoProfile.profile.cyverse_token
@@ -80,7 +96,8 @@
                     >
                     <b-button
                         v-if="
-                            (internalLoaded && internalNode.path.split('/').length > 4)
+                            internalLoaded &&
+                                internalNode.path.split('/').length > 4
                         "
                         class="ml-1"
                         size="sm"
@@ -93,58 +110,44 @@
                         variant="outline-danger"
                         ><i class="fas fa-trash fa-fw"></i> Delete</b-button
                     >
-                </b-input-group></b-col
-            >
-            <b-col class="ml-0 mr-0" md="auto">
-                <b-button
-                    v-if="internalLoaded && !internalLoading"
-                    class="ml-0 mr-0"
-                    title="Refresh Directory"
-                    size="sm"
-                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                    @click="refresh"
-                >
-                    <i class="fas fa-sync-alt fa-fw"></i>
-                </b-button>
-                <b-spinner
-                    small
-                    v-else-if="internalLoaded && internalLoading"
-                    :variant="darkMode ? 'warning' : 'dark'"
-                    type="grow"
-                    label="Loading"
-                ></b-spinner>
-            </b-col>
-            <b-col class="ml-0 mr-0" md="auto">
-                <b-button
-                    class="ml-0 mr-0"
-                    title="Expand Directory"
-                    v-if="!isOpen"
-                    size="sm"
-                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                    @click="toggle"
-                >
-                    <i class="fas fa-caret-up fa-fw"></i> </b-button
-                ><b-button
-                    class="ml-0 mr-0"
-                    title="Collapse Directory"
-                    v-else
-                    size="sm"
-                    :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                    @click="toggle"
-                >
-                    <i class="fas fa-caret-down fa-fw"></i>
-                </b-button>
-            </b-col>
+                    <b-button
+                        class="ml-1"
+                        title="Expand Directory"
+                        v-if="!isOpen"
+                        size="sm"
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        @click="toggle"
+                    >
+                        <i class="fas fa-caret-up fa-fw"></i> </b-button
+                    ><b-button
+                        class="ml-1"
+                        title="Collapse Directory"
+                        v-else
+                        size="sm"
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        @click="toggle"
+                    >
+                        <i class="fas fa-caret-down fa-fw"></i>
+                    </b-button> </b-input-group
+            ></b-col>
         </b-row>
         <b-row align-h="center" align-v="center" class="text-center">
             <b-col>
                 <b-spinner v-if="uploading" variant="success" small></b-spinner>
             </b-col>
+            <b-col></b-col>
+            <b-col></b-col>
+            <b-col></b-col>
+            <b-col></b-col>
         </b-row>
         <b-row align-h="center" align-v="center" class="text-center">
             <b-col>
                 <b-spinner v-if="deleting" variant="danger" small></b-spinner>
             </b-col>
+            <b-col></b-col>
+            <b-col></b-col>
+            <b-col></b-col>
+            <b-col></b-col>
         </b-row>
         <b-row v-if="isDir && !internalLoaded" class="mt-0 mb-0 ml-2 mr-0 p-0">
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'">
@@ -167,8 +170,7 @@
                     }}</b-button
                 >
             </b-col>
-            <b-col md="auto"
-                   v-if="(node.path.split('/').length > 4)"
+            <b-col v-if="node.path.split('/').length > 4" md="auto"
                 ><b-button
                     class="ml-1"
                     size="sm"
@@ -391,7 +393,7 @@ export default {
                     throw err;
                 });
         },
-        async uploadFile(files, to_path, token) {
+        async uploadFiles(files, to_path, token) {
             this.uploading = true;
             for (let file of files) {
                 let data = new FormData();
@@ -421,11 +423,11 @@ export default {
                         throw error;
                     });
             }
-            await 1000;
             await this.loadDirectory(
                 to_path,
                 this.currentUserDjangoProfile.profile.cyverse_token
             );
+            this.filesToUpload = [];
             this.uploading = false;
         },
         loadDirectory(path, token) {
