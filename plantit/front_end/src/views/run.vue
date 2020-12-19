@@ -32,6 +32,30 @@
                     </b-col>
                 </b-row>
                 <br />
+                <div
+                    v-if="
+                        flow.config.output &&
+                            (run.state === 2 || run.state === 1)
+                    "
+                >
+                    <b-row>
+                        <b-col md="auto" align-self="end" class="mr-0">
+                            <h4 :class="darkMode ? 'text-light' : 'text-dark'">
+                                Data
+                            </h4>
+                        </b-col>
+                    </b-row>
+                    <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
+                    <b-row>
+                        <b-col>
+                            <datatree
+                                :upload="false"
+                                :download="true"
+                                :node="userData"
+                            ></datatree></b-col
+                    ></b-row>
+                </div>
+                <br />
                 <b-row>
                     <b-col md="auto" align-self="end" class="mr-0">
                         <h4 :class="darkMode ? 'text-light' : 'text-dark'">
@@ -114,18 +138,6 @@
                         </b-table>
                     </b-col>
                 </b-row>
-                <b-row
-                    v-if="
-                        flow.config.to && (run.state === 2 || run.state === 1)
-                    "
-                >
-                    <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
-                    <b-col md="auto" align-self="end" class="mr-0">
-                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">
-                            Output
-                        </h5>
-                    </b-col>
-                </b-row>
             </div>
         </b-container>
     </div>
@@ -135,15 +147,18 @@ import RunBlurb from '../components/run-blurb';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import axios from 'axios';
+import datatree from '@/components/data-tree.vue';
 import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'run',
     components: {
-        RunBlurb
+        RunBlurb,
+        datatree
     },
     data() {
         return {
+            userData: null,
             reloadAlertDismissSeconds: 2,
             reloadAlertDismissCountdown: 0,
             showReloadAlert: false,
@@ -217,6 +232,25 @@ export default {
                         response.data.flow_owner,
                         response.data.flow_name
                     );
+                    axios
+                        .get(
+                            `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${this.currentUserDjangoProfile.username}/`,
+                            {
+                                headers: {
+                                    Authorization:
+                                        'Bearer ' +
+                                        this.currentUserDjangoProfile.profile
+                                            .cyverse_token
+                                }
+                            }
+                        )
+                        .then(response => {
+                            this.userData = response.data;
+                        })
+                        .catch(error => {
+                            Sentry.captureException(error);
+                            throw error;
+                        });
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -279,8 +313,8 @@ export default {
             }
         }
     },
-    mounted: function() {
-        this.reloadRun(false);
+    async mounted() {
+        await this.reloadRun(false);
     },
     computed: {
         ...mapGetters([

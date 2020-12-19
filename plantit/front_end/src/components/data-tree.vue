@@ -274,7 +274,7 @@
             >
                 <b-col>
                     <b-button
-                        class="ml-4"
+                        class="mt-1 mb-1 ml-4"
                         :disabled="!select || select !== 'file'"
                         size="sm"
                         :variant="darkMode ? 'outline-light' : 'outline-dark'"
@@ -285,7 +285,7 @@
                 </b-col>
                 <b-col md="auto"
                     ><b-button
-                        class="ml-1 mt-1"
+                        class="ml-1 mt-1 mb-1"
                         size="sm"
                         @click="
                             downloadFile(
@@ -300,7 +300,7 @@
                 >
                 <b-col md="auto"
                     ><b-button
-                        class="ml-1 mt-1"
+                        class="ml-1 mt-1 mb-1"
                         size="sm"
                         @click="
                             deletePath(
@@ -325,7 +325,7 @@
             :variant="darkMode ? 'outline-light' : 'outline'"
         >
             <data-tree
-                class="pt-1 mb-0 ml-2 mr-0 p-0"
+                class="pt-1 pb-1 mb-0 ml-2 mr-0 p-0"
                 style="border-top: 1px solid rgba(211, 211, 211, .5); border-left: 2px solid rgba(211, 211, 211, .5)"
                 :select="select"
                 :upload="upload"
