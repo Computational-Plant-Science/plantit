@@ -166,19 +166,31 @@
                     </b-button> </b-input-group
             ></b-col>
         </b-row>
-        <b-row align-h="center" align-v="center" class="text-center text-secondary">
+        <b-row
+            align-h="center"
+            align-v="center"
+            class="text-center text-secondary"
+        >
             <b-col v-if="uploading">
                 <small>Uploading...</small>
                 <b-spinner class="ml-1" variant="secondary" small></b-spinner>
             </b-col>
         </b-row>
-        <b-row align-h="center" align-v="center" class="text-center text-secondary">
+        <b-row
+            align-h="center"
+            align-v="center"
+            class="text-center text-secondary"
+        >
             <b-col v-if="creatingDirectory">
                 <small>Creating directory...</small>
                 <b-spinner class="ml-1" variant="secondary" small></b-spinner>
             </b-col>
         </b-row>
-        <b-row align-h="center" align-v="center" class="text-center text-secondary">
+        <b-row
+            align-h="center"
+            align-v="center"
+            class="text-center text-secondary"
+        >
             <b-col v-if="deleting">
                 <small>Deleting...</small>
                 <b-spinner class="ml-1" variant="secondary" small></b-spinner>
@@ -276,6 +288,21 @@
                         class="ml-1 mt-1"
                         size="sm"
                         @click="
+                            downloadFile(
+                                child.path,
+                                currentUserDjangoProfile.profile.cyverse_token
+                            )
+                        "
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        ><i class="fas fa-download fa-fw"></i>
+                        Download</b-button
+                    ></b-col
+                >
+                <b-col md="auto"
+                    ><b-button
+                        class="ml-1 mt-1"
+                        size="sm"
+                        @click="
                             deletePath(
                                 child.path,
                                 currentUserDjangoProfile.profile.cyverse_token
@@ -354,7 +381,8 @@ export default {
             newDirectoryName: '',
             uploadingIntervalId: '',
             creatingDirectoryIntervalId: '',
-            deletingIntervalId: ''
+            deletingIntervalId: '',
+            downloading: false
         };
     },
     computed: {
@@ -397,6 +425,37 @@ export default {
                 this.internalLoaded ? this.internalNode.path : this.node.path,
                 this.currentUserDjangoProfile.profile.cyverse_token
             );
+        },
+        async downloadFile(path, token) {
+            this.downloading = true;
+            await axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/fileio/download?path=${path}`,
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + token
+                        }
+                    }
+                )
+                .then(response => {
+                    var fileURL = window.URL.createObjectURL(
+                        // new Blob([response.data])
+                        new Blob([response.data])
+                    );
+                    var fileLink = document.createElement('a');
+                    fileLink.href = fileURL;
+                    let filename = path.split('\\').pop().split('/').pop();
+                    fileLink.setAttribute('download', filename);
+                    document.body.appendChild(fileLink);
+                    fileLink.click();
+                    document.body.removeChild(fileLink);
+                    this.downloading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    alert(`Failed to download '${path}''`);
+                    throw error;
+                });
         },
         refreshAfterDeletion() {
             this.$parent.$emit('deleted');

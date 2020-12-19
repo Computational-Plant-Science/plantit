@@ -59,6 +59,7 @@ $compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
 fi
+$compose exec -T celery bash -c "mkdir ~/.ssh"
 $compose exec -T celery bash -c "cp /code/config/ssh/id_rsa.pub ~/.ssh/id_rsa.pub"
 $compose exec -T celery bash -c "cp /code/config/ssh/id_rsa ~/.ssh/id_rsa"
 $compose exec -T celery bash -c "cp /code/config/ssh/known_hosts ~/.ssh/known_hosts"
