@@ -434,21 +434,17 @@ export default {
                     {
                         headers: {
                             Authorization: 'Bearer ' + token
-                        }
+                        },
+                        responseType: 'blob'
                     }
                 )
                 .then(response => {
-                    var fileURL = window.URL.createObjectURL(
-                        // new Blob([response.data])
-                        new Blob([response.data])
-                    );
-                    var fileLink = document.createElement('a');
-                    fileLink.href = fileURL;
-                    let filename = path.split('\\').pop().split('/').pop();
-                    fileLink.setAttribute('download', filename);
-                    document.body.appendChild(fileLink);
-                    fileLink.click();
-                    document.body.removeChild(fileLink);
+                    let url = window.URL.createObjectURL(new Blob([response.data]));
+                    let link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', path);
+                    link.click();
+                    window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
                 .catch(error => {
