@@ -1,14 +1,11 @@
 <template>
     <b-list-group flush class="mt-0 mb-0">
-        <b-spinner
+        <!--<b-spinner
             v-if="internalLoading"
             type="grow"
             variant="success"
-        ></b-spinner>
-        <b-row
-            v-if="isDir && internalLoaded"
-            class="mt-0 mb-0 ml-2 mr-0 p-0"
-        >
+        ></b-spinner>-->
+        <b-row v-if="isDir && internalLoaded" class="mt-1 mb-1 ml-2 mr-0 p-0">
             <b-col
                 :style="{
                     'font-weight': isDir ? '500' : '300'
@@ -18,7 +15,10 @@
                 <b-button
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'white'"
-                    :disabled="!select || (select !== 'directory' && select !== 'files')"
+                    :disabled="
+                        !select ||
+                            (select !== 'directory' && select !== 'files')
+                    "
                     @click="
                         selectNode(
                             internalLoaded ? internalNode : node,
@@ -39,18 +39,59 @@
                     >{{ internalLoaded ? internalNode.label : node.label }}
                 </b-button>-->
             </b-col>
-            <b-col md="auto">
-                <b-badge :variant="darkMode ? 'outline-light' : 'outline-dark'">
-                  {{
-                    isDir
-                        ? `${subDirCount} ${
-                              subDirCount === 1
-                                  ? 'subdirectory'
-                                  : 'subdirectories'
-                          }, ${fileCount} ${fileCount === 1 ? 'file' : 'files'}`
-                        : ''
-                  }}</b-badge>
+            <b-col md="auto" class="mt-1">
+                <small :variant="darkMode ? 'outline-light' : 'outline-dark'">
+                    {{
+                        isDir
+                            ? `${subDirCount} ${
+                                  subDirCount === 1
+                                      ? 'subdirectory'
+                                      : 'subdirectories'
+                              }, ${fileCount} ${
+                                  fileCount === 1 ? 'file' : 'files'
+                              }`
+                            : ''
+                    }}</small
+                >
             </b-col>
+            <b-col md="auto" v-if="upload">
+                <b-input-group size="sm">
+                    <b-form-file
+                        style="min-width: 20rem"
+                        :class="darkMode ? 'theme-dark' : 'theme-light'"
+                        multiple
+                        size="sm"
+                        v-model="filesToUpload"
+                        :placeholder="
+                            'Upload to \'' +
+                                (internalLoaded
+                                    ? internalNode.label
+                                    : node.label) +
+                                '\''
+                        "
+                        :drop-placeholder="
+                            'Upload to \'' +
+                                (internalLoaded
+                                    ? internalNode.label
+                                    : node.label) +
+                                '\''
+                        "
+                    ></b-form-file>
+                    <b-button
+                        class="ml-1"
+                        size="sm"
+                        @click="
+                            uploadFile(
+                                filesToUpload,
+                                internalLoaded ? internalNode.path : node.path,
+                                currentUserDjangoProfile.profile.cyverse_token
+                            )
+                        "
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        ><i class="fas fa-plus fa-fw"></i> Upload</b-button
+                    ></b-input-group
+                ></b-col
+            >
             <b-col class="ml-0 mr-0" md="auto">
                 <b-button
                     v-if="internalLoaded && !internalLoading"
@@ -92,15 +133,20 @@
                 </b-button>
             </b-col>
         </b-row>
-        <b-row
-            v-if="isDir && !internalLoaded"
-            class="mt-0 mb-0 ml-2 mr-0 p-0"
-        >
+        <b-row align-h="center" align-v="center" class="text-center">
+            <b-col>
+                <b-spinner v-if="uploading" variant="success" small></b-spinner>
+            </b-col>
+        </b-row>
+        <b-row v-if="isDir && !internalLoaded" class="mt-0 mb-0 ml-2 mr-0 p-0">
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'">
                 <b-button
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'white'"
-                    :disabled="!select || (select !== 'directory' && select !== 'files')"
+                    :disabled="
+                        !select ||
+                            (select !== 'directory' && select !== 'files')
+                    "
                     @click="
                         selectNode(
                             internalLoaded ? internalNode : node,
@@ -147,31 +193,15 @@
             </b-col>
         </b-row>
         <b-list-group-item
-            class="mt-0 mb-0 ml-2 mr-0 p-0"
-            style="background-color: transparent"
-            v-for="(child, index) in internalLoaded
-                ? internalNode.folders
-                : node.folders"
-            v-bind:key="index"
-            v-show="isOpen"
-            :variant="darkMode ? 'outline-light' : 'outline-dark'"
-        >
-            <data-tree
-                class="mt-0 mb-0 ml-2 mr-0 p-0"
-                :select="select"
-                @selectPath="selectNode(child, 'directory')"
-                :key="index"
-                :node="child"
-            ></data-tree>
-        </b-list-group-item>
-        <b-list-group-item
-            class="mt-0 mb-0 ml-2 mr-0 p-0"
+            class="mt-1 mb-1 ml-2 mr-0 p-0"
+            style="background-color: transparent;"
             v-show="isOpen"
             v-if="isDir && internalLoaded"
             :variant="darkMode ? 'outline-light' : 'outline-dark'"
         >
             <b-row
-                class="mt-0 mb-0 ml-2 mr-0 p-0"
+                class="mt-1 mb-1 ml-2 mr-0 p-0"
+                style="border-top: 1px solid rgba(211, 211, 211, .5);"
                 v-for="(child, index) in internalLoaded
                     ? internalNode.files
                     : node.files"
@@ -189,6 +219,26 @@
                 >
             </b-row>
         </b-list-group-item>
+        <b-list-group-item
+            class="mt-1 mb-1 ml-2 mr-0 p-0"
+            style="background-color: transparent;"
+            v-for="(child, index) in internalLoaded
+                ? internalNode.folders
+                : node.folders"
+            v-bind:key="index"
+            v-show="isOpen"
+            :variant="darkMode ? 'outline-light' : 'outline'"
+        >
+            <data-tree
+                class="mt-0 mb-0 ml-2 mr-0 p-0"
+                style="border-top: 1px solid rgba(211, 211, 211, .5); border-left: 2px solid rgba(211, 211, 211, .5)"
+                :select="select"
+                :upload="upload"
+                @selectPath="selectNode(child, 'directory')"
+                :key="index"
+                :node="child"
+            ></data-tree>
+        </b-list-group-item>
     </b-list-group>
 </template>
 <script>
@@ -205,6 +255,10 @@ export default {
         select: {
             required: false,
             type: String
+        },
+        upload: {
+            required: false,
+            type: Boolean
         }
     },
     data: function() {
@@ -212,7 +266,10 @@ export default {
             internalNode: null,
             internalLoading: false,
             internalLoaded: false,
-            isOpen: false
+            isOpen: false,
+            filesToUpload: [],
+            filesToDownload: [],
+            uploading: false
         };
     },
     computed: {
@@ -256,6 +313,48 @@ export default {
                 this.currentUserDjangoProfile.profile.cyverse_token
             );
         },
+        async uploadFile(files, to_path, token) {
+            // with open(from_path, 'rb') as file:
+            // with requests.post(f"https://de.cyverse.org/terrain/secured/fileio/upload?dest={to_path}",
+            //                    headers={'Authorization': f"Bearer {self.plan.cyverse_token}"},
+            //                    files={'file': (basename(from_path), file, 'application/octet-stream')}) as response:
+            //     response.raise_for_status()
+
+            this.uploading = true;
+            for (let file of files) {
+                let data = new FormData();
+                data.append('file', file, file.name);
+                await axios
+                    .post(
+                        `https://de.cyverse.org/terrain/secured/fileio/upload?dest=${to_path}`,
+                        data,
+                        {
+                            headers: {
+                                Authorization: 'Bearer ' + token,
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        }
+                    )
+                    .then(response => {
+                        alert(
+                            `File '${response.data.file.label}' uploaded to '${response.data.file.path}'`
+                        );
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        this.uploading = false;
+                        alert(
+                            `Failed to upload '${file.name}' to '${to_path}'`
+                        );
+                        throw error;
+                    });
+            }
+            this.uploading = false;
+            await this.loadDirectory(
+                to_path,
+                this.currentUserDjangoProfile.profile.cyverse_token
+            );
+        },
         loadDirectory(path, token) {
             this.internalLoading = true;
             axios
@@ -291,4 +390,9 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped lang="sass">
+@import "../scss/_colors.sass"
+@import "../scss/main.sass"
+.custom-file-input:lang(en) ~ .custom-file-label::after
+  content: 'Upload'
+</style>

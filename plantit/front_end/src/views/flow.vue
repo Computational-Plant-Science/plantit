@@ -528,27 +528,38 @@ export default {
                         response.data.config.output !== undefined &&
                         response.data.config.output.path !== undefined
                     ) {
-                        this.output.from = response.data.config.output.path !== null ? response.data.config.output.path : '';
+                        this.output.from =
+                            response.data.config.output.path !== null
+                                ? response.data.config.output.path
+                                : '';
                         if (
                             response.data.config.output.include !== undefined &&
-                            response.data.config.output.include.names !== undefined
+                            response.data.config.output.include.names !==
+                                undefined
                         )
-                            this.output.include.names = response.data.config.output.include.names;
+                            this.output.include.names =
+                                response.data.config.output.include.names;
                         if (
                             response.data.config.output.include !== undefined &&
-                            response.data.config.output.include.patterns !== undefined
+                            response.data.config.output.include.patterns !==
+                                undefined
                         )
-                            this.output.include.patterns = response.data.config.output.include.patterns;
+                            this.output.include.patterns =
+                                response.data.config.output.include.patterns;
                         if (
                             response.data.config.output.exclude !== undefined &&
-                            response.data.config.output.exclude.names !== undefined
+                            response.data.config.output.exclude.names !==
+                                undefined
                         )
-                            this.output.exclude.names = response.data.config.output.exclude.names;
+                            this.output.exclude.names =
+                                response.data.config.output.exclude.names;
                         if (
                             response.data.config.output.exclude !== undefined &&
-                            response.data.config.output.exclude.patterns !== undefined
+                            response.data.config.output.exclude.patterns !==
+                                undefined
                         )
-                            this.output.exclude.patterns = response.data.config.output.exclude.patterns;
+                            this.output.exclude.patterns =
+                                response.data.config.output.exclude.patterns;
                     }
 
                     // if params are specified, set them

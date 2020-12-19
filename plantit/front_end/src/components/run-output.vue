@@ -14,6 +14,7 @@
                 <datatree
                     v-else
                     select="directory"
+                    :upload="false"
                     @selectNode="selectNode"
                     :node="data"
                 ></datatree></b-col

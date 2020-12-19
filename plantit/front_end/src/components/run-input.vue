@@ -34,6 +34,7 @@
                         <datatree
                             v-else
                             :select="kind"
+                            :upload="true"
                             @selectNode="selectNode"
                             :node="publicData"
                         ></datatree></b-col
@@ -59,6 +60,7 @@
                         <datatree
                             v-else
                             :select="kind"
+                            :upload="true"
                             @selectNode="selectNode"
                             :node="userData"
                         ></datatree></b-col
