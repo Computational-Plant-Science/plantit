@@ -58,148 +58,28 @@
                         </b-col>
                     </b-row>
                     <b-row
-                        v-if="!loggedIn"
-                        class="ml-0 mr-0 pl-0 pr-0"
+                        ><b-col
+                            ><b-nav-item class="m-0 p-0">
+                                <b-button
+                                    :variant="
+                                        darkMode ? 'outline-warning' : 'warning'
+                                    "
+                                    block
+                                    class="text-left m-0"
+                                    @click="loadRuns(0)"
+                                >
+                                    <i class="fas fa-sync-alt fa-1x fa-fw"></i>
+                                    Reload Runs
+                                </b-button>
+                            </b-nav-item></b-col
+                        ></b-row
+                    >
+                    <b-row
+                        v-if="!loadingRuns"
+                        class="m-3 pl-0 pr-0"
                         align-v="center"
                     >
-                        <b-col class="ml-0 mr-0 pl-0 pr-0">
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item class="m-0 p-0" disabled>
-                                    <small
-                                        :class="
-                                            darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
-                                        >Navigation</small
-                                    >
-                                </b-nav-item>
-                                <b-nav-item to="/" class="m-0 p-0">
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i class="fas fa-home fa-1x fa-fw"></i>
-                                        PlantIT
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    href="https://plantit.readthedocs.io/en/latest"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i class="fas fa-book fa-1x fa-fw"></i>
-                                        Docs
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    title="users"
-                                    to="/users"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i class="fas fa-user fa-1x fa-fw"></i>
-                                        Users
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    title="flows"
-                                    to="/flows"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        block
-                                        class="text-left"
-                                    >
-                                        <i
-                                            class="fas fa-stream fa-1x fa-fw"
-                                        ></i>
-                                        Flows
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item class="m-0 p-0" disabled>
-                                    <small
-                                        :class="
-                                            darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
-                                        >Connect</small
-                                    >
-                                </b-nav-item>
-                                <b-nav-item class="ml-0 mr-0 pl-0 pr-0">
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        class="text-left m-0"
-                                        title="Slack"
-                                        block
-                                    >
-                                        <i class="fab fa-slack fa-1x fa-fw"></i>
-                                        Slack
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    class="ml-0 mr-0 pl-0 pr-0"
-                                    href="https://github.com/Computational-Plant-Science/plantit/discussions/63"
-                                >
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        block
-                                        title="GitHub"
-                                        class="text-left m-0 "
-                                    >
-                                        <i
-                                            class="fab fa-github fa-1x fa-fw"
-                                        ></i>
-                                        GitHub
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                        </b-col>
-                    </b-row>
-                    <b-row class="m-3 pl-0 pr-0" align-v="center">
                         <b-col class="ml-0 mr-0 pl-0 pr-0 text-center">
-                            <!--<small
-                                :class="darkMode ? 'text-light' : 'text-dark'"
-                                >Recent Runs</small
-                            >
-                            <br />-->
                             <b-list-group class="text-left">
                                 <b-list-group-item
                                     v-for="run in runs"
@@ -268,12 +148,12 @@
                         </b-col>
                     </b-row>
                     <b-row
-                        class="ml-0 mr-0 pl-0 pr-0 mb-4 text-center"
+                        class="ml-0 mr-0 pl-0 pr-0 mt-2 mb-4 text-center"
                         align-v="start"
                     >
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
-                          <b-spinner
-                                v-if="loadingRuns"
+                            <b-spinner
+                                v-if="loadingRuns || loadingMoreRuns"
                                 type="grow"
                                 variant="warning"
                             ></b-spinner>
@@ -290,6 +170,9 @@
                                         class="text-left m-0"
                                         @click="loadRuns(currentRunPage + 1)"
                                     >
+                                        <i
+                                            class="fas fa-chevron-down fa-fw"
+                                        ></i>
                                         Load More
                                     </b-button>
                                 </b-nav-item>
@@ -547,6 +430,7 @@ export default {
             runs: [],
             currentRunPage: 0,
             loadingRuns: false,
+            loadingMoreRuns: false,
             fields: [
                 {
                     key: 'id',
@@ -640,7 +524,8 @@ export default {
                 });
         },
         async loadRuns(page) {
-            this.loadingRuns = true;
+            this.loadingRuns = page === 0;
+            this.loadingMoreRuns = !this.loadingRuns;
             return axios
                 .get(
                     `/apis/v1/runs/${this.currentUserDjangoProfile.username}/get_by_user/${page}/`
@@ -649,17 +534,18 @@ export default {
                     var ids = [];
                     this.runs = this.runs.concat(response.data);
                     this.runs = this.runs.filter(function(run) {
-                        if (ids.indexOf(run.id) >= 0)
-                            return false;
+                        if (ids.indexOf(run.id) >= 0) return false;
                         ids.push(run.id);
                         return true;
                     });
                     this.loadingRuns = false;
-                    this.currentRunPage = this.currentRunPage + 1;
+                    this.loadingMoreRuns = false;
+                    this.currentRunPage = page + 1;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     this.loadingRuns = false;
+                    this.loadingMoreRuns = false;
                     throw error;
                 });
         }
