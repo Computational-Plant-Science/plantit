@@ -133,6 +133,11 @@
                                         >{{
                                             statusToString(run.state)
                                         }}</b-badge
+                                    ><small>on</small
+                                    ><b-badge
+                                        class="ml-1 mr-1 text-white"
+                                        variant="secondary"
+                                        >{{ run.target }}</b-badge
                                     ><small>
                                         <br />
                                         {{ prettify(run.updated) }}</small
