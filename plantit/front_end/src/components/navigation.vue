@@ -539,6 +539,9 @@ export default {
                         ids.push(run.id);
                         return true;
                     });
+                    this.runs.sort(function(a, b) {
+                        return new Date(b.updated) - new Date(a.updated);
+                    });
                     this.loadingRuns = false;
                     this.loadingMoreRuns = false;
                     this.currentRunPage = page + 1;
