@@ -82,6 +82,7 @@
                         <b-col class="ml-0 mr-0 pl-0 pr-0 text-center">
                             <b-list-group class="text-left">
                                 <b-list-group-item
+                                    style="border: 1px solid darkgray"
                                     v-for="run in runs"
                                     v-bind:key="run.id"
                                     :class="
@@ -95,7 +96,7 @@
                                         ><a
                                             :class="
                                                 darkMode
-                                                    ? 'text-light'
+                                                    ? 'text-warning'
                                                     : 'text-dark'
                                             "
                                             :href="
