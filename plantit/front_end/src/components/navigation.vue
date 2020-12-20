@@ -6,10 +6,14 @@
             :bg-variant="darkMode ? 'dark' : 'light'"
             :text-variant="darkMode ? 'dark' : 'light'"
             no-header-close
+            width="550px"
         >
             <template v-slot:default="{ hide }">
                 <b-container class="p-1">
-                    <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="start">
+                    <b-row
+                        class="ml-0 mr-0 pl-0 pr-0 text-center"
+                        align-v="start"
+                    >
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
                                 <b-nav-item class="m-0 p-0">
@@ -26,7 +30,7 @@
                                         <i
                                             class="fas fa-arrow-left fa-1x fa-fw"
                                         ></i>
-                                        Hide Sidebar
+                                        Hide Runs
                                     </b-button>
                                 </b-nav-item>
                                 <b-nav-item
@@ -189,27 +193,111 @@
                             </b-nav>
                         </b-col>
                     </b-row>
-                    <b-row>
-                      <!-- TODO recent run feed -->
-                    </b-row>
-                </b-container>
-            </template>
-            <!--<template v-slot:footer>
-                <b-container class="p-1">
-                    <b-row class="ml-0 mr-0 pl-0 pr-0" align-v="center">
-                        <b-col class="ml-0 mr-0 pl-0 pr-0">
-                            <b-nav
-                                vertical
-                                class="ml-0 mr-0 pl-0 pr-0 mb-2"
-                                v-if="loggedIn"
+                    <b-row class="m-3 pl-0 pr-0" align-v="center">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0 text-center">
+                            <!--<small
+                                :class="darkMode ? 'text-light' : 'text-dark'"
+                                >Recent Runs</small
                             >
-                                <hr />
-
+                            <br />-->
+                            <b-list-group class="text-left">
+                                <b-list-group-item
+                                    v-for="run in runs"
+                                    v-bind:key="run.id"
+                                    :class="
+                                        darkMode
+                                            ? 'text-light bg-dark'
+                                            : 'text-dark bg-white'
+                                    "
+                                    @click="onRunSelected(run)"
+                                >
+                                    <small
+                                        ><a
+                                            :class="
+                                                darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                            :href="
+                                                `https://github.com/${run.flow_owner}/${run.flow_name}`
+                                            "
+                                            ><i class="fab fa-github fa-fw"></i>
+                                            {{ run.flow_owner }}/{{
+                                                run.flow_name
+                                            }}</a
+                                        ></small
+                                    >
+                                    <br />
+                                    <small
+                                        ><a
+                                            :class="
+                                                darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                            :href="
+                                                `/${currentUserDjangoProfile.username}/runs/${run.id}`
+                                            "
+                                            >{{ run.id }}</a
+                                        ></small
+                                    ><b-badge
+                                        class="ml-1 mr-1"
+                                        :variant="
+                                            run.state === 1
+                                                ? 'success'
+                                                : run.state === 2
+                                                ? 'danger'
+                                                : 'warning'
+                                        "
+                                        >{{
+                                            statusToString(run.state)
+                                        }}</b-badge
+                                    ><small>
+                                        <br />
+                                        {{ prettify(run.updated) }}</small
+                                    >
+                                    <!--<hr
+                                        :class="
+                                            darkMode
+                                                ? 'theme-secondary'
+                                                : 'theme-light'
+                                        "
+                                    />-->
+                                </b-list-group-item>
+                            </b-list-group>
+                        </b-col>
+                    </b-row>
+                    <b-row
+                        class="ml-0 mr-0 pl-0 pr-0 mb-4 text-center"
+                        align-v="start"
+                    >
+                        <b-col class="ml-0 mr-0 pl-0 pr-0">
+                          <b-spinner
+                                v-if="loadingRuns"
+                                type="grow"
+                                variant="warning"
+                            ></b-spinner>
+                            <b-nav v-else vertical class="ml-0 mr-0 pl-0 pr-0">
+                                <b-nav-item class="m-0 p-0">
+                                    <b-button
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-warning'
+                                                : 'warning'
+                                        "
+                                        :disabled="loadingRuns"
+                                        block
+                                        class="text-left m-0"
+                                        @click="loadRuns(currentRunPage + 1)"
+                                    >
+                                        Load More
+                                    </b-button>
+                                </b-nav-item>
                             </b-nav>
                         </b-col>
                     </b-row>
                 </b-container>
-            </template>-->
+            </template>
         </b-sidebar>
         <b-navbar
             toggleable="sm"
@@ -250,7 +338,7 @@
                             :class="darkMode ? 'crumb-dark' : 'crumb-light'"
                         >
                             <h5>
-                                <b-badge variant="info">Sidebar</b-badge>
+                                <b-badge variant="info">Show Runs</b-badge>
                             </h5>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
@@ -338,6 +426,7 @@
                             >
                         </b-dropdown-item>
                         <b-dropdown-item
+                            title="PlantIT"
                             to="/"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
@@ -348,6 +437,7 @@
                             PlantIT
                         </b-dropdown-item>
                         <b-dropdown-item
+                            title="Docs"
                             href="https://plantit.readthedocs.io/en/latest"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
@@ -358,7 +448,7 @@
                             Docs
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="users"
+                            title="Users"
                             to="/users"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
@@ -369,7 +459,7 @@
                             Users
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="flows"
+                            title="Flows"
                             to="/flows"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
@@ -386,10 +476,11 @@
                         >
                             <small
                                 :class="darkMode ? 'text-light' : 'text-dark'"
-                                >Account</small
+                                >User</small
                             >
                         </b-dropdown-item>
                         <b-dropdown-item
+                            title="Profile"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
                                 darkMode ? 'text-secondary' : 'text-dark'
@@ -402,6 +493,9 @@
                             Profile
                         </b-dropdown-item>
                         <b-dropdown-item
+                            :title="
+                                `${darkMode ? 'Disable' : 'Enable'} Dark Mode`
+                            "
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
                                 darkMode ? 'text-secondary' : 'text-dark'
@@ -417,7 +511,7 @@
                             Dark Mode
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="log out"
+                            title="Log Out"
                             href="/apis/v1/idp/cyverse_logout/"
                             class="text-danger"
                             link-class="text-danger"
@@ -434,15 +528,50 @@
 
 <script>
 import { mapGetters } from 'vuex';
+import moment from 'moment';
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
+import router from '@/router';
 
 export default {
     name: 'Navigation',
     components: {},
     data() {
         return {
+            djangoProfile: null,
+            cyverseProfile: null,
+            githubProfile: null,
             crumbs: [],
             notFound: false,
-            titleContent: 'breadcrumb'
+            titleContent: 'breadcrumb',
+            runs: [],
+            currentRunPage: 0,
+            loadingRuns: false,
+            fields: [
+                {
+                    key: 'id',
+                    label: 'Id',
+                    sortable: true
+                },
+                {
+                    key: 'state',
+                    label: 'State'
+                },
+                {
+                    key: 'created',
+                    sortable: true,
+                    formatter: value => {
+                        return `${moment(value).fromNow()} (${moment(
+                            value
+                        ).format('MMMM Do YYYY, h:mm a')})`;
+                    }
+                },
+                {
+                    key: 'flow_name',
+                    label: 'Workflow',
+                    sortable: true
+                }
+            ]
         };
     },
     computed: mapGetters([
@@ -455,6 +584,8 @@ export default {
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadCurrentUser');
+        // await this.loadUser();
+        await this.loadRuns(0);
     },
     watch: {
         $route() {
@@ -462,8 +593,75 @@ export default {
         }
     },
     methods: {
+        prettify: function(date) {
+            return `${moment(date).fromNow()} (${moment(date).format(
+                'MMMM Do YYYY, h:mm a'
+            )})`;
+        },
         toggleDarkMode: function() {
             this.$store.dispatch('toggleDarkMode');
+        },
+        onRunSelected: function(items) {
+            router.push({
+                name: 'run',
+                params: {
+                    id: items[0].id,
+                    username: this.currentUserDjangoProfile.username
+                }
+            });
+        },
+        statusToString(status) {
+            switch (status) {
+                case 1:
+                    return 'Completed';
+                case 2:
+                    return 'Failed';
+                case 3:
+                    return 'Running';
+                case 4:
+                    return 'Created';
+            }
+        },
+        async loadUser() {
+            return axios
+                .get(
+                    `/apis/v1/users/get_by_username/?username=${this.$router.currentRoute.params.username}`
+                )
+                .then(response => {
+                    if (response.data.django_profile)
+                        this.djangoProfile = response.data.django_profile;
+                    if (response.data.cyverse_profile)
+                        this.cyverseProfile = response.data.cyverse_profile;
+                    this.githubProfile = response.data.github_profile;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
+        async loadRuns(page) {
+            this.loadingRuns = true;
+            return axios
+                .get(
+                    `/apis/v1/runs/${this.currentUserDjangoProfile.username}/get_by_user/${page}/`
+                )
+                .then(response => {
+                    var ids = [];
+                    this.runs = this.runs.concat(response.data);
+                    this.runs = this.runs.filter(function(run) {
+                        if (ids.indexOf(run.id) >= 0)
+                            return false;
+                        ids.push(run.id);
+                        return true;
+                    });
+                    this.loadingRuns = false;
+                    this.currentRunPage = this.currentRunPage + 1;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.loadingRuns = false;
+                    throw error;
+                });
         }
     }
 };

@@ -37,8 +37,8 @@ export const user = {
         }
     },
     actions: {
-        toggleDarkMode({ commit }) {
-            axios
+        async toggleDarkMode({ commit }) {
+            return axios
                 .get('/apis/v1/users/toggle_dark_mode/')
                 .then(resp => {
                     commit('setDarkMode', resp.data['dark_mode']);
@@ -48,8 +48,8 @@ export const user = {
                     if (error.response.status === 500) throw error;
                 });
         },
-        loadCurrentUser({ commit }) {
-            axios
+        async loadCurrentUser({ commit }) {
+            return axios
                 .get('/apis/v1/users/retrieve/')
                 .then(django => {
                     commit('setCurrentUserDjangoProfile', django.data);

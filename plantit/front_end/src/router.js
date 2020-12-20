@@ -7,8 +7,6 @@ import run from './views/run.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
 
-import store from './store/store';
-
 Vue.use(Router);
 
 let router = new Router({

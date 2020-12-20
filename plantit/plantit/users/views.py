@@ -213,7 +213,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         user = self.queryset.get(username=username)
         response = {
             'django_profile': {
-                'username': user.username,
+                'username': username,
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,

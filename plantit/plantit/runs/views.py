@@ -17,16 +17,21 @@ from plantit.runs.utils import execute
 
 @api_view(['GET'])
 @login_required
-def get_runs_by_user(request, username):
+def get_runs_by_user(request, username, page):
+    start = int(page) * 20
+    count = start + 20
+
     try:
         user = User.objects.get(username=username)
-        runs = Run.objects.filter(user=user)
+        runs = Run.objects.filter(user=user).order_by('-created')[start:(start+count)]
         return JsonResponse([{
             'id': run.identifier,
             'work_dir': run.work_dir,
             'target': run.target.name,
             'created': run.created,
+            'updated': run.status.date if run.status is not None else run.created,
             'state': run.status.state if run.status is not None else 'Unknown',
+            'description': run.status.description if run.status is not None else '',
             'flow_owner': run.flow_owner,
             'flow_name': run.flow_name
         } for run in runs], safe=False)
@@ -50,7 +55,9 @@ def runs(request):
             'work_dir': run.work_dir,
             'target': run.target.name,
             'created': run.created,
+            'updated': run.status.date if run.status is not None else run.created,
             'state': run.status.state if run.status is not None else 'Unknown',
+            'description': run.status.description if run.status is not None else '',
             'flow_owner': run.flow_owner,
             'flow_name': run.flow_name
         } for run in runs], safe=False)
@@ -120,7 +127,9 @@ def run(request, id):
         'work_dir': run.work_dir,
         'target': run.target.name,
         'created': run.created,
+        'updated': run.status.date if run.status is not None else run.created,
         'state': run.status.state if run.status is not None else 'Unknown',
+        'description': run.status.description if run.status is not None else '',
         'flow_owner': run.flow_owner,
         'flow_name': run.flow_name
     })

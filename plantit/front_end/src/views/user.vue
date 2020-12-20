@@ -1,11 +1,7 @@
 <template>
     <div class="w-100 h-100 pl-3 pt-3" style="background-color: transparent">
         <br />
-        <b-spinner
-            v-if="loadingUser"
-            type="grow"
-            variant="success"
-        ></b-spinner>
+        <b-spinner v-if="loadingUser" type="grow" variant="success"></b-spinner>
         <b-container v-else class="p-3 vl" fluid="">
             <b-row align-v="start" align-h="center" class="mb-2">
                 <b-col style="color: white" align-self="end" class="ml-0 mr-0">
@@ -166,15 +162,19 @@
                                     darkMode ? 'dark' : 'white'
                                 "
                             >
-                                <datatree
-                                    :node="data"
-                                    select="directory"
-                                    :upload="true"
-                                    :download="true"
-                                    :class="
-                                        darkMode ? 'theme-dark' : 'theme-light'
-                                    "
-                                ></datatree></b-card
+                                <b-row>
+                                    <b-col>
+                                        <datatree
+                                            :node="data"
+                                            select="directory"
+                                            :upload="true"
+                                            :download="true"
+                                            :class="
+                                                darkMode
+                                                    ? 'theme-dark'
+                                                    : 'theme-light'
+                                            "
+                                        ></datatree></b-col></b-row></b-card
                         ></b-tab>
                         <b-tab :title-link-class="tabLinkClass(2)">
                             <template v-slot:title>
@@ -211,112 +211,17 @@
                                         >
                                     </b-col>
                                 </b-row>
-                                <flows
-                                    class="m-1"
-                                    v-else-if="githubProfile"
-                                    :github-user="githubProfile.login"
-                                    :github-token="
-                                        currentUserDjangoProfile.profile
-                                            .github_token
-                                    "
-                                >
-                                </flows>
-                            </b-card>
-                        </b-tab>
-                        <b-tab
-                            v-if="djangoProfile"
-                            :title-link-class="tabLinkClass(3)"
-                        >
-                            <template v-slot:title>
-                                <b :class="tabLinkClass(3)">Runs</b>
-                            </template>
-                            <b-card
-                                :header-bg-variant="darkMode ? 'dark' : 'white'"
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :border-variant="darkMode ? 'dark' : 'white'"
-                                :header-border-variant="
-                                    darkMode ? 'dark' : 'white'
-                                "
-                                no-body
-                            >
-                                <b-row align-v="left" align-h="left">
-                                    <b-col align-self="end" class="text-left">
-                                        <b-button
-                                            v-if="!loadingRuns"
-                                            :variant="
-                                                darkMode
-                                                    ? 'outline-light'
-                                                    : 'success'
-                                            "
-                                            @click="loadRuns"
-                                        >
-                                            <i
-                                                class="fas fa-sync-alt fa-fw"
-                                            ></i>
-                                            Refresh
-                                        </b-button>
-                                        <!--<b-button
-                                            v-if="!loadingRuns"
-                                            :variant="
-                                                darkMode
-                                                    ? 'outline-light'
-                                                    : 'success'
-                                            "
-                                            @click="clearRuns"
-                                        >
-                                            <i
-                                                class="fas fa-sync-alt fa-fw"
-                                            ></i>
-                                            Clear
-                                        </b-button>-->
-                                        <b-spinner
-                                            v-if="loadingRuns"
-                                            type="grow"
-                                            label="Loading..."
-                                            :variant="
-                                                darkMode
-                                                    ? 'warning'
-                                                    : 'outline-dark'
-                                            "
-                                        ></b-spinner>
-                                    </b-col>
+                                <b-row v-else-if="githubProfile">
+                                    <flows
+                                        class="m-1"
+                                        :github-user="githubProfile.login"
+                                        :github-token="
+                                            currentUserDjangoProfile.profile
+                                                .github_token
+                                        "
+                                    >
+                                    </flows>
                                 </b-row>
-                                <br />
-                                <b-table
-                                    v-if="!loadingRuns"
-                                    show-empty
-                                    sticky-header="true"
-                                    selectable
-                                    hover
-                                    small
-                                    responsive="sm"
-                                    sort-by.sync="date"
-                                    sort-desc.sync="true"
-                                    :items="runs"
-                                    :fields="fields"
-                                    borderless
-                                    select-mode="single"
-                                    :filter="filter"
-                                    @row-selected="onRunSelected"
-                                    :table-variant="darkMode ? 'dark' : 'white'"
-                                >
-                                    <template v-slot:cell(state)="run">
-                                        <h4>
-                                            <b-badge
-                                                :variant="
-                                                    run.item.state === 2
-                                                        ? 'danger'
-                                                        : 'success'
-                                                "
-                                                >{{
-                                                    statusToString(
-                                                        run.item.state
-                                                    )
-                                                }}
-                                            </b-badge>
-                                        </h4>
-                                    </template>
-                                </b-table>
                             </b-card>
                         </b-tab>
                     </b-tabs>
@@ -351,32 +256,6 @@ export default {
             flows: [],
             runs: [],
             loadingUser: true,
-            loadingRuns: false,
-            fields: [
-                {
-                    key: 'id',
-                    label: 'Id',
-                    sortable: true
-                },
-                {
-                    key: 'state',
-                    label: 'State'
-                },
-                {
-                    key: 'created',
-                    sortable: true,
-                    formatter: value => {
-                        return `${moment(value).fromNow()} (${moment(
-                            value
-                        ).format('MMMM Do YYYY, h:mm a')})`;
-                    }
-                },
-                {
-                    key: 'flow_name',
-                    label: 'Workflow',
-                    sortable: true
-                }
-            ]
         };
     },
     computed: mapGetters([
@@ -393,7 +272,6 @@ export default {
             `/iplant/home/${this.currentUserDjangoProfile.username}/`,
             this.currentUserDjangoProfile.profile.cyverse_token
         );
-        await this.loadRuns();
     },
     methods: {
         tabLinkClass(idx) {
@@ -471,24 +349,6 @@ export default {
                     throw error;
                 });
         },
-        async loadRuns() {
-            this.loadingRuns = true;
-            return axios
-                .get(
-                    '/apis/v1/runs/' +
-                        this.djangoProfile.username +
-                        '/get_by_user/'
-                )
-                .then(response => {
-                    this.runs = response.data;
-                    this.loadingRuns = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
-        async clearRuns() {}
     },
     filters: {
         format_date(value) {
