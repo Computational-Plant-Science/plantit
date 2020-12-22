@@ -628,6 +628,8 @@ export default {
                 target: target,
                 commands: this.flow.config.commands
             };
+            if ('branch' in this.flow.config)
+                config['branch'] = this.flow.config.branch;
             if (this.flow.config.mount !== null)
                 config['mount'] = this.flow.config.mount;
             if (this.input.from) {
