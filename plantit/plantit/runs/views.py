@@ -23,7 +23,7 @@ def get_runs_by_user(request, username, page):
 
     try:
         user = User.objects.get(username=username)
-        runs = Run.objects.filter(user=user).order_by('-created')[start:(start+count)]
+        runs = Run.objects.filter(user=user).order_by('-created')[start:(start + count)]
         return JsonResponse([{
             'id': run.identifier,
             'work_dir': run.work_dir,
@@ -95,6 +95,8 @@ def runs(request):
             'params': flow['config']['params'],
             'target': flow['config']['target'],
         }
+        if 'branch' in flow['config']:
+            config['branch'] = flow['config']['branch']
         if 'mount' in flow['config']:
             config['mount'] = flow['config']['mount']
         if 'input' in flow['config']:
@@ -107,7 +109,7 @@ def runs(request):
         execute.delay({
             'repo': flow['repo'],
             'config': config
-        }, run.identifier, run.token, request.user.profile.cyverse_token) # request.session._session['csrfToken']
+        }, run.identifier, run.token, request.user.profile.cyverse_token)  # request.session._session['csrfToken']
 
         return JsonResponse({
             'id': run.identifier
