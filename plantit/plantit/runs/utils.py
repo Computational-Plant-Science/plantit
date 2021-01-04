@@ -19,135 +19,122 @@ def clean_html(raw_html):
     return text
 
 
-def execute_command(run: Run, ssh_client: SSH, pre_command: str, command: str, directory: str):
-    cmd = f"{pre_command} && cd {directory} && {command}" if directory else command
-    print(f"Executing remote command: '{cmd}'")
-    stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
+def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: str):
+    full_command = f"{pre_command} && cd {directory} && {command}" if directory else command
+    print(f"Executing command on '{ssh_client.host}': {full_command}")
+    stdin, stdout, stderr = ssh_client.client.exec_command(full_command)
     stdin.close()
-    for line in iter(lambda: stdout.readline(2048), ""):
-        print(f"Received stdout from remote command: '{clean_html(line)}'")
-    for line in iter(lambda: stderr.readline(2048), ""):
-        print(f"Received stderr from remote command: '{clean_html(line)}'")
 
+    for line in iter(lambda: stdout.readline(2048), ""):
+        print(f"Received stdout from '{ssh_client.host}': '{clean_html(line)}'")
+    for line in iter(lambda: stderr.readline(2048), ""):
+        print(f"Received stderr from '{ssh_client.host}': '{clean_html(line)}'")
     if stdout.channel.recv_exit_status():
-        raise Exception(f"Received non-zero exit status from remote command")
-    else:
-        print(f"Successfully executed remote command.")
+        raise Exception(f"Received non-zero exit status from '{ssh_client.host}'")
+
+
+def update_status(run: Run, state: int, description: str):
+    print(description)
+    run.status_set.create(description=description, state=state, location='PlantIT')
+    run.save()
 
 
 @app.task()
 def execute(flow, run_id, plantit_token, cyverse_token):
     run = Run.objects.get(identifier=run_id)
 
-    # if flow has outputs, don't push the definition, hidden files or job scripts
+    # if flow has outputs, make sure we don't push configuration or job scripts
     if 'output' in flow['config']:
         flow['config']['output']['exclude']['names'] = [
             "flow.yaml",
             "template_local_run.sh",
-            "template_slurm_run.sh",
-        ]
+            "template_slurm_run.sh"]
 
     try:
+        client = SSH(run.target.hostname, run.target.port, run.target.username)
         work_dir = join(run.target.workdir, run.work_dir)
-        ssh_client = SSH(run.target.hostname,
-                         run.target.port,
-                         run.target.username)
 
-        with ssh_client:
-            msg = f"Creating working directory '{work_dir}'"
-            print(msg)
-            run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
-            run.save()
-
-            execute_command(run=run,
-                            ssh_client=ssh_client,
+        with client:
+            update_status(run, Status.RUNNING, f"Creating working directory '{work_dir}'")
+            execute_command(ssh_client=client,
                             pre_command=':',
                             command=f"mkdir {work_dir}",
                             directory=run.target.workdir)
 
-            msg = "Uploading configuration"
-            print(msg)
-            run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
-            run.save()
-
-            with ssh_client.client.open_sftp() as sftp:
+            with client.client.open_sftp() as sftp:
                 sftp.chdir(work_dir)
-                with sftp.open('flow.yaml', 'w') as flow_def:
+
+                update_status(run, Status.RUNNING, "Uploading configuration")
+                # TODO refactor to allow multiple cluster schedulers
+                sandbox = run.target.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
+                template = os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else os.environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
+                template_name = template.split('/')[-1]
+
+                with sftp.open('flow.yaml', 'w') as flow_file:
                     if 'resources' not in flow['config']['target']:
                         resources = None
                     else:
                         resources = flow['config']['target']['resources']
                     del flow['config']['target']
-                    yaml.dump(flow['config'], flow_def, default_flow_style=False)
 
-                    msg = "Uploading script"
-                    print(msg)
-                    run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
-                    run.save()
+                    if sandbox:
+                        flow['config']['slurm'] = {
+                            'cores': resources['cores'],
+                            'processes': resources['tasks'],
+                            'walltime': resources['time'],
+                        }
 
-                    sandbox = run.target.name == 'Sandbox'
-                    template = os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else os.environ.get(
-                        'CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
-                    template_name = template.split('/')[-1]
-                    with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
-                        for line in template_script:
-                            script.write(line)
-                        if not sandbox:
-                            script.write("#SBATCH -N 1\n")
-                            if 'tasks' in resources:
-                                script.write(f"#SBATCH --ntasks={resources['tasks']}\n")
-                            if 'cores' in resources:
-                                script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
-                            if 'time' in resources:
-                                script.write(f"#SBATCH --time={resources['time']}\n")
-                            if 'mem' in resources and run.target.name != 'Stampede2': # Stampede2 has KNL virtual memory and will reject jobs specifying memory resources
-                                script.write(f"#SBATCH --mem={resources['mem']}\n")
-                            if run.target.queue is not None and run.target.queue != '':
-                                script.write(f"#SBATCH --partition={run.target.queue}\n")
-                            if run.target.project is not None and run.target.project != '':
-                                script.write(f"#SBATCH -A {run.target.project}\n")
-                            script.write("#SBATCH --mail-type=END,FAIL\n")
-                            script.write(f"#SBATCH --mail-user={run.user.email}\n")
-                            script.write("#SBATCH --output=PlantIT.%j.out\n")
-                            script.write("#SBATCH --error=PlantIT.%j.err\n")
-                        script.write(run.target.pre_commands + '\n')
-                        script.write(
-                            f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'\n")
+                        if run.target.queue is not None and run.target.queue != '':
+                            flow['config']['slurm']['queue'] = run.target.queue
+                        if run.target.project is not None and run.target.project != '':
+                            flow['config']['slurm']['project'] = run.target.project
+                        if run.target.header_skip is not None and run.target.header_skip != '':
+                            flow['config']['slurm']['header_skip'] = run.target.header_skip.split(',')
 
-            msg = f"{'Running' if sandbox else 'Submitting'} script"
-            print(msg)
-            run.status_set.create(description=msg, state=Status.RUNNING, location='PlantIT')
-            run.save()
+                    yaml.dump(flow['config'], flow_file, default_flow_style=False)
 
-            execute_command(run=run,
-                            ssh_client=ssh_client,
-                            pre_command='; '.join(
-                                str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
-                            command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
-                            directory=work_dir)
+                with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
+                    for line in template_script:
+                        script.write(line)
+
+                    if not sandbox:  # we're on a SLURM cluster
+                        script.write("#SBATCH -N 1\n")
+                        if 'tasks' in resources:
+                            script.write(f"#SBATCH --ntasks={resources['tasks']}\n")
+                        if 'cores' in resources:
+                            script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
+                        if 'time' in resources:
+                            script.write(f"#SBATCH --time={resources['time']}\n")
+                        if 'mem' in resources and '--mem' not in run.target.header_skip:
+                            script.write(f"#SBATCH --mem={resources['mem']}\n")
+                        if run.target.queue is not None and run.target.queue != '':
+                            script.write(f"#SBATCH --partition={run.target.queue}\n")
+                        if run.target.project is not None and run.target.project != '':
+                            script.write(f"#SBATCH -A {run.target.project}\n")
+
+                        script.write("#SBATCH --mail-type=END,FAIL\n")
+                        script.write(f"#SBATCH --mail-user={run.user.email}\n")
+                        script.write("#SBATCH --output=PlantIT.%j.out\n")
+                        script.write("#SBATCH --error=PlantIT.%j.err\n")
+
+                    script.write(run.target.pre_commands + '\n')
+                    script.write(f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'\n")
+
+            pre_command = '; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':'
+            command = f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}"
+            update_status(run, Status.RUNNING, 'Starting' if sandbox else 'Submitting')
+            execute_command(ssh_client=client, pre_command=pre_command, command=command, directory=work_dir)
 
             if run.status.state != 2:
-                msg = f"'{run.identifier}' {'completed' if sandbox else 'submitted'}"
-                run.status_set.create(
-                    description=msg,
-                    state=Status.COMPLETED if sandbox else Status.RUNNING,
-                    location='PlantIT')
+                update_status(
+                    run,
+                    Status.COMPLETED if sandbox else Status.RUNNING,
+                    f"'{run.identifier}' {'completed' if sandbox else 'submitted'}")
             else:
-                msg = f"'{run.identifier}' failed"
-                print(msg)
-                run.status_set.create(
-                    description=msg,
-                    state=Status.FAILED,
-                    location='PlantIT')
-
+                update_status(run, Status.FAILED, f"'{run.identifier}' failed")
             run.save()
-
     except Exception:
-        msg = f"Run failed: {traceback.format_exc()}."
-        run.status_set.create(
-            description=msg,
-            state=Status.FAILED,
-            location='PlantIT')
+        update_status(run, Status.FAILED, f"{run.identifier}' failed: {traceback.format_exc()}.")
         run.save()
 
 

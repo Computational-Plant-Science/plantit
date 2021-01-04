@@ -47,14 +47,21 @@ class Target(models.Model):
                                         default=1)
 
     queue = models.CharField(max_length=250,
-                             help_text="Default queue.",
+                             help_text="Queue name.",
                              null=True,
                              blank=True)
 
     project = models.CharField(max_length=250,
-                               help_text="Default queue.",
+                               help_text="Allocation or project name.",
                                null=True,
                                blank=True)
+
+    header_skip = models.CharField(max_length=1000,
+                                   help_text='Comma-delimited headers to skip.',
+                                   null=True,
+                                   blank=True)
+
+
 
     disabled: bool = models.BooleanField(default=False)
 
