@@ -82,8 +82,11 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             'cores': resources['cores'],
                             'processes': resources['tasks'],
                             'walltime': resources['time'],
+                            'memory':
                         }
 
+                        if 'mem' in resources and (run.target.header_skip is None or '--mem' not in str(run.target.header_skip)):
+                            flow['config']['slurm']['memory'] = resources['mem']
                         if run.target.queue is not None and run.target.queue != '':
                             flow['config']['slurm']['queue'] = run.target.queue
                         if run.target.project is not None and run.target.project != '':
