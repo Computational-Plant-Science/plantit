@@ -105,7 +105,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
                         if 'time' in resources:
                             script.write(f"#SBATCH --time={resources['time']}\n")
-                        if 'mem' in resources and '--mem' not in run.target.header_skip:
+                        if 'mem' in resources and run.target.header_skip is not None and '--mem' not in str(run.target.header_skip):
                             script.write(f"#SBATCH --mem={resources['mem']}\n")
                         if run.target.queue is not None and run.target.queue != '':
                             script.write(f"#SBATCH --partition={run.target.queue}\n")
