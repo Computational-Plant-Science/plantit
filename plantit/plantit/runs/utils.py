@@ -82,7 +82,6 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             'cores': resources['cores'],
                             'processes': resources['tasks'],
                             'walltime': resources['time'],
-                            'memory':
                         }
 
                         if 'mem' in resources and (run.target.header_skip is None or '--mem' not in str(run.target.header_skip)):
