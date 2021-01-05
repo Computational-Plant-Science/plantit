@@ -77,21 +77,24 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         resources = flow['config']['target']['resources']
                     del flow['config']['target']
 
-                    # if not sandbox:
-                    #     flow['config']['slurm'] = {
-                    #         'cores': resources['cores'],
-                    #         'processes': resources['tasks'],
-                    #         'walltime': resources['time'],
-                    #     }
+                    if not sandbox:
+                        flow['config']['slurm'] = {
+                            'cores': resources['cores'],
+                            'processes': resources['tasks'],
+                            'walltime': resources['time'],
+                            'local_directory': work_dir,
+                            'log_directory': work_dir,
+                            'env_extra': [run.target.pre_commands]
+                        }
 
-                    #     if 'mem' in resources and (run.target.header_skip is None or '--mem' not in str(run.target.header_skip)):
-                    #         flow['config']['slurm']['memory'] = resources['mem']
-                    #     if run.target.queue is not None and run.target.queue != '':
-                    #         flow['config']['slurm']['queue'] = run.target.queue
-                    #     if run.target.project is not None and run.target.project != '':
-                    #         flow['config']['slurm']['project'] = run.target.project
-                    #     if run.target.header_skip is not None and run.target.header_skip != '':
-                    #         flow['config']['slurm']['header_skip'] = run.target.header_skip.split(',')
+                        if 'mem' in resources and (run.target.header_skip is None or '--mem' not in str(run.target.header_skip)):
+                            flow['config']['slurm']['memory'] = resources['mem']
+                        if run.target.queue is not None and run.target.queue != '':
+                            flow['config']['slurm']['queue'] = run.target.queue
+                        if run.target.project is not None and run.target.project != '':
+                            flow['config']['slurm']['project'] = run.target.project
+                        if run.target.header_skip is not None and run.target.header_skip != '':
+                            flow['config']['slurm']['header_skip'] = run.target.header_skip.split(',')
 
                     yaml.dump(flow['config'], flow_file, default_flow_style=False)
 
