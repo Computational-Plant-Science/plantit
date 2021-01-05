@@ -87,7 +87,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                             'env_extra': [run.target.pre_commands]
                         }
 
-                        if 'mem' in resources and (run.target.header_skip is None or '--mem' not in str(run.target.header_skip)):
+                        if 'mem' in resources:
                             flow['config']['slurm']['memory'] = resources['mem']
                         if run.target.queue is not None and run.target.queue != '':
                             flow['config']['slurm']['queue'] = run.target.queue
