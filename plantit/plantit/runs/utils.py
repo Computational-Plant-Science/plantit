@@ -77,7 +77,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         resources = flow['config']['target']['resources']
                     del flow['config']['target']
 
-                    if sandbox:
+                    if not sandbox:
                         flow['config']['slurm'] = {
                             'cores': resources['cores'],
                             'processes': resources['tasks'],
