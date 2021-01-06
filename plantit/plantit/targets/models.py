@@ -61,7 +61,12 @@ class Target(models.Model):
                                    null=True,
                                    blank=True)
 
+    gpu = models.BooleanField(help_text='GPU support.', null=False, default=False)
 
+    gpu_queue = models.CharField(max_length=250,
+                                 help_text="GPU Queue name.",
+                                 null=True,
+                                 blank=True)
 
     disabled: bool = models.BooleanField(default=False)
 

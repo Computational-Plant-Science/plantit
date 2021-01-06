@@ -96,6 +96,13 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         if run.target.header_skip is not None and run.target.header_skip != '':
                             flow['config']['slurm']['header_skip'] = run.target.header_skip.split(',')
 
+                    if 'gpu' in flow['config']:
+                        if run.target.gpu:
+                            flow['config']['slurm']['extra'] = [f"--gres=gpu:{resources['cores']}"]
+                            flow['config']['slurm']['queue'] = run.target.gpu_queue
+                        else:
+                            update_status(run, Status.RUNNING, f"No GPU support on {run.target.name}")
+
                     yaml.dump(flow['config'], flow_file, default_flow_style=False)
 
                 with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
