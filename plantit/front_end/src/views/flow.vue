@@ -628,10 +628,9 @@ export default {
                 target: target,
                 commands: this.flow.config.commands
             };
-            if ('branch' in this.flow.config)
-                config['branch'] = this.flow.config.branch;
-            if (this.flow.config.mount !== null)
-                config['mount'] = this.flow.config.mount;
+            if ('gpu' in this.flow.config) config['gpu'] = this.flow.config.gpu;
+            if ('branch' in this.flow.config) config['branch'] = this.flow.config.branch;
+            if (this.flow.config.mount !== null) config['mount'] = this.flow.config.mount;
             if (this.input.from) {
                 config.input = this.input;
                 config.input.patterns =
