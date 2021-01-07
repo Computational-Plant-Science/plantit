@@ -34,7 +34,10 @@ def list(request, username):
 @login_required
 def get(request, username, name):
     repo = requests.get(f"https://api.github.com/repos/{username}/{name}",
-                        headers={"Authorization": f"token {request.user.profile.github_token}"}).json()
+                        headers={
+                            "Authorization": f"token {request.user.profile.github_token}",
+                            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+                        }).json()
 
     return JsonResponse({
         'repo': repo,

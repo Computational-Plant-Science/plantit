@@ -54,6 +54,16 @@
                                 {{ flow.repo.owner.login }}/{{ flow.repo.name }}
                             </b-link>
                         </small>
+                      <br />
+                        <b-badge
+                            v-for="topic in flow.repo.topics"
+                            v-bind:key="topic"
+                            class="mr-1"
+                            :variant="
+                                darkMode ? 'light' : 'dark'
+                            "
+                            >{{ topic }}</b-badge
+                        >
                     </b-col>
                 </b-row>
                 <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
@@ -94,16 +104,12 @@
                                     </b-col>
                                 </b-row>
                                 <!--<b-row v-if="flow.config.gpu !== undefined">-->
-                                <b-row >
+                                <b-row>
                                     <b-col>
                                         <small>GPU</small>
                                     </b-col>
                                     <b-col cols="10">
-                                        {{
-                                            flow.config.gpu
-                                                ? 'Yes'
-                                                : 'No'
-                                        }}
+                                        {{ flow.config.gpu ? 'Yes' : 'No' }}
                                     </b-col>
                                 </b-row>
                                 <!--<b-row v-if="flow.config.mount !== undefined">-->
@@ -167,26 +173,82 @@
                                         >
                                     </b-col>
                                 </b-row>
-                              <b-row v-if="flow.config.input !== undefined">
+                                <b-row v-if="flow.config.input !== undefined">
                                     <b-col>
                                         <small>Input</small>
                                     </b-col>
                                     <b-col cols="10">
                                         <b
-                                            ><code>[working directory]/input/{{ flow.config.input.filetypes ? '[' + (flow.config.input.filetypes ? '*.' + flow.config.input.filetypes.join(', *.') : []) + ']' : '' }}</code></b
+                                            ><code
+                                                >[working directory]/input/{{
+                                                    flow.config.input.filetypes
+                                                        ? '[' +
+                                                          (flow.config.input
+                                                              .filetypes
+                                                              ? '*.' +
+                                                                flow.config.input.filetypes.join(
+                                                                    ', *.'
+                                                                )
+                                                              : []) +
+                                                          ']'
+                                                        : ''
+                                                }}</code
+                                            ></b
                                         >
                                     </b-col>
                                 </b-row>
-                              <b-row v-if="flow.config.output !== undefined">
+                                <b-row v-if="flow.config.output !== undefined">
                                     <b-col>
                                         <small>Output</small>
                                     </b-col>
                                     <b-col cols="10">
                                         <b
-                                            ><code>[working directory]/{{
-                                                flow.config.output.path ? flow.config.output.path + '/' : ''
-                                            }}{{ flow.config.output.include ? '[' + (flow.config.output.exclude ? '+ ' : '') + (flow.config.output.include.patterns ? '*.' + flow.config.output.include.patterns.join(', *.') : []) + (flow.config.output.include.names ? flow.config.output.include.names.join(', ') : []) : '' }}{{ flow.config.output.exclude ? ' - ' + (flow.config.output.exclude.patterns ? '*.' + flow.config.output.exclude.patterns.join(', *.') : []) + (flow.config.output.exclude.names ? flow.config.output.exclude.names.join(', ') : []) : '' + ']' }}
-                                        </code></b
+                                            ><code
+                                                >[working directory]/{{
+                                                    flow.config.output.path
+                                                        ? flow.config.output
+                                                              .path + '/'
+                                                        : ''
+                                                }}{{
+                                                    flow.config.output.include
+                                                        ? '[' +
+                                                          (flow.config.output
+                                                              .exclude
+                                                              ? '+ '
+                                                              : '') +
+                                                          (flow.config.output
+                                                              .include.patterns
+                                                              ? '*.' +
+                                                                flow.config.output.include.patterns.join(
+                                                                    ', *.'
+                                                                )
+                                                              : []) +
+                                                          (flow.config.output
+                                                              .include.names
+                                                              ? flow.config.output.include.names.join(
+                                                                    ', '
+                                                                )
+                                                              : [])
+                                                        : ''
+                                                }}{{
+                                                    flow.config.output.exclude
+                                                        ? ' - ' +
+                                                          (flow.config.output
+                                                              .exclude.patterns
+                                                              ? '*.' +
+                                                                flow.config.output.exclude.patterns.join(
+                                                                    ', *.'
+                                                                )
+                                                              : []) +
+                                                          (flow.config.output
+                                                              .exclude.names
+                                                              ? flow.config.output.exclude.names.join(
+                                                                    ', '
+                                                                )
+                                                              : [])
+                                                        : '' + ']'
+                                                }}
+                                            </code></b
                                         >
                                     </b-col>
                                 </b-row>
