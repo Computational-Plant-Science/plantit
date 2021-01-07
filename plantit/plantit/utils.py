@@ -117,6 +117,11 @@ def validate_config(config, token):
         if type(config['gpu']) is not bool:
             errors.append('Attribute \'mount\' must be a bool')
 
+    # tags
+    if 'tags' in config:
+        if type(config['tags']) is not list:
+            errors.append('Attribute \'tags\' must be a list')
+
     # legacy input format
     if 'from' in config:
         errors.append('Attribute \'from\' is deprecated; use an \'input\' section instead')

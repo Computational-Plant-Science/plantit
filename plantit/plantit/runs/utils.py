@@ -130,7 +130,14 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         script.write("#SBATCH --error=PlantIT.%j.err\n")
 
                     script.write(run.target.pre_commands + '\n')
-                    script.write(f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'\n")
+                    commands = f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'"
+                    docker_username = os.environ.get('DOCKER_USERNAME', None)
+                    docker_password = os.environ.get('DOCKER_PASSWORD', None)
+                    if docker_username is not None and docker_password is not None:
+                        commands += f" --docker_username {docker_username} --docker_password {docker_password}"
+                    commands += "\n"
+                    script.write(commands)
+                    print(f"Using PlantIT command: {commands}")
 
             pre_command = '; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':'
             command = f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}"

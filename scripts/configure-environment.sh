@@ -47,6 +47,20 @@ else
   cyverse_password="${CYVERSE_PASSWORD}"
 fi
 
+if [[ -z "${DOCKER_USERNAME}" ]]; then
+  docker_username="some_docker_username"
+  echo "Warning: DOCKER_USERNAME environment variable missing"
+else
+  docker_username="${DOCKER_USERNAME}"
+fi
+
+if [[ -z "${DOCKER_PASSWORD}" ]]; then
+  docker_password="some_docker_password"
+  echo "Warning: DOCKER_PASSWORD environment variable missing"
+else
+  docker_password="${DOCKER_PASSWORD}"
+fi
+
 cat <<EOT >>".env"
 VUE_APP_TITLE=plantit
 CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
@@ -72,4 +86,6 @@ GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
 GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/users/github_handle_temporary_code/
 GITHUB_KEY=$github_client_id
 GITHUB_SECRET=$github_secret
+DOCKER_USERNAME=$docker_username
+DOCKER_PASSWORD=$docker_password
 EOT

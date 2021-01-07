@@ -30,6 +30,8 @@ services:
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_KEY=${GITHUB_KEY}
       - GITHUB_SECRET=${GITHUB_SECRET}
+      - DOCKER_USERNAME=${DOCKER_USERNAME}
+      - DOCKER_PASSWORD=${DOCKER_PASSWORD}
     command: ["python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - celery
@@ -84,6 +86,8 @@ services:
       - GITHUB_KEY=${GITHUB_KEY}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_SECRET=${GITHUB_SECRET}
+      - DOCKER_USERNAME=${DOCKER_USERNAME}
+      - DOCKER_PASSWORD=${DOCKER_PASSWORD}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

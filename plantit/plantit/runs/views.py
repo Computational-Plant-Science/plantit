@@ -8,11 +8,11 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import api_view
 
 from plantit.runs.models import Run, Status
-from plantit.targets.models import Target
 from plantit.runs.utils import execute
+from plantit.targets.models import Target
 
 
 @api_view(['GET'])

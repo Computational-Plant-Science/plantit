@@ -629,8 +629,10 @@ export default {
                 commands: this.flow.config.commands
             };
             if ('gpu' in this.flow.config) config['gpu'] = this.flow.config.gpu;
-            if ('branch' in this.flow.config) config['branch'] = this.flow.config.branch;
-            if (this.flow.config.mount !== null) config['mount'] = this.flow.config.mount;
+            if ('branch' in this.flow.config)
+                config['branch'] = this.flow.config.branch;
+            if (this.flow.config.mount !== null)
+                config['mount'] = this.flow.config.mount;
             if (this.input.from) {
                 config.input = this.input;
                 config.input.patterns =
@@ -700,14 +702,24 @@ export default {
             return this.inputSelectedPatterns.some(pattern => pattern !== '');
         },
         inputReady: function() {
-            return (
-                this.input.from !== '' &&
-                this.input.kind !== '' &&
-                this.inputFiletypeSelected
-            );
+            if (this.flow !== null && this.flow.config.input !== undefined)
+                return (
+                    this.flow.config.input.path !== undefined &&
+                    this.input.from !== '' &&
+                    this.input.kind !== '' &&
+                    this.inputFiletypeSelected
+                );
+            return true;
         },
         outputReady: function() {
-            return this.output.to !== '';
+            if (
+                this.flow &&
+                this.flow.config &&
+                this.flow.config.input !== undefined &&
+                this.flow.config.output.path !== undefined
+            )
+                return this.output.to !== '';
+            return true;
         },
         flowReady: function() {
             return (
