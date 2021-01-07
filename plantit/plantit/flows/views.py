@@ -22,7 +22,10 @@ def list_all(request):
 def list(request, username):
     response = requests.get(
         f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
-        headers={"Authorization": f"token {request.user.profile.github_token}"})
+        headers={
+            "Authorization": f"token {request.user.profile.github_token}",
+            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+        })
     pipelines = [{
         'repo': item['repository'],
         'config': get_config(item['repository'], request.user.profile.github_token)
