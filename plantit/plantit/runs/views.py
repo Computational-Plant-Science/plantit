@@ -94,8 +94,9 @@ def runs(request):
             'command': flow['config']['commands'],
             'params': flow['config']['params'],
             'target': flow['config']['target'],
-            'gpu': flow['config']['gpu']
         }
+        if 'gpu' in flow['config']:
+            config['gpu'] = flow['config']['gpu']
         if 'branch' in flow['config']:
             config['branch'] = flow['config']['branch']
         if 'mount' in flow['config']:
