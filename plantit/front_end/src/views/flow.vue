@@ -633,7 +633,7 @@ export default {
                 config['branch'] = this.flow.config.branch;
             if (this.flow.config.mount !== null)
                 config['mount'] = this.flow.config.mount;
-            if (this.input.from) {
+            if (this.input !== undefined && this.input.from) {
                 config.input = this.input;
                 config.input.patterns =
                     this.inputSelectedPatterns.length > 0
