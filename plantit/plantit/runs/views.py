@@ -94,6 +94,7 @@ def runs(request):
             'command': flow['config']['commands'],
             'params': flow['config']['params'],
             'target': flow['config']['target'],
+            'gpu': flow['config']['gpu']
         }
         if 'branch' in flow['config']:
             config['branch'] = flow['config']['branch']
