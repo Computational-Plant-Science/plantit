@@ -1,6 +1,6 @@
 <template>
     <div>
-      <b :class="darkMode ? 'text-white' : 'text-dark'">
+        <b :class="darkMode ? 'text-white' : 'text-dark'">
             Select a cluster or server to submit to.
         </b>
         <br />
@@ -22,6 +22,10 @@
             </template>
             <template v-slot:cell(host)="target">
                 {{ target.item.host }}
+            </template>
+            <template v-slot:cell(gpu)="target">
+                <i :class="target.item.gpu ? 'text-success' : 'text-danger'" v-if="target.item.gpu" class="far fa-check-circle"></i>
+                <i :class="target.item.gpu ? 'text-success' : 'text-danger'" v-else class="far fa-times-circle"></i>
             </template>
         </b-table>
         <b-row align-h="center" v-if="targetsLoading">
@@ -66,6 +70,10 @@ export default {
                     key: 'description',
                     label: 'Description'
                 },
+                {
+                    key: 'gpu',
+                    label: 'GPU'
+                }
             ],
             targets: [],
             targetsLoading: false

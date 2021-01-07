@@ -77,6 +77,14 @@
                                 </b-row>
                                 <b-row>
                                     <b-col>
+                                        <small>Image</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        <b>{{ flow.config.image }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
                                         <small>Clone</small>
                                     </b-col>
                                     <b-col cols="10">
@@ -85,15 +93,21 @@
                                         }}</b>
                                     </b-col>
                                 </b-row>
-                                <b-row>
+                                <!--<b-row v-if="flow.config.gpu !== undefined">-->
+                                <b-row >
                                     <b-col>
-                                        <small>Container</small>
+                                        <small>GPU</small>
                                     </b-col>
                                     <b-col cols="10">
-                                        <b>{{ flow.config.image }}</b>
+                                        {{
+                                            flow.config.gpu
+                                                ? 'Yes'
+                                                : 'No'
+                                        }}
                                     </b-col>
                                 </b-row>
-                                <b-row v-if="flow.config.mount !== undefined">
+                                <!--<b-row v-if="flow.config.mount !== undefined">-->
+                                <b-row>
                                     <b-col>
                                         <small>Mount</small>
                                     </b-col>
@@ -207,7 +221,7 @@
                         >
                     </b-col>
                     <b-col align-self="end" class="text-left" v-else>
-                        <b>Cluster Resources</b>
+                        <b>Resource Requests</b>
                         <br />
                         <br />
                         <b-row align-v="right" align-h="right">

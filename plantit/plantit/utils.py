@@ -112,6 +112,11 @@ def validate_config(config, token):
         elif config['mount'] is None or len(config['mount']) == 0:
             errors.append('Attribute \'mount\' must not be empty')
 
+    # gpu
+    if 'gpu' in config:
+        if type(config['gpu']) is not bool:
+            errors.append('Attribute \'mount\' must be a bool')
+
     # legacy input format
     if 'from' in config:
         errors.append('Attribute \'from\' is deprecated; use an \'input\' section instead')
