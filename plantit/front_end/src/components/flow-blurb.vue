@@ -37,6 +37,7 @@
                 <b-badge
                     v-for="topic in flow.repo.topics"
                     v-bind:key="topic"
+                    class="mr-1"
                     :variant="darkMode ? 'light' : 'dark'"
                     >{{ topic }}</b-badge
                 >
