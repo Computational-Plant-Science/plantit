@@ -2,9 +2,6 @@
     <div v-if="flow.config">
         <b-row>
             <b-col align-self="end" md="auto">
-                <b-badge variant="white"
-                    ><i class="fas fa-terminal fa-1x fa-fw"></i> Run</b-badge
-                >
                 <h4 :class="darkMode ? 'theme-dark' : 'theme-light'">
                     {{ run.id }}
                 </h4>
