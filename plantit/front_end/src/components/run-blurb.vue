@@ -1,11 +1,33 @@
 <template>
     <div v-if="flow.config">
-        <b-row>
-            <b-col align-self="end" md="auto">
-                <h4 :class="darkMode ? 'theme-dark' : 'theme-light'">
+        <!--<b-row class="mb-0">
+            <b-col class="mb-0" align-self="end" md="auto">
+                <h5 :class="darkMode ? 'theme-dark' : 'theme-light'">
                     {{ run.id }}
-                </h4>
-              <h4 :class="darkMode ? 'theme-dark' : 'theme-light'">
+                </h5>
+            </b-col>
+        </b-row>-->
+        <b-row class="mt-0">
+            <b-col class="mt-0">
+                <b-card
+                    :bg-variant="darkMode ? 'dark' : 'white'"
+                    :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                    border-variant="secondary"
+                    :footer-border-variant="darkMode ? 'dark' : 'white'"
+                    style="min-height: 5rem;"
+                    class="overflow-hidden mt-0"
+                >
+                    <WorkflowBlurb
+                        :showPublic="false"
+                        :flow="flow"
+                        selectable="Restart"
+                    ></WorkflowBlurb>
+                </b-card>
+            </b-col>
+        </b-row>
+      <!--<b-row class="mt-1">
+            <b-col align-self="end">
+                <h4 :class="darkMode ? 'theme-dark' : 'theme-light'">
                     <b-badge
                         :variant="
                             run.state === 2
@@ -22,25 +44,13 @@
                     }}</b-badge>
                 </h4>
             </b-col>
-        </b-row>
-        <b-row>
-            <b-col>
-                <b-card
-                    :bg-variant="darkMode ? 'dark' : 'white'"
-                    :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                    border-variant="secondary"
-                    :footer-border-variant="darkMode ? 'dark' : 'white'"
-                    style="min-height: 5rem;"
-                    class="overflow-hidden"
-                >
-                    <WorkflowBlurb
-                        :showPublic="false"
-                        :flow="flow"
-                        selectable="Restart"
-                    ></WorkflowBlurb>
-                </b-card>
+            <b-col md="auto" align-self="start">
+                {{ run.description }}
             </b-col>
-        </b-row>
+        <b-col md="auto" align-self="start">
+
+        </b-col>
+        </b-row>-->
     </div>
 </template>
 

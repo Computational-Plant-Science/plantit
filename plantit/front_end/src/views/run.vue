@@ -25,143 +25,232 @@
                             <b-spinner
                                 type="grow"
                                 label="Loading..."
-                                variant="dark"
+                                variant="warning"
                             ></b-spinner>
                         </b-row>
-                        <RunBlurb v-else :flow="flow" :run="run"></RunBlurb>
-                    </b-col>
-                </b-row>
-                <br />
-                <div
-                    v-if="
-                        flow.config.output &&
-                            (run.state === 2 || run.state === 1)
-                    "
-                >
-                    <b-row>
-                        <b-col md="auto" align-self="end" class="mr-0">
-                            <h4 :class="darkMode ? 'text-light' : 'text-dark'">
-                                Data
-                            </h4>
-                        </b-col>
-                    </b-row>
-                    <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
-                    <b-row>
-                        <b-col>
-                            <datatree
-                                :upload="false"
-                                :download="true"
-                                :node="userData"
-                            ></datatree></b-col
-                    ></b-row>
-                </div>
-                <br />
-                <b-row>
-                    <b-col md="auto" align-self="end" class="mr-0">
-                        <h4 :class="darkMode ? 'text-light' : 'text-dark'">
-                            Container Logs
-                        </h4>
-                    </b-col>
-                    <b-col md="auto" class="m-0">
-                        <b-button
-                            :variant="
-                                darkMode ? 'outline-light' : 'outline-dark'
-                            "
-                            v-b-tooltip.hover
-                            title="Download Container Logs"
-                            @click="downloadLogs"
-                        >
-                            <i class="fas fa-download"></i>
-                        </b-button>
-                    </b-col>
-                </b-row>
-                <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
-                <b-row v-if="logsText !== ''" class="mt-0">
-                    <b-col class="mt-0" style="white-space: pre-line;">
-                        <small>(showing 10 most recent lines)</small>
-                        {{ logsText }}
-                    </b-col>
-                </b-row>
-                <b-row>
-                    <b-col md="auto" align-self="end" class="mr-0">
-                        <h4 :class="darkMode ? 'text-light' : 'text-dark'">
-                            Status Logs
-                        </h4>
-                    </b-col>
-                    <b-col md="auto" class="m-0">
-                        <b-button
-                            :variant="
-                                darkMode ? 'outline-light' : 'outline-dark'
-                            "
-                            v-b-tooltip.hover
-                            title="Refresh Logs"
-                            @click="reloadRun(true)"
-                        >
-                            <i class="fas fa-redo"></i>
-                        </b-button> </b-col
-                    ><b-col md="auto" class="ml-0">
-                        <b-alert
-                            class="m-0 pt-1 pb-1"
-                            :show="reloadAlertDismissCountdown"
-                            variant="success"
-                            @dismissed="reloadAlertDismissCountdown = 0"
-                            @dismiss-count-down="countDownChanged"
-                        >
-                            Logs refreshed.
-                        </b-alert>
-                    </b-col>
-                </b-row>
-                <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
-                <b-row>
-                    <b-col>
-                        <b-table
-                            borderless
-                            small
-                            responsive="sm"
-                            :items="logs ? logs : []"
-                            :fields="status_table.fields"
-                            :sort-by.sync="status_table.sortBy"
-                            :table-variant="darkMode ? 'dark' : 'light'"
-                        >
-                            <template v-slot:cell(location)="status">
-                                <h5>
-                                    <b-badge
-                                        v-if="
-                                            status.item.location === 'PlantIT'
+                        <div v-else-if="flow.config">
+                            <!--<b-row class="mb-0">
+                                <b-col class="mb-0" align-self="end" md="auto">
+                                    <h5 :class="darkMode ? 'theme-dark' : 'theme-light'">
+                                        {{ run.id }}
+                                    </h5>
+                                </b-col>
+                            </b-row>-->
+                            <b-row class="mt-0">
+                                <b-col class="mt-0">
+                                    <b-card
+                                        :bg-variant="
+                                            darkMode ? 'dark' : 'white'
                                         "
-                                        variant="dark"
-                                        class="text-success"
-                                        >{{ status.item.location }}</b-badge
+                                        :footer-bg-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        border-variant="secondary"
+                                        :footer-border-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        style="min-height: 5rem;"
+                                        class="overflow-hidden mt-0"
                                     >
-                                    <b-badge
-                                        v-else
-                                        variant="secondary"
-                                        class="text-white"
-                                        >{{ status.item.location }}</b-badge
+                                        <WorkflowBlurb
+                                            :showPublic="false"
+                                            :flow="flow"
+                                            selectable="Restart"
+                                        ></WorkflowBlurb>
+                                    </b-card>
+                                </b-col>
+                            </b-row>
+                            <b-row class="mt-2">
+                                <b-col align-self="end">
+                                    <h4
+                                        :class="
+                                            darkMode
+                                                ? 'theme-dark'
+                                                : 'theme-light'
+                                        "
                                     >
-                                </h5>
-                            </template>
-                            <template v-slot:cell(state)="status">
-                                <h5>
-                                    <b-badge
+                                        <b-badge
+                                            :variant="
+                                                run.state === 2
+                                                    ? 'danger'
+                                                    : run.state === 1
+                                                    ? 'success'
+                                                    : 'warning'
+                                            "
+                                            >{{ statusToString(run.state) }}
+                                        </b-badge>
+                                        on
+                                        <b-badge
+                                            variant="secondary"
+                                            class="text-white"
+                                            >{{ run.target }}</b-badge
+                                        >
+                                    </h4>
+                                </b-col>
+                                <b-col md="auto" class="ml-0">
+                                    <b-alert
+                                        class="m-0 pt-1 pb-1"
+                                        :show="reloadAlertDismissCountdown"
+                                        variant="success"
+                                        @dismissed="
+                                            reloadAlertDismissCountdown = 0
+                                        "
+                                        @dismiss-count-down="countDownChanged"
+                                    >
+                                        Logs refreshed.
+                                    </b-alert>
+                                </b-col>
+                                <b-col md="auto" class="mt-1">
+                                    {{ run.description }} {{ updatedFormatted }}
+                                </b-col>
+                                <b-col md="auto" class="m-0" align-self="start">
+                                    <b-button
                                         :variant="
-                                            status.item.state === 2
-                                                ? 'danger'
-                                                : status.item.state === 1
-                                                ? 'success'
-                                                : 'warning'
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
                                         "
-                                        >{{ statusToString(status.item.state) }}
-                                    </b-badge>
-                                </h5>
-                            </template>
-                            <span
-                                slot="description"
-                                slot-scope="data"
-                                v-html="data.value"
-                                class="align-left"
-                            ></span>
-                        </b-table>
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        title="Refresh Logs"
+                                        @click="reloadRun(true)"
+                                    >
+                                        <i class="fas fa-redo"></i>
+                                    </b-button>
+                                </b-col>
+                                <b-col md="auto" class="m-0" align-self="start">
+                                    <b-button
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        title="Expand Logs"
+                                        @click="expandLogs"
+                                    >
+                                        <i
+                                            v-if="logsExpanded"
+                                            class="fas fa-caret-down"
+                                        ></i>
+                                        <i v-else class="fas fa-caret-up"></i>
+                                    </b-button>
+                                </b-col>
+                            </b-row>
+                            <div v-if="logsExpanded">
+                                <b-row
+                                    v-for="log in logs.slice(1)"
+                                    v-bind:key="log.updated"
+                                >
+                                    <b-col align-self="end">
+                                        <h4
+                                            :class="
+                                                darkMode
+                                                    ? 'theme-dark'
+                                                    : 'theme-light'
+                                            "
+                                        >
+                                            <b-badge
+                                                :variant="
+                                                    log.state === 2
+                                                        ? 'danger'
+                                                        : log.state === 1
+                                                        ? 'success'
+                                                        : 'warning'
+                                                "
+                                                >{{ statusToString(log.state) }}
+                                            </b-badge>
+                                        </h4>
+                                    </b-col>
+                                    <b-col md="auto" class="mt-1">
+                                        {{ log.description }}
+                                        {{ formatDate(log.date) }}
+                                    </b-col>
+                                </b-row>
+                            </div>
+                            <div
+                                v-if="
+                                    flow.config.output &&
+                                        (run.state === 2 || run.state === 1)
+                                "
+                            >
+                                <b-row>
+                                    <b-col
+                                        md="auto"
+                                        align-self="end"
+                                        class="mr-0"
+                                    >
+                                        <h4
+                                            :class="
+                                                darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Data
+                                        </h4>
+                                    </b-col>
+                                </b-row>
+                                <hr
+                                    :class="
+                                        darkMode
+                                            ? 'theme-dark'
+                                            : 'theme-light'
+                                    "
+                                />
+                                <b-row>
+                                    <b-col>
+                                        <datatree
+                                            :upload="false"
+                                            :download="true"
+                                            :node="userData"
+                                        ></datatree></b-col
+                                ></b-row>
+                            </div>
+                            <hr
+                                class="text-secondary"
+                            />
+                            <b-row>
+                                <b-col align-self="end" class="mr-0">
+                                    <h5
+                                        :class="
+                                            darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        Container Output
+                                    </h5>
+                                </b-col>
+                                <b-col md="auto" class="m-0">
+                                    <b-button
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        title="Download Container Output"
+                                        @click="downloadLogs"
+                                    >
+                                        <i class="fas fa-download"></i>
+                                    </b-button>
+                                </b-col>
+                            </b-row>
+                            <b-row v-if="logsText !== ''" class="mt-0">
+                                <b-col
+                                    class="mt-0"
+                                    style="white-space: pre-line;"
+                                >
+                                    <small
+                                        >(showing 10 most recent lines)</small
+                                    >
+                                    {{ logsText }}
+                                </b-col>
+                            </b-row>
+                        </div>
                     </b-col>
                 </b-row>
             </div>
@@ -169,7 +258,7 @@
     </div>
 </template>
 <script>
-import RunBlurb from '../components/run-blurb';
+import WorkflowBlurb from '@/components/flow-blurb.vue';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import axios from 'axios';
@@ -179,7 +268,7 @@ import * as Sentry from '@sentry/browser';
 export default {
     name: 'run',
     components: {
-        RunBlurb,
+        WorkflowBlurb,
         datatree
     },
     data() {
@@ -193,6 +282,7 @@ export default {
             runNotFound: false,
             run: null,
             logs: null,
+            logsExpanded: false,
             logsText: '',
             status_table: {
                 sortBy: 'date',
@@ -350,6 +440,9 @@ export default {
                     return error;
                 });
         },
+        expandLogs() {
+            this.logsExpanded = !this.logsExpanded;
+        },
         reloadLogs(toast) {
             axios
                 .get(
@@ -372,6 +465,9 @@ export default {
         },
         showAlert() {
             this.reloadAlertDismissCountdown = this.reloadAlertDismissSeconds;
+        },
+        formatDate(date) {
+            return `${moment(date).fromNow()}`;
         },
         statusToString(status) {
             switch (status) {
@@ -403,6 +499,9 @@ export default {
             } else {
                 return 0;
             }
+        },
+        updatedFormatted() {
+            return `${moment(this.run.updated).fromNow()}`;
         }
     },
     filters: {
