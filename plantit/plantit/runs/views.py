@@ -5,12 +5,13 @@ from os.path import join
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 
 from plantit.runs.models import Run, Status
+from plantit.runs.ssh import SSH
 from plantit.runs.utils import execute
 from plantit.targets.models import Target
 
@@ -43,6 +44,64 @@ def get_runs_by_user(request, username, page):
 def get_total_count(request):
     runs = Run.objects.all()
     return JsonResponse({'count': len(runs)})
+
+
+@api_view(['GET'])
+@login_required
+def get_logs_text(request, id):
+    try:
+        run = Run.objects.get(identifier=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    client = SSH(run.target.hostname, run.target.port, run.target.username)
+    work_dir = join(run.target.workdir, run.work_dir)
+    log_file = f"{run.identifier}.log"
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
+            errs = stderr.read()
+            if errs:
+                raise Exception(f"Failed to check existence of {log_file}: {errs}")
+
+            if not stdout.read().strip() == 'exists':
+                return HttpResponseNotFound()
+
+            sftp.chdir(work_dir)
+            sftp.get(log_file, log_file)
+            with open(log_file, 'r') as file:
+                lines = file.readlines()
+                return HttpResponse(lines, content_type='text/plain')
+
+
+@api_view(['GET'])
+@login_required
+def get_logs(request, id):
+    try:
+        run = Run.objects.get(identifier=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    client = SSH(run.target.hostname, run.target.port, run.target.username)
+    work_dir = join(run.target.workdir, run.work_dir)
+    log_file = f"{run.identifier}.log"
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
+            errs = stderr.read()
+            if errs:
+                raise Exception(f"Failed to check existence of {log_file}: {errs}")
+
+            if not stdout.read().strip() == 'exists':
+                return HttpResponseNotFound()
+
+            sftp.chdir(work_dir)
+            sftp.get(log_file, log_file)
+            return FileResponse(open(log_file, 'rb'))
+
+
 
 
 @api_view(['GET', 'POST'])
@@ -94,6 +153,9 @@ def runs(request):
             'command': flow['config']['commands'],
             'params': flow['config']['params'],
             'target': flow['config']['target'],
+            'logging': {
+                'file': f"{run.identifier}.log"
+            },
         }
         if 'gpu' in flow['config']:
             config['gpu'] = flow['config']['gpu']

@@ -88,6 +88,11 @@
                 <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
                 <b-row>
                     <b-col>
+                        {{ logsText }}
+                    </b-col>
+                </b-row>
+                <b-row>
+                    <b-col>
                         <b-table
                             borderless
                             small
@@ -167,6 +172,7 @@ export default {
             runNotFound: false,
             run: null,
             logs: null,
+            logsText: '',
             status_table: {
                 sortBy: 'date',
                 sortDesc: true,
@@ -227,7 +233,8 @@ export default {
                         this.runNotFound = false;
                         this.run = response.data;
                     }
-                    this.reloadLogs(toast);
+                    this.reloadLogsText(toast);
+                    // this.reloadLogs(toast);
                     this.loadFlow(
                         response.data.flow_owner,
                         response.data.flow_name
@@ -275,6 +282,23 @@ export default {
                     } else {
                         throw error;
                     }
+                });
+        },
+        reloadLogsText(toast) {
+            axios
+                .get(
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/logs_text/`
+                )
+                .then(response => {
+                    if (response && response.status === 404) {
+                        return;
+                    }
+                    this.logsText = response.data;
+                    if (toast) this.showAlert();
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
                 });
         },
         reloadLogs(toast) {
