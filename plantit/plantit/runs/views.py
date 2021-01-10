@@ -138,7 +138,7 @@ def runs(request):
             identifier=uuid.uuid4(),
             token=binascii.hexlify(os.urandom(20)).decode())
 
-        run.status_set.create(description=f"Starting '{run.identifier}'",
+        run.status_set.create(description=f"Creating run '{run.identifier}'",
                               state=Status.CREATED,
                               location='PlantIT')
         run.save()
