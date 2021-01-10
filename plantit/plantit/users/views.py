@@ -69,8 +69,7 @@ class IDPViewSet(viewsets.ViewSet):
             return HttpResponseBadRequest("Missing param on token response: 'access_token'")
 
         token = content['access_token']
-        print(token)
-        decoded = jwt.decode(token, algorithms=['RS256'])
+        decoded = jwt.decode(token, options={'verify_signature': False})
 
         user, created = User.objects.get_or_create(username=decoded['preferred_username'])
 
