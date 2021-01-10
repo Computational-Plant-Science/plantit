@@ -48,7 +48,7 @@ def get_total_count(request):
 
 @api_view(['GET'])
 @login_required
-def get_logs_text(request, id):
+def get_logs_text(request, id, size):
     try:
         run = Run.objects.get(identifier=id)
     except Run.DoesNotExist:
@@ -70,7 +70,7 @@ def get_logs_text(request, id):
             sftp.chdir(work_dir)
             sftp.get(log_file, log_file)
             with open(log_file, 'r') as file:
-                lines = file.readlines()[-10:]
+                lines = file.readlines()[-int(size):]
                 return HttpResponse(lines, content_type='text/plain')
 
 

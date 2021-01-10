@@ -194,9 +194,7 @@
                                 </b-row>
                                 <hr
                                     :class="
-                                        darkMode
-                                            ? 'theme-dark'
-                                            : 'theme-light'
+                                        darkMode ? 'theme-dark' : 'theme-light'
                                     "
                                 />
                                 <b-row>
@@ -208,11 +206,27 @@
                                         ></datatree></b-col
                                 ></b-row>
                             </div>
-                            <hr
-                                class="text-secondary"
-                            />
-                            <b-row>
-                                <b-col align-self="end" class="mr-0">
+                            <b-row align-h="center" v-if="loadingContainerLogs">
+                                <b-spinner
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="warning"
+                                ></b-spinner>
+                            </b-row>
+                            <b-row v-else-if="logsText !== ''" class="p-3">
+                                <b-col
+                                    :class="
+                                        darkMode
+                                            ? 'theme-container-dark'
+                                            : 'theme-container-light'
+                                    "
+                                    style="white-space: pre-line;"
+                                >
+                                    {{ logsText }}
+                                </b-col>
+                            </b-row>
+                          <b-row>
+                                <!--<b-col align-self="end" class="mr-0">
                                     <h5
                                         :class="
                                             darkMode
@@ -222,8 +236,38 @@
                                     >
                                         Container Output
                                     </h5>
+                                </b-col>-->
+                                <b-col></b-col>
+                                <b-col md="auto" align-self="middle">
+                                    Showing last
+                                    <b-dropdown
+                                        class="m-1"
+                                        :text="containerLogsPageSize"
+                                        variant="warning"
+                                        size="sm"
+                                    >
+                                        <b-dropdown-item
+                                            @click="
+                                                setContainerLogsPageSize(10)
+                                            "
+                                            >10</b-dropdown-item
+                                        >
+                                        <b-dropdown-item
+                                            @click="
+                                                setContainerLogsPageSize(20)
+                                            "
+                                            >20</b-dropdown-item
+                                        >
+                                        <b-dropdown-item
+                                            @click="
+                                                setContainerLogsPageSize(50)
+                                            "
+                                            >50</b-dropdown-item
+                                        >
+                                    </b-dropdown>
+                                    lines of container output
                                 </b-col>
-                                <b-col md="auto" class="m-0">
+                                <b-col md="auto" align-self="middle">
                                     <b-button
                                         :variant="
                                             darkMode
@@ -237,17 +281,6 @@
                                     >
                                         <i class="fas fa-download"></i>
                                     </b-button>
-                                </b-col>
-                            </b-row>
-                            <b-row v-if="logsText !== ''" class="mt-0">
-                                <b-col
-                                    class="mt-0"
-                                    style="white-space: pre-line;"
-                                >
-                                    <small
-                                        >(showing 10 most recent lines)</small
-                                    >
-                                    {{ logsText }}
                                 </b-col>
                             </b-row>
                         </div>
@@ -279,11 +312,13 @@ export default {
             showReloadAlert: false,
             flow: null,
             loadingRun: true,
+            loadingContainerLogs: false,
             runNotFound: false,
             run: null,
             logs: null,
             logsExpanded: false,
             logsText: '',
+            containerLogsPageSize: 10,
             status_table: {
                 sortBy: 'date',
                 sortDesc: true,
@@ -333,6 +368,10 @@ export default {
         };
     },
     methods: {
+        setContainerLogsPageSize(size) {
+            this.containerLogsPageSize = size;
+            this.reloadOutput(false);
+        },
         reloadRun(toast) {
             this.loadingRun = true;
             axios
@@ -424,9 +463,10 @@ export default {
                 });
         },
         reloadOutput(toast) {
+            this.loadingContainerLogs = true;
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/logs_text/`
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/logs_text/${this.containerLogsPageSize}/`
                 )
                 .then(response => {
                     if (response && response.status === 404) {
@@ -434,9 +474,11 @@ export default {
                     }
                     this.logsText = response.data;
                     if (toast) this.showAlert();
+                    this.loadingContainerLogs = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    this.loadingContainerLogs = false;
                     return error;
                 });
         },
