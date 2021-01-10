@@ -70,7 +70,7 @@ def get_logs_text(request, id):
             sftp.chdir(work_dir)
             sftp.get(log_file, log_file)
             with open(log_file, 'r') as file:
-                lines = file.readlines()
+                lines = file.readlines()[-10:]
                 return HttpResponse(lines, content_type='text/plain')
 
 

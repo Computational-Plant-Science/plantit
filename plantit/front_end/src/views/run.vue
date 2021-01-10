@@ -62,7 +62,7 @@
                             Container Logs
                         </h4>
                     </b-col>
-                  <b-col md="auto" class="m-0">
+                    <b-col md="auto" class="m-0">
                         <b-button
                             :variant="
                                 darkMode ? 'outline-light' : 'outline-dark'
@@ -72,16 +72,16 @@
                             @click="downloadLogs"
                         >
                             <i class="fas fa-download"></i>
-                        </b-button> </b-col
-                    >
+                        </b-button>
+                    </b-col>
                 </b-row>
                 <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
-                <b-row>
-                    <b-col style="white-space: pre-line;">
+                <b-row v-if="logsText !== ''" class="mt-0">
+                    <b-col class="mt-0" style="white-space: pre-line;">
+                        <small>(showing 10 most recent lines)</small>
                         {{ logsText }}
                     </b-col>
                 </b-row>
-                <br />
                 <b-row>
                     <b-col md="auto" align-self="end" class="mr-0">
                         <h4 :class="darkMode ? 'text-light' : 'text-dark'">
@@ -315,10 +315,15 @@ export default {
                         return;
                     }
 
-                    let url = window.URL.createObjectURL(new Blob([response.data]));
+                    let url = window.URL.createObjectURL(
+                        new Blob([response.data])
+                    );
                     let link = document.createElement('a');
                     link.href = url;
-                    link.setAttribute('download', `${this.$router.currentRoute.params.id}.logs`);
+                    link.setAttribute(
+                        'download',
+                        `${this.$router.currentRoute.params.id}.logs`
+                    );
                     link.click();
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
