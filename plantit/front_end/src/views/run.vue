@@ -56,6 +56,20 @@
                     ></b-row>
                 </div>
                 <br />
+              <b-row>
+                    <b-col md="auto" align-self="end" class="mr-0">
+                        <h4 :class="darkMode ? 'text-light' : 'text-dark'">
+                            Container Output
+                        </h4>
+                    </b-col>
+              </b-row>
+              <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
+                <b-row>
+                    <b-col style="white-space: pre-line;">
+                        {{ logsText }}
+                    </b-col>
+                </b-row>
+              <br/>
                 <b-row>
                     <b-col md="auto" align-self="end" class="mr-0">
                         <h4 :class="darkMode ? 'text-light' : 'text-dark'">
@@ -86,11 +100,6 @@
                     </b-col>
                 </b-row>
                 <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
-                <b-row>
-                    <b-col>
-                        {{ logsText }}
-                    </b-col>
-                </b-row>
                 <b-row>
                     <b-col>
                         <b-table
@@ -233,8 +242,8 @@ export default {
                         this.runNotFound = false;
                         this.run = response.data;
                     }
-                    this.reloadLogsText(toast);
-                    // this.reloadLogs(toast);
+                    this.reloadOutput(toast);
+                    this.reloadLogs(toast);
                     this.loadFlow(
                         response.data.flow_owner,
                         response.data.flow_name
@@ -284,7 +293,7 @@ export default {
                     }
                 });
         },
-        reloadLogsText(toast) {
+        reloadOutput(toast) {
             axios
                 .get(
                     `/apis/v1/runs/${this.$router.currentRoute.params.id}/logs_text/`

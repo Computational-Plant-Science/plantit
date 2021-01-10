@@ -64,8 +64,7 @@ def get_logs_text(request, id):
             errs = stderr.read()
             if errs:
                 raise Exception(f"Failed to check existence of {log_file}: {errs}")
-
-            if not stdout.read().strip() == 'exists':
+            if not stdout.read().decode().strip() == 'exists':
                 return HttpResponseNotFound()
 
             sftp.chdir(work_dir)
