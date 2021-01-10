@@ -12,7 +12,7 @@
                 <b-card
                     :bg-variant="darkMode ? 'dark' : 'white'"
                     :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                    border-variant="secondary"
+                    :border-variant="darkMode ? 'white' : 'dark'"
                     :footer-border-variant="darkMode ? 'dark' : 'white'"
                     style="min-height: 5rem;"
                     class="overflow-hidden mt-0"

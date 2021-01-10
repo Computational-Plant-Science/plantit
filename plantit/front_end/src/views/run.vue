@@ -36,114 +36,24 @@
                                     </h5>
                                 </b-col>
                             </b-row>-->
-                            <b-row class="mt-0">
-                                <b-col class="mt-0">
-                                    <b-card
-                                        :bg-variant="
-                                            darkMode ? 'dark' : 'white'
-                                        "
-                                        :footer-bg-variant="
-                                            darkMode ? 'dark' : 'white'
-                                        "
-                                        border-variant="secondary"
-                                        :footer-border-variant="
-                                            darkMode ? 'dark' : 'white'
-                                        "
-                                        style="min-height: 5rem;"
-                                        class="overflow-hidden mt-0"
-                                    >
-                                        <WorkflowBlurb
-                                            :showPublic="false"
-                                            :flow="flow"
-                                            selectable="Restart"
-                                        ></WorkflowBlurb>
-                                    </b-card>
-                                </b-col>
-                            </b-row>
-                            <b-row class="mt-2">
-                                <b-col align-self="end">
-                                    <h4
-                                        :class="
-                                            darkMode
-                                                ? 'theme-dark'
-                                                : 'theme-light'
-                                        "
-                                    >
-                                        <b-badge
-                                            :variant="
-                                                run.state === 2
-                                                    ? 'danger'
-                                                    : run.state === 1
-                                                    ? 'success'
-                                                    : 'warning'
-                                            "
-                                            >{{ statusToString(run.state) }}
-                                        </b-badge>
-                                        on
-                                        <b-badge
-                                            variant="secondary"
-                                            class="text-white"
-                                            >{{ run.target }}</b-badge
-                                        >
-                                    </h4>
-                                </b-col>
-                                <b-col md="auto" class="ml-0">
-                                    <b-alert
-                                        class="m-0 pt-1 pb-1"
-                                        :show="reloadAlertDismissCountdown"
-                                        variant="success"
-                                        @dismissed="
-                                            reloadAlertDismissCountdown = 0
-                                        "
-                                        @dismiss-count-down="countDownChanged"
-                                    >
-                                        Logs refreshed.
-                                    </b-alert>
-                                </b-col>
-                                <b-col md="auto" class="mt-1">
-                                    {{ run.description }} {{ updatedFormatted }}
-                                </b-col>
-                                <b-col md="auto" class="m-0" align-self="start">
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        size="sm"
-                                        v-b-tooltip.hover
-                                        title="Refresh Logs"
-                                        @click="reloadRun(true)"
-                                    >
-                                        <i class="fas fa-redo"></i>
-                                    </b-button>
-                                </b-col>
-                                <b-col md="auto" class="m-0" align-self="start">
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        size="sm"
-                                        v-b-tooltip.hover
-                                        title="Expand Logs"
-                                        @click="expandLogs"
-                                    >
-                                        <i
-                                            v-if="logsExpanded"
-                                            class="fas fa-caret-down"
-                                        ></i>
-                                        <i v-else class="fas fa-caret-up"></i>
-                                    </b-button>
-                                </b-col>
-                            </b-row>
-                            <div v-if="logsExpanded">
-                                <b-row
-                                    v-for="log in logs.slice(1)"
-                                    v-bind:key="log.updated"
-                                >
-                                    <b-col align-self="end">
+                            <b-card
+                                :bg-variant="darkMode ? 'dark' : 'white'"
+                                :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                                :border-variant="darkMode ? 'white' : 'dark'"
+                                :footer-border-variant="
+                                    darkMode ? 'dark' : 'white'
+                                "
+                                style="min-height: 5rem;"
+                                class="overflow-hidden mt-0"
+                            >
+                                <WorkflowBlurb
+                                    :showPublic="false"
+                                    :flow="flow"
+                                    selectable="Restart"
+                                ></WorkflowBlurb>
+                                <br />
+                                <b-row class="m-0 p-0">
+                                    <b-col align-self="end" class="m-0 p-0">
                                         <h4
                                             :class="
                                                 darkMode
@@ -153,80 +63,175 @@
                                         >
                                             <b-badge
                                                 :variant="
-                                                    log.state === 2
+                                                    run.state === 2
                                                         ? 'danger'
-                                                        : log.state === 1
+                                                        : run.state === 1
                                                         ? 'success'
                                                         : 'warning'
                                                 "
-                                                >{{ statusToString(log.state) }}
+                                                >{{ statusToString(run.state) }}
                                             </b-badge>
+                                            <small> on </small>
+                                            <b-badge
+                                                variant="secondary"
+                                                class="text-white mr-0"
+                                                >{{ run.target }}</b-badge
+                                            >
+                                            <small>
+                                                {{ updatedFormatted }}
+                                            </small>
                                         </h4>
                                     </b-col>
-                                    <b-col md="auto" class="mt-1">
-                                        {{ log.description }}
-                                        {{ formatDate(log.date) }}
+                                    <b-col md="auto" class="ml-0">
+                                        <b-alert
+                                            class="m-0 pt-1 pb-1"
+                                            :show="reloadAlertDismissCountdown"
+                                            variant="success"
+                                            @dismissed="
+                                                reloadAlertDismissCountdown = 0
+                                            "
+                                            @dismiss-count-down="
+                                                countDownChanged
+                                            "
+                                        >
+                                            Logs refreshed.
+                                        </b-alert>
+                                    </b-col>
+                                    <!--<b-col md="auto" class="mt-1">
+                                        {{ run.description }} {{ updatedFormatted }}
+                                    </b-col>-->
+                                    <b-col
+                                        md="auto"
+                                        class="m-0"
+                                        align-self="start"
+                                    >
+                                        <b-button
+                                            :variant="
+                                                darkMode
+                                                    ? 'outline-light'
+                                                    : 'outline-dark'
+                                            "
+                                            size="sm"
+                                            v-b-tooltip.hover
+                                            title="Refresh Logs"
+                                            @click="reloadRun(true)"
+                                        >
+                                            <i class="fas fa-redo"></i>
+                                        </b-button>
+                                    </b-col>
+                                    <b-col
+                                        md="auto"
+                                        class="m-0"
+                                        align-self="start"
+                                    >
+                                        <b-button
+                                            :variant="
+                                                darkMode
+                                                    ? 'outline-light'
+                                                    : 'outline-dark'
+                                            "
+                                            size="sm"
+                                            v-b-tooltip.hover
+                                            :title="
+                                                logsExpanded
+                                                    ? 'Collapse Logs'
+                                                    : 'Expand Logs'
+                                            "
+                                            @click="expandLogs"
+                                        >
+                                            <i
+                                                v-if="logsExpanded"
+                                                class="fas fa-caret-down"
+                                            ></i>
+                                            <i
+                                                v-else
+                                                class="fas fa-caret-up"
+                                            ></i>
+                                        </b-button>
                                     </b-col>
                                 </b-row>
-                            </div>
-                            <div
+                                <div v-if="logsExpanded">
+                                    <div
+                                        v-for="log in logs.slice(1)"
+                                        v-bind:key="log.updated"
+                                    >
+                                        <hr />
+                                        <b-row>
+                                            <b-col md="auto" align-self="end">
+                                                <h5
+                                                    :class="
+                                                        darkMode
+                                                            ? 'theme-dark'
+                                                            : 'theme-light'
+                                                    "
+                                                >
+                                                    <b-badge
+                                                        class="mr-1"
+                                                        :variant="
+                                                            log.state === 2
+                                                                ? 'danger'
+                                                                : log.state ===
+                                                                  1
+                                                                ? 'success'
+                                                                : 'warning'
+                                                        "
+                                                        >{{
+                                                            statusToString(
+                                                                log.state
+                                                            )
+                                                        }}
+                                                    </b-badge>
+                                                    <small>{{
+                                                        formatDate(log.date)
+                                                    }}</small>
+                                                </h5>
+                                                <small>
+                                                    {{ log.description }}
+                                                </small>
+                                            </b-col>
+                                        </b-row>
+                                    </div>
+                                </div>
+                            </b-card>
+                            <br />
+                            <b-card
                                 v-if="
                                     flow.config.output &&
                                         (run.state === 2 || run.state === 1)
                                 "
+                                sub-title="Container Output"
+                                :sub-title-text-variant="darkMode ? 'white' : 'dark'"
+                                :bg-variant="darkMode ? 'dark' : 'white'"
+                                :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                                :border-variant="darkMode ? 'white' : 'dark'"
+                                :footer-border-variant="
+                                    darkMode ? 'dark' : 'white'
+                                "
                             >
-                                <b-row>
+                                <b-row
+                                    align-h="center"
+                                    v-if="loadingContainerLogs"
+                                >
+                                    <b-spinner
+                                        type="grow"
+                                        label="Loading..."
+                                        variant="warning"
+                                    ></b-spinner>
+                                </b-row>
+                                <b-row v-else-if="logsText !== ''" class="p-3">
                                     <b-col
-                                        md="auto"
-                                        align-self="end"
-                                        class="mr-0"
+                                        :class="
+                                            darkMode
+                                                ? 'theme-container-dark'
+                                                : 'theme-container-light'
+                                        "
+                                        style="white-space: pre-line;"
                                     >
-                                        <h4
-                                            :class="
-                                                darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            Data
-                                        </h4>
+                                        {{ logsText }}
                                     </b-col>
                                 </b-row>
-                                <hr
-                                    :class="
-                                        darkMode ? 'theme-dark' : 'theme-light'
-                                    "
-                                />
                                 <b-row>
-                                    <b-col>
-                                        <datatree
-                                            :upload="false"
-                                            :download="true"
-                                            :node="userData"
-                                        ></datatree></b-col
-                                ></b-row>
-                            </div>
-                            <b-row align-h="center" v-if="loadingContainerLogs">
-                                <b-spinner
-                                    type="grow"
-                                    label="Loading..."
-                                    variant="warning"
-                                ></b-spinner>
-                            </b-row>
-                            <b-row v-else-if="logsText !== ''" class="p-3">
-                                <b-col
-                                    :class="
-                                        darkMode
-                                            ? 'theme-container-dark'
-                                            : 'theme-container-light'
-                                    "
-                                    style="white-space: pre-line;"
-                                >
-                                    {{ logsText }}
-                                </b-col>
-                            </b-row>
-                          <b-row>
-                                <!--<b-col align-self="end" class="mr-0">
+                                    <!--<b-col align-self="end" class="mr-0">
                                     <h5
                                         :class="
                                             darkMode
@@ -237,52 +242,77 @@
                                         Container Output
                                     </h5>
                                 </b-col>-->
-                                <b-col></b-col>
-                                <b-col md="auto" align-self="middle">
-                                    Showing last
-                                    <b-dropdown
-                                        class="m-1"
-                                        :text="containerLogsPageSize"
-                                        variant="warning"
-                                        size="sm"
-                                    >
-                                        <b-dropdown-item
-                                            @click="
-                                                setContainerLogsPageSize(10)
-                                            "
-                                            >10</b-dropdown-item
+                                    <b-col></b-col>
+                                    <b-col md="auto" align-self="middle">
+                                        Showing last
+                                        <b-dropdown
+                                            class="m-1"
+                                            :text="containerLogsPageSize"
+                                            variant="warning"
+                                            size="sm"
                                         >
-                                        <b-dropdown-item
-                                            @click="
-                                                setContainerLogsPageSize(20)
+                                            <b-dropdown-item
+                                                @click="
+                                                    setContainerLogsPageSize(10)
+                                                "
+                                                >10</b-dropdown-item
+                                            >
+                                            <b-dropdown-item
+                                                @click="
+                                                    setContainerLogsPageSize(20)
+                                                "
+                                                >20</b-dropdown-item
+                                            >
+                                            <b-dropdown-item
+                                                @click="
+                                                    setContainerLogsPageSize(50)
+                                                "
+                                                >50</b-dropdown-item
+                                            >
+                                        </b-dropdown>
+                                        lines
+                                    </b-col>
+                                    <b-col md="auto" align-self="middle">
+                                        <b-button
+                                            :variant="
+                                                darkMode
+                                                    ? 'outline-light'
+                                                    : 'outline-dark'
                                             "
-                                            >20</b-dropdown-item
+                                            size="sm"
+                                            v-b-tooltip.hover
+                                            title="Download Container Output"
+                                            @click="downloadLogs"
                                         >
-                                        <b-dropdown-item
-                                            @click="
-                                                setContainerLogsPageSize(50)
-                                            "
-                                            >50</b-dropdown-item
-                                        >
-                                    </b-dropdown>
-                                    lines of container output
-                                </b-col>
-                                <b-col md="auto" align-self="middle">
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
-                                        "
-                                        size="sm"
-                                        v-b-tooltip.hover
-                                        title="Download Container Output"
-                                        @click="downloadLogs"
-                                    >
-                                        <i class="fas fa-download"></i>
-                                    </b-button>
-                                </b-col>
-                            </b-row>
+                                            <i class="fas fa-download"></i>
+                                        </b-button>
+                                    </b-col>
+                                </b-row>
+                            </b-card>
+                            <br />
+                            <b-card
+                                v-if="
+                                    flow.config.output &&
+                                        (run.state === 2 || run.state === 1)
+                                "
+                                sub-title="CyVerse Data Store"
+                                :sub-title-text-variant="darkMode ? 'white' : 'dark'"
+                                :bg-variant="darkMode ? 'dark' : 'white'"
+                                :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                                :border-variant="darkMode ? 'white' : 'dark'"
+                                :footer-border-variant="
+                                    darkMode ? 'dark' : 'white'
+                                "
+                            >
+                                <b-row>
+                                    <b-col>
+                                        <datatree
+                                            :upload="false"
+                                            :download="true"
+                                            :node="userData"
+                                        ></datatree></b-col
+                                ></b-row>
+                            </b-card>
                         </div>
                     </b-col>
                 </b-row>

@@ -2,7 +2,7 @@
     <div>
         <b-row style="z-index: 10">
             <b-col cols="10">
-                <h4>
+                <h3>
                     <b-link
                         :disabled="
                             selectable !== null &&
@@ -16,7 +16,7 @@
                     >
                         {{ flow.config.name }}
                     </b-link>
-                </h4>
+                </h3>
                 <small>
                     <b-link
                         :class="darkMode ? 'text-warning' : 'text-dark'"

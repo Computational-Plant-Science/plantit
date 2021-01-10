@@ -1,5 +1,5 @@
 <template>
-    <b-list-group flush class="mt-0 mb-0">
+    <b-list-group flush class="m-0">
         <b-row
             v-if="isDir && internalLoaded"
             class="mt-1 mb-1 ml-2 mr-0 p-0 text-left"
