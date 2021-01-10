@@ -196,8 +196,7 @@
                             <br />
                             <b-card
                                 v-if="
-                                    flow.config.output &&
-                                        (run.state === 2 || run.state === 1)
+                                    logsText !== ''
                                 "
                                 sub-title="Container Output"
                                 :sub-title-text-variant="darkMode ? 'white' : 'dark'"
@@ -503,8 +502,8 @@ export default {
                         return;
                     }
                     this.logsText = response.data;
-                    if (toast) this.showAlert();
                     this.loadingContainerLogs = false;
+                    if (toast) this.showAlert();
                 })
                 .catch(error => {
                     Sentry.captureException(error);
