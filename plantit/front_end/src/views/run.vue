@@ -56,24 +56,36 @@
                     ></b-row>
                 </div>
                 <br />
-              <b-row>
+                <b-row>
                     <b-col md="auto" align-self="end" class="mr-0">
                         <h4 :class="darkMode ? 'text-light' : 'text-dark'">
-                            Container Output
+                            Container Logs
                         </h4>
                     </b-col>
-              </b-row>
-              <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
+                  <b-col md="auto" class="m-0">
+                        <b-button
+                            :variant="
+                                darkMode ? 'outline-light' : 'outline-dark'
+                            "
+                            v-b-tooltip.hover
+                            title="Download Container Logs"
+                            @click="downloadLogs"
+                        >
+                            <i class="fas fa-download"></i>
+                        </b-button> </b-col
+                    >
+                </b-row>
+                <hr :class="darkMode ? 'theme-secondary' : 'theme-light'" />
                 <b-row>
                     <b-col style="white-space: pre-line;">
                         {{ logsText }}
                     </b-col>
                 </b-row>
-              <br/>
+                <br />
                 <b-row>
                     <b-col md="auto" align-self="end" class="mr-0">
                         <h4 :class="darkMode ? 'text-light' : 'text-dark'">
-                            Logs
+                            Status Logs
                         </h4>
                     </b-col>
                     <b-col md="auto" class="m-0">
@@ -291,6 +303,29 @@ export default {
                     } else {
                         throw error;
                     }
+                });
+        },
+        downloadLogs() {
+            axios
+                .get(
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/logs/`
+                )
+                .then(response => {
+                    if (response && response.status === 404) {
+                        return;
+                    }
+
+                    let url = window.URL.createObjectURL(new Blob([response.data]));
+                    let link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', `${this.$router.currentRoute.params.id}.logs`);
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                    this.downloading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
                 });
         },
         reloadOutput(toast) {

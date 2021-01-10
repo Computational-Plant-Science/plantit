@@ -88,12 +88,12 @@ def get_logs(request, id):
 
     with client:
         with client.client.open_sftp() as sftp:
-            stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
+            stdin, stdout, stderr = client.client.exec_command(
+                'test -e {0} && echo exists'.format(join(work_dir, log_file)))
             errs = stderr.read()
             if errs:
                 raise Exception(f"Failed to check existence of {log_file}: {errs}")
-
-            if not stdout.read().strip() == 'exists':
+            if not stdout.read().decode().strip() == 'exists':
                 return HttpResponseNotFound()
 
             sftp.chdir(work_dir)
