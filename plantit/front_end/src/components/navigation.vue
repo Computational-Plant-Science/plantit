@@ -92,24 +92,7 @@
                                     "
                                     @click="onRunSelected(run)"
                                 >
-                                    <small
-                                        ><a
-                                            :class="
-                                                darkMode
-                                                    ? 'text-warning'
-                                                    : 'text-dark'
-                                            "
-                                            :href="
-                                                `https://github.com/${run.flow_owner}/${run.flow_name}`
-                                            "
-                                            ><i class="fab fa-github fa-fw"></i>
-                                            {{ run.flow_owner }}/{{
-                                                run.flow_name
-                                            }}</a
-                                        ></small
-                                    >
-                                    <br />
-                                    <small
+                                    <small class="mr-1"
                                         ><a
                                             :class="
                                                 darkMode
@@ -120,9 +103,35 @@
                                                 `/${currentUserDjangoProfile.username}/runs/${run.id}`
                                             "
                                             >{{ run.id }}</a
-                                        ></small
-                                    ><b-badge
-                                        class="ml-1 mr-1"
+                                        >
+                                    </small>
+                                  <b-badge
+                                            v-for="tag in run.tags"
+                                            v-bind:key="tag"
+                                            class="mr-1"
+                                            variant="warning"
+                                            >{{ tag }}
+                                        </b-badge>
+                                    <br/>
+                                    <small
+                                        ><a
+                                            :class="
+                                                darkmode
+                                                    ? 'text-warning'
+                                                    : 'text-dark'
+                                            "
+                                            :href="
+                                                `https://github.com/${run.flow_owner}/${run.flow_name}`
+                                            "
+                                            ><i class="fab fa-github fa-fw"></i>
+                                            {{ run.flow_owner }}/{{
+                                                run.flow_name
+                                            }}</a
+                                        >
+                                    </small>
+                                    <br />
+                                    <b-badge
+                                        class="ml-0 mr-1"
                                         :variant="
                                             run.state === 1
                                                 ? 'success'
@@ -135,13 +144,10 @@
                                         }}</b-badge
                                     ><small>on</small
                                     ><b-badge
-                                        class="ml-1 mr-1 text-white"
+                                        class="ml-1 mr-0 text-white"
                                         variant="secondary"
                                         >{{ run.target }}</b-badge
-                                    ><small>
-                                        <br />
-                                        {{ prettify(run.updated) }}</small
-                                    >
+                                    ><small> {{ prettify(run.updated) }}</small>
                                     <!--<hr
                                         :class="
                                             darkMode

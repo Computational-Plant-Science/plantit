@@ -8,13 +8,14 @@
         "
     >
         <br />
+        <br />
         <b-container fluid class="p-3 vl">
             <b-row>
                 <b-col>
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"
                         :header-bg-variant="darkMode ? 'dark' : 'white'"
-                        :border-variant="darkMode ? 'dark' : 'white'"
+                        border-variant="default"
                         :header-border-variant="darkMode ? 'dark' : 'white'"
                         :text-variant="darkMode ? 'white' : 'dark'"
                         class="overflow-hidden"
@@ -46,6 +47,67 @@
                     </b-card>
                 </b-col>
             </b-row>
+            <b-row class="mt-2">
+                <b-col>
+                    <b> Run {{ flow.config.name }} below. </b>
+                </b-col>
+            </b-row>
+            <b-row>
+                <b-col>
+                    <b-card
+                        :bg-variant="darkMode ? 'dark' : 'white'"
+                        :header-bg-variant="darkMode ? 'dark' : 'white'"
+                        border-variant="default"
+                        :header-border-variant="darkMode ? 'dark' : 'white'"
+                        :text-variant="darkMode ? 'white' : 'dark'"
+                    >
+                        <b-row>
+                            <b-col>
+                                <h5
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                >
+                                    <i class="fas fa-tags fa-fw"></i>
+                                    Tags
+                                </h5>
+                            </b-col>
+                        </b-row>
+                        <b-row
+                            ><b-col
+                                ><b
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                >
+                                    Attach tags to this run.
+                                </b>
+                            </b-col>
+                        </b-row>
+                        <b-row>
+                            <b-col>
+                                <multiselect
+                                    style="z-index: 1000"
+                                    v-model="tags"
+                                    mode="tags"
+                                    :multiple="true"
+                                    :close-on-select="false"
+                                    :clear-on-select="false"
+                                    :preserve-search="true"
+                                    :options="tagOptions"
+                                    :taggable="true"
+                                    placeholder="Add tags..."
+                                    :createTag="true"
+                                    :appendNewTag="true"
+                                    :searchable="true"
+                                    @tag="addTag"
+                                >
+                                </multiselect>
+                            </b-col>
+                        </b-row>
+                    </b-card>
+                </b-col>
+            </b-row>
             <b-row
                 v-if="
                     flow !== null && flow.config.params !== undefined
@@ -57,23 +119,22 @@
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"
                         :header-bg-variant="darkMode ? 'dark' : 'white'"
-                        :border-variant="darkMode ? 'dark' : 'white'"
+                        border-variant="default"
                         :header-border-variant="darkMode ? 'dark' : 'white'"
                         :text-variant="darkMode ? 'white' : 'dark'"
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h4
+                                <h5
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
                                     <i class="fas fa-keyboard fa-fw"></i>
-                                    Configure Parameters
-                                </h4>
+                                    Parameters
+                                </h5>
                             </b-col>
                         </b-row>
-                        <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
                         <b-row
                             ><b-col
                                 ><b
@@ -147,27 +208,26 @@
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"
                         :header-bg-variant="darkMode ? 'dark' : 'white'"
-                        :border-variant="darkMode ? 'dark' : 'white'"
+                        border-variant="default"
                         :header-border-variant="darkMode ? 'dark' : 'white'"
                         :text-variant="darkMode ? 'white' : 'dark'"
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h4
+                                <h5
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
                                     <i class="fas fa-download fa-fw"></i>
-                                    Select Input
+                                    Input
                                     {{
                                         this.input.kind[0].toUpperCase() +
                                             this.input.kind.substr(1)
                                     }}
-                                </h4>
+                                </h5>
                             </b-col>
                         </b-row>
-                        <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
                         <runinput
                             :default-path="flow.config.input.path"
                             :user="user"
@@ -230,23 +290,22 @@
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"
                         :header-bg-variant="darkMode ? 'dark' : 'white'"
-                        :border-variant="darkMode ? 'dark' : 'white'"
+                        border-variant="default"
                         :header-border-variant="darkMode ? 'dark' : 'white'"
                         :text-variant="darkMode ? 'white' : 'dark'"
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h4
+                                <h5
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
                                     <i class="fas fa-upload fa-fw"></i>
-                                    Select Output Directory
-                                </h4>
+                                    Output Directory
+                                </h5>
                             </b-col>
                         </b-row>
-                        <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
                         <runoutput
                             :user="user"
                             v-on:outputSelected="outputSelected"
@@ -259,23 +318,22 @@
                     <b-card
                         :bg-variant="darkMode ? 'dark' : 'white'"
                         :header-bg-variant="darkMode ? 'dark' : 'white'"
-                        :border-variant="darkMode ? 'dark' : 'white'"
+                        border-variant="default"
                         :header-border-variant="darkMode ? 'dark' : 'white'"
                         :text-variant="darkMode ? 'white' : 'dark'"
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h4
+                                <h5
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    <i class="fas fa-server fa-fw"></i> Select
+                                    <i class="fas fa-server fa-fw"></i>
                                     Deployment Target
-                                </h4>
+                                </h5>
                             </b-col>
                         </b-row>
-                        <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
                         <runtarget
                             :selected="target"
                             v-on:targetSelected="targetSelected"
@@ -338,6 +396,8 @@ export default {
             flowLoading: true,
             flowValidated: false,
             flowValidationErrors: [],
+            tags: [],
+            tagOptions: [],
             params: [],
             input: {
                 kind: '',
@@ -421,6 +481,10 @@ export default {
         this.loadFlow();
     },
     methods: {
+        addTag(tag) {
+            this.tags.push(tag);
+            this.tagOptions.push(tag);
+        },
         addIncludedFile(name) {
             let index = this.output.include.names.indexOf(name);
             if (index > -1) {
@@ -626,7 +690,8 @@ export default {
                         : false,
                 params: this.params,
                 target: target,
-                commands: this.flow.config.commands
+                commands: this.flow.config.commands,
+                tags: this.tags
             };
             if ('gpu' in this.flow.config) config['gpu'] = this.flow.config.gpu;
             if ('branch' in this.flow.config)

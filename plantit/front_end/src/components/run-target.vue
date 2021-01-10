@@ -1,7 +1,7 @@
 <template>
     <div>
         <b :class="darkMode ? 'text-white' : 'text-dark'">
-            Select a cluster or server to submit to.
+            Select a cluster or server to submit this run to.
         </b>
         <br />
         <b-table

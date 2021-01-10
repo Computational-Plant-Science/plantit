@@ -1,12 +1,13 @@
 <template>
     <div
-        class="w-100 h-100 p-3"
+        class="w-100 h-100 p-2"
         :style="
             darkMode
                 ? 'background-color: #616163'
                 : 'background-color: white' + '; min-height: 100%'
         "
     >
+        <br />
         <br />
         <b-container class="p-3 vl" fluid>
             <div v-if="runNotFound">
@@ -39,7 +40,7 @@
                             <b-card
                                 :bg-variant="darkMode ? 'dark' : 'white'"
                                 :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                                :border-variant="darkMode ? 'white' : 'dark'"
+                                border-variant="default"
                                 :footer-border-variant="
                                     darkMode ? 'dark' : 'white'
                                 "
@@ -51,6 +52,15 @@
                                     :flow="flow"
                                     selectable="Restart"
                                 ></WorkflowBlurb>
+                                <br />
+                                {{ run.id }}
+                                <b-badge
+                                    v-for="tag in run.tags"
+                                    v-bind:key="tag"
+                                    class="mr-1"
+                                    variant="warning"
+                                    >{{ tag }}</b-badge
+                                >
                                 <br />
                                 <b-row class="m-0 p-0">
                                     <b-col align-self="end" class="m-0 p-0">
@@ -195,14 +205,14 @@
                             </b-card>
                             <br />
                             <b-card
-                                v-if="
-                                    logsText !== ''
-                                "
+                                v-if="logsText !== ''"
                                 sub-title="Container Output"
-                                :sub-title-text-variant="darkMode ? 'white' : 'dark'"
+                                :sub-title-text-variant="
+                                    darkMode ? 'white' : 'dark'
+                                "
                                 :bg-variant="darkMode ? 'dark' : 'white'"
                                 :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                                :border-variant="darkMode ? 'white' : 'dark'"
+                                border-variant="default"
                                 :footer-border-variant="
                                     darkMode ? 'dark' : 'white'
                                 "
@@ -295,10 +305,12 @@
                                         (run.state === 2 || run.state === 1)
                                 "
                                 sub-title="CyVerse Data Store"
-                                :sub-title-text-variant="darkMode ? 'white' : 'dark'"
+                                :sub-title-text-variant="
+                                    darkMode ? 'white' : 'dark'
+                                "
                                 :bg-variant="darkMode ? 'dark' : 'white'"
                                 :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                                :border-variant="darkMode ? 'white' : 'dark'"
+                                border-variant="default"
                                 :footer-border-variant="
                                     darkMode ? 'dark' : 'white'
                                 "

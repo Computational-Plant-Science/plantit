@@ -17,6 +17,14 @@
                         {{ flow.config.name }}
                     </b-link>
                 </h3>
+                <b-badge
+                    v-for="topic in flow.repo.topics"
+                    v-bind:key="topic"
+                    class="mr-1"
+                    :variant="darkMode ? 'light' : 'dark'"
+                    >{{ topic }}</b-badge
+                >
+                <br />
                 <small>
                     <b-link
                         :class="darkMode ? 'text-warning' : 'text-dark'"
@@ -33,14 +41,6 @@
                         {{ flow.repo.owner.login }}/{{ flow.repo.name }}
                     </b-link>
                 </small>
-                <br />
-                <b-badge
-                    v-for="topic in flow.repo.topics"
-                    v-bind:key="topic"
-                    class="mr-1"
-                    :variant="darkMode ? 'light' : 'dark'"
-                    >{{ topic }}</b-badge
-                >
                 <br />
                 {{ flow.repo.description }}
                 <br />

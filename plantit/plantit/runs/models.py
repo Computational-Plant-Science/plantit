@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.forms import model_to_dict
 from django.utils import timezone
+from taggit.managers import TaggableManager
 
 from plantit.targets.models import Target
 
@@ -13,23 +14,33 @@ class Run(models.Model):
         ordering = ['-created']
 
     created = models.DateTimeField(default=timezone.now)
+
     token = models.CharField(max_length=40)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
     identifier = models.CharField(max_length=36, null=False, blank=False)
+
     flow_owner = models.CharField(max_length=280, null=True, blank=True)
+
     flow_name = models.CharField(max_length=280, null=True, blank=True)
+
     target = models.ForeignKey(Target,
                                null=True,
                                blank=True,
                                on_delete=models.SET_NULL)
+
     work_dir = models.CharField(max_length=100,
                                 null=True,
                                 blank=True,
                                 default=timezone.now().strftime('%s') + "/")
+
     remote_results_path = models.CharField(max_length=100,
                                            null=True,
                                            blank=True,
                                            default=None)
+
+    tags = TaggableManager()
 
     def __str__(self):
         return json.dumps(model_to_dict(self))

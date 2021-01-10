@@ -24,7 +24,10 @@
             <b-col>
                 <b-row>
                     <b-col md="auto" class="mr-0">
-                        <b-badge
+                        <h1 :class="darkMode ? 'text-white' : 'text-dark'">
+                            {{ flow.config.name }}
+                        </h1>
+                      <b-badge
                             class="mr-1"
                             :variant="
                                 flow.config.public ? 'success' : 'warning'
@@ -32,10 +35,13 @@
                             >{{
                                 flow.config.public ? 'Public' : 'Private'
                             }}</b-badge
+                        ><b-badge
+                            v-for="topic in flow.repo.topics"
+                            v-bind:key="topic"
+                            class="mr-1"
+                            :variant="darkMode ? 'light' : 'dark'"
+                            >{{ topic }}</b-badge
                         >
-                        <h1 :class="darkMode ? 'text-white' : 'text-dark'">
-                            {{ flow.config.name }}
-                        </h1>
                     </b-col>
                 </b-row>
                 <b-row>
@@ -54,17 +60,8 @@
                                 {{ flow.repo.owner.login }}/{{ flow.repo.name }}
                             </b-link>
                         </small>
-                        <br />
-                        <b-badge
-                            v-for="topic in flow.repo.topics"
-                            v-bind:key="topic"
-                            class="mr-1"
-                            :variant="darkMode ? 'light' : 'dark'"
-                            >{{ topic }}</b-badge
-                        >
                     </b-col>
                 </b-row>
-                <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
                 <b-row>
                     <b-col>
                         <b-row>

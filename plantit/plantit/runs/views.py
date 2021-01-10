@@ -34,7 +34,8 @@ def get_runs_by_user(request, username, page):
             'state': run.status.state if run.status is not None else 'Unknown',
             'description': run.status.description if run.status is not None else '',
             'flow_owner': run.flow_owner,
-            'flow_name': run.flow_name
+            'flow_name': run.flow_name,
+            'tags': [str(tag) for tag in run.tags.all()]
         } for run in runs], safe=False)
     except:
         return HttpResponseNotFound()
@@ -101,8 +102,6 @@ def get_logs(request, id):
             return FileResponse(open(log_file, 'rb'))
 
 
-
-
 @api_view(['GET', 'POST'])
 @login_required
 def runs(request):
@@ -117,7 +116,8 @@ def runs(request):
             'state': run.status.state if run.status is not None else 'Unknown',
             'description': run.status.description if run.status is not None else '',
             'flow_owner': run.flow_owner,
-            'flow_name': run.flow_name
+            'flow_name': run.flow_name,
+            'tags': [str(tag) for tag in run.tags.all()]
         } for run in runs], safe=False)
 
     elif request.method == 'POST':
@@ -127,6 +127,7 @@ def runs(request):
         now_str = now.strftime('%s')
         target = Target.objects.get(name=flow['config']['target']['name'])
         flow_path = f"{flow['repo']['owner']['login']}/{flow['repo']['name']}"
+        print(flow['config']['tags'])
         run = Run.objects.create(
             user=User.objects.get(username=user.username),
             flow_owner=flow['repo']['owner']['login'],
@@ -137,6 +138,9 @@ def runs(request):
             remote_results_path=now_str + "/",
             identifier=uuid.uuid4(),
             token=binascii.hexlify(os.urandom(20)).decode())
+
+        for tag in flow['config']['tags']:
+            run.tags.add(tag)
 
         run.status_set.create(description=f"Creating run '{run.identifier}'",
                               state=Status.CREATED,
@@ -196,7 +200,8 @@ def run(request, id):
         'state': run.status.state if run.status is not None else 'Unknown',
         'description': run.status.description if run.status is not None else '',
         'flow_owner': run.flow_owner,
-        'flow_name': run.flow_name
+        'flow_name': run.flow_name,
+        'tags': [str(tag) for tag in run.tags.all()]
     })
 
 
