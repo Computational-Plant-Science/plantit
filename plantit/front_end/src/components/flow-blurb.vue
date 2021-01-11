@@ -19,6 +19,7 @@
                     :variant="darkMode ? 'light' : 'dark'"
                     >{{ topic }}</b-badge
                 >
+                <br/>
                 <small>
                     <b-link
                         :class="darkMode ? 'text-light' : 'text-dark'"
