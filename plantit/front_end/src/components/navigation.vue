@@ -70,8 +70,8 @@
                                     v-bind:key="run.id"
                                     :class="
                                         darkMode
-                                            ? 'text-light bg-dark m-0 p-1 mb-3'
-                                            : 'text-dark bg-white m-0 p-1 mb-3'
+                                            ? 'text-light bg-dark m-0 p-2 mb-3'
+                                            : 'text-dark bg-white m-0 p-2 mb-3'
                                     "
                                     @click="onRunSelected(run)"
                                 >

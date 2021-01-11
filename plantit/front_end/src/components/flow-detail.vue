@@ -7,7 +7,7 @@
             v-if="flow.config.logo"
             rounded="circle"
             class="card-img-right"
-            style="max-width: 18rem;position: absolute;right: 20px;top: 20px;z-index:1"
+            style="max-width: 12rem;position: absolute;right: 20px;top: 20px;z-index:1"
             right
             :src="
                 `https://raw.githubusercontent.com/${flow.repo.owner.login}/${flow.repo.name}/master/${flow.config.logo}`

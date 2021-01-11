@@ -30,13 +30,6 @@
                             ></b-spinner>
                         </b-row>
                         <div v-else-if="flow.config">
-                            <!--<b-row class="mb-0">
-                                <b-col class="mb-0" align-self="end" md="auto">
-                                    <h5 :class="darkMode ? 'theme-dark' : 'theme-light'">
-                                        {{ run.id }}
-                                    </h5>
-                                </b-col>
-                            </b-row>-->
                             <b-card
                                 :bg-variant="darkMode ? 'dark' : 'white'"
                                 :footer-bg-variant="darkMode ? 'dark' : 'white'"
@@ -54,6 +47,7 @@
                                 ></WorkflowBlurb>
                                 <br />
                                 {{ run.id }}
+                                <br />
                                 <b-badge
                                     v-for="tag in run.tags"
                                     v-bind:key="tag"

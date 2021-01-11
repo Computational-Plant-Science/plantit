@@ -4,11 +4,6 @@
             <b-col cols="10">
                 <h2>
                     <b-link
-                        :disabled="
-                            selectable !== null &&
-                                selectable !== undefined &&
-                                selectable !== ''
-                        "
                         :class="darkMode ? 'text-white' : 'text-dark'"
                         variant="outline-dark"
                         v-b-tooltip.hover
@@ -16,26 +11,14 @@
                     >
                         {{ flow.config.name }}
                     </b-link>
-                    <b-button
-                        v-if="
-                            selectable !== null &&
-                                selectable !== undefined &&
-                                selectable !== ''
-                        "
-                        @click="flowSelected"
-                        variant="warning"
-                    >
-                        {{ selectable }}
-                    </b-button>
                 </h2>
                 <b-badge
                     v-for="topic in flow.repo.topics"
                     v-bind:key="topic"
-                    class="mr-1 mb-2"
+                    class="mr-1 mb-0"
                     :variant="darkMode ? 'light' : 'dark'"
                     >{{ topic }}</b-badge
                 >
-              <br/>
                 <small>
                     <b-link
                         :class="darkMode ? 'text-light' : 'text-dark'"

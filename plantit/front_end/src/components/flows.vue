@@ -4,7 +4,7 @@
             <b-spinner
                 type="grow"
                 label="Loading..."
-                :variant="darkMode ? 'warning' : 'dark'"
+                variant="warning"
             ></b-spinner>
         </b-col>
     </b-row>
@@ -14,7 +14,7 @@
             v-if="flows.length === 0 && !loading"
             >No flows to show!</b-col
         >
-        <b-card-group columns class="justify-content-center">
+        <b-card-group deck columns class="justify-content-center">
             <b-card
                 v-for="flow in flows"
                 :key="flow.repo.name"
@@ -23,7 +23,7 @@
                 border-variant="default"
                 :header-border-variant="darkMode ? 'secondary' : 'default'"
                 :text-variant="darkMode ? 'white' : 'dark'"
-                style="min-width: 15rem; max-width: 38rem;"
+                style="min-width: 40rem; max-width: 40rem;"
                 class="overflow-hidden mb-4"
             >
                 <blurb
