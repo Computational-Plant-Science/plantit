@@ -2,7 +2,7 @@
     <div>
         <b-row style="z-index: 10">
             <b-col cols="10">
-                <h3>
+                <h2>
                     <b-link
                         :disabled="
                             selectable !== null &&
@@ -16,18 +16,29 @@
                     >
                         {{ flow.config.name }}
                     </b-link>
-                </h3>
+                    <b-button
+                        v-if="
+                            selectable !== null &&
+                                selectable !== undefined &&
+                                selectable !== ''
+                        "
+                        @click="flowSelected"
+                        variant="warning"
+                    >
+                        {{ selectable }}
+                    </b-button>
+                </h2>
                 <b-badge
                     v-for="topic in flow.repo.topics"
                     v-bind:key="topic"
-                    class="mr-1"
+                    class="mr-1 mb-2"
                     :variant="darkMode ? 'light' : 'dark'"
                     >{{ topic }}</b-badge
                 >
-                <br />
+              <br/>
                 <small>
                     <b-link
-                        :class="darkMode ? 'text-warning' : 'text-dark'"
+                        :class="darkMode ? 'text-light' : 'text-dark'"
                         @click="
                             openRepo(
                                 'https://github.com/' +
@@ -44,18 +55,6 @@
                 <br />
                 {{ flow.repo.description }}
                 <br />
-                <br />
-                <b-button
-                    v-if="
-                        selectable !== null &&
-                            selectable !== undefined &&
-                            selectable !== ''
-                    "
-                    @click="flowSelected"
-                    variant="warning"
-                >
-                    {{ selectable }}
-                </b-button>
             </b-col>
             <b-col cols="1"></b-col>
         </b-row>

@@ -1,28 +1,12 @@
 <template>
-    <div class="w-100 h-100 pl-3 pt-3" style="background-color: transparent">
-        <br />
-        <b-spinner v-if="loadingUser" type="grow" variant="success"></b-spinner>
+    <div class="w-100 h-100 pl-3" style="background-color: transparent">
+        <b-spinner v-if="loadingUser" type="grow" class="text-center" variant="success"></b-spinner>
         <b-container v-else class="p-3 vl" fluid="">
             <b-row align-v="start" align-h="center" class="mb-2">
                 <b-col style="color: white" align-self="end" class="ml-0 mr-0">
                     <b-row :class="darkMode ? 'text-light' : 'text-secondary'">
-                        <b-col md="auto" class="ml-0 mr-0" align-self="left">
-                            <b-img
-                                right
-                                class="avatar"
-                                rounded="circle"
-                                style="max-height: 6rem; max-width: 6rem; position: relative; border: 2px solid #d6df5D"
-                                :src="
-                                    githubProfile
-                                        ? githubProfile.avatar_url
-                                        : ''
-                                "
-                                v-if="githubProfile"
-                            ></b-img>
-                            <i v-else class="fas fa-user fa-fw fa-4x"></i>
-                        </b-col>
-                        <b-col class="ml-0 mr-0">
-                            <h2 :class="darkMode ? 'text-light' : 'text-dark'">
+                        <b-col class="ml-0 mr-0" align-self="end">
+                            <h3 :class="darkMode ? 'text-light' : 'text-dark'">
                                 {{
                                     cyverseProfile
                                         ? `${cyverseProfile.first_name} ${cyverseProfile.last_name} `
@@ -36,10 +20,7 @@
                                     v-if="djangoProfile !== null"
                                     >({{ djangoProfile.username }})</small
                                 >
-                            </h2>
-                            <hr
-                                :class="darkMode ? 'theme-dark' : 'theme-light'"
-                            />
+                            </h3>
                             <a
                                 v-if="githubProfile"
                                 :class="darkMode ? 'text-light' : 'text-dark'"
@@ -53,10 +34,24 @@
                                 }}
                             </a>
                         </b-col>
+                        <b-col md="auto" class="ml-0 mr-0" align-self="end">
+                            <b-img
+                                right
+                                class="avatar"
+                                rounded="circle"
+                                style="max-height: 7rem; max-width: 7rem; position: relative; top: 38px; box-shadow: 0px 2px 5px #adb5bd"
+                                :src="
+                                    githubProfile
+                                        ? githubProfile.avatar_url
+                                        : ''
+                                "
+                                v-if="githubProfile"
+                            ></b-img>
+                            <i v-else class="fas fa-user fa-fw fa-4x"></i>
+                        </b-col>
                     </b-row>
                 </b-col>
             </b-row>
-            <br />
             <b-row align-v="center" align-h="center"
                 ><b-col>
                     <b-tabs
@@ -81,7 +76,6 @@
                                 :header-border-variant="
                                     darkMode ? 'dark' : 'white'
                                 "
-                                no-body
                             >
                                 <b-row align-h="left">
                                     <b-col md="auto">
@@ -180,49 +174,39 @@
                             <template v-slot:title>
                                 <b :class="tabLinkClass(2)">Flows</b>
                             </template>
-                            <b-card
-                                :header-bg-variant="darkMode ? 'dark' : 'white'"
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :border-variant="darkMode ? 'dark' : 'white'"
-                                :header-border-variant="
-                                    darkMode ? 'dark' : 'white'
-                                "
-                                no-body
+                            <b-row
+                                v-if="currentUserGitHubProfile === null"
+                                align-v="center"
+                                align-h="center"
                             >
-                                <b-row
-                                    v-if="currentUserGitHubProfile === null"
-                                    align-v="center"
-                                    align-h="center"
-                                >
-                                    <b-col md="auto" class="mr-2 pr-0">
-                                        <b-button
-                                            variant="success"
-                                            href="/apis/v1/users/github_request_identity/"
-                                            class="mr-0"
-                                        >
-                                            <i class="fab fa-github"></i>
-                                            Log in to GitHub
-                                        </b-button>
-                                    </b-col>
-                                    <b-col md="auto" class="ml-0 pl-0">
-                                        <b
-                                            class="text-center align-center ml-0 pl-0"
-                                            >to load flows.</b
-                                        >
-                                    </b-col>
-                                </b-row>
-                                <b-row v-else-if="githubProfile">
-                                    <flows
-                                        class="m-1"
-                                        :github-user="githubProfile.login"
-                                        :github-token="
-                                            currentUserDjangoProfile.profile
-                                                .github_token
-                                        "
+                                <b-col md="auto" class="mr-2 pr-0">
+                                    <b-button
+                                        variant="success"
+                                        href="/apis/v1/users/github_request_identity/"
+                                        class="mr-0"
                                     >
-                                    </flows>
-                                </b-row>
-                            </b-card>
+                                        <i class="fab fa-github"></i>
+                                        Log in to GitHub
+                                    </b-button>
+                                </b-col>
+                                <b-col md="auto" class="ml-0 pl-0">
+                                    <b
+                                        class="text-center align-center ml-0 pl-0"
+                                        >to load flows.</b
+                                    >
+                                </b-col>
+                            </b-row>
+                            <b-row v-else-if="githubProfile">
+                                <flows
+                                    class="m-1"
+                                    :github-user="githubProfile.login"
+                                    :github-token="
+                                        currentUserDjangoProfile.profile
+                                            .github_token
+                                    "
+                                >
+                                </flows>
+                            </b-row>
                         </b-tab>
                     </b-tabs>
                 </b-col>
@@ -255,7 +239,7 @@ export default {
             data: {},
             flows: [],
             runs: [],
-            loadingUser: true,
+            loadingUser: true
         };
     },
     computed: mapGetters([
@@ -348,7 +332,7 @@ export default {
                     Sentry.captureException(error);
                     throw error;
                 });
-        },
+        }
     },
     filters: {
         format_date(value) {

@@ -47,11 +47,6 @@
                     </b-card>
                 </b-col>
             </b-row>
-            <b-row class="mt-2">
-                <b-col>
-                    <b> Run {{ flow.config.name }} below. </b>
-                </b-col>
-            </b-row>
             <b-row>
                 <b-col>
                     <b-card
@@ -341,7 +336,6 @@
                     </b-card>
                 </b-col>
             </b-row>
-            <br />
             <b-row>
                 <b-col>
                     <b-button

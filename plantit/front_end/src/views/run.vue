@@ -203,44 +203,65 @@
                                     </div>
                                 </div>
                             </b-card>
-                            <br />
                             <b-card
                                 v-if="logsText !== ''"
-                                sub-title="Container Output"
-                                :sub-title-text-variant="
-                                    darkMode ? 'white' : 'dark'
-                                "
                                 :bg-variant="darkMode ? 'dark' : 'white'"
                                 :footer-bg-variant="darkMode ? 'dark' : 'white'"
                                 border-variant="default"
                                 :footer-border-variant="
                                     darkMode ? 'dark' : 'white'
                                 "
+                                no-body
                             >
-                                <b-row
-                                    align-h="center"
-                                    v-if="loadingContainerLogs"
-                                >
-                                    <b-spinner
-                                        type="grow"
-                                        label="Loading..."
-                                        variant="warning"
-                                    ></b-spinner>
-                                </b-row>
-                                <b-row v-else-if="logsText !== ''" class="p-3">
-                                    <b-col
+                                <b-card-header
+                                    class="mt-1"
+                                    :header-bg-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                    ><h5
                                         :class="
                                             darkMode
-                                                ? 'theme-container-dark'
-                                                : 'theme-container-light'
+                                                ? 'text-white'
+                                                : 'text-dark'
                                         "
-                                        style="white-space: pre-line;"
                                     >
-                                        {{ logsText }}
-                                    </b-col>
-                                </b-row>
-                                <b-row>
-                                    <!--<b-col align-self="end" class="mr-0">
+                                        Container Output
+                                    </h5></b-card-header
+                                >
+                                <b-card-body
+                                    :class="
+                                        darkMode
+                                            ? 'theme-container-dark mt-0 pt-0'
+                                            : 'theme-container-light mt-0 pt-0'
+                                    "
+                                >
+                                    <b-row
+                                        align-h="center"
+                                        v-if="loadingContainerLogs"
+                                    >
+                                        <b-spinner
+                                            type="grow"
+                                            label="Loading..."
+                                            variant="warning"
+                                        ></b-spinner>
+                                    </b-row>
+                                    <b-row
+                                        v-else-if="logsText !== ''"
+                                        :class="
+                                            darkMode
+                                                ? 'theme-container-dark mt-0 pt-0'
+                                                : 'theme-container-light mt-0 pt-0'
+                                        "
+                                    >
+                                        <b-col
+                                            class="pl-3 pr-3 pb-1"
+                                            style="white-space: pre-line;"
+                                        >
+                                            {{ logsText }}
+                                        </b-col>
+                                    </b-row>
+                                    <b-row>
+                                        <!--<b-col align-self="end" class="mr-0">
                                     <h5
                                         :class="
                                             darkMode
@@ -251,62 +272,64 @@
                                         Container Output
                                     </h5>
                                 </b-col>-->
-                                    <b-col></b-col>
-                                    <b-col md="auto" align-self="middle">
-                                        Showing last
-                                        <b-dropdown
-                                            class="m-1"
-                                            :text="containerLogsPageSize"
-                                            variant="warning"
-                                            size="sm"
-                                        >
-                                            <b-dropdown-item
-                                                @click="
-                                                    setContainerLogsPageSize(10)
-                                                "
-                                                >10</b-dropdown-item
+                                        <b-col></b-col>
+                                        <b-col md="auto" align-self="middle">
+                                            Showing last
+                                            <b-dropdown
+                                                class="m-1"
+                                                :text="containerLogsPageSize"
+                                                variant="warning"
+                                                size="sm"
                                             >
-                                            <b-dropdown-item
-                                                @click="
-                                                    setContainerLogsPageSize(20)
+                                                <b-dropdown-item
+                                                    @click="
+                                                        setContainerLogsPageSize(
+                                                            10
+                                                        )
+                                                    "
+                                                    >10</b-dropdown-item
+                                                >
+                                                <b-dropdown-item
+                                                    @click="
+                                                        setContainerLogsPageSize(
+                                                            20
+                                                        )
+                                                    "
+                                                    >20</b-dropdown-item
+                                                >
+                                                <b-dropdown-item
+                                                    @click="
+                                                        setContainerLogsPageSize(
+                                                            50
+                                                        )
+                                                    "
+                                                    >50</b-dropdown-item
+                                                >
+                                            </b-dropdown>
+                                            lines
+                                        </b-col>
+                                        <b-col md="auto" align-self="middle">
+                                            <b-button
+                                                :variant="
+                                                    darkMode
+                                                        ? 'outline-light'
+                                                        : 'outline-dark'
                                                 "
-                                                >20</b-dropdown-item
+                                                size="sm"
+                                                v-b-tooltip.hover
+                                                title="Download Container Output"
+                                                @click="downloadLogs"
                                             >
-                                            <b-dropdown-item
-                                                @click="
-                                                    setContainerLogsPageSize(50)
-                                                "
-                                                >50</b-dropdown-item
-                                            >
-                                        </b-dropdown>
-                                        lines
-                                    </b-col>
-                                    <b-col md="auto" align-self="middle">
-                                        <b-button
-                                            :variant="
-                                                darkMode
-                                                    ? 'outline-light'
-                                                    : 'outline-dark'
-                                            "
-                                            size="sm"
-                                            v-b-tooltip.hover
-                                            title="Download Container Output"
-                                            @click="downloadLogs"
-                                        >
-                                            <i class="fas fa-download"></i>
-                                        </b-button>
-                                    </b-col>
-                                </b-row>
+                                                <i class="fas fa-download"></i>
+                                            </b-button>
+                                        </b-col>
+                                    </b-row>
+                                </b-card-body>
                             </b-card>
-                            <br />
                             <b-card
                                 v-if="
                                     flow.config.output &&
                                         (run.state === 2 || run.state === 1)
-                                "
-                                sub-title="CyVerse Data Store"
-                                :sub-title-text-variant="
-                                    darkMode ? 'white' : 'dark'
                                 "
                                 :bg-variant="darkMode ? 'dark' : 'white'"
                                 :footer-bg-variant="darkMode ? 'dark' : 'white'"
@@ -314,15 +337,33 @@
                                 :footer-border-variant="
                                     darkMode ? 'dark' : 'white'
                                 "
+                                no-body
                             >
-                                <b-row>
-                                    <b-col>
-                                        <datatree
-                                            :upload="false"
-                                            :download="true"
-                                            :node="userData"
-                                        ></datatree></b-col
-                                ></b-row>
+                                <b-card-header
+                                    class="mt-1"
+                                    :header-bg-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                    ><h5
+                                        :class="
+                                            darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        CyVerse Data Store
+                                    </h5></b-card-header
+                                >
+                                <b-card-body>
+                                    <b-row>
+                                        <b-col>
+                                            <datatree
+                                                :upload="false"
+                                                :download="true"
+                                                :node="userData"
+                                            ></datatree></b-col
+                                    ></b-row>
+                                </b-card-body>
                             </b-card>
                         </div>
                     </b-col>

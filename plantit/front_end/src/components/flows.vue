@@ -20,7 +20,7 @@
                 :key="flow.repo.name"
                 :bg-variant="darkMode ? 'dark' : 'white'"
                 :header-bg-variant="darkMode ? 'dark' : 'white'"
-                :border-variant="darkMode ? 'light' : 'dark'"
+                border-variant="default"
                 :header-border-variant="darkMode ? 'secondary' : 'default'"
                 :text-variant="darkMode ? 'white' : 'dark'"
                 style="min-width: 15rem; max-width: 38rem;"

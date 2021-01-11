@@ -25,7 +25,7 @@
                             :key="user.username"
                             :bg-variant="darkMode ? 'dark' : 'white'"
                             :header-bg-variant="darkMode ? 'dark' : 'white'"
-                            :border-variant="darkMode ? 'light' : 'dark'"
+                            border-variant="default"
                             :header-border-variant="
                                 darkMode ? 'secondary' : 'default'
                             "

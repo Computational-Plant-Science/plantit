@@ -24,9 +24,9 @@
             <b-col>
                 <b-row>
                     <b-col md="auto" class="mr-0">
-                        <h1 :class="darkMode ? 'text-white' : 'text-dark'">
+                        <h2 :class="darkMode ? 'text-white' : 'text-dark'">
                             {{ flow.config.name }}
-                        </h1>
+                        </h2>
                       <b-badge
                             class="mr-1"
                             :variant="
@@ -48,7 +48,7 @@
                     <b-col>
                         <small>
                             <b-link
-                                :class="darkMode ? 'text-warning' : 'text-dark'"
+                                :class="darkMode ? 'text-light' : 'text-dark'"
                                 :href="
                                     'https://github.com/' +
                                         flow.repo.owner.login +
