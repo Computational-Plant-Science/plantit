@@ -120,7 +120,7 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         if 'mem' in resources and (run.target.header_skip is None or '--mem' not in str(run.target.header_skip)):
                             script.write(f"#SBATCH --mem={resources['mem']}\n")
                         if run.target.queue is not None and run.target.queue != '':
-                            script.write(f"#SBATCH --partition={run.target.queue}\n")
+                            script.write(f"#SBATCH --partition={run.target.gpu_queue if run.target.gpu else run.target.queue}\n")
                         if run.target.project is not None and run.target.project != '':
                             script.write(f"#SBATCH -A {run.target.project}\n")
 
