@@ -62,7 +62,7 @@
                             img-width="100px"
                             img-height="90px"
                             img-left
-                            style="border: none;"
+                            style="border: none; box-shadow: none"
                         >
                             <b-card-text class="ml-4">
                                 <h4 class="text-white">
@@ -99,7 +99,7 @@
                             img-width="100px"
                             img-height="90px"
                             img-left
-                            style="border: none;"
+                            style="border: none; box-shadow: none"
                         >
                             <b-card-text class="ml-4 text-success">
                                 <h4 class="text-white">
@@ -145,7 +145,7 @@
                             img-width="100px"
                             img-height="90px"
                             img-left
-                            style="border: none;"
+                            style="border: none; box-shadow: none"
                         >
                             <b-card-text class="ml-4">
                                 <h4 class="text-white">

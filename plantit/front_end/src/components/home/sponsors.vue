@@ -5,9 +5,9 @@
             class="rounded-0 text-center"
             bg-variant="white"
             border-variant="default"
-            style="border:none"
             header-bg-variant="white"
             header-border-variant="white"
+            style="border: none; box-shadow: none"
         >
             <template slot="header" style="border: none">
                 <br />
@@ -29,9 +29,10 @@
             </template>
             <b-card-group columns>
                 <b-card
-                    align="right"
+                    align="center"
                     bg-variant="transparent"
                     border-variant="white"
+                    style="border: none; box-shadow: none"
                 >
                     <b-link href="http://arpa-e.energy.gov/">
                         <b-img
@@ -42,9 +43,10 @@
                     </b-link>
                 </b-card>
               <b-card
-                    align="right"
+                    align="center"
                     bg-variant="transparent"
                     border-variant="white"
+                    style="border: none; box-shadow: none"
                 >
                     <b-link href="https://www.nsf.gov/">
                         <b-img
@@ -59,6 +61,7 @@
                     align="center"
                     bg-variant="transparent"
                     border-variant="white"
+                    style="border: none; box-shadow: none"
                 >
                     <b-link href="http://www.xsede.org/">
                         <b-img
@@ -72,6 +75,7 @@
                     align="center"
                     bg-variant="transparent"
                     border-variant="white"
+                    style="border: none; box-shadow: none"
                 >
                     <b-link href="http://www.cyverse.org/">
                         <b-img
@@ -82,9 +86,10 @@
                     </b-link>
                 </b-card>
                 <b-card
-                    align="left"
+                    align="center"
                     bg-variant="transparent"
                     border-variant="white"
+                    style="border: none; box-shadow: none"
                 >
                     <b-link href="http://www.uga.edu/">
                         <b-img
@@ -95,9 +100,10 @@
                     </b-link>
                 </b-card>
                 <b-card
-                    align="left"
+                    align="center"
                     bg-variant="transparent"
                     border-variant="white"
+                    style="border: none; box-shadow: none"
                 >
                     <b-link href="http://gacra.uga.edu/">
                         <b-img
