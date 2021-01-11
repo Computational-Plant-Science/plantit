@@ -9,86 +9,69 @@
             width="550px"
         >
             <template v-slot:default="{ hide }">
-                <b-container class="p-1">
-                    <b-row
-                        class="ml-0 mr-0 pl-0 pr-0 text-center"
-                        align-v="start"
-                    >
-                        <b-col class="ml-0 mr-0 pl-0 pr-0">
-                            <b-nav vertical class="ml-0 mr-0 pl-0 pr-0">
-                                <b-nav-item class="m-0 p-0">
-                                    <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-warning'
-                                                : 'warning'
-                                        "
-                                        block
-                                        class="text-left m-0"
-                                        @click="hide"
-                                    >
-                                        <i
-                                            class="fas fa-arrow-left fa-1x fa-fw"
-                                        ></i>
-                                        Hide Runs
-                                    </b-button>
-                                </b-nav-item>
-                                <b-nav-item
-                                    v-if="!loggedIn"
-                                    href="/apis/v1/idp/cyverse_login/"
-                                    class="m-0 p-0"
-                                >
-                                    <b-button
-                                        variant="white"
-                                        block
-                                        class="text-left m-0"
-                                    >
-                                        Log in with
-                                        <b-img
-                                            :src="
-                                                require('../assets/sponsors/cyversebw-notext.png')
-                                            "
-                                            height="18px"
-                                            alt="Cyverse"
-                                        ></b-img>
-                                        <b>CyVerse</b>
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
+                <b-container class="p-0">
+                    <b-row class="m-3 pl-0 pr-0 text-left" align-v="start">
+                        <b-col md="auto" class="ml-0 mr-0 pl-0 pr-0">
+                            <b-button
+                                :variant="
+                                    darkMode ? 'outline-warning' : 'warning'
+                                "
+                                class="text-left m-0"
+                                @click="hide"
+                            >
+                                <i class="fas fa-arrow-left fa-1x fa-fw"></i>
+                                Hide
+                            </b-button>
+                        </b-col>
+                        <b-col class="ml-0 mr-0 pl-0 pr-0 text-center" align-self="end">
+                            <h5>Your Runs</h5>
+                        </b-col>
+                        <b-col md="auto" class="ml-0 mr-0 pl-0 pr-0">
+                            <b-button
+                                :variant="
+                                    darkMode ? 'outline-warning' : 'warning'
+                                "
+                                class="text-left m-0"
+                                @click="loadRuns(0)"
+                            >
+                                <i class="fas fa-sync-alt fa-1x fa-fw"></i>
+                                Reload
+                            </b-button>
+                            <b-button
+                                v-if="!loggedIn"
+                                href="/apis/v1/idp/cyverse_login/"
+                                variant="white"
+                                block
+                                class="text-left m-0"
+                            >
+                                Log in with
+                                <b-img
+                                    :src="
+                                        require('../assets/sponsors/cyversebw-notext.png')
+                                    "
+                                    height="18px"
+                                    alt="Cyverse"
+                                ></b-img>
+                                <b>CyVerse</b>
+                            </b-button>
                         </b-col>
                     </b-row>
-                    <b-row
-                        ><b-col
-                            ><b-nav-item class="m-0 p-0">
-                                <b-button
-                                    :variant="
-                                        darkMode ? 'outline-warning' : 'warning'
-                                    "
-                                    block
-                                    class="text-left m-0"
-                                    @click="loadRuns(0)"
-                                >
-                                    <i class="fas fa-sync-alt fa-1x fa-fw"></i>
-                                    Reload Runs
-                                </b-button>
-                            </b-nav-item></b-col
-                        ></b-row
-                    >
                     <b-row
                         v-if="!loadingRuns"
                         class="m-3 pl-0 pr-0"
                         align-v="center"
                     >
                         <b-col class="ml-0 mr-0 pl-0 pr-0 text-center">
-                            <b-list-group class="text-left">
+                            <b-list-group class="text-left m-0 p-0">
                                 <b-list-group-item
-                                    style="border: 1px solid darkgray"
+                                    variant="default"
+                                    style="box-shadow: -1px 1px 2px #e2e3b0"
                                     v-for="run in runs"
                                     v-bind:key="run.id"
                                     :class="
                                         darkMode
-                                            ? 'text-light bg-dark'
-                                            : 'text-dark bg-white'
+                                            ? 'text-light bg-dark m-0 p-1 mb-3'
+                                            : 'text-dark bg-white m-0 p-1 mb-3'
                                     "
                                     @click="onRunSelected(run)"
                                 >
@@ -105,19 +88,12 @@
                                             >{{ run.id }}</a
                                         >
                                     </small>
-                                  <b-badge
-                                            v-for="tag in run.tags"
-                                            v-bind:key="tag"
-                                            class="mr-1"
-                                            variant="warning"
-                                            >{{ tag }}
-                                        </b-badge>
-                                    <br/>
-                                    <small
+                                    <br />
+                                    <small class="mr-1"
                                         ><a
                                             :class="
-                                                darkmode
-                                                    ? 'text-warning'
+                                                darkMode
+                                                    ? 'text-light'
                                                     : 'text-dark'
                                             "
                                             :href="
@@ -129,6 +105,14 @@
                                             }}</a
                                         >
                                     </small>
+                                    <br v-if="run.tags.length > 0" />
+                                    <b-badge
+                                        v-for="tag in run.tags"
+                                        v-bind:key="tag"
+                                        class="mr-1"
+                                        variant="warning"
+                                        >{{ tag }}
+                                    </b-badge>
                                     <br />
                                     <b-badge
                                         class="ml-0 mr-1"
@@ -148,19 +132,12 @@
                                         variant="secondary"
                                         >{{ run.target }}</b-badge
                                     ><small> {{ prettify(run.updated) }}</small>
-                                    <!--<hr
-                                        :class="
-                                            darkMode
-                                                ? 'theme-secondary'
-                                                : 'theme-light'
-                                        "
-                                    />-->
                                 </b-list-group-item>
                             </b-list-group>
                         </b-col>
                     </b-row>
                     <b-row
-                        class="ml-0 mr-0 pl-0 pr-0 mt-2 mb-4 text-center"
+                        class="ml-0 mr-0 pl-0 pr-0 mt-1 mb-3 text-center"
                         align-v="start"
                     >
                         <b-col class="ml-0 mr-0 pl-0 pr-0">
@@ -179,7 +156,7 @@
                                         "
                                         :disabled="loadingRuns"
                                         block
-                                        class="text-left m-0"
+                                        class="text-center m-0"
                                         @click="loadRuns(currentRunPage + 1)"
                                     >
                                         <i
