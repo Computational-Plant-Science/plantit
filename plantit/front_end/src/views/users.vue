@@ -9,17 +9,9 @@
     >
         <br />
         <b-container class="pl-3 pt-3" fluid>
-            <p :class="darkMode ? 'text-light' : 'text-dark'">
-                Explore users here. To explore flows, see the
-                <b-link
-                    :class="darkMode ? 'text-warning' : 'text-dark'"
-                    to="/flows"
-                    >Flows page</b-link
-                >.
-            </p>
-            <b-row align-v="center">
+            <b-row align-v="center" align-h="center">
                 <b-col>
-                    <b-card-group columns>
+                    <b-card-group deck columns class="justify-content-center">
                         <b-card
                             v-for="user in users"
                             :key="user.username"

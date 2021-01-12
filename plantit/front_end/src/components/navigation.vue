@@ -110,7 +110,7 @@
                                         }}</b-badge
                                     ><small>on</small
                                     ><b-badge
-                                        class="ml-1 mr-0 text-white"
+                                        class="ml-1 mr-0"
                                         variant="secondary"
                                         >{{ run.target }}</b-badge
                                     ><small> {{ prettify(run.updated) }}</small>

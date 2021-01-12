@@ -49,7 +49,7 @@ export default {
     },
     props: {
         githubUser: {
-            required: true,
+            required: false,
             type: String
         },
         githubToken: {
@@ -69,11 +69,9 @@ export default {
     },
     methods: {
         loadFlows() {
+            let url = (this.githubUser !== undefined && this.githubUser !== null && this.githubUser !== '') ? `/apis/v1/flows/${this.githubUser}/` : '/apis/v1/flows/list_all/'
             axios
-                .get(
-                    '/apis/v1/flows/' +
-                        (this.githubUser !== '' ? `${this.githubUser}/` : '')
-                )
+                .get(url)
                 .then(response => {
                     this.flows = response.data.pipelines;
                     this.loading = false;
