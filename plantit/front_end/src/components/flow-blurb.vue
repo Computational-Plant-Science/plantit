@@ -16,7 +16,7 @@
                     v-for="topic in flow.repo.topics"
                     v-bind:key="topic"
                     class="mr-1 mb-0"
-                    :variant="darkMode ? 'light' : 'dark'"
+                    variant="secondary"
                     >{{ topic }}</b-badge
                 >
                 <br/>

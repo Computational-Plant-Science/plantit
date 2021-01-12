@@ -67,9 +67,7 @@
                                             Run
                                             <b-badge
                                                 class="mr-2"
-                                                :variant="
-                                                    darkMode ? 'light' : 'dark'
-                                                "
+                                                variant="secondary"
                                                 >{{ run.id }}</b-badge
                                             >
                                             <b-badge
@@ -84,8 +82,10 @@
                                             </b-badge>
                                             <small> on </small>
                                             <b-badge
-                                                variant="secondary"
-                                                class="text-white mr-0"
+                                                :variant="
+                                                    darkMode ? 'light' : 'dark'
+                                                "
+                                                class="mr-0"
                                                 >{{ run.target }}</b-badge
                                             >
                                             <small>
@@ -610,7 +610,8 @@ export default {
         downloadFile(file) {
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/output/${file}/`
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/output/${file}/`,
+                    { responseType: 'blob' }
                 )
                 .then(response => {
                     if (response && response.status === 404) {
