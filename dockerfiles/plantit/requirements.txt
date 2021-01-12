@@ -4,6 +4,7 @@ django-filter
 django-model-utils
 django-taggit
 djangorestframework
+sorl-thumbnail
 psycopg2-binary
 markdown
 paramiko
@@ -12,7 +13,7 @@ docutils
 humanize
 Sphinx
 sphinx_rtd_theme
-pillow
+Pillow
 sentry-sdk
 gunicorn
 gql

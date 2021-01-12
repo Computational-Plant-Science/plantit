@@ -5,6 +5,7 @@ from os.path import join
 from pprint import pprint
 
 import tempfile
+from sorl.thumbnail import get_thumbnail
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
@@ -94,6 +95,47 @@ def list_outputs(request, id):
                         outputs.append(output)
 
     return JsonResponse({'outputs': outputs})
+
+
+@api_view(['GET'])
+@login_required
+def get_thumbnail(request, id, file):
+    try:
+        run = Run.objects.get(identifier=id)
+        flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    client = SSH(run.target.hostname, run.target.port, run.target.username)
+    work_dir = join(run.target.workdir, run.work_dir)
+
+    with client:
+        with client.client.open_sftp() as sftp:
+                file_path = join(work_dir, file)
+                stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
+                errs = stderr.read()
+                if errs:
+                    raise Exception(f"Failed to check existence of {file}: {errs}")
+
+                # if file is an image, grab a thumbnail
+                fl = file.lower()
+                with tempfile.NamedTemporaryFile() as tf:
+                    sftp.chdir(work_dir)
+                    sftp.get(file, tf.name)
+                    from PIL import Image
+                    image = Image.open(tf.name)
+                    image.thumbnail((35, 35))
+                    image.save(tf, format='png')
+                    # tn = get_thumbnail(open(tf.name, 'rb'), '100x100', crop='center', quality=99)
+                    # with open(tf.name, 'rb') as tnf:
+                    #     tnf.write(tn)
+
+                    if fl.endswith('png'):
+                        return HttpResponse(open(tf.name, 'rb'), content_type="image/png")
+                    elif fl.endswith('jpg') or fl.endswith('jpeg'):
+                        return HttpResponse(open(tf.name, 'rb'), content_type="image/jpg")
+                    else:
+                        return HttpResponseNotFound()
 
 
 @api_view(['GET'])

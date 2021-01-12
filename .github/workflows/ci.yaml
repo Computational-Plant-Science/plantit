@@ -12,7 +12,7 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: plantit
-          SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo.png
+          SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo-favicon.png
           SLACK_MESSAGE: 'Build triggered'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit
@@ -58,7 +58,7 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: plantit
-          SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo.png
-          SLACK_MESSAGE: 'Successfully built and redeployed'
+          SLACK_ICON: https://raw.githubusercontent.com/Computational-Plant-Science/plantit/master/plantit/front_end/src/assets/logo-favicon.png
+          SLACK_MESSAGE: 'Build finished'
           SLACK_TITLE: PlantIT CI
           SLACK_USERNAME: plantit

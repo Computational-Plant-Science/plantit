@@ -395,6 +395,29 @@
                                                 variant="warning"
                                             ></b-spinner>
                                         </b-col>
+                                        <b-col
+                                          md="auto"
+                                            v-if="
+                                                file.name
+                                                    .toLowerCase()
+                                                    .includes('png') ||
+                                                    file.name
+                                                        .toLowerCase()
+                                                        .includes('jpg') ||
+                                                    file.name
+                                                        .toLowerCase()
+                                                        .includes('jpeg')
+                                            "
+                                            align-self="end"
+                                        >
+                                            <b-img
+                                                right
+                                                fluid
+                                                :src="thumbnailUrl(file.name)"
+                                                :alt="require('@/assets/loading_spinner.gif')"
+                                                rounded
+                                            ></b-img>
+                                        </b-col>
                                         <b-col md="auto" align-self="end">
                                             <b-button
                                                 :disabled="!file.exists"
@@ -607,6 +630,9 @@ export default {
                     }
                 });
         },
+        thumbnailUrl(file) {
+            return `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/${file}/`;
+        },
         downloadFile(file) {
             axios
                 .get(
@@ -672,6 +698,15 @@ export default {
                         return;
                     }
                     this.outputFiles = response.data.outputs;
+                    for (let i = 0; i < this.outputFiles.length; i++) {
+                        let name = response.data.outputs[i]['name'];
+                        if (
+                            name.toLowerCase().includes('png') ||
+                            name.toLowerCase().includes('jpg') ||
+                            name.toLowerCase().includes('jpeg')
+                        )
+                            this.getThumbnail(name);
+                    }
                     this.loadingOutputFiles = false;
                 })
                 .catch(error => {
