@@ -2,7 +2,9 @@ import binascii
 import os
 import uuid
 from os.path import join
+from pprint import pprint
 
+import tempfile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
@@ -14,6 +16,7 @@ from plantit.runs.models import Run, Status
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import execute
 from plantit.targets.models import Target
+from plantit.utils import get_repo_config
 
 
 @api_view(['GET'])
@@ -49,6 +52,69 @@ def get_total_count(request):
 
 @api_view(['GET'])
 @login_required
+def list_outputs(request, id):
+    try:
+        run = Run.objects.get(identifier=id)
+        flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    included_by_name = flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else []
+    included_by_pattern = flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []
+    included = included_by_name + included_by_pattern
+
+    client = SSH(run.target.hostname, run.target.port, run.target.username)
+    work_dir = join(run.target.workdir, run.work_dir)
+    outputs = []
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            for file in included:
+                file_path = join(work_dir, file)
+                stdin, stdout, stderr = client.client.exec_command(
+                    'test -e {0} && echo exists'.format(file_path))
+                errs = stderr.read()
+                if errs:
+                    raise Exception(f"Failed to check existence of {file}: {errs}")
+                outputs.append({
+                    'name': file,
+                    'exists': stdout.read().decode().strip() == 'exists'
+                })
+
+    return JsonResponse({'outputs': outputs})
+
+
+@api_view(['GET'])
+@login_required
+def get_output_file(request, id, file):
+    try:
+        run = Run.objects.get(identifier=id)
+        # flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    client = SSH(run.target.hostname, run.target.port, run.target.username)
+    work_dir = join(run.target.workdir, run.work_dir)
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            file_path = join(work_dir, file)
+            stdin, stdout, stderr = client.client.exec_command(
+                'test -e {0} && echo exists'.format(file_path))
+            errs = stderr.read()
+            if errs:
+                raise Exception(f"Failed to check existence of {file}: {errs}")
+            if not stdout.read().decode().strip() == 'exists':
+                return HttpResponseNotFound()
+
+            with tempfile.NamedTemporaryFile() as tf:
+                sftp.chdir(work_dir)
+                sftp.get(file, tf.name)
+                return FileResponse(open(tf.name, 'rb'))
+
+
+@api_view(['GET'])
+@login_required
 def get_logs_text(request, id, size):
     try:
         run = Run.objects.get(identifier=id)
@@ -68,11 +134,12 @@ def get_logs_text(request, id, size):
             if not stdout.read().decode().strip() == 'exists':
                 return HttpResponseNotFound()
 
-            sftp.chdir(work_dir)
-            sftp.get(log_file, log_file)
-            with open(log_file, 'r') as file:
-                lines = file.readlines()[-int(size):]
-                return HttpResponse(lines, content_type='text/plain')
+            with tempfile.NamedTemporaryFile() as tf:
+                sftp.chdir(work_dir)
+                sftp.get(log_file, tf.name)
+                with open(tf.name, 'r') as file:
+                    lines = file.readlines()[-int(size):]
+                    return HttpResponse(lines, content_type='text/plain')
 
 
 @api_view(['GET'])
@@ -97,9 +164,10 @@ def get_logs(request, id):
             if not stdout.read().decode().strip() == 'exists':
                 return HttpResponseNotFound()
 
-            sftp.chdir(work_dir)
-            sftp.get(log_file, log_file)
-            return FileResponse(open(log_file, 'rb'))
+            with tempfile.NamedTemporaryFile() as tf:
+                sftp.chdir(work_dir)
+                sftp.get(log_file, tf.name)
+                return FileResponse(open(tf.name, 'rb'))
 
 
 @api_view(['GET', 'POST'])

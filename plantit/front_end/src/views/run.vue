@@ -46,16 +46,15 @@
                                     selectable="Restart"
                                 ></WorkflowBlurb>
                                 <br />
-                                {{ run.id }}
-                                <br />
-                                <b-badge
-                                    v-for="tag in run.tags"
-                                    v-bind:key="tag"
-                                    class="mr-1"
-                                    variant="warning"
-                                    >{{ tag }}</b-badge
-                                >
-                                <br />
+                                <h5 v-if="run.tags.length > 0">
+                                    <b-badge
+                                        v-for="tag in run.tags"
+                                        v-bind:key="tag"
+                                        class="mr-2"
+                                        variant="warning"
+                                        >{{ tag }}</b-badge
+                                    >
+                                </h5>
                                 <b-row class="m-0 p-0">
                                     <b-col align-self="end" class="m-0 p-0">
                                         <h4
@@ -65,6 +64,14 @@
                                                     : 'theme-light'
                                             "
                                         >
+                                            Run
+                                            <b-badge
+                                                class="mr-2"
+                                                :variant="
+                                                    darkMode ? 'light' : 'dark'
+                                                "
+                                                >{{ run.id }}</b-badge
+                                            >
                                             <b-badge
                                                 :variant="
                                                     run.state === 2
@@ -219,7 +226,7 @@
                                                 : 'text-dark'
                                         "
                                     >
-                                        Container Output
+                                        Container Logs
                                     </h5></b-card-header
                                 >
                                 <b-card-body
@@ -321,6 +328,81 @@
                                 </b-card-body>
                             </b-card>
                             <b-card
+                                v-if="outputFiles.length > 0"
+                                :bg-variant="darkMode ? 'dark' : 'white'"
+                                :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                                border-variant="default"
+                                :footer-border-variant="
+                                    darkMode ? 'dark' : 'white'
+                                "
+                                no-body
+                            >
+                                <b-card-header
+                                    class="mt-1"
+                                    :header-bg-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                    ><h5
+                                        :class="
+                                            darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        Output Files
+                                    </h5></b-card-header
+                                >
+                                <b-card-body class="mt-0 pt-0">
+                                    <b-row
+                                        align-h="center"
+                                        v-if="loadingOutputFiles"
+                                    >
+                                        <b-spinner
+                                            type="grow"
+                                            label="Loading..."
+                                            variant="warning"
+                                        ></b-spinner>
+                                    </b-row>
+                                    <b-row
+                                        v-for="file in outputFiles"
+                                        v-bind:key="file"
+                                        class="pl-3 pr-3 pb-1"
+                                    >
+                                        <b-col
+                                            align-self="end"
+                                            style="white-space: pre-line;"
+                                        >
+                                            {{ file.name }}
+                                        </b-col>
+                                        <b-col
+                                            align-self="end"
+                                            v-if="!file.exists"
+                                        >
+                                            <b-spinner
+                                                small
+                                                variant="warning"
+                                            ></b-spinner>
+                                        </b-col>
+                                        <b-col md="auto" align-self="end">
+                                            <b-button
+                                                :disabled="!file.exists"
+                                                :variant="
+                                                    darkMode
+                                                        ? 'outline-light'
+                                                        : 'outline-dark'
+                                                "
+                                                size="sm"
+                                                v-b-tooltip.hover
+                                                title="Download File"
+                                                @click="downloadFile(file.name)"
+                                            >
+                                                <i class="fas fa-download"></i>
+                                            </b-button>
+                                        </b-col>
+                                    </b-row>
+                                </b-card-body>
+                            </b-card>
+                            <b-card
                                 v-if="
                                     flow.config.output &&
                                         (run.state === 2 || run.state === 1)
@@ -389,11 +471,13 @@ export default {
             flow: null,
             loadingRun: true,
             loadingContainerLogs: false,
+            loadingOutputFiles: false,
             runNotFound: false,
             run: null,
             logs: null,
             logsExpanded: false,
             logsText: '',
+            outputFiles: [],
             containerLogsPageSize: 10,
             status_table: {
                 sortBy: 'date',
@@ -461,6 +545,7 @@ export default {
                     }
                     this.reloadOutput(toast);
                     this.reloadLogs(toast);
+                    this.reloadOutputFiles();
                     this.loadFlow(
                         response.data.flow_owner,
                         response.data.flow_name
@@ -510,6 +595,31 @@ export default {
                     }
                 });
         },
+        downloadFile(file) {
+            axios
+                .get(
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/output/${file}/`
+                )
+                .then(response => {
+                    if (response && response.status === 404) {
+                        return;
+                    }
+
+                    let url = window.URL.createObjectURL(
+                        new Blob([response.data])
+                    );
+                    let link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', file);
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                    this.downloading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
         downloadLogs() {
             axios
                 .get(
@@ -535,6 +645,25 @@ export default {
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    return error;
+                });
+        },
+        reloadOutputFiles() {
+            this.loadingOutputFiles = true;
+            axios
+                .get(
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/outputs/`
+                )
+                .then(response => {
+                    if (response && response.status === 404) {
+                        return;
+                    }
+                    this.outputFiles = response.data.outputs;
+                    this.loadingOutputFiles = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.loadingOutputFiles = false;
                     return error;
                 });
         },

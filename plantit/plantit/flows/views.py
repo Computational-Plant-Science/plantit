@@ -2,7 +2,7 @@ import requests
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from plantit.utils import get_config, validate_config
+from plantit.utils import get_repo_config, validate_config
 
 
 @login_required
@@ -12,7 +12,7 @@ def list_all(request):
         headers={"Authorization": f"token {request.user.profile.github_token}"})
     pipelines = [{
         'repo': item['repository'],
-        'config': get_config(item['repository'], request.user.profile.github_token)
+        'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], request.user.profile.github_token)
     } for item in response.json()['items']]
 
     return JsonResponse({'pipelines': [pipeline for pipeline in pipelines if pipeline['config']['public']]})
@@ -28,7 +28,7 @@ def list(request, username):
         })
     pipelines = [{
         'repo': item['repository'],
-        'config': get_config(item['repository'], request.user.profile.github_token)
+        'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], request.user.profile.github_token)
     } for item in response.json()['items']]
 
     return JsonResponse({'pipelines': [pipeline for pipeline in pipelines if pipeline['config']['public']]})
@@ -44,7 +44,7 @@ def get(request, username, name):
 
     return JsonResponse({
         'repo': repo,
-        'config': get_config(repo, request.user.profile.github_token)
+        'config': get_repo_config(repo['name'], repo['owner']['login'], request.user.profile.github_token)
     })
 
 
@@ -52,7 +52,7 @@ def get(request, username, name):
 def validate(request, username, name):
     repo = requests.get(f"https://api.github.com/repos/{username}/{name}",
                         headers={"Authorization": f"token {request.user.profile.github_token}"}).json()
-    config = get_config(repo, request.user.profile.github_token)
+    config = get_repo_config(repo['name'], repo['owner']['login'], request.user.profile.github_token)
     result = validate_config(config, request.user.profile.cyverse_token)
     if isinstance(result, bool):
         return JsonResponse({'result': result})

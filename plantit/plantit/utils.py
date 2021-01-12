@@ -1,14 +1,13 @@
-from pprint import pprint
 from random import choice
 
 import requests
 import yaml
 
 
-def get_config(repo, token):
+def get_repo_config(name, owner, token):
     request = requests.get(
-        f"https://api.github.com/repos/{repo['owner']['login']}/{repo['name']}/contents/plantit.yaml") if token == '' \
-        else requests.get(f"https://api.github.com/repos/{repo['owner']['login']}/{repo['name']}/contents/plantit.yaml",
+        f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml") if token == '' \
+        else requests.get(f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml",
                           headers={"Authorization": f"token {token}"})
     file = request.json()
     content = requests.get(file['download_url']).text
