@@ -376,7 +376,19 @@
                                         </b-col>
                                         <b-col
                                             align-self="end"
-                                            v-if="!file.exists"
+                                            v-if="
+                                                (run.status === 1 ||
+                                                    run.status === 2) &&
+                                                    !file.exists
+                                            "
+                                        >
+                                            <i
+                                                class="far fa-times-circle fa-fw text-danger"
+                                            ></i>
+                                        </b-col>
+                                        <b-col
+                                            align-self="end"
+                                            v-else-if="!file.exists"
                                         >
                                             <b-spinner
                                                 small

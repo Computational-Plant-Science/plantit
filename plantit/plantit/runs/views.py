@@ -61,25 +61,37 @@ def list_outputs(request, id):
 
     included_by_name = flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else []
     included_by_pattern = flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []
-    included = included_by_name + included_by_pattern
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
     outputs = []
+    seen = []
 
     with client:
         with client.client.open_sftp() as sftp:
-            for file in included:
+            for file in included_by_name:
                 file_path = join(work_dir, file)
-                stdin, stdout, stderr = client.client.exec_command(
-                    'test -e {0} && echo exists'.format(file_path))
+                stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
                 errs = stderr.read()
                 if errs:
                     raise Exception(f"Failed to check existence of {file}: {errs}")
-                outputs.append({
+                output = {
                     'name': file,
                     'exists': stdout.read().decode().strip() == 'exists'
-                })
+                }
+                print(output)
+                seen.append(output['name'])
+                outputs.append(output)
+
+            for f in sftp.listdir(work_dir):
+                if any(pattern in f for pattern in included_by_pattern):
+                    if not any(s == f for s in seen):
+                        output = {
+                            'name': f,
+                            'exists': True
+                        }
+                        print(output)
+                        outputs.append(output)
 
     return JsonResponse({'outputs': outputs})
 

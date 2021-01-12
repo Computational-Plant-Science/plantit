@@ -11,8 +11,9 @@
             <template v-slot:default="{ hide }">
                 <b-container class="p-0">
                     <b-row class="m-3 pl-0 pr-0 text-left" align-v="start">
-                        <b-col md="auto" class="ml-0 mr-0 pl-0 pr-0">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0">
                             <b-button
+                                block
                                 :variant="
                                     darkMode ? 'outline-warning' : 'warning'
                                 "
@@ -23,11 +24,9 @@
                                 Hide
                             </b-button>
                         </b-col>
-                        <b-col class="ml-0 mr-0 pl-0 pr-0 text-center" align-self="end">
-                            <h5>Your Runs</h5>
-                        </b-col>
-                        <b-col md="auto" class="ml-0 mr-0 pl-0 pr-0">
+                        <b-col md="auto" class="ml-3 mr-0 pl-0 pr-0 text-right">
                             <b-button
+                                block
                                 :variant="
                                     darkMode ? 'outline-warning' : 'warning'
                                 "
@@ -36,23 +35,6 @@
                             >
                                 <i class="fas fa-sync-alt fa-1x fa-fw"></i>
                                 Reload
-                            </b-button>
-                            <b-button
-                                v-if="!loggedIn"
-                                href="/apis/v1/idp/cyverse_login/"
-                                variant="white"
-                                block
-                                class="text-left m-0"
-                            >
-                                Log in with
-                                <b-img
-                                    :src="
-                                        require('../assets/sponsors/cyversebw-notext.png')
-                                    "
-                                    height="18px"
-                                    alt="Cyverse"
-                                ></b-img>
-                                <b>CyVerse</b>
                             </b-button>
                         </b-col>
                     </b-row>
