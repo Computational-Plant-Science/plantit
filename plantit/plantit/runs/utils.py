@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import traceback
@@ -5,12 +6,16 @@ from os.path import join
 
 from datetime import datetime, timedelta
 
+import requests
 import yaml
-from celery.schedules import crontab
+from django.contrib.auth.models import User
+from requests.auth import HTTPBasicAuth
 
+from plantit import settings
 from plantit.celery import app
 from plantit.runs.models import Run, Status
 from plantit.runs.ssh import SSH
+from plantit.utils import get_repo_config, get_repo_config_internal
 
 
 def clean_html(raw_html):
@@ -37,6 +42,36 @@ def update_status(run: Run, state: int, description: str):
     print(description)
     run.status_set.create(description=description, state=state, location='PlantIT')
     run.save()
+
+
+def __list_by_user(username, token):
+    response = requests.get(
+        f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
+        headers={
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+        })
+    flows = [{
+        'repo': item['repository'],
+        'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], token)
+    } for item in response.json()['items']]
+
+    return [flow for flow in flows if flow['config']['public']]
+
+
+def __list_by_user_internal(username):
+    response = requests.get(
+        f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
+        auth=HTTPBasicAuth(settings.GITHUB_USERNAME, settings.GITHUB_KEY),
+        headers={
+            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+        })
+    flows = [{
+        'repo': item['repository'],
+        'config': get_repo_config_internal(item['repository']['name'], item['repository']['owner']['login'])
+    } for item in response.json()['items']]
+
+    return [flow for flow in flows if flow['config']['public']]
 
 
 @app.task()
@@ -155,21 +190,3 @@ def execute(flow, run_id, plantit_token, cyverse_token):
     except Exception:
         update_status(run, Status.FAILED, f"{run.identifier}' failed: {traceback.format_exc()}.")
         run.save()
-
-
-@app.task()
-def remove_old_runs():
-    epoch = datetime.fromordinal(0)
-    threshold = datetime.now() - timedelta(days=30)
-    epoch_ts = f"{epoch.year}-{epoch.month}-{epoch.day}"
-    threshold_ts = f"{threshold.year}-{threshold.month}-{threshold.day}"
-    print(f"Removing runs created before {threshold.strftime('%d/%m/%Y %H:%M:%S')}")
-    Run.objects.filter(date__range=[epoch_ts, threshold_ts]).delete()
-
-
-@app.on_after_configure.connect
-def setup_periodic_tasks(sender, **kwargs):
-    # Executes every morning at 7:30 a.m.
-    sender.add_periodic_task(
-        crontab(hour=7, minute=30),
-        remove_old_runs.s())

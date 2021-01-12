@@ -9,6 +9,7 @@ assert 'DJANGO_ALLOWED_HOSTS' in os.environ, f"{missing_variable}: DJANGO_ALLOWE
 assert 'DJANGO_SECURE_SSL_REDIRECT' in os.environ, f"{missing_variable}: DJANGO_SECURE_SSL_REDIRECT"
 assert 'DJANGO_SESSION_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_SESSION_COOKIE_SECURE"
 assert 'DJANGO_CSRF_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_CSRF_COOKIE_SECURE"
+assert 'FLOWS_CACHE' in os.environ, f"{missing_variable}: FLOWS_CACHE"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
 assert 'CYVERSE_CLIENT_ID' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_ID"
@@ -16,6 +17,7 @@ assert 'CYVERSE_CLIENT_SECRET' in os.environ, f"{missing_variable}: CYVERSE_CLIE
 assert 'GITHUB_AUTH_URI' in os.environ, f"{missing_variable}: GITHUB_AUTH_URI"
 assert 'GITHUB_REDIRECT_URI' in os.environ, f"{missing_variable}: GITHUB_REDIRECT_URI"
 assert 'GITHUB_KEY' in os.environ, f"{missing_variable}: GITHUB_KEY"
+assert 'GITHUB_USERNAME' in os.environ, f"{missing_variable}: GITHUB_USERNAME"
 assert 'GITHUB_SECRET' in os.environ, f"{missing_variable}: GITHUB_SECRET"
 
 API_URL = os.environ.get('DJANGO_API_URL')
@@ -24,6 +26,8 @@ DEBUG = os.environ.get('DJANGO_DEBUG')
 FIELD_ENCRYPTION_KEY = os.environ.get('DJANGO_FIELD_ENCRYPTION_KEY')
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(',')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FLOWS_CACHE = os.environ.get('FLOWS_CACHE')
+FLOWS_REFRESH_MINUTES = os.environ.get('FLOWS_REFRESH_MINUTES')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')
@@ -32,6 +36,7 @@ if not DEBUG:
 
 GITHUB_AUTH_URI = os.environ.get('GITHUB_AUTH_URI')
 GITHUB_REDIRECT_URI = os.environ.get('GITHUB_REDIRECT_URI')
+GITHUB_USERNAME = os.environ.get('GITHUB_USERNAME')
 GITHUB_KEY = os.environ.get('GITHUB_KEY')
 GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
 

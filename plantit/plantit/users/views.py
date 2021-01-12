@@ -156,14 +156,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
-        # users = [{
-        #     'username': 'Computational-Plant-Science',
-        #     'github_username': 'Computational-Plant-Science'
-        # }, {
-        #     'username': 'van-der-knaap-lab',
-        #     'github_username': 'van-der-knaap-lab'
-        # }] +
-
         users = []
         for user in list(self.queryset):
             if user.profile.github_username:

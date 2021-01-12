@@ -2,6 +2,9 @@ from random import choice
 
 import requests
 import yaml
+from requests.auth import HTTPBasicAuth
+
+from plantit import settings
 
 
 def get_repo_config(name, owner, token):
@@ -9,6 +12,14 @@ def get_repo_config(name, owner, token):
         f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml") if token == '' \
         else requests.get(f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml",
                           headers={"Authorization": f"token {token}"})
+    file = request.json()
+    content = requests.get(file['download_url']).text
+    return yaml.load(content)
+
+
+def get_repo_config_internal(name, owner):
+    request = requests.get(
+        f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml", auth=HTTPBasicAuth(settings.GITHUB_USERNAME, settings.GITHUB_KEY))
     file = request.json()
     content = requests.get(file['download_url']).text
     return yaml.load(content)

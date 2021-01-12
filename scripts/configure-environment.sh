@@ -12,6 +12,13 @@ else
   github_client_id="${GITHUB_CLIENT_ID}"
 fi
 
+if [[ -z "${GITHUB_USERNAME}" ]]; then
+  github_username="some_github_username"
+  echo "Warning: GITHUB_USERNAME environment variable missing"
+else
+  github_username="${GITHUB_USERNAME}"
+fi
+
 if [[ -z "${GITHUB_SECRET}" ]]; then
   github_secret="some_github_secret"
   echo "Warning: GITHUB_SECRET environment variable missing"
@@ -81,9 +88,12 @@ DJANGO_ADMIN_PASSWORD=$admin_password
 DJANGO_SECURE_SSL_REDIRECT=False
 DJANGO_SESSION_COOKIE_SECURE=False
 DJANGO_CSRF_COOKIE_SECURE=False
+FLOWS_CACHE=/code/flows.json
+FLOWS_REFRESH_MINUTES=10
 SQL_ENGINE=django.db.backends.sqlite3
 GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
 GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/users/github_handle_temporary_code/
+GITHUB_USERNAME=$github_username
 GITHUB_KEY=$github_client_id
 GITHUB_SECRET=$github_secret
 DOCKER_USERNAME=$docker_username
