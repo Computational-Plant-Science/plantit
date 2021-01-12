@@ -1,11 +1,10 @@
 import binascii
 import os
+import tempfile
 import uuid
 from os.path import join
-from pprint import pprint
+from pathlib import Path
 
-import tempfile
-from sorl.thumbnail import get_thumbnail
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
@@ -13,8 +12,10 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 
+from plantit import settings
 from plantit.runs.models import Run, Status
 from plantit.runs.ssh import SSH
+from plantit.runs.thumbnail import Thumbnail
 from plantit.runs.utils import execute
 from plantit.targets.models import Target
 from plantit.utils import get_repo_config
@@ -80,19 +81,16 @@ def list_outputs(request, id):
                     'name': file,
                     'exists': stdout.read().decode().strip() == 'exists'
                 }
-                print(output)
                 seen.append(output['name'])
                 outputs.append(output)
 
             for f in sftp.listdir(work_dir):
                 if any(pattern in f for pattern in included_by_pattern):
                     if not any(s == f for s in seen):
-                        output = {
+                        outputs.append({
                             'name': f,
                             'exists': True
-                        }
-                        print(output)
-                        outputs.append(output)
+                        })
 
     return JsonResponse({'outputs': outputs})
 
@@ -102,7 +100,6 @@ def list_outputs(request, id):
 def get_thumbnail(request, id, file):
     try:
         run = Run.objects.get(identifier=id)
-        flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -111,31 +108,32 @@ def get_thumbnail(request, id, file):
 
     with client:
         with client.client.open_sftp() as sftp:
-                file_path = join(work_dir, file)
-                stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
-                errs = stderr.read()
-                if errs:
-                    raise Exception(f"Failed to check existence of {file}: {errs}")
+            stdin, stdout, stderr = client.client.exec_command(f"test -e {join(work_dir, file)} && echo exists")
+            errs = stderr.read()
+            if errs:
+                raise Exception(f"Failed to check existence of {file}: {errs}")
 
-                # if file is an image, grab a thumbnail
-                fl = file.lower()
-                with tempfile.NamedTemporaryFile() as tf:
+            run_dir = join(settings.MEDIA_ROOT, run.identifier)
+            thumbnail_path = join(run_dir, file)
+            thumbnail_name_lower = file.lower()
+            if Path(thumbnail_path).exists():
+                print(f"Using existing thumbnail: {thumbnail_path}")
+                thumbnail = open(thumbnail_path, 'rb')
+            else:
+                with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
+                    print(f"Creating new thumbnail: {thumbnail_path}")
                     sftp.chdir(work_dir)
-                    sftp.get(file, tf.name)
-                    from PIL import Image
-                    image = Image.open(tf.name)
-                    image.thumbnail((35, 35))
-                    image.save(tf, format='png')
-                    # tn = get_thumbnail(open(tf.name, 'rb'), '100x100', crop='center', quality=99)
-                    # with open(tf.name, 'rb') as tnf:
-                    #     tnf.write(tn)
+                    sftp.get(file, temp_file.name)
+                    Path(run_dir).mkdir(exist_ok=True, parents=True)
+                    thumbnail = Thumbnail(source=temp_file).generate()
+                    thumbnail_file.write(thumbnail.read())
 
-                    if fl.endswith('png'):
-                        return HttpResponse(open(tf.name, 'rb'), content_type="image/png")
-                    elif fl.endswith('jpg') or fl.endswith('jpeg'):
-                        return HttpResponse(open(tf.name, 'rb'), content_type="image/jpg")
-                    else:
-                        return HttpResponseNotFound()
+            if thumbnail_name_lower.endswith('png'):
+                return HttpResponse(thumbnail, content_type="image/png")
+            elif thumbnail_name_lower.endswith('jpg') or thumbnail_name_lower.endswith('jpeg'):
+                return HttpResponse(thumbnail, content_type="image/jpg")
+            else:
+                return HttpResponseNotFound()
 
 
 @api_view(['GET'])

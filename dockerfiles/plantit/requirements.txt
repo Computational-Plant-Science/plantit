@@ -4,7 +4,6 @@ django-filter
 django-model-utils
 django-taggit
 djangorestframework
-sorl-thumbnail
 psycopg2-binary
 markdown
 paramiko

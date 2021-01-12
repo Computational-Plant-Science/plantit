@@ -367,9 +367,12 @@
                                         v-for="file in outputFiles"
                                         v-bind:key="file"
                                         class="pl-3 pr-3 pb-1"
+                                        style="border-top: 1px solid rgba(211, 211, 211, .5);"
                                     >
                                         <b-col
+                                            md="auto"
                                             align-self="end"
+                                            class="text-left"
                                             style="white-space: pre-line;"
                                         >
                                             {{ file.name }}
@@ -395,8 +398,9 @@
                                                 variant="warning"
                                             ></b-spinner>
                                         </b-col>
+                                        <b-col></b-col>
                                         <b-col
-                                          md="auto"
+                                            md="auto"
                                             v-if="
                                                 file.name
                                                     .toLowerCase()
@@ -414,7 +418,9 @@
                                                 right
                                                 fluid
                                                 :src="thumbnailUrl(file.name)"
-                                                :alt="require('@/assets/loading_spinner.gif')"
+                                                :alt="
+                                                    require('@/assets/loading_spinner.gif')
+                                                "
                                                 rounded
                                             ></b-img>
                                         </b-col>
@@ -428,7 +434,7 @@
                                                 "
                                                 size="sm"
                                                 v-b-tooltip.hover
-                                                title="Download File"
+                                                :title="'Download ' + file.name"
                                                 @click="downloadFile(file.name)"
                                             >
                                                 <i class="fas fa-download"></i>

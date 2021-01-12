@@ -59,8 +59,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'plantit.apps.PlantITConfig',
     'front_end.apps.FrontEndConfig',
-    'taggit',
-    'sorl.thumbnail'
+    'taggit'
 ]
 
 MIDDLEWARE = [

@@ -13,18 +13,13 @@ class Run(models.Model):
     class Meta:
         ordering = ['-created']
 
+    tags = TaggableManager()
     created = models.DateTimeField(default=timezone.now)
-
     token = models.CharField(max_length=40)
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
     identifier = models.CharField(max_length=36, null=False, blank=False)
-
     flow_owner = models.CharField(max_length=280, null=True, blank=True)
-
     flow_name = models.CharField(max_length=280, null=True, blank=True)
-
     target = models.ForeignKey(Target,
                                null=True,
                                blank=True,
@@ -39,8 +34,6 @@ class Run(models.Model):
                                            null=True,
                                            blank=True,
                                            default=None)
-
-    tags = TaggableManager()
 
     def __str__(self):
         return json.dumps(model_to_dict(self))
@@ -78,6 +71,17 @@ class Status(models.Model):
     date = models.DateTimeField(default=timezone.now, blank=True)
     description = models.TextField(blank=True)
 
-
     def __str__(self):
         return self.State[self.state - 1][1]
+
+
+class Output(models.Model):
+    class Meta:
+        ordering = ['-created']
+
+    run = models.ForeignKey(Run, on_delete=models.CASCADE)
+    created = models.DateTimeField(default=timezone.now)
+    thumbnail = models.ImageField(upload_to='thumbnails/', null=True, blank=True, default='favicon-xyz.png')
+
+    def __str__(self):
+        return self.path
