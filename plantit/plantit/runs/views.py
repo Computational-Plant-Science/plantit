@@ -116,6 +116,10 @@ def get_thumbnail(request, id, file):
             run_dir = join(settings.MEDIA_ROOT, run.identifier)
             thumbnail_path = join(run_dir, file)
             thumbnail_name_lower = file.lower()
+
+            # make thumbnail directory for this run if it does not already exist
+            Path(run_dir).mkdir(exist_ok=True, parents=True)
+
             if Path(thumbnail_path).exists():
                 print(f"Using existing thumbnail: {thumbnail_path}")
                 thumbnail = open(thumbnail_path, 'rb')
@@ -124,7 +128,6 @@ def get_thumbnail(request, id, file):
                     print(f"Creating new thumbnail: {thumbnail_path}")
                     sftp.chdir(work_dir)
                     sftp.get(file, temp_file.name)
-                    Path(run_dir).mkdir(exist_ok=True, parents=True)
                     thumbnail = Thumbnail(source=temp_file).generate()
                     thumbnail_file.write(thumbnail.read())
 
