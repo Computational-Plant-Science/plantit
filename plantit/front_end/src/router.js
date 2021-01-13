@@ -127,7 +127,7 @@ let router = new Router({
                 ],
                 requiresAuth: false
             }
-        },
+        }
     ]
 });
 
@@ -146,29 +146,17 @@ router.beforeEach((to, from, next) => {
     }
     if (to.matched.some(record => record.name === 'flow')) {
         while (to.meta.crumb.length > 1) to.meta.crumb.pop();
-        to.meta.crumb.push(
-            {
-                text: to.params.username,
-                href: `/${to.params.username}`
-            },
-            {
-                text: `Flow: ${to.params.name}`,
-                href: `/${to.params.username}/${to.params.name}`
-            }
-        );
+        to.meta.crumb.push({
+            text: `Flow: ${to.params.username}/${to.params.name}`,
+            href: `/${to.params.username}/${to.params.name}`
+        });
     }
     if (to.matched.some(record => record.name === 'run')) {
         while (to.meta.crumb.length > 1) to.meta.crumb.pop();
-        to.meta.crumb.push(
-            {
-                text: to.params.username,
-                href: `/${to.params.username}`
-            },
-            {
-                text: `Run: ${to.params.id}`,
-                href: `/${to.params.username}/runs/${to.params.id}`
-            }
-        );
+        to.meta.crumb.push({
+            text: `Run: ${to.params.id}`,
+            href: `/${to.params.username}/runs/${to.params.id}`
+        });
     }
     if (to.matched.some(record => record.name === 'user')) {
         while (to.meta.crumb.length > 1) to.meta.crumb.pop();
@@ -184,7 +172,7 @@ router.beforeEach((to, from, next) => {
     //         next(); // go to wherever I'm going
     //     }
     // } else {
-        next(); // does not require auth, make sure to always call next()!
+    next(); // does not require auth, make sure to always call next()!
     // }
 });
 

@@ -88,9 +88,9 @@
                                 <b-col class="ml-0 mr-0" align-self="left">
                                     <b-img
                                         right
-                                        rounded="circle"
+                                        rounded
                                         class="avatar card-img-right"
-                                        style="max-height: 4rem; max-width: 4rem; opacity: 0.9; position: absolute; right: -20px; top: -25px; z-index:1;"
+                                        style="max-height: 4rem; max-width: 4rem; opacity: 0.9; position: absolute; right: -15px; top: -25px; z-index:1;"
                                         :src="user.github_profile.avatar_url"
                                     ></b-img>
                                 </b-col>

@@ -9,7 +9,7 @@
     >
         <br />
         <br />
-        <b-container fluid class="p-3 vl">
+        <b-container class="p-3 vl">
             <b-row>
                 <b-col>
                     <b-card
@@ -45,6 +45,12 @@
                             :selectable="false"
                         ></flowdetail>
                     </b-card>
+                </b-col>
+            </b-row>
+            <br />
+            <b-row>
+                <b-col align-self="end">
+                    <h5>To run {{ flow.config.name }}, configure options below.</h5>
                 </b-col>
             </b-row>
             <b-row>
@@ -336,6 +342,7 @@
                     </b-card>
                 </b-col>
             </b-row>
+            <br />
             <b-row>
                 <b-col>
                     <b-button
@@ -344,7 +351,7 @@
                         variant="success"
                         block
                     >
-                        Start
+                        Submit
                     </b-button>
                 </b-col>
             </b-row>

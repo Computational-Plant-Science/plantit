@@ -1,7 +1,7 @@
 <template>
     <div class="w-100 h-100 pl-3" style="background-color: transparent">
         <b-spinner v-if="loadingUser" type="grow" class="text-center" variant="success"></b-spinner>
-        <b-container v-else class="p-3 vl" fluid="">
+        <b-container v-else class="p-3 vl">
             <b-row align-v="start" align-h="center" class="mb-2">
                 <b-col style="color: white" align-self="end" class="ml-0 mr-0">
                     <b-row :class="darkMode ? 'text-light' : 'text-secondary'">
@@ -38,8 +38,8 @@
                             <b-img
                                 right
                                 class="avatar"
-                                rounded="circle"
-                                style="max-height: 7rem; max-width: 7rem; position: relative; top: 38px; box-shadow: 0px 2px 5px #adb5bd"
+                                rounded
+                                style="max-height: 7rem; max-width: 7rem; position: relative; top: 38px; box-shadow: -2px 2px 2px #adb5bd"
                                 :src="
                                     githubProfile
                                         ? githubProfile.avatar_url

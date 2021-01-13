@@ -5,7 +5,7 @@
     >
         <b-img
             v-if="flow.config.logo"
-            rounded="circle"
+            rounded
             class="card-img-right"
             style="max-width: 12rem;position: absolute;right: 20px;top: 20px;z-index:1"
             right
@@ -27,7 +27,7 @@
                         <h2 :class="darkMode ? 'text-white' : 'text-dark'">
                             {{ flow.config.name }}
                         </h2>
-                      <b-badge
+                        <b-badge
                             class="mr-1"
                             :variant="
                                 flow.config.public ? 'success' : 'warning'
@@ -39,7 +39,7 @@
                             v-for="topic in flow.repo.topics"
                             v-bind:key="topic"
                             class="mr-1"
-                            :variant="darkMode ? 'light' : 'dark'"
+                            variant="secondary"
                             >{{ topic }}</b-badge
                         >
                     </b-col>
@@ -70,6 +70,8 @@
                             </b-col>
                         </b-row>
                         <br />
+                        <h5>Configuration</h5>
+                        <hr />
                         <b-row>
                             <b-col>
                                 <b-row>
@@ -266,6 +268,9 @@
                             </b-col>
                         </b-row>
                     </b-col>
+                </b-row>
+                <br />
+                <b-row>
                     <b-col
                         align-self="end"
                         md="auto"
@@ -278,9 +283,8 @@
                         >
                     </b-col>
                     <b-col align-self="end" class="text-left" v-else>
-                        <b>Resource Requests</b>
-                        <br />
-                        <br />
+                        <h5>Cluster Resource Requests</h5>
+                        <hr />
                         <b-row align-v="right" align-h="right">
                             <b-col>
                                 <b

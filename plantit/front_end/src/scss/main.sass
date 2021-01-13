@@ -316,7 +316,7 @@ h5
   color: $dark !important
 
 .card
-  box-shadow: -1px 1px 3px $gray-500
+  box-shadow: -2px 2px 2px $gray-500
 
 // a
 //   color: $dark
@@ -364,3 +364,9 @@ a:link
   color: $gray-700 !important
   background-color: $gray-100 !important
   border-color: $color-disabled
+
+.breadcrumb-item + .breadcrumb-item::before
+  padding: 0
+  margin: 0
+  content: ""
+

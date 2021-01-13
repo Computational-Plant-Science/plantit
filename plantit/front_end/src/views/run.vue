@@ -9,7 +9,7 @@
     >
         <br />
         <br />
-        <b-container class="p-3 vl" fluid>
+        <b-container class="p-3 vl">
             <div v-if="runNotFound">
                 <b-row align-content="center">
                     <b-col>
@@ -241,6 +241,7 @@
                                         v-if="loadingContainerLogs"
                                     >
                                         <b-spinner
+                                            class="mt-3"
                                             type="grow"
                                             label="Loading..."
                                             variant="warning"
@@ -417,6 +418,7 @@
                                             <b-img
                                                 right
                                                 fluid
+                                                thumbnail
                                                 :src="thumbnailUrl(file.name)"
                                                 :alt="
                                                     require('@/assets/loading_spinner.gif')

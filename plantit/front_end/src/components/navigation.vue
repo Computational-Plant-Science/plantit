@@ -47,7 +47,7 @@
                             <b-list-group class="text-left m-0 p-0">
                                 <b-list-group-item
                                     variant="default"
-                                    style="box-shadow: -1px 1px 2px #e2e3b0"
+                                    style="box-shadow: -2px 2px 2px #adb5bd"
                                     v-for="run in runs"
                                     v-bind:key="run.id"
                                     :class="
@@ -57,19 +57,25 @@
                                     "
                                     @click="onRunSelected(run)"
                                 >
-                                    <small class="mr-1"
-                                        ><a
-                                            :class="
-                                                darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                            :href="
-                                                `/${currentUserDjangoProfile.username}/runs/${run.id}`
-                                            "
-                                            >{{ run.id }}</a
-                                        >
-                                    </small>
+                                    <a
+                                        :class="
+                                            darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        :href="
+                                            `/${currentUserDjangoProfile.username}/runs/${run.id}`
+                                        "
+                                        >{{ run.id }}</a
+                                    >
+                                    <br v-if="run.tags.length > 0" />
+                                    <b-badge
+                                        v-for="tag in run.tags"
+                                        v-bind:key="tag"
+                                        class="mr-1"
+                                        variant="warning"
+                                        >{{ tag }}
+                                    </b-badge>
                                     <br />
                                     <small class="mr-1"
                                         ><a
@@ -87,14 +93,6 @@
                                             }}</a
                                         >
                                     </small>
-                                    <br v-if="run.tags.length > 0" />
-                                    <b-badge
-                                        v-for="tag in run.tags"
-                                        v-bind:key="tag"
-                                        class="mr-1"
-                                        variant="warning"
-                                        >{{ tag }}
-                                    </b-badge>
                                     <br />
                                     <b-badge
                                         class="ml-0 mr-1"

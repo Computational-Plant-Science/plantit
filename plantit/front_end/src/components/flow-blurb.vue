@@ -43,7 +43,7 @@
             <b-col cols="1"></b-col>
         </b-row>
         <b-img
-            rounded="circle"
+            rounded
             class="card-img-right"
             style="max-width: 6rem;opacity: 0.8;position: absolute;right: -25px;top: -15px;z-index:1;"
             right

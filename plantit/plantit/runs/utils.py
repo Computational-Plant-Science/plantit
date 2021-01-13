@@ -51,10 +51,11 @@ def __list_by_user(username, token):
             "Authorization": f"token {token}",
             "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
         })
+    response_json = response.json()
     flows = [{
         'repo': item['repository'],
         'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], token)
-    } for item in response.json()['items']]
+    } for item in response_json['items']] if 'items' in response_json else []
 
     return [flow for flow in flows if flow['config']['public']]
 
