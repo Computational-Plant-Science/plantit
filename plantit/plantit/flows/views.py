@@ -31,25 +31,31 @@ def list_all(request):
     flows_file = settings.FLOWS_CACHE
     flows_path = Path(flows_file)
     flows_refresh = int(settings.FLOWS_REFRESH_MINUTES)
-    now = datetime.now()
-    modified = datetime.fromtimestamp(flows_path.stat().st_ctime)
+    flows_file = settings.FLOWS_CACHE
+    flows = []
+    users = User.objects.all()
+    usernames = [user.profile.github_username for user in users] + ['Computational-Plant-Science',
+                                                                    'van-der-knaap-lab', 'burke-lab']
 
-    if flows_path.exists() and ((now - modified).total_seconds() / 60.0) < flows_refresh:
-        print(f"Using flows cached in: {flows_file}")
-        with open(flows_file, 'r') as file:
-            flows = json.load(file)
-    else:
+    if not flows_path.exists():
         print(f"No flows cached, retrieving")
-        flows = []
-        users = User.objects.all()
-        usernames = [user.profile.github_username for user in users] + ['Computational-Plant-Science',
-                                                                        'van-der-knaap-lab', 'burke-lab']
         for username in usernames:
             flows = flows + __list_by_user(username, request.user.profile.github_token)
-
-        flows_file = settings.FLOWS_CACHE
         with open(flows_file, 'w') as file:
             json.dump(flows, file)
+    else:
+        now = datetime.now()
+        modified = datetime.fromtimestamp(flows_path.stat().st_ctime)
+        if ((now - modified).total_seconds() / 60.0) < flows_refresh:
+            print(f"Using flows cached in: {flows_file}")
+            with open(flows_file, 'r') as file:
+                flows = json.load(file)
+        else:
+            print(f"Flow cache is stale, refreshing")
+            for username in usernames:
+                flows = flows + __list_by_user(username, request.user.profile.github_token)
+            with open(flows_file, 'w') as file:
+                json.dump(flows, file)
 
     return JsonResponse({'pipelines': flows})
 
