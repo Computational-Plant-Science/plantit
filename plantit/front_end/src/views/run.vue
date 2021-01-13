@@ -418,7 +418,6 @@
                                             <b-img
                                                 right
                                                 fluid
-                                                thumbnail
                                                 :src="thumbnailUrl(file.name)"
                                                 :alt="
                                                     require('@/assets/loading_spinner.gif')
@@ -706,15 +705,17 @@ export default {
                         return;
                     }
                     this.outputFiles = response.data.outputs;
-                    for (let i = 0; i < this.outputFiles.length; i++) {
-                        let name = response.data.outputs[i]['name'];
-                        if (
-                            name.toLowerCase().includes('png') ||
-                            name.toLowerCase().includes('jpg') ||
-                            name.toLowerCase().includes('jpeg')
-                        )
-                            this.getThumbnail(name);
-                    }
+                    //var promises = [];
+                    //for (let i = 0; i < this.outputFiles.length; i++) {
+                    //    let name = response.data.outputs[i]['name'];
+                    //    if (
+                    //        name.toLowerCase().includes('png') ||
+                    //        name.toLowerCase().includes('jpg') ||
+                    //        name.toLowerCase().includes('jpeg')
+                    //    )
+                    //        promises.push(this.getThumbnail(name));
+                    //}
+                    //Promise.all([...promises]);
                     this.loadingOutputFiles = false;
                 })
                 .catch(error => {
