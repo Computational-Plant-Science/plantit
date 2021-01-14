@@ -50,7 +50,11 @@
             <br />
             <b-row>
                 <b-col align-self="end">
-                    <h5>
+                    <h5
+                        :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                    >
                         To run {{ flow.config.name }}, configure options below.
                     </h5>
                 </b-col>
@@ -144,11 +148,7 @@
                         </b-row>
                         <b-row
                             ><b-col
-                                ><b
-                                    :class="
-                                        darkMode ? 'text-white' : 'text-dark'
-                                    "
-                                >
+                                ><b>
                                     Configure parameters for this run.
                                 </b>
                                 <br /><b-table
@@ -317,7 +317,11 @@
                                         class="fas fa-upload fa-fw text-success"
                                     ></i>
                                     <i
-                                        v-else
+                                        v-else-if="!outputDirectory && darkMode"
+                                        class="fas fa-upload fa-fw text-white"
+                                    ></i>
+                                    <i
+                                        v-else-if="!outputDirectory && !darkMode"
                                         class="fas fa-upload fa-fw text-dark"
                                     ></i>
                                     Output Sync
@@ -751,6 +755,7 @@ export default {
             }
             if (this.output.to) {
                 config.output = this.output;
+                if (!this.outputDirectory) config.output.to = null;
             }
 
             // save config

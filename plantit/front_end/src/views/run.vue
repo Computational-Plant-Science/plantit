@@ -353,7 +353,7 @@
                                     </h5></b-card-header
                                 >
                                 <b-card-body
-                                    v-if="outputFiles.length > 0"
+                                    v-if="outputFiles.length > 0 || loadingOutputFiles"
                                     class="mt-0 pt-0"
                                 >
                                     <b-row
