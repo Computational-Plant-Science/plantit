@@ -1,8 +1,7 @@
 <template>
     <div>
         <b :class="darkMode ? 'text-white' : 'text-dark'">
-            Select a directory in the CyVerse Data Store to push output files
-            to.
+            Select a directory in the CyVerse Data Store to upload output files to.
         </b>
         <b-row class="mt-2"
             ><b-col>

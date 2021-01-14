@@ -329,7 +329,6 @@
                                 </b-card-body>
                             </b-card>
                             <b-card
-                                v-if="outputFiles.length > 0"
                                 :bg-variant="darkMode ? 'dark' : 'white'"
                                 :footer-bg-variant="darkMode ? 'dark' : 'white'"
                                 border-variant="default"
@@ -353,7 +352,10 @@
                                         Output Files
                                     </h5></b-card-header
                                 >
-                                <b-card-body class="mt-0 pt-0">
+                                <b-card-body
+                                    v-if="outputFiles.length > 0"
+                                    class="mt-0 pt-0"
+                                >
                                     <b-row
                                         align-h="center"
                                         v-if="loadingOutputFiles"
@@ -440,6 +442,79 @@
                                             >
                                                 <i class="fas fa-download"></i>
                                             </b-button>
+                                        </b-col>
+                                    </b-row>
+                                </b-card-body>
+                                <b-card-body
+                                    v-else-if="flow.config.output"
+                                    class="mt-0 pt-0"
+                                >
+                                    <b-row align-h="center" align-v="center" class="mt-2">
+                                        <b-col>
+                                            <i
+                                                class="fas fa-exclamation-triangle text-danger fa-fw"
+                                            ></i>
+                                            Output files expected but not found
+                                        </b-col>
+                                    </b-row>
+                                    <b-row align-h="center" align-v="center">
+                                        <b-col>
+                                            <b
+                                                ><code
+                                                    >{{
+                                                        flow.config.output.path
+                                                            ? flow.config.output
+                                                                  .path + '/'
+                                                            : ''
+                                                    }}{{
+                                                        flow.config.output
+                                                            .include
+                                                            ? (flow.config
+                                                                  .output
+                                                                  .exclude
+                                                                  ? '+ '
+                                                                  : '') +
+                                                              (flow.config
+                                                                  .output
+                                                                  .include
+                                                                  .patterns
+                                                                  ? '*.' +
+                                                                    flow.config.output.include.patterns.join(
+                                                                        ', *.'
+                                                                    ) + ', '
+                                                                  : []) +
+                                                              (flow.config
+                                                                  .output
+                                                                  .include.names
+                                                                  ? flow.config.output.include.names.join(
+                                                                        ', '
+                                                                    )
+                                                                  : [])
+                                                            : ''
+                                                    }}{{
+                                                        flow.config.output
+                                                            .exclude
+                                                            ? ' - ' +
+                                                              (flow.config
+                                                                  .output
+                                                                  .exclude
+                                                                  .patterns
+                                                                  ? '*.' +
+                                                                    flow.config.output.exclude.patterns.join(
+                                                                        ', *.'
+                                                                    ) + ', '
+                                                                  : []) +
+                                                              (flow.config
+                                                                  .output
+                                                                  .exclude.names
+                                                                  ? flow.config.output.exclude.names.join(
+                                                                        ', '
+                                                                    )
+                                                                  : [])
+                                                            : ''
+                                                    }}
+                                                </code></b
+                                            >
                                         </b-col>
                                     </b-row>
                                 </b-card-body>

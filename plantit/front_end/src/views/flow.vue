@@ -50,7 +50,9 @@
             <br />
             <b-row>
                 <b-col align-self="end">
-                    <h5>To run {{ flow.config.name }}, configure options below.</h5>
+                    <h5>
+                        To run {{ flow.config.name }}, configure options below.
+                    </h5>
                 </b-col>
             </b-row>
             <b-row>
@@ -69,7 +71,11 @@
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    <i class="fas fa-tags fa-fw"></i>
+                                    <i
+                                        v-if="tags.length > 0"
+                                        class="fas fa-tags fa-fw text-success"
+                                    ></i>
+                                    <i v-else class="fas fa-tags fa-fw"></i>
                                     Tags
                                 </h5>
                             </b-col>
@@ -220,7 +226,11 @@
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    <i class="fas fa-download fa-fw"></i>
+                                    <i
+                                        v-if="inputReady"
+                                        class="fas fa-download fa-fw text-success"
+                                    ></i>
+                                    <i v-else class="fas fa-download fa-fw"></i>
                                     Input
                                     {{
                                         this.input.kind[0].toUpperCase() +
@@ -302,12 +312,29 @@
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    <i class="fas fa-upload fa-fw"></i>
-                                    Output Directory
+                                    <i
+                                        v-if="outputDirectory"
+                                        class="fas fa-upload fa-fw text-success"
+                                    ></i>
+                                    <i
+                                        v-else
+                                        class="fas fa-upload fa-fw text-dark"
+                                    ></i>
+                                    Output Sync
+                                    {{ outputDirectory ? '' : ' (off)' }}
                                 </h5>
+                            </b-col>
+                            <b-col md="auto">
+                                <b-form-checkbox
+                                    v-model="outputDirectory"
+                                    switch
+                                    size="md"
+                                >
+                                </b-form-checkbox>
                             </b-col>
                         </b-row>
                         <runoutput
+                            v-if="outputDirectory"
                             :user="user"
                             v-on:outputSelected="outputSelected"
                         ></runoutput>
@@ -330,7 +357,11 @@
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    <i class="fas fa-server fa-fw"></i>
+                                    <i
+                                        v-if="target.name !== ''"
+                                        class="fas fa-server fa-fw text-success"
+                                    ></i>
+                                    <i v-else class="fas fa-server fa-fw"></i>
                                     Deployment Target
                                 </h5>
                             </b-col>
@@ -406,6 +437,7 @@ export default {
                 filetypes: []
             },
             inputSelectedPatterns: [],
+            outputDirectory: false,
             outputSpecified: false,
             output: {
                 from: '',
@@ -779,6 +811,7 @@ export default {
         },
         outputReady: function() {
             if (
+                this.outputDirectory &&
                 this.flow &&
                 this.flow.config &&
                 this.flow.config.input !== undefined &&

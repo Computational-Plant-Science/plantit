@@ -218,7 +218,7 @@
                                                               ? '*.' +
                                                                 flow.config.output.include.patterns.join(
                                                                     ', *.'
-                                                                )
+                                                                ) + ', '
                                                               : []) +
                                                           (flow.config.output
                                                               .include.names
@@ -235,7 +235,7 @@
                                                               ? '*.' +
                                                                 flow.config.output.exclude.patterns.join(
                                                                     ', *.'
-                                                                )
+                                                                ) + ', '
                                                               : []) +
                                                           (flow.config.output
                                                               .exclude.names

@@ -8,6 +8,7 @@ from pathlib import Path
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
+from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
@@ -84,13 +85,16 @@ def list_outputs(request, id):
                 seen.append(output['name'])
                 outputs.append(output)
 
-            for f in sftp.listdir(work_dir):
-                if any(pattern in f for pattern in included_by_pattern):
-                    if not any(s == f for s in seen):
-                        outputs.append({
-                            'name': f,
-                            'exists': True
-                        })
+            try:
+                for f in sftp.listdir(work_dir):
+                    if any(pattern in f for pattern in included_by_pattern):
+                        if not any(s == f for s in seen):
+                            outputs.append({
+                                'name': f,
+                                'exists': True
+                            })
+            except:
+                return JsonResponse({'outputs': []})
 
     return JsonResponse({'outputs': outputs})
 
@@ -122,7 +126,8 @@ def get_thumbnail(request, id, file):
 
             if Path(thumbnail_path).exists():
                 print(f"Using existing thumbnail: {thumbnail_path}")
-                thumbnail = open(thumbnail_path, 'rb')
+                return redirect(thumbnail_path)
+                # thumbnail = open(thumbnail_path, 'rb')
             else:
                 with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
                     print(f"Creating new thumbnail: {thumbnail_path}")
