@@ -70,7 +70,7 @@
                             </b-col>
                         </b-row>
                         <br />
-                        <h5>Configuration</h5>
+                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">Configuration</h5>
                         <hr />
                         <b-row>
                             <b-col>
@@ -283,7 +283,7 @@
                         >
                     </b-col>
                     <b-col align-self="end" class="text-left" v-else>
-                        <h5>Cluster Resource Requests</h5>
+                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">Cluster Resource Requests</h5>
                         <hr />
                         <b-row align-v="right" align-h="right">
                             <b-col>
