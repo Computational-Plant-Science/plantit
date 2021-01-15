@@ -323,6 +323,7 @@
                                                 @click="downloadLogs"
                                             >
                                                 <i class="fas fa-download"></i>
+                                                Download
                                             </b-button>
                                         </b-col>
                                     </b-row>
@@ -353,10 +354,14 @@
                                     </h5></b-card-header
                                 >
                                 <b-card-body
-                                    v-if="outputFiles.length > 0 || loadingOutputFiles"
+                                    v-if="
+                                        outputFiles.length > 0 ||
+                                            loadingOutputFiles
+                                    "
                                     class="mt-0 pt-0"
                                 >
                                     <b-row
+                                        class="pl-1 pr-1 pb-1"
                                         align-h="center"
                                         v-if="loadingOutputFiles"
                                     >
@@ -369,11 +374,82 @@
                                     <b-row
                                         v-for="file in outputFiles"
                                         v-bind:key="file"
-                                        class="pl-3 pr-3 pb-1"
+                                        class="pl-1 pr-1 pb-1"
                                         style="border-top: 1px solid rgba(211, 211, 211, .5);"
                                     >
                                         <b-col
                                             md="auto"
+                                            v-if="
+                                                file.name
+                                                    .toLowerCase()
+                                                    .endsWith('txt') ||
+                                                    file.name
+                                                        .toLowerCase()
+                                                        .endsWith('log')
+                                            "
+                                            align-self="end"
+                                        >
+                                            <i class="fas fa-file-alt"></i>
+                                        </b-col>
+                                        <b-col
+                                            md="auto"
+                                            v-else-if="
+                                                file.name
+                                                    .toLowerCase()
+                                                    .endsWith('csv')
+                                            "
+                                            align-self="end"
+                                        >
+                                            <i class="fas fa-file-csv"></i>
+                                        </b-col>
+                                        <b-col
+                                            md="auto"
+                                            v-else-if="
+                                                file.name
+                                                    .toLowerCase()
+                                                    .endsWith('xlsx')
+                                            "
+                                            align-self="end"
+                                        >
+                                            <i class="fas fa-file-excel"></i>
+                                        </b-col>
+                                        <b-col
+                                            md="auto"
+                                            v-else-if="
+                                                file.name
+                                                    .toLowerCase()
+                                                    .endsWith('pdf')
+                                            "
+                                            align-self="end"
+                                        >
+                                            <i class="fas fa-file-pdf"></i>
+                                        </b-col>
+                                        <b-col
+                                            md="auto"
+                                            v-if="
+                                                file.name
+                                                    .toLowerCase()
+                                                    .includes('png') ||
+                                                    file.name
+                                                        .toLowerCase()
+                                                        .includes('jpg') ||
+                                                    file.name
+                                                        .toLowerCase()
+                                                        .includes('jpeg')
+                                            "
+                                            align-self="end"
+                                        >
+                                            <b-img
+                                                right
+                                                fluid
+                                                :src="thumbnailUrl(file.name)"
+                                                :alt="
+                                                    require('@/assets/loading_spinner.gif')
+                                                "
+                                                rounded
+                                            ></b-img>
+                                        </b-col>
+                                        <b-col
                                             align-self="end"
                                             class="text-left"
                                             style="white-space: pre-line;"
@@ -401,32 +477,6 @@
                                                 variant="warning"
                                             ></b-spinner>
                                         </b-col>
-                                        <b-col></b-col>
-                                        <b-col
-                                            md="auto"
-                                            v-if="
-                                                file.name
-                                                    .toLowerCase()
-                                                    .includes('png') ||
-                                                    file.name
-                                                        .toLowerCase()
-                                                        .includes('jpg') ||
-                                                    file.name
-                                                        .toLowerCase()
-                                                        .includes('jpeg')
-                                            "
-                                            align-self="end"
-                                        >
-                                            <b-img
-                                                right
-                                                fluid
-                                                :src="thumbnailUrl(file.name)"
-                                                :alt="
-                                                    require('@/assets/loading_spinner.gif')
-                                                "
-                                                rounded
-                                            ></b-img>
-                                        </b-col>
                                         <b-col md="auto" align-self="end">
                                             <b-button
                                                 :disabled="!file.exists"
@@ -441,15 +491,43 @@
                                                 @click="downloadFile(file.name)"
                                             >
                                                 <i class="fas fa-download"></i>
+                                                Download
                                             </b-button>
                                         </b-col>
+                                    </b-row>
+                                    <br />
+                                    <b-row class="pl-1 pr-1 pb-1">
+                                        <b-col
+                                            class="text-right"
+                                            align-self="end"
+                                            ><b-button
+                                                :variant="
+                                                    darkMode
+                                                        ? 'outline-light'
+                                                        : 'outline-dark'
+                                                "
+                                                size="sm"
+                                                v-b-tooltip.hover
+                                                title="Download zip file"
+                                                @click="downloadZip"
+                                            >
+                                                <i
+                                                    class="fas fa-file-archive fa-fw"
+                                                ></i>
+                                                Download All
+                                            </b-button></b-col
+                                        >
                                     </b-row>
                                 </b-card-body>
                                 <b-card-body
                                     v-else-if="flow.config.output"
                                     class="mt-0 pt-0"
                                 >
-                                    <b-row align-h="center" align-v="center" class="mt-2">
+                                    <b-row
+                                        align-h="center"
+                                        align-v="center"
+                                        class="mt-2"
+                                    >
                                         <b-col>
                                             <i
                                                 class="fas fa-exclamation-triangle text-danger fa-fw"
@@ -481,7 +559,8 @@
                                                                   ? '*.' +
                                                                     flow.config.output.include.patterns.join(
                                                                         ', *.'
-                                                                    ) + ', '
+                                                                    ) +
+                                                                    ', '
                                                                   : []) +
                                                               (flow.config
                                                                   .output
@@ -502,7 +581,8 @@
                                                                   ? '*.' +
                                                                     flow.config.output.exclude.patterns.join(
                                                                         ', *.'
-                                                                    ) + ', '
+                                                                    ) +
+                                                                    ', '
                                                                   : []) +
                                                               (flow.config
                                                                   .output
@@ -715,6 +795,7 @@ export default {
         thumbnailUrl(file) {
             return `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/${file}/`;
         },
+        downloadZip() {},
         downloadFile(file) {
             axios
                 .get(
