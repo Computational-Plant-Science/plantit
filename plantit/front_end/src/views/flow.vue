@@ -741,21 +741,10 @@ export default {
                     this.inputSelectedPatterns.length > 0
                         ? this.inputSelectedPatterns
                         : this.input.filetypes;
-                // if (config.input.kind === '')
-                //     config.input.kind =
-                //         'from_directory' in this.flow.config
-                //             ? this.flow.config.from_directory
-                //                 ? 'directory'
-                //                 : '.' in this.input.from
-                //                 ? 'file'
-                //                 : 'files'
-                //             : this.input.from.indexOf('.') !== -1
-                //             ? 'file'
-                //             : 'files';
             }
-            if (this.output.to) {
+            if (this.output !== undefined) {
                 config.output = this.output;
-                if (!this.outputDirectory) config.output.to = null;
+                if (!this.outputDirectory) delete config.output['to'];
             }
 
             // save config

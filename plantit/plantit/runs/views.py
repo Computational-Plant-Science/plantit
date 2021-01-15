@@ -298,7 +298,6 @@ def runs(request):
             config['input'] = flow['config']['input']
         if 'output' in flow['config']:
             flow['config']['output']['from'] = join(target.workdir, run.work_dir, flow['config']['output']['from'])
-            print(flow['config']['output']['from'])
             config['output'] = flow['config']['output']
 
         execute.delay({
