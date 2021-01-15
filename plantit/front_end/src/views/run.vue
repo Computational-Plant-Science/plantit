@@ -459,15 +459,13 @@
                                                         .includes('jpeg')
                                             "
                                         >
-                                            <b-img
-                                                right
-                                                fluid
-                                                :src="thumbnailUrl(file.name)"
-                                                :alt="
-                                                    require('@/assets/loading_spinner.gif')
-                                                "
-                                                rounded
-                                            ></b-img>
+                                            <i class="far fa-file-image fa-fw"></i>
+                                        </b-col>
+                                        <b-col
+                                            align-self="end"
+                                            md="auto"
+                                        v-else>
+                                          <i class="fas fa-file fa-fw"></i>
                                         </b-col>
                                         <b-col
                                             align-self="end"
