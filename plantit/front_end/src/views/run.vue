@@ -358,7 +358,6 @@
                                         outputFiles.length > 0 ||
                                             loadingOutputFiles
                                     "
-                                    class="mt-0 pt-0"
                                 >
                                     <b-row
                                         class="pl-1 pr-1 pb-1"
@@ -374,10 +373,11 @@
                                     <b-row
                                         v-for="file in outputFiles"
                                         v-bind:key="file"
-                                        class="pl-1 pr-1 pb-1"
+                                        class="p-1"
                                         style="border-top: 1px solid rgba(211, 211, 211, .5);"
                                     >
                                         <b-col
+                                            align-self="end"
                                             md="auto"
                                             v-if="
                                                 file.name
@@ -387,46 +387,67 @@
                                                         .toLowerCase()
                                                         .endsWith('log')
                                             "
-                                            align-self="end"
                                         >
-                                            <i class="fas fa-file-alt"></i>
+                                            <i
+                                                class="fas fa-file-alt fa-fw"
+                                            ></i>
                                         </b-col>
                                         <b-col
+                                            align-self="end"
                                             md="auto"
                                             v-else-if="
                                                 file.name
                                                     .toLowerCase()
                                                     .endsWith('csv')
                                             "
-                                            align-self="end"
                                         >
-                                            <i class="fas fa-file-csv"></i>
+                                            <i
+                                                class="fas fa-file-csv fa-fw"
+                                            ></i>
                                         </b-col>
                                         <b-col
+                                            align-self="end"
+                                            md="auto"
+                                            v-else-if="
+                                                file.name
+                                                    .toLowerCase()
+                                                    .endsWith('zip')
+                                            "
+                                        >
+                                            <i
+                                                class="fas fa-file-archive fa-fw"
+                                            ></i>
+                                        </b-col>
+                                        <b-col
+                                            align-self="end"
                                             md="auto"
                                             v-else-if="
                                                 file.name
                                                     .toLowerCase()
                                                     .endsWith('xlsx')
                                             "
-                                            align-self="end"
                                         >
-                                            <i class="fas fa-file-excel"></i>
+                                            <i
+                                                class="fas fa-file-excel fa-fw"
+                                            ></i>
                                         </b-col>
                                         <b-col
+                                            align-self="end"
                                             md="auto"
                                             v-else-if="
                                                 file.name
                                                     .toLowerCase()
                                                     .endsWith('pdf')
                                             "
-                                            align-self="end"
                                         >
-                                            <i class="fas fa-file-pdf"></i>
+                                            <i
+                                                class="fas fa-file-pdf fa-fw"
+                                            ></i>
                                         </b-col>
                                         <b-col
+                                            align-self="end"
                                             md="auto"
-                                            v-if="
+                                            v-else-if="
                                                 file.name
                                                     .toLowerCase()
                                                     .includes('png') ||
@@ -437,7 +458,6 @@
                                                         .toLowerCase()
                                                         .includes('jpeg')
                                             "
-                                            align-self="end"
                                         >
                                             <b-img
                                                 right
@@ -452,30 +472,37 @@
                                         <b-col
                                             align-self="end"
                                             class="text-left"
-                                            style="white-space: pre-line;"
+                                            style="position: relative; top: -5px; left: -40px"
                                         >
-                                            {{ file.name }}
-                                        </b-col>
-                                        <b-col
-                                            align-self="end"
-                                            v-if="
-                                                (run.status === 1 ||
-                                                    run.status === 2) &&
-                                                    !file.exists
-                                            "
-                                        >
+                                            <b-spinner
+                                                class="m-0 p-0"
+                                                v-if="
+                                                    !file.exists &&
+                                                        run.state !== 1 &&
+                                                        run.state !== 2
+                                                "
+                                                type="grow"
+                                                small
+                                                variant="warning"
+                                            ></b-spinner>
                                             <i
-                                                class="far fa-times-circle fa-fw text-danger"
+                                                v-else-if="
+                                                    !file.exists &&
+                                                        (run.state === 1 ||
+                                                            run.state === 2)
+                                                "
+                                                class="far fa-times-circle text-danger fa-fw"
+                                            ></i>
+<i
+                                                v-else
+                                                class="fas fa-check text-success fa-fw"
                                             ></i>
                                         </b-col>
                                         <b-col
                                             align-self="end"
-                                            v-else-if="!file.exists"
+                                            class="text-left"
                                         >
-                                            <b-spinner
-                                                small
-                                                variant="warning"
-                                            ></b-spinner>
+                                            {{ file.name }}
                                         </b-col>
                                         <b-col md="auto" align-self="end">
                                             <b-button
@@ -490,13 +517,14 @@
                                                 :title="'Download ' + file.name"
                                                 @click="downloadFile(file.name)"
                                             >
-                                                <i class="fas fa-download"></i>
+                                                <i
+                                                    class="fas fa-download fa-fw"
+                                                ></i>
                                                 Download
                                             </b-button>
                                         </b-col>
                                     </b-row>
-                                    <br />
-                                    <b-row class="pl-1 pr-1 pb-1">
+                                    <!--<b-row class="pl-1 pr-1 pb-1">
                                         <b-col
                                             class="text-right"
                                             align-self="end"
@@ -517,7 +545,7 @@
                                                 Download All
                                             </b-button></b-col
                                         >
-                                    </b-row>
+                                    </b-row>-->
                                 </b-card-body>
                                 <b-card-body
                                     v-else-if="flow.config.output"
@@ -795,7 +823,9 @@ export default {
         thumbnailUrl(file) {
             return `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/${file}/`;
         },
-        downloadZip() {},
+        downloadZip() {
+            this.downloadFile(`${this.$router.currentRoute.params.id}.zip`);
+        },
         downloadFile(file) {
             axios
                 .get(

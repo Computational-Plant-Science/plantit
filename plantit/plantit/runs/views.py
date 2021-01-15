@@ -62,7 +62,7 @@ def list_outputs(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    included_by_name = flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else []
+    included_by_name = (flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else []) + [f"{run.identifier}.zip"]
     included_by_pattern = flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
