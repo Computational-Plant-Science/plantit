@@ -459,13 +459,16 @@
                                                         .includes('jpeg')
                                             "
                                         >
-                                            <i class="far fa-file-image fa-fw"></i>
+                                            <i
+                                                class="far fa-file-image fa-fw"
+                                            ></i>
                                         </b-col>
                                         <b-col
                                             align-self="end"
                                             md="auto"
-                                        v-else>
-                                          <i class="fas fa-file fa-fw"></i>
+                                            v-else
+                                        >
+                                            <i class="fas fa-file fa-fw"></i>
                                         </b-col>
                                         <b-col
                                             align-self="end"
@@ -491,7 +494,7 @@
                                                 "
                                                 class="far fa-times-circle text-danger fa-fw"
                                             ></i>
-<i
+                                            <i
                                                 v-else
                                                 class="fas fa-check text-success fa-fw"
                                             ></i>
@@ -501,6 +504,43 @@
                                             class="text-left"
                                         >
                                             {{ file.name }}
+                                        </b-col>
+                                        <b-col md="auto" align-self="end">
+                                            <b-button
+                                                id="popover-reactive-1"
+                                                :disabled="
+                                                    !file.exists ||
+                                                        !(
+                                                            file.name
+                                                                .toLowerCase()
+                                                                .includes(
+                                                                    'png'
+                                                                ) ||
+                                                            file.name
+                                                                .toLowerCase()
+                                                                .includes(
+                                                                    'jpg'
+                                                                ) ||
+                                                            file.name
+                                                                .toLowerCase()
+                                                                .includes(
+                                                                    'jpeg'
+                                                                )
+                                                        )
+                                                "
+                                                :variant="
+                                                    darkMode
+                                                        ? 'outline-light'
+                                                        : 'outline-dark'
+                                                "
+                                                size="sm"
+                                                v-b-tooltip.hover
+                                                :title="'View ' + file.name"
+                                                @click="viewFile(file.name)"
+                                            >
+                                                <i class="fas fa-eye fa-fw"></i>
+                                                View
+                                            </b-button>
                                         </b-col>
                                         <b-col md="auto" align-self="end">
                                             <b-button
@@ -669,6 +709,53 @@
                 </b-row>
             </div>
         </b-container>
+        <b-modal
+            ok-only
+            :body-bg-variant="darkMode ? 'dark' : 'light'"
+            :header-bg-variant="darkMode ? 'dark' : 'light'"
+            :footer-bg-variant="darkMode ? 'dark' : 'light'"
+            :title-class="darkMode ? 'text-white' : 'text-dark'"
+            :header-text-variant="darkMode ? 'white' : 'dark'"
+            :body-text-variant="darkMode ? 'white' : 'dark'"
+            header-border-variant="secondary"
+            footer-border-variant="secondary"
+            ok-variant="secondary"
+            ok-title="Close"
+            size="xl"
+            centered
+            :title="thumbnailTitle"
+            id="thumbnail"
+            class="overflow-hidden"
+            @close="onThumbnailHidden"
+        >
+            <b-spinner
+                v-if="thumbnailLoading"
+                type="grow"
+                label="Loading..."
+                variant="warning"
+            ></b-spinner>
+            <b-img
+                center
+                :src="thumbnailUrl"
+                style="width: 68rem"
+                @load="thumbnailLoaded"
+                v-show="thumbnailIsLoaded"
+            >
+            </b-img>
+        </b-modal>
+        <!--<b-popover
+            target="popover-reactive-1"
+            triggers="click"
+            :show.sync="thumbnailUrl !== ''"
+            placement="auto"
+            @hidden="onThumbnailHidden"
+        >
+            <template #title>
+                {{ thumbnailTitle }}
+            </template>
+            <b-img :src="thumbnailUrl" style="max-width: 70rem"> </b-img
+        >
+        </b-popover>-->
     </div>
 </template>
 <script>
@@ -701,6 +788,10 @@ export default {
             logsExpanded: false,
             logsText: '',
             outputFiles: [],
+            thumbnailTitle: '',
+            thumbnailUrl: '',
+            thumbnailLoading: true,
+            thumbnailIsLoaded: false,
             containerLogsPageSize: 10,
             status_table: {
                 sortBy: 'date',
@@ -818,11 +909,23 @@ export default {
                     }
                 });
         },
-        thumbnailUrl(file) {
-            return `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/${file}/`;
-        },
         downloadZip() {
             this.downloadFile(`${this.$router.currentRoute.params.id}.zip`);
+        },
+        thumbnailLoaded() {
+            this.thumbnailIsLoaded = true;
+            this.thumbnailLoading = false;
+        },
+        onThumbnailHidden() {
+            this.thumbnailUrl = '';
+            this.thumbnailTitle = '';
+            this.thumbnailIsLoaded = false;
+            this.thumbnailLoading = true;
+        },
+        viewFile(file) {
+            this.thumbnailUrl = `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/${file}/`;
+            this.thumbnailTitle = file;
+            this.$bvModal.show('thumbnail');
         },
         downloadFile(file) {
             axios
@@ -1015,7 +1118,6 @@ export default {
 
 .table-td
     text-align: left
-
 
 #error-log > thead
     display: none !important

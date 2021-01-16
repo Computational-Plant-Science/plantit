@@ -124,6 +124,14 @@ def get_thumbnail(request, id, file):
             # make thumbnail directory for this run if it does not already exist
             Path(run_dir).mkdir(exist_ok=True, parents=True)
 
+            with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
+                print(f"Creating new thumbnail: {thumbnail_path}")
+                sftp.chdir(work_dir)
+                sftp.get(file, temp_file.name)
+                return HttpResponse(temp_file, content_type="image/png")
+                # thumbnail = Thumbnail(source=temp_file).generate()
+                # thumbnail_file.write(thumbnail.read())
+
             if Path(thumbnail_path).exists():
                 print(f"Using existing thumbnail: {thumbnail_path}")
                 return redirect(thumbnail_path)
