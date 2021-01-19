@@ -274,8 +274,23 @@
                                         Container Output
                                     </h5>
                                 </b-col>-->
-                                        <b-col></b-col>
-                                        <b-col md="auto" align-self="middle">
+                                        <b-col align-self="end">
+                                            <b-button
+                                                :variant="
+                                                    darkMode
+                                                        ? 'outline-light'
+                                                        : 'outline-dark'
+                                                "
+                                                size="sm"
+                                                v-b-tooltip.hover
+                                                title="Download Container Output"
+                                                @click="downloadLogs"
+                                            >
+                                                <i class="fas fa-download"></i>
+                                                Download
+                                            </b-button>
+                                        </b-col>
+                                        <b-col md="auto" align-self="end">
                                             Showing last
                                             <b-dropdown
                                                 class="m-1"
@@ -309,22 +324,6 @@
                                                 >
                                             </b-dropdown>
                                             lines
-                                        </b-col>
-                                        <b-col md="auto" align-self="middle">
-                                            <b-button
-                                                :variant="
-                                                    darkMode
-                                                        ? 'outline-light'
-                                                        : 'outline-dark'
-                                                "
-                                                size="sm"
-                                                v-b-tooltip.hover
-                                                title="Download Container Output"
-                                                @click="downloadLogs"
-                                            >
-                                                <i class="fas fa-download"></i>
-                                                Download
-                                            </b-button>
                                         </b-col>
                                     </b-row>
                                 </b-card-body>
@@ -370,8 +369,81 @@
                                             variant="warning"
                                         ></b-spinner>
                                     </b-row>
+                                    <b-row>
+                                        <b-col>
+                                            <b-pagination
+                                                v-model="outputFilePage"
+                                                pills
+                                                :total-rows="outputFiles.length"
+                                                :per-page="
+                                                    outputPageSize
+                                                "
+                                                aria-controls="outputList"
+                                                variant
+                                            >
+                                                <template #first-text
+                                                    ><span
+                                                        >First</span
+                                                    ></template
+                                                >
+                                                <template #prev-text
+                                                    ><span>Prev</span></template
+                                                >
+                                                <template #next-text
+                                                    ><span>Next</span></template
+                                                >
+                                                <template #last-text
+                                                    ><span>Last</span></template
+                                                >
+                                                <template #ellipsis-text>
+                                                    <b-spinner
+                                                        small
+                                                        type="grow"
+                                                    ></b-spinner>
+                                                    <b-spinner
+                                                        small
+                                                        type="grow"
+                                                    ></b-spinner>
+                                                    <b-spinner
+                                                        small
+                                                        type="grow"
+                                                    ></b-spinner>
+                                                </template>
+                                            </b-pagination>
+                                        </b-col>
+                                        <b-col md="auto" align-self="middle">
+                                            Showing
+                                            <b-dropdown
+                                                class="m-1"
+                                                :text="outputPageSize"
+                                                variant="warning"
+                                                size="sm"
+                                            >
+                                                <b-dropdown-item
+                                                    @click="
+                                                        setOutputPageSize(10)
+                                                    "
+                                                    >10</b-dropdown-item
+                                                >
+                                                <b-dropdown-item
+                                                    @click="
+                                                        setOutputPageSize(20)
+                                                    "
+                                                    >20</b-dropdown-item
+                                                >
+                                                <b-dropdown-item
+                                                    @click="
+                                                        setOutputPageSize(50)
+                                                    "
+                                                    >50</b-dropdown-item
+                                                >
+                                            </b-dropdown>
+                                            files
+                                        </b-col>
+                                    </b-row>
                                     <b-row
-                                        v-for="file in outputFiles"
+                                        id="outputList"
+                                        v-for="file in outputList()"
                                         v-bind:key="file"
                                         class="p-1"
                                         style="border-top: 1px solid rgba(211, 211, 211, .5);"
@@ -787,6 +859,8 @@ export default {
             logs: null,
             logsExpanded: false,
             logsText: '',
+            outputFilePage: 1,
+            outputPageSize: 10,
             outputFiles: [],
             thumbnailTitle: '',
             thumbnailUrl: '',
@@ -842,6 +916,16 @@ export default {
         };
     },
     methods: {
+        outputList() {
+            return this.outputFiles.slice(
+                (this.outputFilePage - 1) * this.outputPageSize,
+                this.outputFilePage * this.outputPageSize
+            );
+        },
+        setOutputPageSize(size) {
+            this.outputPageSize = size;
+            this.reloadOutput(false);
+        },
         setContainerLogsPageSize(size) {
             this.containerLogsPageSize = size;
             this.reloadOutput(false);
