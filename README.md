@@ -108,10 +108,11 @@ PlantIT uses [Let's Encrypt](https://letsencrypt.org/) and [Certbot](https://cer
 docker-compose -f docker-compose.prod.yml run certbot
 ```
 
-To renew an existing certificate:
+To renew an existing certificate, use the `renew` command, then restart all containers:
 
 ```shell
 docker-compose -f docker-compose.prod.yml run certbot renew
+docker-compose -f docker-compose.prod.yml restart
 ```
 
 Use the `--dry-run` flag with any command to test without writing anything to disk.
