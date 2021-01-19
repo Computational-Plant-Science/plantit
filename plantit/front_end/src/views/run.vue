@@ -395,20 +395,6 @@
                                                 <template #last-text
                                                     ><span>Last</span></template
                                                 >
-                                                <template #ellipsis-text>
-                                                    <b-spinner
-                                                        small
-                                                        type="grow"
-                                                    ></b-spinner>
-                                                    <b-spinner
-                                                        small
-                                                        type="grow"
-                                                    ></b-spinner>
-                                                    <b-spinner
-                                                        small
-                                                        type="grow"
-                                                    ></b-spinner>
-                                                </template>
                                             </b-pagination>
                                         </b-col>
                                         <b-col md="auto" align-self="middle">
