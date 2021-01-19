@@ -1,3 +1,19 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Defining Flows](#defining-flows)
+  - [The `plantit.yaml` file](#the-plantityaml-file)
+    - [Parameters](#parameters)
+    - [Flow input/output](#flow-inputoutput)
+      - [Flow input](#flow-input)
+        - [Input types (`file`, `files`, and `directory`)](#input-types-file-files-and-directory)
+        - [Input filetypes](#input-filetypes)
+      - [Flow output](#flow-output)
+      - [A super simple example](#a-super-simple-example)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Defining Flows
 
 ## The `plantit.yaml` file
