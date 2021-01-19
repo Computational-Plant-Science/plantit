@@ -100,6 +100,22 @@ At this point the following containers should be running:
 - `sandbox`: sandbox deployment target
 - `nginx`: NGINX reverse proxy
 
+#### SSL Certificates
+
+PlantIT uses [Let's Encrypt](https://letsencrypt.org/) and [Certbot](https://certbot.eff.org/) for SSL certification. The production configuration includes a `certbot` container which can be used to request new or renew existing certificates from Let's Encrypt. Standard certificates last 90 days. To check request a new certificate, run:
+
+```shell
+docker-compose -f docker-compose.prod.yml run certbot
+```
+
+To renew an existing certificate:
+
+```shell
+docker-compose -f docker-compose.prod.yml run certbot renew
+```
+
+Use the `--dry-run` flag with any command to test without writing anything to disk.
+
 ## Environment variables
 
 Docker will read environment variables in the following format from a file named `.env` in the `plantit` root directory (if the file exists):
