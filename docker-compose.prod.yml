@@ -130,6 +130,7 @@ services:
     volumes:
       - ./config/certbot/conf:/etc/letsencrypt/
       - ./config/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done;'"
 networks:
   ngnix_network:
     driver: bridge
