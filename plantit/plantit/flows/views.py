@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import datetime
 from os.path import join
@@ -9,21 +10,8 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 
 from plantit import settings
-from plantit.runs.utils import __list_by_user
+from plantit.runs.utils import __list_by_user, __list_all_by_user
 from plantit.utils import get_repo_config, validate_config
-
-
-# @login_required
-# def list_all(request):
-#     response = requests.get(
-#         f"https://api.github.com/search/code?q=filename:plantit.yaml-user:Computational-Plant-Science-user:van-der-knaap-lab-user:burke-lab",
-#         headers={"Authorization": f"token {request.user.profile.github_token}"})
-#     pipelines = [{
-#         'repo': item['repository'],
-#         'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], request.user.profile.github_token)
-#     } for item in response.json()['items']]
-#
-#     return JsonResponse({'pipelines': [pipeline for pipeline in pipelines if pipeline['config']['public']]})
 
 
 @login_required
@@ -52,17 +40,16 @@ def list_all(request):
                 flows = json.load(file)
         else:
             print(f"Flow cache is stale, refreshing")
-            for username in usernames:
-                flows = flows + __list_by_user(username, request.user.profile.github_token)
+            flows = asyncio.run(__list_all_by_user(usernames, request.user.profile.github_token))
             with open(flows_file, 'w') as file:
                 json.dump(flows, file)
 
-    return JsonResponse({'pipelines': flows})
+    return JsonResponse({'flows': flows})
 
 
 @login_required
 def list_by_user(request, username):
-    return JsonResponse({'pipelines': __list_by_user(username, request.user.profile.github_token)})
+    return JsonResponse({'flows': __list_by_user(username, request.user.profile.github_token)})
 
 
 @login_required

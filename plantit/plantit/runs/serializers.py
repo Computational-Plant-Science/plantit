@@ -13,7 +13,7 @@ class StatusSerializer(serializers.ModelSerializer):
 class RunSerializer(serializers.ModelSerializer):
     class Meta:
         model = Run
-        fields = ('pk', 'cluster', 'pipeline_owner', 'pipeline_name',
+        fields = ('pk', 'cluster', 'flow_owner', 'flow_name',
                   'created', 'work_dir', 'identifier',
                   'remote_results_path')
 

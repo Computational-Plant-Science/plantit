@@ -24,3 +24,4 @@ pyaml
 channels
 sphinx
 recommonmark
+httpx==0.16.1

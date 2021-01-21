@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import re
@@ -5,7 +6,9 @@ import traceback
 from os.path import join
 
 from datetime import datetime, timedelta
+from typing import List
 
+import httpx
 import requests
 import yaml
 from django.contrib.auth.models import User
@@ -44,19 +47,35 @@ def update_status(run: Run, state: int, description: str):
     run.save()
 
 
-def __list_by_user(username, token):
+def __get_flows(response, token):
+    response_json = response.json()
+    flows = [{
+        'repo': item['repository'],
+        'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], token)
+    } for item in response_json['items']] if 'items' in response_json else []
+    return flows
+
+
+async def __list_all_by_user(usernames: List[str], token: str):
+    urls = [f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}" for username in usernames]
+    headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+        }
+    async with httpx.AsyncClient(headers=headers) as client:
+        futures = [client.get(url) for url in urls]
+        responses = await asyncio.gather(*futures)
+        return [flow for flows in [__get_flows(response, token) for response in responses] for flow in flows]
+
+
+def __list_by_user(username: str, token: str):
     response = requests.get(
         f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
         headers={
             "Authorization": f"token {token}",
             "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
         })
-    response_json = response.json()
-    flows = [{
-        'repo': item['repository'],
-        'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], token)
-    } for item in response_json['items']] if 'items' in response_json else []
-
+    flows = __get_flows(response, token)
     return [flow for flow in flows if flow['config']['public']]
 
 

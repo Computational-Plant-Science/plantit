@@ -73,7 +73,7 @@ export default {
             axios
                 .get(url)
                 .then(response => {
-                    this.flows = response.data.pipelines;
+                    this.flows = response.data.flows
                     this.loading = false;
                 })
                 .catch(error => {
