@@ -19,7 +19,7 @@
                     variant="secondary"
                     >{{ topic }}</b-badge
                 >
-                <br/>
+                <br />
                 <small>
                     <b-link
                         :class="darkMode ? 'text-light' : 'text-dark'"
@@ -37,7 +37,7 @@
                     </b-link>
                 </small>
                 <br />
-                {{ flow.repo.description }}
+                <small>{{ flow.repo.description }}</small>
                 <br />
             </b-col>
             <b-col cols="1"></b-col>

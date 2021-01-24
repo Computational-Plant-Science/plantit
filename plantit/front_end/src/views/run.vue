@@ -30,145 +30,147 @@
                             ></b-spinner>
                         </b-row>
                         <div v-else-if="flow.config">
-                            <b-card
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                                border-variant="default"
-                                :footer-border-variant="
-                                    darkMode ? 'dark' : 'white'
-                                "
-                                style="min-height: 5rem;"
-                                class="overflow-hidden mt-0"
-                            >
-                                <WorkflowBlurb
-                                    :showPublic="false"
-                                    :flow="flow"
-                                    selectable="Restart"
-                                ></WorkflowBlurb>
-                                <br />
-                                <h5 v-if="run.tags.length > 0">
-                                    <b-badge
-                                        v-for="tag in run.tags"
-                                        v-bind:key="tag"
-                                        class="mr-2"
-                                        variant="warning"
-                                        >{{ tag }}</b-badge
+                            <b-row>
+                                <b-col
+                                    align-self="end"
+                                    v-if="logs[0].state === 1"
+                                    class="text-center"
+                                >
+                                    <b-spinner small variant="warning">
+                                    </b-spinner>
+                                    Creating run
+                                </b-col>
+                                <b-col
+                                    v-else
+                                    class="text-center"
+                                    align-self="end"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Created
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    v-if="logs[0].state === 2"
+                                    class="text-center"
+                                >
+                                    <b-spinner small variant="warning">
+                                    </b-spinner>
+                                    Pulling inputs
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    v-else-if="anyStatuses(2)"
+                                    class="text-center"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Pulled
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    v-if="logs[0].state === 3"
+                                    class="text-center"
+                                >
+                                    <b-spinner small variant="warning">
+                                    </b-spinner>
+                                    Running container(s)
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    v-else-if="anyStatuses(3)"
+                                    class="text-center"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Ran
+                                </b-col>
+                                <b-col
+                                    v-if="logs[0].state === 4"
+                                    class="text-center"
+                                >
+                                    <b-spinner small variant="warning">
+                                    </b-spinner>
+                                    Zipping outputs
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    v-else-if="anyStatuses(4)"
+                                    class="text-center"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Zipped
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    v-if="logs[0].state === 5"
+                                    class="text-center"
+                                >
+                                    <b-spinner small variant="warning">
+                                    </b-spinner>
+                                    Pushing outputs
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    v-else-if="anyStatuses(5)"
+                                    class="text-center"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Pushed
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    v-if="anyStatuses(5)"
+                                    class="text-center"
+                                >
+                                    <i
+                                        class="far fa-times-circle text-danger"
+                                    ></i>
+                                    Failed
+                                </b-col>
+                              <b-col
+                                    align-self="end"
+                                    v-else-if="logs[0].state === 6"
+                                    class="text-center"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Completed
+                                </b-col>
+                            </b-row>
+                            <br />
+                            <b-row>
+                                <b-col>
+                                    <b-card
+                                        :bg-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        :footer-bg-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        border-variant="default"
+                                        :footer-border-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        style="min-height: 5rem;"
+                                        class="overflow-hidden mt-0"
                                     >
-                                </h5>
-                                <b-row class="m-0 p-0">
-                                    <b-col align-self="end" class="m-0 p-0">
-                                        <h4
-                                            :class="
-                                                darkMode
-                                                    ? 'theme-dark'
-                                                    : 'theme-light'
-                                            "
-                                        >
-                                            Run
+                                        <WorkflowBlurb
+                                            :showPublic="false"
+                                            :flow="flow"
+                                            selectable="Restart"
+                                        ></WorkflowBlurb>
+                                        <br />
+                                        <h5 v-if="run.tags.length > 0">
                                             <b-badge
+                                                v-for="tag in run.tags"
+                                                v-bind:key="tag"
                                                 class="mr-2"
-                                                variant="secondary"
-                                                >{{ run.id }}</b-badge
+                                                variant="warning"
+                                                >{{ tag }}</b-badge
                                             >
-                                            <b-badge
-                                                :variant="
-                                                    run.state === 2
-                                                        ? 'danger'
-                                                        : run.state === 1
-                                                        ? 'success'
-                                                        : 'warning'
-                                                "
-                                                >{{ statusToString(run.state) }}
-                                            </b-badge>
-                                            <small> on </small>
-                                            <b-badge
-                                                :variant="
-                                                    darkMode ? 'light' : 'dark'
-                                                "
-                                                class="mr-0"
-                                                >{{ run.target }}</b-badge
+                                        </h5>
+                                        <b-row class="m-0 p-0">
+                                            <b-col
+                                                align-self="end"
+                                                class="m-0 p-0"
                                             >
-                                            <small>
-                                                {{ updatedFormatted }}
-                                            </small>
-                                        </h4>
-                                    </b-col>
-                                    <b-col md="auto" class="ml-0">
-                                        <b-alert
-                                            class="m-0 pt-1 pb-1"
-                                            :show="reloadAlertDismissCountdown"
-                                            variant="success"
-                                            @dismissed="
-                                                reloadAlertDismissCountdown = 0
-                                            "
-                                            @dismiss-count-down="
-                                                countDownChanged
-                                            "
-                                        >
-                                            Logs refreshed.
-                                        </b-alert>
-                                    </b-col>
-                                    <!--<b-col md="auto" class="mt-1">
-                                        {{ run.description }} {{ updatedFormatted }}
-                                    </b-col>-->
-                                    <b-col
-                                        md="auto"
-                                        class="m-0"
-                                        align-self="start"
-                                    >
-                                        <b-button
-                                            :variant="
-                                                darkMode
-                                                    ? 'outline-light'
-                                                    : 'outline-dark'
-                                            "
-                                            size="sm"
-                                            v-b-tooltip.hover
-                                            title="Refresh Logs"
-                                            @click="reloadRun(true)"
-                                        >
-                                            <i class="fas fa-redo"></i>
-                                        </b-button>
-                                    </b-col>
-                                    <b-col
-                                        md="auto"
-                                        class="m-0"
-                                        align-self="start"
-                                    >
-                                        <b-button
-                                            :variant="
-                                                darkMode
-                                                    ? 'outline-light'
-                                                    : 'outline-dark'
-                                            "
-                                            size="sm"
-                                            v-b-tooltip.hover
-                                            :title="
-                                                logsExpanded
-                                                    ? 'Collapse Logs'
-                                                    : 'Expand Logs'
-                                            "
-                                            @click="expandLogs"
-                                        >
-                                            <i
-                                                v-if="logsExpanded"
-                                                class="fas fa-caret-down"
-                                            ></i>
-                                            <i
-                                                v-else
-                                                class="fas fa-caret-up"
-                                            ></i>
-                                        </b-button>
-                                    </b-col>
-                                </b-row>
-                                <div v-if="logsExpanded">
-                                    <div
-                                        v-for="log in logs.slice(1)"
-                                        v-bind:key="log.updated"
-                                    >
-                                        <hr />
-                                        <b-row>
-                                            <b-col md="auto" align-self="end">
                                                 <h5
                                                     :class="
                                                         darkMode
@@ -176,404 +178,488 @@
                                                             : 'theme-light'
                                                     "
                                                 >
+                                                    Run
                                                     <b-badge
-                                                        class="mr-1"
+                                                        class="mr-2"
+                                                        variant="secondary"
+                                                        >{{ run.id }}</b-badge
+                                                    >
+                                                    <b-badge
                                                         :variant="
-                                                            log.state === 2
+                                                            logs[0].state === 0
                                                                 ? 'danger'
-                                                                : log.state ===
-                                                                  1
+                                                                : logs[0].state ===
+                                                                  6
                                                                 ? 'success'
                                                                 : 'warning'
                                                         "
                                                         >{{
                                                             statusToString(
-                                                                log.state
+                                                                anyStatuses(0) ? 0 : logs[0].state
                                                             )
                                                         }}
                                                     </b-badge>
-                                                    <small>{{
-                                                        formatDate(log.date)
-                                                    }}</small>
+                                                    <small> on </small>
+                                                    <b-badge
+                                                        :variant="
+                                                            darkMode
+                                                                ? 'light'
+                                                                : 'dark'
+                                                        "
+                                                        class="mr-0"
+                                                        >{{
+                                                            run.target
+                                                        }}</b-badge
+                                                    >
+                                                    <small>
+                                                        {{ updatedFormatted }}
+                                                    </small>
                                                 </h5>
-                                                <small>
-                                                    {{ log.description }}
-                                                </small>
+                                            </b-col>
+                                            <b-col md="auto" class="ml-0">
+                                                <b-alert
+                                                    class="m-0 pt-1 pb-1"
+                                                    :show="
+                                                        reloadAlertDismissCountdown
+                                                    "
+                                                    variant="success"
+                                                    @dismissed="
+                                                        reloadAlertDismissCountdown = 0
+                                                    "
+                                                    @dismiss-count-down="
+                                                        countDownChanged
+                                                    "
+                                                >
+                                                    Logs refreshed.
+                                                </b-alert>
+                                            </b-col>
+                                            <b-col
+                                                md="auto"
+                                                class="m-0"
+                                                align-self="start"
+                                            >
+                                                <b-button
+                                                    :variant="
+                                                        darkMode
+                                                            ? 'outline-light'
+                                                            : 'outline-dark'
+                                                    "
+                                                    size="sm"
+                                                    v-b-tooltip.hover
+                                                    title="Refresh Logs"
+                                                    @click="reloadRun(true)"
+                                                >
+                                                    <i class="fas fa-redo"></i>
+                                                </b-button>
+                                            </b-col>
+                                            <b-col
+                                                md="auto"
+                                                class="m-0"
+                                                align-self="start"
+                                            >
+                                                <b-button
+                                                    :variant="
+                                                        darkMode
+                                                            ? 'outline-light'
+                                                            : 'outline-dark'
+                                                    "
+                                                    size="sm"
+                                                    v-b-tooltip.hover
+                                                    :title="
+                                                        logsExpanded
+                                                            ? 'Collapse Logs'
+                                                            : 'Expand Logs'
+                                                    "
+                                                    @click="expandLogs"
+                                                >
+                                                    <i
+                                                        v-if="logsExpanded"
+                                                        class="fas fa-caret-down"
+                                                    ></i>
+                                                    <i
+                                                        v-else
+                                                        class="fas fa-caret-up"
+                                                    ></i>
+                                                </b-button>
                                             </b-col>
                                         </b-row>
-                                    </div>
-                                </div>
-                            </b-card>
-                            <b-card
-                                v-if="logsText !== ''"
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                                border-variant="default"
-                                :footer-border-variant="
-                                    darkMode ? 'dark' : 'white'
-                                "
-                                no-body
-                            >
-                                <b-card-header
-                                    class="mt-1"
-                                    :header-bg-variant="
-                                        darkMode ? 'dark' : 'white'
-                                    "
-                                    ><h5
-                                        :class="
-                                            darkMode
-                                                ? 'text-white'
-                                                : 'text-dark'
+                                        <div v-if="logsExpanded">
+                                            <div
+                                                v-for="log in logs.slice(1)"
+                                                v-bind:key="log.updated"
+                                            >
+                                                <hr />
+                                                <b-row>
+                                                    <b-col
+                                                        md="auto"
+                                                        align-self="end"
+                                                    >
+                                                        <h5
+                                                            :class="
+                                                                darkMode
+                                                                    ? 'theme-dark'
+                                                                    : 'theme-light'
+                                                            "
+                                                        >
+                                                            <b-badge
+                                                                class="mr-1"
+                                                                :variant="
+                                                                    log.state ===
+                                                                    0
+                                                                        ? 'danger'
+                                                                        : log.state ===
+                                                                          1
+                                                                        ? 'success'
+                                                                        : 'warning'
+                                                                "
+                                                                >{{
+                                                                    statusToString(
+                                                                        log.state
+                                                                    )
+                                                                }}
+                                                            </b-badge>
+                                                            <small>{{
+                                                                formatDate(
+                                                                    log.date
+                                                                )
+                                                            }}</small>
+                                                        </h5>
+                                                        <small>
+                                                            {{
+                                                                log.description
+                                                            }}
+                                                        </small>
+                                                    </b-col>
+                                                </b-row>
+                                            </div>
+                                        </div>
+                                    </b-card>
+                                    <b-card
+                                        v-if="logsText !== ''"
+                                        :bg-variant="
+                                            darkMode ? 'dark' : 'white'
                                         "
-                                    >
-                                        Container Logs
-                                    </h5></b-card-header
-                                >
-                                <b-card-body
-                                    :class="
-                                        darkMode
-                                            ? 'theme-container-dark mt-0 pt-0'
-                                            : 'theme-container-light mt-0 pt-0'
-                                    "
-                                >
-                                    <b-row
-                                        align-h="center"
-                                        v-if="loadingContainerLogs"
-                                    >
-                                        <b-spinner
-                                            class="mt-3"
-                                            type="grow"
-                                            label="Loading..."
-                                            variant="warning"
-                                        ></b-spinner>
-                                    </b-row>
-                                    <b-row
-                                        v-else-if="logsText !== ''"
-                                        :class="
-                                            darkMode
-                                                ? 'theme-container-dark mt-0 pt-0'
-                                                : 'theme-container-light mt-0 pt-0'
+                                        :footer-bg-variant="
+                                            darkMode ? 'dark' : 'white'
                                         "
-                                    >
-                                        <b-col
-                                            class="pl-3 pr-3 pb-1"
-                                            style="white-space: pre-line;"
-                                        >
-                                            {{ logsText }}
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <!--<b-col align-self="end" class="mr-0">
-                                    <h5
-                                        :class="
-                                            darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
+                                        border-variant="default"
+                                        :footer-border-variant="
+                                            darkMode ? 'dark' : 'white'
                                         "
+                                        no-body
                                     >
-                                        Container Output
-                                    </h5>
-                                </b-col>-->
-                                        <b-col align-self="end">
-                                            <b-button
-                                                :variant="
+                                        <b-card-header
+                                            class="mt-1"
+                                            :header-bg-variant="
+                                                darkMode ? 'dark' : 'white'
+                                            "
+                                            ><h4
+                                                :class="
                                                     darkMode
-                                                        ? 'outline-light'
-                                                        : 'outline-dark'
+                                                        ? 'text-white'
+                                                        : 'text-dark'
                                                 "
-                                                size="sm"
-                                                v-b-tooltip.hover
-                                                title="Download Container Output"
-                                                @click="downloadLogs"
                                             >
-                                                <i class="fas fa-download"></i>
-                                                Download
-                                            </b-button>
-                                        </b-col>
-                                        <b-col md="auto" align-self="end">
-                                            Showing last
-                                            <b-dropdown
-                                                class="m-1"
-                                                :text="containerLogsPageSize"
-                                                variant="warning"
-                                                size="sm"
+                                                Container Logs
+                                            </h4></b-card-header
+                                        >
+                                        <b-card-body
+                                            :class="
+                                                darkMode
+                                                    ? 'theme-container-dark mt-0 pt-0'
+                                                    : 'theme-container-light mt-0 pt-0'
+                                            "
+                                        >
+                                            <b-row
+                                                align-h="center"
+                                                v-if="loadingContainerLogs"
                                             >
-                                                <b-dropdown-item
-                                                    @click="
-                                                        setContainerLogsPageSize(
-                                                            10
-                                                        )
-                                                    "
-                                                    >10</b-dropdown-item
+                                                <b-spinner
+                                                    class="mt-3"
+                                                    type="grow"
+                                                    label="Loading..."
+                                                    variant="warning"
+                                                ></b-spinner>
+                                            </b-row>
+                                            <b-row
+                                                v-else-if="logsText !== ''"
+                                                :class="
+                                                    darkMode
+                                                        ? 'theme-container-dark mt-0 pt-0'
+                                                        : 'theme-container-light mt-0 pt-0'
+                                                "
+                                            >
+                                                <b-col
+                                                    class="pl-3 pr-3 pb-1"
+                                                    style="white-space: pre-line;"
                                                 >
-                                                <b-dropdown-item
-                                                    @click="
-                                                        setContainerLogsPageSize(
-                                                            20
-                                                        )
-                                                    "
-                                                    >20</b-dropdown-item
+                                                    {{ logsText }}
+                                                </b-col>
+                                            </b-row>
+                                            <b-row>
+                                                <b-col align-self="end">
+                                                    <b-button
+                                                        :variant="
+                                                            darkMode
+                                                                ? 'outline-light'
+                                                                : 'outline-dark'
+                                                        "
+                                                        size="sm"
+                                                        v-b-tooltip.hover
+                                                        title="Download Container Output"
+                                                        @click="downloadLogs"
+                                                    >
+                                                        <i
+                                                            class="fas fa-download"
+                                                        ></i>
+                                                        Download
+                                                    </b-button>
+                                                </b-col>
+                                                <b-col
+                                                    md="auto"
+                                                    align-self="end"
                                                 >
-                                                <b-dropdown-item
-                                                    @click="
-                                                        setContainerLogsPageSize(
-                                                            50
-                                                        )
-                                                    "
-                                                    >50</b-dropdown-item
-                                                >
-                                            </b-dropdown>
-                                            lines
-                                        </b-col>
-                                    </b-row>
-                                </b-card-body>
-                            </b-card>
-                            <b-card
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                                border-variant="default"
-                                :footer-border-variant="
-                                    darkMode ? 'dark' : 'white'
-                                "
-                                no-body
-                            >
-                                <b-card-header
-                                    class="mt-1"
-                                    :header-bg-variant="
-                                        darkMode ? 'dark' : 'white'
-                                    "
-                                    ><h5
-                                        :class="
-                                            darkMode
-                                                ? 'text-white'
-                                                : 'text-dark'
+                                                    Showing last
+                                                    <b-dropdown
+                                                        class="m-1"
+                                                        :text="
+                                                            containerLogsPageSize
+                                                        "
+                                                        variant="warning"
+                                                        size="sm"
+                                                    >
+                                                        <b-dropdown-item
+                                                            @click="
+                                                                setContainerLogsPageSize(
+                                                                    10
+                                                                )
+                                                            "
+                                                            >10</b-dropdown-item
+                                                        >
+                                                        <b-dropdown-item
+                                                            @click="
+                                                                setContainerLogsPageSize(
+                                                                    20
+                                                                )
+                                                            "
+                                                            >20</b-dropdown-item
+                                                        >
+                                                        <b-dropdown-item
+                                                            @click="
+                                                                setContainerLogsPageSize(
+                                                                    50
+                                                                )
+                                                            "
+                                                            >50</b-dropdown-item
+                                                        >
+                                                    </b-dropdown>
+                                                    lines
+                                                </b-col>
+                                            </b-row>
+                                        </b-card-body>
+                                    </b-card>
+                                    <b-card
+                                        :bg-variant="
+                                            darkMode ? 'dark' : 'white'
                                         "
+                                        :footer-bg-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        border-variant="default"
+                                        :footer-border-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        no-body
                                     >
-                                        Output Files
-                                    </h5></b-card-header
-                                >
-                                <b-card-body
-                                    v-if="
-                                        outputFiles.length > 0 ||
-                                            loadingOutputFiles
-                                    "
-                                >
-                                    <b-row
-                                        class="pl-1 pr-1 pb-1"
-                                        align-h="center"
-                                        v-if="loadingOutputFiles"
-                                    >
-                                        <b-spinner
-                                            type="grow"
-                                            label="Loading..."
-                                            variant="warning"
-                                        ></b-spinner>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            <b-pagination
-                                                v-model="outputFilePage"
-                                                pills
-                                                :total-rows="outputFiles.length"
-                                                :per-page="
-                                                    outputPageSize
+                                        <b-card-header
+                                            class="mt-1"
+                                            :header-bg-variant="
+                                                darkMode ? 'dark' : 'white'
+                                            "
+                                            ><h4
+                                                :class="
+                                                    darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
                                                 "
-                                                aria-controls="outputList"
-                                                variant
                                             >
-                                                <template #first-text
-                                                    ><span
-                                                        >First</span
-                                                    ></template
-                                                >
-                                                <template #prev-text
-                                                    ><span>Prev</span></template
-                                                >
-                                                <template #next-text
-                                                    ><span>Next</span></template
-                                                >
-                                                <template #last-text
-                                                    ><span>Last</span></template
-                                                >
-                                            </b-pagination>
-                                        </b-col>
-                                        <b-col md="auto" align-self="middle">
-                                            Showing
-                                            <b-dropdown
-                                                class="m-1"
-                                                :text="outputPageSize"
-                                                variant="warning"
-                                                size="sm"
-                                            >
-                                                <b-dropdown-item
-                                                    @click="
-                                                        setOutputPageSize(10)
-                                                    "
-                                                    >10</b-dropdown-item
-                                                >
-                                                <b-dropdown-item
-                                                    @click="
-                                                        setOutputPageSize(20)
-                                                    "
-                                                    >20</b-dropdown-item
-                                                >
-                                                <b-dropdown-item
-                                                    @click="
-                                                        setOutputPageSize(50)
-                                                    "
-                                                    >50</b-dropdown-item
-                                                >
-                                            </b-dropdown>
-                                            files
-                                        </b-col>
-                                    </b-row>
-                                    <b-row
-                                        id="outputList"
-                                        v-for="file in outputList()"
-                                        v-bind:key="file"
-                                        class="p-1"
-                                        style="border-top: 1px solid rgba(211, 211, 211, .5);"
-                                    >
-                                        <b-col
-                                            align-self="end"
-                                            md="auto"
+                                                Output Files
+                                            </h4></b-card-header
+                                        >
+                                        <b-card-body
                                             v-if="
-                                                file.name
-                                                    .toLowerCase()
-                                                    .endsWith('txt') ||
-                                                    file.name
-                                                        .toLowerCase()
-                                                        .endsWith('log')
+                                                outputFiles.length > 0 ||
+                                                    loadingOutputFiles
                                             "
                                         >
-                                            <i
-                                                class="fas fa-file-alt fa-fw"
-                                            ></i>
-                                        </b-col>
-                                        <b-col
-                                            align-self="end"
-                                            md="auto"
-                                            v-else-if="
-                                                file.name
-                                                    .toLowerCase()
-                                                    .endsWith('csv')
-                                            "
-                                        >
-                                            <i
-                                                class="fas fa-file-csv fa-fw"
-                                            ></i>
-                                        </b-col>
-                                        <b-col
-                                            align-self="end"
-                                            md="auto"
-                                            v-else-if="
-                                                file.name
-                                                    .toLowerCase()
-                                                    .endsWith('zip')
-                                            "
-                                        >
-                                            <i
-                                                class="fas fa-file-archive fa-fw"
-                                            ></i>
-                                        </b-col>
-                                        <b-col
-                                            align-self="end"
-                                            md="auto"
-                                            v-else-if="
-                                                file.name
-                                                    .toLowerCase()
-                                                    .endsWith('xlsx')
-                                            "
-                                        >
-                                            <i
-                                                class="fas fa-file-excel fa-fw"
-                                            ></i>
-                                        </b-col>
-                                        <b-col
-                                            align-self="end"
-                                            md="auto"
-                                            v-else-if="
-                                                file.name
-                                                    .toLowerCase()
-                                                    .endsWith('pdf')
-                                            "
-                                        >
-                                            <i
-                                                class="fas fa-file-pdf fa-fw"
-                                            ></i>
-                                        </b-col>
-                                        <b-col
-                                            align-self="end"
-                                            md="auto"
-                                            v-else-if="
-                                                file.name
-                                                    .toLowerCase()
-                                                    .includes('png') ||
-                                                    file.name
-                                                        .toLowerCase()
-                                                        .includes('jpg') ||
-                                                    file.name
-                                                        .toLowerCase()
-                                                        .includes('jpeg')
-                                            "
-                                        >
-                                            <i
-                                                class="far fa-file-image fa-fw"
-                                            ></i>
-                                        </b-col>
-                                        <b-col
-                                            align-self="end"
-                                            md="auto"
-                                            v-else
-                                        >
-                                            <i class="fas fa-file fa-fw"></i>
-                                        </b-col>
-                                        <b-col
-                                            align-self="end"
-                                            class="text-left"
-                                            style="position: relative; top: -5px; left: -40px"
-                                        >
-                                            <b-spinner
-                                                class="m-0 p-0"
-                                                v-if="
-                                                    !file.exists &&
-                                                        run.state !== 1 &&
-                                                        run.state !== 2
-                                                "
-                                                type="grow"
-                                                small
-                                                variant="warning"
-                                            ></b-spinner>
-                                            <i
-                                                v-else-if="
-                                                    !file.exists &&
-                                                        (run.state === 1 ||
-                                                            run.state === 2)
-                                                "
-                                                class="far fa-times-circle text-danger fa-fw"
-                                            ></i>
-                                            <i
-                                                v-else
-                                                class="fas fa-check text-success fa-fw"
-                                            ></i>
-                                        </b-col>
-                                        <b-col
-                                            align-self="end"
-                                            class="text-left"
-                                        >
-                                            {{ file.name }}
-                                        </b-col>
-                                        <b-col md="auto" align-self="end">
-                                            <b-button
-                                                id="popover-reactive-1"
-                                                :disabled="
-                                                    !file.exists ||
-                                                        !(
+                                            <b-row
+                                                class="pl-1 pr-1 pb-1"
+                                                align-h="center"
+                                                v-if="loadingOutputFiles"
+                                            >
+                                                <b-spinner
+                                                    type="grow"
+                                                    label="Loading..."
+                                                    variant="warning"
+                                                ></b-spinner>
+                                            </b-row>
+                                            <b-row>
+                                                <b-col>
+                                                    <b-pagination
+                                                        v-model="outputFilePage"
+                                                        pills
+                                                        :total-rows="
+                                                            outputFiles.length
+                                                        "
+                                                        :per-page="
+                                                            outputPageSize
+                                                        "
+                                                        aria-controls="outputList"
+                                                        variant
+                                                    >
+                                                        <template #first-text
+                                                            ><span
+                                                                >First</span
+                                                            ></template
+                                                        >
+                                                        <template #prev-text
+                                                            ><span
+                                                                >Prev</span
+                                                            ></template
+                                                        >
+                                                        <template #next-text
+                                                            ><span
+                                                                >Next</span
+                                                            ></template
+                                                        >
+                                                        <template #last-text
+                                                            ><span
+                                                                >Last</span
+                                                            ></template
+                                                        >
+                                                    </b-pagination>
+                                                </b-col>
+                                                <b-col
+                                                    md="auto"
+                                                    align-self="middle"
+                                                >
+                                                    Showing
+                                                    <b-dropdown
+                                                        class="m-1"
+                                                        :text="outputPageSize"
+                                                        variant="warning"
+                                                        size="sm"
+                                                    >
+                                                        <b-dropdown-item
+                                                            @click="
+                                                                setOutputPageSize(
+                                                                    10
+                                                                )
+                                                            "
+                                                            >10</b-dropdown-item
+                                                        >
+                                                        <b-dropdown-item
+                                                            @click="
+                                                                setOutputPageSize(
+                                                                    20
+                                                                )
+                                                            "
+                                                            >20</b-dropdown-item
+                                                        >
+                                                        <b-dropdown-item
+                                                            @click="
+                                                                setOutputPageSize(
+                                                                    50
+                                                                )
+                                                            "
+                                                            >50</b-dropdown-item
+                                                        >
+                                                    </b-dropdown>
+                                                    files
+                                                </b-col>
+                                            </b-row>
+                                            <b-row
+                                                id="outputList"
+                                                v-for="file in outputList()"
+                                                v-bind:key="file"
+                                                class="p-1"
+                                                style="border-top: 1px solid rgba(211, 211, 211, .5);"
+                                            >
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('txt') ||
                                                             file.name
                                                                 .toLowerCase()
-                                                                .includes(
-                                                                    'png'
-                                                                ) ||
+                                                                .endsWith('log')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-alt fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('csv')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-csv fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('zip')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-archive fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('xlsx')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-excel fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .endsWith('pdf')
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fas fa-file-pdf fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else-if="
+                                                        file.name
+                                                            .toLowerCase()
+                                                            .includes('png') ||
                                                             file.name
                                                                 .toLowerCase()
                                                                 .includes(
@@ -584,43 +670,136 @@
                                                                 .includes(
                                                                     'jpeg'
                                                                 )
-                                                        )
-                                                "
-                                                :variant="
-                                                    darkMode
-                                                        ? 'outline-light'
-                                                        : 'outline-dark'
-                                                "
-                                                size="sm"
-                                                v-b-tooltip.hover
-                                                :title="'View ' + file.name"
-                                                @click="viewFile(file.name)"
-                                            >
-                                                <i class="fas fa-eye fa-fw"></i>
-                                                View
-                                            </b-button>
-                                        </b-col>
-                                        <b-col md="auto" align-self="end">
-                                            <b-button
-                                                :disabled="!file.exists"
-                                                :variant="
-                                                    darkMode
-                                                        ? 'outline-light'
-                                                        : 'outline-dark'
-                                                "
-                                                size="sm"
-                                                v-b-tooltip.hover
-                                                :title="'Download ' + file.name"
-                                                @click="downloadFile(file.name)"
-                                            >
-                                                <i
-                                                    class="fas fa-download fa-fw"
-                                                ></i>
-                                                Download
-                                            </b-button>
-                                        </b-col>
-                                    </b-row>
-                                    <!--<b-row class="pl-1 pr-1 pb-1">
+                                                    "
+                                                >
+                                                    <i
+                                                        class="far fa-file-image fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    md="auto"
+                                                    v-else
+                                                >
+                                                    <i
+                                                        class="fas fa-file fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    class="text-left"
+                                                    style="position: relative; top: -5px; left: -40px"
+                                                >
+                                                    <b-spinner
+                                                        class="m-0 p-0"
+                                                        v-if="
+                                                            !file.exists &&
+                                                                logs[0].state !==
+                                                                    6 &&
+                                                                logs[0].state !== 0
+                                                        "
+                                                        type="grow"
+                                                        small
+                                                        variant="warning"
+                                                    ></b-spinner>
+                                                    <i
+                                                        v-else-if="
+                                                            !file.exists &&
+                                                                (logs[0].state ===
+                                                                    6 ||
+                                                                    logs[0].state ===
+                                                                        0)
+                                                        "
+                                                        class="far fa-times-circle text-danger fa-fw"
+                                                    ></i>
+                                                    <i
+                                                        v-else
+                                                        class="fas fa-check text-success fa-fw"
+                                                    ></i>
+                                                </b-col>
+                                                <b-col
+                                                    align-self="end"
+                                                    class="text-left"
+                                                >
+                                                    {{ file.name }}
+                                                </b-col>
+                                                <b-col
+                                                    md="auto"
+                                                    align-self="end"
+                                                >
+                                                    <b-button
+                                                        id="popover-reactive-1"
+                                                        :disabled="
+                                                            !file.exists ||
+                                                                !(
+                                                                    file.name
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            'png'
+                                                                        ) ||
+                                                                    file.name
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            'jpg'
+                                                                        ) ||
+                                                                    file.name
+                                                                        .toLowerCase()
+                                                                        .includes(
+                                                                            'jpeg'
+                                                                        )
+                                                                )
+                                                        "
+                                                        :variant="
+                                                            darkMode
+                                                                ? 'outline-light'
+                                                                : 'outline-dark'
+                                                        "
+                                                        size="sm"
+                                                        v-b-tooltip.hover
+                                                        :title="
+                                                            'View ' + file.name
+                                                        "
+                                                        @click="
+                                                            viewFile(file.name)
+                                                        "
+                                                    >
+                                                        <i
+                                                            class="fas fa-eye fa-fw"
+                                                        ></i>
+                                                        View
+                                                    </b-button>
+                                                </b-col>
+                                                <b-col
+                                                    md="auto"
+                                                    align-self="end"
+                                                >
+                                                    <b-button
+                                                        :disabled="!file.exists"
+                                                        :variant="
+                                                            darkMode
+                                                                ? 'outline-light'
+                                                                : 'outline-dark'
+                                                        "
+                                                        size="sm"
+                                                        v-b-tooltip.hover
+                                                        :title="
+                                                            'Download ' +
+                                                                file.name
+                                                        "
+                                                        @click="
+                                                            downloadFile(
+                                                                file.name
+                                                            )
+                                                        "
+                                                    >
+                                                        <i
+                                                            class="fas fa-download fa-fw"
+                                                        ></i>
+                                                        Download
+                                                    </b-button>
+                                                </b-col>
+                                            </b-row>
+                                            <!--<b-row class="pl-1 pr-1 pb-1">
                                         <b-col
                                             class="text-right"
                                             align-self="end"
@@ -642,126 +821,147 @@
                                             </b-button></b-col
                                         >
                                     </b-row>-->
-                                </b-card-body>
-                                <b-card-body
-                                    v-else-if="flow.config.output"
-                                    class="mt-0 pt-0"
-                                >
-                                    <b-row
-                                        align-h="center"
-                                        align-v="center"
-                                        class="mt-2"
-                                    >
-                                        <b-col>
-                                            <i
-                                                class="fas fa-exclamation-triangle text-danger fa-fw"
-                                            ></i>
-                                            Output files expected but not found
-                                        </b-col>
-                                    </b-row>
-                                    <b-row align-h="center" align-v="center">
-                                        <b-col>
-                                            <b
-                                                ><code
-                                                    >{{
-                                                        flow.config.output.path
-                                                            ? flow.config.output
-                                                                  .path + '/'
-                                                            : ''
-                                                    }}{{
-                                                        flow.config.output
-                                                            .include
-                                                            ? (flow.config
-                                                                  .output
-                                                                  .exclude
-                                                                  ? '+ '
-                                                                  : '') +
-                                                              (flow.config
-                                                                  .output
-                                                                  .include
-                                                                  .patterns
-                                                                  ? '*.' +
-                                                                    flow.config.output.include.patterns.join(
-                                                                        ', *.'
-                                                                    ) +
-                                                                    ', '
-                                                                  : []) +
-                                                              (flow.config
-                                                                  .output
-                                                                  .include.names
-                                                                  ? flow.config.output.include.names.join(
-                                                                        ', '
-                                                                    )
-                                                                  : [])
-                                                            : ''
-                                                    }}{{
-                                                        flow.config.output
-                                                            .exclude
-                                                            ? ' - ' +
-                                                              (flow.config
-                                                                  .output
-                                                                  .exclude
-                                                                  .patterns
-                                                                  ? '*.' +
-                                                                    flow.config.output.exclude.patterns.join(
-                                                                        ', *.'
-                                                                    ) +
-                                                                    ', '
-                                                                  : []) +
-                                                              (flow.config
-                                                                  .output
-                                                                  .exclude.names
-                                                                  ? flow.config.output.exclude.names.join(
-                                                                        ', '
-                                                                    )
-                                                                  : [])
-                                                            : ''
-                                                    }}
-                                                </code></b
+                                        </b-card-body>
+                                        <b-card-body
+                                            v-else-if="flow.config.output"
+                                            class="mt-0 pt-0"
+                                        >
+                                            <b-row
+                                                align-h="center"
+                                                align-v="center"
+                                                class="mt-2"
                                             >
-                                        </b-col>
-                                    </b-row>
-                                </b-card-body>
-                            </b-card>
-                            <b-card
-                                v-if="
-                                    flow.config.output &&
-                                        (run.state === 2 || run.state === 1)
-                                "
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                                border-variant="default"
-                                :footer-border-variant="
-                                    darkMode ? 'dark' : 'white'
-                                "
-                                no-body
-                            >
-                                <b-card-header
-                                    class="mt-1"
-                                    :header-bg-variant="
+                                                <b-col>
+                                                    <i
+                                                        class="fas fa-exclamation-triangle text-danger fa-fw"
+                                                    ></i>
+                                                    Output files expected but
+                                                    not found
+                                                </b-col>
+                                            </b-row>
+                                            <b-row
+                                                align-h="center"
+                                                align-v="center"
+                                            >
+                                                <b-col>
+                                                    <b
+                                                        ><code
+                                                            >{{
+                                                                flow.config
+                                                                    .output.path
+                                                                    ? flow
+                                                                          .config
+                                                                          .output
+                                                                          .path +
+                                                                      '/'
+                                                                    : ''
+                                                            }}{{
+                                                                flow.config
+                                                                    .output
+                                                                    .include
+                                                                    ? (flow
+                                                                          .config
+                                                                          .output
+                                                                          .exclude
+                                                                          ? '+ '
+                                                                          : '') +
+                                                                      (flow
+                                                                          .config
+                                                                          .output
+                                                                          .include
+                                                                          .patterns
+                                                                          ? '*.' +
+                                                                            flow.config.output.include.patterns.join(
+                                                                                ', *.'
+                                                                            ) +
+                                                                            ', '
+                                                                          : []) +
+                                                                      (flow
+                                                                          .config
+                                                                          .output
+                                                                          .include
+                                                                          .names
+                                                                          ? flow.config.output.include.names.join(
+                                                                                ', '
+                                                                            )
+                                                                          : [])
+                                                                    : ''
+                                                            }}{{
+                                                                flow.config
+                                                                    .output
+                                                                    .exclude
+                                                                    ? ' - ' +
+                                                                      (flow
+                                                                          .config
+                                                                          .output
+                                                                          .exclude
+                                                                          .patterns
+                                                                          ? '*.' +
+                                                                            flow.config.output.exclude.patterns.join(
+                                                                                ', *.'
+                                                                            ) +
+                                                                            ', '
+                                                                          : []) +
+                                                                      (flow
+                                                                          .config
+                                                                          .output
+                                                                          .exclude
+                                                                          .names
+                                                                          ? flow.config.output.exclude.names.join(
+                                                                                ', '
+                                                                            )
+                                                                          : [])
+                                                                    : ''
+                                                            }}
+                                                        </code></b
+                                                    >
+                                                </b-col>
+                                            </b-row>
+                                        </b-card-body>
+                                    </b-card>
+                                    <!--<b-card
+                                    v-if="
+                                        flow.config.output &&
+                                            (run.state === 6 || run.state === 0)
+                                    "
+                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :footer-bg-variant="
                                         darkMode ? 'dark' : 'white'
                                     "
-                                    ><h5
-                                        :class="
-                                            darkMode
-                                                ? 'text-white'
-                                                : 'text-dark'
-                                        "
-                                    >
-                                        CyVerse Data Store
-                                    </h5></b-card-header
+                                    border-variant="default"
+                                    :footer-border-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                    no-body
                                 >
-                                <b-card-body>
-                                    <b-row>
-                                        <b-col>
-                                            <datatree
-                                                :upload="false"
-                                                :download="true"
-                                                :node="userData"
-                                            ></datatree></b-col
-                                    ></b-row>
-                                </b-card-body>
-                            </b-card>
+                                    <b-card-header
+                                        class="mt-1"
+                                        :header-bg-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        ><h5
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            CyVerse Data Store
+                                        </h5></b-card-header
+                                    >
+                                    <b-card-body>
+                                        <b-row>
+                                            <b-col>
+                                                <datatree
+                                                    :upload="false"
+                                                    :download="true"
+                                                    :node="userData"
+                                                ></datatree></b-col
+                                        ></b-row>
+                                    </b-card-body>
+                                </b-card>-->
+                                </b-col>
+                            </b-row>
                         </div>
                     </b-col>
                 </b-row>
@@ -821,14 +1021,12 @@ import WorkflowBlurb from '@/components/flow-blurb.vue';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import axios from 'axios';
-import datatree from '@/components/data-tree.vue';
 import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'run',
     components: {
-        WorkflowBlurb,
-        datatree
+        WorkflowBlurb
     },
     data() {
         return {
@@ -862,14 +1060,20 @@ export default {
                         label: 'Status',
                         formatter: value => {
                             switch (value) {
-                                case 1:
-                                    return 'Completed';
-                                case 2:
+                                case 0:
                                     return 'Failed';
+                                case 1:
+                                    return 'Creating';
+                                case 2:
+                                    return 'Pulling';
                                 case 3:
                                     return 'Running';
                                 case 4:
-                                    return 'Created';
+                                    return 'Zipping';
+                                case 5:
+                                    return 'Pushing';
+                                case 6:
+                                    return 'Completed';
                             }
                         }
                     },
@@ -1132,15 +1336,26 @@ export default {
         },
         statusToString(status) {
             switch (status) {
-                case 1:
-                    return 'Completed';
-                case 2:
+                case 0:
                     return 'Failed';
+                case 1:
+                    return 'Creating';
+                case 2:
+                    return 'Pulling';
                 case 3:
                     return 'Running';
                 case 4:
-                    return 'Created';
+                    return 'Zipping';
+                case 5:
+                    return 'Pushing';
+                case 6:
+                    return 'Completed';
             }
+        },
+        anyStatuses(state) {
+            return this.logs.some(function(l) {
+                return l.state === state;
+            });
         }
     },
     async mounted() {
@@ -1163,7 +1378,7 @@ export default {
         },
         updatedFormatted() {
             return `${moment(this.run.updated).fromNow()}`;
-        }
+        },
     },
     filters: {
         format_date(value) {

@@ -53,20 +53,25 @@ class Status(models.Model):
     class Meta:
         ordering = ['-date']
 
-    COMPLETED = 1
-    FAILED = 2
+    FAILED = 0
+    CREATING = 1
+    PULLING = 2
     RUNNING = 3
-    CREATED = 4
+    ZIPPING = 4
+    PUSHING = 5
+    COMPLETED = 6
 
     State = (
-        (COMPLETED, 'Completed'),
         (FAILED, 'Failed'),
+        (CREATING, 'Creating'),
+        (PULLING, 'Pulling'),
         (RUNNING, 'Running'),
-        (CREATED, 'Created')
-    )
+        (ZIPPING, 'Zipping'),
+        (PUSHING, 'Pushing'),
+        (COMPLETED, 'Completed'))
 
     run = models.ForeignKey(Run, on_delete=models.CASCADE)
-    state = models.PositiveIntegerField(choices=State, default=CREATED)
+    state = models.PositiveIntegerField(choices=State, default=CREATING)
     location = models.CharField(max_length=100, blank=True, null=True)
     date = models.DateTimeField(default=timezone.now, blank=True)
     description = models.TextField(blank=True)

@@ -6,6 +6,7 @@ import traceback
 from os.path import join
 
 from datetime import datetime, timedelta
+from pprint import pprint
 from typing import List
 
 import httpx
@@ -94,6 +95,69 @@ def __list_by_user_internal(username):
     return [flow for flow in flows if flow['config']['public']]
 
 
+def __old_flow_config_to_new(flow: dict, run: Run, resources: dict):
+    new_flow = {
+        'image': flow['config']['image'],
+        'command': flow['config']['command'],
+        'workdir': flow['config']['workdir'],
+        'log_file': f"{run.identifier}.log"
+    }
+
+    del flow['config']['target']
+
+    if 'mount' in flow['config']:
+        new_flow['bind_mounts'] = flow['config']['mount']
+
+    if 'parameters' in flow['config']:
+        new_flow['parameters'] = flow['config']['parameters']
+
+    if 'input' in flow['config']:
+        input_kind = flow['config']['input']['kind'] if 'kind' in flow['config']['input'] else None
+        new_flow['input'] = dict()
+        if input_kind == 'directory':
+            new_flow['input']['directory'] = dict()
+            new_flow['input']['directory']['path'] = join(run.target.workdir, run.work_dir, 'input')
+            new_flow['input']['directory']['patterns'] = flow['config']['input']['patterns']
+        elif input_kind == 'files':
+            new_flow['input']['files'] = dict()
+            new_flow['input']['files']['path'] = join(run.target.workdir, run.work_dir, 'input')
+            new_flow['input']['files']['patterns'] = flow['config']['input']['patterns']
+        elif input_kind == 'file':
+            new_flow['input']['file'] = dict()
+            new_flow['input']['file']['path'] = join(run.target.workdir, run.work_dir, 'input', flow['config']['input']['from'].rpartition('/')[2])
+
+    sandbox = run.target.name == 'Sandbox'
+    work_dir = join(run.target.workdir, run.work_dir)
+    if not sandbox:
+        new_flow['jobqueue'] = dict()
+        new_flow['jobqueue']['slurm'] = {
+            'cores': resources['cores'],
+            'processes': resources['tasks'],
+            'walltime': resources['time'],
+            'local_directory': work_dir,
+            'log_directory': work_dir,
+            'env_extra': [run.target.pre_commands]
+        }
+
+        if 'mem' in resources:
+            new_flow['jobqueue']['slurm']['memory'] = resources['mem']
+        if run.target.queue is not None and run.target.queue != '':
+            new_flow['jobqueue']['slurm']['queue'] = run.target.queue
+        if run.target.project is not None and run.target.project != '':
+            new_flow['jobqueue']['slurm']['project'] = run.target.project
+        if run.target.header_skip is not None and run.target.header_skip != '':
+            new_flow['jobqueue']['slurm']['header_skip'] = run.target.header_skip.split(',')
+
+        if 'gpu' in flow['config'] and flow['config']['gpu']:
+            if run.target.gpu:
+                new_flow['jobqueue']['slurm']['extra'] = [f"--gres=gpu:{resources['cores']}"]
+                new_flow['jobqueue']['slurm']['queue'] = run.target.gpu_queue
+            else:
+                update_status(run, Status.RUNNING, f"No GPU support on {run.target.name}")
+
+    return new_flow
+
+
 @app.task()
 def execute(flow, run_id, plantit_token, cyverse_token):
     run = Run.objects.get(identifier=run_id)
@@ -105,12 +169,21 @@ def execute(flow, run_id, plantit_token, cyverse_token):
             "template_local_run.sh",
             "template_slurm_run.sh"]
 
+    # pull cluster resoures out
+    if 'resources' not in flow['config']['target']:
+        resources = None
+    else:
+        resources = flow['config']['target']['resources']
+
+    # TODO use this new format from browser
+    new_flow = __old_flow_config_to_new(flow, run, resources)
+
     try:
         client = SSH(run.target.hostname, run.target.port, run.target.username)
         work_dir = join(run.target.workdir, run.work_dir)
 
         with client:
-            update_status(run, Status.RUNNING, f"Creating working directory '{work_dir}'")
+            update_status(run, Status.CREATING, f"Creating working directory '{work_dir}'")
             execute_command(ssh_client=client,
                             pre_command=':',
                             command=f"mkdir {work_dir}",
@@ -119,46 +192,43 @@ def execute(flow, run_id, plantit_token, cyverse_token):
             with client.client.open_sftp() as sftp:
                 sftp.chdir(work_dir)
 
-                update_status(run, Status.RUNNING, "Uploading configuration")
+                update_status(run, Status.CREATING, "Uploading configuration")
                 # TODO refactor to allow multiple cluster schedulers
                 sandbox = run.target.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
                 template = os.environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else os.environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
                 template_name = template.split('/')[-1]
 
                 with sftp.open('flow.yaml', 'w') as flow_file:
-                    if 'resources' not in flow['config']['target']:
-                        resources = None
-                    else:
-                        resources = flow['config']['target']['resources']
-                    del flow['config']['target']
 
-                    if not sandbox:
-                        flow['config']['slurm'] = {
-                            'cores': resources['cores'],
-                            'processes': resources['tasks'],
-                            'walltime': resources['time'],
-                            'local_directory': work_dir,
-                            'log_directory': work_dir,
-                            'env_extra': [run.target.pre_commands]
-                        }
+                    yaml.dump(new_flow, flow_file, default_flow_style=False)
 
-                        if 'mem' in resources:
-                            flow['config']['slurm']['memory'] = resources['mem']
-                        if run.target.queue is not None and run.target.queue != '':
-                            flow['config']['slurm']['queue'] = run.target.queue
-                        if run.target.project is not None and run.target.project != '':
-                            flow['config']['slurm']['project'] = run.target.project
-                        if run.target.header_skip is not None and run.target.header_skip != '':
-                            flow['config']['slurm']['header_skip'] = run.target.header_skip.split(',')
+                    # if not sandbox:
+                    #     flow['jobqueue']['slurm'] = {
+                    #         'cores': resources['cores'],
+                    #         'processes': resources['tasks'],
+                    #         'walltime': resources['time'],
+                    #         'local_directory': work_dir,
+                    #         'log_directory': work_dir,
+                    #         'env_extra': [run.target.pre_commands]
+                    #     }
 
-                    if 'gpu' in flow['config'] and flow['config']['gpu']:
-                        if run.target.gpu:
-                            flow['config']['slurm']['extra'] = [f"--gres=gpu:{resources['cores']}"]
-                            flow['config']['slurm']['queue'] = run.target.gpu_queue
-                        else:
-                            update_status(run, Status.RUNNING, f"No GPU support on {run.target.name}")
+                    #     if 'mem' in resources:
+                    #         flow['jobqueue']['slurm']['memory'] = resources['mem']
+                    #     if run.target.queue is not None and run.target.queue != '':
+                    #         flow['jobqueue']['slurm']['queue'] = run.target.queue
+                    #     if run.target.project is not None and run.target.project != '':
+                    #         flow['jobqueue']['slurm']['project'] = run.target.project
+                    #     if run.target.header_skip is not None and run.target.header_skip != '':
+                    #         flow['jobqueue']['slurm']['header_skip'] = run.target.header_skip.split(',')
 
-                    yaml.dump(flow['config'], flow_file, default_flow_style=False)
+                    # if 'gpu' in flow['config'] and flow['config']['gpu']:
+                    #     if run.target.gpu:
+                    #         flow['jobqueue']['slurm']['extra'] = [f"--gres=gpu:{resources['cores']}"]
+                    #         flow['jobqueue']['slurm']['queue'] = run.target.gpu_queue
+                    #     else:
+                    #         update_status(run, Status.RUNNING, f"No GPU support on {run.target.name}")
+
+                    # yaml.dump(flow['config'], flow_file, default_flow_style=False)
 
                 with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
                     for line in template_script:
@@ -184,25 +254,61 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         script.write("#SBATCH --output=PlantIT.%j.out\n")
                         script.write("#SBATCH --error=PlantIT.%j.err\n")
 
+                    callback_url = settings.API_URL + 'runs/' + run.identifier + '/status/'
+
+                    if 'input' in flow['config']:
+                        sftp.mkdir(join(run.target.workdir, run.work_dir, 'input'))
+                        pull_commands = f"plantit terrain pull {flow['config']['input']['from']} -p {join(run.target.workdir, run.work_dir, 'input')} --patterns {','.join(flow['config']['input']['patterns'])} --plantit_url '{callback_url}' --plantit_token '{plantit_token}' --terrain_token {cyverse_token}\n"
+                        script.write(pull_commands)
+                        print(f"Using pull command: {pull_commands}")
+
                     script.write(run.target.pre_commands + '\n')
-                    commands = f"plantit flow.yaml --plantit_token '{plantit_token}' --cyverse_token '{cyverse_token}'"
+                    run_commands = f"plantit run flow.yaml --plantit_url '{callback_url}' --plantit_token '{plantit_token}'"
                     docker_username = os.environ.get('DOCKER_USERNAME', None)
                     docker_password = os.environ.get('DOCKER_PASSWORD', None)
                     if docker_username is not None and docker_password is not None:
-                        commands += f" --docker_username {docker_username} --docker_password {docker_password}"
-                    commands += "\n"
-                    script.write(commands)
-                    print(f"Using PlantIT command: {commands}")
+                        run_commands += f" --docker_username {docker_username} --docker_password {docker_password}"
+                    run_commands += "\n"
+                    script.write(run_commands)
+                    print(f"Using run command: {run_commands}")
+
+                    if 'output' in flow:
+                        zip_commands = f"plantit zip {flow['output']['from']}"
+                        if 'include' in flow['output']:
+                            if 'patterns' in flow['output']['include']:
+                                zip_commands += f" --include_patterns {flow['output']['include']['patterns']}"
+                            if 'names' in flow['output']['include']:
+                                zip_commands += f" --include_names {flow['output']['include']['names']}"
+                            if 'patterns' in flow['output']['exclude']:
+                                zip_commands += f" --exclude_patterns {flow['output']['exclude']['patterns']}"
+                            if 'names' in flow['output']['exclude']:
+                                zip_commands += f" --exclude_names {flow['output']['exclude']['names']}"
+                        zip_commands += '\n'
+                        print(f"Using zip command: {zip_commands}")
+
+                        push_commands = f"plantit terrain push {flow['output']['to']} -p {join(run.workdir, flow['output']['from'])} --plantit_url '{callback_url}' --plantit_token '{plantit_token}' --terrain_token {cyverse_token}"
+                        if 'include' in flow['output']:
+                            if 'patterns' in flow['output']['include']:
+                                push_commands += f" --include_patterns {flow['output']['include']['patterns']}"
+                            if 'names' in flow['output']['include']:
+                                push_commands += f" --include_names {flow['output']['include']['names']}"
+                            if 'patterns' in flow['output']['exclude']:
+                                push_commands += f" --exclude_patterns {flow['output']['exclude']['patterns']}"
+                            if 'names' in flow['output']['exclude']:
+                                push_commands += f" --exclude_names {flow['output']['exclude']['names']}"
+                        push_commands += '\n'
+                        script.write(push_commands)
+                        print(f"Using push command: {push_commands}")
 
             pre_command = '; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':'
             command = f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}"
-            update_status(run, Status.RUNNING, 'Starting' if sandbox else 'Submitting')
+            update_status(run, Status.CREATING, 'Starting run' if sandbox else 'Submitting run')
             execute_command(ssh_client=client, pre_command=pre_command, command=command, directory=work_dir)
 
-            if run.status.state != 2:
+            if run.status.state != 0:
                 update_status(
                     run,
-                    Status.COMPLETED if sandbox else Status.RUNNING,
+                    Status.COMPLETED if sandbox else Status.CREATING,
                     f"'{run.identifier}' {'completed' if sandbox else 'submitted'}")
             else:
                 update_status(run, Status.FAILED, f"'{run.identifier}' failed")

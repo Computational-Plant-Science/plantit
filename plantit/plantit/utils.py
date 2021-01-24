@@ -26,8 +26,10 @@ def get_repo_config_internal(name, owner):
 
 
 def docker_container_exists(name, owner=None):
-    content = requests.get(
-        f"https://hub.docker.com/v2/repositories/{owner if owner is not None else 'library'}/{name}/").json()
+    response = requests.get(
+        f"https://hub.docker.com/v2/repositories/{owner if owner is not None else 'library'}/{name}/")
+    response.raise_for_status()
+    content = response.json()
     if 'user' not in content or 'name' not in content:
         return False
     if content['user'] != (owner if owner is not None else 'library') or content['name'] != name:

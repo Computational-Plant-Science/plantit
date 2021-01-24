@@ -4,6 +4,7 @@ import tempfile
 import uuid
 from os.path import join
 from pathlib import Path
+from pprint import pprint
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -62,8 +63,10 @@ def list_outputs(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    included_by_name = (flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else []) + [f"{run.identifier}.zip"]
-    included_by_pattern = flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []
+    included_by_name = ((flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else []) + [f"{run.identifier}.zip"]) if 'output' in flow_config else []
+    included_by_pattern = (flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []) if 'output' in flow_config else []
+
+    included_by_name.append(f"{run.identifier}.log")
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
@@ -279,23 +282,20 @@ def runs(request):
             run.tags.add(tag)
 
         run.status_set.create(description=f"Creating run '{run.identifier}'",
-                              state=Status.CREATED,
+                              state=Status.CREATING,
                               location='PlantIT')
         run.save()
 
         config = {
             'identifier': run.identifier,
-            'api_url': os.environ['DJANGO_API_URL'] + f"runs/{run.identifier}/status/",
             'workdir': join(target.workdir, now_str),
-            'clone': f"https://github.com/{flow_path}" if flow['config']['clone'] else None,
             'image': flow['config']['image'],
             'command': flow['config']['commands'],
-            'params': flow['config']['params'],
+            'parameters': flow['config']['params'],
             'target': flow['config']['target'],
-            'logging': {
-                'file': f"{run.identifier}.log"
-            },
+            'log_file': f"{run.identifier}.log",
         }
+
         if 'gpu' in flow['config']:
             config['gpu'] = flow['config']['gpu']
         if 'branch' in flow['config']:
@@ -362,16 +362,30 @@ def status(request, id):
         status = request.data
         state = int(status['state'])
 
+        # FAILED = 0
+        # CREATED = 1
+        # PULLING = 2
+        # RUNNING = 3
+        # ZIPPING = 4
+        # PUSHING = 5
+        # COMPLETED = 6
+
+        if state == 0 or 'error' in status['description'].lower():
+            pass  # state == Status.FAILED
         if state == 1:
-            state = Status.COMPLETED
-        elif state == 2 or 'error' in status['description'].lower():
-            state = Status.FAILED
+            state = Status.CREATING
+        elif state == 2:
+            state = Status.PULLING
         elif state == 3:
             state = Status.RUNNING
         elif state == 4:
-            state = Status.CREATED
+            state = Status.ZIPPING
+        elif state == 5:
+            state = Status.PUSHING
+        elif state == 6:
+            state = Status.COMPLETED
         else:
-            raise ValueError(f"Invalid value for state '{status['state']}' (expected 1 - 4)")
+            raise ValueError(f"Invalid value for state '{status['state']}' (expected 0 - 6)")
 
         try:
             run = Run.objects.get(identifier=id)

@@ -97,9 +97,9 @@
                                     <b-badge
                                         class="ml-0 mr-1"
                                         :variant="
-                                            run.state === 1
+                                            run.state === 6
                                                 ? 'success'
-                                                : run.state === 2
+                                                : run.state === 0
                                                 ? 'danger'
                                                 : 'warning'
                                         "
@@ -465,14 +465,20 @@ export default {
         },
         statusToString(status) {
             switch (status) {
-                case 1:
-                    return 'Completed';
-                case 2:
+                case 0:
                     return 'Failed';
+                case 1:
+                    return 'Creating';
+                case 2:
+                    return 'Pulling';
                 case 3:
                     return 'Running';
                 case 4:
-                    return 'Created';
+                    return 'Zipping';
+                case 5:
+                    return 'Pushing';
+                case 6:
+                    return 'Completed';
             }
         },
         async loadUser() {

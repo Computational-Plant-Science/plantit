@@ -721,10 +721,6 @@ export default {
             let config = {
                 name: this.flow.config.name,
                 image: this.flow.config.image,
-                clone:
-                    this.flow.config.clone !== null
-                        ? this.flow.config.clone
-                        : false,
                 params: this.params,
                 target: target,
                 commands: this.flow.config.commands,

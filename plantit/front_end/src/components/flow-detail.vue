@@ -90,16 +90,6 @@
                                         <b>{{ flow.config.image }}</b>
                                     </b-col>
                                 </b-row>
-                                <b-row>
-                                    <b-col>
-                                        <small>Clone</small>
-                                    </b-col>
-                                    <b-col cols="10">
-                                        <b>{{
-                                            flow.config.clone ? 'Yes' : 'No'
-                                        }}</b>
-                                    </b-col>
-                                </b-row>
                                 <!--<b-row v-if="flow.config.gpu !== undefined">-->
                                 <b-row>
                                     <b-col>
