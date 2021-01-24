@@ -9,7 +9,7 @@
     >
         <br />
         <br />
-        <b-container class="p-3 vl">
+        <b-container class="p-3 vl" fluid>
             <div v-if="runNotFound">
                 <b-row align-content="center">
                     <b-col>
@@ -31,6 +31,7 @@
                         </b-row>
                         <div v-else-if="flow.config">
                             <b-row>
+                                <!-- CREATING -->
                                 <b-col
                                     align-self="end"
                                     v-if="logs[0].state === 1"
@@ -50,6 +51,31 @@
                                 </b-col>
                                 <b-col
                                     align-self="end"
+                                    class="text-center mb-2"
+                                >
+                                    <b-progress
+                                        height="0.5rem"
+                                        :value="1"
+                                        :max="1"
+                                        :variant="
+                                            logs[0].state === 1
+                                                ? 'warning'
+                                                : 'success'
+                                        "
+                                        :animated="logs[0].state === 1"
+                                    ></b-progress>
+                                </b-col>
+                                <!-- PULLING -->
+                                <b-col
+                                    align-self="end"
+                                    v-if="logs[0].state === 1"
+                                    class="text-center"
+                                >
+                                    <i class="far fa-circle text-secondary"></i>
+                                    Next: Pull
+                                </b-col>
+                                <b-col
+                                    align-self="end"
                                     v-if="logs[0].state === 2"
                                     class="text-center"
                                 >
@@ -64,6 +90,32 @@
                                 >
                                     <i class="fas fa-check text-success"></i>
                                     Pulled
+                                </b-col>
+                                <b-col
+                                    v-if="anyStatuses(2)"
+                                    align-self="end"
+                                    class="text-center mb-2"
+                                >
+                                    <b-progress
+                                        height="0.5rem"
+                                        :value="1"
+                                        :max="1"
+                                        :variant="
+                                            logs[0].state === 2
+                                                ? 'warning'
+                                                : 'success'
+                                        "
+                                        :animated="logs[0].state === 2"
+                                    ></b-progress>
+                                </b-col>
+                                <!-- RUNNING -->
+                                <b-col
+                                    align-self="end"
+                                    v-if="logs[0].state === 2"
+                                    class="text-center"
+                                >
+                                    <i class="far fa-circle text-secondary"></i>
+                                    Next: Run
                                 </b-col>
                                 <b-col
                                     align-self="end"
@@ -83,6 +135,35 @@
                                     Ran
                                 </b-col>
                                 <b-col
+                                    v-if="anyStatuses(3)"
+                                    align-self="end"
+                                    class="text-center mb-2"
+                                >
+                                    <b-progress
+                                        height="0.5rem"
+                                        :value="1"
+                                        :max="1"
+                                        :variant="
+                                            logs[0].state === 3
+                                                ? 'warning'
+                                                : 'success'
+                                        "
+                                        :animated="logs[0].state === 3"
+                                    ></b-progress>
+                                </b-col>
+                                <!-- ZIPPING -->
+                                <b-col
+                                    align-self="end"
+                                    v-if="
+                                        logs[0].state === 3 &&
+                                            flow.config.output
+                                    "
+                                    class="text-center"
+                                >
+                                    <i class="far fa-circle text-secondary"></i>
+                                    Next: Zip
+                                </b-col>
+                                <b-col
                                     v-if="logs[0].state === 4"
                                     class="text-center"
                                 >
@@ -97,6 +178,35 @@
                                 >
                                     <i class="fas fa-check text-success"></i>
                                     Zipped
+                                </b-col>
+                                <b-col
+                                    v-if="anyStatuses(4)"
+                                    align-self="end"
+                                    class="text-center mb-2"
+                                >
+                                    <b-progress
+                                        height="0.5rem"
+                                        :value="1"
+                                        :max="1"
+                                        :variant="
+                                            logs[0].state === 3
+                                                ? 'warning'
+                                                : 'success'
+                                        "
+                                        :animated="logs[0].state === 3"
+                                    ></b-progress>
+                                </b-col>
+                                <!-- PUSHING -->
+                                <b-col
+                                    align-self="end"
+                                    v-if="
+                                        logs[0].state === 4 &&
+                                            flow.config.output
+                                    "
+                                    class="text-center"
+                                >
+                                    <i class="far fa-circle text-secondary"></i>
+                                    Next: Push
                                 </b-col>
                                 <b-col
                                     align-self="end"
@@ -116,8 +226,26 @@
                                     Pushed
                                 </b-col>
                                 <b-col
-                                    align-self="end"
                                     v-if="anyStatuses(5)"
+                                    align-self="end"
+                                    class="text-center mb-2"
+                                >
+                                    <b-progress
+                                        height="0.5rem"
+                                        :value="1"
+                                        :max="1"
+                                        :variant="
+                                            logs[0].state === 4
+                                                ? 'warning'
+                                                : 'success'
+                                        "
+                                        :animated="logs[0].state === 4"
+                                    ></b-progress>
+                                </b-col>
+                                <!-- COMPLETION/FAILURE -->
+                                <b-col
+                                    align-self="end"
+                                    v-if="anyStatuses(0)"
                                     class="text-center"
                                 >
                                     <i
@@ -125,7 +253,7 @@
                                     ></i>
                                     Failed
                                 </b-col>
-                              <b-col
+                                <b-col
                                     align-self="end"
                                     v-else-if="logs[0].state === 6"
                                     class="text-center"
@@ -150,189 +278,207 @@
                                         "
                                         style="min-height: 5rem;"
                                         class="overflow-hidden mt-0"
+                                        no-body
                                     >
-                                        <WorkflowBlurb
-                                            :showPublic="false"
-                                            :flow="flow"
-                                            selectable="Restart"
-                                        ></WorkflowBlurb>
-                                        <br />
-                                        <h5 v-if="run.tags.length > 0">
-                                            <b-badge
-                                                v-for="tag in run.tags"
-                                                v-bind:key="tag"
-                                                class="mr-2"
-                                                variant="warning"
-                                                >{{ tag }}</b-badge
-                                            >
-                                        </h5>
-                                        <b-row class="m-0 p-0">
-                                            <b-col
-                                                align-self="end"
-                                                class="m-0 p-0"
-                                            >
-                                                <h5
-                                                    :class="
-                                                        darkMode
-                                                            ? 'theme-dark'
-                                                            : 'theme-light'
-                                                    "
+                                        <b-card-body
+                                            class="mr-1 mt-2 mb-2 ml-2 p-1"
+                                        >
+                                            <WorkflowBlurb
+                                                :showPublic="false"
+                                                :flow="flow"
+                                                selectable="Restart"
+                                            ></WorkflowBlurb>
+                                            <br />
+                                            <h5 v-if="run.tags.length > 0">
+                                                <b-badge
+                                                    v-for="tag in run.tags"
+                                                    v-bind:key="tag"
+                                                    class="mr-2"
+                                                    variant="warning"
+                                                    >{{ tag }}</b-badge
                                                 >
-                                                    Run
-                                                    <b-badge
-                                                        class="mr-2"
-                                                        variant="secondary"
-                                                        >{{ run.id }}</b-badge
-                                                    >
-                                                    <b-badge
-                                                        :variant="
-                                                            logs[0].state === 0
-                                                                ? 'danger'
-                                                                : logs[0].state ===
-                                                                  6
-                                                                ? 'success'
-                                                                : 'warning'
-                                                        "
-                                                        >{{
-                                                            statusToString(
-                                                                anyStatuses(0) ? 0 : logs[0].state
-                                                            )
-                                                        }}
-                                                    </b-badge>
-                                                    <small> on </small>
-                                                    <b-badge
-                                                        :variant="
+                                            </h5>
+                                            <b-row class="m-0 p-0">
+                                                <b-col
+                                                    align-self="end"
+                                                    class="m-0 p-0"
+                                                >
+                                                    <h5
+                                                        :class="
                                                             darkMode
-                                                                ? 'light'
-                                                                : 'dark'
+                                                                ? 'theme-dark'
+                                                                : 'theme-light'
                                                         "
-                                                        class="mr-0"
-                                                        >{{
-                                                            run.target
-                                                        }}</b-badge
                                                     >
-                                                    <small>
-                                                        {{ updatedFormatted }}
-                                                    </small>
-                                                </h5>
-                                            </b-col>
-                                            <b-col md="auto" class="ml-0">
-                                                <b-alert
-                                                    class="m-0 pt-1 pb-1"
-                                                    :show="
-                                                        reloadAlertDismissCountdown
-                                                    "
-                                                    variant="success"
-                                                    @dismissed="
-                                                        reloadAlertDismissCountdown = 0
-                                                    "
-                                                    @dismiss-count-down="
-                                                        countDownChanged
-                                                    "
-                                                >
-                                                    Logs refreshed.
-                                                </b-alert>
-                                            </b-col>
-                                            <b-col
-                                                md="auto"
-                                                class="m-0"
-                                                align-self="start"
-                                            >
-                                                <b-button
-                                                    :variant="
-                                                        darkMode
-                                                            ? 'outline-light'
-                                                            : 'outline-dark'
-                                                    "
-                                                    size="sm"
-                                                    v-b-tooltip.hover
-                                                    title="Refresh Logs"
-                                                    @click="reloadRun(true)"
-                                                >
-                                                    <i class="fas fa-redo"></i>
-                                                </b-button>
-                                            </b-col>
-                                            <b-col
-                                                md="auto"
-                                                class="m-0"
-                                                align-self="start"
-                                            >
-                                                <b-button
-                                                    :variant="
-                                                        darkMode
-                                                            ? 'outline-light'
-                                                            : 'outline-dark'
-                                                    "
-                                                    size="sm"
-                                                    v-b-tooltip.hover
-                                                    :title="
-                                                        logsExpanded
-                                                            ? 'Collapse Logs'
-                                                            : 'Expand Logs'
-                                                    "
-                                                    @click="expandLogs"
-                                                >
-                                                    <i
-                                                        v-if="logsExpanded"
-                                                        class="fas fa-caret-down"
-                                                    ></i>
-                                                    <i
-                                                        v-else
-                                                        class="fas fa-caret-up"
-                                                    ></i>
-                                                </b-button>
-                                            </b-col>
-                                        </b-row>
-                                        <div v-if="logsExpanded">
-                                            <div
-                                                v-for="log in logs.slice(1)"
-                                                v-bind:key="log.updated"
-                                            >
-                                                <hr />
-                                                <b-row>
-                                                    <b-col
-                                                        md="auto"
-                                                        align-self="end"
-                                                    >
-                                                        <h5
-                                                            :class="
-                                                                darkMode
-                                                                    ? 'theme-dark'
-                                                                    : 'theme-light'
-                                                            "
+                                                        <b-badge
+                                                            class="mr-2"
+                                                            variant="secondary"
+                                                            >{{
+                                                                run.id
+                                                            }}</b-badge
                                                         >
-                                                            <b-badge
-                                                                class="mr-1"
-                                                                :variant="
-                                                                    log.state ===
-                                                                    0
-                                                                        ? 'danger'
-                                                                        : log.state ===
-                                                                          1
-                                                                        ? 'success'
-                                                                        : 'warning'
-                                                                "
-                                                                >{{
-                                                                    statusToString(
-                                                                        log.state
+                                                        <b-badge
+                                                            :variant="
+                                                                logs[0]
+                                                                    .state === 0
+                                                                    ? 'danger'
+                                                                    : logs[0]
+                                                                          .state ===
+                                                                      6
+                                                                    ? 'success'
+                                                                    : 'warning'
+                                                            "
+                                                            >{{
+                                                                statusToString(
+                                                                    anyStatuses(
+                                                                        0
                                                                     )
-                                                                }}
-                                                            </b-badge>
-                                                            <small>{{
-                                                                formatDate(
-                                                                    log.date
+                                                                        ? 0
+                                                                        : logs[0]
+                                                                              .state
                                                                 )
-                                                            }}</small>
-                                                        </h5>
+                                                            }}
+                                                        </b-badge>
+                                                        <small> on </small>
+                                                        <b-badge
+                                                            :variant="
+                                                                darkMode
+                                                                    ? 'light'
+                                                                    : 'dark'
+                                                            "
+                                                            class="mr-0"
+                                                            >{{
+                                                                run.target
+                                                            }}</b-badge
+                                                        >
                                                         <small>
                                                             {{
-                                                                log.description
+                                                                updatedFormatted
                                                             }}
                                                         </small>
-                                                    </b-col>
-                                                </b-row>
+                                                    </h5>
+                                                </b-col>
+                                                <b-col md="auto" class="ml-0">
+                                                    <b-alert
+                                                        class="m-0 pt-1 pb-1"
+                                                        :show="
+                                                            reloadAlertDismissCountdown
+                                                        "
+                                                        variant="success"
+                                                        @dismissed="
+                                                            reloadAlertDismissCountdown = 0
+                                                        "
+                                                        @dismiss-count-down="
+                                                            countDownChanged
+                                                        "
+                                                    >
+                                                        Logs refreshed.
+                                                    </b-alert>
+                                                </b-col>
+                                                <b-col
+                                                    md="auto"
+                                                    class="m-0"
+                                                    align-self="start"
+                                                >
+                                                    <b-button
+                                                        :variant="
+                                                            darkMode
+                                                                ? 'outline-light'
+                                                                : 'outline-dark'
+                                                        "
+                                                        size="sm"
+                                                        v-b-tooltip.hover
+                                                        title="Refresh"
+                                                        @click="reloadRun(true)"
+                                                    >
+                                                        <i
+                                                            class="fas fa-redo"
+                                                        ></i>
+                                                    </b-button>
+                                                </b-col>
+                                                <b-col
+                                                    md="auto"
+                                                    class="m-0"
+                                                    align-self="start"
+                                                >
+                                                    <b-button
+                                                        :variant="
+                                                            darkMode
+                                                                ? 'outline-light'
+                                                                : 'outline-dark'
+                                                        "
+                                                        size="sm"
+                                                        v-b-tooltip.hover
+                                                        :title="
+                                                            logsExpanded
+                                                                ? 'Collapse Status Logs'
+                                                                : 'Expand Status Logs'
+                                                        "
+                                                        @click="expandLogs"
+                                                    >
+                                                        <i
+                                                            v-if="logsExpanded"
+                                                            class="fas fa-caret-down"
+                                                        ></i>
+                                                        <i
+                                                            v-else
+                                                            class="fas fa-caret-up"
+                                                        ></i>
+                                                    </b-button>
+                                                </b-col>
+                                            </b-row>
+                                            <div v-if="logsExpanded">
+                                                <hr>
+                                                <div
+                                                    v-for="log in logs.slice(1)"
+                                                    v-bind:key="log.updated"
+                                                >
+                                                    <b-row>
+                                                        <b-col
+                                                            md="auto"
+                                                            align-self="end"
+                                                        >
+                                                            <p
+                                                                :class="
+                                                                    darkMode
+                                                                        ? 'theme-dark'
+                                                                        : 'theme-light'
+                                                                "
+                                                            >
+                                                                <b-badge
+                                                                    class="mr-1"
+                                                                    :variant="
+                                                                        log.state ===
+                                                                        0
+                                                                            ? 'danger'
+                                                                            : log.state ===
+                                                                              6
+                                                                            ? 'success'
+                                                                            : 'warning'
+                                                                    "
+                                                                    >{{
+                                                                        statusToString(
+                                                                            log.state
+                                                                        )
+                                                                    }}
+                                                                </b-badge>
+                                                                <small>{{
+                                                                    formatDate(
+                                                                        log.date
+                                                                    )
+                                                                }}</small>
+                                                                <br />
+                                                                <small>
+                                                                    {{
+                                                                        log.description
+                                                                    }}
+                                                                </small>
+                                                            </p>
+                                                        </b-col>
+                                                    </b-row>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </b-card-body>
                                     </b-card>
                                     <b-card
                                         v-if="logsText !== ''"
@@ -353,17 +499,52 @@
                                             :header-bg-variant="
                                                 darkMode ? 'dark' : 'white'
                                             "
-                                            ><h4
-                                                :class="
-                                                    darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                            >
-                                                Container Logs
-                                            </h4></b-card-header
                                         >
+                                            <b-row
+                                                ><b-col>
+                                                    <h4
+                                                        :class="
+                                                            darkMode
+                                                                ? 'text-white'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        Container Logs
+                                                    </h4>
+                                                </b-col>
+                                                <b-col md="auto">
+                                                    <b-button
+                                                        :variant="
+                                                            darkMode
+                                                                ? 'outline-light'
+                                                                : 'outline-dark'
+                                                        "
+                                                        size="sm"
+                                                        v-b-tooltip.hover
+                                                        :title="
+                                                            containerLogsExpanded
+                                                                ? 'Collapse Container Logs'
+                                                                : 'Expand Container Logs'
+                                                        "
+                                                        @click="
+                                                            expandContainerLogs
+                                                        "
+                                                    >
+                                                        <i
+                                                            v-if="
+                                                                containerLogsExpanded
+                                                            "
+                                                            class="fas fa-caret-down"
+                                                        ></i>
+                                                        <i
+                                                            v-else
+                                                            class="fas fa-caret-up"
+                                                        ></i>
+                                                    </b-button> </b-col
+                                            ></b-row>
+                                        </b-card-header>
                                         <b-card-body
+                                            v-if="containerLogsExpanded"
                                             :class="
                                                 darkMode
                                                     ? 'theme-container-dark mt-0 pt-0'
@@ -476,20 +657,55 @@
                                             :header-bg-variant="
                                                 darkMode ? 'dark' : 'white'
                                             "
-                                            ><h4
-                                                :class="
-                                                    darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                            >
-                                                Output Files
-                                            </h4></b-card-header
                                         >
+                                            <b-row
+                                                ><b-col>
+                                                    <h4
+                                                        :class="
+                                                            darkMode
+                                                                ? 'text-white'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        Output Files
+                                                    </h4>
+                                                </b-col>
+                                                <b-col md="auto">
+                                                    <b-button
+                                                        :variant="
+                                                            darkMode
+                                                                ? 'outline-light'
+                                                                : 'outline-dark'
+                                                        "
+                                                        size="sm"
+                                                        v-b-tooltip.hover
+                                                        :title="
+                                                            outputFilesExpanded
+                                                                ? 'Collapse Output Files'
+                                                                : 'Expand Output Files'
+                                                        "
+                                                        @click="
+                                                            expandOutputFiles
+                                                        "
+                                                    >
+                                                        <i
+                                                            v-if="
+                                                                outputFilesExpanded
+                                                            "
+                                                            class="fas fa-caret-down"
+                                                        ></i>
+                                                        <i
+                                                            v-else
+                                                            class="fas fa-caret-up"
+                                                        ></i>
+                                                    </b-button> </b-col
+                                            ></b-row>
+                                        </b-card-header>
                                         <b-card-body
                                             v-if="
-                                                outputFiles.length > 0 ||
-                                                    loadingOutputFiles
+                                                outputFilesExpanded &&
+                                                    (outputFiles.length > 0 ||
+                                                        loadingOutputFiles)
                                             "
                                         >
                                             <b-row
@@ -694,9 +910,11 @@
                                                         class="m-0 p-0"
                                                         v-if="
                                                             !file.exists &&
-                                                                logs[0].state !==
+                                                                logs[0]
+                                                                    .state !==
                                                                     6 &&
-                                                                logs[0].state !== 0
+                                                                logs[0]
+                                                                    .state !== 0
                                                         "
                                                         type="grow"
                                                         small
@@ -705,9 +923,11 @@
                                                     <i
                                                         v-else-if="
                                                             !file.exists &&
-                                                                (logs[0].state ===
+                                                                (logs[0]
+                                                                    .state ===
                                                                     6 ||
-                                                                    logs[0].state ===
+                                                                    logs[0]
+                                                                        .state ===
                                                                         0)
                                                         "
                                                         class="far fa-times-circle text-danger fa-fw"
@@ -823,7 +1043,10 @@
                                     </b-row>-->
                                         </b-card-body>
                                         <b-card-body
-                                            v-else-if="flow.config.output"
+                                            v-else-if="
+                                                outputFilesExpanded &&
+                                                    flow.config.output
+                                            "
                                             class="mt-0 pt-0"
                                         >
                                             <b-row
@@ -1042,6 +1265,8 @@ export default {
             run: null,
             logs: null,
             logsExpanded: false,
+            containerLogsExpanded: false,
+            outputFilesExpanded: false,
             logsText: '',
             outputFilePage: 1,
             outputPageSize: 10,
@@ -1308,6 +1533,12 @@ export default {
         expandLogs() {
             this.logsExpanded = !this.logsExpanded;
         },
+        expandContainerLogs() {
+            this.containerLogsExpanded = !this.containerLogsExpanded;
+        },
+        expandOutputFiles() {
+            this.outputFilesExpanded = !this.outputFilesExpanded;
+        },
         reloadLogs(toast) {
             axios
                 .get(
@@ -1378,7 +1609,7 @@ export default {
         },
         updatedFormatted() {
             return `${moment(this.run.updated).fromNow()}`;
-        },
+        }
     },
     filters: {
         format_date(value) {

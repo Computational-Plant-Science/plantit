@@ -204,7 +204,7 @@
                             :key="crumb.text"
                             :to="crumb.href"
                             :disabled="crumb.text === 'runs'"
-                            :class="darkMode ? 'crumb-dark' : 'crumb-light'"
+                            class="ml-0 mr-0"
                         >
                             <h5>
                                 <b-badge

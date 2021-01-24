@@ -34,12 +34,17 @@ def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: 
     stdin, stdout, stderr = ssh_client.client.exec_command(full_command)
     stdin.close()
 
+    errors = []
     for line in iter(lambda: stdout.readline(2048), ""):
         print(f"Received stdout from '{ssh_client.host}': '{clean_html(line)}'")
     for line in iter(lambda: stderr.readline(2048), ""):
-        print(f"Received stderr from '{ssh_client.host}': '{clean_html(line)}'")
-    if stdout.channel.recv_exit_status():
+        clean_line = clean_html(line)
+        errors.append(clean_line)
+        print(f"Received stderr from '{ssh_client.host}': '{clean_line}'")
+    if stdout.channel.recv_exit_status() != 0:
         raise Exception(f"Received non-zero exit status from '{ssh_client.host}'")
+    elif len(errors) > 0:
+        raise Exception(f"Received stderr: {errors}")
 
 
 def update_status(run: Run, state: int, description: str):
@@ -255,14 +260,14 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         script.write("#SBATCH --error=PlantIT.%j.err\n")
 
                     callback_url = settings.API_URL + 'runs/' + run.identifier + '/status/'
+                    script.write(run.target.pre_commands + '\n')
 
                     if 'input' in flow['config']:
                         sftp.mkdir(join(run.target.workdir, run.work_dir, 'input'))
-                        pull_commands = f"plantit terrain pull {flow['config']['input']['from']} -p {join(run.target.workdir, run.work_dir, 'input')} --patterns {','.join(flow['config']['input']['patterns'])} --plantit_url '{callback_url}' --plantit_token '{plantit_token}' --terrain_token {cyverse_token}\n"
+                        pull_commands = f"plantit terrain pull {flow['config']['input']['from']} -p {join(run.target.workdir, run.work_dir, 'input')} {' '.join(['--pattern ' + pattern for pattern in flow['config']['input']['patterns']])} --plantit_url '{callback_url}' --plantit_token '{plantit_token}' --terrain_token {cyverse_token}\n"
                         script.write(pull_commands)
                         print(f"Using pull command: {pull_commands}")
 
-                    script.write(run.target.pre_commands + '\n')
                     run_commands = f"plantit run flow.yaml --plantit_url '{callback_url}' --plantit_token '{plantit_token}'"
                     docker_username = os.environ.get('DOCKER_USERNAME', None)
                     docker_password = os.environ.get('DOCKER_PASSWORD', None)
@@ -276,26 +281,26 @@ def execute(flow, run_id, plantit_token, cyverse_token):
                         zip_commands = f"plantit zip {flow['output']['from']}"
                         if 'include' in flow['output']:
                             if 'patterns' in flow['output']['include']:
-                                zip_commands += f" --include_patterns {flow['output']['include']['patterns']}"
+                                zip_commands = zip_commands + ' '.join(['--include_pattern ' + pattern for pattern in flow['output']['include']['patterns']])
                             if 'names' in flow['output']['include']:
-                                zip_commands += f" --include_names {flow['output']['include']['names']}"
+                                zip_commands = zip_commands + ' '.join(['--include_name ' + pattern for pattern in flow['output']['include']['names']])
                             if 'patterns' in flow['output']['exclude']:
-                                zip_commands += f" --exclude_patterns {flow['output']['exclude']['patterns']}"
+                                zip_commands = zip_commands + ' '.join(['--exclude_pattern ' + pattern for pattern in flow['output']['exclude']['patterns']])
                             if 'names' in flow['output']['exclude']:
-                                zip_commands += f" --exclude_names {flow['output']['exclude']['names']}"
+                                zip_commands = zip_commands + ' '.join(['--exclude_name ' + pattern for pattern in flow['output']['exclude']['names']])
                         zip_commands += '\n'
                         print(f"Using zip command: {zip_commands}")
 
                         push_commands = f"plantit terrain push {flow['output']['to']} -p {join(run.workdir, flow['output']['from'])} --plantit_url '{callback_url}' --plantit_token '{plantit_token}' --terrain_token {cyverse_token}"
                         if 'include' in flow['output']:
                             if 'patterns' in flow['output']['include']:
-                                push_commands += f" --include_patterns {flow['output']['include']['patterns']}"
+                                push_commands = push_commands + ' '.join(['--include_pattern ' + pattern for pattern in flow['output']['include']['patterns']])
                             if 'names' in flow['output']['include']:
-                                push_commands += f" --include_names {flow['output']['include']['names']}"
+                                push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in flow['output']['include']['names']])
                             if 'patterns' in flow['output']['exclude']:
-                                push_commands += f" --exclude_patterns {flow['output']['exclude']['patterns']}"
+                                push_commands = push_commands + ' '.join(['--exclude_pattern ' + pattern for pattern in flow['output']['exclude']['patterns']])
                             if 'names' in flow['output']['exclude']:
-                                push_commands += f" --exclude_names {flow['output']['exclude']['names']}"
+                                push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in flow['output']['exclude']['names']])
                         push_commands += '\n'
                         script.write(push_commands)
                         print(f"Using push command: {push_commands}")
