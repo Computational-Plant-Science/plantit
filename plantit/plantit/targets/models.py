@@ -34,7 +34,7 @@ class Target(models.Model):
     max_mem = models.IntegerField(help_text="Maximum memory (GB)",
                                   blank=True,
                                   null=True,
-                                  default=10)
+                                  default=5)
 
     max_cores = models.IntegerField(help_text="Maximum cores per node",
                                     blank=True,

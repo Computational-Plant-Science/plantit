@@ -41,9 +41,9 @@ class Run(models.Model):
     @property
     def status(self):
         try:
-            filtered = self.status_set.filter(state__exact=2)
-            if len(filtered) > 0:
-                return filtered.latest('date')
+            # filtered = self.status_set.filter(state__exact=2)
+            # if len(filtered) > 0:
+            #     return filtered.latest('date')
             return self.status_set.filter(date__isnull=False).latest('date')
         except:
             return None

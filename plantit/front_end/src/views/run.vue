@@ -71,7 +71,9 @@
                                 <b-col
                                     md="auto"
                                     align-self="end"
-                                    v-if="logs[0].state === 1 && flow.config.input"
+                                    v-if="
+                                        logs[0].state === 1 && flow.config.input
+                                    "
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
@@ -117,7 +119,11 @@
                                 <b-col
                                     md="auto"
                                     align-self="end"
-                                    v-if="logs[0].state === 2 || (logs[0].state === 1 && !flow.config.input)"
+                                    v-if="
+                                        logs[0].state === 2 ||
+                                            (logs[0].state === 1 &&
+                                                !flow.config.input)
+                                    "
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
@@ -271,11 +277,25 @@
                                 <b-col
                                     md="auto"
                                     align-self="end"
+                                    v-else-if="
+                                        (logs[0].state === 3 &&
+                                            !flow.config.output) ||
+                                            (flow.config.output &&
+                                                logs[0].state === 5)
+                                    "
+                                    class="text-center  ml-0 mr-0"
+                                >
+                                    <i class="far fa-circle text-secondary"></i>
+                                    Next: Complete
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
                                     v-else-if="logs[0].state === 6"
                                     class="text-center"
                                 >
                                     <i class="fas fa-check text-success"></i>
-                                    Completed
+                                    Complete
                                 </b-col>
                             </b-row>
                             <br />
@@ -444,7 +464,7 @@
                                                 </b-col>
                                             </b-row>
                                             <div v-if="logsExpanded">
-                                                <hr>
+                                                <hr />
                                                 <div
                                                     v-for="log in logs"
                                                     v-bind:key="log.updated"

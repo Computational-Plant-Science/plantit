@@ -9,7 +9,7 @@
     >
         <br />
         <br />
-        <b-container class="p-3 vl">
+        <b-container class="p-3 vl" fluid>
             <b-row>
                 <b-col>
                     <b-card

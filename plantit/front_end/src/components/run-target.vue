@@ -23,9 +23,26 @@
             <template v-slot:cell(host)="target">
                 {{ target.item.host }}
             </template>
+            <template v-slot:cell(host)="target">
+                {{ target.item.max_cores }}
+            </template>
+            <template v-slot:cell(host)="target">
+                {{ target.item.max_processes }}
+            </template>
+            <template v-slot:cell(host)="target">
+                {{ target.item.max_mem }}
+            </template>
             <template v-slot:cell(gpu)="target">
-                <i :class="target.item.gpu ? 'text-success' : 'text-danger'" v-if="target.item.gpu" class="far fa-check-circle"></i>
-                <i :class="target.item.gpu ? 'text-success' : 'text-danger'" v-else class="far fa-times-circle"></i>
+                <i
+                    :class="target.item.gpu ? 'text-success' : 'text-danger'"
+                    v-if="target.item.gpu"
+                    class="far fa-check-circle"
+                ></i>
+                <i
+                    :class="target.item.gpu ? 'text-success' : 'text-danger'"
+                    v-else
+                    class="far fa-times-circle"
+                ></i>
             </template>
         </b-table>
         <b-row align-h="center" v-if="targetsLoading">
@@ -69,6 +86,18 @@ export default {
                 {
                     key: 'description',
                     label: 'Description'
+                },
+                {
+                    key: 'max_cores',
+                    label: 'Max Cores'
+                },
+                {
+                    key: 'max_processes',
+                    label: 'Max Processes'
+                },
+                {
+                    key: 'max_mem',
+                    label: 'Max Memory'
                 },
                 {
                     key: 'gpu',
