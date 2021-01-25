@@ -3,13 +3,13 @@
         <b-container id="main">
             <b-card
                 align="center"
-                class="p-2 text-white"
+                class="p-3 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
                 :border-variant="darkMode ? 'secondary' : 'default'"
                 :text-variant="darkMode ? 'dark' : 'white'"
                 :bg-variant="darkMode ? 'dark' : 'white'"
-                style="max-width: 300px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
+                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -20,7 +20,7 @@
                             class="m-0 p-0"
                         ></b-img>
                         <h1 :class="darkMode ? 'text-white' : 'text-dark'">
-                            PlantIT
+                            plant<small class="mb-3 text-success" style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;">IT</small>
                         </h1>
                     </b-col>
                 </b-row>
@@ -29,6 +29,7 @@
                         <b-navbar-nav class="m-0 p-0">
                             <b-nav-item
                                 href="https://plantit.readthedocs.io/en/latest"
+                                title="PlantIT Docs"
                                 class="m-0 p-0"
                             >
                                 <b-button
@@ -45,6 +46,7 @@
                             </b-nav-item>
                             <b-nav-item
                                 class="m-0 p-0"
+                                title="GitHub"
                                 href="https://github.com/Computational-Plant-Science/plantit/discussions/63"
                             >
                                 <b-button
@@ -60,7 +62,7 @@
                                     Github
                                 </b-button>
                             </b-nav-item>
-                            <!--<b-nav-item class="m-0 p-0">
+                            <b-nav-item class="m-0 p-0" title="Slack">
                                 <b-button
                                     :variant="
                                         darkMode
@@ -73,7 +75,36 @@
                                     <br />
                                     Slack
                                 </b-button>
-                            </b-nav-item>-->
+                            </b-nav-item>
+                            <b-nav-item
+                                v-if="loggedIn"
+                                title="Enter PlantIT"
+                                class="m-0 p-0"
+                                :to="
+                                    '/' +
+                                        currentUserDjangoProfile.username +
+                                        '/'
+                                "
+                            >
+                                <b-button
+                                    :variant="
+                                        darkMode ? 'outline-light' : 'white'
+                                    "
+                                >
+                                    <b-img
+                                        v-if="currentUserGitHubProfile"
+                                        class="avatar"
+                                        rounded="circle"
+                                        center
+                                        :src="
+                                            currentUserGitHubProfile
+                                                ? currentUserGitHubProfile.avatar_url
+                                                : ''
+                                        "
+                                    ></b-img>
+                                    Enter
+                                </b-button>
+                            </b-nav-item>
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
@@ -97,51 +128,6 @@
                         </b-button>
                     </b-col>
                 </b-row>
-                <b-navbar toggleable="sm" class="m-0 p-0" v-else>
-                    <b-collapse class="justify-content-center m-0 p-0" is-nav>
-                        <b-navbar-nav class="m-0 p-0">
-                            <b-nav-item
-                                right
-                                v-if="loggedIn"
-                                title="Enter PlantIT"
-                                style="font-size: 12pt"
-                                :to="
-                                    '/' +
-                                        currentUserDjangoProfile.username +
-                                        '/'
-                                "
-                            >
-                                <b-button
-                                    :variant="
-                                        darkMode ? 'outline-light' : 'white'
-                                    "
-                                    block
-                                >
-                                    <b-img
-                                        v-if="currentUserGitHubProfile"
-                                        class="avatar m-0 p-0"
-                                        rounded="circle"
-                                        center
-                                        :src="
-                                            currentUserGitHubProfile
-                                                ? currentUserGitHubProfile.avatar_url
-                                                : ''
-                                        "
-                                    ></b-img>
-                                    Enter
-                                    <!--<b v-else
-                                        >(
-                                        {{
-                                            currentUserCyVerseProfile
-                                                ? currentUserCyVerseProfile.first_name
-                                                : currentUserDjangoProfile.username
-                                        }})</b
-                                    >-->
-                                </b-button>
-                            </b-nav-item>
-                        </b-navbar-nav>
-                    </b-collapse>
-                </b-navbar>
             </b-card>
         </b-container>
         <div style="position: absolute; bottom: 0; left: 49%">

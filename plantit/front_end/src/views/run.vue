@@ -35,7 +35,7 @@
                                 <b-col
                                     align-self="end"
                                     v-if="logs[0].state === 1"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
@@ -43,7 +43,7 @@
                                 </b-col>
                                 <b-col
                                     v-else
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                     align-self="end"
                                 >
                                     <i class="fas fa-check text-success"></i>
@@ -54,7 +54,7 @@
                                     class="text-center mb-2"
                                 >
                                     <b-progress
-                                        height="0.5rem"
+                                        height="0.3rem"
                                         :value="1"
                                         :max="1"
                                         :variant="
@@ -69,7 +69,7 @@
                                 <b-col
                                     align-self="end"
                                     v-if="logs[0].state === 1"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
                                     Next: Pull
@@ -77,7 +77,7 @@
                                 <b-col
                                     align-self="end"
                                     v-if="logs[0].state === 2"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
@@ -86,7 +86,7 @@
                                 <b-col
                                     align-self="end"
                                     v-else-if="anyStatuses(2)"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <i class="fas fa-check text-success"></i>
                                     Pulled
@@ -97,7 +97,7 @@
                                     class="text-center mb-2"
                                 >
                                     <b-progress
-                                        height="0.5rem"
+                                        height="0.3rem"
                                         :value="1"
                                         :max="1"
                                         :variant="
@@ -112,7 +112,7 @@
                                 <b-col
                                     align-self="end"
                                     v-if="logs[0].state === 2"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
                                     Next: Run
@@ -120,7 +120,7 @@
                                 <b-col
                                     align-self="end"
                                     v-if="logs[0].state === 3"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
@@ -129,7 +129,7 @@
                                 <b-col
                                     align-self="end"
                                     v-else-if="anyStatuses(3)"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <i class="fas fa-check text-success"></i>
                                     Ran
@@ -140,7 +140,7 @@
                                     class="text-center mb-2"
                                 >
                                     <b-progress
-                                        height="0.5rem"
+                                        height="0.3rem"
                                         :value="1"
                                         :max="1"
                                         :variant="
@@ -158,14 +158,14 @@
                                         logs[0].state === 3 &&
                                             flow.config.output
                                     "
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
                                     Next: Zip
                                 </b-col>
                                 <b-col
                                     v-if="logs[0].state === 4"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
@@ -174,7 +174,7 @@
                                 <b-col
                                     align-self="end"
                                     v-else-if="anyStatuses(4)"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <i class="fas fa-check text-success"></i>
                                     Zipped
@@ -185,7 +185,7 @@
                                     class="text-center mb-2"
                                 >
                                     <b-progress
-                                        height="0.5rem"
+                                        height="0.3rem"
                                         :value="1"
                                         :max="1"
                                         :variant="
@@ -203,7 +203,7 @@
                                         logs[0].state === 4 &&
                                             flow.config.output
                                     "
-                                    class="text-center"
+                                    class="text-center  ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
                                     Next: Push
@@ -211,7 +211,7 @@
                                 <b-col
                                     align-self="end"
                                     v-if="logs[0].state === 5"
-                                    class="text-center"
+                                    class="text-center  ml-0 mr-0"
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
@@ -220,7 +220,7 @@
                                 <b-col
                                     align-self="end"
                                     v-else-if="anyStatuses(5)"
-                                    class="text-center"
+                                    class="text-center ml-0 mr-0"
                                 >
                                     <i class="fas fa-check text-success"></i>
                                     Pushed
@@ -231,7 +231,7 @@
                                     class="text-center mb-2"
                                 >
                                     <b-progress
-                                        height="0.5rem"
+                                        height="0.3rem"
                                         :value="1"
                                         :max="1"
                                         :variant="

@@ -31,10 +31,6 @@ let router = new Router({
                 title: 'Users',
                 crumb: [
                     {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
-                    {
                         text: 'Users',
                         href: '/users'
                     }
@@ -49,10 +45,6 @@ let router = new Router({
             meta: {
                 title: 'Flows',
                 crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
                     {
                         text: 'Flows',
                         href: '/flows'
@@ -69,10 +61,6 @@ let router = new Router({
             meta: {
                 title: 'Flow',
                 crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    }
                 ],
                 requiresAuth: true
             }
@@ -85,10 +73,6 @@ let router = new Router({
             meta: {
                 title: 'Run',
                 crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    }
                 ],
                 requiresAuth: true
             }
@@ -101,10 +85,6 @@ let router = new Router({
             meta: {
                 title: 'User',
                 crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    }
                 ],
                 requiresAuth: true
             }
@@ -117,10 +97,6 @@ let router = new Router({
             meta: {
                 title: 'Not Found',
                 crumb: [
-                    {
-                        text: 'PlantIT',
-                        href: '/'
-                    },
                     {
                         text: '404'
                     }
@@ -145,21 +121,21 @@ router.beforeEach((to, from, next) => {
         document.title = to.meta.title;
     }
     if (to.matched.some(record => record.name === 'flow')) {
-        while (to.meta.crumb.length > 1) to.meta.crumb.pop();
+        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `Flow: ${to.params.username}/${to.params.name}`,
             href: `/${to.params.username}/${to.params.name}`
         });
     }
     if (to.matched.some(record => record.name === 'run')) {
-        while (to.meta.crumb.length > 1) to.meta.crumb.pop();
+        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `Run: ${to.params.id}`,
             href: `/${to.params.username}/runs/${to.params.id}`
         });
     }
     if (to.matched.some(record => record.name === 'user')) {
-        while (to.meta.crumb.length > 1) to.meta.crumb.pop();
+        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `User: ${to.params.username}`,
             href: `/${to.params.username}`

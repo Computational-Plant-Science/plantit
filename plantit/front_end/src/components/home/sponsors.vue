@@ -2,9 +2,9 @@
     <div>
         <b-card
             align="center"
-            class="rounded-0 text-center"
+            class="rounded-0 text-center m-0"
             bg-variant="white"
-            border-variant="default"
+            border-variant="light"
             header-bg-variant="white"
             header-border-variant="white"
             style="border: none; box-shadow: none"
@@ -20,9 +20,9 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h1>
+                        <h3>
                             Sponsors
-                        </h1>
+                        </h3>
                         <br />
                     </b-col>
                 </b-row>
@@ -53,7 +53,6 @@
                             :src="require('@/assets/sponsors/nsf.png')"
                             height="60px"
                             alt="National Science Foundation"
-                            class="mr-5"
                         ></b-img>
                     </b-link>
                 </b-card>

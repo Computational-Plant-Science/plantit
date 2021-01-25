@@ -57,18 +57,6 @@
                                     "
                                     @click="onRunSelected(run)"
                                 >
-                                    <a
-                                        :class="
-                                            darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
-                                        :href="
-                                            `/${currentUserDjangoProfile.username}/runs/${run.id}`
-                                        "
-                                        >{{ run.id }}</a
-                                    >
-                                    <br v-if="run.tags.length > 0" />
                                     <b-badge
                                         v-for="tag in run.tags"
                                         v-bind:key="tag"
@@ -76,24 +64,7 @@
                                         variant="warning"
                                         >{{ tag }}
                                     </b-badge>
-                                    <br />
-                                    <small class="mr-1"
-                                        ><a
-                                            :class="
-                                                darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                            :href="
-                                                `https://github.com/${run.flow_owner}/${run.flow_name}`
-                                            "
-                                            ><i class="fab fa-github fa-fw"></i>
-                                            {{ run.flow_owner }}/{{
-                                                run.flow_name
-                                            }}</a
-                                        >
-                                    </small>
-                                    <br />
+                                    <br v-if="run.tags.length > 0" />
                                     <b-badge
                                         class="ml-0 mr-1"
                                         :variant="
@@ -112,6 +83,35 @@
                                         variant="secondary"
                                         >{{ run.target }}</b-badge
                                     ><small> {{ prettify(run.updated) }}</small>
+                                    <br />
+                                    <a
+                                        :class="
+                                            darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        :href="
+                                            `/${currentUserDjangoProfile.username}/runs/${run.id}`
+                                        "
+                                        >{{ run.id }}</a
+                                    >
+                                    <br />
+                                    <small class="mr-1"
+                                        ><a
+                                            :class="
+                                                darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                            :href="
+                                                `https://github.com/${run.flow_owner}/${run.flow_name}`
+                                            "
+                                            ><i class="fab fa-github fa-fw"></i>
+                                            {{ run.flow_owner }}/{{
+                                                run.flow_name
+                                            }}</a
+                                        >
+                                    </small>
                                 </b-list-group-item>
                             </b-list-group>
                         </b-col>
@@ -278,7 +278,7 @@
                             >
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="PlantIT"
+                            title="Home"
                             to="/"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
@@ -286,7 +286,7 @@
                             "
                         >
                             <i class="fas fa-home fa-1x fa-fw"></i>
-                            PlantIT
+                            Home
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Docs"
