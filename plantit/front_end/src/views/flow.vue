@@ -50,11 +50,7 @@
             <br />
             <b-row>
                 <b-col align-self="end">
-                    <h5
-                        :class="
-                                        darkMode ? 'text-white' : 'text-dark'
-                                    "
-                    >
+                    <h5 :class="darkMode ? 'text-white' : 'text-dark'">
                         To run {{ flow.config.name }}, configure options below.
                     </h5>
                 </b-col>
@@ -70,7 +66,7 @@
                     >
                         <b-row>
                             <b-col>
-                                <h5
+                                <h4
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
@@ -81,7 +77,7 @@
                                     ></i>
                                     <i v-else class="fas fa-tags fa-fw"></i>
                                     Tags
-                                </h5>
+                                </h4>
                             </b-col>
                         </b-row>
                         <b-row
@@ -98,7 +94,7 @@
                         <b-row>
                             <b-col>
                                 <multiselect
-                                    style="z-index: 1000"
+                                    style="z-index: 100"
                                     v-model="tags"
                                     mode="tags"
                                     :multiple="true"
@@ -136,7 +132,7 @@
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h5
+                                <h4
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
@@ -147,7 +143,7 @@
                                     ></i>
                                     <i v-else class="fas fa-keyboard fa-fw"></i>
                                     Parameters
-                                </h5>
+                                </h4>
                             </b-col>
                         </b-row>
                         <b-row
@@ -225,7 +221,7 @@
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h5
+                                <h4
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
@@ -240,7 +236,7 @@
                                         this.input.kind[0].toUpperCase() +
                                             this.input.kind.substr(1)
                                     }}
-                                </h5>
+                                </h4>
                             </b-col>
                         </b-row>
                         <runinput
@@ -311,7 +307,7 @@
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h5
+                                <h4
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
@@ -325,12 +321,14 @@
                                         class="fas fa-upload fa-fw text-white"
                                     ></i>
                                     <i
-                                        v-else-if="!outputDirectory && !darkMode"
+                                        v-else-if="
+                                            !outputDirectory && !darkMode
+                                        "
                                         class="fas fa-upload fa-fw text-dark"
                                     ></i>
                                     Output Sync
                                     {{ outputDirectory ? '' : ' (off)' }}
-                                </h5>
+                                </h4>
                             </b-col>
                             <b-col md="auto">
                                 <b-form-checkbox
@@ -360,7 +358,7 @@
                     >
                         <b-row align-v="center">
                             <b-col>
-                                <h5
+                                <h4
                                     :class="
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
@@ -371,13 +369,114 @@
                                     ></i>
                                     <i v-else class="fas fa-server fa-fw"></i>
                                     Deployment Target
-                                </h5>
+                                </h4>
                             </b-col>
                         </b-row>
-                        <runtarget
-                            :selected="target"
-                            v-on:targetSelected="targetSelected"
-                        ></runtarget>
+                        <div>
+                            <b :class="darkMode ? 'text-white' : 'text-dark'">
+                                Select a cluster or server to submit this run
+                                to.
+                            </b>
+                            <br />
+                            <b-table
+                                :items="
+                                    targets.filter(target => !target.disabled)
+                                "
+                                :fields="targetFields"
+                                responsive="sm"
+                                borderless
+                                small
+                                sticky-header="true"
+                                caption-top
+                                :table-variant="darkMode ? 'dark' : 'white'"
+                            >
+                                <template v-slot:cell(name)="target">
+                                    <b-button
+                                        size="sm"
+                                        block
+                                        class="text-left"
+                                        @click="targetSelected(target.item)"
+                                        variant="success"
+                                        :disabled="
+                                            targetUnsupported(target.item)
+                                        "
+                                        >{{ target.item.name }}</b-button
+                                    >
+                                </template>
+                                <template v-slot:cell(host)="target">
+                                    {{ target.item.host }}
+                                </template>
+                                <template v-slot:cell(max_cores)="target">
+                                    {{ target.item.max_cores }}
+                                </template>
+                                <template v-slot:cell(max_processes)="target">
+                                    {{ target.item.max_processes }}
+                                </template>
+                                <template v-slot:cell(max_mem)="target">
+                                    <span
+                                        v-if="
+                                            parseInt(target.item.max_mem) >=
+                                                parseInt(
+                                                    flow.config.resources.mem
+                                                )
+                                        "
+                                        >{{ target.item.max_mem }} GB</span
+                                    >
+                                    <b v-else class="text-danger"
+                                        >{{ target.item.max_mem }} GB</b
+                                    >
+                                </template>
+                                <template v-slot:cell(gpu)="target">
+                                    <i
+                                        :class="
+                                            target.item.gpu
+                                                ? 'text-success'
+                                                : ''
+                                        "
+                                        v-if="target.item.gpu"
+                                        class="far fa-check-circle"
+                                    ></i>
+                                    <i v-else class="far fa-times-circle"></i>
+                                </template>
+                            </b-table>
+
+                            <b-row align-h="center" v-if="targetsLoading">
+                                <b-spinner
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="success"
+                                ></b-spinner>
+                            </b-row>
+                            <b-row
+                                align-h="center"
+                                class="text-center"
+                                v-else-if="
+                                    !targetsLoading && targets.length === 0
+                                "
+                            >
+                                <b-col>
+                                    None to show.
+                                </b-col>
+                            </b-row>
+                            <b-alert
+                                v-else
+                                class="mt-1"
+                                :variant="
+                                    target.name !== '' ? 'success' : 'danger'
+                                "
+                                :show="true"
+                                >Selected:
+                                {{ target.name !== '' ? target.name : 'None' }}
+                                <i
+                                    v-if="target.name !== ''"
+                                    class="fas fa-check text-success"
+                                ></i>
+                                <i
+                                    v-else
+                                    class="fas fa-exclamation text-danger"
+                                ></i>
+                            </b-alert>
+                        </div>
                     </b-card>
                 </b-col>
             </b-row>
@@ -402,7 +501,6 @@
 import flowdetail from '../components/flow-detail';
 import runinput from '../components/run-input';
 import runoutput from '../components/run-output';
-import runtarget from '../components/run-target';
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
@@ -419,8 +517,7 @@ export default {
         Multiselect,
         flowdetail,
         runinput,
-        runoutput,
-        runtarget
+        runoutput
     },
     props: {
         username: {
@@ -506,6 +603,34 @@ export default {
             target: {
                 name: ''
             },
+            targets: [],
+            targetsLoading: false,
+            targetFields: [
+                {
+                    key: 'name',
+                    label: ''
+                },
+                {
+                    key: 'description',
+                    label: 'Description'
+                },
+                {
+                    key: 'max_cores',
+                    label: 'Max Cores'
+                },
+                {
+                    key: 'max_processes',
+                    label: 'Max Processes'
+                },
+                {
+                    key: 'max_mem',
+                    label: 'Max Memory'
+                },
+                {
+                    key: 'gpu',
+                    label: 'GPU'
+                }
+            ],
             fields: [
                 {
                     key: 'name',
@@ -520,6 +645,7 @@ export default {
     },
     mounted: function() {
         this.loadFlow();
+        this.loadTargets();
     },
     methods: {
         addTag(tag) {
@@ -545,34 +671,6 @@ export default {
                 return;
             }
             this.output.exclude.names.push(name);
-        },
-        removeExcludedFile(name) {
-            let index = this.output.exclude.names.indexOf(name);
-            if (index > -1) this.output.exclude.names.splice(index, 1);
-        },
-        addIncludedPattern(pattern) {
-            let index = this.output.include.patterns.indexOf(pattern);
-            if (index > -1) {
-                alert("You've already included this file pattern.");
-                return;
-            }
-            this.output.include.patterns.push(pattern);
-        },
-        removeIncludedPattern(pattern) {
-            let index = this.output.include.patterns.indexOf(pattern);
-            if (index > -1) this.output.include.patterns.splice(index, 1);
-        },
-        addExcludedPattern(pattern) {
-            let index = this.output.exclude.patterns.indexOf(pattern);
-            if (index > -1) {
-                alert("You've already excluded this file pattern.");
-                return;
-            }
-            this.output.exclude.patterns.push(pattern);
-        },
-        removeExcludedPattern(pattern) {
-            let index = this.output.exclude.patterns.indexOf(pattern);
-            if (index > -1) this.output.exclude.patterns.splice(index, 1);
         },
         validate() {
             axios
@@ -709,6 +807,30 @@ export default {
         },
         targetSelected(target) {
             this.target = target;
+        },
+        targetUnsupported(target) {
+            return (
+                parseInt(target.max_mem) <
+                    parseInt(this.flow.config.resources.mem) ||
+                parseInt(target.max_cores) <
+                    parseInt(this.flow.config.resources.cores) ||
+                parseInt(target.max_processes) <
+                    parseInt(this.flow.config.resources.processes)
+            );
+            // TODO walltime
+        },
+        loadTargets: function() {
+            this.targetsLoading = true;
+            return axios
+                .get('/apis/v1/targets/')
+                .then(response => {
+                    this.targets = response.data;
+                    this.targetsLoading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
         },
         onStart() {
             if (!this.flow.config.resources && this.target.name !== 'Sandbox') {

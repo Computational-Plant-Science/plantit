@@ -9,24 +9,26 @@
             header-border-variant="white"
             style="border: none; box-shadow: none"
         >
-            <template slot="header" style="border: none">
+            <!--<template slot="header" style="border: none">
                 <br />
                 <br />
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
                         <b-img
-                            style="max-width: 5rem;transform: translate(0px, 20px);"
+                            style="max-width: 3rem;transform: translate(0px, 20px);"
                             :src="require('../../assets/logo.png')"
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h3>
-                            Sponsors
-                        </h3>
+                        <br />
+                        <h5>
+                            Supported by...
+                        </h5>
                         <br />
                     </b-col>
                 </b-row>
-            </template>
+            </template>-->
+            <br/>
             <b-card-group columns>
                 <b-card
                     align="center"
@@ -42,7 +44,7 @@
                         ></b-img>
                     </b-link>
                 </b-card>
-              <b-card
+                <b-card
                     align="center"
                     bg-variant="transparent"
                     border-variant="white"
@@ -114,6 +116,7 @@
                 </b-card>
             </b-card-group>
         </b-card>
+      <br/>
     </div>
 </template>
 

@@ -24,7 +24,7 @@
                             plant<small class="mb-3 text-success">IT</small>
                         </h2>
                         <h5 class="text-white mt-4">
-                            plant phenomics in the browser
+                            Plant phenomics in the browser
                         </h5>
                     </b-col>
                 </b-row>
@@ -58,12 +58,12 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-white">
-                                    plug in your data
+                                    Plug in your data
                                 </h4>
-                                attach metadata and collaborate with team
+                                Share collections and collaborate with team
                                 members
                                 <br />
-                                upload, analyze, and publish datasets with
+                                Upload, annotate, and publish datasets with
                                 <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
@@ -88,25 +88,27 @@
                             bg-variant="dark"
                             text-variant="success"
                             no-body
-                              img-width="120px"
+                            img-width="120px"
                             :img-src="
                                 require('../../assets/frontpage/icons/code.png')
                             "
                             img-right
                             style="border: none; box-shadow: none"
                         >
-                            <b-card-text class="ml-4 mr-4 text-success text-right">
+                            <b-card-text
+                                class="ml-4 mr-4 text-success text-right"
+                            >
                                 <h4 class="text-white">
-                                    host your software
+                                    Host your software
                                 </h4>
-                                discover projects or publish your own code with
+                                Discover projects or publish your own code with
                                 <b-link
                                     class="text-white"
                                     href="https://www.github.com/"
                                     >Github</b-link
                                 >
                                 <br />
-                                if it can run in
+                                If it runs in
                                 <b-link
                                     class="text-white"
                                     href="https://www.docker.com/"
@@ -142,11 +144,11 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-white">
-                                    workflows on the web
+                                    Workflows on the web
                                 </h4>
-                                configure parameters and deploy to a cluster
+                                Configure parameters and deploy to a cluster
                                 <br />
-                                all from the browser, no programming required
+                                All from the browser, no programming required
                             </b-card-text>
                         </b-card>
                     </b-col>

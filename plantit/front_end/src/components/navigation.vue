@@ -239,7 +239,7 @@
                         :title="currentUserDjangoProfile.username"
                         class="m-0 p-0 mt-1 dropdown-custom"
                         :menu-class="darkMode ? 'theme-dark' : 'theme-light'"
-                        style="font-size: 12pt; z-index: 1001;"
+                        style="font-size: 12pt"
                     >
                         <template #button-content>
                             <b-button

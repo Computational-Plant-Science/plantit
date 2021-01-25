@@ -12,19 +12,45 @@
             <br />
             <br />
             <b-container class="text-center">
-                <div class="p-0 m-0 background-white text-white">
-                    <b-img
-                        style="max-width: 5rem;transform: translate(0px, 20px);"
-                        :src="require('../../assets/logo.png')"
-                        center
-                        class="m-0 p-0"
-                    ></b-img>
-                </div>
-                <h3 class="text-center">
-                    <b>People</b>
-                </h3>
+                <b-row align-v="center" class="justify-content-md-center">
+                    <b-col>
+                        <b-img
+                            style="max-width: 3rem;transform: translate(0px, 20px);"
+                            :src="require('../../assets/logo.png')"
+                            right
+                            class="m-0 p-0"
+                        ></b-img>
+                    </b-col>
+                    <b-col
+                        ><b-img
+                            style="width: 5rem;transform: translate(0px, 20px);"
+                            :src="require('../../assets//cps.png')"
+                            left
+                            class="m-0 p-0"
+                        ></b-img
+                    ></b-col>
+                </b-row>
                 <br />
+                <b-row align-v="center" class="justify-content-md-center">
+                    <b-col>
+                        <h5 class="text-dark">
+                            Built with <i class="far fa-heart"></i> by
+                            the
+                            <b-link
+                                :class="
+                                            darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                style="text-decoration: underline;text-underline: lightgray"
+                                href="https://www.computational-plant-science.org/joomla30/"
+                                >Computational Plant Science Lab</b-link
+                            >.
+                        </h5>
+                    </b-col>
+                </b-row>
                 <br />
+                <br/>
                 <b-row class="justify-content-md-center mb-4">
                     <b-col>
                         <b-tabs
@@ -35,7 +61,7 @@
                             <br />
                             <b-tab title="Active" active>
                                 <template v-slot:title class="m-0 p-0">
-                                    <b class="text-secondary">Active</b>
+                                    <b class="text-dark">Active Team</b>
                                 </template>
                                 <br />
                                 <b-card-group deck columns>
@@ -131,7 +157,9 @@
                             </b-tab>
                             <b-tab title="Former">
                                 <template v-slot:title class="m-0 p-0">
-                                    <b class="text-secondary">Former</b>
+                                    <b class="text-dark"
+                                        >Former Contributors</b
+                                    >
                                 </template>
                                 <br />
                                 <b-card-group columns>
@@ -262,6 +290,7 @@
                         </b-tabs>
                     </b-col>
                 </b-row>
+                <br />
             </b-container>
         </b-card>
     </div>
