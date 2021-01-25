@@ -141,7 +141,11 @@
                                         darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
-                                    <i class="fas fa-keyboard fa-fw"></i>
+                                    <i
+                                        v-if="params.every(p => p.value !== '')"
+                                        class="fas fa-keyboard fa-fw text-success"
+                                    ></i>
+                                    <i v-else class="fas fa-keyboard fa-fw"></i>
                                     Parameters
                                 </h5>
                             </b-col>

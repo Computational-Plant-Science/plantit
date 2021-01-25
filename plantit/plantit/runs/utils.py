@@ -307,14 +307,14 @@ def execute(flow, run_id, plantit_token, cyverse_token):
 
             pre_command = '; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':'
             command = f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}"
-            update_status(run, Status.CREATING, 'Starting run' if sandbox else 'Submitting run')
+            update_status(run, Status.CREATING, 'Running script' if sandbox else 'Submitting script to scheduler')
             execute_command(ssh_client=client, pre_command=pre_command, command=command, directory=work_dir)
 
             if run.status.state != 0:
                 update_status(
                     run,
                     Status.COMPLETED if sandbox else Status.CREATING,
-                    f"'{run.identifier}' {'completed' if sandbox else 'submitted'}")
+                    f"Run '{run.identifier}' {'completed' if sandbox else 'submitted'}")
             else:
                 update_status(run, Status.FAILED, f"'{run.identifier}' failed")
             run.save()

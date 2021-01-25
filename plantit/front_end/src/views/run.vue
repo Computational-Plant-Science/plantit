@@ -30,18 +30,20 @@
                             ></b-spinner>
                         </b-row>
                         <div v-else-if="flow.config">
-                            <b-row>
+                            <b-row class="m-1">
                                 <!-- CREATING -->
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-if="logs[0].state === 1"
                                     class="text-center ml-0 mr-0"
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
-                                    Creating run
+                                    Creating
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     v-else
                                     class="text-center ml-0 mr-0"
                                     align-self="end"
@@ -67,29 +69,32 @@
                                 </b-col>
                                 <!-- PULLING -->
                                 <b-col
+                                    md="auto"
                                     align-self="end"
-                                    v-if="logs[0].state === 1"
+                                    v-if="logs[0].state === 1 && flow.config.input"
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
-                                    Next: Pull
+                                    Next: Pull Inputs
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-if="logs[0].state === 2"
                                     class="text-center ml-0 mr-0"
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
-                                    Pulling inputs
+                                    Pulling Inputs
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-else-if="anyStatuses(2)"
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="fas fa-check text-success"></i>
-                                    Pulled
+                                    Pulled Inputs
                                 </b-col>
                                 <b-col
                                     v-if="anyStatuses(2)"
@@ -110,14 +115,16 @@
                                 </b-col>
                                 <!-- RUNNING -->
                                 <b-col
+                                    md="auto"
                                     align-self="end"
-                                    v-if="logs[0].state === 2"
+                                    v-if="logs[0].state === 2 || (logs[0].state === 1 && !flow.config.input)"
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
-                                    Next: Run
+                                    Next: Run container(s)
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-if="logs[0].state === 3"
                                     class="text-center ml-0 mr-0"
@@ -127,12 +134,13 @@
                                     Running container(s)
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-else-if="anyStatuses(3)"
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="fas fa-check text-success"></i>
-                                    Ran
+                                    Ran container(s)
                                 </b-col>
                                 <b-col
                                     v-if="anyStatuses(3)"
@@ -153,6 +161,7 @@
                                 </b-col>
                                 <!-- ZIPPING -->
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-if="
                                         logs[0].state === 3 &&
@@ -161,23 +170,25 @@
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
-                                    Next: Zip
+                                    Next: Zip Outputs
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     v-if="logs[0].state === 4"
                                     class="text-center ml-0 mr-0"
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
-                                    Zipping outputs
+                                    Zipping Outputs
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-else-if="anyStatuses(4)"
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="fas fa-check text-success"></i>
-                                    Zipped
+                                    Zipped Outputs
                                 </b-col>
                                 <b-col
                                     v-if="anyStatuses(4)"
@@ -198,6 +209,7 @@
                                 </b-col>
                                 <!-- PUSHING -->
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-if="
                                         logs[0].state === 4 &&
@@ -206,24 +218,26 @@
                                     class="text-center  ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
-                                    Next: Push
+                                    Next: Push Outputs
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-if="logs[0].state === 5"
                                     class="text-center  ml-0 mr-0"
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
-                                    Pushing outputs
+                                    Pushing Outputs
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-else-if="anyStatuses(5)"
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="fas fa-check text-success"></i>
-                                    Pushed
+                                    Pushed Outputs
                                 </b-col>
                                 <b-col
                                     v-if="anyStatuses(5)"
@@ -244,6 +258,7 @@
                                 </b-col>
                                 <!-- COMPLETION/FAILURE -->
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-if="anyStatuses(0)"
                                     class="text-center"
@@ -254,6 +269,7 @@
                                     Failed
                                 </b-col>
                                 <b-col
+                                    md="auto"
                                     align-self="end"
                                     v-else-if="logs[0].state === 6"
                                     class="text-center"
@@ -281,7 +297,7 @@
                                         no-body
                                     >
                                         <b-card-body
-                                            class="mr-1 mt-2 mb-2 ml-2 p-1"
+                                            class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
                                         >
                                             <WorkflowBlurb
                                                 :showPublic="false"
@@ -430,7 +446,7 @@
                                             <div v-if="logsExpanded">
                                                 <hr>
                                                 <div
-                                                    v-for="log in logs.slice(1)"
+                                                    v-for="log in logs"
                                                     v-bind:key="log.updated"
                                                 >
                                                     <b-row>
@@ -495,7 +511,7 @@
                                         no-body
                                     >
                                         <b-card-header
-                                            class="mt-1"
+                                            class="mr-2 mt-2 mb-2 ml-2 p-1 pt-2"
                                             :header-bg-variant="
                                                 darkMode ? 'dark' : 'white'
                                             "
@@ -587,7 +603,7 @@
                                                         "
                                                         size="sm"
                                                         v-b-tooltip.hover
-                                                        title="Download Container Output"
+                                                        title="Download Container Log File"
                                                         @click="downloadLogs"
                                                     >
                                                         <i
@@ -653,7 +669,7 @@
                                         no-body
                                     >
                                         <b-card-header
-                                            class="mt-1"
+                                            class="mr-2 mt-2 mb-2 ml-2 p-1 pt-2"
                                             :header-bg-variant="
                                                 darkMode ? 'dark' : 'white'
                                             "
