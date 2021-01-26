@@ -377,11 +377,7 @@
                                                         </b-badge>
                                                         <small> on </small>
                                                         <b-badge
-                                                            :variant="
-                                                                darkMode
-                                                                    ? 'light'
-                                                                    : 'dark'
-                                                            "
+                                                            variant="secondary"
                                                             class="mr-0"
                                                             >{{
                                                                 run.target
