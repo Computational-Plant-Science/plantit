@@ -389,6 +389,40 @@
                                                             }}
                                                         </small>
                                                     </h5>
+                                                    <small
+                                                        v-if="
+                                                            walltimeRemaining !==
+                                                                null
+                                                        "
+                                                        >{{
+                                                            this.anyStatuses(
+                                                                0
+                                                            ) ||
+                                                            this.anyStatuses(6)
+                                                                ? 'Ran'
+                                                                : 'Running'
+                                                        }}
+                                                        for
+                                                        {{
+                                                            walltimeElapsed.humanize()
+                                                        }}
+                                                        <span
+                                                            v-if="
+                                                                !(
+                                                                    this.anyStatuses(
+                                                                        0
+                                                                    ) ||
+                                                                    this.anyStatuses(
+                                                                        6
+                                                                    )
+                                                                )
+                                                            "
+                                                            >({{
+                                                                walltimeRemaining.humanize()
+                                                            }}
+                                                            remaining)</span
+                                                        ></small
+                                                    >
                                                 </b-col>
                                                 <b-col md="auto" class="ml-0">
                                                     <b-alert
@@ -1632,6 +1666,40 @@ export default {
             'loggedIn',
             'darkMode'
         ]),
+        walltimeElapsed() {
+            if (!this.anyStatuses(2) && !this.anyStatuses(3)) return null;
+
+            let start = moment(
+                this.logs.find(s => s.state === 2 || s.state === 3).date
+            );
+            let end =
+                this.anyStatuses(0) || this.anyStatuses(6)
+                    ? moment(
+                          this.logs.find(s => s.state === 0 || s.state === 6)
+                              .date
+                      )
+                    : moment();
+            let diff = end.diff(start);
+            return moment.duration(diff);
+        },
+        walltimeRemaining() {
+            if (!this.anyStatuses(2) && !this.anyStatuses(3)) return null;
+
+            let start = moment(
+                this.logs.find(s => s.state === 2 || s.state === 3).date
+            );
+            let walltimeSplit = this.flow.config.resources.time.split(':');
+            if (walltimeSplit.length !== 3) throw 'Malformed walltime';
+            let hours = parseInt(walltimeSplit[0]);
+            let minutes = parseInt(walltimeSplit[1]);
+            let seconds = parseInt(walltimeSplit[2]);
+            let end = start.clone();
+            end.add(hours, 'h')
+                .add(minutes, 'm')
+                .add(seconds, 's');
+            let diff = end.diff(start);
+            return moment.duration(diff);
+        },
         runStatus() {
             if (this.run.runstatus_set.length > 0) {
                 return this.run.runstatus_set[0].state;
