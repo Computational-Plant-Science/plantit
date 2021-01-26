@@ -308,6 +308,17 @@ def runs(request):
             flow['config']['output']['from'] = join(target.workdir, run.work_dir, flow['config']['output']['from'])
             config['output'] = flow['config']['output']
 
+        from celery.task import control
+        if 'resources' in flow['config']['target']:
+            time_split = flow['config']['target']['resources']['time'].split(':')
+            time_hours = int(time_split[0])
+            time_minutes = int(time_split[1])
+            time_seconds = int(time_split[2])
+            time_limit_seconds = time_seconds + 60 * time_minutes + 60 * time_hours * 2  # twice the given walltime, to allow for scheduler delay
+        else:
+            time_limit_seconds = 600  # otherwise just default to 10 minutes
+        control.time_limit('plantit.runs.utils.execute', soft=time_limit_seconds)
+
         execute.delay({
             'repo': flow['repo'],
             'config': config

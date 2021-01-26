@@ -24,12 +24,10 @@ class Run(models.Model):
                                null=True,
                                blank=True,
                                on_delete=models.SET_NULL)
-
     work_dir = models.CharField(max_length=100,
                                 null=True,
                                 blank=True,
                                 default=timezone.now().strftime('%s') + "/")
-
     remote_results_path = models.CharField(max_length=100,
                                            null=True,
                                            blank=True,

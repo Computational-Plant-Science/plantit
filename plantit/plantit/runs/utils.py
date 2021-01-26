@@ -14,6 +14,7 @@ import requests
 import yaml
 from django.contrib.auth.models import User
 from requests.auth import HTTPBasicAuth
+from celery.exceptions import SoftTimeLimitExceeded
 
 from plantit import settings
 from plantit.celery import app
@@ -165,25 +166,25 @@ def __old_flow_config_to_new(flow: dict, run: Run, resources: dict):
 
 @app.task()
 def execute(flow, run_id, plantit_token, cyverse_token):
-    run = Run.objects.get(identifier=run_id)
-
-    # if flow has outputs, make sure we don't push configuration or job scripts
-    if 'output' in flow['config']:
-        flow['config']['output']['exclude']['names'] = [
-            "flow.yaml",
-            "template_local_run.sh",
-            "template_slurm_run.sh"]
-
-    # pull cluster resoures out
-    if 'resources' not in flow['config']['target']:
-        resources = None
-    else:
-        resources = flow['config']['target']['resources']
-
-    # TODO use this new format from browser
-    new_flow = __old_flow_config_to_new(flow, run, resources)
-
     try:
+        run = Run.objects.get(identifier=run_id)
+
+        # if flow has outputs, make sure we don't push configuration or job scripts
+        if 'output' in flow['config']:
+            flow['config']['output']['exclude']['names'] = [
+                "flow.yaml",
+                "template_local_run.sh",
+                "template_slurm_run.sh"]
+
+        # pull cluster resoures out
+        if 'resources' not in flow['config']['target']:
+            resources = None
+        else:
+            resources = flow['config']['target']['resources']
+
+        # TODO use this new format from browser
+        new_flow = __old_flow_config_to_new(flow, run, resources)
+
         client = SSH(run.target.hostname, run.target.port, run.target.username)
         work_dir = join(run.target.workdir, run.work_dir)
 
@@ -318,6 +319,10 @@ def execute(flow, run_id, plantit_token, cyverse_token):
             else:
                 update_status(run, Status.FAILED, f"'{run.identifier}' failed")
             run.save()
+    except SoftTimeLimitExceeded:
+        update_status(run, Status.RUNNING, f"{run.identifier}' exceeded its walltime: {traceback.format_exc()}.")
+        run.save()
+        return
     except Exception:
         update_status(run, Status.FAILED, f"{run.identifier}' failed: {traceback.format_exc()}.")
         run.save()
