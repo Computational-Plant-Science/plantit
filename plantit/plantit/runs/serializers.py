@@ -14,7 +14,7 @@ class RunSerializer(serializers.ModelSerializer):
     class Meta:
         model = Run
         fields = ('pk', 'cluster', 'flow_owner', 'flow_name',
-                  'created', 'work_dir', 'identifier',
+                  'created', 'timeout', 'started', 'work_dir', 'identifier',
                   'remote_results_path')
 
     def create(self, validated_data):

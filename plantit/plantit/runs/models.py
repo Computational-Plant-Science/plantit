@@ -15,6 +15,8 @@ class Run(models.Model):
 
     tags = TaggableManager()
     created = models.DateTimeField(default=timezone.now)
+    started = models.DateTimeField(null=True, blank=True)
+    timeout = models.IntegerField(default=600, null=False, blank=False)
     token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     identifier = models.CharField(max_length=36, null=False, blank=False)

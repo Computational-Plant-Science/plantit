@@ -13,6 +13,11 @@
                     </b-link>
                 </h2>
                 <b-badge
+                    v-if="!flow.config.public"
+                    variant="warning"
+                    >Private</b-badge
+                >
+              <b-badge
                     v-for="topic in flow.repo.topics"
                     v-bind:key="topic"
                     class="mr-1 mb-0"

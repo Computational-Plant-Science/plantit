@@ -4,7 +4,6 @@ import tempfile
 import uuid
 from os.path import join
 from pathlib import Path
-from pprint import pprint
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -18,7 +17,7 @@ from plantit import settings
 from plantit.runs.models import Run, Status
 from plantit.runs.ssh import SSH
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import execute
+from plantit.runs.utils import execute, cleanup
 from plantit.targets.models import Target
 from plantit.utils import get_repo_config
 
@@ -37,6 +36,8 @@ def get_runs_by_user(request, username, page):
             'work_dir': run.work_dir,
             'target': run.target.name,
             'created': run.created,
+            'started': run.started,
+            'timeout': run.timeout,
             'updated': run.status.date if run.status is not None else run.created,
             'state': run.status.state if run.status is not None else 'Unknown',
             'description': run.status.description if run.status is not None else '',
@@ -251,6 +252,8 @@ def runs(request):
             'work_dir': run.work_dir,
             'target': run.target.name,
             'created': run.created,
+            'started': run.started,
+            'timeout': run.timeout,
             'updated': run.status.date if run.status is not None else run.created,
             'state': run.status.state if run.status is not None else 'Unknown',
             'description': run.status.description if run.status is not None else '',
@@ -308,7 +311,7 @@ def runs(request):
             flow['config']['output']['from'] = join(target.workdir, run.work_dir, flow['config']['output']['from'])
             config['output'] = flow['config']['output']
 
-        from celery.task import control
+        from plantit.celery import app
         if 'resources' in flow['config']['target']:
             time_split = flow['config']['target']['resources']['time'].split(':')
             time_hours = int(time_split[0])
@@ -317,12 +320,18 @@ def runs(request):
             time_limit_seconds = time_seconds + 60 * time_minutes + 60 * time_hours * 2  # twice the given walltime, to allow for scheduler delay
         else:
             time_limit_seconds = 600  # otherwise just default to 10 minutes
-        control.time_limit('plantit.runs.utils.execute', soft=time_limit_seconds)
+        app.control.time_limit('plantit.runs.utils.execute', soft=time_limit_seconds)
+        run.timeout = time_limit_seconds
+        run.save()
 
+        # start the run now
         execute.delay({
             'repo': flow['repo'],
             'config': config
-        }, run.identifier, run.token, request.user.profile.cyverse_token)  # request.session._session['csrfToken']
+        }, run.identifier, run.token, request.user.profile.cyverse_token)
+
+        # schedule a cleanup task to run after the timeout
+        cleanup.s(run.identifier, run.token, request.user.profile.cyverse_token).apply_async(countdown=run.timeout)
 
         return JsonResponse({
             'id': run.identifier
@@ -342,6 +351,8 @@ def run(request, id):
         'work_dir': run.work_dir,
         'target': run.target.name,
         'created': run.created,
+        'started': run.started,
+        'timeout': run.timeout,
         'updated': run.status.date if run.status is not None else run.created,
         'state': run.status.state if run.status is not None else 'Unknown',
         'description': run.status.description if run.status is not None else '',

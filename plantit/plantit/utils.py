@@ -8,6 +8,7 @@ from plantit import settings
 
 
 def get_repo_config(name, owner, token):
+    print(f"Getting config for {owner}/{name}")
     request = requests.get(
         f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml") if token == '' \
         else requests.get(f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml",
@@ -94,12 +95,6 @@ def validate_config(config, token):
         errors.append('Missing attribute \'public\'')
     elif type(config['public']) is not bool:
         errors.append('Attribute \'public\' must be a bool')
-
-    # clone (required)
-    if 'clone' not in config:
-        errors.append('Missing attribute \'clone\'')
-    elif type(config['clone']) is not bool:
-        errors.append('Attribute \'clone\' must be a bool')
 
     # image (required)
     if 'image' not in config:

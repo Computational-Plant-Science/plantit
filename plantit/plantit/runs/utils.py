@@ -13,6 +13,7 @@ import httpx
 import requests
 import yaml
 from django.contrib.auth.models import User
+from django.utils import timezone
 from requests.auth import HTTPBasicAuth
 from celery.exceptions import SoftTimeLimitExceeded
 
@@ -83,7 +84,7 @@ def __list_by_user(username: str, token: str):
             "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
         })
     flows = __get_flows(response, token)
-    return [flow for flow in flows if flow['config']['public']]
+    return [flow for flow in flows]  # if flow['config']['public']]
 
 
 def __list_by_user_internal(username):
@@ -165,9 +166,16 @@ def __old_flow_config_to_new(flow: dict, run: Run, resources: dict):
 
 
 @app.task()
+def cleanup(run_id, plantit_token, cyverse_token):
+    print(f"TODO: check if run '{run_id}' has completed or timed out on the cluster, retry it with longer walltime, etc")
+
+
+@app.task()
 def execute(flow, run_id, plantit_token, cyverse_token):
     try:
         run = Run.objects.get(identifier=run_id)
+        run.started = timezone.now()
+        run.save()
 
         # if flow has outputs, make sure we don't push configuration or job scripts
         if 'output' in flow['config']:

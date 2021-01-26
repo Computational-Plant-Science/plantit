@@ -391,6 +391,59 @@
                                                     </h5>
                                                     <small
                                                         v-if="
+                                                            remainingWalltime !==
+                                                                null &&
+                                                                remainingWalltime >
+                                                                    0
+                                                        "
+                                                        :class="
+                                                            remainingWalltime.minutes() >
+                                                            5
+                                                                ? 'text-secondary'
+                                                                : 'text-danger'
+                                                        "
+                                                        >{{
+                                                            remainingWalltime.hours()
+                                                        }}
+                                                        hours,
+                                                        {{
+                                                            remainingWalltime.minutes()
+                                                        }}
+                                                        minutes,
+                                                        {{
+                                                            remainingWalltime.seconds()
+                                                        }}
+                                                        seconds remaining before
+                                                        timeout</small
+                                                    >
+                                                    <small
+                                                        v-else-if="
+                                                            remainingWalltime !==
+                                                                null
+                                                        "
+                                                        class="text-danger"
+                                                        >Exceeded time
+                                                        allocation ({{
+                                                            parseSeconds(
+                                                                run.timeout
+                                                            ).hours()
+                                                        }}
+                                                        hours,
+                                                        {{
+                                                            parseSeconds(
+                                                                run.timeout
+                                                            ).minutes()
+                                                        }}
+                                                        minutes,
+                                                        {{
+                                                            parseSeconds(
+                                                                run.timeout
+                                                            ).seconds()
+                                                        }}
+                                                        seconds)</small
+                                                    >
+                                                    <!--<small
+                                                        v-if="
                                                             walltimeRemaining !==
                                                                 null
                                                         "
@@ -421,8 +474,20 @@
                                                                 walltimeRemaining.humanize()
                                                             }}
                                                             remaining)</span
+                                                        >
+                                                        >
+                                                        <span
+                                                            class="text-danger"
+                                                            v-else-if="
+                                                                walltimeOvertime !==
+                                                                    null
+                                                            "
+                                                            >({{
+                                                                walltimeOvertime.humanize()
+                                                            }}
+                                                            overtime)</span
                                                         ></small
-                                                    >
+                                                    >-->
                                                 </b-col>
                                                 <b-col md="auto" class="ml-0">
                                                     <b-alert
@@ -1306,6 +1371,7 @@ export default {
             loadingOutputFiles: false,
             runNotFound: false,
             run: null,
+            remainingWalltime: null,
             logs: null,
             logsExpanded: false,
             containerLogsExpanded: false,
@@ -1374,6 +1440,9 @@ export default {
         };
     },
     methods: {
+        parseSeconds(seconds) {
+            return moment.utc(seconds * 1000);
+        },
         outputList() {
             return this.outputFiles.slice(
                 (this.outputFilePage - 1) * this.outputPageSize,
@@ -1630,10 +1699,19 @@ export default {
             return this.logs.some(function(l) {
                 return l.state === state;
             });
+        },
+        updateWalltimeRemaining() {
+            if (this.run === null || this.run.started === null) return null;
+
+            let started = moment(this.run.started);
+            let timeout = started.clone();
+            timeout.add(this.run.timeout, 's');
+            this.remainingWalltime = moment.duration(timeout.diff(moment()));
         }
     },
     async mounted() {
         await this.reloadRun(false);
+        setInterval(this.updateWalltimeRemaining, 1000);
     },
     computed: {
         ...mapGetters([
@@ -1643,40 +1721,52 @@ export default {
             'loggedIn',
             'darkMode'
         ]),
-        walltimeElapsed() {
-            if (!this.anyStatuses(2) && !this.anyStatuses(3)) return null;
+        // walltimeStart() {
+        //     if (!this.anyStatuses(2) && !this.anyStatuses(3)) return null;
+        //     return moment(
+        //         this.logs
+        //             .map(l => ({ ...l }))
+        //             .reverse()
+        //             .find(s => s.state === 2 || s.state === 3).date
+        //     );
+        // },
+        // walltimeEnd() {
+        //     if (!this.anyStatuses(2) && !this.anyStatuses(3)) return null;
 
-            let start = moment(
-                this.logs.find(s => s.state === 2 || s.state === 3).date
-            );
-            let end =
-                this.anyStatuses(0) || this.anyStatuses(6)
-                    ? moment(
-                          this.logs.find(s => s.state === 0 || s.state === 6)
-                              .date
-                      )
-                    : moment();
-            let diff = end.diff(start);
-            return moment.duration(diff);
-        },
-        walltimeRemaining() {
-            if (!this.anyStatuses(2) && !this.anyStatuses(3)) return null;
+        //     let start = moment(
+        //         this.logs.find(s => s.state === 2 || s.state === 3).date
+        //     );
+        //     let walltimeSplit = this.flow.config.resources.time.split(':');
+        //     if (walltimeSplit.length !== 3) throw 'Malformed walltime';
+        //     let hours = parseInt(walltimeSplit[0]);
+        //     let minutes = parseInt(walltimeSplit[1]);
+        //     let seconds = parseInt(walltimeSplit[2]);
+        //     let end = start.clone();
+        //     end.add(hours, 'h')
+        //         .add(minutes, 'm')
+        //         .add(seconds, 's');
 
-            let start = moment(
-                this.logs.find(s => s.state === 2 || s.state === 3).date
-            );
-            let walltimeSplit = this.flow.config.resources.time.split(':');
-            if (walltimeSplit.length !== 3) throw 'Malformed walltime';
-            let hours = parseInt(walltimeSplit[0]);
-            let minutes = parseInt(walltimeSplit[1]);
-            let seconds = parseInt(walltimeSplit[2]);
-            let end = start.clone();
-            end.add(hours, 'h')
-                .add(minutes, 'm')
-                .add(seconds, 's');
-            let diff = end.diff(moment());
-            return moment.duration(diff);
-        },
+        //     return end;
+        // },
+        // walltimeElapsed() {
+        //     if (!this.anyStatuses(2) && !this.anyStatuses(3)) return null;
+
+        //     let start = moment(
+        //         this.logs
+        //             .map(l => ({ ...l }))
+        //             .reverse()
+        //             .find(s => s.state === 2 || s.state === 3).date
+        //     );
+        //     let end =
+        //         this.anyStatuses(0) || this.anyStatuses(6)
+        //             ? moment(
+        //                   this.logs.find(s => s.state === 0 || s.state === 6)
+        //                       .date
+        //               )
+        //             : moment();
+        //     let diff = end.diff(start);
+        //     return moment.duration(diff);
+        // },
         runStatus() {
             if (this.run.runstatus_set.length > 0) {
                 return this.run.runstatus_set[0].state;
