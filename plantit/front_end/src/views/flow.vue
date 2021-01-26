@@ -378,68 +378,107 @@
                                 to.
                             </b>
                             <br />
-                            <b-table
-                                :items="
-                                    targets.filter(target => !target.disabled)
-                                "
-                                :fields="targetFields"
-                                responsive="sm"
-                                borderless
-                                small
-                                sticky-header="true"
-                                caption-top
-                                :table-variant="darkMode ? 'dark' : 'white'"
+                            <br />
+                            <b-row>
+                                <b-col class="text-left" align-self="end"
+                                    ><h5><small>Name</small></h5></b-col
+                                >
+                                <b-col class="text-right" align-self="end"
+                                    ><h5>
+                                        <small>Resources Available </small>
+                                    </h5>
+                                    <small>per container</small></b-col
+                                >
+                            </b-row>
+                            <hr />
+                            <b-row
+                                class="text-right"
+                                v-for="target in targets"
+                                v-bind:key="target.name"
                             >
-                                <template v-slot:cell(name)="target">
-                                    <b-button
+                                <b-col
+                                    ><b-button
                                         size="sm"
                                         block
-                                        class="text-left"
-                                        @click="targetSelected(target.item)"
-                                        variant="success"
-                                        :disabled="
-                                            targetUnsupported(target.item)
+                                        class="text-left pt-2"
+                                        @click="targetSelected(target)"
+                                        :variant="
+                                            darkMode ? 'success' : 'white'
                                         "
-                                        >{{ target.item.name }}</b-button
-                                    >
-                                </template>
-                                <template v-slot:cell(host)="target">
-                                    {{ target.item.host }}
-                                </template>
-                                <template v-slot:cell(max_cores)="target">
-                                    {{ target.item.max_cores }}
-                                </template>
-                                <template v-slot:cell(max_processes)="target">
-                                    {{ target.item.max_processes }}
-                                </template>
-                                <template v-slot:cell(max_mem)="target">
-                                    <span
+                                        :disabled="targetUnsupported(target)"
+                                        ><h5>
+                                            <small>{{ target.name }}</small>
+                                        </h5></b-button
+                                    ></b-col
+                                >
+                                <!--<b-col align-self="center" :class="darkMode ? 'text-white' : 'text-dark'" cols="4">{{ target.hostname }}</b-col>-->
+                                <b-col
+                                    align-self="center"
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                    cols="1"
+                                    ><b>{{ target.max_cores }}</b> cores</b-col
+                                >
+                                <b-col
+                                    align-self="center"
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                    cols="1"
+                                    ><b>{{ target.max_processes }}</b>
+                                    processes</b-col
+                                >
+                                <b-col
+                                    align-self="center"
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                    cols="1"
+                                    ><span
                                         v-if="
-                                            parseInt(target.item.max_mem) >=
+                                            parseInt(target.max_mem) >=
                                                 parseInt(
                                                     flow.config.resources.mem
-                                                )
+                                                ) &&
+                                                parseInt(target.max_mem) > 0
                                         "
-                                        >{{ target.item.max_mem }} GB</span
+                                        >{{ target.max_mem }} GB memory</span
                                     >
-                                    <b v-else class="text-danger"
-                                        >{{ target.item.max_mem }} GB</b
+                                    <span
+                                        v-else-if="parseInt(target.max_mem) > 0"
+                                        class="text-danger"
+                                        >{{ target.max_mem }} GB memory</span
                                     >
-                                </template>
-                                <template v-slot:cell(gpu)="target">
-                                    <i
-                                        :class="
-                                            target.item.gpu
-                                                ? 'text-success'
-                                                : ''
+                                    <span
+                                        v-else-if="
+                                            parseInt(target.max_mem) === -1
                                         "
-                                        v-if="target.item.gpu"
-                                        class="far fa-check-circle"
-                                    ></i>
-                                    <i v-else class="far fa-times-circle"></i>
-                                </template>
-                            </b-table>
-
+                                        >virtual memory</span
+                                    ></b-col
+                                >
+                                <b-col
+                                    align-self="center"
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                    cols="1"
+                                >
+                                    <span v-if="target.gpu">
+                                        GPU
+                                        <i
+                                            :class="
+                                                target.gpu ? 'text-success' : ''
+                                            "
+                                            class="far fa-check-circle"
+                                        ></i>
+                                    </span>
+                                    <span v-else class="text-secondary"
+                                        >No GPU
+                                        <i class="far fa-times-circle"></i
+                                    ></span>
+                                </b-col>
+                            </b-row>
                             <b-row align-h="center" v-if="targetsLoading">
                                 <b-spinner
                                     type="grow"
