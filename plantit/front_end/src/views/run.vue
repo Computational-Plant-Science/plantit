@@ -504,43 +504,20 @@
                                                             md="auto"
                                                             align-self="end"
                                                         >
-                                                            <p
-                                                                :class="
-                                                                    darkMode
-                                                                        ? 'theme-dark'
-                                                                        : 'theme-light'
-                                                                "
-                                                            >
-                                                                <b-badge
-                                                                    class="mr-1"
-                                                                    :variant="
-                                                                        log.state ===
-                                                                        0
-                                                                            ? 'danger'
-                                                                            : log.state ===
-                                                                              6
-                                                                            ? 'success'
-                                                                            : 'warning'
-                                                                    "
-                                                                    >{{
-                                                                        statusToString(
-                                                                            log.state
-                                                                        )
-                                                                    }}
-                                                                </b-badge>
-                                                                <small>{{
-                                                                    formatDate(
-                                                                        log.date
-                                                                    )
-                                                                }}</small>
-                                                                <br />
-                                                                <small>
-                                                                    {{
-                                                                        log.description
-                                                                    }}
-                                                                </small>
-                                                            </p>
+                                                            <small>
+                                                                {{
+                                                                    log.description
+                                                                }}
+                                                            </small>
                                                         </b-col>
+                                                        <b-col
+                                                            class="text-right"
+                                                            ><small>{{
+                                                                formatDate(
+                                                                    log.date
+                                                                )
+                                                            }}</small></b-col
+                                                        >
                                                     </b-row>
                                                 </div>
                                             </div>
@@ -1697,7 +1674,7 @@ export default {
             end.add(hours, 'h')
                 .add(minutes, 'm')
                 .add(seconds, 's');
-            let diff = end.diff(start);
+            let diff = end.diff(moment());
             return moment.duration(diff);
         },
         runStatus() {
