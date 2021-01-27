@@ -561,7 +561,7 @@
                                             <div v-if="logsExpanded">
                                                 <hr />
                                                 <div
-                                                    v-for="log in logs"
+                                                    v-for="log in logs.reverse()"
                                                     v-bind:key="log.updated"
                                                 >
                                                     <b-row>

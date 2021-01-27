@@ -157,7 +157,7 @@ def __old_flow_config_to_new(flow: dict, run: Run, resources: dict):
 
         if 'gpu' in flow['config'] and flow['config']['gpu']:
             if run.target.gpu:
-                new_flow['jobqueue']['slurm']['extra'] = [f"--gres=gpu:{resources['cores']}"]
+                new_flow['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:{resources['cores']}"]
                 new_flow['jobqueue']['slurm']['queue'] = run.target.gpu_queue
             else:
                 update_status(run, Status.RUNNING, f"No GPU support on {run.target.name}")
@@ -166,8 +166,16 @@ def __old_flow_config_to_new(flow: dict, run: Run, resources: dict):
 
 
 @app.task()
-def cleanup(run_id, plantit_token, cyverse_token):
+def cleanup(task_id, run_id, plantit_token, cyverse_token):
     print(f"TODO: check if run '{run_id}' has completed or timed out on the cluster, retry it with longer walltime, etc")
+    try:
+        run = Run.objects.get(identifier=run_id)
+        if run.status != 0 and run.status != 6:
+            from plantit.celery import app
+            app.control.revoke(task_id, terminate=True)
+            update_status(run, Status.FAILED, f"Timed out after {timedelta(seconds=run.timeout)}")
+    except:
+        update_status(run, Status.FAILED, f"Cleanup failed: {traceback.format_exc()}")
 
 
 @app.task()
