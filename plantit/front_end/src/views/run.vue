@@ -127,7 +127,7 @@
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="far fa-circle text-secondary"></i>
-                                    Next: Run container(s)
+                                    Next: Submit container(s)
                                 </b-col>
                                 <b-col
                                     md="auto"
@@ -137,7 +137,7 @@
                                 >
                                     <b-spinner small variant="warning">
                                     </b-spinner>
-                                    Running container(s)
+                                    Submitting container(s)
                                 </b-col>
                                 <b-col
                                     md="auto"
@@ -146,7 +146,7 @@
                                     class="text-center ml-0 mr-0"
                                 >
                                     <i class="fas fa-check text-success"></i>
-                                    Ran container(s)
+                                    Submitted container(s)
                                 </b-col>
                                 <b-col
                                     v-if="anyStatuses(3)"
@@ -561,7 +561,7 @@
                                             <div v-if="logsExpanded">
                                                 <hr />
                                                 <div
-                                                    v-for="log in logs.reverse()"
+                                                    v-for="log in reversedLogs"
                                                     v-bind:key="log.updated"
                                                 >
                                                     <b-row>
@@ -1721,6 +1721,9 @@ export default {
             'loggedIn',
             'darkMode'
         ]),
+        reversedLogs() {
+            return this.logs.map(l => ({ ...l })).reverse();
+        },
         // walltimeStart() {
         //     if (!this.anyStatuses(2) && !this.anyStatuses(3)) return null;
         //     return moment(

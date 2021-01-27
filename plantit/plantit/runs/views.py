@@ -325,13 +325,13 @@ def runs(request):
         run.save()
 
         # start the run now
-        task_id = execute.delay({
+        task = execute.delay({
             'repo': flow['repo'],
             'config': config
         }, run.identifier, run.token, request.user.profile.cyverse_token)
 
         # schedule a cleanup task to run after the timeout
-        cleanup.s(task_id, run.identifier, run.token, request.user.profile.cyverse_token).apply_async(countdown=run.timeout)
+        cleanup.s(task.id, run.identifier, run.token, request.user.profile.cyverse_token).apply_async(countdown=run.timeout)
 
         return JsonResponse({
             'id': run.identifier
