@@ -55,7 +55,6 @@ class UtilsTest(TestCase):
         result = validate_config({
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -66,7 +65,6 @@ class UtilsTest(TestCase):
         result = validate_config({
             'name': 'Test Flow',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -77,30 +75,17 @@ class UtilsTest(TestCase):
         result = validate_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
         self.assertFalse(result[0])
         self.assertTrue('Missing attribute \'public\'' in result[1])
 
-    def test_validate_config_when_is_not_valid_missing_clone(self):
-        result = validate_config({
-            'name': 'Test Flow',
-            'author': 'Computational Plant Science Lab',
-            'public': True,
-            'image': 'docker://alpine',
-            'commands': 'echo "Hello, world!"'
-        }, Token.get())
-        self.assertFalse(result[0])
-        self.assertTrue('Missing attribute \'clone\'' in result[1])
-
     def test_validate_config_when_is_not_valid_missing_image(self):
         result = validate_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'commands': 'echo "Hello, world!"'
         }, Token.get())
         self.assertFalse(result[0])
@@ -111,7 +96,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
         }, Token.get())
         self.assertFalse(result[0])
@@ -122,7 +106,6 @@ class UtilsTest(TestCase):
             'name': True,
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -134,7 +117,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': True,
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -146,31 +128,17 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': '',
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
         self.assertFalse(result[0])
         self.assertTrue('Attribute \'public\' must be a bool' in result[1])
 
-    def test_validate_config_when_is_not_valid_clone_wrong_type(self):
-        result = validate_config({
-            'name': 'Test Flow',
-            'author': 'Computational Plant Science Lab',
-            'public': True,
-            'clone': '',
-            'image': 'docker://alpine',
-            'commands': 'echo "Hello, world!"'
-        }, Token.get())
-        self.assertFalse(result[0])
-        self.assertTrue('Attribute \'clone\' must be a bool' in result[1])
-
     def test_validate_config_when_is_not_valid_image_wrong_type(self):
         result = validate_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': True,
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -182,7 +150,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': True
         }, Token.get())
@@ -194,7 +161,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': True,
             'commands': 'echo "Hello, world!"',
             'mount': True,
@@ -207,7 +173,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': True,
             'commands': 'echo "Hello, world!"',
             'mount': None,
@@ -220,7 +185,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': True,
             'commands': 'echo "Hello, world!"',
             'mount': [],
@@ -233,7 +197,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -244,7 +207,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"',
             'output': {
@@ -258,7 +220,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"',
             'output': {
@@ -272,7 +233,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt', 'kind' : 'file'},
@@ -285,7 +245,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'cat "$INPUT"',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt',
@@ -299,7 +258,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT"',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
@@ -313,7 +271,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT" | tee output.txt',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
@@ -327,7 +284,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT"',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
@@ -341,7 +297,6 @@ class UtilsTest(TestCase):
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
-            'clone': False,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT" | tee output.txt',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
