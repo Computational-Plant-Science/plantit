@@ -414,6 +414,11 @@ def status(request, id):
         except Run.DoesNotExist:
             return HttpResponseNotFound()
 
+        if run.status == 0 or run.status == 6:
+            msg = f"Run already {'failed' if run.status == 0 else 'completed'}"
+            print(msg)
+            return HttpResponse(msg, status=500)
+
         for chunk in status['description'].split('<br>'):
             for line in chunk.split('\n'):
                 if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
