@@ -317,7 +317,7 @@ def runs(request):
             time_hours = int(time_split[0])
             time_minutes = int(time_split[1])
             time_seconds = int(time_split[2])
-            time_limit_seconds = time_seconds + 60 * time_minutes + 60 * time_hours * 2  # twice the given walltime, to allow for scheduler delay
+            time_limit_seconds = time_seconds + 60 * time_minutes + 3600 * time_hours * 2  # twice the given walltime, to allow for scheduler delay
         else:
             time_limit_seconds = 600  # otherwise just default to 10 minutes
         app.control.time_limit('plantit.runs.utils.execute', soft=time_limit_seconds)
