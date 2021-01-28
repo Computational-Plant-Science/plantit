@@ -138,7 +138,7 @@
                                     "
                                 >
                                     <i
-                                        v-if="params.every(p => p.value !== '')"
+                                        v-if="params && params.every(p => p.value !== '')"
                                         class="fas fa-keyboard fa-fw text-success"
                                     ></i>
                                     <i v-else class="fas fa-keyboard fa-fw"></i>
@@ -886,7 +886,7 @@ export default {
             let config = {
                 name: this.flow.config.name,
                 image: this.flow.config.image,
-                params: this.params,
+                parameters: this.params,
                 target: target,
                 commands: this.flow.config.commands,
                 tags: this.tags

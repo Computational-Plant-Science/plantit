@@ -20,7 +20,11 @@
                             class="m-0 p-0"
                         ></b-img>
                         <h2 :class="darkMode ? 'text-white' : 'text-dark'">
-                            plant<small class="mb-3 text-success" style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;">IT</small>
+                            plant<small
+                                class="mb-3 text-success"
+                                style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                >IT</small
+                            >
                         </h2>
                     </b-col>
                 </b-row>
@@ -102,6 +106,10 @@
                                                 : ''
                                         "
                                     ></b-img>
+                                    <i
+                                        v-else
+                                        class="far fa-user fa-fw fa-2x"
+                                    ></i>
                                     Enter
                                 </b-button>
                             </b-nav-item>

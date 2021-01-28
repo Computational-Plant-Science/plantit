@@ -4,6 +4,7 @@ ENV PYTHONUNBUFFERED 1
 RUN apt-get -y update && apt-get install -y \
     python3-numpy-dev \
     cron \
+    postgresql-client \
     openssh-client \
     sshpass \
     curl \

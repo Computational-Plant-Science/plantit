@@ -26,7 +26,15 @@ services:
       - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
       - FLOWS_CACHE=${FLOWS_CACHE}
       - FLOWS_REFRESH_MINUTES=${FLOWS_REFRESH_MINUTES}
+      - RUNS_TIMEOUT_MULTIPLIER=${RUNS_TIMEOUT_MULTIPLIER}
+      - RUNS_LOGS=${RUNS_LOGS}
       - SQL_ENGINE=${SQL_ENGINE}
+      - SQL_HOST=${SQL_HOST}
+      - SQL_PORT=${SQL_PORT}
+      # - SQL_NAME=${SQL_NAME}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
+      - SQL_DB=${SQL_DB}
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
@@ -35,8 +43,9 @@ services:
       - GITHUB_SECRET=${GITHUB_SECRET}
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
-    command: ["python", "manage.py", "runserver", "0.0.0.0:3000"]
+    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
+      - postgres
       - celery
       - sandbox
     ports:
@@ -47,6 +56,36 @@ services:
       timeout: 20s
       retries: 2
       start_period: 20s
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_HOST=${SQL_HOST}
+      - POSTGRES_PORT=${SQL_PORT}
+      - POSTGRES_NAME=${SQL_NAME}
+      - POSTGRES_DB=${SQL_NAME}
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+    healthcheck:
+      test: /usr/bin/pg_isready -U "postgres"
+      interval: 60s
+      timeout: 60s
+      retries: 2
+      start_period: 20s
+  # pgloader:
+  #   image: dimitri/pgloader
+  #   command: [ "pgloader", "/code/plantit/db.sqlite3", "postgresql://${SQL_HOST}/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}" ]
+  #   depends_on:
+  #     - postgres
+  #   environment:
+  #     - POSTGRES_HOST=${SQL_HOST}
+  #     - POSTGRES_PORT=${SQL_PORT}
+  #     - POSTGRES_NAME=${SQL_NAME}
+  #     - POSTGRES_USER=${SQL_USER}
+  #     - POSTGRES_PASSWORD=${SQL_PASSWORD}
+  #   volumes:
+  #     - .:/code
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
@@ -60,11 +99,12 @@ services:
       start_period: 20s
   celery:
     image: computationalplantscience/plantit
-    command: ["celery", "-A", "plantit", "worker", "--loglevel=INFO"]
+    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "--loglevel=INFO"]
     volumes:
       - .:/code
     working_dir: /code/plantit
     depends_on:
+      - postgres
       - rabbitmq
     environment:
       - CYVERSE_REDIRECT_URL=${CYVERSE_REDIRECT_URL}
@@ -85,7 +125,15 @@ services:
       - CELERY_TEMPLATE_SLURM_RUN_SCRIPT=${CELERY_TEMPLATE_SLURM_RUN_SCRIPT}
       - FLOWS_CACHE=${FLOWS_CACHE}
       - FLOWS_REFRESH_MINUTES=${FLOWS_REFRESH_MINUTES}
+      - RUNS_TIMEOUT_MULTIPLIER=${RUNS_TIMEOUT_MULTIPLIER}
+      - RUNS_LOGS=${RUNS_LOGS}
       - SQL_ENGINE=${SQL_ENGINE}
+      - SQL_HOST=${SQL_HOST}
+      - SQL_PORT=${SQL_PORT}
+      # - SQL_NAME=${SQL_NAME}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
+      - SQL_DB=${SQL_DB}
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_USERNAME=${GITHUB_USERNAME}

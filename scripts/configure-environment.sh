@@ -5,6 +5,13 @@ secret_key=$(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.Syste
 sql_password=$(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)))\")")
 field_encryption_key=$(python2 -c "exec(\"import cryptography.fernet\nprint('%s' % cryptography.fernet.Fernet.generate_key())\")")
 
+if [[ -z "${SQL_PASSWORD}" ]]; then
+  sql_password="some_sql_password"
+  echo "Warning: SQL_PASSWORD environment variable missing"
+else
+  sql_password="${SQL_PASSWORD}"
+fi
+
 if [[ -z "${GITHUB_CLIENT_ID}" ]]; then
   github_client_id="some_github_client_id"
   echo "Warning: GITHUB_CLIENT_ID environment variable missing"
@@ -90,12 +97,20 @@ DJANGO_SESSION_COOKIE_SECURE=False
 DJANGO_CSRF_COOKIE_SECURE=False
 FLOWS_CACHE=/code/flows.json
 FLOWS_REFRESH_MINUTES=10
-SQL_ENGINE=django.db.backends.sqlite3
+RUNS_TIMEOUT_MULTIPLER=2
+RUNS_LOGS=/code/logs
+SQL_ENGINE=django.db.backends.postgresql
+SQL_HOST=postgres
+SQL_PORT=5432
+SQL_NAME=postgres
+SQL_USER=postgres
+SQL_PASSWORD=$sql_password
 GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
 GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/users/github_handle_temporary_code/
 GITHUB_USERNAME=$github_username
 GITHUB_KEY=$github_client_id
 GITHUB_SECRET=$github_secret
+GITHUB_CLIENT_ID=d15df2f5710e9597290f
 DOCKER_USERNAME=$docker_username
 DOCKER_PASSWORD=$docker_password
 EOT

@@ -1,6 +1,13 @@
 <template>
     <div class="w-100 h-100 pl-3" style="background-color: transparent">
-        <b-spinner v-if="loadingUser" type="grow" class="text-center" variant="success"></b-spinner>
+        <br />
+        <br />
+        <b-spinner
+            v-if="loadingUser"
+            type="grow"
+            class="text-center"
+            variant="success"
+        ></b-spinner>
         <b-container v-else class="p-3 vl">
             <b-row align-v="start" align-h="center" class="mb-2">
                 <b-col style="color: white" align-self="end" class="ml-0 mr-0">
@@ -47,7 +54,7 @@
                                 "
                                 v-if="githubProfile"
                             ></b-img>
-                            <i v-else class="fas fa-user fa-fw fa-4x"></i>
+                            <i v-else class="far fa-user fa-fw fa-4x"></i>
                         </b-col>
                     </b-row>
                 </b-col>

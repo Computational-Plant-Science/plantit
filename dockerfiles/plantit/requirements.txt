@@ -12,6 +12,7 @@ docutils
 humanize
 Sphinx
 sphinx_rtd_theme
+SQLAlchemy
 Pillow
 sentry-sdk
 gunicorn

@@ -126,7 +126,11 @@
                                 type="grow"
                                 variant="warning"
                             ></b-spinner>
-                            <b-nav v-else vertical class="ml-0 mr-0 pl-0 pr-0">
+                            <b-nav
+                                v-else-if="runs.length > 0"
+                                vertical
+                                class="ml-0 mr-0 pl-0 pr-0"
+                            >
                                 <b-nav-item class="m-0 p-0">
                                     <b-button
                                         :variant="
@@ -146,6 +150,9 @@
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
+                            <h5 :class="darkMode ? 'text-center text-light' : 'text-center text-dark'" v-else>
+                                You haven't run any flows yet!
+                            </h5>
                         </b-col>
                     </b-row>
                 </b-container>

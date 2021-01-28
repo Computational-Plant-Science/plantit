@@ -2,9 +2,11 @@ import binascii
 import os
 import tempfile
 import uuid
+from datetime import timedelta, datetime
 from os.path import join
 from pathlib import Path
 
+from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
@@ -17,9 +19,11 @@ from plantit import settings
 from plantit.runs.models import Run, Status
 from plantit.runs.ssh import SSH
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import execute, cleanup
+from plantit.runs.utils import parse_walltime, update_log, stat_log
+from plantit.runs.tasks import execute, cleanup
 from plantit.targets.models import Target
 from plantit.utils import get_repo_config
+from plantit.celery import app
 
 
 @api_view(['GET'])
@@ -31,20 +35,7 @@ def get_runs_by_user(request, username, page):
     try:
         user = User.objects.get(username=username)
         runs = Run.objects.filter(user=user).order_by('-created')[start:(start + count)]
-        return JsonResponse([{
-            'id': run.identifier,
-            'work_dir': run.work_dir,
-            'target': run.target.name,
-            'created': run.created,
-            'started': run.started,
-            'timeout': run.timeout,
-            'updated': run.status.date if run.status is not None else run.created,
-            'state': run.status.state if run.status is not None else 'Unknown',
-            'description': run.status.description if run.status is not None else '',
-            'flow_owner': run.flow_owner,
-            'flow_name': run.flow_name,
-            'tags': [str(tag) for tag in run.tags.all()]
-        } for run in runs], safe=False)
+        return JsonResponse([__convert_run(run) for run in runs], safe=False)
     except:
         return HttpResponseNotFound()
 
@@ -59,15 +50,14 @@ def get_total_count(request):
 @login_required
 def list_outputs(request, id):
     try:
-        run = Run.objects.get(identifier=id)
+        run = Run.objects.get(task_id=id)
         flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    included_by_name = ((flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else []) + [f"{run.identifier}.zip"]) if 'output' in flow_config else []
+    included_by_name = ((flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else []) + [f"{run.task_id}.zip"]) if 'output' in flow_config else []
+    # included_by_name.append(f"{run.task_id}.{run.target.name.lower()}.log")
     included_by_pattern = (flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []) if 'output' in flow_config else []
-
-    included_by_name.append(f"{run.identifier}.log")
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
@@ -107,7 +97,7 @@ def list_outputs(request, id):
 @login_required
 def get_thumbnail(request, id, file):
     try:
-        run = Run.objects.get(identifier=id)
+        run = Run.objects.get(task_id=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -121,7 +111,7 @@ def get_thumbnail(request, id, file):
             if errs:
                 raise Exception(f"Failed to check existence of {file}: {errs}")
 
-            run_dir = join(settings.MEDIA_ROOT, run.identifier)
+            run_dir = join(settings.MEDIA_ROOT, run.task_id)
             thumbnail_path = join(run_dir, file)
             thumbnail_name_lower = file.lower()
 
@@ -160,7 +150,7 @@ def get_thumbnail(request, id, file):
 @login_required
 def get_output_file(request, id, file):
     try:
-        run = Run.objects.get(identifier=id)
+        run = Run.objects.get(task_id=id)
         # flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
@@ -187,15 +177,45 @@ def get_output_file(request, id, file):
 
 @api_view(['GET'])
 @login_required
-def get_logs_text(request, id, size):
+def get_local_logs_text(request, id, size):
     try:
-        run = Run.objects.get(identifier=id)
+        run = Run.objects.get(task_id=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.task_id}.plantit.log")
+    if Path(log_path).is_file():
+        with open(log_path, 'r') as log:
+            lines = log.readlines()[-int(size):]
+            return HttpResponse(lines, content_type='text/plain')
+    else:
+        return HttpResponseNotFound()
+
+
+@api_view(['GET'])
+@login_required
+def get_local_logs(request, id):
+    try:
+        run = Run.objects.get(task_id=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.task_id}.plantit.log")
+    return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
+
+
+
+@api_view(['GET'])
+@login_required
+def get_target_logs_text(request, id, size):
+    try:
+        run = Run.objects.get(task_id=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.identifier}.log"
+    log_file = f"{run.task_id}.{run.target.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -216,15 +236,15 @@ def get_logs_text(request, id, size):
 
 @api_view(['GET'])
 @login_required
-def get_logs(request, id):
+def get_target_logs(request, id):
     try:
-        run = Run.objects.get(identifier=id)
+        run = Run.objects.get(task_id=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.identifier}.log"
+    log_file = f"{run.task_id}.{run.target.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -242,124 +262,68 @@ def get_logs(request, id):
                 return FileResponse(open(tf.name, 'rb'))
 
 
+def __convert_run(run):
+    task = AsyncResult(run.task_id, app=app)
+    log_updated = stat_log(task.id)
+    return {
+        'id': run.task_id,
+        'work_dir': run.work_dir,
+        'target': run.target.name,
+        'created': run.created,
+        'timeout': run.timeout,
+        'updated': task.date_done.replace(tzinfo=timezone.utc) if task.ready() else log_updated if log_updated is not None else run.created,
+        'state': AsyncResult(run.task_id, app=app).state,
+        'flow_owner': run.flow_owner,
+        'flow_name': run.flow_name,
+        'tags': [str(tag) for tag in run.tags.all()]
+    }
+
+
 @api_view(['GET', 'POST'])
 @login_required
 def runs(request):
     if request.method == 'GET':
         runs = Run.objects.all()
-        return JsonResponse([{
-            'id': run.identifier,
-            'work_dir': run.work_dir,
-            'target': run.target.name,
-            'created': run.created,
-            'started': run.started,
-            'timeout': run.timeout,
-            'updated': run.status.date if run.status is not None else run.created,
-            'state': run.status.state if run.status is not None else 'Unknown',
-            'description': run.status.description if run.status is not None else '',
-            'flow_owner': run.flow_owner,
-            'flow_name': run.flow_name,
-            'tags': [str(tag) for tag in run.tags.all()]
-        } for run in runs], safe=False)
-
+        return JsonResponse([__convert_run(run) for run in runs], safe=False)
     elif request.method == 'POST':
-        user = request.user
-        flow = request.data
-        now = timezone.now()
-        now_str = now.strftime('%s')
-        target = Target.objects.get(name=flow['config']['target']['name'])
-        flow_path = f"{flow['repo']['owner']['login']}/{flow['repo']['name']}"
-        print(flow['config']['tags'])
-        run = Run.objects.create(
-            user=User.objects.get(username=user.username),
-            flow_owner=flow['repo']['owner']['login'],
-            flow_name=flow['repo']['name'],
-            target=target,
-            created=now,
-            work_dir=now_str + "/",
-            remote_results_path=now_str + "/",
-            identifier=uuid.uuid4(),
-            token=binascii.hexlify(os.urandom(20)).decode())
-
-        for tag in flow['config']['tags']:
-            run.tags.add(tag)
-
-        run.status_set.create(description=f"Creating run '{run.identifier}'",
-                              state=Status.CREATING,
-                              location='PlantIT')
-        run.save()
-
-        config = {
-            'identifier': run.identifier,
-            'workdir': join(target.workdir, now_str),
-            'image': flow['config']['image'],
-            'command': flow['config']['commands'],
-            'parameters': flow['config']['params'],
-            'target': flow['config']['target'],
-            'log_file': f"{run.identifier}.log",
-        }
-
-        if 'gpu' in flow['config']:
-            config['gpu'] = flow['config']['gpu']
-        if 'branch' in flow['config']:
-            config['branch'] = flow['config']['branch']
-        if 'mount' in flow['config']:
-            config['mount'] = flow['config']['mount']
-        if 'input' in flow['config']:
-            config['input'] = flow['config']['input']
-        if 'output' in flow['config']:
-            flow['config']['output']['from'] = join(target.workdir, run.work_dir, flow['config']['output']['from'])
-            config['output'] = flow['config']['output']
-
-        from plantit.celery import app
-        if 'resources' in flow['config']['target']:
-            time_split = flow['config']['target']['resources']['time'].split(':')
-            time_hours = int(time_split[0])
-            time_minutes = int(time_split[1])
-            time_seconds = int(time_split[2])
-            time_limit_seconds = time_seconds + 60 * time_minutes + 3600 * time_hours * 2  # twice the given walltime, to allow for scheduler delay
-        else:
-            time_limit_seconds = 600  # otherwise just default to 10 minutes
-        app.control.time_limit('plantit.runs.utils.execute', soft=time_limit_seconds)
-        run.timeout = time_limit_seconds
-        run.save()
-
-        # start the run now
-        task = execute.delay({
-            'repo': flow['repo'],
-            'config': config
-        }, run.identifier, run.token, request.user.profile.cyverse_token)
-
-        # schedule a cleanup task to run after the timeout
-        cleanup.s(task.id, run.identifier, run.token, request.user.profile.cyverse_token).apply_async(countdown=run.timeout)
-
-        return JsonResponse({
-            'id': run.identifier
-        })
+        task = execute.delay(request.user.username, request.data)
+        return JsonResponse({'id': task.id})
 
 
 @api_view(['GET'])
 @login_required
 def run(request, id):
+    task = AsyncResult(id, app=app)
     try:
-        run = Run.objects.get(identifier=id)
+        run = Run.objects.get(task_id=id)
+        return JsonResponse(__convert_run(run))
     except Run.DoesNotExist:
-        return HttpResponseNotFound()
+        # return HttpResponseNotFound()
+        return JsonResponse({
+            'id': task.id,
+            'work_dir': None,
+            'target': None,
+            'created': None,
+            'timeout': None,
+            'updated': None,
+            'state': task.state,
+            'flow_owner': None,
+            'flow_name': None,
+            'tags': []
+        })
 
-    return JsonResponse({
-        'id': run.identifier,
-        'work_dir': run.work_dir,
-        'target': run.target.name,
-        'created': run.created,
-        'started': run.started,
-        'timeout': run.timeout,
-        'updated': run.status.date if run.status is not None else run.created,
-        'state': run.status.state if run.status is not None else 'Unknown',
-        'description': run.status.description if run.status is not None else '',
-        'flow_owner': run.flow_owner,
-        'flow_name': run.flow_name,
-        'tags': [str(tag) for tag in run.tags.all()]
-    })
+    # return JsonResponse({
+    #     'id': run.task_id,
+    #     'work_dir': run.work_dir,
+    #     'target': run.target.name,
+    #     'created': run.created,
+    #     'timeout': run.timeout,
+    #     'updated': task.date_done.replace(tzinfo=timezone.utc) if task.ready() else stat_log(task.id),
+    #     'state': task.status,
+    #     'flow_owner': run.flow_owner,
+    #     'flow_name': run.flow_name,
+    #     'tags': [str(tag) for tag in run.tags.all()]
+    # })
 
 
 @api_view(['GET', 'POST'])
@@ -368,7 +332,7 @@ def run(request, id):
 def status(request, id):
     if request.method == 'GET':
         try:
-            run = Run.objects.get(identifier=id)
+            run = Run.objects.get(task_id=id)
             return JsonResponse([
                 {
                     'run_id': id,
@@ -383,14 +347,6 @@ def status(request, id):
     elif request.method == 'POST':
         status = request.data
         state = int(status['state'])
-
-        # FAILED = 0
-        # CREATED = 1
-        # PULLING = 2
-        # RUNNING = 3
-        # ZIPPING = 4
-        # PUSHING = 5
-        # COMPLETED = 6
 
         if state == 0 or 'error' in status['description'].lower():
             pass  # state == Status.FAILED
@@ -410,20 +366,22 @@ def status(request, id):
             raise ValueError(f"Invalid value for state '{status['state']}' (expected 0 - 6)")
 
         try:
-            run = Run.objects.get(identifier=id)
+            run = Run.objects.get(task_id=id)
         except Run.DoesNotExist:
             return HttpResponseNotFound()
 
-        if run.status == 0 or run.status == 6:
-            msg = f"Run already {'failed' if run.status == 0 else 'completed'}"
-            print(msg)
-            return HttpResponse(msg, status=500)
+        # if run.status == 0 or run.status == 6:
+        #     msg = f"Run already {'failed' if run.status == 0 else 'completed'}"
+        #     print(msg)
+        #     return HttpResponse(msg, status=500)
 
         for chunk in status['description'].split('<br>'):
             for line in chunk.split('\n'):
+                # skip verbose Singularity log output
                 if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
                     continue
-                run.status_set.create(description=line, state=state, location=run.target.name)
+                update_log(run.task_id, line)
+                # run.status_set.create(description=line, state=state, location=run.target.name)
 
         run.save()
         return HttpResponse(status=200)

@@ -60,6 +60,7 @@ Bring everything up with `docker-compose -f docker-compose.dev.yml up` (`-d` for
 This will start a number of containers:
 
 - `plantit`: Django web application (`http://localhost:3000`)
+- `postgres`: PostgreSQL database
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `celery`: Celery worker
 - `sandbox`: test deployment target
@@ -77,6 +78,7 @@ Tests can be run with `docker-compose -f docker-compose.dev.yml exec plantit ./m
 In production configuration:
 
 - Django runs behind Gunicorn (both in the same container) which runs behind NGINX (in a separate container)
+- Postgres stores data in a persistent volume
 - NGINX serves static assets and acts as a reverse proxy
 
 To configure PlantIT for deployment, first clone the repo, then run `./scripts/deploy.sh <host IP or FQDN> <admin email address>` from the root directory. This script is idempotent and may safely be triggered to run by e.g., a CI/CD server. This will:
@@ -96,6 +98,7 @@ To configure PlantIT for deployment, first clone the repo, then run `./scripts/d
 At this point the following containers should be running:
 
 - `plantit`: Django web application (`http://localhost:80`)
+- `postgres`: PostgreSQL database
 - `rabbitmq`: RabbitMQ message broker (admin UI at `http://localhost:15672`)
 - `celery`: Celery worker
 - `sandbox`: sandbox deployment target
@@ -132,7 +135,7 @@ key=value
 
 ```
 VUE_APP_TITLE=plantit
-CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
+CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/idp/cyverse_handle_temporary_code/
 CYVERSE_CLIENT_ID=<your cyverse client id>
 CYVERSE_CLIENT_SECRET=<your cyverse client secret>
 CVVERSE_USERNAME=<your cyverse username>
@@ -142,19 +145,31 @@ DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=<your django secret key>
 DJANGO_DEBUG=True
 DJANGO_FIELD_ENCRYPTION_KEY=<your django field encryption key>
-DJANGO_API_URL=http://plantit/apis/v1/
-DJANGO_ALLOWED_HOSTS=*
-DJANGO_ADMIN_USERNAME=admin
-DJANGO_ADMIN_EMAIL=admin@example.com
-DJANGO_ADMIN_PASSWORD=<your django admin password>
+DJANGO_API_URL=http://plantit:3000/apis/v1/
 DJANGO_SECURE_SSL_REDIRECT=False
 DJANGO_SESSION_COOKIE_SECURE=False
 DJANGO_CSRF_COOKIE_SECURE=False
-SQL_ENGINE=django.db.backends.sqlite3
+DJANGO_ALLOWED_HOSTS=*
+DJANGO_ADMIN_USERNAME=<your django admin username>
+DJANGO_ADMIN_PASSWORD=<your django admin password>
+DJANGO_ADMIN_EMAIL=<your django admin email>
+CELERY_TEMPLATE_LOCAL_RUN_SCRIPT=/code/scripts/template_local_run.sh
+CELERY_TEMPLATE_SLURM_RUN_SCRIPT=/code/scripts/template_slurm_run.sh
+FLOWS_CACHE=/code/flows.json
+FLOWS_REFRESH_MINUTES=15
+RUNS_TIMEOUT_MULTIPLIER=2
+RUNS_LOGS=/code/logs
+SQL_ENGINE=django.db.backends.postgresql
+SQL_HOST=postgres
+SQL_PORT=5432
+SQL_NAME=postgres
+SQL_USER=postgres
+SQL_PASSWORD=$sql_password
 GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
 GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/users/github_handle_temporary_code/
 GITHUB_KEY=<your github key>
 GITHUB_SECRET=<your github secret>
+GITHUB_CLIENT_ID=d15df2f5710e9597290f
 DOCKER_USERNAME=<your docker username>
 DOCKER_PASSWORD=<your docker password>
 ```

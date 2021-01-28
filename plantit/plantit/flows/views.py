@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 
 from plantit import settings
-from plantit.runs.utils import __list_by_user, __list_all_by_user
+from plantit.runs.utils import __list_by_user, list_flows_for_users
 from plantit.utils import get_repo_config, validate_config
 
 
@@ -40,7 +40,7 @@ def list_all(request):
                 flows = json.load(file)
         else:
             print(f"Flow cache is stale, refreshing")
-            flows = asyncio.run(__list_all_by_user(usernames, request.user.profile.github_token))
+            flows = asyncio.run(list_flows_for_users(usernames, request.user.profile.github_token))
             with open(flows_file, 'w') as file:
                 json.dump(flows, file)
 

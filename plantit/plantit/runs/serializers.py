@@ -14,7 +14,7 @@ class RunSerializer(serializers.ModelSerializer):
     class Meta:
         model = Run
         fields = ('pk', 'cluster', 'flow_owner', 'flow_name',
-                  'created', 'timeout', 'started', 'work_dir', 'identifier',
+                  'created', 'walltime', 'timeout', 'work_dir', 'task_id',
                   'remote_results_path')
 
     def create(self, validated_data):
@@ -27,8 +27,8 @@ class RunSerializer(serializers.ModelSerializer):
 
     def update(self, run, validated_data):
         print(validated_data)
-        if 'identifier' in validated_data.keys():
-            run.identifier = validated_data['identifier']
+        if 'task_id' in validated_data.keys():
+            run.task_id = validated_data['task_id']
 
         if 'remote_results_path' in validated_data.keys():
             run.remote_results_path = validated_data['remote_results_path']

@@ -27,7 +27,15 @@ services:
       - DJANGO_CSRF_COOKIE_SECURE=${DJANGO_CSRF_COOKIE_SECURE}
       - FLOWS_CACHE=${FLOWS_CACHE}
       - FLOWS_REFRESH_MINUTES=${FLOWS_REFRESH_MINUTES}
+      - RUNS_TIMEOUT_MULTIPLIER=${RUNS_TIMEOUT_MULTIPLIER}
+      - RUNS_LOGS=${RUNS_LOGS}
       - SQL_ENGINE=${SQL_ENGINE}
+      - SQL_HOST=${SQL_HOST}
+      - SQL_PORT=${SQL_PORT}
+      - SQL_NAME=${SQL_NAME}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
+      - SQL_DB=${SQL_DB}
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_USERNAME=${GITHUB_USERNAME}
@@ -36,7 +44,7 @@ services:
       - GITHUB_SECRET=${GITHUB_SECRET}
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
-    command: ["gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
+    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
     networks:
       - ngnix_network
       - default
@@ -49,7 +57,7 @@ services:
       start_period: 20s
   celery:
     image: computationalplantscience/plantit
-    command: ["celery", "-A", "plantit", "worker", "--loglevel=info"]
+    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "--loglevel=info"]
     volumes:
       - .:/code
     working_dir: /code/plantit
@@ -72,7 +80,15 @@ services:
       - CELERY_TEMPLATE_SLURM_RUN_SCRIPT=${CELERY_TEMPLATE_SLURM_RUN_SCRIPT}
       - FLOWS_CACHE=${FLOWS_CACHE}
       - FLOWS_REFRESH_MINUTES=${FLOWS_REFRESH_MINUTES}
+      - RUNS_TIMEOUT_MULTIPLIER=${RUNS_TIMEOUT_MULTIPLIER}
+      - RUNS_LOGS=${RUNS_LOGS}
       - SQL_ENGINE=${SQL_ENGINE}
+      - SQL_HOST=${SQL_HOST}
+      - SQL_PORT=${SQL_PORT}
+      - SQL_NAME=${SQL_NAME}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASSWORD=${SQL_PASSWORD}
+      - SQL_DB=${SQL_DB}
       - GITHUB_AUTH_URI=${GITHUB_AUTH_URI}
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
       - GITHUB_USERNAME=${GITHUB_USERNAME}
@@ -88,6 +104,36 @@ services:
       retries: 2
       start_period: 20s
     restart: always
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_HOST=${SQL_HOST}
+      - POSTGRES_PORT=${SQL_PORT}
+      - POSTGRES_NAME=${SQL_NAME}
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DB}
+    healthcheck:
+      test: /usr/bin/pg_isready -U "postgres"
+      interval: 60s
+      timeout: 60s
+      retries: 2
+    start_period: 20s
+  pgloader:
+    image: dimitri/pgloader
+    command: ["pgloader", "plantit/db.sqlite3", "postgres:///plantit"]
+    environment:
+      - POSTGRES_HOST=${SQL_HOST}
+      - POSTGRES_PORT=${SQL_PORT}
+      - POSTGRES_NAME=${SQL_NAME}
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DB}
+  restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
@@ -134,3 +180,5 @@ services:
 networks:
   ngnix_network:
     driver: bridge
+volumes:
+  pgdata:

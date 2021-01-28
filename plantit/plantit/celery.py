@@ -1,12 +1,16 @@
 import json
 import os
+from os import environ
 from datetime import timedelta, datetime
 
 from celery import Celery, shared_task
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'plantit.settings')
 
-app = Celery('plantit', broker='amqp://rabbitmq')
+app = Celery(
+    'plantit',
+    broker='amqp://rabbitmq',
+    backend=f"db+postgresql://{environ.get('SQL_USER')}:{environ.get('SQL_PASSWORD')}@{environ.get('SQL_HOST')}")
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

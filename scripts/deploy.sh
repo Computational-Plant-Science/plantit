@@ -23,6 +23,9 @@ npm install
 npm run build
 cd ../..
 
+echo "Creating run log directory..."
+mkdir -p logs
+
 echo "Collecting static files..."
 $compose run plantit ./manage.py collectstatic --no-input
 

@@ -15,25 +15,16 @@ class Run(models.Model):
 
     tags = TaggableManager()
     created = models.DateTimeField(default=timezone.now)
-    started = models.DateTimeField(null=True, blank=True)
+    walltime = models.IntegerField(default=600, null=False, blank=False)
     timeout = models.IntegerField(default=600, null=False, blank=False)
     token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    identifier = models.CharField(max_length=36, null=False, blank=False)
+    task_id = models.CharField(max_length=36, null=False, blank=False)
     flow_owner = models.CharField(max_length=280, null=True, blank=True)
     flow_name = models.CharField(max_length=280, null=True, blank=True)
-    target = models.ForeignKey(Target,
-                               null=True,
-                               blank=True,
-                               on_delete=models.SET_NULL)
-    work_dir = models.CharField(max_length=100,
-                                null=True,
-                                blank=True,
-                                default=timezone.now().strftime('%s') + "/")
-    remote_results_path = models.CharField(max_length=100,
-                                           null=True,
-                                           blank=True,
-                                           default=None)
+    target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.SET_NULL)
+    work_dir = models.CharField(max_length=100, null=True, blank=True, default=timezone.now().strftime('%s') + "/")
+    remote_results_path = models.CharField(max_length=100, null=True, blank=True, default=None)
 
     def __str__(self):
         return json.dumps(model_to_dict(self))
@@ -41,9 +32,6 @@ class Run(models.Model):
     @property
     def status(self):
         try:
-            # filtered = self.status_set.filter(state__exact=2)
-            # if len(filtered) > 0:
-            #     return filtered.latest('date')
             return self.status_set.filter(date__isnull=False).latest('date')
         except:
             return None

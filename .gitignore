@@ -258,3 +258,8 @@ plantit/.telemetry
 sandbox/*
 node_modules/
 flows.json
+
+*.postgresql
+plantit/postgres
+
+logs
