@@ -123,15 +123,15 @@ services:
     start_period: 20s
   pgloader:
     image: dimitri/pgloader
-    command: ["pgloader", "plantit/db.sqlite3", "postgres:///plantit"]
+    command: [ "pgloader", "/code/plantit/db.sqlite3", "postgresql://${SQL_HOST}/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}" ]
+    depends_on:
+      - postgres
     environment:
       - POSTGRES_HOST=${SQL_HOST}
       - POSTGRES_PORT=${SQL_PORT}
       - POSTGRES_NAME=${SQL_NAME}
       - POSTGRES_USER=${SQL_USER}
       - POSTGRES_PASSWORD=${SQL_PASSWORD}
-      - POSTGRES_DB=${SQL_DB}
-  restart: always
     volumes:
       - pgdata:/var/lib/postgresql/data
   rabbitmq:
