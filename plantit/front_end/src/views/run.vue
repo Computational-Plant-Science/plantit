@@ -379,37 +379,56 @@
                                                             }}
                                                         </small>
                                                     </h5>
+                                                </b-col>
+                                                <b-col
+                                                    md="auto"
+                                                    align-self="center"
+                                                    class="ml-0"
+                                                >
+                                                    <small
+                                                        v-if="runComplete"
+                                                        :class="
+                                                            darkMode
+                                                                ? 'text-white'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        {{ runComplete ? 'Ran' : 'Running' }} for
+                                                        {{
+                                                            walltimeTotal.humanize()
+                                                        }}
+                                                    </small>
                                                     <!--<small
                                                         v-if="
-                                                            timeRemaining !==
+                                                            walltimeRemaining !==
                                                                 null &&
-                                                                timeRemaining >
+                                                                walltimeRemaining >
                                                                     0 &&
                                                                 run
                                                         "
                                                         :class="
-                                                            timeRemaining.minutes() >
+                                                            walltimeRemaining.minutes() >
                                                             5
                                                                 ? 'text-secondary'
                                                                 : 'text-danger'
                                                         "
                                                         >{{
-                                                        timeRemaining.hours()
-                                                      }}
-                                                      hours,
-                                                      {{
-                                                        timeRemaining.minutes()
-                                                      }}
-                                                      minutes,
-                                                      {{
-                                                        timeRemaining.seconds()
-                                                      }}
-                                                      seconds remaining before
-                                                      timeout</small
+                                                            walltimeRemaining.hours()
+                                                        }}
+                                                        hours,
+                                                        {{
+                                                            walltimeRemaining.minutes()
+                                                        }}
+                                                        minutes,
+                                                        {{
+                                                            walltimeRemaining.seconds()
+                                                        }}
+                                                        seconds remaining before
+                                                        timeout</small
                                                     >
                                                     <small
                                                         v-else-if="
-                                                            timeRemaining !==
+                                                            walltimeRemaining !==
                                                                 null
                                                         "
                                                         class="text-danger"
@@ -433,52 +452,6 @@
                                                         }}
                                                         seconds)</small
                                                     >-->
-                                                    <!--<small
-                                                        v-if="
-                                                            walltimeRemaining !==
-                                                                null
-                                                        "
-                                                        >{{
-                                                            this.anyStatuses(
-                                                                0
-                                                            ) ||
-                                                            this.anyStatuses(6)
-                                                                ? 'Ran'
-                                                                : 'Running'
-                                                        }}
-                                                        for
-                                                        {{
-                                                            walltimeElapsed.humanize()
-                                                        }}
-                                                        <span
-                                                            v-if="
-                                                                !(
-                                                                    this.anyStatuses(
-                                                                        0
-                                                                    ) ||
-                                                                    this.anyStatuses(
-                                                                        6
-                                                                    )
-                                                                )
-                                                            "
-                                                            >({{
-                                                                walltimeRemaining.humanize()
-                                                            }}
-                                                            remaining)</span
-                                                        >
-                                                        >
-                                                        <span
-                                                            class="text-danger"
-                                                            v-else-if="
-                                                                walltimeOvertime !==
-                                                                    null
-                                                            "
-                                                            >({{
-                                                                walltimeOvertime.humanize()
-                                                            }}
-                                                            overtime)</span
-                                                        ></small
-                                                    >-->
                                                 </b-col>
                                                 <b-col md="auto" class="ml-0">
                                                     <b-alert
@@ -491,7 +464,7 @@
                                                             reloadAlertDismissCountdown = 0
                                                         "
                                                         @dismiss-count-down="
-                                                            countDownChanged
+                                                            refreshedCountdownChanged
                                                         "
                                                     >
                                                         Logs refreshed.
@@ -553,15 +526,7 @@
                                                                         : 'text-dark'
                                                                 "
                                                             >
-                                                                <b-badge
-                                                                    variant="warning"
-                                                                    >plant<small
-                                                                        class="mb-3 text-success"
-                                                                        style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
-                                                                        >IT</small
-                                                                    ></b-badge
-                                                                >
-                                                                Logs
+                                                                Status Logs
                                                             </h4>
                                                         </b-col>
                                                         <b-col md="auto">
@@ -727,13 +692,7 @@
                                                                         : 'text-dark'
                                                                 "
                                                             >
-                                                                <b-badge
-                                                                    variant="secondary"
-                                                                    >{{
-                                                                        run.target
-                                                                    }}</b-badge
-                                                                >
-                                                                Logs
+                                                                Container Logs
                                                             </h4>
                                                         </b-col>
                                                         <b-col md="auto">
@@ -777,11 +736,7 @@
                                                 >
                                                     <b-row
                                                         align-h="center"
-                                                        v-if="
-                                                            loadingTargetLogs ||
-                                                                targetLogsText ===
-                                                                    ''
-                                                        "
+                                                        v-if="loadingTargetLogs"
                                                     >
                                                         <b-spinner
                                                             class="mt-3"
@@ -790,6 +745,22 @@
                                                             variant="warning"
                                                         ></b-spinner>
                                                     </b-row>
+                                                    <b-row
+                                                        v-if="
+                                                            !loadingTargetLogs &&
+                                                                targetLogsText ===
+                                                                    ''
+                                                        "
+                                                        ><b-col
+                                                            class="text-center"
+                                                            ><br />
+                                                            Nothing
+                                                            here...<b-img
+                                                                center
+                                                                width="100rem"
+                                                                src="https://i.pinimg.com/originals/bf/ec/5c/bfec5cfd86fca6de0b4574d7c73f7930.jpg"
+                                                            ></b-img></b-col
+                                                    ></b-row>
                                                     <b-row
                                                         v-if="
                                                             targetLogsText !==
@@ -823,7 +794,11 @@
                                                                 "
                                                                 size="sm"
                                                                 v-b-tooltip.hover
-                                                                :title="'Download ' + run.target + ' Log File'"
+                                                                :title="
+                                                                    'Download ' +
+                                                                        run.target +
+                                                                        ' Log File'
+                                                                "
                                                                 @click="
                                                                     downloadTargetLogs
                                                                 "
@@ -880,7 +855,6 @@
                                         >
                                     </b-row>
                                     <b-card
-                                        v-if="flow.config.output"
                                         :bg-variant="
                                             darkMode ? 'dark' : 'white'
                                         "
@@ -1277,7 +1251,112 @@
                                         <b-card-body
                                             v-else-if="
                                                 outputFilesExpanded &&
-                                                    flow.config.output
+                                                    flow.config.output &&
+                                                    !runComplete
+                                            "
+                                            class="mt-0 pt-0"
+                                        >
+                                            <b-row
+                                                align-h="center"
+                                                align-v="center"
+                                                class="mt-2 text-center"
+                                            >
+                                                <b-col>
+                                                    Output files expected:
+                                                </b-col>
+                                            </b-row>
+                                            <b-row
+                                                align-h="center"
+                                                align-v="center"
+                                                class="text-center"
+                                            >
+                                                <b-col>
+                                                    <b
+                                                        ><code
+                                                            >{{
+                                                                flow.config
+                                                                    .output.path
+                                                                    ? flow
+                                                                          .config
+                                                                          .output
+                                                                          .path +
+                                                                      '/'
+                                                                    : ''
+                                                            }}{{
+                                                                flow.config
+                                                                    .output
+                                                                    .include
+                                                                    ? (flow
+                                                                          .config
+                                                                          .output
+                                                                          .exclude
+                                                                          ? '+ '
+                                                                          : '') +
+                                                                      (flow
+                                                                          .config
+                                                                          .output
+                                                                          .include
+                                                                          .patterns
+                                                                          ? '*.' +
+                                                                            flow.config.output.include.patterns.join(
+                                                                                ', *.'
+                                                                            ) +
+                                                                            ', '
+                                                                          : []) +
+                                                                      (flow
+                                                                          .config
+                                                                          .output
+                                                                          .include
+                                                                          .names
+                                                                          ? flow.config.output.include.names.join(
+                                                                                ', '
+                                                                            )
+                                                                          : [])
+                                                                    : ''
+                                                            }}{{
+                                                                flow.config
+                                                                    .output
+                                                                    .exclude
+                                                                    ? ' - ' +
+                                                                      (flow
+                                                                          .config
+                                                                          .output
+                                                                          .exclude
+                                                                          .patterns
+                                                                          ? '*.' +
+                                                                            flow.config.output.exclude.patterns.join(
+                                                                                ', *.'
+                                                                            ) +
+                                                                            ', '
+                                                                          : []) +
+                                                                      (flow
+                                                                          .config
+                                                                          .output
+                                                                          .exclude
+                                                                          .names
+                                                                          ? flow.config.output.exclude.names.join(
+                                                                                ', '
+                                                                            )
+                                                                          : [])
+                                                                    : ''
+                                                            }}
+                                                        </code></b
+                                                    >
+                                                    <br />
+                                                    <br />
+                                                    <b-spinner
+                                                        type="grow"
+                                                        variant="warning"
+                                                    ></b-spinner>
+                                                </b-col>
+                                            </b-row>
+                                            <br />
+                                        </b-card-body>
+                                        <b-card-body
+                                            v-else-if="
+                                                outputFilesExpanded &&
+                                                    flow.config.output &&
+                                                    runComplete
                                             "
                                             class="mt-0 pt-0"
                                         >
@@ -1502,8 +1581,10 @@ export default {
             loadingRun: true,
             run: null,
             runNotFound: false,
-            // walltime/timeout
-            timeRemaining: null,
+            // walltime
+            walltimeTotal: null,
+            walltimeRemaining: null,
+            runtimeUpdateInterval: null,
             // PlantIT logs
             loadingLocalLogs: false,
             localLogsText: '',
@@ -1674,10 +1755,7 @@ export default {
                     );
                     let link = document.createElement('a');
                     link.href = url;
-                    link.setAttribute(
-                        'download',
-                        this.localLogFileName
-                    );
+                    link.setAttribute('download', this.localLogFileName);
                     link.click();
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
@@ -1699,7 +1777,7 @@ export default {
                     }
                     this.localLogsText = response.data;
                     this.loadingLocalLogs = false;
-                    if (toast) this.showAlert();
+                    if (toast) this.showRefreshedAlert();
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1744,7 +1822,7 @@ export default {
                     }
                     this.targetLogsText = response.data;
                     this.loadingTargetLogs = false;
-                    if (toast) this.showAlert();
+                    if (toast) this.showRefreshedAlert();
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1780,27 +1858,32 @@ export default {
         expandOutputFiles() {
             this.outputFilesExpanded = !this.outputFilesExpanded;
         },
-        countDownChanged(dismissCountDown) {
+        refreshedCountdownChanged(dismissCountDown) {
             this.reloadAlertDismissCountdown = dismissCountDown;
         },
-        showAlert() {
+        showRefreshedAlert() {
             this.reloadAlertDismissCountdown = this.reloadAlertDismissSeconds;
         },
-        formatDate(date) {
-            return `${moment(date).fromNow()}`;
-        },
-        updateTimeRemaining() {
+        updateWalltime() {
             if (this.run === null || this.run.created === null) return null;
+            let complete =
+                this.run.state === this.SUCCESS ||
+                this.run.state === this.FAILURE;
+            if (complete) clearInterval(this.runtimeUpdateInterval);
 
             let started = moment(this.run.created);
+            let updated = moment(this.run.updated);
             let timeout = started.clone();
             timeout.add(this.run.timeout, 's');
-            this.timeRemaining = moment.duration(timeout.diff(moment()));
+            this.walltimeTotal = moment.duration(
+                (complete ? updated : moment()).diff(started)
+            );
+            this.walltimeRemaining = moment.duration(timeout.diff(moment()));
         }
     },
     async mounted() {
         await this.reloadRun(false);
-        setInterval(this.updateTimeRemaining, 1000);
+        this.runtimeUpdateInterval = setInterval(this.updateWalltime, 1000);
     },
     computed: {
         localLogFileName() {

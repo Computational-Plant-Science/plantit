@@ -138,7 +138,12 @@
                                     "
                                 >
                                     <i
-                                        v-if="params && params.every(p => p.value !== '')"
+                                        v-if="
+                                            params &&
+                                                params.every(
+                                                    p => p.value !== ''
+                                                )
+                                        "
                                         class="fas fa-keyboard fa-fw text-success"
                                     ></i>
                                     <i v-else class="fas fa-keyboard fa-fw"></i>
@@ -381,16 +386,34 @@
                             <br />
                             <b-row>
                                 <b-col class="text-left" align-self="end"
-                                    ><h5><small :class="darkMode ? 'text-white' : 'text-dark'">Name</small></h5></b-col
+                                    ><h5>
+                                        <small
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                            >Name</small
+                                        >
+                                    </h5></b-col
                                 >
                                 <b-col class="text-right" align-self="end"
                                     ><h5>
-                                        <small :class="darkMode ? 'text-white' : 'text-dark'">Resources Available </small>
+                                        <small
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                            >Resources Available
+                                        </small>
                                     </h5>
                                     <small>per container</small></b-col
                                 >
                             </b-row>
-                            <hr :class="darkMode ? 'theme-dark' : 'theme-light'" />
+                            <hr
+                                :class="darkMode ? 'theme-dark' : 'theme-light'"
+                            />
                             <b-row
                                 class="text-right"
                                 v-for="target in targets"

@@ -1,8 +1,6 @@
-import binascii
+import os
 import os
 import tempfile
-import uuid
-from datetime import timedelta, datetime
 from os.path import join
 from pathlib import Path
 
@@ -16,14 +14,13 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 
 from plantit import settings
-from plantit.runs.models import Run, Status
-from plantit.runs.ssh import SSH
-from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import parse_walltime, update_log, stat_log
-from plantit.runs.tasks import execute, cleanup
-from plantit.targets.models import Target
-from plantit.utils import get_repo_config
 from plantit.celery import app
+from plantit.runs.models import Run
+from plantit.runs.ssh import SSH
+from plantit.runs.tasks import execute
+from plantit.runs.thumbnail import Thumbnail
+from plantit.runs.utils import update_log, stat_log
+from plantit.utils import get_repo_config
 
 
 @api_view(['GET'])
@@ -50,13 +47,16 @@ def get_total_count(request):
 @login_required
 def list_outputs(request, id):
     try:
-        run = Run.objects.get(task_id=id)
+        run = Run.objects.get(submission_task_id=id)
         flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    included_by_name = ((flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else []) + [f"{run.task_id}.zip"]) if 'output' in flow_config else []
-    # included_by_name.append(f"{run.task_id}.{run.target.name.lower()}.log")
+    included_by_name = ((flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else [])) if 'output' in flow_config else []  # [f"{run.task_id}.zip"]
+    included_by_name.append(f"{run.submission_task_id}.{run.target.name.lower()}.log")
+    if run.job_id is not None and run.job_id != '':
+        included_by_name.append(f"plantit.{run.job_id}.out")
+        included_by_name.append(f"plantit.{run.job_id}.err")
     included_by_pattern = (flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []) if 'output' in flow_config else []
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
@@ -97,7 +97,7 @@ def list_outputs(request, id):
 @login_required
 def get_thumbnail(request, id, file):
     try:
-        run = Run.objects.get(task_id=id)
+        run = Run.objects.get(submission_task_id=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -111,7 +111,7 @@ def get_thumbnail(request, id, file):
             if errs:
                 raise Exception(f"Failed to check existence of {file}: {errs}")
 
-            run_dir = join(settings.MEDIA_ROOT, run.task_id)
+            run_dir = join(settings.MEDIA_ROOT, run.submission_task_id)
             thumbnail_path = join(run_dir, file)
             thumbnail_name_lower = file.lower()
 
@@ -150,7 +150,7 @@ def get_thumbnail(request, id, file):
 @login_required
 def get_output_file(request, id, file):
     try:
-        run = Run.objects.get(task_id=id)
+        run = Run.objects.get(submission_task_id=id)
         # flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
@@ -179,11 +179,11 @@ def get_output_file(request, id, file):
 @login_required
 def get_local_logs_text(request, id, size):
     try:
-        run = Run.objects.get(task_id=id)
+        run = Run.objects.get(submission_task_id=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.task_id}.plantit.log")
+    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.submission_task_id}.plantit.log")
     if Path(log_path).is_file():
         with open(log_path, 'r') as log:
             lines = log.readlines()[-int(size):]
@@ -196,11 +196,11 @@ def get_local_logs_text(request, id, size):
 @login_required
 def get_local_logs(request, id):
     try:
-        run = Run.objects.get(task_id=id)
+        run = Run.objects.get(submission_task_id=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.task_id}.plantit.log")
+    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.submission_task_id}.plantit.log")
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
@@ -209,13 +209,13 @@ def get_local_logs(request, id):
 @login_required
 def get_target_logs_text(request, id, size):
     try:
-        run = Run.objects.get(task_id=id)
+        run = Run.objects.get(submission_task_id=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.task_id}.{run.target.name.lower()}.log"
+    log_file = f"{run.submission_task_id}.{run.target.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -238,13 +238,13 @@ def get_target_logs_text(request, id, size):
 @login_required
 def get_target_logs(request, id):
     try:
-        run = Run.objects.get(task_id=id)
+        run = Run.objects.get(submission_task_id=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.task_id}.{run.target.name.lower()}.log"
+    log_file = f"{run.submission_task_id}.{run.target.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -262,17 +262,18 @@ def get_target_logs(request, id):
                 return FileResponse(open(tf.name, 'rb'))
 
 
-def __convert_run(run):
-    task = AsyncResult(run.task_id, app=app)
+def __convert_run(run: Run):
+    task = AsyncResult(run.submission_task_id, app=app)
     log_updated = stat_log(task.id)
     return {
-        'id': run.task_id,
+        'id': run.submission_task_id,
+        'job_id': run.job_id,
         'work_dir': run.work_dir,
         'target': run.target.name,
         'created': run.created,
         'timeout': run.timeout,
         'updated': task.date_done.replace(tzinfo=timezone.utc) if task.ready() else log_updated if log_updated is not None else run.created,
-        'state': AsyncResult(run.task_id, app=app).state,
+        'state': AsyncResult(run.submission_task_id, app=app).state,
         'flow_owner': run.flow_owner,
         'flow_name': run.flow_name,
         'tags': [str(tag) for tag in run.tags.all()]
@@ -295,7 +296,7 @@ def runs(request):
 def run(request, id):
     task = AsyncResult(id, app=app)
     try:
-        run = Run.objects.get(task_id=id)
+        run = Run.objects.get(submission_task_id=id)
         return JsonResponse(__convert_run(run))
     except Run.DoesNotExist:
         # return HttpResponseNotFound()
@@ -313,7 +314,7 @@ def run(request, id):
         })
 
     # return JsonResponse({
-    #     'id': run.task_id,
+    #     'id': run.submission_task_id,
     #     'work_dir': run.work_dir,
     #     'target': run.target.name,
     #     'created': run.created,
@@ -332,7 +333,7 @@ def run(request, id):
 def status(request, id):
     if request.method == 'GET':
         try:
-            run = Run.objects.get(task_id=id)
+            run = Run.objects.get(submission_task_id=id)
             return JsonResponse([
                 {
                     'run_id': id,
@@ -346,42 +347,18 @@ def status(request, id):
 
     elif request.method == 'POST':
         status = request.data
-        state = int(status['state'])
-
-        if state == 0 or 'error' in status['description'].lower():
-            pass  # state == Status.FAILED
-        if state == 1:
-            state = Status.CREATING
-        elif state == 2:
-            state = Status.PULLING
-        elif state == 3:
-            state = Status.RUNNING
-        elif state == 4:
-            state = Status.ZIPPING
-        elif state == 5:
-            state = Status.PUSHING
-        elif state == 6:
-            state = Status.COMPLETED
-        else:
-            raise ValueError(f"Invalid value for state '{status['state']}' (expected 0 - 6)")
 
         try:
-            run = Run.objects.get(task_id=id)
+            run = Run.objects.get(submission_task_id=id)
         except Run.DoesNotExist:
             return HttpResponseNotFound()
-
-        # if run.status == 0 or run.status == 6:
-        #     msg = f"Run already {'failed' if run.status == 0 else 'completed'}"
-        #     print(msg)
-        #     return HttpResponse(msg, status=500)
 
         for chunk in status['description'].split('<br>'):
             for line in chunk.split('\n'):
                 # skip verbose Singularity log output
                 if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
                     continue
-                update_log(run.task_id, line)
+                update_log(run.submission_task_id, line)
                 # run.status_set.create(description=line, state=state, location=run.target.name)
 
-        run.save()
         return HttpResponse(status=200)

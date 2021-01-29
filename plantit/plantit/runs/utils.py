@@ -1,5 +1,4 @@
 import asyncio
-import os
 import re
 from datetime import timedelta, datetime
 from os import environ
@@ -12,7 +11,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from plantit import settings
-from plantit.runs.models import Run, Status
+from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.utils import get_repo_config, get_repo_config_internal
 
@@ -23,34 +22,40 @@ def clean_html(raw_html):
     return text
 
 
-def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: str):
+def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: str) -> List[str]:
     full_command = f"{pre_command} && cd {directory} && {command}" if directory else command
+    output = []
+    errors = []
+
     print(f"Executing command on '{ssh_client.host}': {full_command}")
     stdin, stdout, stderr = ssh_client.client.exec_command(full_command)
     stdin.close()
 
-    errors = []
     for line in iter(lambda: stdout.readline(2048), ""):
-        print(f"Received stdout from '{ssh_client.host}': '{clean_html(line)}'")
+        clean = clean_html(line)
+        output.append(clean)
+        print(f"Received stdout from '{ssh_client.host}': '{clean}'")
     for line in iter(lambda: stderr.readline(2048), ""):
-        clean_line = clean_html(line)
-        if 'WARNING' not in clean_line:  # Dask occasionally returns messages like 'distributed.worker - WARNING - Heartbeat to scheduler failed'
-            errors.append(clean_line)
-            print(f"Received stderr from '{ssh_client.host}': '{clean_line}'")
+        clean = clean_html(line)
+        if 'WARNING' not in clean:  # Dask occasionally returns messages like 'distributed.worker - WARNING - Heartbeat to scheduler failed'
+            errors.append(clean)
+            print(f"Received stderr from '{ssh_client.host}': '{clean}'")
     if stdout.channel.recv_exit_status() != 0:
         raise Exception(f"Received non-zero exit status from '{ssh_client.host}'")
     elif len(errors) > 0:
         raise Exception(f"Received stderr: {errors}")
 
+    return output
 
-def update_log(task_id: str, description: str):
-    log_path = join(environ.get('RUNS_LOGS'), f"{task_id}.plantit.log")
+
+def update_log(submission_task_id: str, description: str):
+    log_path = join(environ.get('RUNS_LOGS'), f"{submission_task_id}.plantit.log")
     with open(log_path, 'a') as log:
         log.write(f"{description}\n")
 
 
-def stat_log(task_id: str):
-    log_path = Path(join(environ.get('RUNS_LOGS'), f"{task_id}.plantit.log"))
+def stat_log(submission_task_id: str):
+    log_path = Path(join(environ.get('RUNS_LOGS'), f"{submission_task_id}.plantit.log"))
     return datetime.fromtimestamp(log_path.stat().st_mtime) if log_path.is_file() else None
 
 
@@ -106,7 +111,7 @@ def old_flow_config_to_new(flow: dict, run: Run, resources: dict):
         'image': flow['config']['image'],
         'command': flow['config']['commands'],
         'workdir': flow['config']['workdir'],
-        'log_file': f"{run.task_id}.{run.target.name.lower()}.log"
+        'log_file': f"{run.submission_task_id}.{run.target.name.lower()}.log"
     }
 
     del flow['config']['target']
@@ -159,7 +164,7 @@ def old_flow_config_to_new(flow: dict, run: Run, resources: dict):
                 new_flow['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:{resources['cores']}"]
                 new_flow['jobqueue']['slurm']['queue'] = run.target.gpu_queue
             else:
-                update_log(run, Status.RUNNING, f"No GPU support on {run.target.name}")
+                print(f"No GPU support on {run.target.name}")
 
     return new_flow
 

@@ -57,33 +57,6 @@
                                     "
                                     @click="onRunSelected(run)"
                                 >
-                                    <b-badge
-                                        v-for="tag in run.tags"
-                                        v-bind:key="tag"
-                                        class="mr-1"
-                                        variant="warning"
-                                        >{{ tag }}
-                                    </b-badge>
-                                    <br v-if="run.tags.length > 0" />
-                                    <b-badge
-                                        class="ml-0 mr-1"
-                                        :variant="
-                                            run.state === 6
-                                                ? 'success'
-                                                : run.state === 0
-                                                ? 'danger'
-                                                : 'warning'
-                                        "
-                                        >{{
-                                            statusToString(run.state)
-                                        }}</b-badge
-                                    ><small>on</small
-                                    ><b-badge
-                                        class="ml-1 mr-0"
-                                        variant="secondary"
-                                        >{{ run.target }}</b-badge
-                                    ><small> {{ prettify(run.updated) }}</small>
-                                    <br />
                                     <a
                                         :class="
                                             darkMode
@@ -95,6 +68,33 @@
                                         "
                                         >{{ run.id }}</a
                                     >
+                                    <br />
+                                    <b-badge
+                                        v-for="tag in run.tags"
+                                        v-bind:key="tag"
+                                        class="mr-1"
+                                        variant="warning"
+                                        >{{ tag }}
+                                    </b-badge>
+                                    <br v-if="run.tags.length > 0" />
+                                    <b-badge
+                                        class="ml-0 mr-1"
+                                        :variant="
+                                            run.state === SUCCESS
+                                                ? 'success'
+                                                : run.state === FAILURE
+                                                ? 'danger'
+                                                : 'warning'
+                                        "
+                                        >{{
+                                            run.state
+                                        }}</b-badge
+                                    ><small>on</small
+                                    ><b-badge
+                                        class="ml-1 mr-0"
+                                        variant="secondary"
+                                        >{{ run.target }}</b-badge
+                                    ><small> {{ prettify(run.updated) }}</small>
                                     <br />
                                     <small class="mr-1"
                                         ><a
@@ -397,6 +397,13 @@ export default {
     components: {},
     data() {
         return {
+            // run status constants
+            PENDING: 'PENDING',
+            STARTED: 'STARTED',
+            SUCCESS: 'SUCCESS',
+            FAILURE: 'FAILURE',
+            REVOKED: 'REVOKED',
+            // user data
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null,
