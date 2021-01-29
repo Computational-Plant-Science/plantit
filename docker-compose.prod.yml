@@ -5,6 +5,7 @@ services:
     working_dir: /code/plantit
     depends_on:
       - celery
+      - postgres
       - sandbox
     volumes:
       - .:/code
@@ -63,6 +64,7 @@ services:
     working_dir: /code/plantit
     depends_on:
       - rabbitmq
+      - postgres
     environment:
       - CYVERSE_REDIRECT_URL=${CYVERSE_REDIRECT_URL}
       - CYVERSE_CLIENT_ID=${CYVERSE_CLIENT_ID}
@@ -120,20 +122,21 @@ services:
       interval: 60s
       timeout: 60s
       retries: 2
-    start_period: 20s
-  pgloader:
-    image: dimitri/pgloader
-    command: [ "pgloader", "/code/plantit/db.sqlite3", "postgresql://${SQL_HOST}/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}" ]
-    depends_on:
-      - postgres
-    environment:
-      - POSTGRES_HOST=${SQL_HOST}
-      - POSTGRES_PORT=${SQL_PORT}
-      - POSTGRES_NAME=${SQL_NAME}
-      - POSTGRES_USER=${SQL_USER}
-      - POSTGRES_PASSWORD=${SQL_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+  # pgloader:
+  #   image: dimitri/pgloader
+  #   command: [ "pgloader", "/code/plantit/db.sqlite3", "postgresql://${SQL_HOST}/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}" ]
+  #   depends_on:
+  #     - postgres
+  #   environment:
+  #     - POSTGRES_HOST=${SQL_HOST}
+  #     - POSTGRES_PORT=${SQL_PORT}
+  #     - POSTGRES_NAME=${SQL_NAME}
+  #     - POSTGRES_USER=${SQL_USER}
+  #     - POSTGRES_PASSWORD=${SQL_PASSWORD}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
   rabbitmq:
     image: rabbitmq:3.7.6-management
     hostname: rabbitmq
