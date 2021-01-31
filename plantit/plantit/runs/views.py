@@ -19,7 +19,7 @@ from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import update_log, stat_log
+from plantit.runs.utils import update_local_log, stat_log, update_target_log
 from plantit.utils import get_repo_config
 
 
@@ -118,6 +118,25 @@ def get_thumbnail(request, id, file):
             # make thumbnail directory for this run if it does not already exist
             Path(run_dir).mkdir(exist_ok=True, parents=True)
 
+            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
+                with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
+                    # stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
+                    # errs = stderr.read()
+                    # if errs:
+                    #     raise Exception(f"Failed to check existence of {log_file}: {errs}")
+                    # if not stdout.read().decode().strip() == 'exists':
+                    #     return HttpResponseNotFound()
+
+                    sftp.chdir(work_dir)
+                    sftp.get(file, temp_file.name)
+
+                    with tempfile.NamedTemporaryFile() as tf:
+                        sftp.chdir(work_dir)
+                        sftp.get(file, tf.name)
+                        with open(tf.name, 'r') as file:
+                            lines = file.readlines()
+                            return HttpResponse(lines, content_type='text/plain')
+
             with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
                 print(f"Creating new thumbnail: {thumbnail_path}")
                 sftp.chdir(work_dir)
@@ -177,7 +196,7 @@ def get_output_file(request, id, file):
 
 @api_view(['GET'])
 @login_required
-def get_local_logs_text(request, id, size):
+def get_submission_logs_text(request, id, size):
     try:
         run = Run.objects.get(submission_task_id=id)
     except Run.DoesNotExist:
@@ -194,7 +213,7 @@ def get_local_logs_text(request, id, size):
 
 @api_view(['GET'])
 @login_required
-def get_local_logs(request, id):
+def get_submission_logs(request, id):
     try:
         run = Run.objects.get(submission_task_id=id)
     except Run.DoesNotExist:
@@ -262,6 +281,64 @@ def get_target_logs(request, id):
                 return FileResponse(open(tf.name, 'rb'))
 
 
+
+@api_view(['GET'])
+@login_required
+def get_container_logs_text(request, id, size):
+    try:
+        run = Run.objects.get(submission_task_id=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    client = SSH(run.target.hostname, run.target.port, run.target.username)
+    work_dir = join(run.target.workdir, run.work_dir)
+    log_file = f"{run.submission_task_id}.{run.target.name.lower()}.log"
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
+            errs = stderr.read()
+            if errs:
+                raise Exception(f"Failed to check existence of {log_file}: {errs}")
+            if not stdout.read().decode().strip() == 'exists':
+                return HttpResponseNotFound()
+
+            with tempfile.NamedTemporaryFile() as tf:
+                sftp.chdir(work_dir)
+                sftp.get(log_file, tf.name)
+                with open(tf.name, 'r') as file:
+                    lines = file.readlines()[-int(size):]
+                    return HttpResponse(lines, content_type='text/plain')
+
+
+@api_view(['GET'])
+@login_required
+def get_container_logs(request, id):
+    try:
+        run = Run.objects.get(submission_task_id=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    client = SSH(run.target.hostname, run.target.port, run.target.username)
+    work_dir = join(run.target.workdir, run.work_dir)
+    log_file = f"{run.submission_task_id}.{run.target.name.lower()}.log"
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            stdin, stdout, stderr = client.client.exec_command(
+                'test -e {0} && echo exists'.format(join(work_dir, log_file)))
+            errs = stderr.read()
+            if errs:
+                raise Exception(f"Failed to check existence of {log_file}: {errs}")
+            if not stdout.read().decode().strip() == 'exists':
+                return HttpResponseNotFound()
+
+            with tempfile.NamedTemporaryFile() as tf:
+                sftp.chdir(work_dir)
+                sftp.get(log_file, tf.name)
+                return FileResponse(open(tf.name, 'rb'))
+
+
 def __convert_run(run: Run):
     task = AsyncResult(run.submission_task_id, app=app)
     log_updated = stat_log(task.id)
@@ -276,14 +353,12 @@ def __convert_run(run: Run):
         'created': run.created,
         'timeout': run.timeout,
         'updated': task.date_done.replace(tzinfo=timezone.utc) if task.ready() else log_updated if log_updated is not None else run.created,
-        'state': AsyncResult(run.submission_task_id, app=app).state,
         'flow_owner': run.flow_owner,
         'flow_name': run.flow_name,
         'tags': [str(tag) for tag in run.tags.all()],
         'is_complete': run.is_complete,
         'is_success': run.is_success,
         'is_failure': run.is_failure,
-        'is_revoked': run.is_revoked
     }
 
 
@@ -334,38 +409,23 @@ def run(request, id):
     # })
 
 
-@api_view(['GET', 'POST'])
+@api_view(['POST'])
 @login_required
 @csrf_exempt
-def status(request, id):
-    if request.method == 'GET':
-        try:
-            run = Run.objects.get(submission_task_id=id)
-            return JsonResponse([
-                {
-                    'run_id': id,
-                    'state': status.state,
-                    'location': status.location,
-                    'date': status.date,
-                    'description': status.description
-                } for status in list(run.status_set.all())], safe=False)
-        except Run.DoesNotExist:
-            return HttpResponseNotFound()
+def update_status(request, id):
+    status = request.data
 
-    elif request.method == 'POST':
-        status = request.data
+    try:
+        run = Run.objects.get(submission_task_id=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
 
-        try:
-            run = Run.objects.get(submission_task_id=id)
-        except Run.DoesNotExist:
-            return HttpResponseNotFound()
+    for chunk in status['description'].split('<br>'):
+        for line in chunk.split('\n'):
+            # skip verbose Singularity log output
+            # if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
+            #     continue
+            update_target_log(run.submission_task_id, run.target.name, line)
+            # run.status_set.create(description=line, state=state, location=run.target.name)
 
-        for chunk in status['description'].split('<br>'):
-            for line in chunk.split('\n'):
-                # skip verbose Singularity log output
-                if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
-                    continue
-                update_log(run.submission_task_id, line)
-                # run.status_set.create(description=line, state=state, location=run.target.name)
-
-        return HttpResponse(status=200)
+    return HttpResponse(status=200)

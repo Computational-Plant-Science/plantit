@@ -13,6 +13,7 @@ assert 'FLOWS_CACHE' in os.environ, f"{missing_variable}: FLOWS_CACHE"
 assert 'FLOWS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: FLOWS_REFRESH_MINUTES"
 assert 'RUNS_TIMEOUT_MULTIPLIER' in os.environ, f"{missing_variable}: RUNS_TIMEOUT_MULTIPLIER"
 assert 'RUNS_REFRESH_SECONDS' in os.environ, f"{missing_variable}: RUNS_REFRESH_SECONDS"
+assert 'RUNS_CLEANUP_MINUTES' in os.environ, f"{missing_variable}: RUNS_CLEANUP_MINUTES"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
 assert 'CYVERSE_CLIENT_ID' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_ID"
@@ -33,6 +34,7 @@ FLOWS_CACHE = os.environ.get('FLOWS_CACHE')
 FLOWS_REFRESH_MINUTES = os.environ.get('FLOWS_REFRESH_MINUTES')
 RUNS_TIMEOUT_MULTIPLIER = os.environ.get('RUNS_TIMEOUT_MULTIPLIER')
 RUNS_REFRESH_SECONDS = os.environ.get('RUNS_REFRESH_SECONDS')
+RUNS_CLEANUP_MINUTES = os.environ.get('RUNS_CLEANUP_MINUTES')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')

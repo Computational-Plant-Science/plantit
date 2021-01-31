@@ -10,9 +10,11 @@ urlpatterns = [
     path(r'<id>/outputs/', views.list_outputs),
     path(r'<id>/output/<file>/', views.get_output_file),
     path(r'<id>/thumbnail/<file>/', views.get_thumbnail),
-    path(r'<id>/local_logs/', views.get_local_logs),
-    path(r'<id>/local_logs_text/<size>/', views.get_local_logs_text),
+    path(r'<id>/submission_logs/', views.get_submission_logs),
+    path(r'<id>/submission_logs_text/<size>/', views.get_submission_logs_text),
     path(r'<id>/target_logs/', views.get_target_logs),
     path(r'<id>/target_logs_text/<size>/', views.get_target_logs_text),
-    path(r'<id>/status/', views.status)
+    path(r'<id>/container_logs/', views.get_container_logs),
+    path(r'<id>/container_logs_text/<size>/', views.get_container_logs_text),
+    path(r'<id>/status/', views.update_status)
 ]

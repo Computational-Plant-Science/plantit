@@ -77,19 +77,11 @@
                                         >{{ tag }}
                                     </b-badge>
                                     <br v-if="run.tags.length > 0" />
-                                    <b-badge
-                                        class="ml-0 mr-1"
-                                        :variant="
-                                            run.state === SUCCESS
-                                                ? 'success'
-                                                : run.state === FAILURE
-                                                ? 'danger'
-                                                : 'warning'
-                                        "
-                                        >{{
-                                            run.state
-                                        }}</b-badge
-                                    ><small>on</small
+                                    <small>{{
+                                                run.is_complete
+                                                    ? 'Ran'
+                                                    : 'Running'
+                                            }} on</small
                                     ><b-badge
                                         class="ml-1 mr-0"
                                         variant="secondary"

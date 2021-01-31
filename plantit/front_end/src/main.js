@@ -3,6 +3,7 @@ import Vue from 'vue';
 import './plugins/bootstrap-vue';
 import App from './App.vue';
 import VueLogger from 'vuejs-logger';
+import VueFriendlyIframe from 'vue-friendly-iframe';
 import router from './router';
 import store from './store/store';
 import Axios from 'axios';
@@ -17,6 +18,7 @@ Axios.defaults.xsrfHeaderName = 'X-CSRFTOKEN';
 Vue.config.productionTip = false;
 
 Vue.use(VueLogger);
+Vue.use(VueFriendlyIframe)
 
 if (process.env.VUE_APP_ANALYTICS_ID) {
     Vue.use(VueAnalytics, {

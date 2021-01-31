@@ -39,7 +39,7 @@ class Run(models.Model):
 
     @property
     def is_complete(self):
-        return not (self.is_success or self.is_failure or self.is_revoked)
+        return self.is_success or self.is_failure
 
     @property
     def is_success(self):
@@ -48,10 +48,6 @@ class Run(models.Model):
     @property
     def is_failure(self):
         return self.completion_status == 'FAILURE'
-
-    @property
-    def is_revoked(self):
-        return self.completion_status == 'REVOKED'
 
 
 class Output(models.Model):

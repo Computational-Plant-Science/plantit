@@ -48,8 +48,14 @@ def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: 
     return output
 
 
-def update_log(submission_task_id: str, description: str):
+def update_local_log(submission_task_id: str, description: str):
     log_path = join(environ.get('RUNS_LOGS'), f"{submission_task_id}.plantit.log")
+    with open(log_path, 'a') as log:
+        log.write(f"{description}\n")
+
+
+def update_target_log(submission_task_id: str, target: str, description: str):
+    log_path = join(environ.get('RUNS_LOGS'), f"{submission_task_id}.{target}.log")
     with open(log_path, 'a') as log:
         log.write(f"{description}\n")
 
