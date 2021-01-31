@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from datetime import datetime
 
 from plantit.runs.models import Run
 
@@ -8,7 +7,7 @@ class RunSerializer(serializers.ModelSerializer):
     class Meta:
         model = Run
         fields = ('pk', 'cluster', 'flow_owner', 'flow_name',
-                  'created', 'walltime', 'timeout', 'work_dir', 'submission_task_id', 'job_id',
+                  'created', 'walltime', 'timeout', 'work_dir', 'submission_task_id', 'completion_status', 'job_id', 'job_status',
                   'remote_results_path')
 
     def create(self, validated_data):

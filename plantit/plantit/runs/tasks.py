@@ -97,7 +97,8 @@ def __upload(flow, run, target, ssh):
                 if 'mem' in resources and (run.target.header_skip is None or '--mem' not in str(run.target.header_skip)):
                     script.write(f"#SBATCH --mem={resources['mem']}\n")
                 if run.target.queue is not None and run.target.queue != '':
-                    script.write(f"#SBATCH --partition={run.target.gpu_queue if run.target.gpu and 'gpu' in flow['config'] and flow['config']['gpu'] else run.target.queue}\n")
+                    script.write(
+                        f"#SBATCH --partition={run.target.gpu_queue if run.target.gpu and 'gpu' in flow['config'] and flow['config']['gpu'] else run.target.queue}\n")
                 if run.target.project is not None and run.target.project != '':
                     script.write(f"#SBATCH -A {run.target.project}\n")
                 script.write("#SBATCH --mail-type=END,FAIL\n")
@@ -155,11 +156,13 @@ def __upload(flow, run, target, ssh):
                                     f" --terrain_token {run.user.profile.cyverse_token}"
                     if 'include' in flow['output']:
                         if 'patterns' in flow['output']['include']:
-                            push_commands = push_commands + ' '.join(['--include_pattern ' + pattern for pattern in flow['output']['include']['patterns']])
+                            push_commands = push_commands + ' '.join(
+                                ['--include_pattern ' + pattern for pattern in flow['output']['include']['patterns']])
                         if 'names' in flow['output']['include']:
                             push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in flow['output']['include']['names']])
                         if 'patterns' in flow['output']['exclude']:
-                            push_commands = push_commands + ' '.join(['--exclude_pattern ' + pattern for pattern in flow['output']['exclude']['patterns']])
+                            push_commands = push_commands + ' '.join(
+                                ['--exclude_pattern ' + pattern for pattern in flow['output']['exclude']['patterns']])
                         if 'names' in flow['output']['exclude']:
                             push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in flow['output']['exclude']['names']])
                     push_commands += '\n'
@@ -172,6 +175,7 @@ def __submit(run, ssh):
     sandbox = run.target.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
     template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
     template_name = template.split('/')[-1]
+
     if run.is_sandbox:
         execute_command(
             ssh_client=ssh,
@@ -184,59 +188,44 @@ def __submit(run, ssh):
             pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
             command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
             directory=join(run.target.workdir, run.work_dir))[-1].replace('Submitted batch job', '').strip()
-        print(f"Got job ID {job_id}")
         run.job_id = job_id
         run.save()
 
 
 @app.task(bind=True, track_started=True)
-def execute(self, username, flow):
+def submit_run(self, username, flow):
     try:
         target = Target.objects.get(name=flow['config']['target']['name'])
-        run = __create_run(username, flow, target, execute.request.id)
-
-        description = f"Deploying run {execute.request.id} to {target.name}"
-        logger.info(description)
-        update_log(execute.request.id, description)
+        run = __create_run(username, flow, target, submit_run.request.id)
+        log = f"Deploying run {submit_run.request.id} to {target.name}"
+        logger.info(log)
+        update_log(submit_run.request.id, log)
 
         # TODO orchestrate these steps independently within this task, rather than stringing them together in 1 script?
         ssh = SSH(run.target.hostname, run.target.port, run.target.username)
         with ssh:
-            # upload run config file and script
-            description = f"Creating working directory and uploading files"
-            logger.info(description)
-            self.update_state(state='UPLOADING', meta={'description': description})
-            update_log(execute.request.id, description)
+            log = f"Creating working directory and uploading files"
+            logger.info(log)
+            self.update_state(state='UPLOADING', meta={'description': log})
+            update_log(submit_run.request.id, log)
             __upload(flow, run, target, ssh)
 
-            # schedule a checkup task to run after walltime elapses
-            poll_cluster.s(execute.request.id).apply_async(countdown=run.walltime)
-
-            # submit run
-            description = 'Running script' if run.target.name == 'Sandbox' else 'Submitting script to scheduler'
-            logger.info(description)
-            self.update_state(state='RUNNING', meta={'description': description})
-            update_log(execute.request.id, description)
+            log = 'Running script' if run.target.name == 'Sandbox' else 'Submitting script to scheduler'
+            logger.info(log)
+            self.update_state(state='RUNNING', meta={'description': log})
+            update_log(submit_run.request.id, log)
             __submit(run, ssh)
 
             if not run.is_sandbox:  # schedule a task to poll the cluster scheduler for job status
-                poll_cluster(execute.request.id)
-
-            # schedule a cleanup task to run after timeout elapses
-            # cleanup.s(execute.request.id).apply_async(countdown=run.timeout)
+                poll_cluster_scheduler.s(run.submission_task_id).apply_async(countdown=0)
     except Exception:
-        description = f"Run {execute.request.id} failed: {traceback.format_exc()}."
-        logger.error(description)
-        update_log(execute.request.id, description)
+        log = f"Failed to submit run {submit_run.request.id}: {traceback.format_exc()}."
+        logger.error(log)
+        update_log(submit_run.request.id, log)
         raise
 
 
-@app.task()
-def poll_cluster(submission_task_id):
-    task = AsyncResult(submission_task_id, app=app)
-    run = Run.objects.get(submission_task_id=submission_task_id)
-    logger.info(f"Checking {run.target.name} scheduler status for run {task.id} (SLURM job {run.job_id})")
-
+def check_cluster_scheduler(run: Run) -> (str, str):
     ssh = SSH(run.target.hostname, run.target.port, run.target.username)
     with ssh:
         lines = execute_command(
@@ -245,23 +234,36 @@ def poll_cluster(submission_task_id):
             command=f"squeue --me",
             directory=join(run.target.workdir, run.work_dir))
 
-        try:
-            job_line = next(l for l in lines if run.job_id in l)
-            job_split = job_line.split()
-            job_walltime = job_split[-3]
-            job_status = job_split[-4]
-            print(f"Job {run.job_id} is {job_status} for {job_walltime}")
-            poll_cluster.s(submission_task_id).apply_async(countdown=60)
-        except StopIteration:
-            print(f"Could not find {run.job_id}, not rescheduling poll")
-            pass
+        job_line = next(l for l in lines if run.job_id in l)
+        job_split = job_line.split()
+        job_walltime = job_split[-3]
+        job_status = job_split[-4]
+        return job_status, job_walltime
+
+
+@app.task()
+def poll_cluster_scheduler(submission_task_id):
+    task = AsyncResult(submission_task_id, app=app)
+    run = Run.objects.get(submission_task_id=submission_task_id)
+    logger.info(f"Checking {run.target.name} scheduler status for run {task.id} (SLURM job {run.job_id})")
+
+    try:
+        job_status, job_walltime = check_cluster_scheduler(run)
+        print(f"Job {run.job_id} is {job_status} for {job_walltime}")
+        run.job_status = job_status
+        run.job_walltime = job_walltime
+        run.save()
+        poll_cluster_scheduler.s(submission_task_id).apply_async(countdown=int(environ.get('RUNS_REFRESH_SECONDS')))
+    except StopIteration:
+        print(f"Could not find {run.job_id}, not rescheduling poll")
+        # cleanup.s(submit_run.request.id).apply_async(countdown=run.timeout)
+        pass
 
     # TODO:
     # - if the run failed (check the cluster scheduler), delete everything in the run working directory but the log files
 
     # otherwise schedule a cleanup task to run after timeout elapses
     # cleanup.s(execute.request.id).apply_async(countdown=run.timeout)  # TODO adjustable period (1 day? 1 week?)
-
 
 
 @app.task()

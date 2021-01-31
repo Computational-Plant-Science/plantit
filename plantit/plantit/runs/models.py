@@ -20,8 +20,10 @@ class Run(models.Model):
     token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     submission_task_id = models.CharField(max_length=36, null=False, blank=False)
-    completion_task_id = models.CharField(max_length=36, null=True, blank=True)
+    completion_status = models.CharField(max_length=7, null=True, blank=True)
     job_id = models.CharField(max_length=7, null=True, blank=True)
+    job_status = models.CharField(max_length=1, null=True, blank=True)
+    job_walltime = models.CharField(max_length=8, null=True, blank=True)
     flow_owner = models.CharField(max_length=280, null=True, blank=True)
     flow_name = models.CharField(max_length=280, null=True, blank=True)
     target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.SET_NULL)
@@ -34,6 +36,22 @@ class Run(models.Model):
     @property
     def is_sandbox(self):
         return self.target.name is not None and self.target.name == 'Sandbox'
+
+    @property
+    def is_complete(self):
+        return not (self.is_success or self.is_failure or self.is_revoked)
+
+    @property
+    def is_success(self):
+        return self.completion_status == 'SUCCESS'
+
+    @property
+    def is_failure(self):
+        return self.completion_status == 'FAILURE'
+
+    @property
+    def is_revoked(self):
+        return self.completion_status == 'REVOKED'
 
 
 class Output(models.Model):

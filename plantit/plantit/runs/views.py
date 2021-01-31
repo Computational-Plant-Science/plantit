@@ -17,7 +17,7 @@ from plantit import settings
 from plantit.celery import app
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
-from plantit.runs.tasks import execute
+from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
 from plantit.runs.utils import update_log, stat_log
 from plantit.utils import get_repo_config
@@ -268,6 +268,9 @@ def __convert_run(run: Run):
     return {
         'id': run.submission_task_id,
         'job_id': run.job_id,
+        'job_status': run.job_status,
+        'job_walltime': run.job_walltime,
+        'completion_status': run.completion_status,
         'work_dir': run.work_dir,
         'target': run.target.name,
         'created': run.created,
@@ -276,7 +279,11 @@ def __convert_run(run: Run):
         'state': AsyncResult(run.submission_task_id, app=app).state,
         'flow_owner': run.flow_owner,
         'flow_name': run.flow_name,
-        'tags': [str(tag) for tag in run.tags.all()]
+        'tags': [str(tag) for tag in run.tags.all()],
+        'is_complete': run.is_complete,
+        'is_success': run.is_success,
+        'is_failure': run.is_failure,
+        'is_revoked': run.is_revoked
     }
 
 
@@ -287,7 +294,7 @@ def runs(request):
         runs = Run.objects.all()
         return JsonResponse([__convert_run(run) for run in runs], safe=False)
     elif request.method == 'POST':
-        task = execute.delay(request.user.username, request.data)
+        task = submit_run.delay(request.user.username, request.data)
         return JsonResponse({'id': task.id})
 
 

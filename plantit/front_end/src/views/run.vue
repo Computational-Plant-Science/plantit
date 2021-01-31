@@ -36,369 +36,46 @@
                             ></b-spinner>
                         </b-row>
                         <div v-else-if="flow.config">
-                            <!--<b-row class="m-1">
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-if="logs[0].state === 1"
-                                    class="text-center ml-0 mr-0"
+                            <h5 v-if="run.tags.length > 0">
+                                <b-badge
+                                    v-for="tag in run.tags"
+                                    v-bind:key="tag"
+                                    class="mr-2"
+                                    variant="warning"
+                                    >{{ tag }}</b-badge
                                 >
-                                    <b-spinner small variant="warning">
-                                    </b-spinner>
-                                    Creating
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    v-else
-                                    class="text-center ml-0 mr-0"
-                                    align-self="end"
-                                >
-                                    <i class="fas fa-check text-success"></i>
-                                    Created
-                                </b-col>
-                                <b-col
-                                    align-self="end"
-                                    class="text-center mb-2"
-                                >
-                                    <b-progress
-                                        height="0.3rem"
-                                        :value="1"
-                                        :max="1"
-                                        :variant="
-                                            logs[0].state === 1
-                                                ? 'warning'
-                                                : 'success'
+                            </h5>
+                            <b-row class="m-0 p-0 mb-2">
+                                <b-col align-self="end" class="m-0 p-0">
+                                    <h5
+                                        :class="
+                                            darkMode
+                                                ? 'theme-dark'
+                                                : 'theme-light'
                                         "
-                                        :animated="logs[0].state === 1"
-                                    ></b-progress>
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-if="
-                                        logs[0].state === 1 && flow.config.input
-                                    "
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <i class="far fa-circle text-secondary"></i>
-                                    Next: Pull Inputs
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-if="logs[0].state === 2"
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <b-spinner small variant="warning">
-                                    </b-spinner>
-                                    Pulling Inputs
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-else-if="anyStatuses(2)"
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <i class="fas fa-check text-success"></i>
-                                    Pulled Inputs
-                                </b-col>
-                                <b-col
-                                    v-if="anyStatuses(2)"
-                                    align-self="end"
-                                    class="text-center mb-2"
-                                >
-                                    <b-progress
-                                        height="0.3rem"
-                                        :value="1"
-                                        :max="1"
-                                        :variant="
-                                            logs[0].state === 2
-                                                ? 'warning'
-                                                : 'success'
-                                        "
-                                        :animated="logs[0].state === 2"
-                                    ></b-progress>
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-if="
-                                        logs[0].state === 2 ||
-                                            (logs[0].state === 1 &&
-                                                !flow.config.input)
-                                    "
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <i class="far fa-circle text-secondary"></i>
-                                    Next: Submit container(s)
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-if="logs[0].state === 3"
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <b-spinner small variant="warning">
-                                    </b-spinner>
-                                    Submitting container(s)
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-else-if="anyStatuses(3)"
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <i class="fas fa-check text-success"></i>
-                                    Submitted container(s)
-                                </b-col>
-                                <b-col
-                                    v-if="anyStatuses(3)"
-                                    align-self="end"
-                                    class="text-center mb-2"
-                                >
-                                    <b-progress
-                                        height="0.3rem"
-                                        :value="1"
-                                        :max="1"
-                                        :variant="
-                                            logs[0].state === 3
-                                                ? 'warning'
-                                                : 'success'
-                                        "
-                                        :animated="logs[0].state === 3"
-                                    ></b-progress>
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-if="
-                                        logs[0].state === 3 &&
-                                            flow.config.output
-                                    "
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <i class="far fa-circle text-secondary"></i>
-                                    Next: Zip Outputs
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    v-if="logs[0].state === 4"
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <b-spinner small variant="warning">
-                                    </b-spinner>
-                                    Zipping Outputs
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-else-if="anyStatuses(4)"
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <i class="fas fa-check text-success"></i>
-                                    Zipped Outputs
-                                </b-col>
-                                <b-col
-                                    v-if="anyStatuses(4)"
-                                    align-self="end"
-                                    class="text-center mb-2"
-                                >
-                                    <b-progress
-                                        height="0.3rem"
-                                        :value="1"
-                                        :max="1"
-                                        :variant="
-                                            logs[0].state === 3
-                                                ? 'warning'
-                                                : 'success'
-                                        "
-                                        :animated="logs[0].state === 3"
-                                    ></b-progress>
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-if="
-                                        logs[0].state === 4 &&
-                                            flow.config.output
-                                    "
-                                    class="text-center  ml-0 mr-0"
-                                >
-                                    <i class="far fa-circle text-secondary"></i>
-                                    Next: Push Outputs
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-if="logs[0].state === 5"
-                                    class="text-center  ml-0 mr-0"
-                                >
-                                    <b-spinner small variant="warning">
-                                    </b-spinner>
-                                    Pushing Outputs
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-else-if="anyStatuses(5)"
-                                    class="text-center ml-0 mr-0"
-                                >
-                                    <i class="fas fa-check text-success"></i>
-                                    Pushed Outputs
-                                </b-col>
-                                <b-col
-                                    v-if="anyStatuses(5)"
-                                    align-self="end"
-                                    class="text-center mb-2"
-                                >
-                                    <b-progress
-                                        height="0.3rem"
-                                        :value="1"
-                                        :max="1"
-                                        :variant="
-                                            logs[0].state === 4
-                                                ? 'warning'
-                                                : 'success'
-                                        "
-                                        :animated="logs[0].state === 4"
-                                    ></b-progress>
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-if="anyStatuses(0)"
-                                    class="text-center"
-                                >
-                                    <i
-                                        class="far fa-times-circle text-danger"
-                                    ></i>
-                                    Failed
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-else-if="
-                                        (logs[0].state === 3 &&
-                                            !flow.config.output) ||
-                                            (flow.config.output &&
-                                                logs[0].state === 5)
-                                    "
-                                    class="text-center  ml-0 mr-0"
-                                >
-                                    <i class="far fa-circle text-secondary"></i>
-                                    Next: Complete
-                                </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="end"
-                                    v-else-if="logs[0].state === 6"
-                                    class="text-center"
-                                >
-                                    <i class="fas fa-check text-success"></i>
-                                    Complete
-                                </b-col>
-                            </b-row>
-                            <br />-->
-                            <b-row>
-                                <b-col>
-                                    <b-card
-                                        :bg-variant="
-                                            darkMode ? 'dark' : 'white'
-                                        "
-                                        :footer-bg-variant="
-                                            darkMode ? 'dark' : 'white'
-                                        "
-                                        border-variant="default"
-                                        :footer-border-variant="
-                                            darkMode ? 'dark' : 'white'
-                                        "
-                                        style="min-height: 5rem;"
-                                        class="overflow-hidden mt-0"
-                                        no-body
                                     >
-                                        <b-card-body
-                                            class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
+                                        <b-badge
+                                            class="mr-1"
+                                            variant="secondary"
+                                            >{{ run.id }}</b-badge
                                         >
-                                            <WorkflowBlurb
-                                                :showPublic="false"
-                                                :flow="flow"
-                                                selectable="Restart"
-                                            ></WorkflowBlurb>
-                                            <br />
-                                            <h5 v-if="run.tags.length > 0">
-                                                <b-badge
-                                                    v-for="tag in run.tags"
-                                                    v-bind:key="tag"
-                                                    class="mr-2"
-                                                    variant="warning"
-                                                    >{{ tag }}</b-badge
-                                                >
-                                            </h5>
-                                            <b-row class="m-0 p-0">
-                                                <b-col
-                                                    align-self="end"
-                                                    class="m-0 p-0"
-                                                >
-                                                    <h5
-                                                        :class="
-                                                            darkMode
-                                                                ? 'theme-dark'
-                                                                : 'theme-light'
-                                                        "
-                                                    >
-                                                        <b-badge
-                                                            class="mr-2"
-                                                            variant="secondary"
-                                                            >{{
-                                                                run.id
-                                                            }}</b-badge
-                                                        >
-                                                        <b-badge
-                                                            :variant="
-                                                                run.state ===
-                                                                FAILURE
-                                                                    ? 'danger'
-                                                                    : run.state ===
-                                                                      SUCCESS
-                                                                    ? 'success'
-                                                                    : 'warning'
-                                                            "
-                                                            >{{ run.state }}
-                                                        </b-badge>
-                                                        <small> on </small>
-                                                        <b-badge
-                                                            variant="secondary"
-                                                            class="mr-0"
-                                                            >{{
-                                                                run.target
-                                                            }}</b-badge
-                                                        >
-                                                        <small>
-                                                            {{
-                                                                updatedFormatted
-                                                            }}
-                                                        </small>
-                                                    </h5>
-                                                </b-col>
-                                                <b-col
-                                                    md="auto"
-                                                    align-self="center"
-                                                    class="ml-0"
-                                                >
-                                                    <small
-                                                        v-if="runComplete"
-                                                        :class="
-                                                            darkMode
-                                                                ? 'text-white'
-                                                                : 'text-dark'
-                                                        "
-                                                    >
-                                                        {{ runComplete ? 'Ran' : 'Running' }} for
-                                                        {{
-                                                            walltimeTotal.humanize()
-                                                        }}
-                                                    </small>
-                                                    <!--<small
+                                        <small
+                                            v-if="runComplete"
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            {{
+                                                runComplete
+                                                    ? 'ran'
+                                                    : 'has been running'
+                                            }}
+                                            for
+                                            {{ walltimeTotal.humanize() }}
+                                        </small>
+                                        <!--<small
                                                         v-if="
                                                             walltimeRemaining !==
                                                                 null &&
@@ -452,46 +129,217 @@
                                                         }}
                                                         seconds)</small
                                                     >-->
-                                                </b-col>
-                                                <b-col md="auto" class="ml-0">
-                                                    <b-alert
-                                                        class="m-0 pt-1 pb-1"
-                                                        :show="
-                                                            reloadAlertDismissCountdown
-                                                        "
-                                                        variant="success"
-                                                        @dismissed="
-                                                            reloadAlertDismissCountdown = 0
-                                                        "
-                                                        @dismiss-count-down="
-                                                            refreshedCountdownChanged
-                                                        "
-                                                    >
-                                                        Logs refreshed.
-                                                    </b-alert>
-                                                </b-col>
-                                                <b-col
-                                                    md="auto"
-                                                    class="m-0"
-                                                    align-self="start"
-                                                >
-                                                    <b-button
-                                                        :variant="
-                                                            darkMode
-                                                                ? 'outline-light'
-                                                                : 'outline-dark'
-                                                        "
-                                                        size="sm"
-                                                        v-b-tooltip.hover
-                                                        title="Refresh"
-                                                        @click="reloadRun(true)"
-                                                    >
-                                                        <i
-                                                            class="fas fa-redo"
-                                                        ></i>
-                                                    </b-button>
-                                                </b-col>
-                                            </b-row>
+                                        <!--<b-badge
+                                            :variant="
+                                                run.state === FAILURE
+                                                    ? 'danger'
+                                                    : run.state === SUCCESS
+                                                    ? 'success'
+                                                    : 'warning'
+                                            "
+                                            >{{ run.state }}
+                                        </b-badge>-->
+                                        <small> on </small>
+                                        <b-badge
+                                            variant="secondary"
+                                            class="mr-0"
+                                            >{{ run.target }}</b-badge
+                                        >
+                                        <small>
+                                            {{ updatedFormatted }}
+                                        </small>
+                                    </h5>
+                                </b-col>
+                                <b-col md="auto" class="ml-0">
+                                    <b-alert
+                                        class="m-0 pt-1 pb-1"
+                                        :show="reloadAlertDismissCountdown"
+                                        variant="success"
+                                        @dismissed="
+                                            reloadAlertDismissCountdown = 0
+                                        "
+                                        @dismiss-count-down="
+                                            refreshedCountdownChanged
+                                        "
+                                    >
+                                        Logs refreshed.
+                                    </b-alert>
+                                </b-col>
+                                <b-col md="auto" class="m-0" align-self="start">
+                                    <b-button
+                                        :variant="
+                                            darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        title="Refresh"
+                                        @click="reloadRun(true)"
+                                    >
+                                        <i class="fas fa-redo"></i>
+                                    </b-button>
+                                </b-col>
+                            </b-row>
+                            <!--<b-row class="m-1 mb-3">
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    class="text-center ml-0 mr-0"
+                                >
+                                    <b-spinner small variant="warning">
+                                    </b-spinner>
+                                    Creating
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    class="text-center ml-0 mr-0"
+                                    align-self="end"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Created
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    class="text-center mb-2"
+                                >
+                                    <b-progress
+                                        height="0.3rem"
+                                        :value="1"
+                                        :max="1"
+                                        variant="warning"
+                                        :animated="true"
+                                    ></b-progress>
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    class="text-center ml-0 mr-0"
+                                >
+                                    <i class="far fa-circle text-secondary"></i>
+                                    Next: Submit container(s)
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    class="text-center ml-0 mr-0"
+                                >
+                                    <b-spinner small variant="warning">
+                                    </b-spinner>
+                                    Submitting container(s)
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    class="text-center ml-0 mr-0"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Submitted container(s)
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    class="text-center mb-2"
+                                >
+                                    <b-progress
+                                        height="0.3rem"
+                                        :value="1"
+                                        :max="1"
+                                        variant="warning"
+                                        :animated="true"
+                                    ></b-progress>
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    class="text-center ml-0 mr-0"
+                                >
+                                    <i class="far fa-circle text-secondary"></i>
+                                    Next: Run container(s)
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    class="text-center ml-0 mr-0"
+                                >
+                                    <b-spinner small variant="warning">
+                                    </b-spinner>
+                                    Running container(s)
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    class="text-center ml-0 mr-0"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Ran container(s)
+                                </b-col>
+                                <b-col
+                                    align-self="end"
+                                    class="text-center mb-2"
+                                >
+                                    <b-progress
+                                        height="0.3rem"
+                                        :value="1"
+                                        :max="1"
+                                        variant="warning"
+                                        :animated="true"
+                                    ></b-progress>
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    v-if="run.is_failed"
+                                    class="text-center"
+                                >
+                                    <i
+                                        class="far fa-times-circle text-danger"
+                                    ></i>
+                                    Failed
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    v-else-if="!run.is_complete"
+                                    class="text-center  ml-0 mr-0"
+                                >
+                                    <i class="far fa-circle text-secondary"></i>
+                                    Next: Complete
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    align-self="end"
+                                    v-else-if="run.is_success"
+                                    class="text-center"
+                                >
+                                    <i class="fas fa-check text-success"></i>
+                                    Complete
+                                </b-col>
+                            </b-row>-->
+                            <b-row>
+                                <b-col>
+                                    <b-card
+                                        :bg-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        :footer-bg-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        border-variant="default"
+                                        :footer-border-variant="
+                                            darkMode ? 'dark' : 'white'
+                                        "
+                                        style="min-height: 5rem;"
+                                        class="overflow-hidden mt-0"
+                                        no-body
+                                    >
+                                        <b-card-body
+                                            class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
+                                        >
+                                            <WorkflowBlurb
+                                                :showPublic="false"
+                                                :flow="flow"
+                                                selectable="Restart"
+                                            ></WorkflowBlurb>
                                         </b-card-body>
                                     </b-card>
                                     <b-row class="m-0 p-0">
@@ -1157,23 +1005,12 @@
                                                         id="popover-reactive-1"
                                                         :disabled="
                                                             !file.exists ||
-                                                                !(
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .includes(
-                                                                            'png'
-                                                                        ) ||
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .includes(
-                                                                            'jpg'
-                                                                        ) ||
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .includes(
-                                                                            'jpeg'
-                                                                        )
-                                                                )
+                                                                (!fileIsImage(
+                                                                    file
+                                                                ) &&
+                                                                    !fileIsText(
+                                                                        file
+                                                                    ))
                                                         "
                                                         :variant="
                                                             darkMode
@@ -1609,6 +1446,66 @@ export default {
         };
     },
     methods: {
+        fileIsImage(file) {
+            return (
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'png' ||
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpg' ||
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpeg'
+            );
+        },
+        fileIsText(file) {
+            return (
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'txt' ||
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'csv' ||
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'tsv' ||
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'yml' ||
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'yaml'
+            );
+        },
+        fileIsViewable(file) {
+            return (
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'png' ||
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpg' ||
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpeg' ||
+                file.name
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'txt'
+            );
+        },
         parseSeconds(seconds) {
             return moment.utc(seconds * 1000);
         },
@@ -1911,14 +1808,6 @@ export default {
         updatedFormatted() {
             return `${moment(this.run.updated).fromNow()}`;
         }
-    },
-    filters: {
-        format_date(value) {
-            return moment(value).format('MM/DD/YY HH:mm');
-        }
-        // resultsLink() {
-        //     return Runs.resultsLink(this.pk);
-        // }
     }
 };
 </script>

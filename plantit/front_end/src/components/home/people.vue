@@ -45,7 +45,7 @@
                                 style="text-decoration: underline;text-underline: lightgray"
                                 href="https://www.computational-plant-science.org/joomla30/"
                                 >Computational Plant Science Lab</b-link
-                            >.
+                            >
                         </h5>
                     </b-col>
                 </b-row>
@@ -61,7 +61,7 @@
                             <br />
                             <b-tab title="Active" active>
                                 <template v-slot:title class="m-0 p-0">
-                                    <b class="text-dark">Active Team</b>
+                                    <b class="text-dark">Active Contributors</b>
                                 </template>
                                 <br />
                                 <b-card-group deck columns>
