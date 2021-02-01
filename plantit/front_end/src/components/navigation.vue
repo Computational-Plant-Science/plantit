@@ -249,7 +249,7 @@
                                 <b-img
                                     v-if="currentUserGitHubProfile"
                                     class="avatar m-0 mb-1 p-0 github-hover logo"
-                                    style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 1.5px; border: 1px solid #d6df5D;"
+                                    style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 1.5px; border: 1px solid white;"
                                     rounded="circle"
                                     :src="
                                         currentUserGitHubProfile

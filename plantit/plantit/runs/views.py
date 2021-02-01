@@ -1,6 +1,9 @@
+import binascii
 import os
 import os
 import tempfile
+import uuid
+from datetime import timedelta
 from os.path import join
 from pathlib import Path
 
@@ -19,7 +22,8 @@ from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import update_local_log, stat_log, update_target_log
+from plantit.runs.utils import update_local_log, stat_log, update_target_log, parse_walltime
+from plantit.targets.models import Target
 from plantit.utils import get_repo_config
 
 
@@ -47,13 +51,13 @@ def get_total_count(request):
 @login_required
 def list_outputs(request, id):
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
         flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
     included_by_name = ((flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else [])) if 'output' in flow_config else []  # [f"{run.task_id}.zip"]
-    included_by_name.append(f"{run.submission_task_id}.{run.target.name.lower()}.log")
+    included_by_name.append(f"{run.guid}.{run.target.name.lower()}.log")
     if run.job_id is not None and run.job_id != '':
         included_by_name.append(f"plantit.{run.job_id}.out")
         included_by_name.append(f"plantit.{run.job_id}.err")
@@ -97,7 +101,7 @@ def list_outputs(request, id):
 @login_required
 def get_thumbnail(request, id, file):
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -111,7 +115,7 @@ def get_thumbnail(request, id, file):
             if errs:
                 raise Exception(f"Failed to check existence of {file}: {errs}")
 
-            run_dir = join(settings.MEDIA_ROOT, run.submission_task_id)
+            run_dir = join(settings.MEDIA_ROOT, run.guid)
             thumbnail_path = join(run_dir, file)
             thumbnail_name_lower = file.lower()
 
@@ -169,7 +173,7 @@ def get_thumbnail(request, id, file):
 @login_required
 def get_output_file(request, id, file):
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
         # flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
@@ -198,11 +202,11 @@ def get_output_file(request, id, file):
 @login_required
 def get_submission_logs_text(request, id, size):
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.submission_task_id}.plantit.log")
+    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.guid}.plantit.log")
     if Path(log_path).is_file():
         with open(log_path, 'r') as log:
             lines = log.readlines()[-int(size):]
@@ -215,11 +219,11 @@ def get_submission_logs_text(request, id, size):
 @login_required
 def get_submission_logs(request, id):
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.submission_task_id}.plantit.log")
+    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.guid}.plantit.log")
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
@@ -228,13 +232,13 @@ def get_submission_logs(request, id):
 @login_required
 def get_target_logs_text(request, id, size):
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.submission_task_id}.{run.target.name.lower()}.log"
+    log_file = f"{run.guid}.{run.target.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -257,13 +261,13 @@ def get_target_logs_text(request, id, size):
 @login_required
 def get_target_logs(request, id):
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.submission_task_id}.{run.target.name.lower()}.log"
+    log_file = f"{run.guid}.{run.target.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -286,13 +290,13 @@ def get_target_logs(request, id):
 @login_required
 def get_container_logs_text(request, id, size):
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.submission_task_id}.{run.target.name.lower()}.log"
+    log_file = f"{run.guid}.{run.target.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -315,13 +319,13 @@ def get_container_logs_text(request, id, size):
 @login_required
 def get_container_logs(request, id):
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.submission_task_id}.{run.target.name.lower()}.log"
+    log_file = f"{run.guid}.{run.target.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -340,19 +344,15 @@ def get_container_logs(request, id):
 
 
 def __convert_run(run: Run):
-    task = AsyncResult(run.submission_task_id, app=app)
-    log_updated = stat_log(task.id)
     return {
-        'id': run.submission_task_id,
+        'id': run.guid,
         'job_id': run.job_id,
         'job_status': run.job_status,
         'job_walltime': run.job_walltime,
-        'completion_status': run.completion_status,
         'work_dir': run.work_dir,
         'target': run.target.name,
         'created': run.created,
-        'timeout': run.timeout,
-        'updated': task.date_done.replace(tzinfo=timezone.utc) if task.ready() else log_updated if log_updated is not None else run.created,
+        'updated': run.updated,
         'flow_owner': run.flow_owner,
         'flow_name': run.flow_name,
         'tags': [str(tag) for tag in run.tags.all()],
@@ -362,6 +362,29 @@ def __convert_run(run: Run):
     }
 
 
+def __create_run(username, flow, target) -> Run:
+    now = timezone.now()
+    run = Run.objects.create(
+        guid=str(uuid.uuid4()),
+        user=User.objects.get(username=username),
+        flow_owner=flow['repo']['owner']['login'],
+        flow_name=flow['repo']['name'],
+        target=target,
+        created=now,
+        updated=now,
+        token=binascii.hexlify(os.urandom(20)).decode())
+
+    # add tags
+    for tag in flow['config']['tags']:
+        run.tags.add(tag)
+
+    # guid for working directory name
+    run.work_dir = f"{run.guid}/"
+
+    run.save()
+    return run
+
+
 @api_view(['GET', 'POST'])
 @login_required
 def runs(request):
@@ -369,8 +392,11 @@ def runs(request):
         runs = Run.objects.all()
         return JsonResponse([__convert_run(run) for run in runs], safe=False)
     elif request.method == 'POST':
-        task = submit_run.delay(request.user.username, request.data)
-        return JsonResponse({'id': task.id})
+        target = Target.objects.get(name=request.data['config']['target']['name'])
+        run = __create_run(request.user.username, request.data, target)
+        submit_run.delay(run.guid, request.data)
+
+        return JsonResponse({'id': run.guid})
 
 
 @api_view(['GET'])
@@ -378,7 +404,7 @@ def runs(request):
 def run(request, id):
     task = AsyncResult(id, app=app)
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
         return JsonResponse(__convert_run(run))
     except Run.DoesNotExist:
         # return HttpResponseNotFound()
@@ -395,19 +421,6 @@ def run(request, id):
             'tags': []
         })
 
-    # return JsonResponse({
-    #     'id': run.submission_task_id,
-    #     'work_dir': run.work_dir,
-    #     'target': run.target.name,
-    #     'created': run.created,
-    #     'timeout': run.timeout,
-    #     'updated': task.date_done.replace(tzinfo=timezone.utc) if task.ready() else stat_log(task.id),
-    #     'state': task.status,
-    #     'flow_owner': run.flow_owner,
-    #     'flow_name': run.flow_name,
-    #     'tags': [str(tag) for tag in run.tags.all()]
-    # })
-
 
 @api_view(['POST'])
 @login_required
@@ -416,7 +429,7 @@ def update_status(request, id):
     status = request.data
 
     try:
-        run = Run.objects.get(submission_task_id=id)
+        run = Run.objects.get(guid=id)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -425,7 +438,7 @@ def update_status(request, id):
             # skip verbose Singularity log output
             # if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
             #     continue
-            update_target_log(run.submission_task_id, run.target.name, line)
+            update_target_log(run.guid, run.target.name, line)
             # run.status_set.create(description=line, state=state, location=run.target.name)
 
     return HttpResponse(status=200)

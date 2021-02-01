@@ -2,222 +2,267 @@
     <div class="w-100 h-100 pl-3" style="background-color: transparent">
         <br />
         <br />
-        <b-spinner
-            v-if="loadingUser"
-            type="grow"
-            class="text-center"
-            variant="success"
-        ></b-spinner>
-        <b-container v-else class="p-3 vl">
-            <b-row align-v="start" align-h="center" class="mb-2">
-                <b-col style="color: white" align-self="end" class="ml-0 mr-0">
-                    <b-row :class="darkMode ? 'text-light' : 'text-secondary'">
-                        <b-col class="ml-0 mr-0" align-self="end">
-                            <h3 :class="darkMode ? 'text-light' : 'text-dark'">
-                                {{
-                                    cyverseProfile
-                                        ? `${cyverseProfile.first_name} ${cyverseProfile.last_name} `
-                                        : githubProfile
-                                        ? githubProfile.login
-                                        : ''
-                                }}<small
-                                    :class="
-                                        darkMode ? 'text-warning' : 'text-dark'
-                                    "
-                                    v-if="djangoProfile !== null"
-                                    >({{ djangoProfile.username }})</small
-                                >
-                            </h3>
-                            <a
-                                v-if="githubProfile"
-                                :class="darkMode ? 'text-light' : 'text-dark'"
-                                :href="
-                                    'https://github.com/' + githubProfile.login
-                                "
-                            >
-                                <i class="fab fa-github fa-1x fa-fw"></i>
-                                {{
-                                    'https://github.com/' + githubProfile.login
-                                }}
-                            </a>
-                        </b-col>
-                        <b-col md="auto" class="ml-0 mr-0" align-self="end">
-                            <b-img
-                                right
-                                class="avatar"
-                                rounded
-                                style="max-height: 7rem; max-width: 7rem; position: relative; top: 38px; box-shadow: -2px 2px 2px #adb5bd"
-                                :src="
-                                    githubProfile
-                                        ? githubProfile.avatar_url
-                                        : ''
-                                "
-                                v-if="githubProfile"
-                            ></b-img>
-                            <i v-else class="far fa-user fa-fw fa-4x"></i>
-                        </b-col>
-                    </b-row>
-                </b-col>
-            </b-row>
-            <b-row align-v="center" align-h="center"
-                ><b-col>
-                    <b-tabs
-                        pills
-                        content-class="mt-2"
-                        v-model="currentTab"
-                        active-nav-item-class="background-success text-dark"
+        <b-container class="p-3 vl" fluid>
+            <div v-if="loadingUser">
+                <b-row align-h="center">
+                    <b-spinner
+                        type="grow"
+                        label="Loading..."
+                        variant="warning"
+                    ></b-spinner>
+                </b-row>
+            </div>
+            <div v-else>
+                <b-row align-v="start" align-h="center" class="mb-2">
+                    <b-col
+                        style="color: white"
+                        align-self="end"
+                        class="ml-0 mr-0"
                     >
-                        <b-tab
-                            v-if="djangoProfile"
-                            title="Profile"
-                            active
-                            :title-link-class="tabLinkClass(0)"
-                        >
-                            <template v-slot:title>
-                                <b :class="tabLinkClass(0)">Profile</b>
-                            </template>
-                            <b-card
-                                :header-bg-variant="darkMode ? 'dark' : 'white'"
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :border-variant="darkMode ? 'dark' : 'white'"
-                                :header-border-variant="
-                                    darkMode ? 'dark' : 'white'
-                                "
+                        <b-row
+                            ><b-col
+                                md="auto"
+                                class="ml-0 mr-0"
+                                align-self="end"
                             >
-                                <b-row align-h="left">
-                                    <b-col md="auto">
-                                        <b-card-text
-                                            v-if="cyverseProfile"
-                                            :class="
-                                                darkMode
-                                                    ? 'theme-dark'
-                                                    : 'theme-light'
-                                            "
+                                <b-img
+                                    class="avatar"
+                                    rounded
+                                    style="max-height: 9rem; max-width: 9rem; position: relative; top: 38px; box-shadow: -2px 2px 2px #adb5bd"
+                                    :src="
+                                        githubProfile
+                                            ? githubProfile.avatar_url
+                                            : ''
+                                    "
+                                    v-if="githubProfile"
+                                ></b-img>
+                                <i
+                                    v-else
+                                    class="far fa-user fa-fw fa-4x"
+                                ></i> </b-col
+                        ></b-row>
+                        <br />
+                        <br />
+                        <b-row
+                            :class="darkMode ? 'text-light' : 'text-secondary'"
+                        >
+                            <b-col class="ml-0 mr-0" align-self="end">
+                                <h3
+                                    :class="
+                                        darkMode ? 'text-light' : 'text-dark'
+                                    "
+                                >
+                                    {{
+                                        cyverseProfile
+                                            ? `${cyverseProfile.first_name} ${cyverseProfile.last_name} `
+                                            : githubProfile
+                                            ? githubProfile.login
+                                            : ''
+                                    }}<small
+                                        :class="
+                                            darkMode
+                                                ? 'text-warning'
+                                                : 'text-dark'
+                                        "
+                                        v-if="djangoProfile !== null"
+                                        >({{ djangoProfile.username }})</small
+                                    >
+                                </h3>
+                                <a
+                                    v-if="githubProfile"
+                                    :class="
+                                        darkMode ? 'text-light' : 'text-dark'
+                                    "
+                                    :href="
+                                        'https://github.com/' +
+                                            githubProfile.login
+                                    "
+                                >
+                                    <i class="fab fa-github fa-1x fa-fw"></i>
+                                    {{
+                                        'https://github.com/' +
+                                            githubProfile.login
+                                    }}
+                                </a>
+                            </b-col>
+                        </b-row>
+                    </b-col>
+                </b-row>
+                <b-row align-v="center" align-h="center"
+                    ><b-col>
+                        <b-tabs
+                            pills
+                            vertical
+                            content-class="mt-2"
+                            v-model="currentTab"
+                            active-nav-item-class="bg-warning text-dark"
+                        >
+                            <b-tab
+                                v-if="djangoProfile"
+                                title="Profile"
+                                active
+                                :title-link-class="tabLinkClass(0)"
+                            >
+                                <template v-slot:title>
+                                    <b :class="tabLinkClass(0)">Profile</b>
+                                </template>
+                                <b-card
+                                    :header-bg-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :border-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                    :header-border-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                >
+                                    <b-row align-h="left">
+                                        <b-col md="auto">
+                                            <b-card-text
+                                                v-if="cyverseProfile"
+                                                :class="
+                                                    darkMode
+                                                        ? 'theme-dark'
+                                                        : 'theme-light'
+                                                "
+                                            >
+                                                <p>
+                                                    <small
+                                                        class="text-secondary"
+                                                        >Email</small
+                                                    >
+                                                    <br />
+                                                    {{ cyverseProfile.email }}
+                                                    <br />
+                                                    {{
+                                                        githubProfile
+                                                            ? githubProfile.email
+                                                            : ''
+                                                    }}
+                                                </p>
+                                                <p>
+                                                    <small
+                                                        class="text-secondary"
+                                                        >Affiliation</small
+                                                    >
+                                                    <br />
+                                                    {{
+                                                        cyverseProfile ===
+                                                        undefined
+                                                            ? ''
+                                                            : cyverseProfile.institution
+                                                    }}
+                                                </p>
+                                                <p>
+                                                    <small
+                                                        class="text-secondary"
+                                                        >Bio</small
+                                                    >
+                                                    <br />
+                                                    {{
+                                                        githubProfile
+                                                            ? githubProfile.bio
+                                                            : 'None'
+                                                    }}
+                                                </p>
+                                                <p>
+                                                    <small
+                                                        class="text-secondary"
+                                                        >Location</small
+                                                    >
+                                                    <br />
+                                                    {{
+                                                        githubProfile
+                                                            ? githubProfile.location
+                                                            : 'None'
+                                                    }}
+                                                </p>
+                                            </b-card-text>
+                                        </b-col>
+                                    </b-row>
+                                </b-card>
+                            </b-tab>
+                            <b-tab
+                                v-if="
+                                    this.currentUserDjangoProfile.username ===
+                                        this.$router.currentRoute.params
+                                            .username
+                                "
+                                :title-link-class="tabLinkClass(1)"
+                            >
+                                <template v-slot:title>
+                                    <b :class="tabLinkClass(1)">Data</b>
+                                </template>
+                                <b-card
+                                    :header-bg-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :border-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                    :header-border-variant="
+                                        darkMode ? 'dark' : 'white'
+                                    "
+                                >
+                                    <b-row>
+                                        <b-col>
+                                            <datatree
+                                                :node="data"
+                                                select="directory"
+                                                :upload="true"
+                                                :download="true"
+                                                :class="
+                                                    darkMode
+                                                        ? 'theme-dark'
+                                                        : 'theme-light'
+                                                "
+                                            ></datatree></b-col></b-row></b-card
+                            ></b-tab>
+                            <b-tab :title-link-class="tabLinkClass(2)">
+                                <template v-slot:title>
+                                    <b :class="tabLinkClass(2)">Flows</b>
+                                </template>
+                                <b-row
+                                    v-if="currentUserGitHubProfile === null"
+                                    align-v="center"
+                                    align-h="center"
+                                >
+                                    <b-col md="auto" class="mr-2 pr-0">
+                                        <b-button
+                                            variant="success"
+                                            href="/apis/v1/users/github_request_identity/"
+                                            class="mr-0"
                                         >
-                                            <p>
-                                                <small class="text-secondary"
-                                                    >Email</small
-                                                >
-                                                <br />
-                                                {{ cyverseProfile.email }}
-                                                <br />
-                                                {{
-                                                    githubProfile
-                                                        ? githubProfile.email
-                                                        : ''
-                                                }}
-                                            </p>
-                                            <p>
-                                                <small class="text-secondary"
-                                                    >Affiliation</small
-                                                >
-                                                <br />
-                                                {{
-                                                    cyverseProfile === undefined
-                                                        ? ''
-                                                        : cyverseProfile.institution
-                                                }}
-                                            </p>
-                                            <p>
-                                                <small class="text-secondary"
-                                                    >Bio</small
-                                                >
-                                                <br />
-                                                {{
-                                                    githubProfile
-                                                        ? githubProfile.bio
-                                                        : 'None'
-                                                }}
-                                            </p>
-                                            <p>
-                                                <small class="text-secondary"
-                                                    >Location</small
-                                                >
-                                                <br />
-                                                {{
-                                                    githubProfile
-                                                        ? githubProfile.location
-                                                        : 'None'
-                                                }}
-                                            </p>
-                                        </b-card-text>
+                                            <i class="fab fa-github"></i>
+                                            Log in to GitHub
+                                        </b-button>
+                                    </b-col>
+                                    <b-col md="auto" class="ml-0 pl-0">
+                                        <b
+                                            class="text-center align-center ml-0 pl-0"
+                                            >to load flows.</b
+                                        >
                                     </b-col>
                                 </b-row>
-                            </b-card>
-                        </b-tab>
-                        <b-tab
-                            v-if="
-                                this.currentUserDjangoProfile.username ===
-                                    this.$router.currentRoute.params.username
-                            "
-                            :title-link-class="tabLinkClass(1)"
-                        >
-                            <template v-slot:title>
-                                <b :class="tabLinkClass(1)">Data</b>
-                            </template>
-                            <b-card
-                                :header-bg-variant="darkMode ? 'dark' : 'white'"
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :border-variant="darkMode ? 'dark' : 'white'"
-                                :header-border-variant="
-                                    darkMode ? 'dark' : 'white'
-                                "
-                            >
-                                <b-row>
-                                    <b-col>
-                                        <datatree
-                                            :node="data"
-                                            select="directory"
-                                            :upload="true"
-                                            :download="true"
-                                            :class="
-                                                darkMode
-                                                    ? 'theme-dark'
-                                                    : 'theme-light'
-                                            "
-                                        ></datatree></b-col></b-row></b-card
-                        ></b-tab>
-                        <b-tab :title-link-class="tabLinkClass(2)">
-                            <template v-slot:title>
-                                <b :class="tabLinkClass(2)">Flows</b>
-                            </template>
-                            <b-row
-                                v-if="currentUserGitHubProfile === null"
-                                align-v="center"
-                                align-h="center"
-                            >
-                                <b-col md="auto" class="mr-2 pr-0">
-                                    <b-button
-                                        variant="success"
-                                        href="/apis/v1/users/github_request_identity/"
-                                        class="mr-0"
+                                <b-row v-else-if="githubProfile">
+                                    <flows
+                                        class="m-1"
+                                        :github-user="githubProfile.login"
+                                        :github-token="
+                                            currentUserDjangoProfile.profile
+                                                .github_token
+                                        "
                                     >
-                                        <i class="fab fa-github"></i>
-                                        Log in to GitHub
-                                    </b-button>
-                                </b-col>
-                                <b-col md="auto" class="ml-0 pl-0">
-                                    <b
-                                        class="text-center align-center ml-0 pl-0"
-                                        >to load flows.</b
-                                    >
-                                </b-col>
-                            </b-row>
-                            <b-row v-else-if="githubProfile">
-                                <flows
-                                    class="m-1"
-                                    :github-user="githubProfile.login"
-                                    :github-token="
-                                        currentUserDjangoProfile.profile
-                                            .github_token
-                                    "
-                                >
-                                </flows>
-                            </b-row>
-                        </b-tab>
-                    </b-tabs>
-                </b-col>
-            </b-row>
+                                    </flows>
+                                </b-row>
+                            </b-tab>
+                        </b-tabs>
+                    </b-col>
+                </b-row>
+            </div>
         </b-container>
     </div>
 </template>

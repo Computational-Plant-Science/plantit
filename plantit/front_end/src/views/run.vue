@@ -36,16 +36,7 @@
                             ></b-spinner>
                         </b-row>
                         <div v-else-if="flow.config">
-                            <h5 v-if="run.tags.length > 0">
-                                <b-badge
-                                    v-for="tag in run.tags"
-                                    v-bind:key="tag"
-                                    class="mr-2"
-                                    variant="warning"
-                                    >{{ tag }}</b-badge
-                                >
-                            </h5>
-                            <b-row class="m-0 p-0 mb-1">
+                            <b-row class="m-0 p-0">
                                 <b-col align-self="end" class="m-0 p-0">
                                     <h5
                                         :class="
@@ -55,13 +46,13 @@
                                         "
                                     >
                                         <b-spinner
-                                            class="mb-2"
+                                            class="mb-1"
                                             small
                                             v-if="!run.is_complete"
                                             variant="warning"
                                         >
                                         </b-spinner>
-                                        <i class="ml-1 mr-1">{{ run.id }}</i>
+                                        <b class="ml-1 mr-1">{{ run.id }}</b>
                                         <small
                                             :class="
                                                 darkMode
@@ -142,39 +133,46 @@
                                             >{{ run.state }}
                                         </b-badge>-->
                                         <small> on </small>
-                                        <b-badge
-                                            :variant="
-                                                darkMode ? 'light' : 'dark'
-                                            "
-                                            class="mr-0"
-                                            >{{ run.target }}</b-badge
-                                        >
-                                        <small>
-                                            {{ prettify(run.updated) }}
-                                        </small>
+                                        <b class="mr-0">{{ run.target }}</b>
                                     </h5>
                                 </b-col>
-                                <b-col md="auto" class="ml-0">
-                                    <b-alert
-                                        class="m-0 pt-1 pb-1"
-                                        :show="reloadAlertDismissCountdown"
-                                        variant="success"
-                                        @dismissed="
-                                            reloadAlertDismissCountdown = 0
-                                        "
-                                        @dismiss-count-down="
-                                            refreshedCountdownChanged
-                                        "
-                                    >
-                                        Logs refreshed.
-                                    </b-alert>
+                            </b-row>
+                            <b-row class="m-0 p-0">
+                                <b-col align-self="end" class="m-0 p-0">
+                                    <h5>
+                                        <b-badge
+                                            :variant="
+                                                run.is_failure || run.is_timeout
+                                                    ? 'danger'
+                                                    : run.is_success
+                                                    ? 'success'
+                                                    : 'warning'
+                                            "
+                                            class="mr-2"
+                                            >{{ run.job_status }}</b-badge
+                                        >
+                                        <b-badge
+                                            v-for="tag in run.tags"
+                                            v-bind:key="tag"
+                                            class="mr-2"
+                                            variant="secondary"
+                                            >{{ tag }}</b-badge
+                                        >
+                                    </h5>
                                 </b-col>
-                                <b-col md="auto" class="m-0" align-self="start">
+                                <b-col md="auto"
+                                    ><small>
+                                        Last updated {{ prettify(run.updated) }}
+                                    </small></b-col
+                                >
+                                <b-col
+                                    md="auto"
+                                    class="m-0 mb-2"
+                                    align-self="start"
+                                >
                                     <b-button
                                         :variant="
-                                            darkMode
-                                                ? 'outline-light'
-                                                : 'outline-dark'
+                                            darkMode ? 'outline-light' : 'white'
                                         "
                                         size="sm"
                                         v-b-tooltip.hover
@@ -254,32 +252,31 @@
                                                                             : 'text-dark'
                                                                     "
                                                                 >
-                                                                    Submission
-                                                                    Logs
+                                                                    Status Logs
                                                                 </h5>
-                                                                <b-spinner
-                                                                    v-if="
-                                                                        loadingSubmissionLogs
-                                                                    "
-                                                                    class="ml-2"
-                                                                    type="grow"
-                                                                    variant="warning"
-                                                                    small
-                                                                ></b-spinner>
                                                             </b-col>
                                                             <b-col
                                                                 md="auto"
                                                                 align-self="end"
                                                             >
-                                                                <small
-                                                                    >Showing
-                                                                    last
+                                                                <small>
                                                                     <b-dropdown
                                                                         class="m-1"
                                                                         :text="
                                                                             submissionLogsPageSize
                                                                         "
-                                                                        variant="warning"
+                                                                        dropleft
+                                                                        :variant="
+                                                                            darkMode
+                                                                                ? 'outline-light'
+                                                                                : 'white'
+                                                                        "
+                                                                        :title="
+                                                                            'Showing last ' +
+                                                                                submissionLogsPageSize +
+                                                                                ' lines'
+                                                                        "
+                                                                        v-b-tooltip.hover
                                                                         size="sm"
                                                                     >
                                                                         <b-dropdown-item
@@ -307,22 +304,22 @@
                                                                             >50</b-dropdown-item
                                                                         >
                                                                     </b-dropdown>
-                                                                    lines
                                                                 </small>
                                                             </b-col>
                                                             <b-col md="auto">
                                                                 <b-button
+                                                                    class="m-1"
                                                                     :variant="
                                                                         darkMode
                                                                             ? 'outline-light'
-                                                                            : 'outline-dark'
+                                                                            : 'white'
                                                                     "
                                                                     size="sm"
                                                                     v-b-tooltip.hover
                                                                     :title="
                                                                         submissionLogsExpanded
-                                                                            ? 'Collapse Submission Logs'
-                                                                            : 'Expand Submission Logs'
+                                                                            ? 'Collapse Status Logs'
+                                                                            : 'Expand Status Logs'
                                                                     "
                                                                     @click="
                                                                         expandLocalLogs
@@ -393,15 +390,20 @@
                                                                 md="auto"
                                                                 align-self="end"
                                                             >
-                                                                <small
-                                                                    >Showing
-                                                                    last
+                                                                <small>
                                                                     <b-dropdown
                                                                         class="m-1"
                                                                         :text="
                                                                             targetLogsPageSize
                                                                         "
-                                                                        variant="warning"
+                                                                        dropleft
+                                                                        title="Change page size"
+                                                                        v-b-tooltip.hover
+                                                                        :variant="
+                                                                            darkMode
+                                                                                ? 'outline-light'
+                                                                                : 'white'
+                                                                        "
                                                                         size="sm"
                                                                     >
                                                                         <b-dropdown-item
@@ -428,16 +430,16 @@
                                                                             "
                                                                             >50</b-dropdown-item
                                                                         >
-                                                                    </b-dropdown>
-                                                                    lines</small
+                                                                    </b-dropdown></small
                                                                 >
                                                             </b-col>
                                                             <b-col md="auto">
                                                                 <b-button
+                                                                    class="m-1"
                                                                     :variant="
                                                                         darkMode
                                                                             ? 'outline-light'
-                                                                            : 'outline-dark'
+                                                                            : 'white'
                                                                     "
                                                                     size="sm"
                                                                     v-b-tooltip.hover
@@ -537,31 +539,119 @@
                                                                 outputFiles.length
                                                             }})</span
                                                         >
-                                                        <b-spinner
-                                                            class="ml-2"
+                                                    </template>
+                                                    <div class="mt-0 pt-0">
+                                                        <b-row
                                                             v-if="
-                                                                loadingOutputFiles ||
-                                                                    !run.is_complete
+                                                                flow.config &&
+                                                                    flow.config
+                                                                        .output
                                                             "
-                                                            type="grow"
-                                                            variant="warning"
-                                                            small
-                                                        ></b-spinner
-                                                    ></template>
-                                                    <div
-                                                        v-if="
-                                                            outputFiles.length >
-                                                                0 ||
-                                                                loadingOutputFiles
-                                                        "
-                                                    >
-                                                        <b-row>
+                                                            align-h="center"
+                                                            align-v="center"
+                                                            class="mt-2 text-center"
+                                                        >
+                                                            <b-col>
+                                                                Output files
+                                                                expected:
+                                                            </b-col>
+                                                        </b-row>
+                                                        <b-row
+                                                            v-if="
+                                                                flow.config &&
+                                                                    flow.config
+                                                                        .output
+                                                            "
+                                                            align-h="center"
+                                                            align-v="center"
+                                                            class="text-center"
+                                                        >
+                                                            <b-col>
+                                                                <b
+                                                                    ><code
+                                                                        >{{
+                                                                            flow
+                                                                                .config
+                                                                                .output
+                                                                                .path
+                                                                                ? flow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .path +
+                                                                                  '/'
+                                                                                : ''
+                                                                        }}{{
+                                                                            flow
+                                                                                .config
+                                                                                .output
+                                                                                .include
+                                                                                ? (flow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .exclude
+                                                                                      ? '+ '
+                                                                                      : '') +
+                                                                                  (flow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .include
+                                                                                      .patterns
+                                                                                      ? '*.' +
+                                                                                        flow.config.output.include.patterns.join(
+                                                                                            ', *.'
+                                                                                        ) +
+                                                                                        ', '
+                                                                                      : []) +
+                                                                                  (flow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .include
+                                                                                      .names
+                                                                                      ? flow.config.output.include.names.join(
+                                                                                            ', '
+                                                                                        )
+                                                                                      : [])
+                                                                                : ''
+                                                                        }}{{
+                                                                            flow
+                                                                                .config
+                                                                                .output
+                                                                                .exclude
+                                                                                ? ' - ' +
+                                                                                  (flow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .exclude
+                                                                                      .patterns
+                                                                                      ? '*.' +
+                                                                                        flow.config.output.exclude.patterns.join(
+                                                                                            ', *.'
+                                                                                        ) +
+                                                                                        ', '
+                                                                                      : []) +
+                                                                                  (flow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .exclude
+                                                                                      .names
+                                                                                      ? flow.config.output.exclude.names.join(
+                                                                                            ', '
+                                                                                        )
+                                                                                      : [])
+                                                                                : ''
+                                                                        }}
+                                                                    </code></b
+                                                                >
+                                                            </b-col>
+                                                        </b-row>
+                                                        <b-row v-else>
                                                             <b-col>
                                                                 <b-pagination
                                                                     v-model="
                                                                         outputFilePage
                                                                     "
                                                                     pills
+                                                                    size="md"
                                                                     :total-rows="
                                                                         outputFiles.length
                                                                     "
@@ -569,7 +659,6 @@
                                                                         outputPageSize
                                                                     "
                                                                     aria-controls="outputList"
-                                                                    variant
                                                                 >
                                                                     <template
                                                                         #first-text
@@ -601,12 +690,14 @@
                                                                 md="auto"
                                                                 align-self="middle"
                                                             >
-                                                                Showing
                                                                 <b-dropdown
                                                                     class="m-1"
                                                                     :text="
                                                                         outputPageSize
                                                                     "
+                                                                    dropleft
+                                                                    title="Change page size"
+                                                                    v-b-tooltip.hover
                                                                     variant="warning"
                                                                     size="sm"
                                                                 >
@@ -635,7 +726,6 @@
                                                                         >50</b-dropdown-item
                                                                     >
                                                                 </b-dropdown>
-                                                                files
                                                             </b-col>
                                                         </b-row>
                                                         <b-row
@@ -824,7 +914,7 @@
                                                                     :variant="
                                                                         darkMode
                                                                             ? 'outline-light'
-                                                                            : 'outline-dark'
+                                                                            : 'white'
                                                                     "
                                                                     size="sm"
                                                                     v-b-tooltip.hover
@@ -855,7 +945,7 @@
                                                                     :variant="
                                                                         darkMode
                                                                             ? 'outline-light'
-                                                                            : 'outline-dark'
+                                                                            : 'white'
                                                                     "
                                                                     size="sm"
                                                                     v-b-tooltip.hover
@@ -899,116 +989,7 @@
                                         >
                                     </b-row>-->
                                                     </div>
-                                                    <div
-                                                        v-else-if="
-                                                            flow.config
-                                                                .output &&
-                                                                !run.is_complete
-                                                        "
-                                                        class="mt-0 pt-0"
-                                                    >
-                                                        <b-row
-                                                            align-h="center"
-                                                            align-v="center"
-                                                            class="mt-2 text-center"
-                                                        >
-                                                            <b-col>
-                                                                Output files
-                                                                expected:
-                                                            </b-col>
-                                                        </b-row>
-                                                        <b-row
-                                                            align-h="center"
-                                                            align-v="center"
-                                                            class="text-center"
-                                                        >
-                                                            <b-col>
-                                                                <b
-                                                                    ><code
-                                                                        >{{
-                                                                            flow
-                                                                                .config
-                                                                                .output
-                                                                                .path
-                                                                                ? flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .path +
-                                                                                  '/'
-                                                                                : ''
-                                                                        }}{{
-                                                                            flow
-                                                                                .config
-                                                                                .output
-                                                                                .include
-                                                                                ? (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .exclude
-                                                                                      ? '+ '
-                                                                                      : '') +
-                                                                                  (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .include
-                                                                                      .patterns
-                                                                                      ? '*.' +
-                                                                                        flow.config.output.include.patterns.join(
-                                                                                            ', *.'
-                                                                                        ) +
-                                                                                        ', '
-                                                                                      : []) +
-                                                                                  (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .include
-                                                                                      .names
-                                                                                      ? flow.config.output.include.names.join(
-                                                                                            ', '
-                                                                                        )
-                                                                                      : [])
-                                                                                : ''
-                                                                        }}{{
-                                                                            flow
-                                                                                .config
-                                                                                .output
-                                                                                .exclude
-                                                                                ? ' - ' +
-                                                                                  (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .exclude
-                                                                                      .patterns
-                                                                                      ? '*.' +
-                                                                                        flow.config.output.exclude.patterns.join(
-                                                                                            ', *.'
-                                                                                        ) +
-                                                                                        ', '
-                                                                                      : []) +
-                                                                                  (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .exclude
-                                                                                      .names
-                                                                                      ? flow.config.output.exclude.names.join(
-                                                                                            ', '
-                                                                                        )
-                                                                                      : [])
-                                                                                : ''
-                                                                        }}
-                                                                    </code></b
-                                                                >
-                                                                <br />
-                                                                <br />
-                                                                <b-spinner
-                                                                    type="grow"
-                                                                    variant="warning"
-                                                                ></b-spinner>
-                                                            </b-col>
-                                                        </b-row>
-                                                        <br />
-                                                    </div>
-                                                    <div
+                                                    <!--<div
                                                         v-else-if="
                                                             flow.config
                                                                 .output &&
@@ -1112,7 +1093,7 @@
                                                                 >
                                                             </b-col>
                                                         </b-row>
-                                                    </div>
+                                                    </div>-->
                                                 </b-tab>
                                             </b-tabs>
                                         </b-col>
@@ -1244,9 +1225,6 @@ export default {
             REVOKED: 'REVOKED',
             // user data
             userData: null,
-            reloadAlertDismissSeconds: 2,
-            reloadAlertDismissCountdown: 0,
-            showReloadAlert: false,
             // flow
             flow: null,
             // run
@@ -1255,7 +1233,6 @@ export default {
             runNotFound: false,
             // walltime
             walltimeTotal: null,
-            walltimeRemaining: null,
             runtimeUpdateInterval: null,
             // submission logs
             loadingSubmissionLogs: false,
@@ -1531,7 +1508,6 @@ export default {
                     }
                     this.submissionLogsText = response.data;
                     this.loadingSubmissionLogs = false;
-                    if (toast) this.showRefreshedAlert();
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1576,7 +1552,6 @@ export default {
                     }
                     this.targetLogsText = response.data;
                     this.loadingTargetLogs = false;
-                    if (toast) this.showRefreshedAlert();
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1621,7 +1596,6 @@ export default {
                     }
                     this.containerLogsText = response.data;
                     this.loadingContainerLogs = false;
-                    if (toast) this.showRefreshedAlert();
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1654,24 +1628,15 @@ export default {
         expandTargetLogs() {
             this.targetLogsExpanded = !this.targetLogsExpanded;
         },
-        refreshedCountdownChanged(dismissCountDown) {
-            this.reloadAlertDismissCountdown = dismissCountDown;
-        },
-        showRefreshedAlert() {
-            this.reloadAlertDismissCountdown = this.reloadAlertDismissSeconds;
-        },
         updateWalltime() {
             if (this.run === null || this.run.created === null) return null;
             if (this.run.is_complete) clearInterval(this.runtimeUpdateInterval);
 
             let started = moment(this.run.created);
             let updated = moment(this.run.updated);
-            let timeout = started.clone();
-            timeout.add(this.run.timeout, 's');
             this.walltimeTotal = moment.duration(
                 (this.run.is_complete ? updated : moment()).diff(started)
             );
-            this.walltimeRemaining = moment.duration(timeout.diff(moment()));
         }
     },
     async mounted() {

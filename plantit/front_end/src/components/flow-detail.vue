@@ -273,7 +273,7 @@
                         >
                     </b-col>
                     <b-col align-self="end" class="text-left" v-else>
-                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">Cluster Resource Requests</h5>
+                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">Resource Requests</h5>
                         <hr />
                         <b-row align-v="right" align-h="right">
                             <b-col>
@@ -295,16 +295,16 @@
                                 <small> memory</small>
                             </b-col>
                         </b-row>
-                        <!--<b-row>
+                        <b-row>
                             <b-col>
                                 <b
                                     ><code>{{
-                                        ' ' + flow.config.resources.tasks
+                                        ' ' + flow.config.resources.processes
                                     }}</code></b
                                 >
-                                <small> task(s)</small>
+                                <small> process(es)</small>
                             </b-col>
-                        </b-row>-->
+                        </b-row>
                         <b-row>
                             <b-col>
                                 <b

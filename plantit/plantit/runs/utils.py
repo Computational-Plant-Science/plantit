@@ -48,20 +48,20 @@ def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: 
     return output
 
 
-def update_local_log(submission_task_id: str, description: str):
-    log_path = join(environ.get('RUNS_LOGS'), f"{submission_task_id}.plantit.log")
+def update_local_log(id: str, description: str):
+    log_path = join(environ.get('RUNS_LOGS'), f"{id}.plantit.log")
     with open(log_path, 'a') as log:
         log.write(f"{description}\n")
 
 
-def update_target_log(submission_task_id: str, target: str, description: str):
-    log_path = join(environ.get('RUNS_LOGS'), f"{submission_task_id}.{target}.log")
+def update_target_log(id: str, target: str, description: str):
+    log_path = join(environ.get('RUNS_LOGS'), f"{id}.{target.lower()}.log")
     with open(log_path, 'a') as log:
         log.write(f"{description}\n")
 
 
-def stat_log(submission_task_id: str):
-    log_path = Path(join(environ.get('RUNS_LOGS'), f"{submission_task_id}.plantit.log"))
+def stat_log(id: str):
+    log_path = Path(join(environ.get('RUNS_LOGS'), f"{id}.plantit.log"))
     return datetime.fromtimestamp(log_path.stat().st_mtime) if log_path.is_file() else None
 
 
@@ -117,7 +117,7 @@ def old_flow_config_to_new(flow: dict, run: Run, resources: dict):
         'image': flow['config']['image'],
         'command': flow['config']['commands'],
         'workdir': flow['config']['workdir'],
-        'log_file': f"{run.submission_task_id}.{run.target.name.lower()}.log"
+        'log_file': f"{run.guid}.{run.target.name.lower()}.log"
     }
 
     del flow['config']['target']
@@ -149,7 +149,7 @@ def old_flow_config_to_new(flow: dict, run: Run, resources: dict):
         new_flow['jobqueue'] = dict()
         new_flow['jobqueue']['slurm'] = {
             'cores': resources['cores'],
-            'processes': resources['tasks'],
+            'processes': resources['processes'],
             'walltime': resources['time'],
             'local_directory': work_dir,
             'log_directory': work_dir,

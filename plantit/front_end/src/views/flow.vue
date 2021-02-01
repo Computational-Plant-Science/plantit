@@ -73,7 +73,7 @@
                                 >
                                     <i
                                         v-if="tags.length > 0"
-                                        class="fas fa-tags fa-fw text-success"
+                                        class="fas fa-tags fa-fw text-warning"
                                     ></i>
                                     <i v-else class="fas fa-tags fa-fw"></i>
                                     Tags
@@ -144,7 +144,7 @@
                                                     p => p.value !== ''
                                                 )
                                         "
-                                        class="fas fa-keyboard fa-fw text-success"
+                                        class="fas fa-keyboard fa-fw text-warning"
                                     ></i>
                                     <i v-else class="fas fa-keyboard fa-fw"></i>
                                     Parameters
@@ -319,7 +319,7 @@
                                 >
                                     <i
                                         v-if="outputDirectory"
-                                        class="fas fa-upload fa-fw text-success"
+                                        class="fas fa-upload fa-fw text-warning"
                                     ></i>
                                     <i
                                         v-else-if="!outputDirectory && darkMode"
@@ -370,7 +370,7 @@
                                 >
                                     <i
                                         v-if="target.name !== ''"
-                                        class="fas fa-server fa-fw text-success"
+                                        class="fas fa-server fa-fw text-warning"
                                     ></i>
                                     <i v-else class="fas fa-server fa-fw"></i>
                                     Deployment Target
@@ -425,13 +425,9 @@
                                         block
                                         class="text-left pt-2"
                                         @click="targetSelected(target)"
-                                        :variant="
-                                            darkMode ? 'success' : 'white'
-                                        "
+                                        :variant="darkMode ? 'dark' : 'white'"
                                         :disabled="targetUnsupported(target)"
-                                        ><h5>
-                                            <small>{{ target.name }}</small>
-                                        </h5></b-button
+                                        >{{ target.name }}</b-button
                                     ></b-col
                                 >
                                 <!--<b-col align-self="center" :class="darkMode ? 'text-white' : 'text-dark'" cols="4">{{ target.hostname }}</b-col>-->
@@ -491,7 +487,7 @@
                                         GPU
                                         <i
                                             :class="
-                                                target.gpu ? 'text-success' : ''
+                                                target.gpu ? 'text-warning' : ''
                                             "
                                             class="far fa-check-circle"
                                         ></i>
@@ -847,7 +843,10 @@ export default {
                         let flowConfig = this.flowConfigs[
                             `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`
                         ];
-                        this.params = flowConfig.params;
+                        this.params =
+                            flowConfig.params !== undefined
+                                ? flowConfig.params
+                                : this.params;
                         this.input = flowConfig.input;
                         this.output = flowConfig.output;
                         this.target = flowConfig.target;

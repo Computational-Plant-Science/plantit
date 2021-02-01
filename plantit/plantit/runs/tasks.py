@@ -1,57 +1,26 @@
-import binascii
-import os
 import traceback
-from datetime import timedelta
 from os import environ
 from os.path import join
 
 import yaml
-from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
-from django.contrib.auth.models import User
 from django.utils import timezone
 
 from plantit import settings
 from plantit.celery import app
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
-from plantit.runs.utils import update_local_log, execute_command, old_flow_config_to_new, parse_walltime
-from plantit.targets.models import Target
+from plantit.runs.utils import update_local_log, execute_command, old_flow_config_to_new
 
 logger = get_task_logger(__name__)
 
 
-def __create_run(username, flow, target, submission_task_id) -> Run:
-    walltime = parse_walltime(flow['config']['target']['resources']['time']) if 'resources' in flow['config']['target'] else timedelta(minutes=10)
-    now = timezone.now()
-    run = Run.objects.create(
-        user=User.objects.get(username=username),
-        flow_owner=flow['repo']['owner']['login'],
-        flow_name=flow['repo']['name'],
-        target=target,
-        created=now,
-        submission_task_id=submission_task_id,
-        work_dir=submission_task_id + "/",
-        remote_results_path=submission_task_id + "/",
-        token=binascii.hexlify(os.urandom(20)).decode(),
-        walltime=walltime.total_seconds(),
-        timeout=walltime.total_seconds() * int(settings.RUNS_TIMEOUT_MULTIPLIER))  # multiplier allows for cluster scheduler delay
-
-    # add tags
-    for tag in flow['config']['tags']:
-        run.tags.add(tag)
-
-    run.save()
-    return run
-
-
-def __upload(flow, run, target, ssh):
+def __upload_run(flow, run, ssh):
     # update flow config before uploading
-    flow['config']['submission_task_id'] = run.submission_task_id
-    flow['config']['workdir'] = join(target.workdir, run.submission_task_id)
-    flow['config']['log_file'] = f"{run.submission_task_id}.{target.name.lower()}.log"
+    flow['config']['workdir'] = join(run.target.workdir, run.guid)
+    flow['config']['log_file'] = f"{run.guid}.{run.target.name.lower()}.log"
     if 'output' in flow['config']:
-        flow['config']['output']['from'] = join(target.workdir, run.work_dir, flow['config']['output']['from'])
+        flow['config']['output']['from'] = join(run.target.workdir, run.work_dir, flow['config']['output']['from'])
 
     # if flow has outputs, make sure we don't push configuration or job scripts
     if 'output' in flow['config']:
@@ -61,7 +30,7 @@ def __upload(flow, run, target, ssh):
             "template_slurm_run.sh"]
 
     resources = None if 'resources' not in flow['config']['target'] else flow['config']['target']['resources']  # cluster resource requests, if any
-    callback_url = settings.API_URL + 'runs/' + run.submission_task_id + '/status/'  # PlantIT status update callback URL
+    callback_url = settings.API_URL + 'runs/' + run.guid + '/status/'  # PlantIT status update callback URL
     work_dir = join(run.target.workdir, run.work_dir)
     new_flow = old_flow_config_to_new(flow, run, resources)  # TODO update flow UI page
 
@@ -88,8 +57,7 @@ def __upload(flow, run, target, ssh):
 
             if not sandbox:  # we're on a SLURM cluster, so add resource requests
                 script.write("#SBATCH -N 1\n")
-                if 'tasks' in resources:
-                    script.write(f"#SBATCH --ntasks={resources['tasks']}\n")
+                script.write("#SBATCH --ntasks=1\n")
                 if 'cores' in resources:
                     script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
                 if 'time' in resources:
@@ -170,7 +138,7 @@ def __upload(flow, run, target, ssh):
                     logger.info(f"Using push command: {push_commands}")
 
 
-def __submit(run, ssh):
+def __submit_run(run, ssh):
     # TODO refactor to allow multiple cluster schedulers
     sandbox = run.target.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
     template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
@@ -189,53 +157,11 @@ def __submit(run, ssh):
             command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
             directory=join(run.target.workdir, run.work_dir))[-1].replace('Submitted batch job', '').strip()
         run.job_id = job_id
+        run.updated = timezone.now()
         run.save()
 
 
-@app.task(track_started=True)
-def submit_run(username, flow):
-    target = Target.objects.get(name=flow['config']['target']['name'])
-    run = __create_run(username, flow, target, submit_run.request.id)
-
-    log = f"Deploying run {submit_run.request.id} to {target.name}"
-    logger.info(log)
-    update_local_log(submit_run.request.id, log)
-
-    try:
-        # TODO orchestrate these steps independently within this task, rather than stringing them together in 1 script?
-        ssh = SSH(run.target.hostname, run.target.port, run.target.username)
-        with ssh:
-            log = f"Creating working directory and uploading files"
-            logger.info(log)
-            update_local_log(submit_run.request.id, log)
-            __upload(flow, run, target, ssh)
-
-            log = 'Running script' if run.target.name == 'Sandbox' else 'Submitting script to scheduler'
-            logger.info(log)
-            update_local_log(submit_run.request.id, log)
-            __submit(run, ssh)
-
-            if run.is_sandbox:
-                log = f"Completed run {submit_run.request.id}"
-                logger.info(log)
-                update_local_log(submit_run.request.id, log)
-
-                run.completion_status = 'SUCCESS'
-                run.save()
-            else:
-                # poll the deployment target cluster scheduler for job status
-                poll_cluster_scheduler.s(run.submission_task_id).apply_async(countdown=0)
-    except Exception:
-        log = f"Failed to submit run {submit_run.request.id}: {traceback.format_exc()}."
-        logger.error(log)
-        update_local_log(submit_run.request.id, log)
-
-        run.completion_status = 'FAILURE'
-        run.save()
-        raise
-
-
-def check_cluster_scheduler(run: Run) -> (str, str):
+def __get_job_walltime(run: Run) -> (str, str):
     ssh = SSH(run.target.hostname, run.target.port, run.target.username)
     with ssh:
         lines = execute_command(
@@ -244,44 +170,106 @@ def check_cluster_scheduler(run: Run) -> (str, str):
             command=f"squeue --me",
             directory=join(run.target.workdir, run.work_dir))
 
+        try:
+            job_line = next(l for l in lines if run.job_id in l)
+            job_split = job_line.split()
+            job_walltime = job_split[-3]
+            return job_walltime
+        except StopIteration:
+            return None
+
+
+
+def __get_job_status(run: Run) -> str:
+    ssh = SSH(run.target.hostname, run.target.port, run.target.username)
+    with ssh:
+        lines = execute_command(
+            ssh_client=ssh,
+            pre_command=':',
+            command=f"sacct -j {run.job_id}",
+            directory=join(run.target.workdir, run.work_dir))
+
         job_line = next(l for l in lines if run.job_id in l)
         job_split = job_line.split()
-        job_walltime = job_split[-3]
-        job_status = job_split[-4]
-        return job_status, job_walltime
+        job_status = job_split[5]
+        return job_status
+    pass
+
+
+@app.task(track_started=True)
+def submit_run(id, flow):
+    run = Run.objects.get(guid=id)
+
+    log = f"Deploying run {run.guid} to {run.target.name}"
+    logger.info(log)
+    update_local_log(run.guid, log)
+
+    try:
+        ssh = SSH(run.target.hostname, run.target.port, run.target.username)
+        with ssh:
+            log = f"Creating working directory and uploading files"
+            logger.info(log)
+            update_local_log(run.guid, log)
+            __upload_run(flow, run, ssh)
+
+            log = 'Running script' if run.target.name == 'Sandbox' else 'Submitting script to scheduler'
+            logger.info(log)
+            update_local_log(run.guid, log)
+            __submit_run(run, ssh)
+
+            if run.is_sandbox:
+                log = f"Completed run {run.guid}"
+                logger.info(log)
+                update_local_log(run.guid, log)
+
+                run.job_status = 'SUCCESS'
+            else:
+                # poll the cluster scheduler for job status
+                delay = int(environ.get('RUNS_REFRESH_SECONDS'))
+                update_local_log(run.guid, f"Polling for job status in {delay}s")
+                poll_run_status.s(run.guid).apply_async(countdown=delay)
+    except Exception:
+        log = f"Failed to submit run {run.guid}: {traceback.format_exc()}."
+        logger.error(log)
+        update_local_log(run.guid, log)
+
+        run.job_status = 'FAILURE'
+        raise
+    finally:
+        run.updated = timezone.now()
+        run.save()
 
 
 @app.task()
-def poll_cluster_scheduler(submission_task_id):
-    task = AsyncResult(submission_task_id, app=app)
-    run = Run.objects.get(submission_task_id=submission_task_id)
-    logger.info(f"Checking {run.target.name} scheduler status for run {task.id} (SLURM job {run.job_id})")
+def poll_run_status(id):
+    run = Run.objects.get(guid=id)
+    logger.info(f"Checking {run.target.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
     try:
-        job_status, job_walltime = check_cluster_scheduler(run)
+        job_status = __get_job_status(run)
+        job_walltime = __get_job_walltime(run)
         run.job_status = job_status
         run.job_walltime = job_walltime
 
-        if job_status == 'C':
-            update_local_log(submission_task_id, f"Job {run.job_id} completed after {job_walltime}, not rescheduling poll")
-            run.completion_status = 'SUCCESS'
+        if job_status == 'COMPLETED':
+            update_local_log(id, f"Job {run.job_id} completed" + (f"after {job_walltime}" if job_walltime is not None else ''))
         else:
             delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-            update_local_log(submission_task_id, f"Job {run.job_id} status {job_status}, walltime {job_walltime}, polling again in {delay}s")
-            poll_cluster_scheduler.s(submission_task_id).apply_async(countdown=delay)
-
-        run.save()
+            update_local_log(id, f"Job {run.job_id} status {job_status}, walltime {job_walltime}, polling again in {delay}s")
+            poll_run_status.s(id).apply_async(countdown=delay)
     except StopIteration:
         delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
 
-        if run.completion_status != 'SUCCESS':
-            update_local_log(submission_task_id, f"Could not find job {run.job_id}, scheduling cleanup in {delay}m")
-            run.completion_status = 'FAILURE'
-            run.save()
+        if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
+            update_local_log(id, f"Could not find job {run.job_id}, scheduling cleanup in {delay}m")
+            run.job_status = 'FAILURE'
         else:
             update_local_log(f"Job {run.job_id} already succeeded, scheduling cleanup in {delay}m")
 
-        cleanup.s(submit_run.request.id).apply_async(countdown=delay)
+        cleanup_run.s(id).apply_async(countdown=delay)
+    finally:
+        run.updated = timezone.now()
+        run.save()
 
 
     # TODO:
@@ -292,9 +280,9 @@ def poll_cluster_scheduler(submission_task_id):
 
 
 @app.task()
-def cleanup(submission_task_id):
-    run = Run.objects.get(submission_task_id=submission_task_id)
-    logger.info(f"Cleaning up run {submission_task_id}")
+def cleanup_run(id):
+    run = Run.objects.get(guid=id)
+    logger.info(f"Cleaning up run {id}")
 
     # TODO:
     # - if the run failed, delete everything in the run working directory but the log files
