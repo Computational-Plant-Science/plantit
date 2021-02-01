@@ -191,7 +191,7 @@ def __get_job_status(run: Run) -> str:
 
         job_line = next(l for l in lines if run.job_id in l)
         job_split = job_line.split()
-        job_status = job_split[5]
+        job_status = job_split[5].replace('+', '')
         return job_status
     pass
 

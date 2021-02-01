@@ -38,6 +38,30 @@
                         <div v-else-if="flow.config">
                             <b-row class="m-0 p-0">
                                 <b-col align-self="end" class="m-0 p-0">
+                                    <h4>
+                                        <b-badge
+                                            :variant="
+                                                run.is_failure || run.is_timeout
+                                                    ? 'danger'
+                                                    : run.is_success
+                                                    ? 'success'
+                                                    : 'warning'
+                                            "
+                                            class="mr-2"
+                                            >{{ run.job_status }}</b-badge
+                                        >
+                                        <b-badge
+                                            v-for="tag in run.tags"
+                                            v-bind:key="tag"
+                                            class="mr-2"
+                                            variant="secondary"
+                                            >{{ tag }}</b-badge
+                                        >
+                                    </h4>
+                                </b-col>
+                            </b-row>
+                            <b-row class="m-0 p-0">
+                                <b-col align-self="end" class="m-0 p-0">
                                     <h5
                                         :class="
                                             darkMode
@@ -134,30 +158,6 @@
                                         </b-badge>-->
                                         <small> on </small>
                                         <b class="mr-0">{{ run.target }}</b>
-                                    </h5>
-                                </b-col>
-                            </b-row>
-                            <b-row class="m-0 p-0">
-                                <b-col align-self="end" class="m-0 p-0">
-                                    <h5>
-                                        <b-badge
-                                            :variant="
-                                                run.is_failure || run.is_timeout
-                                                    ? 'danger'
-                                                    : run.is_success
-                                                    ? 'success'
-                                                    : 'warning'
-                                            "
-                                            class="mr-2"
-                                            >{{ run.job_status }}</b-badge
-                                        >
-                                        <b-badge
-                                            v-for="tag in run.tags"
-                                            v-bind:key="tag"
-                                            class="mr-2"
-                                            variant="secondary"
-                                            >{{ tag }}</b-badge
-                                        >
                                     </h5>
                                 </b-col>
                                 <b-col md="auto"
@@ -643,6 +643,7 @@
                                                                     </code></b
                                                                 >
                                                             </b-col>
+                                                          <br/>
                                                         </b-row>
                                                         <b-row v-else>
                                                             <b-col>
@@ -1345,11 +1346,11 @@ export default {
         },
         setLocalLogsPageSize(size) {
             this.submissionLogsPageSize = size;
-            this.reloadLocalLogs(false);
+            this.reloadLocalLogs();
         },
         setTargetLogsPageSize(size) {
             this.targetLogsPageSize = size;
-            this.reloadTargetLogs(false);
+            this.reloadTargetLogs();
         },
         listOutputFiles() {
             return this.outputFiles.slice(
@@ -1359,9 +1360,9 @@ export default {
         },
         setOutputFilesPageSize(size) {
             this.outputPageSize = size;
-            this.reloadTargetLogs(false);
+            this.reloadTargetLogs();
         },
-        reloadRun(toast) {
+        reloadRun() {
             this.loadingRun = true;
             axios
                 .get(`/apis/v1/runs/${this.$router.currentRoute.params.id}/`)
@@ -1373,8 +1374,8 @@ export default {
                         this.run = response.data;
                     }
                     if (this.run.updated === null) return;
-                    this.reloadLocalLogs(toast);
-                    this.reloadTargetLogs(toast);
+                    this.reloadLocalLogs();
+                    this.reloadTargetLogs();
                     this.reloadOutputFiles();
                     this.loadFlow(
                         response.data.flow_owner,
@@ -1496,7 +1497,7 @@ export default {
                     return error;
                 });
         },
-        reloadLocalLogs(toast) {
+        reloadLocalLogs() {
             this.loadingSubmissionLogs = true;
             axios
                 .get(
@@ -1540,7 +1541,7 @@ export default {
                     return error;
                 });
         },
-        reloadTargetLogs(toast) {
+        reloadTargetLogs() {
             this.loadingTargetLogs = true;
             axios
                 .get(
@@ -1584,7 +1585,7 @@ export default {
                     return error;
                 });
         },
-        reloadContainerLogs(toast) {
+        reloadContainerLogs() {
             this.loadingContainerLogs = true;
             axios
                 .get(
@@ -1640,7 +1641,7 @@ export default {
         }
     },
     async mounted() {
-        await this.reloadRun(false);
+        await this.reloadRun();
         this.runtimeUpdateInterval = setInterval(this.updateWalltime, 1000);
     },
     computed: {
