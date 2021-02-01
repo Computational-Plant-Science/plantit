@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from plantit import settings
 from plantit.celery import app
+from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import update_local_log, execute_command, old_flow_config_to_new
@@ -161,44 +162,12 @@ def __submit_run(run, ssh):
         run.save()
 
 
-def __get_job_walltime(run: Run) -> (str, str):
-    ssh = SSH(run.target.hostname, run.target.port, run.target.username)
-    with ssh:
-        lines = execute_command(
-            ssh_client=ssh,
-            pre_command=":",
-            command=f"squeue --me",
-            directory=join(run.target.workdir, run.work_dir))
-
-        try:
-            job_line = next(l for l in lines if run.job_id in l)
-            job_split = job_line.split()
-            job_walltime = job_split[-3]
-            return job_walltime
-        except StopIteration:
-            return None
-
-
-
-def __get_job_status(run: Run) -> str:
-    ssh = SSH(run.target.hostname, run.target.port, run.target.username)
-    with ssh:
-        lines = execute_command(
-            ssh_client=ssh,
-            pre_command=':',
-            command=f"sacct -j {run.job_id}",
-            directory=join(run.target.workdir, run.work_dir))
-
-        job_line = next(l for l in lines if run.job_id in l)
-        job_split = job_line.split()
-        job_status = job_split[5].replace('+', '')
-        return job_status
-    pass
-
-
 @app.task(track_started=True)
 def submit_run(id, flow):
     run = Run.objects.get(guid=id)
+    # set this task's ID on the run so user can cancel it
+    run.submission_id = submit_run.request.id
+    run.save()
 
     log = f"Deploying run {run.guid} to {run.target.name}"
     logger.info(log)
@@ -212,7 +181,7 @@ def submit_run(id, flow):
             update_local_log(run.guid, log)
             __upload_run(flow, run, ssh)
 
-            log = 'Running script' if run.target.name == 'Sandbox' else 'Submitting script to scheduler'
+            log = 'Running script' if run.is_sandbox else 'Submitting script to scheduler'
             logger.info(log)
             update_local_log(run.guid, log)
             __submit_run(run, ssh)
@@ -221,7 +190,6 @@ def submit_run(id, flow):
                 log = f"Completed run {run.guid}"
                 logger.info(log)
                 update_local_log(run.guid, log)
-
                 run.job_status = 'SUCCESS'
             else:
                 # poll the cluster scheduler for job status
@@ -232,7 +200,6 @@ def submit_run(id, flow):
         log = f"Failed to submit run {run.guid}: {traceback.format_exc()}."
         logger.error(log)
         update_local_log(run.guid, log)
-
         run.job_status = 'FAILURE'
         raise
     finally:
@@ -246,8 +213,8 @@ def poll_run_status(id):
     logger.info(f"Checking {run.target.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
     try:
-        job_status = __get_job_status(run)
-        job_walltime = __get_job_walltime(run)
+        job_status = get_job_status(run)
+        job_walltime = get_job_walltime(run)
         run.job_status = job_status
         run.job_walltime = job_walltime
 
@@ -257,7 +224,9 @@ def poll_run_status(id):
         elif job_status == 'FAILED':
             update_local_log(id, f"Job {run.job_id} failed" + (f"after {job_walltime}" if job_walltime is not None else ''))
             cleanup_run.s(id).apply_async(countdown=delay)
-            run.job_status = 'FAILURE'
+        elif job_status == 'CANCELLED':
+            update_local_log(id, f"Job {run.job_id} cancelled" + (f"after {job_walltime}" if job_walltime is not None else ''))
+            cleanup_run.s(id).apply_async(countdown=delay)
         else:
             update_local_log(id, f"Job {run.job_id} status {job_status}, walltime {job_walltime}, polling again in {delay}s")
             poll_run_status.s(id).apply_async(countdown=delay)

@@ -41,7 +41,7 @@
                                     <h4>
                                         <b-badge
                                             :variant="
-                                                run.is_failure || run.is_timeout
+                                                run.is_failure || run.is_timeout || run.is_cancelled
                                                     ? 'danger'
                                                     : run.is_success
                                                     ? 'success'
@@ -599,15 +599,14 @@
                                                                                       ? '*.' +
                                                                                         flow.config.output.include.patterns.join(
                                                                                             ', *.'
-                                                                                        ) +
-                                                                                        ', '
+                                                                                        )
                                                                                       : []) +
                                                                                   (flow
                                                                                       .config
                                                                                       .output
                                                                                       .include
                                                                                       .names
-                                                                                      ? flow.config.output.include.names.join(
+                                                                                      ? ', ' + flow.config.output.include.names.join(
                                                                                             ', '
                                                                                         )
                                                                                       : [])
@@ -626,15 +625,14 @@
                                                                                       ? '*.' +
                                                                                         flow.config.output.exclude.patterns.join(
                                                                                             ', *.'
-                                                                                        ) +
-                                                                                        ', '
+                                                                                        )
                                                                                       : []) +
                                                                                   (flow
                                                                                       .config
                                                                                       .output
                                                                                       .exclude
                                                                                       .names
-                                                                                      ? flow.config.output.exclude.names.join(
+                                                                                      ? ', ' + flow.config.output.exclude.names.join(
                                                                                             ', '
                                                                                         )
                                                                                       : [])
@@ -644,8 +642,9 @@
                                                                 >
                                                             </b-col>
                                                           <br/>
+                                                          <br/>
                                                         </b-row>
-                                                        <b-row v-else>
+                                                        <b-row>
                                                             <b-col>
                                                                 <b-pagination
                                                                     v-model="

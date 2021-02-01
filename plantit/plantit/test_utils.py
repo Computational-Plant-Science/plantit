@@ -1,7 +1,7 @@
 import os
 import requests
 from django.test import TestCase
-from plantit.utils import docker_container_exists, validate_config, cyverse_path_exists
+from plantit.utils import docker_image_exists, validate_config, cyverse_path_exists
 
 
 class Token:
@@ -32,10 +32,10 @@ class Token:
 
 class UtilsTest(TestCase):
     def test_docker_container_exists_when_exists_is_true(self):
-        self.assertTrue(docker_container_exists('alpine'))
+        self.assertTrue(docker_image_exists('alpine'))
 
     def test_docker_container_exists_when_doesnt_exist_is_false(self):
-        self.assertFalse(docker_container_exists('notacontainer'))
+        self.assertFalse(docker_image_exists('notacontainer'))
 
     def test_cyverse_path_exists_when_doesnt_exist_is_false(self):
         result = cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsaid.txt', Token.get())

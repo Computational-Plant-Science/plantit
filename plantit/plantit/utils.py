@@ -26,7 +26,7 @@ def get_repo_config_internal(name, owner):
     return yaml.load(content)
 
 
-def docker_container_exists(name, owner=None, tag=None):
+def docker_image_exists(name, owner=None, tag=None):
     url = f"https://hub.docker.com/v2/repositories/{owner if owner is not None else 'library'}/{name}/"
     if tag is not None:
         url += f"tags/{tag}/"
@@ -77,6 +77,20 @@ def cyverse_path_exists(path, token):
     return True, input_type
 
 
+def __parse_docker_image_components(value):
+    container_split = value.split('/')
+    container_name = container_split[-1]
+    container_owner = None if container_split[-2] == '' else container_split[-2]
+    if ':' in container_name:
+        container_name_split = container_name.split(":")
+        container_name = container_name_split[0]
+        container_tag = container_name_split[1]
+    else:
+        container_tag = None
+
+    return container_owner, container_name, container_tag
+
+
 def validate_config(config, token):
     errors = []
 
@@ -104,16 +118,8 @@ def validate_config(config, token):
     elif type(config['image']) is not str:
         errors.append('Attribute \'image\' must be a str')
     else:
-        container_split = config['image'].split('/')
-        container_name = container_split[-1]
-        container_owner = None if container_split[-2] == '' else container_split[-2]
-        if ':' in container_name:
-            container_name_split = container_name.split(":")
-            container_name = container_name_split[0]
-            container_tag = container_name_split[1]
-        else:
-            container_tag = None
-        if 'docker' in config['image'] and not docker_container_exists(container_name, container_owner, container_tag):
+        image_owner, image_name, image_tag = __parse_docker_image_components(config['image'])
+        if 'docker' in config['image'] and not docker_image_exists(image_name, image_owner, image_tag):
             errors.append(f"Image '{config['image']}' not found on Docker Hub")
 
     # commands (required)

@@ -20,6 +20,7 @@ class Run(models.Model):
     updated = models.DateTimeField(default=timezone.now)
     token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    submission_id = models.CharField(max_length=50, null=True, blank=True)
     job_id = models.CharField(max_length=7, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
     job_walltime = models.CharField(max_length=8, null=True, blank=True)

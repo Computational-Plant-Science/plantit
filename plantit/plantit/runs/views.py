@@ -18,6 +18,7 @@ from rest_framework.decorators import api_view
 
 from plantit import settings
 from plantit.celery import app
+from plantit.runs.cluster import cancel_job
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
@@ -56,12 +57,14 @@ def list_outputs(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    included_by_name = ((flow_config['output']['include']['names'] if 'names' in flow_config['output']['include'] else [])) if 'output' in flow_config else []  # [f"{run.task_id}.zip"]
+    included_by_name = ((flow_config['output']['include']['names'] if 'names' in flow_config['output'][
+        'include'] else [])) if 'output' in flow_config else []  # [f"{run.task_id}.zip"]
     included_by_name.append(f"{run.guid}.{run.target.name.lower()}.log")
     if run.job_id is not None and run.job_id != '':
         included_by_name.append(f"plantit.{run.job_id}.out")
         included_by_name.append(f"plantit.{run.job_id}.err")
-    included_by_pattern = (flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []) if 'output' in flow_config else []
+    included_by_pattern = (
+        flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []) if 'output' in flow_config else []
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
@@ -122,7 +125,8 @@ def get_thumbnail(request, id, file):
             # make thumbnail directory for this run if it does not already exist
             Path(run_dir).mkdir(exist_ok=True, parents=True)
 
-            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
+            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith(
+                    'out') or file.endswith('err') or file.endswith('log'):
                 with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
                     # stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
                     # errs = stderr.read()
@@ -227,7 +231,6 @@ def get_submission_logs(request, id):
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
-
 @api_view(['GET'])
 @login_required
 def get_target_logs_text(request, id, size):
@@ -283,7 +286,6 @@ def get_target_logs(request, id):
                 sftp.chdir(work_dir)
                 sftp.get(log_file, tf.name)
                 return FileResponse(open(tf.name, 'rb'))
-
 
 
 @api_view(['GET'])
@@ -359,6 +361,7 @@ def __convert_run(run: Run):
         'is_complete': run.is_complete,
         'is_success': run.is_success,
         'is_failure': run.is_failure,
+        'is_cancelled': run.is_cancelled
     }
 
 
@@ -402,24 +405,51 @@ def runs(request):
 @api_view(['GET'])
 @login_required
 def run(request, id):
-    task = AsyncResult(id, app=app)
     try:
         run = Run.objects.get(guid=id)
         return JsonResponse(__convert_run(run))
     except Run.DoesNotExist:
-        # return HttpResponseNotFound()
         return JsonResponse({
-            'id': task.id,
+            'id': id,
+            'job_id': None,
+            'job_status': None,
+            'job_walltime': None,
             'work_dir': None,
             'target': None,
             'created': None,
-            'timeout': None,
             'updated': None,
-            'state': task.state,
             'flow_owner': None,
             'flow_name': None,
-            'tags': []
+            'tags': [],
+            'is_complete': False,
+            'is_success': False,
+            'is_failure': False,
+            'is_cancelled': False
         })
+
+
+@api_view(['GET'])
+@login_required
+def cancel(request, id):
+    try:
+        run = Run.objects.get(guid=id)
+    except:
+        return HttpResponseNotFound()
+
+    if run.is_sandbox:
+        # cancel the Celery task
+        AsyncResult(run.submission_id).revoke()
+        update_local_log(run.guid, f"Cancelled run {id}")
+        run.job_status = 'CANCELLED'
+        run.save()
+        return HttpResponse(status=200)
+    else:
+        # cancel the cluster scheduler job
+        cancel_job(run)
+        update_local_log(run.guid, f"Cancelled run {id}")
+        run.job_status = 'CANCELLED'
+        run.save()
+        return HttpResponse(status=200)
 
 
 @api_view(['POST'])
