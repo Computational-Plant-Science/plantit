@@ -26,14 +26,16 @@ def get_repo_config_internal(name, owner):
     return yaml.load(content)
 
 
-def docker_container_exists(name, owner=None):
-    response = requests.get(
-        f"https://hub.docker.com/v2/repositories/{owner if owner is not None else 'library'}/{name}/")
+def docker_container_exists(name, owner=None, tag=None):
+    url = f"https://hub.docker.com/v2/repositories/{owner if owner is not None else 'library'}/{name}/"
+    if tag is not None:
+        url += f"tags/{tag}/"
+    response = requests.get(url)
     try:
         content = response.json()
-        if 'user' not in content or 'name' not in content:
+        if 'user' not in content and 'name' not in content:
             return False
-        if content['user'] != (owner if owner is not None else 'library') or content['name'] != name:
+        if content['name'] != tag and content['name'] != name and content['user'] != (owner if owner is not None else 'library'):
             return False
         return True
     except:
@@ -105,7 +107,13 @@ def validate_config(config, token):
         container_split = config['image'].split('/')
         container_name = container_split[-1]
         container_owner = None if container_split[-2] == '' else container_split[-2]
-        if 'docker' in config['image'] and not docker_container_exists(container_name, container_owner):
+        if ':' in container_name:
+            container_name_split = container_name.split(":")
+            container_name = container_name_split[0]
+            container_tag = container_name_split[1]
+        else:
+            container_tag = None
+        if 'docker' in config['image'] and not docker_container_exists(container_name, container_owner, container_tag):
             errors.append(f"Image '{config['image']}' not found on Docker Hub")
 
     # commands (required)
