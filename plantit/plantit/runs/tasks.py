@@ -251,10 +251,14 @@ def poll_run_status(id):
         run.job_status = job_status
         run.job_walltime = job_walltime
 
+        delay = int(environ.get('RUNS_REFRESH_SECONDS'))
         if job_status == 'COMPLETED':
             update_local_log(id, f"Job {run.job_id} completed" + (f"after {job_walltime}" if job_walltime is not None else ''))
+        elif job_status == 'FAILED':
+            update_local_log(id, f"Job {run.job_id} failed" + (f"after {job_walltime}" if job_walltime is not None else ''))
+            cleanup_run.s(id).apply_async(countdown=delay)
+            run.job_status = 'FAILURE'
         else:
-            delay = int(environ.get('RUNS_REFRESH_SECONDS'))
             update_local_log(id, f"Job {run.job_id} status {job_status}, walltime {job_walltime}, polling again in {delay}s")
             poll_run_status.s(id).apply_async(countdown=delay)
     except StopIteration:
