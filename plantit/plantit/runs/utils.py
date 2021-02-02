@@ -167,6 +167,7 @@ def old_flow_config_to_new(flow: dict, run: Run, resources: dict):
 
         if 'gpu' in flow['config'] and flow['config']['gpu']:
             if run.target.gpu:
+                new_flow['gpu'] = True
                 new_flow['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:K40:1"]
                 new_flow['jobqueue']['slurm']['queue'] = run.target.gpu_queue
             else:
