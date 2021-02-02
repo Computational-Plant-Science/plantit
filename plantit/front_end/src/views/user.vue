@@ -95,7 +95,7 @@
                             vertical
                             content-class="mt-2"
                             v-model="currentTab"
-                            active-nav-item-class="bg-warning text-dark"
+                            active-nav-item-class="bg-secondary text-dark"
                         >
                             <b-tab
                                 v-if="djangoProfile"
@@ -130,7 +130,6 @@
                                             >
                                                 <p>
                                                     <small
-                                                        class="text-secondary"
                                                         >Email</small
                                                     >
                                                     <br />
@@ -144,7 +143,6 @@
                                                 </p>
                                                 <p>
                                                     <small
-                                                        class="text-secondary"
                                                         >Affiliation</small
                                                     >
                                                     <br />
@@ -157,7 +155,6 @@
                                                 </p>
                                                 <p>
                                                     <small
-                                                        class="text-secondary"
                                                         >Bio</small
                                                     >
                                                     <br />
@@ -169,7 +166,6 @@
                                                 </p>
                                                 <p>
                                                     <small
-                                                        class="text-secondary"
                                                         >Location</small
                                                     >
                                                     <br />

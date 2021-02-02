@@ -10,13 +10,10 @@
         >
             <template v-slot:default="{ hide }">
                 <b-container class="p-0">
-                    <b-row class="m-3 pl-0 pr-0 text-left" align-v="start">
-                        <b-col class="ml-0 mr-0 pl-0 pr-0">
+                    <b-row class="ml-4 mr-4 mb-4 mt-2 pl-0 pr-0 text-left" align-v="start">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0" align-self="center" md="auto">
                             <b-button
-                                block
-                                :variant="
-                                    darkMode ? 'outline-warning' : 'warning'
-                                "
+                                :variant="darkMode ? 'dark' : 'light'"
                                 class="text-left m-0"
                                 @click="hide"
                             >
@@ -24,13 +21,25 @@
                                 Hide
                             </b-button>
                         </b-col>
-                        <b-col md="auto" class="ml-3 mr-0 pl-0 pr-0 text-right">
+                        <b-col class="ml-0 mr-0 pl-0 pr-0" align-self="start">
                             <b-button
+                                disabled
                                 block
-                                :variant="
-                                    darkMode ? 'outline-warning' : 'warning'
-                                "
-                                class="text-left m-0"
+                                size="lg"
+                                :variant="darkMode ? 'dark' : 'light'"
+                                class="text-center m-0"
+                            >
+                                Your Runs
+                            </b-button>
+                        </b-col>
+                        <b-col
+                            md="auto"
+                            class="ml-0 mr-0 pl-0 pr-0 text-right"
+                            align-self="center"
+                        >
+                            <b-button
+                                :variant="darkMode ? 'dark' : 'light'"
+                                class="text-right m-0"
                                 @click="loadRuns(0)"
                             >
                                 <i class="fas fa-sync-alt fa-1x fa-fw"></i>
@@ -40,10 +49,10 @@
                     </b-row>
                     <b-row
                         v-if="!loadingRuns"
-                        class="m-3 pl-0 pr-0"
+                        class="m-4 mb-1 pl-0 pr-0"
                         align-v="center"
                     >
-                        <b-col class="ml-0 mr-0 pl-0 pr-0 text-center">
+                        <b-col class="m-0 pl-0 pr-0 text-center">
                             <b-list-group class="text-left m-0 p-0">
                                 <b-list-group-item
                                     variant="default"
@@ -73,7 +82,7 @@
                                         v-for="tag in run.tags"
                                         v-bind:key="tag"
                                         class="mr-1"
-                                        variant="warning"
+                                        variant="secondary"
                                         >{{ tag }}
                                     </b-badge>
                                     <br v-if="run.tags.length > 0" />
@@ -118,10 +127,10 @@
                         </b-col>
                     </b-row>
                     <b-row
-                        class="ml-0 mr-0 pl-0 pr-0 mt-1 mb-3 text-center"
+                        class="ml-0 mr-0 pl-0 pr-0 mt-0 mb-3 text-center"
                         align-v="start"
                     >
-                        <b-col class="ml-0 mr-0 pl-0 pr-0">
+                        <b-col align-self="start" class="m-0 pl-0 pr-0">
                             <b-spinner
                                 v-if="loadingRuns || loadingMoreRuns"
                                 type="grow"
@@ -130,15 +139,11 @@
                             <b-nav
                                 v-else-if="runs.length > 0"
                                 vertical
-                                class="ml-0 mr-0 pl-0 pr-0"
+                                class="m-0 pl-0 pr-0"
                             >
                                 <b-nav-item class="m-0 p-0">
                                     <b-button
-                                        :variant="
-                                            darkMode
-                                                ? 'outline-warning'
-                                                : 'warning'
-                                        "
+                                        :variant="darkMode ? 'dark' : 'light'"
                                         :disabled="loadingRuns"
                                         block
                                         class="text-center m-0"
@@ -205,7 +210,7 @@
                             :class="darkMode ? 'crumb-dark' : 'crumb-light'"
                         >
                             <h5>
-                                <b-badge variant="info">Show Runs</b-badge>
+                                <b-badge variant="secondary">Show Runs</b-badge>
                             </h5>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
