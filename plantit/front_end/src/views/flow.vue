@@ -871,8 +871,9 @@ export default {
         },
         targetUnsupported(target) {
             return (
-                parseInt(target.max_mem) <
-                    parseInt(this.flow.config.resources.mem) ||
+                (parseInt(target.max_mem) !== -1 &&
+                    parseInt(target.max_mem) <
+                        parseInt(this.flow.config.resources.mem)) ||
                 parseInt(target.max_cores) <
                     parseInt(this.flow.config.resources.cores) ||
                 parseInt(target.max_processes) <

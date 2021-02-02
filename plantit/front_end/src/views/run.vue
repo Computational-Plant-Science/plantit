@@ -417,7 +417,7 @@
                                                                         "
                                                                         dropleft
                                                                         :title="
-                                                                            'Showing last' +
+                                                                            'Showing last ' +
                                                                                 targetLogsPageSize +
                                                                                 ' lines'
                                                                         "
