@@ -42,6 +42,7 @@ export default {
 <style scoped lang="sass">
 @import 'scss/main.sass'
 @import 'scss/_colors.sass'
+@import url('https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap');
 .dark
     background-color: $dark
 .light

@@ -4,6 +4,7 @@
   *
   **/
 @import '_colors'
+@import url('https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap')
 
 // Base grayscale colors definitions
 $white: #fff !default
@@ -16,6 +17,7 @@ $gray-600: #6c757d !default
 $gray-700: #495057 !default
 $gray-800: #343a40 !default
 $gray-900: #212529 !default
+$gray-950: #202400 !default
 $black: #000 !default
 
 // Base colors definitions
@@ -32,7 +34,7 @@ $cyan: #17a2b8 !default
 
 // Theme color default definitions
 $primary: $blue !default
-$secondary: $gray-300 // $color-box-background
+$secondary: $gray-200 // $color-box-background
 $success: $green !default
 $info: $color-highlight !default
 $warning: #e2e3b0!default
@@ -352,8 +354,11 @@ a:link
 
 .theme-container-dark
   color: $gray-200 !important
-  background-color: $gray-700 !important
+  background-color: $gray-950 !important
   border-color: $color-disabled
+  font-family: "Cutive-Mono", "Menlo", "Courier New", monospace
+  font-size: 12px
+
 
 .theme-secondary
   color: $success !important
@@ -369,6 +374,8 @@ a:link
   color: $gray-700 !important
   background-color: $gray-100 !important
   border-color: $color-disabled
+  font-family: "Cutive-Mono", "Menlo", "Courier New", monospace
+  font-size: 12px
 
 .breadcrumb-item + .breadcrumb-item::before
   padding: 0

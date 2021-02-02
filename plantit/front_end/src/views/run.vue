@@ -32,7 +32,7 @@
                             <b-spinner
                                 type="grow"
                                 label="Loading..."
-                                variant="warning"
+                                variant="secondary"
                             ></b-spinner>
                         </b-row>
                         <div v-else-if="flow.config">
@@ -41,7 +41,9 @@
                                     <h4>
                                         <b-badge
                                             :variant="
-                                                run.is_failure || run.is_timeout || run.is_cancelled
+                                                run.is_failure ||
+                                                run.is_timeout ||
+                                                run.is_cancelled
                                                     ? 'danger'
                                                     : run.is_success
                                                     ? 'success'
@@ -76,7 +78,7 @@
                                             variant="warning"
                                         >
                                         </b-spinner>
-                                        <b class="ml-1 mr-1">{{ run.id }}</b>
+                                        <b class="ml-1 mr-0">{{ run.id }}</b>
                                         <small
                                             :class="
                                                 darkMode
@@ -217,7 +219,7 @@
                                                 card
                                                 vertical
                                                 nav-class="bg-transparent"
-                                                active-nav-item-class="bg-warning text-dark"
+                                                active-nav-item-class="bg-secondary text-dark"
                                                 fill
                                             >
                                                 <b-tab
@@ -243,16 +245,25 @@
                                                                 : 'theme-container-light m-0 p-0'
                                                         "
                                                     >
-                                                        <b-row class="m-0">
-                                                            <b-col>
+                                                        <b-row
+                                                            class="m-0"
+                                                            style="border-bottom: 1px solid lightgray"
+                                                        >
+                                                            <b-col
+                                                                align-self="end"
+                                                            >
                                                                 <h5
                                                                     :class="
                                                                         darkMode
                                                                             ? 'text-white'
                                                                             : 'text-dark'
                                                                     "
+                                                                    style="font-family: 'Menlo', 'Courier New', monospace"
                                                                 >
-                                                                    Status Logs
+                                                                    <b
+                                                                        >Status
+                                                                        Logs</b
+                                                                    >
                                                                 </h5>
                                                             </b-col>
                                                             <b-col
@@ -337,7 +348,6 @@
                                                                     ></i>
                                                                 </b-button> </b-col
                                                         ></b-row>
-                                                        <hr />
                                                         <div
                                                             v-if="
                                                                 submissionLogsExpanded
@@ -353,7 +363,7 @@
                                                                     class="mt-3"
                                                                     type="grow"
                                                                     label="Loading..."
-                                                                    variant="warning"
+                                                                    variant="secondary"
                                                                 ></b-spinner>
                                                             </b-row>
                                                             <b-row
@@ -373,17 +383,26 @@
                                                                 </b-col>
                                                             </b-row>
                                                         </div>
-                                                        <b-row class="m-0">
-                                                            <b-col>
+                                                        <br />
+                                                        <b-row
+                                                            class="m-0"
+                                                            style="border-bottom: 1px solid lightgray"
+                                                        >
+                                                            <b-col
+                                                                align-self="end"
+                                                            >
                                                                 <h5
                                                                     :class="
                                                                         darkMode
                                                                             ? 'text-white'
                                                                             : 'text-dark'
                                                                     "
+                                                                    style="font-family: 'Menlo', 'Courier New', monospace"
                                                                 >
-                                                                    Container
-                                                                    Logs
+                                                                    <b
+                                                                        >Container
+                                                                        Logs</b
+                                                                    >
                                                                 </h5>
                                                             </b-col>
                                                             <b-col
@@ -397,7 +416,11 @@
                                                                             targetLogsPageSize
                                                                         "
                                                                         dropleft
-                                                                        title="Change page size"
+                                                                        :title="
+                                                                            'Showing last' +
+                                                                                targetLogsPageSize +
+                                                                                ' lines'
+                                                                        "
                                                                         v-b-tooltip.hover
                                                                         :variant="
                                                                             darkMode
@@ -464,7 +487,6 @@
                                                                     ></i>
                                                                 </b-button> </b-col
                                                         ></b-row>
-                                                        <hr />
                                                         <div
                                                             class="m-0"
                                                             v-if="
@@ -481,7 +503,7 @@
                                                                     class="mt-3"
                                                                     type="grow"
                                                                     label="Loading..."
-                                                                    variant="warning"
+                                                                    variant="secondary"
                                                                 ></b-spinner>
                                                             </b-row>
                                                             <b-row
@@ -606,7 +628,8 @@
                                                                                       .output
                                                                                       .include
                                                                                       .names
-                                                                                      ? ', ' + flow.config.output.include.names.join(
+                                                                                      ? ', ' +
+                                                                                        flow.config.output.include.names.join(
                                                                                             ', '
                                                                                         )
                                                                                       : [])
@@ -632,7 +655,8 @@
                                                                                       .output
                                                                                       .exclude
                                                                                       .names
-                                                                                      ? ', ' + flow.config.output.exclude.names.join(
+                                                                                      ? ', ' +
+                                                                                        flow.config.output.exclude.names.join(
                                                                                             ', '
                                                                                         )
                                                                                       : [])
@@ -641,8 +665,8 @@
                                                                     </code></b
                                                                 >
                                                             </b-col>
-                                                          <br/>
-                                                          <br/>
+                                                            <br />
+                                                            <br />
                                                         </b-row>
                                                         <b-row>
                                                             <b-col>
@@ -696,9 +720,17 @@
                                                                         outputPageSize
                                                                     "
                                                                     dropleft
-                                                                    title="Change page size"
+                                                                    :title="
+                                                                        'Showing ' +
+                                                                            outputPageSize +
+                                                                            ' files per page'
+                                                                    "
                                                                     v-b-tooltip.hover
-                                                                    variant="warning"
+                                                                    :variant="
+                                                                        darkMode
+                                                                            ? 'outline-light'
+                                                                            : 'white'
+                                                                    "
                                                                     size="sm"
                                                                 >
                                                                     <b-dropdown-item
@@ -738,7 +770,7 @@
                                                             <b-spinner
                                                                 type="grow"
                                                                 label="Loading..."
-                                                                variant="warning"
+                                                                variant="secondary"
                                                             ></b-spinner>
                                                         </b-row>
                                                         <b-row

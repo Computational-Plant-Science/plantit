@@ -8,7 +8,7 @@
                     <b-spinner
                         type="grow"
                         label="Loading..."
-                        variant="warning"
+                        variant="secondary"
                     ></b-spinner>
                 </b-row>
             </div>

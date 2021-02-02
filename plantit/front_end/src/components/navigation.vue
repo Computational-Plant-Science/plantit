@@ -77,12 +77,21 @@
                                         >{{ tag }}
                                     </b-badge>
                                     <br v-if="run.tags.length > 0" />
-                                    <small>{{
-                                                run.is_complete
-                                                    ? 'Ran'
-                                                    : 'Running'
-                                            }} on</small
-                                    ><b-badge
+                                    <small v-if="!run.is_complete"
+                                        >Running on</small
+                                    >
+                                    <b-badge
+                                        :variant="
+                                            run.is_failure || run.is_timeout
+                                                ? 'danger'
+                                                : run.is_cancelled
+                                                ? 'secondary'
+                                                : 'success'
+                                        "
+                                        v-else
+                                        >{{ run.job_status }}</b-badge
+                                    >
+                                    <b-badge
                                         class="ml-1 mr-0"
                                         variant="secondary"
                                         >{{ run.target }}</b-badge
@@ -116,7 +125,7 @@
                             <b-spinner
                                 v-if="loadingRuns || loadingMoreRuns"
                                 type="grow"
-                                variant="warning"
+                                variant="secondary"
                             ></b-spinner>
                             <b-nav
                                 v-else-if="runs.length > 0"
@@ -142,7 +151,14 @@
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
-                            <h5 :class="darkMode ? 'text-center text-light' : 'text-center text-dark'" v-else>
+                            <h5
+                                :class="
+                                    darkMode
+                                        ? 'text-center text-light'
+                                        : 'text-center text-dark'
+                                "
+                                v-else
+                            >
                                 You haven't run any flows yet!
                             </h5>
                         </b-col>
