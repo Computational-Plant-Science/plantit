@@ -72,7 +72,7 @@
                                         "
                                     >
                                         <b-spinner
-                                            class="mb-1"
+                                            class="mb-1 mr-1"
                                             small
                                             v-if="!run.is_complete"
                                             variant="warning"
@@ -162,11 +162,29 @@
                                         <b class="mr-0">{{ run.target }}</b>
                                     </h5>
                                 </b-col>
-                                <b-col md="auto"
+                                <b-col md="auto" align-self="center" class="mb-2"
                                     ><small>
                                         Last updated {{ prettify(run.updated) }}
                                     </small></b-col
                                 >
+                              <b-col
+                                    v-if="run.is_complete"
+                                    md="auto"
+                                    class="m-0 mb-2"
+                                    align-self="start"
+                                >
+                                    <b-button
+                                        :variant="
+                                            darkMode ? 'outline-light' : 'white'
+                                        "
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        :title="'Restart ' + flow.config.name"
+                                        @click="onRestart"
+                                    >
+                                      Restart
+                                    </b-button>
+                                </b-col>
                                 <b-col
                                     md="auto"
                                     class="m-0 mb-2"
@@ -591,6 +609,11 @@
                                                             <b-col>
                                                                 <b
                                                                     ><code
+                                                                        :class="
+                                                                            darkMode
+                                                                                ? 'theme-dark'
+                                                                                : 'theme-light'
+                                                                        "
                                                                         >{{
                                                                             flow
                                                                                 .config
@@ -685,29 +708,24 @@
                                                                     aria-controls="outputList"
                                                                 >
                                                                     <template
-                                                                        #first-text
-                                                                        ><span
-                                                                            >First</span
-                                                                        ></template
+                                                                        class="theme-dark"
+                                                                        #page="{ page, active }"
                                                                     >
-                                                                    <template
-                                                                        #prev-text
-                                                                        ><span
-                                                                            >Prev</span
-                                                                        ></template
-                                                                    >
-                                                                    <template
-                                                                        #next-text
-                                                                        ><span
-                                                                            >Next</span
-                                                                        ></template
-                                                                    >
-                                                                    <template
-                                                                        #last-text
-                                                                        ><span
-                                                                            >Last</span
-                                                                        ></template
-                                                                    >
+                                                                        <b
+                                                                            v-if="
+                                                                                active
+                                                                            "
+                                                                            >{{
+                                                                                page
+                                                                            }}</b
+                                                                        >
+                                                                        <i
+                                                                            v-else
+                                                                            >{{
+                                                                                page
+                                                                            }}</i
+                                                                        >
+                                                                    </template>
                                                                 </b-pagination>
                                                             </b-col>
                                                             <b-col
@@ -1241,6 +1259,7 @@ import { mapGetters } from 'vuex';
 import moment from 'moment';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
+import router from '@/router';
 
 export default {
     name: 'run',
@@ -1295,6 +1314,35 @@ export default {
         };
     },
     methods: {
+        onRestart() {
+            // retrieve config
+            let config = this.flowConfigs[this.flowKey];
+
+            // resubmit run
+            axios({
+                method: 'post',
+                url: `/apis/v1/runs/`,
+                data: {
+                    repo: this.flow.repo,
+                    config: config
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    router.push({
+                        name: 'run',
+                        params: {
+                            username: this.currentUserDjangoProfile.username,
+                            id: response.data.id
+                        }
+                    });
+                    this.reloadRun();
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
         prettify: function(date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
@@ -1676,6 +1724,9 @@ export default {
         this.runtimeUpdateInterval = setInterval(this.updateWalltime, 1000);
     },
     computed: {
+        flowKey() {
+            return `${this.flow.repo.owner.login}/${this.flow.repo.name}`;
+        },
         localLogFileName() {
             return `${this.$router.currentRoute.params.id}.plantit.log`;
         },
@@ -1694,6 +1745,7 @@ export default {
             'currentUserCyVerseProfile',
             'currentUserGitHubProfile',
             'loggedIn',
+            'flowConfigs',
             'darkMode'
         ]),
         updatedFormatted() {

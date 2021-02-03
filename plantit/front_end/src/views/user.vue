@@ -19,30 +19,33 @@
                         align-self="end"
                         class="ml-0 mr-0"
                     >
-                        <b-row
-                            ><b-col
-                                md="auto"
-                                class="ml-0 mr-0"
-                                align-self="end"
-                            >
-                                <b-img
-                                    class="avatar"
-                                    rounded
-                                    style="max-height: 9rem; max-width: 9rem; position: relative; top: 38px; box-shadow: -2px 2px 2px #adb5bd"
-                                    :src="
-                                        githubProfile
-                                            ? githubProfile.avatar_url
-                                            : ''
-                                    "
-                                    v-if="githubProfile"
-                                ></b-img>
-                                <i
-                                    v-else
-                                    class="far fa-user fa-fw fa-4x"
-                                ></i> </b-col
-                        ></b-row>
-                        <br />
-                        <br />
+                        <div v-if="githubProfile">
+                            <b-row
+                                ><b-col
+                                    md="auto"
+                                    class="ml-0 mr-0"
+                                    align-self="end"
+                                >
+                                    <b-img
+                                        class="avatar"
+                                        rounded
+                                        style="max-height: 9rem; max-width: 9rem; position: relative; top: 38px; box-shadow: -2px 2px 2px #adb5bd"
+                                        :src="
+                                            githubProfile
+                                                ? githubProfile.avatar_url
+                                                : ''
+                                        "
+                                        v-if="githubProfile"
+                                    ></b-img>
+                                    <i
+                                        v-else
+                                        class="far fa-user fa-fw fa-4x"
+                                    ></i>
+                                </b-col>
+                            </b-row>
+                            <br />
+                            <br />
+                        </div>
                         <b-row
                             :class="darkMode ? 'text-light' : 'text-secondary'"
                         >
@@ -129,9 +132,7 @@
                                                 "
                                             >
                                                 <p>
-                                                    <small
-                                                        >Email</small
-                                                    >
+                                                    <small>Email</small>
                                                     <br />
                                                     {{ cyverseProfile.email }}
                                                     <br />
@@ -142,9 +143,7 @@
                                                     }}
                                                 </p>
                                                 <p>
-                                                    <small
-                                                        >Affiliation</small
-                                                    >
+                                                    <small>Affiliation</small>
                                                     <br />
                                                     {{
                                                         cyverseProfile ===
@@ -154,9 +153,7 @@
                                                     }}
                                                 </p>
                                                 <p>
-                                                    <small
-                                                        >Bio</small
-                                                    >
+                                                    <small>Bio</small>
                                                     <br />
                                                     {{
                                                         githubProfile
@@ -165,9 +162,7 @@
                                                     }}
                                                 </p>
                                                 <p>
-                                                    <small
-                                                        >Location</small
-                                                    >
+                                                    <small>Location</small>
                                                     <br />
                                                     {{
                                                         githubProfile

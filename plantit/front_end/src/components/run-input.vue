@@ -20,8 +20,8 @@
                 :title-link-class="darkMode ? 'text-white' : 'text-dark'"
                 :class="
                     darkMode
-                        ? 'theme-container-dark m-0 p-3'
-                        : 'theme-container-light m-0 p-3'
+                        ? 'theme-dark m-0 p-3'
+                        : 'theme-light m-0 p-3'
                 "
             >
                 <b-row
@@ -58,8 +58,8 @@
                 :title-link-class="darkMode ? 'text-white' : 'text-dark'"
                 :class="
                     darkMode
-                        ? 'theme-container-dark m-0 p-3'
-                        : 'theme-container-light m-0 p-3'
+                        ? 'theme-dark m-0 p-3'
+                        : 'theme-light m-0 p-3'
                 "
             >
                 <b-row

@@ -22,10 +22,10 @@ def clean_html(raw_html):
     return text
 
 
-def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: str) -> List[str]:
+def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: str, allow_stderr: bool = False) -> List[str]:
     full_command = f"{pre_command} && cd {directory} && {command}" if directory else command
     output = []
-    errors = []
+    stderr = []
 
     print(f"Executing command on '{ssh_client.host}': {full_command}")
     stdin, stdout, stderr = ssh_client.client.exec_command(full_command)
@@ -38,12 +38,12 @@ def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: 
     for line in iter(lambda: stderr.readline(2048), ""):
         clean = clean_html(line)
         if 'WARNING' not in clean:  # Dask occasionally returns messages like 'distributed.worker - WARNING - Heartbeat to scheduler failed'
-            errors.append(clean)
+            stderr.append(clean)
             print(f"Received stderr from '{ssh_client.host}': '{clean}'")
     if stdout.channel.recv_exit_status() != 0:
         raise Exception(f"Received non-zero exit status from '{ssh_client.host}'")
-    elif len(errors) > 0:
-        raise Exception(f"Received stderr: {errors}")
+    elif not allow_stderr and len(stderr) > 0:
+        raise Exception(f"Received stderr: {stderr}")
 
     return output
 

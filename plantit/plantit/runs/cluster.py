@@ -12,7 +12,8 @@ def get_job_walltime(run: Run) -> (str, str):
             ssh_client=ssh,
             pre_command=":",
             command=f"squeue --me",
-            directory=join(run.target.workdir, run.work_dir))
+            directory=join(run.target.workdir, run.work_dir),
+            allow_stderr=True)
 
         try:
             job_line = next(l for l in lines if run.job_id in l)
@@ -30,7 +31,8 @@ def get_job_status(run: Run) -> str:
             ssh_client=ssh,
             pre_command=':',
             command=f"sacct -j {run.job_id}",
-            directory=join(run.target.workdir, run.work_dir))
+            directory=join(run.target.workdir, run.work_dir),
+            allow_stderr=True)
 
         job_line = next(l for l in lines if run.job_id in l)
         job_split = job_line.split()

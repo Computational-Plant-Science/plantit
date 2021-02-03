@@ -36,7 +36,7 @@ def __upload_run(flow, run, ssh):
     new_flow = old_flow_config_to_new(flow, run, resources)  # TODO update flow UI page
 
     # create working directory
-    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.target.workdir)
+    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.target.workdir, allow_stderr=True)
 
     # upload flow config and job script
     with ssh.client.open_sftp() as sftp:
@@ -139,6 +139,13 @@ def __upload_run(flow, run, ssh):
                     logger.info(f"Using push command: {push_commands}")
 
 
+def __parse_job_id(line: str) -> str:
+    try:
+        return str(int(line.replace('Submitted batch job', '').strip()))
+    except:
+        raise Exception(f"Failed to parse job ID from: '{line}'")
+
+
 def __submit_run(run, ssh):
     # TODO refactor to allow multiple cluster schedulers
     sandbox = run.target.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
@@ -150,13 +157,16 @@ def __submit_run(run, ssh):
             ssh_client=ssh,
             pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
             command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
-            directory=join(run.target.workdir, run.work_dir))
+            directory=join(run.target.workdir, run.work_dir),
+            allow_stderr=True)
     else:
-        job_id = execute_command(
+        output_lines = execute_command(
             ssh_client=ssh,
             pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
             command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
-            directory=join(run.target.workdir, run.work_dir))[-1].replace('Submitted batch job', '').strip()
+            directory=join(run.target.workdir, run.work_dir),
+            allow_stderr=True)
+        job_id = __parse_job_id(output_lines[-1])
         run.job_id = job_id
         run.updated = timezone.now()
         run.save()

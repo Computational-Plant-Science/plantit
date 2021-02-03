@@ -15,7 +15,12 @@ def get_repo_config(name, owner, token):
                           headers={"Authorization": f"token {token}"})
     file = request.json()
     content = requests.get(file['download_url']).text
-    return yaml.load(content)
+    config = yaml.load(content)
+
+    # fill optional attributes
+    config['public'] = config['public'] if 'public' in config else True
+
+    return config
 
 
 def get_repo_config_internal(name, owner):

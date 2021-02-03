@@ -44,7 +44,11 @@ $dark: $gray-900 !default // $color-disabled
 
 // This table defines the theme colors (variant names)
 $theme-colors: () !default
-$theme-colors: map-merge(('primary': $primary, 'secondary': $secondary, 'success': $success, 'info': $info, 'warning': $warning, 'danger': $danger, 'light': $light, 'dark': $dark ), $theme-colors)
+$theme-colors: map-merge(('primary': $success, 'secondary': $secondary, 'success': $success, 'info': $info, 'warning': $warning, 'danger': $danger, 'light': $light, 'dark': $dark ), $theme-colors)
+
+$pagination-active-color: $dark !important
+$pagination-active-bg: $secondary !important
+$pagination-active-border-color: $warning !important
 
 // Bootstrap and its default variables
 @import '../../node_modules/bootstrap/scss/bootstrap'
@@ -389,3 +393,7 @@ a:link
   color: $dark !important
   background-color: $success !important
   border-color: $success !important
+
+code
+  font-family: "Cutive-Mono", "Menlo", "Courier New", monospace
+  font-size: 12px

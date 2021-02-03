@@ -233,7 +233,7 @@
                                 >
                                     <i
                                         v-if="inputReady"
-                                        class="fas fa-download fa-fw text-success"
+                                        class="fas fa-download fa-fw text-warning"
                                     ></i>
                                     <i v-else class="fas fa-download fa-fw"></i>
                                     Input

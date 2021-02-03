@@ -10,8 +10,15 @@
         >
             <template v-slot:default="{ hide }">
                 <b-container class="p-0">
-                    <b-row class="ml-4 mr-4 mb-4 mt-2 pl-0 pr-0 text-left" align-v="start">
-                        <b-col class="ml-0 mr-0 pl-0 pr-0" align-self="center" md="auto">
+                    <b-row
+                        class="ml-4 mr-4 mb-4 mt-2 pl-0 pr-0 text-left"
+                        align-v="start"
+                    >
+                        <b-col
+                            class="ml-0 mr-0 pl-0 pr-0"
+                            align-self="center"
+                            md="auto"
+                        >
                             <b-button
                                 :variant="darkMode ? 'dark' : 'light'"
                                 class="text-left m-0"
@@ -29,7 +36,7 @@
                                 :variant="darkMode ? 'dark' : 'light'"
                                 class="text-center m-0"
                             >
-                                Your Runs
+                              <b>Your Runs</b>
                             </b-button>
                         </b-col>
                         <b-col
@@ -156,7 +163,7 @@
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
-                            <h5
+                            <p
                                 :class="
                                     darkMode
                                         ? 'text-center text-light'
@@ -164,8 +171,8 @@
                                 "
                                 v-else
                             >
-                                You haven't run any flows yet!
-                            </h5>
+                                You haven't run any flows yet.
+                            </p>
                         </b-col>
                     </b-row>
                 </b-container>
@@ -206,11 +213,13 @@
                     >
                         <b-breadcrumb-item
                             disabled
-                            class="ml-2"
+                            class="ml-3"
                             :class="darkMode ? 'crumb-dark' : 'crumb-light'"
                         >
-                            <h5>
-                                <b-badge variant="secondary">Show Runs</b-badge>
+                            <h5
+                                :class="darkMode ? 'crumb-dark' : 'crumb-light'"
+                            >
+                                Your Runs
                             </h5>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
@@ -226,15 +235,10 @@
                             :disabled="crumb.text === 'runs'"
                             class="ml-0 mr-0"
                         >
-                            <h5>
-                                <b-badge
-                                    variant="white"
-                                    :class="
-                                        darkMode ? 'text-white' : 'text-dark'
-                                    "
-                                >
-                                    {{ crumb.text }}
-                                </b-badge>
+                            <h5
+                                :class="darkMode ? 'crumb-dark' : 'crumb-light'"
+                            >
+                                {{ crumb.text }}
                             </h5>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
@@ -627,7 +631,8 @@ export default {
   border: 1px solid $dark
 
 .crumb-dark
-  font-weight: 300
+  font-size: 16px
+  font-weight: 200
   color: white !important
   // text-decoration: underline
   // text-decoration-color: $color-button
@@ -636,8 +641,17 @@ export default {
   background-color: transparent !important
 
 .crumb-light
-  font-weight: 300
+  font-size: 16px
+  font-weight: 200
   color: $dark !important
+
+a
+  text-decoration: none
+  text-decoration-color: $color-button
+
+a:hover
+  text-decoration: underline
+  text-decoration-color: $color-button
 
 .darkk
   background-color: #292b2c

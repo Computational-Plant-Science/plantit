@@ -20,15 +20,14 @@ def list_all(request):
     flows_path = Path(flows_file)
     flows_refresh = int(settings.FLOWS_REFRESH_MINUTES)
     flows_file = settings.FLOWS_CACHE
-    flows = []
+
     users = User.objects.all()
-    usernames = [user.profile.github_username for user in users] + ['Computational-Plant-Science',
-                                                                    'van-der-knaap-lab', 'burke-lab']
+    usernames = [user.profile.github_username for user in users] + ['Computational-Plant-Science', 'van-der-knaap-lab', 'burke-lab']
 
     if not flows_path.exists():
         print(f"No flows cached, retrieving")
-        for username in usernames:
-            flows = flows + __list_by_user(username, request.user.profile.github_token)
+        flows = asyncio.run(list_flows_for_users(usernames, request.user.profile.github_token))
+        flows = [flow for flow in flows if flow['config']['public']]  # select only public flows
         with open(flows_file, 'w') as file:
             json.dump(flows, file)
     else:
