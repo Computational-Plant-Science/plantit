@@ -29,7 +29,6 @@ class Run(models.Model):
     flow_name = models.CharField(max_length=280, null=True, blank=True)
     target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.SET_NULL)
     work_dir = models.CharField(max_length=100, null=True, blank=True)
-    cleanup_delay = models.DurationField(null=False, blank=False, default=timedelta(days=7))
 
     def __str__(self):
         return json.dumps(model_to_dict(self))
