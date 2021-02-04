@@ -388,7 +388,7 @@
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Log Out"
-                            href="/apis/v1/idp/cyverse_logout/"
+                            @click="logOut"
                             class="text-danger"
                             link-class="text-danger"
                         >
@@ -477,6 +477,10 @@ export default {
         }
     },
     methods: {
+        logOut() {
+            sessionStorage.clear();
+            window.location.replace('/apis/v1/idp/cyverse_logout/');
+        },
         prettify: function(date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
