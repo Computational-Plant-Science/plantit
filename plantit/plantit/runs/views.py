@@ -361,7 +361,8 @@ def __convert_run(run: Run):
         'is_complete': run.is_complete,
         'is_success': run.is_success,
         'is_failure': run.is_failure,
-        'is_cancelled': run.is_cancelled
+        'is_cancelled': run.is_cancelled,
+        'is_timeout': run.is_timeout
     }
 
 
@@ -424,7 +425,8 @@ def run(request, id):
             'is_complete': False,
             'is_success': False,
             'is_failure': False,
-            'is_cancelled': False
+            'is_cancelled': False,
+            'is_timeout': False,
         })
 
 

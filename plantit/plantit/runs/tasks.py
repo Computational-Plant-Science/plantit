@@ -240,7 +240,7 @@ def poll_run_status(id):
         run.job_walltime = job_walltime
 
         if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED' or job_status == 'TIMEOUT':
-            update_local_log(id, f"Job {run.job_id} {job_status}" + (f"after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {cleanup_delay}m")
+            update_local_log(id, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {cleanup_delay}m")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
             update_local_log(id, f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s")
