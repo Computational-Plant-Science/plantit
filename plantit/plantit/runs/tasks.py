@@ -189,7 +189,7 @@ def submit_run(id, flow):
     try:
         ssh = SSH(run.target.hostname, run.target.port, run.target.username)
         with ssh:
-            log = f"Creating working directory and uploading files"
+            log = f"Creating working directory {join(run.target.workdir, run.guid)} and uploading files"
             logger.info(log)
             update_local_log(run.guid, log)
             __upload_run(flow, run, ssh)
