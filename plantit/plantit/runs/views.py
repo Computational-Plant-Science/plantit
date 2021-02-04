@@ -465,10 +465,11 @@ def update_status(request, id):
 
     for chunk in status['description'].split('<br>'):
         for line in chunk.split('\n'):
-            # skip verbose Singularity log output
-            # if 'old time stamp' in line or 'image path' in line or 'Cache folder' in line or line == '':
-            #     continue
             update_target_log(run.guid, run.target.name, line)
-            # run.status_set.create(description=line, state=state, location=run.target.name)
+
+            # catch singularity build failures
+            if 'FATAL' in line:
+                run.job_status = 'FAILURE'
+                run.save()
 
     return HttpResponse(status=200)

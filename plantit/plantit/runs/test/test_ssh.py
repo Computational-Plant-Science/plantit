@@ -20,3 +20,5 @@ class SSHClientTests(TestCase):
         with ssh:
             stdin, stdout, stderr = ssh.client.exec_command('pwd')
             self.assertEqual('/root\n', stdout.readlines()[0])
+
+

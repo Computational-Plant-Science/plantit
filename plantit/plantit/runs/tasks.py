@@ -227,6 +227,12 @@ def poll_run_status(id):
     cleanup_delay = run.target.cleanup_delay.total_seconds()
     logger.info(f"Checking {run.target.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
+    # if the job already failed, schedule cleanup
+    if run.job_status == 'FAILURE':
+        update_local_log(f"Job {run.job_id} already failed, cleaning up in {cleanup_delay}m")
+        cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+
+    # otherwise poll the scheduler for its status
     try:
         job_status = get_job_status(run)
         job_walltime = get_job_walltime(run)
