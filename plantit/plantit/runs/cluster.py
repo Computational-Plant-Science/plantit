@@ -11,7 +11,7 @@ def get_job_walltime(run: Run) -> (str, str):
         lines = execute_command(
             ssh_client=ssh,
             pre_command=":",
-            command=f"squeue --me",
+            command=f"squeue --user={run.target.username}",
             directory=join(run.target.workdir, run.work_dir),
             allow_stderr=True)
 

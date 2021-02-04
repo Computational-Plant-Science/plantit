@@ -16,5 +16,6 @@ urlpatterns = [
     path(r'<id>/target_logs_text/<size>/', views.get_target_logs_text),
     path(r'<id>/container_logs/', views.get_container_logs),
     path(r'<id>/container_logs_text/<size>/', views.get_container_logs_text),
-    path(r'<id>/status/', views.update_status)
+    path(r'<id>/status/', views.update_status),
+    path(r'<id>/cancel/', views.cancel)
 ]
