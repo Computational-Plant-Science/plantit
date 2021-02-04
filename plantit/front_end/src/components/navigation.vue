@@ -362,7 +362,7 @@
                                 darkMode ? 'text-secondary' : 'text-dark'
                             "
                             :href="
-                                '/' + currentUserDjangoProfile.username + '/'
+                                '/user/' + currentUserDjangoProfile.username + '/'
                             "
                         >
                             <i class="fas fa-user fa-1x fa-fw"></i>

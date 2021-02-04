@@ -54,7 +54,7 @@ let router = new Router({
             }
         },
         {
-            path: '/flows/:username/:name',
+            path: '/flow/:username/:name',
             name: 'flow',
             props: true,
             component: flow,
@@ -65,7 +65,7 @@ let router = new Router({
             }
         },
         {
-            path: '/runs/:id',
+            path: '/run/:id',
             name: 'run',
             props: true,
             component: run,
@@ -76,7 +76,7 @@ let router = new Router({
             }
         },
         {
-            path: '/users/:username',
+            path: '/user/:username',
             name: 'user',
             props: true,
             component: user,
@@ -121,21 +121,21 @@ router.beforeEach((to, from, next) => {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `Flow: ${to.params.username}/${to.params.name}`,
-            href: `/flows/${to.params.username}/${to.params.name}`
+            href: `/flow/${to.params.username}/${to.params.name}`
         });
     }
     if (to.matched.some(record => record.name === 'run')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `Run: ${to.params.id}`,
-            href: `/runs/${to.params.id}`
+            href: `/run/${to.params.id}`
         });
     }
     if (to.matched.some(record => record.name === 'user')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `User: ${to.params.username}`,
-            href: `/users/${to.params.username}`
+            href: `/user/${to.params.username}`
         });
     }
     // if (to.matched.some(record => record.meta.requiresAuth)) {

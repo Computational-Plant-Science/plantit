@@ -1,8 +1,9 @@
 <template>
     <div class="w-100 h-100 pl-3" style="background-color: transparent">
+        <br/>
+      <br/>
         <b-container class="p-3 vl" fluid>
             <div v-if="loadingUser">
-                <br />
                 <br />
                 <b-row align-h="center">
                     <b-spinner

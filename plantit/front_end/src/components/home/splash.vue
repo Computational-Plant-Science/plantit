@@ -85,7 +85,7 @@
                                 title="Enter PlantIT"
                                 class="m-0 p-0"
                                 :to="
-                                    '/' +
+                                    '/user/' +
                                         currentUserDjangoProfile.username +
                                         '/'
                                 "
