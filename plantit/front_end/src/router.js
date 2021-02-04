@@ -54,38 +54,35 @@ let router = new Router({
             }
         },
         {
-            path: '/:username/:name',
+            path: '/flows/:username/:name',
             name: 'flow',
             props: true,
             component: flow,
             meta: {
                 title: 'Flow',
-                crumb: [
-                ],
+                crumb: [],
                 requiresAuth: true
             }
         },
         {
-            path: '/:username/runs/:id',
+            path: '/runs/:id',
             name: 'run',
             props: true,
             component: run,
             meta: {
                 title: 'Run',
-                crumb: [
-                ],
+                crumb: [],
                 requiresAuth: true
             }
         },
         {
-            path: '/:username',
+            path: '/users/:username',
             name: 'user',
             props: true,
             component: user,
             meta: {
                 title: 'User',
-                crumb: [
-                ],
+                crumb: [],
                 requiresAuth: true
             }
         },
@@ -124,21 +121,21 @@ router.beforeEach((to, from, next) => {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `Flow: ${to.params.username}/${to.params.name}`,
-            href: `/${to.params.username}/${to.params.name}`
+            href: `/flows/${to.params.username}/${to.params.name}`
         });
     }
     if (to.matched.some(record => record.name === 'run')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `Run: ${to.params.id}`,
-            href: `/${to.params.username}/runs/${to.params.id}`
+            href: `/runs/${to.params.id}`
         });
     }
     if (to.matched.some(record => record.name === 'user')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `User: ${to.params.username}`,
-            href: `/${to.params.username}`
+            href: `/users/${to.params.username}`
         });
     }
     // if (to.matched.some(record => record.meta.requiresAuth)) {

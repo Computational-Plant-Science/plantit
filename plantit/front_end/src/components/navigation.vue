@@ -80,7 +80,7 @@
                                                 : 'text-dark'
                                         "
                                         :href="
-                                            `/${currentUserDjangoProfile.username}/runs/${run.id}`
+                                            `/runs/${run.id}`
                                         "
                                         >{{ run.id }}</a
                                     >
@@ -490,7 +490,6 @@ export default {
                 name: 'run',
                 params: {
                     id: items[0].id,
-                    username: this.currentUserDjangoProfile.username
                 }
             });
         },
