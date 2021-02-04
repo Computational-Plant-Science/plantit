@@ -12,6 +12,7 @@ from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import update_local_log, execute_command, old_flow_config_to_new
+from plantit.targets.models import Target
 
 logger = get_task_logger(__name__)
 
@@ -222,6 +223,7 @@ def submit_run(id, flow):
 @app.task()
 def poll_run_status(id):
     run = Run.objects.get(guid=id)
+    delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
     logger.info(f"Checking {run.target.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
     try:
@@ -232,7 +234,8 @@ def poll_run_status(id):
 
         delay = int(environ.get('RUNS_REFRESH_SECONDS'))
         if job_status == 'COMPLETED':
-            update_local_log(id, f"Job {run.job_id} completed" + (f"after {job_walltime}" if job_walltime is not None else ''))
+            update_local_log(id, f"Job {run.job_id} completed" + (f"after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {delay}m")
+            cleanup_run.s(id).apply_async(countdown=delay)
         elif job_status == 'FAILED':
             update_local_log(id, f"Job {run.job_id} failed" + (f"after {job_walltime}" if job_walltime is not None else ''))
             cleanup_run.s(id).apply_async(countdown=delay)
@@ -243,15 +246,12 @@ def poll_run_status(id):
             update_local_log(id, f"Job {run.job_id} status {job_status}, walltime {job_walltime}, polling again in {delay}s")
             poll_run_status.s(id).apply_async(countdown=delay)
     except StopIteration:
-        delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
-
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
-            update_local_log(id, f"Could not find job {run.job_id}, scheduling cleanup in {delay}m")
+            update_local_log(id, f"Could not find job {run.job_id}, cleaning up in {delay}m")
             run.job_status = 'FAILURE'
         else:
-            update_local_log(f"Job {run.job_id} already succeeded, scheduling cleanup in {delay}m")
-
-        cleanup_run.s(id).apply_async(countdown=delay)
+            update_local_log(f"Job {run.job_id} already succeeded, cleaning up in {delay}m")
+            cleanup_run.s(id).apply_async(countdown=delay)
     finally:
         run.updated = timezone.now()
         run.save()
@@ -282,3 +282,16 @@ def cleanup_run(id):
     # except:
     #     logger.error(f"Cleanup failed: {traceback.format_exc()}")
     #     update_status(run, Status.FAILED, f"Cleanup failed: {traceback.format_exc()}")
+
+
+@app.task()
+def clean_singularity_cache(name):
+    target = Target.objects.get(name=name)
+    ssh = SSH(target.hostname, target.port, target.username)
+    with ssh:
+        execute_command(
+            ssh_client=ssh,
+            pre_command=target.pre_commands,
+            command="singularity cache clean",
+            directory=target.workdir,
+            allow_stderr=True)
