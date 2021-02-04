@@ -465,7 +465,8 @@ def update_status(request, id):
 
     for chunk in status['description'].split('<br>'):
         for line in chunk.split('\n'):
-            update_target_log(run.guid, run.target.name, line)
+            update_local_log(run.guid, line)
+            # update_target_log(run.guid, run.target.name, line)
 
             # catch singularity build failures
             if 'FATAL' in line:
