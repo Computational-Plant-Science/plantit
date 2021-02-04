@@ -162,12 +162,15 @@
                                         <b class="mr-0">{{ run.target }}</b>
                                     </h5>
                                 </b-col>
-                                <b-col md="auto" align-self="center" class="mb-2"
+                                <b-col
+                                    md="auto"
+                                    align-self="center"
+                                    class="mb-2"
                                     ><small>
                                         Last updated {{ prettify(run.updated) }}
                                     </small></b-col
                                 >
-                              <b-col
+                                <b-col
                                     v-if="run.is_complete"
                                     md="auto"
                                     class="m-0 mb-2"
@@ -182,7 +185,7 @@
                                         :title="'Restart ' + flow.config.name"
                                         @click="onRestart"
                                     >
-                                      Restart
+                                        Restart
                                     </b-button>
                                 </b-col>
                                 <b-col

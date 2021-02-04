@@ -56,9 +56,11 @@ def __upload_run(flow, run, ssh):
             for line in template_script:
                 script.write(line)
 
-            if not sandbox:  # we're on a SLURM cluster, so add resource requests
+            if not sandbox:
+                # we're on a SLURM cluster, so add resource requests
                 script.write("#SBATCH -N 1\n")
                 script.write("#SBATCH --ntasks=1\n")
+
                 if 'cores' in resources:
                     script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
                 if 'time' in resources:
@@ -66,10 +68,10 @@ def __upload_run(flow, run, ssh):
                 if 'mem' in resources and (run.target.header_skip is None or '--mem' not in str(run.target.header_skip)):
                     script.write(f"#SBATCH --mem={resources['mem']}\n")
                 if run.target.queue is not None and run.target.queue != '':
-                    script.write(
-                        f"#SBATCH --partition={run.target.gpu_queue if run.target.gpu and 'gpu' in flow['config'] and flow['config']['gpu'] else run.target.queue}\n")
+                    script.write(f"#SBATCH --partition={run.target.queue}\n")
                 if run.target.project is not None and run.target.project != '':
                     script.write(f"#SBATCH -A {run.target.project}\n")
+
                 script.write("#SBATCH --mail-type=END,FAIL\n")
                 script.write(f"#SBATCH --mail-user={run.user.email}\n")
                 script.write("#SBATCH --output=plantit.%j.out\n")
@@ -102,7 +104,7 @@ def __upload_run(flow, run, ssh):
 
             # if we have outputs...
             if 'output' in flow:
-                # add zip command...
+                # add zip command
                 zip_commands = f"plantit zip {flow['output']['from']}"
                 if 'include' in flow['output']:
                     if 'patterns' in flow['output']['include']:
@@ -116,7 +118,7 @@ def __upload_run(flow, run, ssh):
                 zip_commands += '\n'
                 logger.info(f"Using zip command: {zip_commands}")
 
-                # and add push command if we have a destination
+                # add push command if we have a destination
                 if 'to' in flow['output']:
                     push_commands = f"plantit terrain push {flow['output']['to']}" \
                                     f" -p {join(run.workdir, flow['output']['from'])}" \
