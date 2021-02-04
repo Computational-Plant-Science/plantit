@@ -75,9 +75,9 @@ if [ ! -d config/ssh ]; then
 fi
 if [ ! -f config/ssh/known_hosts ]; then
   touch config/ssh/known_hosts
-  $compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
 fi
+$compose exec -T plantit bash -c "ssh-keyscan -H sandbox >> /code/config/ssh/known_hosts"
 if [ ! -f config/ssh/id_rsa.pub ]; then
   ssh-keygen -b 2048 -t rsa -f config/ssh/id_rsa -N ""
-  $compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
 fi
+$compose exec -T plantit bash -c "/code/scripts/ssh-copy-id.expect"
