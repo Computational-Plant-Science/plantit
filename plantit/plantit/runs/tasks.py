@@ -11,7 +11,7 @@ from plantit.celery import app
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
-from plantit.runs.utils import update_local_log, execute_command, old_flow_config_to_new
+from plantit.runs.utils import update_local_log, execute_command, old_flow_config_to_new, remove_logs
 from plantit.targets.models import Target
 
 logger = get_task_logger(__name__)
@@ -223,7 +223,8 @@ def submit_run(id, flow):
 @app.task()
 def poll_run_status(id):
     run = Run.objects.get(guid=id)
-    delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
+    refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
+    cleanup_delay = run.target.cleanup_delay.total_seconds()
     logger.info(f"Checking {run.target.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
     try:
@@ -232,56 +233,38 @@ def poll_run_status(id):
         run.job_status = job_status
         run.job_walltime = job_walltime
 
-        delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-        if job_status == 'COMPLETED':
-            update_local_log(id, f"Job {run.job_id} completed" + (f"after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {delay}m")
-            cleanup_run.s(id).apply_async(countdown=delay)
-        elif job_status == 'FAILED':
-            update_local_log(id, f"Job {run.job_id} failed" + (f"after {job_walltime}" if job_walltime is not None else ''))
-            cleanup_run.s(id).apply_async(countdown=delay)
-        elif job_status == 'CANCELLED':
-            update_local_log(id, f"Job {run.job_id} cancelled" + (f"after {job_walltime}" if job_walltime is not None else ''))
-            cleanup_run.s(id).apply_async(countdown=delay)
+        if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED':
+            update_local_log(id, f"Job {run.job_id} {job_status}" + (f"after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {cleanup_delay}m")
+            cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
-            update_local_log(id, f"Job {run.job_id} status {job_status}, walltime {job_walltime}, polling again in {delay}s")
-            poll_run_status.s(id).apply_async(countdown=delay)
+            update_local_log(id, f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s")
+            poll_run_status.s(id).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
-            update_local_log(id, f"Could not find job {run.job_id}, cleaning up in {delay}m")
+            update_local_log(id, f"Job {run.job_id} not found, cleaning up in {cleanup_delay}m")
             run.job_status = 'FAILURE'
         else:
-            update_local_log(f"Job {run.job_id} already succeeded, cleaning up in {delay}m")
-            cleanup_run.s(id).apply_async(countdown=delay)
+            update_local_log(f"Job {run.job_id} already succeeded, cleaning up in {cleanup_delay}m")
+            cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     finally:
         run.updated = timezone.now()
         run.save()
 
 
-    # TODO:
-    # - if the run failed (check the cluster scheduler), delete everything in the run working directory but the log files
-
-    # otherwise schedule a cleanup task to run after timeout elapses
-    # cleanup.s(execute.request.id).apply_async(countdown=run.timeout)  # TODO adjustable period (1 day? 1 week?)
-
-
 @app.task()
 def cleanup_run(id):
     run = Run.objects.get(guid=id)
-    logger.info(f"Cleaning up run {id}")
-
-    # TODO:
-    # - if the run failed, delete everything in the run working directory but the log files
-    # - if the run completed,
-
-    # try:
-    #     # if task is completed or failed, cancel its task
-    #     if run.status != 0 and run.status != 6:
-    #         app.control.terminate(task_id)
-    #         logger.info(f"Timed out after {timedelta(seconds=run.timeout)}")
-    #         update_status(run, Status.FAILED, f"Timed out after {timedelta(seconds=run.timeout)}")
-    # except:
-    #     logger.error(f"Cleanup failed: {traceback.format_exc()}")
-    #     update_status(run, Status.FAILED, f"Cleanup failed: {traceback.format_exc()}")
+    logger.info(f"Cleaning up run {id} local working directory {run.target.workdir}")
+    remove_logs(run.guid, run.target.name)
+    logger.info(f"Cleaning up run {id} target working directory {run.target.workdir}")
+    ssh = SSH(run.target.hostname, run.target.port, run.target.username)
+    with ssh:
+        execute_command(
+            ssh_client=ssh,
+            pre_command=run.target.pre_commands,
+            command=f"rm -r {join(run.target.workdir, run.work_dir)}",
+            directory=run.target.workdir,
+            allow_stderr=True)
 
 
 @app.task()

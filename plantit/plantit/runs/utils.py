@@ -1,4 +1,5 @@
 import asyncio
+import os
 import re
 from datetime import timedelta, datetime
 from os import environ
@@ -63,6 +64,13 @@ def update_target_log(id: str, target: str, description: str):
 def stat_log(id: str):
     log_path = Path(join(environ.get('RUNS_LOGS'), f"{id}.plantit.log"))
     return datetime.fromtimestamp(log_path.stat().st_mtime) if log_path.is_file() else None
+
+
+def remove_logs(id: str, target: str):
+    local_log_path = join(environ.get('RUNS_LOGS'), f"{id}.plantit.log")
+    target_log_path = join(environ.get('RUNS_LOGS'), f"{id}.{target.lower()}.log")
+    os.remove(local_log_path)
+    os.remove(target_log_path)
 
 
 def __get_flows(response, token):
