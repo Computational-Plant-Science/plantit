@@ -241,11 +241,15 @@ def poll_run_status(id):
             poll_run_status.s(id).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
-            update_local_log(id, f"Job {run.job_id} not found, cleaning up in {cleanup_delay}m")
             run.job_status = 'FAILURE'
+            update_local_log(id, f"Job {run.job_id} not found, cleaning up in {cleanup_delay}m")
         else:
             update_local_log(f"Job {run.job_id} already succeeded, cleaning up in {cleanup_delay}m")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+    except:
+        run.job_status = 'FAILURE'
+        update_local_log(f"Job {run.job_id} encountered unexpected error (cleaning up in {cleanup_delay}m): {traceback.format_exc()}")
+        cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     finally:
         run.updated = timezone.now()
         run.save()
