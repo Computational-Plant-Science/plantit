@@ -109,7 +109,7 @@
                                             class="mb-1 mr-1"
                                             small
                                             v-if="!run.is_complete"
-                                            variant="warning"
+                                            variant="secondary"
                                         >
                                         </b-spinner>
                                         <b class="ml-1 mr-0">{{ run.id }}</b>
