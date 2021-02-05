@@ -103,7 +103,7 @@
                                     </b-badge>
                                     <br v-if="run.tags.length > 0" />
                                     <small v-if="!run.is_complete"
-                                        >Running on</small
+                                        >Running</small
                                     >
                                     <b-badge
                                         :variant="
@@ -116,8 +116,9 @@
                                         v-else
                                         >{{ run.job_status }}</b-badge
                                     >
+                                    <small> on </small>
                                     <b-badge
-                                        class="ml-1 mr-0"
+                                        class="ml-0 mr-0"
                                         variant="secondary"
                                         >{{ run.target }}</b-badge
                                     ><small> {{ prettify(run.updated) }}</small>
