@@ -438,20 +438,24 @@ def cancel(request, id):
     except:
         return HttpResponseNotFound()
 
+    if run.is_complete:
+        return HttpResponse(f"Run {id} is no longer running")
+
+    message = f"Attempting to cancel run {id}"
     if run.is_sandbox:
         # cancel the Celery task
         AsyncResult(run.submission_id).revoke()
-        update_local_log(run.guid, f"Cancelled run {id}")
+        update_local_log(run.guid, message)
         run.job_status = 'CANCELLED'
         run.save()
-        return HttpResponse(status=200)
+        return HttpResponse(message)
     else:
         # cancel the cluster scheduler job
         cancel_job(run)
-        update_local_log(run.guid, f"Cancelled run {id}")
+        update_local_log(run.guid, message)
         run.job_status = 'CANCELLED'
         run.save()
-        return HttpResponse(status=200)
+        return HttpResponse(message)
 
 
 @api_view(['POST'])

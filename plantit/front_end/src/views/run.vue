@@ -37,6 +37,28 @@
                         </b-row>
                         <div v-else-if="flow.config">
                             <b-row class="m-0 p-0">
+                                <b-col v-if="showCanceledAlert" class="m-0 p-0">
+                                    <b-alert
+                                        :show="showCanceledAlert"
+                                        :variant="canceledAlertMessage.includes('no longer running') ? 'success' : 'warning'"
+                                        dismissible
+                                        @dismissed="showCanceledAlert = false"
+                                    >
+                                        {{ canceledAlertMessage }}
+                                    </b-alert>
+                                </b-col>
+                                <b-col v-if="showFailedToCancelAlert" class="m-0 p-0">
+                                    <b-alert
+                                        :show="showFailedToCancelAlert"
+                                        variant="danger"
+                                        dismissible
+                                        @dismissed="showFailedToCancelAlert = false"
+                                    >
+                                        Failed to cancel run {{ run.id }}.
+                                    </b-alert>
+                                </b-col>
+                            </b-row>
+                            <b-row class="m-0 p-0">
                                 <b-col align-self="end" class="m-0 p-0">
                                     <h4>
                                         <b-badge
@@ -185,7 +207,25 @@
                                         :title="'Restart ' + flow.config.name"
                                         @click="onRestart"
                                     >
+                                        <i class="fas fa-level-up-alt"></i>
                                         Restart
+                                    </b-button>
+                                </b-col>
+                                <b-col
+                                    v-if="!run.is_complete"
+                                    md="auto"
+                                    class="m-0 mb-2"
+                                    align-self="start"
+                                >
+                                    <b-button
+                                        variant="outline-danger"
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        title="Cancel Run"
+                                        @click="onCancel"
+                                    >
+                                        <i class="fas fa-times"></i>
+                                        Cancel
                                     </b-button>
                                 </b-col>
                                 <b-col
@@ -199,10 +239,11 @@
                                         "
                                         size="sm"
                                         v-b-tooltip.hover
-                                        title="Refresh"
+                                        title="Refresh Run"
                                         @click="reloadRun(true)"
                                     >
                                         <i class="fas fa-redo"></i>
+                                        Refresh
                                     </b-button>
                                 </b-col>
                             </b-row>
@@ -279,7 +320,7 @@
                                                                             ? 'text-white'
                                                                             : 'text-dark'
                                                                     "
-                                                                    style="font-family: 'Menlo', 'Courier New', monospace"
+                                                                    style="font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: 15px"
                                                                 >
                                                                     <b
                                                                         >Status
@@ -418,7 +459,7 @@
                                                                             ? 'text-white'
                                                                             : 'text-dark'
                                                                     "
-                                                                    style="font-family: 'Menlo', 'Courier New', monospace"
+                                                                    style="font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: 15px"
                                                                 >
                                                                     <b
                                                                         >Container
@@ -1313,10 +1354,32 @@ export default {
             thumbnailName: '',
             thumbnailUrl: '',
             thumbnailTitle: '',
-            thumbnailDoneLoading: false
+            thumbnailDoneLoading: false,
+            // alerts
+            canceledAlertMessage: '',
+            showCanceledAlert: false,
+            showFailedToCancelAlert: false
         };
     },
     methods: {
+        onCancel() {
+            axios
+                .get(
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/cancel/`
+                )
+                .then(response => {
+                    if (response.status === 200) {
+                        this.showCanceledAlert = true;
+                        this.canceledAlertMessage = response.data;
+                    } else {
+                        this.showFailedToCancelAlert = true;
+                    }
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
         onRestart() {
             // retrieve config
             let config = this.flowConfigs[this.flowKey];
@@ -1446,6 +1509,8 @@ export default {
         },
         reloadRun() {
             this.loadingRun = true;
+            this.showCanceledAlert = false;
+            this.showFailedToCancelAlert = false;
             axios
                 .get(`/apis/v1/runs/${this.$router.currentRoute.params.id}/`)
                 .then(response => {
