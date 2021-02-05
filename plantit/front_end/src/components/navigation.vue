@@ -80,7 +80,7 @@
                                                 : 'text-dark'
                                         "
                                         :href="
-                                            `/runs/${run.id}`
+                                            `/run/${run.id}`
                                         "
                                         >{{ run.id }}</a
                                     >
