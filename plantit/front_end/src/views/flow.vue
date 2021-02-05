@@ -426,7 +426,10 @@
                                         class="text-left pt-2"
                                         @click="targetSelected(target)"
                                         :variant="darkMode ? 'dark' : 'white'"
-                                        :disabled="targetUnsupported(target)"
+                                        :disabled="
+                                            targetUnsupported(target) ||
+                                                target.disabled
+                                        "
                                         >{{ target.name }}</b-button
                                     ></b-col
                                 >
