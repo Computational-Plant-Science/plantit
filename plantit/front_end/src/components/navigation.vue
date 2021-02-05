@@ -36,7 +36,7 @@
                                 :variant="darkMode ? 'dark' : 'light'"
                                 class="text-center m-0"
                             >
-                              <b>Your Runs</b>
+                                <b>Your Runs</b>
                             </b-button>
                         </b-col>
                         <b-col
@@ -68,20 +68,26 @@
                                     v-bind:key="run.id"
                                     :class="
                                         darkMode
-                                            ? 'text-light bg-dark m-0 p-2 mb-3'
-                                            : 'text-dark bg-white m-0 p-2 mb-3'
+                                            ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
+                                            : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                                     "
                                     @click="onRunSelected(run)"
                                 >
+                                    <b-img
+                                        v-if="run.flow_image_url !== undefined && run.flow_image_url !== null"
+                                        rounded
+                                        class="card-img-right"
+                                        style="max-width: 4rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
+                                        right
+                                        :src="run.flow_image_url"
+                                    ></b-img>
                                     <a
                                         :class="
                                             darkMode
                                                 ? 'text-light'
                                                 : 'text-dark'
                                         "
-                                        :href="
-                                            `/run/${run.id}`
-                                        "
+                                        :href="`/run/${run.id}`"
                                         >{{ run.id }}</a
                                     >
                                     <br />
@@ -362,7 +368,9 @@
                                 darkMode ? 'text-secondary' : 'text-dark'
                             "
                             :href="
-                                '/user/' + currentUserDjangoProfile.username + '/'
+                                '/user/' +
+                                    currentUserDjangoProfile.username +
+                                    '/'
                             "
                         >
                             <i class="fas fa-user fa-1x fa-fw"></i>
@@ -493,7 +501,7 @@ export default {
             router.push({
                 name: 'run',
                 params: {
-                    id: items[0].id,
+                    id: items[0].id
                 }
             });
         },

@@ -27,6 +27,7 @@ class Run(models.Model):
     job_walltime = models.CharField(max_length=8, null=True, blank=True)
     flow_owner = models.CharField(max_length=280, null=True, blank=True)
     flow_name = models.CharField(max_length=280, null=True, blank=True)
+    flow_image_url = models.URLField(null=True, blank=True)
     target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.SET_NULL)
     work_dir = models.CharField(max_length=100, null=True, blank=True)
 

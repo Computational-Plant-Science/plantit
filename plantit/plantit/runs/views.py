@@ -362,17 +362,23 @@ def __convert_run(run: Run):
         'is_success': run.is_success,
         'is_failure': run.is_failure,
         'is_cancelled': run.is_cancelled,
-        'is_timeout': run.is_timeout
+        'is_timeout': run.is_timeout,
+        'flow_image_url': run.flow_image_url
     }
 
 
 def __create_run(username, flow, target) -> Run:
     now = timezone.now()
+    user = User.objects.get(username=username)
+    flow_owner = flow['repo']['owner']['login']
+    flow_name = flow['repo']['name']
+    flow_config = get_repo_config(flow_name, flow_owner, user.profile.github_token)
     run = Run.objects.create(
         guid=str(uuid.uuid4()),
-        user=User.objects.get(username=username),
-        flow_owner=flow['repo']['owner']['login'],
-        flow_name=flow['repo']['name'],
+        user=user,
+        flow_owner=flow_owner,
+        flow_name=flow_name,
+        flow_image_url=f"https://raw.githubusercontent.com/{flow_owner}/{flow_name}/master/{flow_config['logo']}",
         target=target,
         created=now,
         updated=now,
