@@ -1,5 +1,6 @@
 <template>
     <div
+        v-if="render"
         class="w-100 h-100 p-2"
         :style="
             darkMode
@@ -40,19 +41,30 @@
                                 <b-col v-if="showCanceledAlert" class="m-0 p-0">
                                     <b-alert
                                         :show="showCanceledAlert"
-                                        :variant="canceledAlertMessage.includes('no longer running') ? 'success' : 'warning'"
+                                        :variant="
+                                            canceledAlertMessage.includes(
+                                                'no longer running'
+                                            )
+                                                ? 'success'
+                                                : 'warning'
+                                        "
                                         dismissible
                                         @dismissed="showCanceledAlert = false"
                                     >
                                         {{ canceledAlertMessage }}
                                     </b-alert>
                                 </b-col>
-                                <b-col v-if="showFailedToCancelAlert" class="m-0 p-0">
+                                <b-col
+                                    v-if="showFailedToCancelAlert"
+                                    class="m-0 p-0"
+                                >
                                     <b-alert
                                         :show="showFailedToCancelAlert"
                                         variant="danger"
                                         dismissible
-                                        @dismissed="showFailedToCancelAlert = false"
+                                        @dismissed="
+                                            showFailedToCancelAlert = false
+                                        "
                                     >
                                         Failed to cancel run {{ run.id }}.
                                     </b-alert>
@@ -1358,7 +1370,9 @@ export default {
             // alerts
             canceledAlertMessage: '',
             showCanceledAlert: false,
-            showFailedToCancelAlert: false
+            showFailedToCancelAlert: false,
+            // the "v-if hack" (https://michaelnthiessen.com/force-re-render/)
+            render: true
         };
     },
     methods: {
@@ -1402,6 +1416,7 @@ export default {
                             id: response.data.id
                         }
                     });
+                    location.reload();
                     this.reloadRun();
                 })
                 .catch(error => {
@@ -1508,6 +1523,11 @@ export default {
             this.reloadTargetLogs();
         },
         reloadRun() {
+            this.render = false;
+            this.$nextTick(() => {
+                this.render = true;
+            });
+
             this.loadingRun = true;
             this.showCanceledAlert = false;
             this.showFailedToCancelAlert = false;

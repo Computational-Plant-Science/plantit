@@ -240,7 +240,7 @@ def poll_run_status(id):
         run.job_walltime = job_walltime
 
         if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED' or job_status == 'TIMEOUT':
-            update_local_log(id, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(cleanup_delay)}")
+            update_local_log(id, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.cleanup_delay)}")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
             update_local_log(id, f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s")
@@ -248,13 +248,13 @@ def poll_run_status(id):
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
             run.job_status = 'FAILURE'
-            update_local_log(id, f"Job {run.job_id} not found, cleaning up in {cleanup_delay}m")
+            update_local_log(id, f"Job {run.job_id} not found, cleaning up in {str(run.target.cleanup_delay)}")
         else:
-            update_local_log(f"Job {run.job_id} already succeeded, cleaning up in {cleanup_delay}m")
+            update_local_log(f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.cleanup_delay)}")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     except:
         run.job_status = 'FAILURE'
-        update_local_log(f"Job {run.job_id} encountered unexpected error (cleaning up in {cleanup_delay}m): {traceback.format_exc()}")
+        update_local_log(f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.cleanup_delay)}): {traceback.format_exc()}")
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     finally:
         run.updated = timezone.now()
