@@ -166,7 +166,8 @@ def __submit_run(run, ssh):
         output_lines = execute_command(
             ssh_client=ssh,
             pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
-            command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
+            # if the cluster scheduler prohibits nested job submissions, we need to run the CLI from a login node
+            command=f"chmod +x {template_name} && ./{template_name}" if run.target.no_nested else f"chmod +x {template_name} && sbatch {template_name}",
             directory=join(run.target.workdir, run.work_dir),
             allow_stderr=True)
         job_id = __parse_job_id(output_lines[-1])

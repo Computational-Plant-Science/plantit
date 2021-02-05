@@ -23,6 +23,7 @@ class Target(models.Model):
     gpu_queue = models.CharField(max_length=250, null=True, blank=True)
     disabled: bool = models.BooleanField(default=False)
     cleanup_delay = models.DurationField(null=False, blank=False, default=timedelta(days=7))
+    no_nested = models.BooleanField(default=False)  # https://github.com/Computational-Plant-Science/plantit/issues/98
 
     class Executor(models.TextChoices):
         LOCAL = 'local', gettext_lazy('Local')

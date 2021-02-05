@@ -74,7 +74,10 @@
                                     @click="onRunSelected(run)"
                                 >
                                     <b-img
-                                        v-if="run.flow_image_url !== undefined && run.flow_image_url !== null"
+                                        v-if="
+                                            run.flow_image_url !== undefined &&
+                                                run.flow_image_url !== null
+                                        "
                                         rounded
                                         class="card-img-right"
                                         style="max-width: 4rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
