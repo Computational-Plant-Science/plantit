@@ -11,13 +11,13 @@ from plantit.celery import app
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
-from plantit.runs.utils import update_local_log, execute_command, old_flow_config_to_new, remove_logs
+from plantit.runs.utils import update_local_logs, execute_command, old_flow_config_to_new, remove_logs, parse_job_id
 from plantit.targets.models import Target
 
 logger = get_task_logger(__name__)
 
 
-def __upload_run(flow, run, ssh):
+def __upload_run(flow, run: Run, ssh: SSH):
     # update flow config before uploading
     flow['config']['workdir'] = join(run.target.workdir, run.guid)
     flow['config']['log_file'] = f"{run.guid}.{run.target.name.lower()}.log"
@@ -142,14 +142,7 @@ def __upload_run(flow, run, ssh):
                     logger.info(f"Using push command: {push_commands}")
 
 
-def __parse_job_id(line: str) -> str:
-    try:
-        return str(int(line.replace('Submitted batch job', '').strip()))
-    except:
-        raise Exception(f"Failed to parse job ID from: '{line}'")
-
-
-def __submit_run(run, ssh):
+def __submit_run(run: Run, ssh: SSH):
     # TODO refactor to allow multiple cluster schedulers
     sandbox = run.target.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
     template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
@@ -170,14 +163,14 @@ def __submit_run(run, ssh):
             command=f"chmod +x {template_name} && ./{template_name}" if run.target.no_nested else f"chmod +x {template_name} && sbatch {template_name}",
             directory=join(run.target.workdir, run.work_dir),
             allow_stderr=True)
-        job_id = __parse_job_id(output_lines[-1])
+        job_id = parse_job_id(output_lines[-1])
         run.job_id = job_id
         run.updated = timezone.now()
         run.save()
 
 
 @app.task(track_started=True)
-def submit_run(id, flow):
+def submit_run(id: str, flow):
     run = Run.objects.get(guid=id)
     # set this task's ID on the run so user can cancel it
     run.submission_id = submit_run.request.id
@@ -185,35 +178,39 @@ def submit_run(id, flow):
 
     log = f"Deploying run {run.guid} to {run.target.name}"
     logger.info(log)
-    update_local_log(run.guid, log)
+    update_local_logs(run.guid, log)
 
     try:
         ssh = SSH(run.target.hostname, run.target.port, run.target.username)
         with ssh:
             log = f"Creating working directory {join(run.target.workdir, run.guid)} and uploading files"
             logger.info(log)
-            update_local_log(run.guid, log)
+            update_local_logs(run.guid, log)
             __upload_run(flow, run, ssh)
 
             log = 'Running script' if run.is_sandbox else 'Submitting script to scheduler'
             logger.info(log)
-            update_local_log(run.guid, log)
+            update_local_logs(run.guid, log)
             __submit_run(run, ssh)
 
             if run.is_sandbox:
                 log = f"Completed run {run.guid}"
                 logger.info(log)
-                update_local_log(run.guid, log)
+                update_local_logs(run.guid, log)
                 run.job_status = 'SUCCESS'
+
+                cleanup_delay = int(run.target.cleanup_delay.total_seconds())
+                update_local_logs(run.guid, f"Cleaning up in {str(run.target.cleanup_delay)}")
+                cleanup_run.s(id).apply_async(countdown=cleanup_delay)
             else:
                 # poll the cluster scheduler for job status
                 delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-                update_local_log(run.guid, f"Polling for job status in {delay}s")
+                update_local_logs(run.guid, f"Polling for job status in {delay}s")
                 poll_run_status.s(run.guid).apply_async(countdown=delay)
     except Exception:
         log = f"Failed to submit run {run.guid}: {traceback.format_exc()}."
         logger.error(log)
-        update_local_log(run.guid, log)
+        update_local_logs(run.guid, log)
         run.job_status = 'FAILURE'
         raise
     finally:
@@ -222,7 +219,7 @@ def submit_run(id, flow):
 
 
 @app.task()
-def poll_run_status(id):
+def poll_run_status(id: str):
     run = Run.objects.get(guid=id)
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
     cleanup_delay = int(run.target.cleanup_delay.total_seconds())
@@ -230,7 +227,7 @@ def poll_run_status(id):
 
     # if the job already failed, schedule cleanup
     if run.job_status == 'FAILURE':
-        update_local_log(f"Job {run.job_id} already failed, cleaning up in {cleanup_delay}m")
+        update_local_logs(f"Job {run.job_id} already failed, cleaning up in {cleanup_delay}m")
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
 
     # otherwise poll the scheduler for its status
@@ -241,21 +238,21 @@ def poll_run_status(id):
         run.job_walltime = job_walltime
 
         if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED' or job_status == 'TIMEOUT':
-            update_local_log(id, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.cleanup_delay)}")
+            update_local_logs(id, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.cleanup_delay)}")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
-            update_local_log(id, f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s")
+            update_local_logs(id, f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s")
             poll_run_status.s(id).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
             run.job_status = 'FAILURE'
-            update_local_log(id, f"Job {run.job_id} not found, cleaning up in {str(run.target.cleanup_delay)}")
+            update_local_logs(id, f"Job {run.job_id} not found, cleaning up in {str(run.target.cleanup_delay)}")
         else:
-            update_local_log(f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.cleanup_delay)}")
+            update_local_logs(id, f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.cleanup_delay)}")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     except:
         run.job_status = 'FAILURE'
-        update_local_log(f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.cleanup_delay)}): {traceback.format_exc()}")
+        update_local_logs(f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.cleanup_delay)}): {traceback.format_exc()}")
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     finally:
         run.updated = timezone.now()
@@ -263,7 +260,7 @@ def poll_run_status(id):
 
 
 @app.task()
-def cleanup_run(id):
+def cleanup_run(id: str):
     run = Run.objects.get(guid=id)
     logger.info(f"Cleaning up run {id} local working directory {run.target.workdir}")
     remove_logs(run.guid, run.target.name)
@@ -279,8 +276,8 @@ def cleanup_run(id):
 
 
 @app.task()
-def clean_singularity_cache(name):
-    target = Target.objects.get(name=name)
+def clean_singularity_cache(target: str):
+    target = Target.objects.get(name=target)
     ssh = SSH(target.hostname, target.port, target.username)
     with ssh:
         execute_command(

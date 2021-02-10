@@ -49,31 +49,25 @@ def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: 
     return output
 
 
-def update_local_log(id: str, description: str):
+def update_local_logs(id: str, description: str):
     log_path = join(environ.get('RUNS_LOGS'), f"{id}.plantit.log")
     with open(log_path, 'a') as log:
         log.write(f"{description}\n")
 
 
-def update_target_log(id: str, target: str, description: str):
-    log_path = join(environ.get('RUNS_LOGS'), f"{id}.{target.lower()}.log")
-    with open(log_path, 'a') as log:
-        log.write(f"{description}\n")
-
-
-def stat_log(id: str):
+def stat_logs(id: str):
     log_path = Path(join(environ.get('RUNS_LOGS'), f"{id}.plantit.log"))
     return datetime.fromtimestamp(log_path.stat().st_mtime) if log_path.is_file() else None
 
 
 def remove_logs(id: str, target: str):
     local_log_path = join(environ.get('RUNS_LOGS'), f"{id}.plantit.log")
-    target_log_path = join(environ.get('RUNS_LOGS'), f"{id}.{target.lower()}.log")
+    # target_log_path = join(environ.get('RUNS_LOGS'), f"{id}.{target.lower()}.log")
     os.remove(local_log_path)
-    os.remove(target_log_path)
+    # os.remove(target_log_path)
 
 
-def __get_flows(response, token):
+def get_flows(response, token):
     response_json = response.json()
     flows = [{
         'repo': item['repository'],
@@ -91,21 +85,21 @@ async def list_flows_for_users(usernames: List[str], token: str):
     async with httpx.AsyncClient(headers=headers) as client:
         futures = [client.get(url) for url in urls]
         responses = await asyncio.gather(*futures)
-        return [flow for flows in [__get_flows(response, token) for response in responses] for flow in flows]
+        return [flow for flows in [get_flows(response, token) for response in responses] for flow in flows]
 
 
-def __list_by_user(username: str, token: str):
+def list_by_user(username: str, token: str):
     response = requests.get(
         f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
         headers={
             "Authorization": f"token {token}",
             "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
         })
-    flows = __get_flows(response, token)
+    flows = get_flows(response, token)
     return [flow for flow in flows]  # if flow['config']['public']]
 
 
-def __list_by_user_internal(username):
+def list_by_user_internal(username):
     response = requests.get(
         f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
         auth=HTTPBasicAuth(settings.GITHUB_USERNAME, settings.GITHUB_KEY),
@@ -190,3 +184,10 @@ def parse_walltime(walltime) -> timedelta:
     time_minutes = int(time_split[1])
     time_seconds = int(time_split[2])
     return timedelta(hours=time_hours, minutes=time_minutes, seconds=time_seconds)
+
+
+def parse_job_id(line: str) -> str:
+    try:
+        return str(int(line.replace('Submitted batch job', '').strip()))
+    except:
+        raise Exception(f"Failed to parse job ID from: '{line}'")

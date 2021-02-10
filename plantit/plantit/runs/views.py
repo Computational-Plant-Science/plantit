@@ -1,9 +1,7 @@
 import binascii
 import os
-import os
 import tempfile
 import uuid
-from datetime import timedelta
 from os.path import join
 from pathlib import Path
 
@@ -17,13 +15,12 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 
 from plantit import settings
-from plantit.celery import app
 from plantit.runs.cluster import cancel_job
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import update_local_log, stat_log, update_target_log, parse_walltime
+from plantit.runs.utils import update_local_logs
 from plantit.targets.models import Target
 from plantit.utils import get_repo_config
 
@@ -451,14 +448,14 @@ def cancel(request, id):
     if run.is_sandbox:
         # cancel the Celery task
         AsyncResult(run.submission_id).revoke()
-        update_local_log(run.guid, message)
+        update_local_logs(run.guid, message)
         run.job_status = 'CANCELLED'
         run.save()
         return HttpResponse(message)
     else:
         # cancel the cluster scheduler job
         cancel_job(run)
-        update_local_log(run.guid, message)
+        update_local_logs(run.guid, message)
         run.job_status = 'CANCELLED'
         run.save()
         return HttpResponse(message)
@@ -477,7 +474,7 @@ def update_status(request, id):
 
     for chunk in status['description'].split('<br>'):
         for line in chunk.split('\n'):
-            update_local_log(run.guid, line)
+            update_local_logs(run.guid, line)
             # update_target_log(run.guid, run.target.name, line)
 
             # catch singularity build failures
