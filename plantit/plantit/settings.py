@@ -14,6 +14,7 @@ assert 'FLOWS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: FLOWS_REFRES
 assert 'RUNS_TIMEOUT_MULTIPLIER' in os.environ, f"{missing_variable}: RUNS_TIMEOUT_MULTIPLIER"
 assert 'RUNS_REFRESH_SECONDS' in os.environ, f"{missing_variable}: RUNS_REFRESH_SECONDS"
 assert 'RUNS_CLEANUP_MINUTES' in os.environ, f"{missing_variable}: RUNS_CLEANUP_MINUTES"
+assert 'TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES' in os.environ, f"{missing_variable}: TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
 assert 'CYVERSE_CLIENT_ID' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_ID"
@@ -35,6 +36,7 @@ FLOWS_REFRESH_MINUTES = os.environ.get('FLOWS_REFRESH_MINUTES')
 RUNS_TIMEOUT_MULTIPLIER = os.environ.get('RUNS_TIMEOUT_MULTIPLIER')
 RUNS_REFRESH_SECONDS = os.environ.get('RUNS_REFRESH_SECONDS')
 RUNS_CLEANUP_MINUTES = os.environ.get('RUNS_CLEANUP_MINUTES')
+TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES = os.environ.get('TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')
@@ -71,7 +73,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'plantit.apps.PlantITConfig',
     'front_end.apps.FrontEndConfig',
-    'taggit'
+    'taggit',
+    'django_celery_beat'
 ]
 
 MIDDLEWARE = [

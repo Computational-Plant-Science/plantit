@@ -3,6 +3,7 @@ django-imagekit
 django-filter
 django-model-utils
 django-taggit
+django-celery-beat
 djangorestframework
 psycopg2-binary
 markdown
