@@ -18,6 +18,22 @@ class TargetsViewSet(viewsets.ModelViewSet):
         policies = TargetPolicy.objects.filter(user=user)
         targets = [policy.target for policy in policies]
 
-        return JsonResponse({'targets': targets})
+        return JsonResponse({'targets': [{
+            'name': target.name,
+            'role': policy.role.value.lower(),
+            'description': target.description,
+            'hostname': target.hostname,
+            'pre_commands': target.pre_commands,
+            'max_walltime': target.max_walltime,
+            'max_mem': target.max_mem,
+            'max_cores': target.max_cores,
+            'max_processes': target.max_processes,
+            'queue': target.queue,
+            'project': target.project,
+            'workdir': target.workdir,
+            'executor': target.executor,
+            'disabled': target.disabled,
+            'gpu': target.gpu
+        } for target, policy in zip(targets, policies)]})
 
 

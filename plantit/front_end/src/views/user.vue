@@ -98,18 +98,22 @@
                         <b-tabs
                             pills
                             vertical
-                            content-class="mt-2"
+                            content-class="mt-2 mr-3"
                             v-model="currentTab"
-                            active-nav-item-class="bg-secondary text-dark"
+                            :active-nav-item-class="
+                                darkMode ? 'bg-dark' : 'bg-secondary'
+                            "
                         >
-                            <b-tab
-                                v-if="djangoProfile"
-                                title="Profile"
-                                active
-                                :title-link-class="tabLinkClass(0)"
-                            >
+                            <b-tab v-if="djangoProfile" title="Profile" active>
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(0)">Profile</b>
+                                    <b
+                                        :class="
+                                            darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        >Profile</b
+                                    >
                                 </template>
                                 <b-card
                                     :header-bg-variant="
@@ -296,43 +300,62 @@
                                         "
                                     />
                                     <b-row
+                                        align-h="center"
+                                        v-if="targetsLoading"
+                                    >
+                                        <b-spinner
+                                            type="grow"
+                                            label="Loading..."
+                                            variant="success"
+                                        ></b-spinner>
+                                    </b-row>
+                                    <b-row
+                                        align-h="center"
+                                        class="text-center"
+                                        v-if="
+                                            !targetsLoading &&
+                                                targets.length === 0
+                                        "
+                                    >
+                                        <b-col>
+                                            None to show.
+                                        </b-col>
+                                    </b-row>
+                                    <b-row
                                         class="text-right"
                                         v-for="target in targets"
                                         v-bind:key="target.name"
                                     >
-                                        <b-col
+                                        <b-col md="auto"
                                             ><b-button
-                                                size="sm"
+                                                size="md"
                                                 block
                                                 class="text-left pt-2"
-                                                @click="targetSelected(target)"
                                                 :variant="
                                                     darkMode ? 'dark' : 'white'
                                                 "
-                                                :disabled="
-                                                    targetUnsupported(target) ||
-                                                        target.disabled
-                                                "
+                                                :disabled="true"
                                                 >{{ target.name }}</b-button
                                             ></b-col
                                         >
-                                        <b-col v-if="target"
-                                            ><b-button
-                                                size="sm"
-                                                block
-                                                class="text-left pt-2"
-                                                @click="targetSelected(target)"
-                                                :variant="
-                                                    darkMode ? 'dark' : 'white'
+                                        <b-col align-self="center text-left"
+                                            ><small
+                                                :class="
+                                                    darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
                                                 "
-                                                :disabled="
-                                                    targetUnsupported(target) ||
-                                                        target.disabled
-                                                "
-                                                >{{ target.name }}</b-button
+                                                >{{
+                                                    `You ${
+                                                        target.role === 'own'
+                                                            ? target.role
+                                                            : 'can ' +
+                                                              target.role
+                                                    }`
+                                                }}
+                                                this deployment target.</small
                                             ></b-col
                                         >
-                                        <!--<b-col align-self="center" :class="darkMode ? 'text-white' : 'text-dark'" cols="4">{{ target.hostname }}</b-col>-->
                                         <b-col
                                             align-self="center"
                                             :class="
@@ -364,16 +387,7 @@
                                             "
                                             cols="1"
                                             ><span
-                                                v-if="
-                                                    parseInt(target.max_mem) >=
-                                                        parseInt(
-                                                            flow.config
-                                                                .resources.mem
-                                                        ) &&
-                                                        parseInt(
-                                                            target.max_mem
-                                                        ) > 0
-                                                "
+                                                v-if="parseInt(target.max_mem)"
                                                 >{{ target.max_mem }} GB
                                                 memory</span
                                             >
@@ -421,28 +435,6 @@
                                             ></span>
                                         </b-col>
                                     </b-row>
-                                    <b-row
-                                        align-h="center"
-                                        v-if="targetsLoading"
-                                    >
-                                        <b-spinner
-                                            type="grow"
-                                            label="Loading..."
-                                            variant="success"
-                                        ></b-spinner>
-                                    </b-row>
-                                    <b-row
-                                        align-h="center"
-                                        class="text-center"
-                                        v-else-if="
-                                            !targetsLoading &&
-                                                targets.length === 0
-                                        "
-                                    >
-                                        <b-col>
-                                            None to show.
-                                        </b-col>
-                                    </b-row>
                                 </div>
                             </b-tab>
                         </b-tabs>
@@ -478,6 +470,7 @@ export default {
             flows: [],
             runs: [],
             targets: [],
+            targetsLoading: false,
             loadingUser: true
         };
     },
@@ -502,9 +495,6 @@ export default {
             if (this.djangoProfile === null)
                 return this.darkMode ? '' : 'text-dark';
             if (this.currentTab === idx) {
-                // return this.darkMode
-                //     ? 'background-dark text-success'
-                //     : 'bg-light text-dark';
                 return this.darkMode ? '' : 'text-dark';
             } else {
                 return this.darkMode
@@ -551,13 +541,16 @@ export default {
                 });
         },
         async loadTargets() {
+            this.targetsLoading = true;
             return axios
                 .get(`/apis/v1/targets/get_by_username/`)
                 .then(response => {
+                    this.targetsLoading = false;
                     this.targets = response.data.targets;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    this.targetsLoading = false;
                     if (error.response.status === 500) throw error;
                 });
         },

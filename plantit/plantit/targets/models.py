@@ -1,7 +1,6 @@
 import json
 from datetime import timedelta
 from enum import Enum
-from os import environ
 
 from django.conf import settings
 from django.db import models
