@@ -262,7 +262,7 @@
                         href="/apis/v1/idp/github_request_identity/"
                         class="ml-0 mr-0"
                     >
-                        <b-button class="text-left" variant="success" size="sm">
+                        <b-button class="mt-1 text-left" variant="success" size="sm">
                             <i class="fab fa-github"></i>
                             Log in to GitHub
                         </b-button>

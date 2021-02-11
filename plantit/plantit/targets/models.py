@@ -1,7 +1,15 @@
+import json
 from datetime import timedelta
+from enum import Enum
+from os import environ
 
+from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
+from django_enum_choices.fields import EnumChoiceField
 
 
 class Target(models.Model):
@@ -37,3 +45,39 @@ class Target(models.Model):
 
     def __str__(self):
         return self.name
+
+
+@receiver(post_save, sender=Target)
+def schedule_singularity_cache_cleaning(sender, instance, created, **kwargs):
+    if not created:
+        return
+
+    schedule, _ = IntervalSchedule.objects.get_or_create(
+        every=instance.cleanup_delay.total_seconds(),
+        period=IntervalSchedule.SECONDS)
+
+    PeriodicTask.objects.create(
+        interval=schedule,
+        name=f"Clean singularity cache on {instance.name}",
+        task='plantit.runs.tasks.clean_singularity_cache',
+        args=json.dumps([instance.name]))
+
+
+@receiver(post_delete, sender=Target)
+def unschedule_singularity_cache_cleaning(sender, instance, **kwargs):
+    task = PeriodicTask.objects.get(name=f"Clean singularity cache on {instance.name}")
+    task.delete()
+
+
+class TargetRole(Enum):
+    own = 'OWN'
+    run = 'USE'
+
+
+class TargetPolicy(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    role = EnumChoiceField(TargetRole, default=TargetRole.run)
+    target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.SET_NULL)
+
+
+

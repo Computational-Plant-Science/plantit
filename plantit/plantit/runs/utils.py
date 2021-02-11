@@ -29,7 +29,7 @@ def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: 
     errors = []
 
     print(f"Executing command on '{ssh_client.host}': {full_command}")
-    stdin, stdout, stderr = ssh_client.client.exec_command(full_command)
+    stdin, stdout, stderr = ssh_client.client.exec_command(full_command, get_pty=True)
     stdin.close()
 
     for line in iter(lambda: stdout.readline(2048), ""):

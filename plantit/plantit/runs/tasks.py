@@ -290,25 +290,3 @@ def clean_singularity_cache(target: str):
             command="singularity cache clean",
             directory=target.workdir,
             allow_stderr=True)
-
-
-# @app.on_after_configure.connect
-# def setup_periodic_tasks(sender, **kwargs):
-#     targets = Target.objects.all()
-#     for target in targets:
-#         sender.add_periodic_task(
-#             int(os.environ.get('TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES')) * 60,
-#             clean_singularity_cache.s(target.name))
-
-
-schedule, _ = IntervalSchedule.objects.get_or_create(
-    every=int(os.environ.get('TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES')),
-    period=IntervalSchedule.MINUTES)
-
-targets = Target.objects.all()
-for target in targets:
-    PeriodicTask.objects.create(
-        interval=schedule,
-        name=f"Clean singularity cache on {target.name}",
-        task='plantit.runs.tasks.clean_singularity_cache',
-        args=json.dumps([target.name]))

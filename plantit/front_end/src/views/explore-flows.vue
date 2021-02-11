@@ -12,9 +12,10 @@
             <b-row
                 v-if="currentUserGitHubProfile === null"
                 align-v="center"
-                class="p-2"
+                align-h="center"
+                class="p-2 text-center"
             >
-                <b-col md="auto" class="mr-2 pr-0">
+                <b-col class="mr-2 pr-0 text-right">
                     <b-button
                         variant="success"
                         href="/apis/v1/users/github_request_identity/"
@@ -24,7 +25,7 @@
                         Log in to GitHub
                     </b-button>
                 </b-col>
-                <b-col md="auto" class="ml-0 pl-0">
+                <b-col class="ml-0 pl-0 text-left">
                     <b class="ml-0 pl-0">to load flows.</b>
                 </b-col>
             </b-row>

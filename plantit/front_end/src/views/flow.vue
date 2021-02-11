@@ -433,6 +433,20 @@
                                         >{{ target.name }}</b-button
                                     ></b-col
                                 >
+                                <b-col v-if="target"
+                                    ><b-button
+                                        size="sm"
+                                        block
+                                        class="text-left pt-2"
+                                        @click="targetSelected(target)"
+                                        :variant="darkMode ? 'dark' : 'white'"
+                                        :disabled="
+                                            targetUnsupported(target) ||
+                                                target.disabled
+                                        "
+                                        >{{ target.name }}</b-button
+                                    ></b-col
+                                >
                                 <!--<b-col align-self="center" :class="darkMode ? 'text-white' : 'text-dark'" cols="4">{{ target.hostname }}</b-col>-->
                                 <b-col
                                     align-self="center"

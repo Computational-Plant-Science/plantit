@@ -1,7 +1,7 @@
 <template>
     <div class="w-100 h-100 pl-3" style="background-color: transparent">
-        <br/>
-      <br/>
+        <br />
+        <br />
         <b-container class="p-3 vl" fluid>
             <div v-if="loadingUser">
                 <br />
@@ -252,6 +252,199 @@
                                     </flows>
                                 </b-row>
                             </b-tab>
+                            <b-tab :title-link-class="tabLinkClass(3)">
+                                <template v-slot:title>
+                                    <b :class="tabLinkClass(3)">Targets</b>
+                                </template>
+                                <div>
+                                    <b-row>
+                                        <b-col
+                                            class="text-left"
+                                            align-self="end"
+                                            ><h5>
+                                                <small
+                                                    :class="
+                                                        darkMode
+                                                            ? 'text-white'
+                                                            : 'text-dark'
+                                                    "
+                                                    >Name</small
+                                                >
+                                            </h5></b-col
+                                        >
+                                        <b-col
+                                            class="text-right"
+                                            align-self="end"
+                                            ><h5>
+                                                <small
+                                                    :class="
+                                                        darkMode
+                                                            ? 'text-white'
+                                                            : 'text-dark'
+                                                    "
+                                                    >Resources Available
+                                                </small>
+                                            </h5>
+                                            <small>per container</small></b-col
+                                        >
+                                    </b-row>
+                                    <hr
+                                        :class="
+                                            darkMode
+                                                ? 'theme-dark'
+                                                : 'theme-light'
+                                        "
+                                    />
+                                    <b-row
+                                        class="text-right"
+                                        v-for="target in targets"
+                                        v-bind:key="target.name"
+                                    >
+                                        <b-col
+                                            ><b-button
+                                                size="sm"
+                                                block
+                                                class="text-left pt-2"
+                                                @click="targetSelected(target)"
+                                                :variant="
+                                                    darkMode ? 'dark' : 'white'
+                                                "
+                                                :disabled="
+                                                    targetUnsupported(target) ||
+                                                        target.disabled
+                                                "
+                                                >{{ target.name }}</b-button
+                                            ></b-col
+                                        >
+                                        <b-col v-if="target"
+                                            ><b-button
+                                                size="sm"
+                                                block
+                                                class="text-left pt-2"
+                                                @click="targetSelected(target)"
+                                                :variant="
+                                                    darkMode ? 'dark' : 'white'
+                                                "
+                                                :disabled="
+                                                    targetUnsupported(target) ||
+                                                        target.disabled
+                                                "
+                                                >{{ target.name }}</b-button
+                                            ></b-col
+                                        >
+                                        <!--<b-col align-self="center" :class="darkMode ? 'text-white' : 'text-dark'" cols="4">{{ target.hostname }}</b-col>-->
+                                        <b-col
+                                            align-self="center"
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                            cols="1"
+                                            ><b>{{ target.max_cores }}</b>
+                                            cores</b-col
+                                        >
+                                        <b-col
+                                            align-self="center"
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                            cols="1"
+                                            ><b>{{ target.max_processes }}</b>
+                                            processes</b-col
+                                        >
+                                        <b-col
+                                            align-self="center"
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                            cols="1"
+                                            ><span
+                                                v-if="
+                                                    parseInt(target.max_mem) >=
+                                                        parseInt(
+                                                            flow.config
+                                                                .resources.mem
+                                                        ) &&
+                                                        parseInt(
+                                                            target.max_mem
+                                                        ) > 0
+                                                "
+                                                >{{ target.max_mem }} GB
+                                                memory</span
+                                            >
+                                            <span
+                                                v-else-if="
+                                                    parseInt(target.max_mem) > 0
+                                                "
+                                                class="text-danger"
+                                                >{{ target.max_mem }} GB
+                                                memory</span
+                                            >
+                                            <span
+                                                v-else-if="
+                                                    parseInt(target.max_mem) ===
+                                                        -1
+                                                "
+                                                >virtual memory</span
+                                            ></b-col
+                                        >
+                                        <b-col
+                                            align-self="center"
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                            cols="1"
+                                        >
+                                            <span v-if="target.gpu">
+                                                GPU
+                                                <i
+                                                    :class="
+                                                        target.gpu
+                                                            ? 'text-warning'
+                                                            : ''
+                                                    "
+                                                    class="far fa-check-circle"
+                                                ></i>
+                                            </span>
+                                            <span v-else class="text-secondary"
+                                                >No GPU
+                                                <i
+                                                    class="far fa-times-circle"
+                                                ></i
+                                            ></span>
+                                        </b-col>
+                                    </b-row>
+                                    <b-row
+                                        align-h="center"
+                                        v-if="targetsLoading"
+                                    >
+                                        <b-spinner
+                                            type="grow"
+                                            label="Loading..."
+                                            variant="success"
+                                        ></b-spinner>
+                                    </b-row>
+                                    <b-row
+                                        align-h="center"
+                                        class="text-center"
+                                        v-else-if="
+                                            !targetsLoading &&
+                                                targets.length === 0
+                                        "
+                                    >
+                                        <b-col>
+                                            None to show.
+                                        </b-col>
+                                    </b-row>
+                                </div>
+                            </b-tab>
                         </b-tabs>
                     </b-col>
                 </b-row>
@@ -284,6 +477,7 @@ export default {
             data: {},
             flows: [],
             runs: [],
+            targets: [],
             loadingUser: true
         };
     },
@@ -301,6 +495,7 @@ export default {
             `/iplant/home/${this.currentUserDjangoProfile.username}/`,
             this.currentUserDjangoProfile.profile.cyverse_token
         );
+        await this.loadTargets();
     },
     methods: {
         tabLinkClass(idx) {
@@ -349,6 +544,17 @@ export default {
                     if (response.data.cyverse_profile)
                         this.cyverseProfile = response.data.cyverse_profile;
                     this.githubProfile = response.data.github_profile;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
+        async loadTargets() {
+            return axios
+                .get(`/apis/v1/targets/get_by_username/`)
+                .then(response => {
+                    this.targets = response.data.targets;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
