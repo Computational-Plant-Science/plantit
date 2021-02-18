@@ -217,8 +217,7 @@
                                                     `You ${
                                                         target.role === 'own'
                                                             ? target.role
-                                                            : 'can ' +
-                                                              target.role
+                                                            : target.role === 'none' ? 'do not have access to' : 'can ' + target.role
                                                     }`
                                                 }}
                                                 this deployment target.</small
@@ -234,6 +233,7 @@
                                                 size="sm"
                                                 v-b-tooltip.hover
                                                 title="Check Connection Status"
+                                                :disabled="target.role === 'none'"
                                                 @click="checkStatus"
                                             >
                                                 <i

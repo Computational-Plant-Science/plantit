@@ -369,7 +369,7 @@
 
                                                         target.role === 'own'
                                                             ? "(owner)"
-                                                            : '(guest)'
+                                                            : target.role === 'none' ? '(no access)' : '(guest)'
 
                                                 }}</small
                                             ></b-col

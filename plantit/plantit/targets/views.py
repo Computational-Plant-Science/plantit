@@ -22,7 +22,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
     def __convert_target(target, role):
         return {
             'name': target.name,
-            'role': role.value.lower(),
+            'role': role.lower(),
             'description': target.description,
             'hostname': target.hostname,
             'pre_commands': target.pre_commands,
@@ -55,10 +55,10 @@ class TargetsViewSet(viewsets.ModelViewSet):
         user = request.user
         policies = TargetPolicy.objects.filter(user=user)
         if target not in [policy.target for policy in policies]:
-            return HttpResponseNotFound()
+            return JsonResponse(self.__convert_target(target, 'none'))
 
         policy = TargetPolicy.objects.get(user=user, target=target)
-        return JsonResponse(self.__convert_target(target, policy.role))
+        return JsonResponse(self.__convert_target(target, policy.role.value))
 
     @action(methods=['get'], detail=False)
     def status(self, request):
@@ -86,9 +86,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
     def get_by_username(self, request):
         user = request.user
         policies = TargetPolicy.objects.filter(user=user)
-        targets = [policy.target for policy in policies]
-
-        return JsonResponse({'targets': [{
+        targets = [{
             'name': target.name,
             'role': policy.role.value.lower(),
             'description': target.description,
@@ -107,7 +105,28 @@ class TargetsViewSet(viewsets.ModelViewSet):
             'singularity_cache_clean_enabled': target.singularity_cache_clean_enabled,
             'singularity_cache_clean_delay': target.singularity_cache_clean_delay,
             'workdir_clean_delay': target.workdir_clean_delay
-        } for target, policy in zip(targets, policies)]})
+        } for target, policy in zip([policy.target for policy in policies], policies)] + [{
+            'name': target.name,
+            'role': 'none',
+            'description': target.description,
+            'hostname': target.hostname,
+            'pre_commands': target.pre_commands,
+            'max_walltime': target.max_walltime,
+            'max_mem': target.max_mem,
+            'max_cores': target.max_cores,
+            'max_processes': target.max_processes,
+            'queue': target.queue,
+            'project': target.project,
+            'workdir': target.workdir,
+            'executor': target.executor,
+            'disabled': target.disabled,
+            'gpu': target.gpu,
+            'singularity_cache_clean_enabled': target.singularity_cache_clean_enabled,
+            'singularity_cache_clean_delay': target.singularity_cache_clean_delay,
+            'workdir_clean_delay': target.workdir_clean_delay
+        } for target in Target.objects.exclude(targetpolicy__in=policies)]
+
+        return JsonResponse({'targets': targets})
 
     @action(methods=['get'], detail=False)
     def schedule_singularity_cache_cleaning(self, request):
