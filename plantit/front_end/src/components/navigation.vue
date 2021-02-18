@@ -382,7 +382,7 @@
                         </b-dropdown-item>
                         <b-dropdown-item
                             :title="
-                                `${darkMode ? 'Disable' : 'Enable'} Dark Mode`
+                                `${darkMode ? 'Light Mode' : 'Dark Mode'}`
                             "
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
@@ -395,8 +395,7 @@
                                 class="fas fa-sun fa-1x fa-fw"
                             ></i>
                             <i v-else class="fas fa-moon fa-1x fa-fw"></i>
-                            {{ darkMode ? 'Disable' : 'Enable' }}
-                            Dark Mode
+                            {{ darkMode ? 'Light Mode' : 'Dark Mode' }}
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Log Out"

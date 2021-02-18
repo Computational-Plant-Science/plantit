@@ -82,38 +82,42 @@
                                             }}</small>
                                         </b-col>
                                     </b-row>
-                                    <hr/>
-                                    <h5>Configuration </h5>
+                                    <hr />
+                                    <h5 :class="darkMode ? 'text-white' : 'text-dark'">Configuration</h5>
                                     <b-row>
                                         <b-col>
-                                            <small>Executor</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            {{ target.executor }}
+                                            <small>executor</small>
+                                            <br />
+                                            <b class="ml-3">
+                                                {{ target.executor }}
+                                            </b>
                                         </b-col>
                                     </b-row>
                                     <b-row>
                                         <b-col>
-                                            <small>Working directory</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            {{ target.workdir }}
+                                            <small>working directory</small>
+                                            <br />
+                                            <b class="ml-3">
+                                                {{ target.workdir }}
+                                            </b>
                                         </b-col>
                                     </b-row>
-                                  <b-row>
+                                    <b-row>
                                         <b-col>
-                                            <small>Pre-commands</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b
+                                            <small>pre-commands</small>
+                                            <br />
+                                            <b class="ml-3"
                                                 ><code>{{
                                                     ' ' + target.pre_commands
                                                 }}</code></b
                                             >
                                         </b-col>
                                     </b-row>
-                                    <hr/>
-                                    <h5>Resources Available <small>per container</small></h5>
+                                    <hr />
+                                    <h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                                        Resources Available
+                                        <small>per container</small>
+                                    </h5>
                                     <b-row>
                                         <b-col
                                             align-self="center"
@@ -126,7 +130,7 @@
                                             ><b>{{ target.max_cores }}</b>
                                             cores</b-col
                                         >
-                                      </b-row>
+                                    </b-row>
                                     <b-row>
                                         <b-col
                                             align-self="center"
@@ -139,7 +143,7 @@
                                             ><b>{{ target.max_processes }}</b>
                                             processes</b-col
                                         >
-                                      </b-row>
+                                    </b-row>
                                     <b-row>
                                         <b-col
                                             align-self="center"
@@ -170,7 +174,7 @@
                                                 >virtual memory</span
                                             ></b-col
                                         >
-                                      </b-row>
+                                    </b-row>
                                     <b-row>
                                         <b-col
                                             align-self="center"
@@ -349,7 +353,8 @@ export default {
                 )
                 .then(response => {
                     this.target = response.data;
-                    this.singularityCacheCleaning = response.data.singularity_cache_clean_enabled;
+                    this.singularityCacheCleaning =
+                        response.data.singularity_cache_clean_enabled;
                     this.targetLoading = false;
                 })
                 .catch(error => {
@@ -383,7 +388,7 @@ export default {
                         `/apis/v1/targets/unschedule_singularity_cache_cleaning/?name=${target.name}`
                     )
                     .then(() => {
-                      this.loadTarget();
+                        this.loadTarget();
                         this.statusAlertMessage = `Disabled Singularity cache cleaning on ${target.name}`;
                         this.showStatusAlert = true;
                     })

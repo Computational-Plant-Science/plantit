@@ -307,10 +307,9 @@
                                                             ? 'text-white'
                                                             : 'text-dark'
                                                     "
-                                                    >Resources Available
+                                                    >Resources
                                                 </small>
-                                            </h5>
-                                            <small>per container</small></b-col
+                                            </h5></b-col
                                         >
                                     </b-row>
                                     <hr
@@ -367,66 +366,14 @@
                                                         : 'text-dark'
                                                 "
                                                 >{{
-                                                    `You ${
+
                                                         target.role === 'own'
-                                                            ? target.role
-                                                            : 'can ' +
-                                                              target.role
-                                                    }`
-                                                }}
-                                                this deployment target.</small
+                                                            ? "(owner)"
+                                                            : '(guest)'
+
+                                                }}</small
                                             ></b-col
                                         >
-                                        <b-col
-                                            align-self="center"
-                                            :class="
-                                                darkMode
-                                                    ? 'text-white text-right'
-                                                    : 'text-dark text-right'
-                                            "
-                                            cols="2"
-                                        >
-                                            <small
-                                                v-if="
-                                                    target.singularity_cache_clean_enabled
-                                                "
-                                                >Cleaning Singularity cache
-                                                every
-                                                {{
-                                                    prettifyDuration(
-                                                        target.singularity_cache_clean_delay
-                                                    )
-                                                }}</small
-                                            >
-                                            <small v-else
-                                                >Not cleaning Singularity
-                                                cache</small
-                                            >
-                                        </b-col>
-                                        <b-col
-                                            v-if="target.role === 'own'"
-                                            align-self="center"
-                                            :class="
-                                                darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                            cols="1"
-                                        >
-                                            <b-form-checkbox
-                                                :v-model="
-                                                    target.singularity_cache_clean_enabled
-                                                "
-                                                @change="
-                                                    toggleSingularityCacheCleanDelay(
-                                                        target
-                                                    )
-                                                "
-                                                switch
-                                                size="md"
-                                            >
-                                            </b-form-checkbox
-                                        ></b-col>
                                         <b-col
                                             align-self="center"
                                             :class="
@@ -498,7 +445,7 @@
                                                     class="far fa-check-circle"
                                                 ></i>
                                             </span>
-                                            <span v-else class="text-secondary"
+                                            <span v-else
                                                 >No GPU
                                                 <i
                                                     class="far fa-times-circle"
