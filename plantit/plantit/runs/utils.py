@@ -88,7 +88,7 @@ async def list_flows_for_users(usernames: List[str], token: str):
         return [flow for flows in [get_flows(response, token) for response in responses] for flow in flows]
 
 
-def list_by_user(username: str, token: str):
+def list_flows_for_user(username: str, token: str):
     response = requests.get(
         f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
         headers={

@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 
 from plantit import settings
-from plantit.runs.utils import list_by_user, list_flows_for_users
+from plantit.runs.utils import list_flows_for_user, list_flows_for_users
 from plantit.utils import get_repo_config, validate_config
 
 
@@ -48,7 +48,8 @@ def list_all(request):
 
 @login_required
 def list_by_user(request, username):
-    return JsonResponse({'flows': list_by_user(username, request.user.profile.github_token)})
+    flows = asyncio.run(list_flows_for_users([username], request.user.profile.github_token))
+    return JsonResponse({'flows': flows})
 
 
 @login_required

@@ -203,8 +203,8 @@ def submit_run(id: str, flow):
                 update_local_logs(run.guid, log)
                 run.job_status = 'SUCCESS'
 
-                cleanup_delay = int(run.target.cleanup_delay.total_seconds())
-                update_local_logs(run.guid, f"Cleaning up in {str(run.target.cleanup_delay)}")
+                cleanup_delay = int(run.target.workdir_clean_delay.total_seconds())
+                update_local_logs(run.guid, f"Cleaning up in {str(run.target.workdir_clean_delay)}")
                 cleanup_run.s(id).apply_async(countdown=cleanup_delay)
             else:
                 # poll the cluster scheduler for job status
@@ -226,7 +226,7 @@ def submit_run(id: str, flow):
 def poll_run_status(id: str):
     run = Run.objects.get(guid=id)
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-    cleanup_delay = int(run.target.cleanup_delay.total_seconds())
+    cleanup_delay = int(run.target.workdir_clean_delay.total_seconds())
     logger.info(f"Checking {run.target.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
     # if the job already failed, schedule cleanup
@@ -242,7 +242,7 @@ def poll_run_status(id: str):
         run.job_walltime = job_walltime
 
         if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED' or job_status == 'TIMEOUT':
-            update_local_logs(id, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.cleanup_delay)}")
+            update_local_logs(id, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.workdir_clean_delay)}")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
             update_local_logs(id, f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s")
@@ -250,13 +250,13 @@ def poll_run_status(id: str):
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
             run.job_status = 'FAILURE'
-            update_local_logs(id, f"Job {run.job_id} not found, cleaning up in {str(run.target.cleanup_delay)}")
+            update_local_logs(id, f"Job {run.job_id} not found, cleaning up in {str(run.target.workdir_clean_delay)}")
         else:
-            update_local_logs(id, f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.cleanup_delay)}")
+            update_local_logs(id, f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.workdir_clean_delay)}")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     except:
         run.job_status = 'FAILURE'
-        update_local_logs(f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.cleanup_delay)}): {traceback.format_exc()}")
+        update_local_logs(f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.workdir_clean_delay)}): {traceback.format_exc()}")
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     finally:
         run.updated = timezone.now()

@@ -1,4 +1,8 @@
-from django.http import JsonResponse
+import json
+from datetime import timedelta
+
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -33,7 +37,50 @@ class TargetsViewSet(viewsets.ModelViewSet):
             'workdir': target.workdir,
             'executor': target.executor,
             'disabled': target.disabled,
-            'gpu': target.gpu
+            'gpu': target.gpu,
+            'singularity_cache_clean_enabled': target.singularity_cache_clean_enabled,
+            'singularity_cache_clean_delay': target.singularity_cache_clean_delay,
+            'workdir_clean_delay': target.workdir_clean_delay
         } for target, policy in zip(targets, policies)]})
+
+    @action(methods=['get'], detail=False)
+    def schedule_singularity_cache_cleaning(self, request):
+        name = request.GET.get('name')
+        delay = request.GET.get('delay', None)
+
+        try:
+            target = Target.objects.get(name=name)
+        except:
+            return HttpResponseNotFound()
+
+        if delay is not None:
+            target.singularity_cache_clean_delay = timedelta(seconds=int(delay))
+        target.singularity_cache_clean_enabled = True
+        target.save()
+
+        schedule, _ = IntervalSchedule.objects.get_or_create(every=int(delay), period=IntervalSchedule.SECONDS)
+        PeriodicTask.objects.create(
+            interval=schedule,
+            name=f"Clean singularity cache on {target.name}",
+            task='plantit.runs.tasks.clean_singularity_cache',
+            args=json.dumps([target.name]))
+
+        return JsonResponse({'enabled': True})
+
+    @action(methods=['get'], detail=False)
+    def unschedule_singularity_cache_cleaning(self, request):
+        name = request.GET.get('name')
+
+        try:
+            target = Target.objects.get(name=name)
+            task = PeriodicTask.objects.get(name=f"Clean singularity cache on {name}")
+        except:
+            return HttpResponseNotFound()
+
+        task.delete()  # cancel the periodic task
+        target.singularity_cache_clean_enabled = False
+        target.save()
+
+        return JsonResponse({'enabled': False})
 
 

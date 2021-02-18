@@ -261,6 +261,28 @@
                                     <b :class="tabLinkClass(3)">Targets</b>
                                 </template>
                                 <div>
+                                    <b-row
+                                        v-if="
+                                            showToggleSingularityCacheCleaningAlert
+                                        "
+                                    >
+                                        <b-col class="m-0 p-0">
+                                            <b-alert
+                                                :show="
+                                                    showToggleSingularityCacheCleaningAlert
+                                                "
+                                                :variant="showToggleSingularityCacheCleaningMessage.startsWith('Failed') ? 'danger' : 'success'"
+                                                dismissible
+                                                @dismissed="
+                                                    showToggleSingularityCacheCleaningAlert = false
+                                                "
+                                            >
+                                                {{
+                                                    showToggleSingularityCacheCleaningMessage
+                                                }}
+                                            </b-alert>
+                                        </b-col>
+                                    </b-row>
                                     <b-row>
                                         <b-col
                                             class="text-left"
@@ -356,6 +378,56 @@
                                                 this deployment target.</small
                                             ></b-col
                                         >
+                                        <b-col
+                                            align-self="center"
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white text-right'
+                                                    : 'text-dark text-right'
+                                            "
+                                            cols="2"
+                                        >
+                                            <small
+                                                v-if="
+                                                    target.singularity_cache_clean_enabled
+                                                "
+                                                >Cleaning Singularity cache
+                                                every
+                                                {{
+                                                    prettifyDuration(
+                                                        target.singularity_cache_clean_delay
+                                                    )
+                                                }}</small
+                                            >
+                                            <small v-else
+                                                >Not cleaning Singularity
+                                                cache</small
+                                            >
+                                        </b-col>
+                                        <b-col
+                                            v-if="target.role === 'own'"
+                                            align-self="center"
+                                            :class="
+                                                darkMode
+                                                    ? 'text-white'
+                                                    : 'text-dark'
+                                            "
+                                            cols="1"
+                                        >
+                                            <b-form-checkbox
+                                                :v-model="
+                                                    target.singularity_cache_clean_enabled
+                                                "
+                                                @change="
+                                                    toggleSingularityCacheCleanDelay(
+                                                        target
+                                                    )
+                                                "
+                                                switch
+                                                size="md"
+                                            >
+                                            </b-form-checkbox
+                                        ></b-col>
                                         <b-col
                                             align-self="center"
                                             :class="
@@ -471,7 +543,8 @@ export default {
             runs: [],
             targets: [],
             targetsLoading: false,
-            loadingUser: true
+            loadingUser: true,
+            showToggleSingularityCacheCleaningAlert: false
         };
     },
     computed: mapGetters([
@@ -491,6 +564,54 @@ export default {
         await this.loadTargets();
     },
     methods: {
+        toggleSingularityCacheCleanDelay: function(target) {
+            if (target.singularity_cache_clean_enabled)
+                axios
+                    .get(
+                        `/apis/v1/targets/unschedule_singularity_cache_cleaning/?name=${target.name}`
+                    )
+                    .then(() => {
+                        this.showToggleSingularityCacheCleaningMessage = `Disabled Singularity cache cleaning on ${target.name}`;
+                        this.showToggleSingularityCacheCleaningAlert = true;
+                        this.loadTargets();
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        if (error.response.status === 500) {
+                            this.showToggleSingularityCacheCleaningMessage = `Failed to disable Singularity cache cleaning on ${target.name}`;
+                            this.showToggleSingularityCacheCleaningAlert = true;
+                            throw error;
+                        }
+                    });
+            else
+                axios
+                    .get(
+                        `/apis/v1/targets/schedule_singularity_cache_cleaning/?name=${
+                            target.name
+                        }&delay=${moment
+                            .duration(
+                                target.singularity_cache_clean_delay,
+                                'seconds'
+                            )
+                            .asSeconds()}`
+                    )
+                    .then(() => {
+                        this.showToggleSingularityCacheCleaningMessage = `Enabled Singularity cache cleaning on ${target.name}`;
+                        this.showToggleSingularityCacheCleaningAlert = true;
+                        this.loadTargets();
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        if (error.response.status === 500) {
+                            this.showToggleSingularityCacheCleaningMessage = `Failed to enable Singularity cache cleaning on ${target.name}`;
+                            this.showToggleSingularityCacheCleaningAlert = true;
+                            throw error;
+                        }
+                    });
+        },
+        prettifyDuration: function(dur) {
+            return moment.duration(dur, 'seconds').humanize();
+        },
         tabLinkClass(idx) {
             if (this.djangoProfile === null)
                 return this.darkMode ? '' : 'text-dark';
