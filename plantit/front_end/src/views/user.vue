@@ -14,7 +14,6 @@
                 </b-row>
             </div>
             <div v-else>
-                <br />
                 <b-row align-v="start" align-h="center" class="mb-2">
                     <b-col
                         style="color: white"
@@ -356,7 +355,7 @@
                                                 :variant="
                                                     darkMode ? 'dark' : 'white'
                                                 "
-                                                :disabled="true"
+                                                @click="targetSelected(target)"
                                                 >{{ target.name }}</b-button
                                             ></b-col
                                         >
@@ -564,6 +563,14 @@ export default {
         await this.loadTargets();
     },
     methods: {
+        targetSelected: function(target) {
+            router.push({
+                name: 'target',
+                params: {
+                    name: target.name,
+                }
+            });
+        },
         toggleSingularityCacheCleanDelay: function(target) {
             if (target.singularity_cache_clean_enabled)
                 axios

@@ -29,6 +29,8 @@ class Target(models.Model):
     gpu = models.BooleanField(null=False, default=False)
     gpu_queue = models.CharField(max_length=250, null=True, blank=True)
     disabled: bool = models.BooleanField(default=False)
+    public: bool = models.BooleanField(default=False)
+    logo: str = models.URLField(null=True, blank=True)
     workdir_clean_delay = models.DurationField(null=False, blank=False, default=timedelta(days=7))
     singularity_cache_clean_delay = models.DurationField(null=True, blank=True, default=timedelta(days=7))
     singularity_cache_clean_enabled = models.BooleanField(null=False, blank=False, default=False)
