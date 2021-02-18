@@ -82,7 +82,8 @@
                                             }}</small>
                                         </b-col>
                                     </b-row>
-                                    <br />
+                                    <hr/>
+                                    <h5>Configuration </h5>
                                     <b-row>
                                         <b-col>
                                             <small>Executor</small>
@@ -99,7 +100,7 @@
                                             {{ target.workdir }}
                                         </b-col>
                                     </b-row>
-                                    <b-row>
+                                  <b-row>
                                         <b-col>
                                             <small>Pre-commands</small>
                                         </b-col>
@@ -111,117 +112,9 @@
                                             >
                                         </b-col>
                                     </b-row>
-                                    <b-row no-gutters class="mt-3">
-                                        <b-col v-if="showStatusAlert">
-                                            <b-alert
-                                                :show="showStatusAlert"
-                                                :variant="
-                                                    statusAlertMessage.startsWith(
-                                                        'Failed'
-                                                    )
-                                                        ? 'danger'
-                                                        : 'success'
-                                                "
-                                                dismissible
-                                                @dismissed="
-                                                    showStatusAlert = false
-                                                "
-                                            >
-                                                {{ statusAlertMessage }}
-                                            </b-alert>
-                                        </b-col>
-                                    </b-row>
+                                    <hr/>
+                                    <h5>Resources Available <small>per container</small></h5>
                                     <b-row>
-                                        <b-col></b-col>
-                                        <b-col md="auto" align-self="end"
-                                            ><b-button
-                                                :variant="
-                                                    darkMode
-                                                        ? 'outline-light'
-                                                        : 'white'
-                                                "
-                                                size="sm"
-                                                v-b-tooltip.hover
-                                                title="Check Connection Status"
-                                                @click="checkStatus"
-                                            >
-                                                <i
-                                                    class="fas fa-network-wired"
-                                                ></i>
-                                                Check Status
-                                            </b-button></b-col
-                                        >
-                                    </b-row>
-                                    <hr />
-                                    <b-row>
-                                        <b-col align-self="center text-left"
-                                            ><small
-                                                :class="
-                                                    darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                                >{{
-                                                    `You ${
-                                                        target.role === 'own'
-                                                            ? target.role
-                                                            : 'can ' +
-                                                              target.role
-                                                    }`
-                                                }}
-                                                this deployment target.</small
-                                            ></b-col
-                                        >
-                                        <b-col
-                                            align-self="center"
-                                            :class="
-                                                darkMode
-                                                    ? 'text-white text-right'
-                                                    : 'text-dark text-right'
-                                            "
-                                            cols="2"
-                                        >
-                                            <small
-                                                v-if="
-                                                    target.singularity_cache_clean_enabled
-                                                "
-                                                >Cleaning Singularity cache
-                                                every
-                                                {{
-                                                    prettifyDuration(
-                                                        target.singularity_cache_clean_delay
-                                                    )
-                                                }}</small
-                                            >
-                                            <small v-else
-                                                >Not cleaning Singularity
-                                                cache</small
-                                            >
-                                        </b-col>
-                                        <b-col
-                                            v-if="target.role === 'own'"
-                                            align-self="center"
-                                            :class="
-                                                darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                            cols="1"
-                                        >
-                                            <b-form-checkbox
-                                                :v-model="
-                                                    target.singularity_cache_clean_enabled
-                                                "
-                                                @change="
-                                                    toggleSingularityCacheCleanDelay(
-                                                        target
-                                                    )
-                                                "
-                                                switch
-                                                size="md"
-                                            >
-                                            </b-form-checkbox
-                                        ></b-col>
                                         <b-col
                                             align-self="center"
                                             :class="
@@ -233,6 +126,8 @@
                                             ><b>{{ target.max_cores }}</b>
                                             cores</b-col
                                         >
+                                      </b-row>
+                                    <b-row>
                                         <b-col
                                             align-self="center"
                                             :class="
@@ -244,6 +139,8 @@
                                             ><b>{{ target.max_processes }}</b>
                                             processes</b-col
                                         >
+                                      </b-row>
+                                    <b-row>
                                         <b-col
                                             align-self="center"
                                             :class="
@@ -273,6 +170,8 @@
                                                 >virtual memory</span
                                             ></b-col
                                         >
+                                      </b-row>
+                                    <b-row>
                                         <b-col
                                             align-self="center"
                                             :class="
@@ -293,7 +192,7 @@
                                                     class="far fa-check-circle"
                                                 ></i>
                                             </span>
-                                            <span v-else class="text-secondary"
+                                            <span v-else
                                                 >No GPU
                                                 <i
                                                     class="far fa-times-circle"
@@ -301,10 +200,107 @@
                                             ></span>
                                         </b-col>
                                     </b-row>
+                                    <hr />
+                                    <b-row>
+                                        <b-col align-self="center text-left"
+                                            ><small
+                                                :class="
+                                                    darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                                >{{
+                                                    `You ${
+                                                        target.role === 'own'
+                                                            ? target.role
+                                                            : 'can ' +
+                                                              target.role
+                                                    }`
+                                                }}
+                                                this deployment target.</small
+                                            ></b-col
+                                        >
+                                        <b-col md="auto" align-self="end"
+                                            ><b-button
+                                                :variant="
+                                                    darkMode
+                                                        ? 'outline-light'
+                                                        : 'white'
+                                                "
+                                                size="sm"
+                                                v-b-tooltip.hover
+                                                title="Check Connection Status"
+                                                @click="checkStatus"
+                                            >
+                                                <i
+                                                    class="fas fa-network-wired"
+                                                ></i>
+                                                Check Status
+                                            </b-button></b-col
+                                        >
+                                    </b-row>
                                 </b-col>
                             </b-row>
-                        </div> </b-card
-                ></b-col>
+                        </div>
+                    </b-card>
+                </b-col>
+                <b-col md="auto">
+                    <b-row>
+                        <b-col></b-col>
+                        <b-col md="auto"><h5>Settings</h5></b-col>
+                    </b-row>
+                    <b-row>
+                        <b-col
+                            md="auto"
+                            v-if="target.role === 'own'"
+                            align-self="start"
+                            :class="darkMode ? 'text-white' : 'text-dark'"
+                        >
+                            <b-form-checkbox
+                                v-model="singularityCacheCleaning"
+                                @change="toggleSingularityCacheCleaning(target)"
+                                switch
+                                size="md"
+                            >
+                            </b-form-checkbox
+                        ></b-col>
+                        <b-col
+                            md="auto"
+                            align-self="start"
+                            :class="
+                                darkMode
+                                    ? 'text-white text-right'
+                                    : 'text-dark text-right'
+                            "
+                        >
+                            <small v-if="target.singularity_cache_clean_enabled"
+                                >Cleaning Singularity cache every
+                                {{
+                                    prettifyDuration(
+                                        target.singularity_cache_clean_delay
+                                    )
+                                }}</small
+                            >
+                            <small v-else>Not cleaning Singularity cache</small>
+                        </b-col>
+                    </b-row>
+                </b-col>
+            </b-row>
+            <b-row no-gutters class="mt-3">
+                <b-col v-if="showStatusAlert">
+                    <b-alert
+                        :show="showStatusAlert"
+                        :variant="
+                            statusAlertMessage.startsWith('Failed')
+                                ? 'danger'
+                                : 'success'
+                        "
+                        dismissible
+                        @dismissed="showStatusAlert = false"
+                    >
+                        {{ statusAlertMessage }}
+                    </b-alert>
+                </b-col>
             </b-row>
         </b-container>
     </div>
@@ -314,6 +310,7 @@
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import { mapGetters } from 'vuex';
+import moment from 'moment';
 
 export default {
     name: 'target.vue',
@@ -323,7 +320,8 @@ export default {
             targetLoading: false,
             checkingStatus: false,
             showStatusAlert: false,
-            statusAlertMessage: ''
+            statusAlertMessage: '',
+            singularityCacheCleaning: false
         };
     },
     mounted() {
@@ -340,6 +338,9 @@ export default {
         ])
     },
     methods: {
+        prettifyDuration: function(dur) {
+            return moment.duration(dur, 'seconds').humanize();
+        },
         loadTarget: function() {
             this.targetLoading = true;
             return axios
@@ -348,6 +349,7 @@ export default {
                 )
                 .then(response => {
                     this.target = response.data;
+                    this.singularityCacheCleaning = response.data.singularity_cache_clean_enabled;
                     this.targetLoading = false;
                 })
                 .catch(error => {
@@ -373,6 +375,51 @@ export default {
                     this.checkingStatus = false;
                     throw error;
                 });
+        },
+        toggleSingularityCacheCleaning: function(target) {
+            if (target.singularity_cache_clean_enabled)
+                axios
+                    .get(
+                        `/apis/v1/targets/unschedule_singularity_cache_cleaning/?name=${target.name}`
+                    )
+                    .then(() => {
+                      this.loadTarget();
+                        this.statusAlertMessage = `Disabled Singularity cache cleaning on ${target.name}`;
+                        this.showStatusAlert = true;
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        if (error.response.status === 500) {
+                            this.statusAlertMessage = `Failed to disable Singularity cache cleaning on ${target.name}`;
+                            this.showStatusAlert = true;
+                            throw error;
+                        }
+                    });
+            else
+                axios
+                    .get(
+                        `/apis/v1/targets/schedule_singularity_cache_cleaning/?name=${
+                            target.name
+                        }&delay=${moment
+                            .duration(
+                                target.singularity_cache_clean_delay,
+                                'seconds'
+                            )
+                            .asSeconds()}`
+                    )
+                    .then(() => {
+                        this.loadTarget();
+                        this.statusAlertMessage = `Enabled Singularity cache cleaning on ${target.name}`;
+                        this.showStatusAlert = true;
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        if (error.response.status === 500) {
+                            this.statusAlertMessage = `Failed to enable Singularity cache cleaning on ${target.name}`;
+                            this.showStatusAlert = true;
+                            throw error;
+                        }
+                    });
         }
     }
 };
