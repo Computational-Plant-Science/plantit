@@ -46,7 +46,7 @@ services:
       - GITHUB_SECRET=${GITHUB_SECRET}
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
-    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
+    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "gunicorn", "--bind", ":3000", "--log-level", "debug", "plantit.asgi:application", "-k", "uvicorn.workers.UvicornWorker"] # "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
       - celery

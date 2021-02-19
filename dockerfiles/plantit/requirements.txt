@@ -18,6 +18,7 @@ SQLAlchemy
 Pillow
 sentry-sdk
 gunicorn
+uvicorn[standard]
 gql
 six
 pyjwt[crypto]

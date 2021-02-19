@@ -48,7 +48,7 @@ services:
       - GITHUB_SECRET=${GITHUB_SECRET}
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
-    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application"]
+    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "gunicorn", "--bind", ":8000", "--log-level", "debug", "plantit.wsgi:application", "-k", "uvicorn.workers.UvicornWorker"]
     networks:
       - ngnix_network
       - default

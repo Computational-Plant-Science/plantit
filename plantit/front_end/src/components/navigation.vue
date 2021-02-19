@@ -410,6 +410,15 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
+      <b-navbar
+            toggleable="sm"
+            class="logo p-0"
+            style="min-height: 44px; max-height: 46px; z-index: 1000"
+            fixed="bottom"
+            :variant="darkMode ? 'dark' : 'white'"
+        >
+        hello
+      </b-navbar>
     </div>
 </template>
 
