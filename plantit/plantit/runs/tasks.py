@@ -1,14 +1,10 @@
-import json
-import os
 import traceback
 from os import environ
 from os.path import join
 
 import yaml
-from celery.schedules import crontab
 from celery.utils.log import get_task_logger
 from django.utils import timezone
-from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 from plantit import settings
 from plantit.celery import app
@@ -288,5 +284,18 @@ def clean_singularity_cache(target: str):
             ssh_client=ssh,
             pre_command=target.pre_commands,
             command="singularity cache clean",
+            directory=target.workdir,
+            allow_stderr=True)
+
+
+@app.task()
+def run_command(target: str, command: str, pre_command: str = None):
+    target = Target.objects.get(name=target)
+    ssh = SSH(target.hostname, target.port, target.username)
+    with ssh:
+        execute_command(
+            ssh_client=ssh,
+            pre_command=f"{target.pre_commands} && {pre_command}",
+            command=command,
             directory=target.workdir,
             allow_stderr=True)

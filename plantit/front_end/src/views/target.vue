@@ -83,7 +83,15 @@
                                         </b-col>
                                     </b-row>
                                     <hr />
-                                    <h5 :class="darkMode ? 'text-white' : 'text-dark'">Configuration</h5>
+                                    <h5
+                                        :class="
+                                            darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        Configuration
+                                    </h5>
                                     <b-row>
                                         <b-col>
                                             <small>executor</small>
@@ -114,7 +122,13 @@
                                         </b-col>
                                     </b-row>
                                     <hr />
-                                    <h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                                    <h5
+                                        :class="
+                                            darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                    >
                                         Resources Available
                                         <small>per container</small>
                                     </h5>
@@ -217,7 +231,11 @@
                                                     `You ${
                                                         target.role === 'own'
                                                             ? target.role
-                                                            : target.role === 'none' ? 'do not have access to' : 'can ' + target.role
+                                                            : target.role ===
+                                                              'none'
+                                                            ? 'do not have access to'
+                                                            : 'can ' +
+                                                              target.role
                                                     }`
                                                 }}
                                                 this deployment target.</small
@@ -233,7 +251,9 @@
                                                 size="sm"
                                                 v-b-tooltip.hover
                                                 title="Check Connection Status"
-                                                :disabled="target.role === 'none'"
+                                                :disabled="
+                                                    target.role === 'none'
+                                                "
                                                 @click="checkStatus"
                                             >
                                                 <i
@@ -249,11 +269,27 @@
                     </b-card>
                 </b-col>
                 <b-col md="auto">
-                    <b-row>
-                        <b-col></b-col>
-                        <b-col md="auto"><h5>Settings</h5></b-col>
-                    </b-row>
-                    <b-row>
+                    <b-row
+                        ><b-col align-self="end"
+                            ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                                Periodic Tasks
+                            </h5></b-col
+                        ><b-col class="mb-1" align-self="start" md="auto"
+                            ><b-button
+                                :variant="darkMode ? 'outline-light' : 'white'"
+                                size="sm"
+                                v-b-tooltip.hover
+                                title="Create Periodic Task"
+                                :disabled="target.role !== 'own'"
+                                v-b-modal.createTask
+                            >
+                                <i class="fas fa-plus fa-fw"></i>
+                                Create
+                            </b-button></b-col
+                        ></b-row
+                    >
+                    <hr />
+                    <b-row v-for="task in target.tasks" v-bind:key="task.name">
                         <b-col
                             md="auto"
                             v-if="target.role === 'own'"
@@ -261,33 +297,26 @@
                             :class="darkMode ? 'text-white' : 'text-dark'"
                         >
                             <b-form-checkbox
-                                v-model="singularityCacheCleaning"
-                                @change="toggleSingularityCacheCleaning(target)"
+                                v-model="task.enabled"
+                                @change="toggleTask(task)"
                                 switch
                                 size="md"
                             >
                             </b-form-checkbox
                         ></b-col>
-                        <b-col
-                            md="auto"
-                            align-self="start"
-                            :class="
-                                darkMode
-                                    ? 'text-white text-right'
-                                    : 'text-dark text-right'
-                            "
-                        >
-                            <small v-if="target.singularity_cache_clean_enabled"
-                                >Cleaning Singularity cache every
-                                {{
-                                    prettifyDuration(
-                                        target.singularity_cache_clean_delay
-                                    )
-                                }}</small
-                            >
-                            <small v-else>Not cleaning Singularity cache</small>
-                        </b-col>
-                    </b-row>
+                        <b-col>{{ task.name }}</b-col>
+                        <b-col md="auto"
+                            ><small>Once {{ taskTime(task) }}</small></b-col
+                        ><b-col md="auto"
+                            ><b-button
+                                size="sm"
+                                variant="outline-danger"
+                                @click="deleteTask(task)"
+                                ><i class="fas fa-trash fa-fw"></i>
+                                Remove</b-button
+                            ></b-col
+                        ></b-row
+                    >
                 </b-col>
             </b-row>
             <b-row no-gutters class="mt-3">
@@ -307,6 +336,85 @@
                 </b-col>
             </b-row>
         </b-container>
+        <b-modal
+            centered
+            id="createTask"
+            title="Create Periodic Task"
+            @ok="createTask"
+        >
+            <b-form @submit="createTask" @reset="resetCreateTaskForm">
+                <b-form-group
+                    id="input-group-1"
+                    label="Name"
+                    label-for="input-1"
+                    description="Give this task a name."
+                >
+                    <b-form-input
+                        id="input-1"
+                        v-model="createTaskForm.name"
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <!--<b-form-group
+                    id="input-group-2"
+                    label="Description"
+                    label-for="input-2"
+                    description="Give this task a description."
+                >
+                    <b-form-input
+                        id="input-2"
+                        v-model="createTaskForm.description"
+                        required
+                    ></b-form-input>
+                </b-form-group>-->
+                <b-form-group
+                    id="input-group-3"
+                    label="Command"
+                    label-for="input-3"
+                    description="Enter a command for this task to run."
+                >
+                    <b-form-input
+                        id="input-3"
+                        v-model="createTaskForm.command"
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group
+                    id="input-group-4"
+                    label-for="input-4"
+                    description="Configure how often this task should run, and at what time."
+                >
+                    <b-form-group label="Every" v-slot="{ ariaDescribedby }">
+                        <!--<b-form-timepicker
+                            v-model="createTaskForm.time"
+                            locale="en "
+                        ></b-form-timepicker
+                        <b-form-input
+                            id="input-3"
+                            v-model="createTaskForm.timeIntervalValue"
+                            placeholder="..."
+                            required
+                        ></b-form-input>-->
+                        <b-form-select
+                            v-model="createTaskForm.timeInterval"
+                            :options="timeIntervalOptions"
+                        ></b-form-select>
+                    </b-form-group>
+                    <!--<b-form-group label="At" v-slot="{ ariaDescribedby }">
+                        <b-form-timepicker
+                            v-model="createTaskForm.time"
+                            locale="en "
+                        ></b-form-timepicker>
+                        <b-form-input
+                            id="input-3"
+                            v-model="createTaskForm.timeIntervalValue"
+                            placeholder="..."
+                            required
+                        ></b-form-input>
+                    </b-form-group>-->
+                </b-form-group>
+            </b-form>
+        </b-modal>
     </div>
 </template>
 
@@ -325,7 +433,18 @@ export default {
             checkingStatus: false,
             showStatusAlert: false,
             statusAlertMessage: '',
-            singularityCacheCleaning: false
+            singularityCacheCleaning: false,
+            workdirCleaning: false,
+            createTaskForm: {
+                name: '',
+                description: '',
+                command: '',
+                once: '',
+                time: '',
+                timeInterval: 'day',
+                timeIntervalValue: 1
+            },
+            timeIntervalOptions: ['day', 'week', 'month']
         };
     },
     mounted() {
@@ -342,8 +461,77 @@ export default {
         ])
     },
     methods: {
+        taskTime(task) {
+            return moment
+                .duration(task.interval.every, task.interval.period)
+                .humanize();
+        },
+        deleteTask(task) {
+            return axios
+                .get(`/apis/v1/targets/remove_task/?name=${task.name}`)
+                .then(() => {
+                    this.loadTarget();
+                    this.statusAlertMessage = `Deleted task ${task.name} on ${this.target.name}`;
+                    this.showStatusAlert = true;
+                    this.checkingStatus = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.statusAlertMessage = `Failed to delete ${task.name} on ${this.target.name}`;
+                    this.showStatusAlert = true;
+                    this.checkingStatus = false;
+                    throw error;
+                });
+        },
+        createTask(event) {
+            event.preventDefault();
+            axios({
+                method: 'post',
+                url: `/apis/v1/targets/create_task/`,
+                data: {
+                    name: this.createTaskForm.name,
+                    target: this.target.name,
+                    description: this.createTaskForm.description,
+                    command: this.createTaskForm.command,
+                    delay: moment
+                        .duration(
+                            this.createTaskForm.timeIntervalValue,
+                            this.createTaskForm.timeInterval
+                        )
+                        .asSeconds()
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    this.statusAlertMessage =
+                        response.status === 200 && response.data.created
+                            ? `Created task ${this.createTaskForm.name} on ${this.target.name}`
+                            : response.status === 200 && !response.data.created
+                            ? `Task ${this.createTaskForm.name} already exists on ${this.target.name}`
+                            : `Failed to create task ${this.createTaskForm.name} on ${this.target.name}`;
+                    this.showStatusAlert = true;
+                    this.checkingStatus = false;
+                    this.loadTarget();
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.statusAlertMessage = `Failed to create task ${this.createTaskForm.name} on ${this.target.name}`;
+                    this.showStatusAlert = true;
+                    this.checkingStatus = false;
+                    throw error;
+                });
+        },
+        resetCreateTaskForm() {
+            this.form = {
+                name: '',
+                description: '',
+                command: '',
+                interval: moment.duration(1, 'days')
+            };
+        },
         prettifyDuration: function(dur) {
-            return moment.duration(dur, 'seconds').humanize();
+            moment.relativeTimeThreshold('m', 1);
+            return moment.duration(dur, 'seconds').humanize(true);
         },
         loadTarget: function() {
             this.targetLoading = true;
@@ -381,50 +569,24 @@ export default {
                     throw error;
                 });
         },
-        toggleSingularityCacheCleaning: function(target) {
-            if (target.singularity_cache_clean_enabled)
-                axios
-                    .get(
-                        `/apis/v1/targets/unschedule_singularity_cache_cleaning/?name=${target.name}`
-                    )
-                    .then(() => {
-                        this.loadTarget();
-                        this.statusAlertMessage = `Disabled Singularity cache cleaning on ${target.name}`;
+        toggleTask: function(task) {
+            axios
+                .get(`/apis/v1/targets/toggle_task/?name=${task.name}`)
+                .then(response => {
+                    this.loadTarget();
+                    this.statusAlertMessage = `${
+                        response.data.enabled ? 'Enabled' : 'Disabled'
+                    } task ${task.name} on ${this.target.name}`;
+                    this.showStatusAlert = true;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) {
+                        this.statusAlertMessage = `Failed to disable task ${task.name} on ${this.target.name}`;
                         this.showStatusAlert = true;
-                    })
-                    .catch(error => {
-                        Sentry.captureException(error);
-                        if (error.response.status === 500) {
-                            this.statusAlertMessage = `Failed to disable Singularity cache cleaning on ${target.name}`;
-                            this.showStatusAlert = true;
-                            throw error;
-                        }
-                    });
-            else
-                axios
-                    .get(
-                        `/apis/v1/targets/schedule_singularity_cache_cleaning/?name=${
-                            target.name
-                        }&delay=${moment
-                            .duration(
-                                target.singularity_cache_clean_delay,
-                                'seconds'
-                            )
-                            .asSeconds()}`
-                    )
-                    .then(() => {
-                        this.loadTarget();
-                        this.statusAlertMessage = `Enabled Singularity cache cleaning on ${target.name}`;
-                        this.showStatusAlert = true;
-                    })
-                    .catch(error => {
-                        Sentry.captureException(error);
-                        if (error.response.status === 500) {
-                            this.statusAlertMessage = `Failed to enable Singularity cache cleaning on ${target.name}`;
-                            this.showStatusAlert = true;
-                            throw error;
-                        }
-                    });
+                        throw error;
+                    }
+                });
         }
     }
 };

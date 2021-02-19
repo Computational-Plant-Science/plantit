@@ -10,6 +10,8 @@ from django.utils.translation import gettext_lazy
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
 
+from plantit.targets.utils import singularity_cache_clean_task_name
+
 
 class Target(models.Model):
     name = models.CharField(max_length=20)
@@ -31,9 +33,6 @@ class Target(models.Model):
     disabled: bool = models.BooleanField(default=False)
     public: bool = models.BooleanField(default=False)
     logo: str = models.URLField(null=True, blank=True)
-    workdir_clean_delay = models.DurationField(null=False, blank=False, default=timedelta(days=7))
-    singularity_cache_clean_delay = models.DurationField(null=True, blank=True, default=timedelta(days=7))
-    singularity_cache_clean_enabled = models.BooleanField(null=False, blank=False, default=False)
     no_nested = models.BooleanField(default=False)  # https://github.com/Computational-Plant-Science/plantit/issues/98
 
     class Executor(models.TextChoices):
@@ -50,22 +49,19 @@ class Target(models.Model):
         return self.name
 
 
-# @receiver(post_save, sender=Target)
-# def schedule_singularity_cache_cleaning(sender, instance, created, **kwargs):
-#     if not created:
-#         return
-#
-#     schedule, _ = IntervalSchedule.objects.get_or_create(
-#         every=instance.workdir_clean_delay.total_seconds(),
-#         period=IntervalSchedule.SECONDS)
-#
-#     PeriodicTask.objects.create(
-#         interval=schedule,
-#         name=f"Clean singularity cache on {instance.name}",
-#         task='plantit.runs.tasks.clean_singularity_cache',
-#         args=json.dumps([instance.name]))
-#
-#
+@receiver(post_save, sender=Target)
+def schedule_default_tasks(sender, instance, created, **kwargs):
+    if not created:
+        return
+
+    schedule, _ = IntervalSchedule.objects.get_or_create(every=1, period=IntervalSchedule.DAYS)
+    singularity_cache_clean_task = TargetTask.objects.create(
+        interval=schedule,
+        name=singularity_cache_clean_task_name(instance.name),
+        task='plantit.runs.tasks.clean_singularity_cache',
+        args=json.dumps([instance.name]))
+
+
 # @receiver(post_delete, sender=Target)
 # def unschedule_singularity_cache_cleaning(sender, instance, **kwargs):
 #     task = PeriodicTask.objects.get(name=f"Clean singularity cache on {instance.name}")
@@ -79,8 +75,10 @@ class TargetRole(Enum):
 
 class TargetPolicy(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.CASCADE)
     role = EnumChoiceField(TargetRole, default=TargetRole.run)
-    target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.SET_NULL)
 
 
-
+class TargetTask(PeriodicTask):
+    target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.CASCADE)
+    command = models.CharField(max_length=250, null=False, blank=False)
