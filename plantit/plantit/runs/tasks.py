@@ -295,7 +295,7 @@ def run_command(target: str, command: str, pre_command: str = None):
     with ssh:
         execute_command(
             ssh_client=ssh,
-            pre_command=f"{target.pre_commands} && {pre_command}",
+            pre_command=target.pre_commands + '' if pre_command is None else f"&& {pre_command}",
             command=command,
             directory=target.workdir,
             allow_stderr=True)

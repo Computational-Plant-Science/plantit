@@ -289,34 +289,54 @@
                         ></b-row
                     >
                     <hr />
-                    <b-row v-for="task in target.tasks" v-bind:key="task.name">
-                        <b-col
-                            md="auto"
-                            v-if="target.role === 'own'"
-                            align-self="start"
-                            :class="darkMode ? 'text-white' : 'text-dark'"
-                        >
-                            <b-form-checkbox
-                                v-model="task.enabled"
-                                @change="toggleTask(task)"
-                                switch
-                                size="md"
+                    <div v-for="task in target.tasks" v-bind:key="task.name" class="pb-2">
+                        <b-row class="pt-1">
+                            <b-col
+                                md="auto"
+                                v-if="target.role === 'own'"
+                                align-self="end"
+                                :class="
+                                    darkMode
+                                        ? 'text-white mb-1'
+                                        : 'text-dark mb-1'
+                                "
                             >
-                            </b-form-checkbox
-                        ></b-col>
-                        <b-col>{{ task.name }}</b-col>
-                        <b-col md="auto"
-                            ><small>Once {{ taskTime(task) }}</small></b-col
-                        ><b-col md="auto"
-                            ><b-button
-                                size="sm"
-                                variant="outline-danger"
-                                @click="deleteTask(task)"
-                                ><i class="fas fa-trash fa-fw"></i>
-                                Remove</b-button
-                            ></b-col
-                        ></b-row
-                    >
+                                <b-form-checkbox
+                                    v-model="task.enabled"
+                                    @change="toggleTask(task)"
+                                    switch
+                                    size="md"
+                                >
+                                </b-form-checkbox
+                            ></b-col>
+                            <b-col align-self="end" class="mb-1">{{
+                                task.name
+                            }}</b-col>
+                            <b-col
+                                md="auto"
+                                align-self="end"
+                                v-if="task.name !== `Healthcheck`"
+                                ><b-button
+                                    size="sm"
+                                    variant="outline-danger"
+                                    @click="deleteTask(task)"
+                                    ><i class="fas fa-trash fa-fw"></i>
+                                    Remove</b-button
+                                ></b-col
+                            ></b-row
+                        >
+                        <b-row
+                            ><b-col md="auto" align-self="end" class="mb-1"
+                                ><small v-if="task.enabled">Next running {{ cronTime(task) }}<br /></small
+                                ><small v-if="task.last_run !== null"
+                                    >Last ran
+                                    {{ prettify(task.last_run) }}</small
+                                ><small v-else
+                                    >Task has not run yet</small
+                                ></b-col
+                            >
+                        </b-row>
+                    </div>
                 </b-col>
             </b-row>
             <b-row no-gutters class="mt-3">
@@ -341,77 +361,45 @@
             id="createTask"
             title="Create Periodic Task"
             @ok="createTask"
+            size="xl"
         >
             <b-form @submit="createTask" @reset="resetCreateTaskForm">
-                <b-form-group
-                    id="input-group-1"
-                    label="Name"
-                    label-for="input-1"
-                    description="Give this task a name."
-                >
-                    <b-form-input
-                        id="input-1"
-                        v-model="createTaskForm.name"
-                        required
-                    ></b-form-input>
+                <b-form-group id="input-group-1" label-for="input-1">
+                    <b-input-group size="md" prepend="Name">
+                        <b-form-input
+                            id="input-1"
+                            v-model="createTaskForm.name"
+                            required
+                        ></b-form-input>
+                        <b-form-invalid-feedback
+                            :state="this.createTaskForm.name !== ''"
+                        >
+                            Give this task a name.
+                        </b-form-invalid-feedback>
+                    </b-input-group>
                 </b-form-group>
-                <!--<b-form-group
-                    id="input-group-2"
-                    label="Description"
-                    label-for="input-2"
-                    description="Give this task a description."
-                >
-                    <b-form-input
-                        id="input-2"
-                        v-model="createTaskForm.description"
-                        required
-                    ></b-form-input>
-                </b-form-group>-->
-                <b-form-group
-                    id="input-group-3"
-                    label="Command"
-                    label-for="input-3"
-                    description="Enter a command for this task to run."
-                >
-                    <b-form-input
-                        id="input-3"
-                        v-model="createTaskForm.command"
-                        required
-                    ></b-form-input>
+                <b-form-group id="input-group-3" label-for="input-3">
+                    <b-input-group size="md" prepend="Command">
+                        <b-form-input
+                            id="input-3"
+                            v-model="createTaskForm.command"
+                            required
+                        ></b-form-input>
+                        <b-form-invalid-feedback
+                            :state="this.createTaskForm.command !== ''"
+                        >
+                            Enter a command for this task to run.
+                        </b-form-invalid-feedback>
+                    </b-input-group>
                 </b-form-group>
                 <b-form-group
                     id="input-group-4"
                     label-for="input-4"
-                    description="Configure how often this task should run, and at what time."
+                    description="Configure when this task should run."
                 >
-                    <b-form-group label="Every" v-slot="{ ariaDescribedby }">
-                        <!--<b-form-timepicker
-                            v-model="createTaskForm.time"
-                            locale="en "
-                        ></b-form-timepicker
-                        <b-form-input
-                            id="input-3"
-                            v-model="createTaskForm.timeIntervalValue"
-                            placeholder="..."
-                            required
-                        ></b-form-input>-->
-                        <b-form-select
-                            v-model="createTaskForm.timeInterval"
-                            :options="timeIntervalOptions"
-                        ></b-form-select>
-                    </b-form-group>
-                    <!--<b-form-group label="At" v-slot="{ ariaDescribedby }">
-                        <b-form-timepicker
-                            v-model="createTaskForm.time"
-                            locale="en "
-                        ></b-form-timepicker>
-                        <b-form-input
-                            id="input-3"
-                            v-model="createTaskForm.timeIntervalValue"
-                            placeholder="..."
-                            required
-                        ></b-form-input>
-                    </b-form-group>-->
+                    <VueCronEditorBuefy
+                        v-model="createTaskForm.time"
+                    ></VueCronEditorBuefy>
                 </b-form-group>
             </b-form>
         </b-modal>
@@ -423,9 +411,14 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
+import VueCronEditorBuefy from 'vue-cron-editor-buefy';
+import parser from 'cron-parser';
 
 export default {
     name: 'target.vue',
+    components: {
+        VueCronEditorBuefy
+    },
     data: function() {
         return {
             target: null,
@@ -440,11 +433,8 @@ export default {
                 description: '',
                 command: '',
                 once: '',
-                time: '',
-                timeInterval: 'day',
-                timeIntervalValue: 1
-            },
-            timeIntervalOptions: ['day', 'week', 'month']
+                time: ''
+            }
         };
     },
     mounted() {
@@ -461,10 +451,19 @@ export default {
         ])
     },
     methods: {
-        taskTime(task) {
-            return moment
-                .duration(task.interval.every, task.interval.period)
-                .humanize();
+        cronTime(task) {
+            if (
+                task.crontab === null ||
+                task.crontab === undefined ||
+                task.crontab === 'None'
+            )
+                return '';
+            return moment(
+                parser
+                    .parseExpression(task.crontab)
+                    .next()
+                    .toString()
+            ).format('MMMM Do YYYY, h:mm a');
         },
         deleteTask(task) {
             return axios
@@ -493,12 +492,13 @@ export default {
                     target: this.target.name,
                     description: this.createTaskForm.description,
                     command: this.createTaskForm.command,
-                    delay: moment
-                        .duration(
-                            this.createTaskForm.timeIntervalValue,
-                            this.createTaskForm.timeInterval
-                        )
-                        .asSeconds()
+                    delay: this.createTaskForm.time
+                    // delay: moment
+                    //     .duration(
+                    //         this.createTaskForm.timeIntervalValue,
+                    //         this.createTaskForm.timeInterval
+                    //     )
+                    //     .asSeconds()
                 },
                 headers: { 'Content-Type': 'application/json' }
             })
@@ -511,6 +511,7 @@ export default {
                             : `Failed to create task ${this.createTaskForm.name} on ${this.target.name}`;
                     this.showStatusAlert = true;
                     this.checkingStatus = false;
+                    this.$bvModal.hide('createTask');
                     this.loadTarget();
                 })
                 .catch(error => {
@@ -518,6 +519,7 @@ export default {
                     this.statusAlertMessage = `Failed to create task ${this.createTaskForm.name} on ${this.target.name}`;
                     this.showStatusAlert = true;
                     this.checkingStatus = false;
+                    this.$bvModal.hide('createTask');
                     throw error;
                 });
         },
@@ -528,6 +530,11 @@ export default {
                 command: '',
                 interval: moment.duration(1, 'days')
             };
+        },
+        prettify: function(date) {
+            return `${moment(date).fromNow()} (${moment(date).format(
+                'MMMM Do YYYY, h:mm a'
+            )})`;
         },
         prettifyDuration: function(dur) {
             moment.relativeTimeThreshold('m', 1);

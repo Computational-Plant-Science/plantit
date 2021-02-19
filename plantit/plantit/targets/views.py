@@ -2,7 +2,7 @@ import json
 from datetime import timedelta
 
 from django.http import JsonResponse, HttpResponseNotFound
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
+from django_celery_beat.models import IntervalSchedule, PeriodicTask, CrontabSchedule
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -24,10 +24,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
             'name': task.name,
             'description': task.description,
             'command': task.command,
-            'interval': {
-                'every': task.interval.every,
-                'period': task.interval.period
-            },
+            'crontab': str(task.crontab).rpartition("(")[0].strip(),
             'enabled': task.enabled,
             'last_run': task.last_run_at
         }
@@ -116,11 +113,17 @@ class TargetsViewSet(viewsets.ModelViewSet):
         task_name = request.data['name']
         task_description = request.data['description']
         task_command = request.data['command']
-        task_delay = request.data['delay']
+        task_delay = request.data['delay'].split()
 
-        schedule, _ = IntervalSchedule.objects.get_or_create(every=int(task_delay), period=IntervalSchedule.SECONDS)
+        schedule, _ = CrontabSchedule.objects.get_or_create(
+            minute=task_delay[0],
+            hour=task_delay[1],
+            day_of_week=task_delay[2],
+            day_of_month=task_delay[3],
+            month_of_year=task_delay[4])
+        # schedule, _ = IntervalSchedule.objects.get_or_create(every=int(task_delay), period=IntervalSchedule.SECONDS)
         task, created = TargetTask.objects.get_or_create(
-            interval=schedule,
+            crontab=schedule,
             target=target,
             name=task_name,
             command=task_command,
@@ -131,41 +134,6 @@ class TargetsViewSet(viewsets.ModelViewSet):
         return JsonResponse({
             'task': self.__map_task(task),
             'created': created
-        })
-
-    @action(methods=['post'], detail=True)
-    def update_task(self, request, name):
-        try:
-            target = Target.objects.get(name=name)
-        except:
-            return HttpResponseNotFound()
-
-        task_name = request.POST.get('name', None)
-        task_description = request.POST.get('description', None)
-        task_command = request.POST.get('command', None)
-        task_delay = request.POST.get('delay', None)
-
-        schedule, _ = IntervalSchedule.objects.get_or_create(every=int(task_delay), period=IntervalSchedule.SECONDS)
-        try:
-            task = TargetTask.objects.get(name=task_name)
-        except:
-            return HttpResponseNotFound()
-
-        task.interval = schedule
-        task.name = task_name,
-        task.command = task_command,
-        task.description = task_description
-        task.task = 'plantit.runs.tasks.run_command',
-        task.args = json.dumps([target.name, task_command])
-        task.save()
-
-        return JsonResponse({
-            'name': task.name,
-            'description': task.description,
-            'command': task.command,
-            'interval': task.interval,
-            'enabled': task.enabled,
-            'last_run': task.last_run_at
         })
 
     @action(methods=['get'], detail=False)
@@ -192,32 +160,6 @@ class TargetsViewSet(viewsets.ModelViewSet):
         task.enabled = not task.enabled
         task.save()
         return JsonResponse({'enabled': task.enabled})
-
-    @action(methods=['get'], detail=False)
-    def update_singularity_cache_cleaning_schedule(self, request):
-        name = request.GET.get('name')
-        delay = request.GET.get('delay', None)
-
-        try:
-            target = Target.objects.get(name=name)
-        except:
-            return HttpResponseNotFound()
-
-        if delay is not None:
-            target.singularity_cache_clean_delay = timedelta(seconds=int(delay))
-        target.singularity_cache_clean_enabled = True
-
-        schedule, _ = IntervalSchedule.objects.get_or_create(every=int(delay), period=IntervalSchedule.SECONDS)
-        task = PeriodicTask.objects.get_or_create(
-            interval=schedule,
-            name=f"Clean singularity cache on {target.name}",
-            task='plantit.runs.tasks.clean_singularity_cache',
-            args=json.dumps([target.name]))
-
-        target.singularity_cache_clean_task_id = task.id
-        target.save()
-
-        return JsonResponse({'enabled': True})
 
     @action(methods=['get'], detail=False)
     def disable_singularity_cache_cleaning(self, request):
