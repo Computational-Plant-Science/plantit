@@ -1676,13 +1676,11 @@ export default {
     },
     async mounted() {
         this.socket = new WebSocket(
-            location.protocol === 'https:'
-                ? 'wss://'
-                : 'ws://' +
-                  window.location.host +
-                  '/ws/run/' +
-                  this.$router.currentRoute.params.id +
-                  '/'
+            (location.protocol === 'https:' ? 'wss://' : 'ws://') +
+                window.location.host +
+                '/ws/run/' +
+                this.$router.currentRoute.params.id +
+                '/'
         );
         this.socket.onmessage = this.subscribeToSocket;
         await this.reloadRun();
