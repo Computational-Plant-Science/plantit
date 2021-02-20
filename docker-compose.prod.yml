@@ -48,7 +48,7 @@ services:
       - GITHUB_SECRET=${GITHUB_SECRET}
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
-    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "daphne", "-p", "8001", "plantit.wsgi:application"]
+    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "daphne", "-p", "8000", "plantit.asgi:application"]
     networks:
       - ngnix_network
       - default
