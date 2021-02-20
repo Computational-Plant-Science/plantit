@@ -27,6 +27,7 @@ PyGithub
 requests
 pyaml
 channels
+daphne
 sphinx
 recommonmark
 httpx==0.16.1
