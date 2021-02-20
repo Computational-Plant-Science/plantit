@@ -113,21 +113,6 @@
                                         >
                                         </b-spinner>
                                         <b class="ml-1 mr-0">{{ run.id }}</b>
-                                        <small
-                                            :class="
-                                                darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            {{
-                                                run.is_complete
-                                                    ? 'ran'
-                                                    : 'running'
-                                            }}
-                                            for
-                                            {{ walltimeTotal.humanize() }}
-                                        </small>
                                         <!--<small
                                                         v-if="
                                                             walltimeRemaining !==
@@ -325,6 +310,7 @@
                                                         >
                                                             <b-col
                                                                 align-self="end"
+                                                                class="mb-2"
                                                             >
                                                                 <h5
                                                                     :class="
@@ -341,12 +327,12 @@
                                                                 </h5>
                                                             </b-col>
                                                             <b-col
-                                                                md="auto"
                                                                 align-self="end"
+                                                                class="text-right"
                                                             >
                                                                 <small>
                                                                     <b-dropdown
-                                                                        class="m-1"
+                                                                        class="m-2"
                                                                         :text="
                                                                             submissionLogsPageSize
                                                                         "
@@ -391,79 +377,9 @@
                                                                     </b-dropdown>
                                                                 </small>
                                                             </b-col>
-                                                            <b-col md="auto">
-                                                                <b-button
-                                                                    class="m-1"
-                                                                    :variant="
-                                                                        darkMode
-                                                                            ? 'outline-light'
-                                                                            : 'white'
-                                                                    "
-                                                                    size="sm"
-                                                                    v-b-tooltip.hover
-                                                                    :title="
-                                                                        submissionLogsExpanded
-                                                                            ? 'Collapse Status Logs'
-                                                                            : 'Expand Status Logs'
-                                                                    "
-                                                                    @click="
-                                                                        expandLocalLogs
-                                                                    "
-                                                                >
-                                                                    <i
-                                                                        v-if="
-                                                                            submissionLogsExpanded
-                                                                        "
-                                                                        class="fas fa-caret-down"
-                                                                    ></i>
-                                                                    <i
-                                                                        v-else
-                                                                        class="fas fa-caret-up"
-                                                                    ></i>
-                                                                </b-button> </b-col
-                                                        ></b-row>
-                                                        <div
-                                                            v-if="
-                                                                submissionLogsExpanded
-                                                            "
-                                                        >
-                                                            <b-row
-                                                                align-h="center"
-                                                                v-if="
-                                                                    loadingSubmissionLogs
-                                                                "
-                                                            >
-                                                                <b-spinner
-                                                                    class="mt-3"
-                                                                    type="grow"
-                                                                    label="Loading..."
-                                                                    variant="secondary"
-                                                                ></b-spinner>
-                                                            </b-row>
-                                                            <b-row
-                                                                class="m-0"
-                                                                v-else-if="
-                                                                    submissionLogsText !==
-                                                                        ''
-                                                                "
-                                                            >
-                                                                <b-col
-                                                                    class="m-0 p-0 pl-3 pr-3 pb-1"
-                                                                    style="white-space: pre-line;"
-                                                                >
-                                                                    {{
-                                                                        submissionLogsText
-                                                                    }}
-                                                                </b-col>
-                                                            </b-row>
-                                                        </div>
-                                                        <br />
-                                                        <b-row
-                                                            class="m-0"
-                                                            style="border-bottom: 1px solid lightgray"
-                                                        >
                                                             <b-col
                                                                 align-self="end"
+                                                                class="mb-2"
                                                             >
                                                                 <h5
                                                                     :class="
@@ -485,7 +401,7 @@
                                                             >
                                                                 <small>
                                                                     <b-dropdown
-                                                                        class="m-1"
+                                                                        class="m-2"
                                                                         :text="
                                                                             targetLogsPageSize
                                                                         "
@@ -530,47 +446,12 @@
                                                                     </b-dropdown></small
                                                                 >
                                                             </b-col>
-                                                            <b-col md="auto">
-                                                                <b-button
-                                                                    class="m-1"
-                                                                    :variant="
-                                                                        darkMode
-                                                                            ? 'outline-light'
-                                                                            : 'white'
-                                                                    "
-                                                                    size="sm"
-                                                                    v-b-tooltip.hover
-                                                                    :title="
-                                                                        targetLogsExpanded
-                                                                            ? 'Collapse Container Logs'
-                                                                            : 'Expand Container Logs'
-                                                                    "
-                                                                    @click="
-                                                                        expandTargetLogs
-                                                                    "
-                                                                >
-                                                                    <i
-                                                                        v-if="
-                                                                            targetLogsExpanded
-                                                                        "
-                                                                        class="fas fa-caret-down"
-                                                                    ></i>
-                                                                    <i
-                                                                        v-else
-                                                                        class="fas fa-caret-up"
-                                                                    ></i>
-                                                                </b-button> </b-col
-                                                        ></b-row>
-                                                        <div
-                                                            class="m-0"
-                                                            v-if="
-                                                                targetLogsExpanded
-                                                            "
-                                                        >
+                                                        </b-row>
+                                                        <div>
                                                             <b-row
                                                                 align-h="center"
                                                                 v-if="
-                                                                    loadingTargetLogs
+                                                                    loadingSubmissionLogs
                                                                 "
                                                             >
                                                                 <b-spinner
@@ -580,33 +461,26 @@
                                                                     variant="secondary"
                                                                 ></b-spinner>
                                                             </b-row>
-                                                            <b-row
-                                                                class="m-0"
-                                                                v-if="
-                                                                    !loadingTargetLogs &&
-                                                                        targetLogsText ===
-                                                                            ''
-                                                                "
-                                                                ><b-col
-                                                                    class="text-center"
-                                                                    ><br />
-                                                                    Nothing
-                                                                    here...<b-img
-                                                                        center
-                                                                        width="100rem"
-                                                                        src="https://i.pinimg.com/originals/bf/ec/5c/bfec5cfd86fca6de0b4574d7c73f7930.jpg"
-                                                                    ></b-img></b-col
-                                                            ></b-row>
-                                                            <b-row
-                                                                class="m-0"
-                                                                v-if="
-                                                                    targetLogsText !==
-                                                                        '' &&
-                                                                        !loadingTargetLogs
-                                                                "
-                                                            >
+                                                            <b-row class="m-0">
                                                                 <b-col
-                                                                    class="pl-3 pr-3 pb-1"
+                                                                    class="m-0 p-0 pl-3 pr-3"
+                                                                    style="white-space: pre-line;"
+                                                                >
+                                                                    {{
+                                                                        statusLogs
+                                                                    }}
+                                                                    <!--<small
+                                                                        v-for="log in statusList"
+                                                                        v-bind:key="
+                                                                            log.timestamp
+                                                                        "
+                                                                        >{{
+                                                                            log.description
+                                                                        }}<br
+                                                                    /></small>-->
+                                                                </b-col>
+                                                                <b-col
+                                                                    class="pl-3 pr-3 pb-1 text-right"
                                                                     style="white-space: pre-line;"
                                                                 >
                                                                     {{
@@ -789,7 +663,7 @@
                                                                 align-self="middle"
                                                             >
                                                                 <b-dropdown
-                                                                    class="m-1"
+                                                                    class="m-2"
                                                                     :text="
                                                                         outputPageSize
                                                                     "
@@ -1343,18 +1217,19 @@ export default {
             runtimeUpdateInterval: null,
             // submission logs
             loadingSubmissionLogs: false,
-            submissionLogsText: '',
-            submissionLogsExpanded: false,
+            statusLogs: '',
+            statusList: [],
+            submissionLogsExpanded: true,
             submissionLogsPageSize: 10,
             // target logs
             loadingTargetLogs: false,
             targetLogsText: '',
-            targetLogsExpanded: false,
+            targetLogsExpanded: true,
             targetLogsPageSize: 10,
             // container logs
             loadingContainerLogs: false,
             containerLogsText: '',
-            containerLogsExpanded: false,
+            containerLogsExpanded: true,
             containerLogsPageSize: 10,
             // output files
             loadingOutputFiles: false,
@@ -1372,10 +1247,18 @@ export default {
             showCanceledAlert: false,
             showFailedToCancelAlert: false,
             // the "v-if hack" (https://michaelnthiessen.com/force-re-render/)
-            render: true
+            render: true,
+            // websocket
+            socket: null
         };
     },
     methods: {
+        subscribeToSocket(e) {
+            let data = JSON.parse(e.data);
+            this.statusList.push(data);
+            this.statusLogs = this.statusLogs.trim() + `\n${data.description}`;
+            this.run = data.run;
+        },
         onCancel() {
             axios
                 .get(
@@ -1674,7 +1557,7 @@ export default {
                     if (response && response.status === 404) {
                         return;
                     }
-                    this.submissionLogsText = response.data;
+                    this.statusLogs = response.data;
                     this.loadingSubmissionLogs = false;
                 })
                 .catch(error => {
@@ -1790,28 +1673,24 @@ export default {
                     return error;
                 });
         },
-        expandLocalLogs() {
-            this.submissionLogsExpanded = !this.submissionLogsExpanded;
-        },
-        expandTargetLogs() {
-            this.targetLogsExpanded = !this.targetLogsExpanded;
-        },
-        updateWalltime() {
-            if (this.run === null || this.run.created === null) return null;
-            if (this.run.is_complete) clearInterval(this.runtimeUpdateInterval);
-
-            let started = moment(this.run.created);
-            let updated = moment(this.run.updated);
-            this.walltimeTotal = moment.duration(
-                (this.run.is_complete ? updated : moment()).diff(started)
-            );
-        }
     },
     async mounted() {
+        this.socket = new WebSocket(
+            'ws://' +
+                window.location.host +
+                '/ws/run/' +
+                this.$router.currentRoute.params.id +
+                '/'
+        );
+        this.socket.onmessage = this.subscribeToSocket;
         await this.reloadRun();
-        this.runtimeUpdateInterval = setInterval(this.updateWalltime, 1000);
     },
     computed: {
+        latestLog() {
+            return this.statusList.length > 0
+                ? this.statusList.slice(-1).pop().description
+                : null;
+        },
         flowKey() {
             return `${this.flow.repo.owner.login}/${this.flow.repo.name}`;
         },

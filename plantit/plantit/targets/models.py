@@ -53,6 +53,7 @@ def schedule_default_tasks(sender, instance, created, **kwargs):
 
     every_minute, _ = IntervalSchedule.objects.get_or_create(every=1, period=IntervalSchedule.MINUTES)
     healthcheck_task = TargetTask.objects.create(
+        target=instance,
         interval=every_minute,
         name='Healthcheck',
         task='plantit.runs.tasks.run_command',

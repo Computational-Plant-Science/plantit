@@ -3,6 +3,8 @@ import Vue from 'vue';
 import './plugins/bootstrap-vue';
 import App from './App.vue';
 import VueLogger from 'vuejs-logger';
+import VueSocketIO from 'vue-socket.io';
+import SocketIO from 'socket.io-client';
 import VueFriendlyIframe from 'vue-friendly-iframe';
 import router from './router';
 import store from './store/store';
@@ -17,8 +19,14 @@ Axios.defaults.xsrfHeaderName = 'X-CSRFTOKEN';
 
 Vue.config.productionTip = false;
 
+Vue.use(
+    new VueSocketIO({
+        debug: true,
+        connection: SocketIO(process.env.VUE_API_URL)
+    })
+);
 Vue.use(VueLogger);
-Vue.use(VueFriendlyIframe)
+Vue.use(VueFriendlyIframe);
 
 if (process.env.VUE_APP_ANALYTICS_ID) {
     Vue.use(VueAnalytics, {
@@ -65,11 +73,11 @@ if (
 //    .then(auth => {
 //        if (!auth) {
 //            window.location.reload();
-            new Vue({
-                router,
-                store,
-                render: h => h(App)
-            }).$mount('#app');
+new Vue({
+    router,
+    store,
+    render: h => h(App)
+}).$mount('#app');
 // `        } else {
 // `            Vue.$log.info('Authenticated');
 // `            new Vue({

@@ -1,11 +1,16 @@
 import binascii
+import json
 import os
 import tempfile
 import uuid
 from os.path import join
 from pathlib import Path
 
+from asgiref.sync import async_to_sync
 from celery.result import AsyncResult
+from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
+from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
@@ -20,7 +25,7 @@ from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import update_local_logs
+from plantit.runs.utils import update_local_logs, map_run
 from plantit.targets.models import Target
 from plantit.utils import get_repo_config
 
@@ -34,7 +39,7 @@ def get_runs_by_user(request, username, page):
     try:
         user = User.objects.get(username=username)
         runs = Run.objects.filter(user=user).order_by('-created')[start:(start + count)]
-        return JsonResponse([__convert_run(run) for run in runs], safe=False)
+        return JsonResponse([map_run(run) for run in runs], safe=False)
     except:
         return HttpResponseNotFound()
 
@@ -342,28 +347,6 @@ def get_container_logs(request, id):
                 return FileResponse(open(tf.name, 'rb'))
 
 
-def __convert_run(run: Run):
-    return {
-        'id': run.guid,
-        'job_id': run.job_id,
-        'job_status': run.job_status,
-        'job_walltime': run.job_walltime,
-        'work_dir': run.work_dir,
-        'target': run.target.name,
-        'created': run.created,
-        'updated': run.updated,
-        'flow_owner': run.flow_owner,
-        'flow_name': run.flow_name,
-        'tags': [str(tag) for tag in run.tags.all()],
-        'is_complete': run.is_complete,
-        'is_success': run.is_success,
-        'is_failure': run.is_failure,
-        'is_cancelled': run.is_cancelled,
-        'is_timeout': run.is_timeout,
-        'flow_image_url': run.flow_image_url
-    }
-
-
 def __create_run(username, flow, target) -> Run:
     now = timezone.now()
     user = User.objects.get(username=username)
@@ -397,7 +380,7 @@ def __create_run(username, flow, target) -> Run:
 def runs(request):
     if request.method == 'GET':
         runs = Run.objects.all()
-        return JsonResponse([__convert_run(run) for run in runs], safe=False)
+        return JsonResponse([map_run(run) for run in runs], safe=False)
     elif request.method == 'POST':
         target = Target.objects.get(name=request.data['config']['target']['name'])
         run = __create_run(request.user.username, request.data, target)
@@ -411,7 +394,7 @@ def runs(request):
 def run(request, id):
     try:
         run = Run.objects.get(guid=id)
-        return JsonResponse(__convert_run(run))
+        return JsonResponse(map_run(run))
     except Run.DoesNotExist:
         return JsonResponse({
             'id': id,
@@ -436,6 +419,7 @@ def run(request, id):
 @api_view(['GET'])
 @login_required
 def cancel(request, id):
+    channel_layer = get_channel_layer()
     try:
         run = Run.objects.get(guid=id)
     except:
@@ -451,6 +435,12 @@ def cancel(request, id):
         update_local_logs(run.guid, message)
         run.job_status = 'CANCELLED'
         run.save()
+        async_to_sync(channel_layer.group_send)(id, {
+            'type': 'update_status',
+            'run': map_run(run),
+            'description': 'Cancelled run',
+            'timestamp': timezone.now().isoformat()
+        })
         return HttpResponse(message)
     else:
         # cancel the cluster scheduler job
@@ -458,6 +448,12 @@ def cancel(request, id):
         update_local_logs(run.guid, message)
         run.job_status = 'CANCELLED'
         run.save()
+        async_to_sync(channel_layer.group_send)(id, {
+            'type': 'update_status',
+            'run': map_run(run),
+            'description': 'Cancelled job on cluster scheduler',
+            'timestamp': timezone.now().isoformat()
+        })
         return HttpResponse(message)
 
 
@@ -465,6 +461,7 @@ def cancel(request, id):
 @login_required
 @csrf_exempt
 def update_status(request, id):
+    channel_layer = get_channel_layer()
     status = request.data
 
     try:
@@ -475,11 +472,65 @@ def update_status(request, id):
     for chunk in status['description'].split('<br>'):
         for line in chunk.split('\n'):
             update_local_logs(run.guid, line)
-            # update_target_log(run.guid, run.target.name, line)
 
             # catch singularity build failures
             if 'FATAL' in line:
                 run.job_status = 'FAILURE'
                 run.save()
+                async_to_sync(channel_layer.group_send)(id, {
+                    'type': 'update_status',
+                    'run': map_run(run),
+                    'description': line,
+                    'timestamp': timezone.now().isoformat()
+                })
+            else:
+                run.job_status = 'RUNNING'
+                run.save()
+                async_to_sync(channel_layer.group_send)(id, {
+                    'type': 'update_status',
+                    'run': map_run(run),
+                    'description': line,
+                    'timestamp': timezone.now().isoformat()
+                })
 
     return HttpResponse(status=200)
+
+
+class RunConsumer(WebsocketConsumer):
+    def connect(self):
+        self.run_id = self.scope['url_route']['kwargs']['id']
+        print(f"Socket connected for run {self.run_id}")
+        async_to_sync(self.channel_layer.group_add)(self.run_id, self.channel_name)
+        self.accept()
+
+    def disconnect(self, code):
+        print(f"Socket disconnected for run {self.run_id}")
+        # async_to_sync(self.channel_layer.group_discard)(self.run_id, self.channel_name)
+
+    def update_status(self, event):
+        print(f"Received status update for run {self.run_id}: {event['description']}")
+        run = Run.objects.get(guid=self.run_id)
+        run_json = {
+            'id': run.guid,
+            'job_id': run.job_id,
+            'job_status': run.job_status,
+            'job_walltime': run.job_walltime,
+            'work_dir': run.work_dir,
+            'target': run.target.name,
+            'created': run.created.isoformat(),
+            'updated': run.updated.isoformat(),
+            'flow_owner': run.flow_owner,
+            'flow_name': run.flow_name,
+            'tags': [str(tag) for tag in run.tags.all()],
+            'is_complete': run.is_complete,
+            'is_success': run.is_success,
+            'is_failure': run.is_failure,
+            'is_cancelled': run.is_cancelled,
+            'is_timeout': run.is_timeout,
+            'flow_image_url': run.flow_image_url
+        }
+        self.send(text_data=json.dumps({
+            'description': event['description'],
+            'run': run_json,
+            'timestamp': event['timestamp']
+        }))

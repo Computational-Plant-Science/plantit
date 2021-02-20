@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
@@ -18,4 +18,8 @@ urlpatterns = [
     path(r'<id>/container_logs_text/<size>/', views.get_container_logs_text),
     path(r'<id>/status/', views.update_status),
     path(r'<id>/cancel/', views.cancel)
+]
+
+websocket_urlpatterns = [
+    path(r'ws/run/<id>/', views.RunConsumer.as_asgi()),
 ]

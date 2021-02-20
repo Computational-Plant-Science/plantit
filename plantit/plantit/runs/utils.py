@@ -191,3 +191,25 @@ def parse_job_id(line: str) -> str:
         return str(int(line.replace('Submitted batch job', '').strip()))
     except:
         raise Exception(f"Failed to parse job ID from: '{line}'")
+
+
+def map_run(run: Run):
+    return {
+        'id': run.guid,
+        'job_id': run.job_id,
+        'job_status': run.job_status,
+        'job_walltime': run.job_walltime,
+        'work_dir': run.work_dir,
+        'target': run.target.name,
+        'created': run.created,
+        'updated': run.updated,
+        'flow_owner': run.flow_owner,
+        'flow_name': run.flow_name,
+        'tags': [str(tag) for tag in run.tags.all()],
+        'is_complete': run.is_complete,
+        'is_success': run.is_success,
+        'is_failure': run.is_failure,
+        'is_cancelled': run.is_cancelled,
+        'is_timeout': run.is_timeout,
+        'flow_image_url': run.flow_image_url
+    }

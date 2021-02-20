@@ -72,9 +72,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'plantit.apps.PlantITConfig',
-    'front_end.apps.FrontEndConfig',
     'taggit',
-    'django_celery_beat'
+    'django_celery_beat',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -86,6 +86,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 AUTHENTICATION_BACKENDS = (
     'plantit.runs.authentication.RunTokenAuthentication',
@@ -113,6 +119,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'plantit.asgi.application'
 WSGI_APPLICATION = 'plantit.wsgi.application'
 
 DATABASES = {

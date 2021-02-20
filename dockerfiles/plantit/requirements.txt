@@ -5,6 +5,7 @@ django-model-utils
 django-taggit
 django-celery-beat
 djangorestframework
+djangochannelsrestframework
 django-enum-choices
 psycopg2-binary
 markdown

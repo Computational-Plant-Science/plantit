@@ -1,16 +1,16 @@
 import asyncio
 import json
 from datetime import datetime
-from os.path import join
 from pathlib import Path
 
-import requests
+import httpx
+from asgiref.sync import sync_to_async
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from django.contrib.auth.models import User
+from django.http import JsonResponse, HttpResponse
 
 from plantit import settings
-from plantit.runs.utils import list_flows_for_user, list_flows_for_users
+from plantit.runs.utils import list_flows_for_users
 from plantit.utils import get_repo_config, validate_config
 
 
@@ -55,25 +55,28 @@ def list_by_user(request, username):
 
 @login_required
 def get(request, username, name):
-    repo = requests.get(f"https://api.github.com/repos/{username}/{name}",
-                        headers={
-                            "Authorization": f"token {request.user.profile.github_token}",
-                            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-                        }).json()
-
-    return JsonResponse({
-        'repo': repo,
-        'config': get_repo_config(repo['name'], repo['owner']['login'], request.user.profile.github_token)
-    })
+    headers = {
+        "Authorization": f"token {request.user.profile.github_token}",
+        "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+    }
+    with httpx.Client(headers=headers) as client:
+        response = client.get(f"https://api.github.com/repos/{username}/{name}")
+        repo = response.json()
+        return JsonResponse({
+            'repo': repo,
+            'config': get_repo_config(repo['name'], repo['owner']['login'], request.user.profile.github_token)
+        })
 
 
 @login_required
 def validate(request, username, name):
-    repo = requests.get(f"https://api.github.com/repos/{username}/{name}",
-                        headers={"Authorization": f"token {request.user.profile.github_token}"}).json()
-    config = get_repo_config(repo['name'], repo['owner']['login'], request.user.profile.github_token)
-    result = validate_config(config, request.user.profile.cyverse_token)
-    if isinstance(result, bool):
-        return JsonResponse({'result': result})
-    else:
-        return JsonResponse({'result': result[0], 'errors': result[1]})
+    headers = {"Authorization": f"token {request.user.profile.github_token}"}
+    with httpx.Client(headers=headers) as client:
+        response = client.get(f"https://api.github.com/repos/{username}/{name}")
+        repo = response.json()
+        config = get_repo_config(repo['name'], repo['owner']['login'], request.user.profile.github_token)
+        result = validate_config(config, request.user.profile.cyverse_token)
+        if isinstance(result, bool):
+            return JsonResponse({'result': result})
+        else:
+            return JsonResponse({'result': result[0], 'errors': result[1]})

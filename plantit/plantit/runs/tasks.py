@@ -1,9 +1,12 @@
+import json
 import traceback
 from os import environ
 from os.path import join
 
 import yaml
+from asgiref.sync import async_to_sync
 from celery.utils.log import get_task_logger
+from channels.layers import get_channel_layer
 from django.utils import timezone
 
 from plantit import settings
@@ -11,7 +14,7 @@ from plantit.celery import app
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
-from plantit.runs.utils import update_local_logs, execute_command, old_flow_config_to_new, remove_logs, parse_job_id
+from plantit.runs.utils import update_local_logs, execute_command, old_flow_config_to_new, remove_logs, parse_job_id, map_run
 from plantit.targets.models import Target
 
 logger = get_task_logger(__name__)
@@ -171,6 +174,7 @@ def __submit_run(run: Run, ssh: SSH):
 
 @app.task(track_started=True)
 def submit_run(id: str, flow):
+    channel_layer = get_channel_layer()
     run = Run.objects.get(guid=id)
     # set this task's ID on the run so user can cancel it
     run.submission_id = submit_run.request.id
@@ -179,6 +183,12 @@ def submit_run(id: str, flow):
     log = f"Deploying run {run.guid} to {run.target.name}"
     logger.info(log)
     update_local_logs(run.guid, log)
+    async_to_sync(channel_layer.group_send)(id, {
+        'type': 'update_status',
+        'run': map_run(run),
+        'description': log,
+        'timestamp': timezone.now().isoformat()
+    })
 
     try:
         ssh = SSH(run.target.hostname, run.target.port, run.target.username)
@@ -187,21 +197,40 @@ def submit_run(id: str, flow):
             logger.info(log)
             update_local_logs(run.guid, log)
             __upload_run(flow, run, ssh)
+            async_to_sync(channel_layer.group_send)(id, {
+                'type': 'update_status',
+                'run': map_run(run),
+                'description': log,
+                'timestamp': timezone.now().isoformat()
+            })
 
             log = 'Running script' if run.is_sandbox else 'Submitting script to scheduler'
             logger.info(log)
             update_local_logs(run.guid, log)
             __submit_run(run, ssh)
+            async_to_sync(channel_layer.group_send)(id, {
+                'type': 'update_status',
+                'run': map_run(run),
+                'description': log,
+                'timestamp': timezone.now().isoformat()
+            })
 
             if run.is_sandbox:
                 log = f"Completed run {run.guid}"
                 logger.info(log)
                 update_local_logs(run.guid, log)
                 run.job_status = 'SUCCESS'
+                run.save()
+                async_to_sync(channel_layer.group_send)(id, {
+                    'type': 'update_status',
+                    'run': map_run(run),
+                    'description': log,
+                    'timestamp': timezone.now().isoformat()
+                })
 
-                cleanup_delay = int(run.target.workdir_clean_delay.total_seconds())
-                update_local_logs(run.guid, f"Cleaning up in {str(run.target.workdir_clean_delay)}")
-                cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+                cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
+                update_local_logs(run.guid, f"Cleaning up in {cleanup_delay}m")
+                cleanup_run.s(id).apply_async(countdown=cleanup_delay * 60)
             else:
                 # poll the cluster scheduler for job status
                 delay = int(environ.get('RUNS_REFRESH_SECONDS'))
@@ -212,6 +241,13 @@ def submit_run(id: str, flow):
         logger.error(log)
         update_local_logs(run.guid, log)
         run.job_status = 'FAILURE'
+        run.save()
+        async_to_sync(channel_layer.group_send)(id, {
+            'type': 'update_status',
+            'run': map_run(run),
+            'description': log,
+            'timestamp': timezone.now().isoformat()
+        })
         raise
     finally:
         run.updated = timezone.now()
@@ -220,6 +256,7 @@ def submit_run(id: str, flow):
 
 @app.task()
 def poll_run_status(id: str):
+    channel_layer = get_channel_layer()
     run = Run.objects.get(guid=id)
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
     cleanup_delay = int(run.target.workdir_clean_delay.total_seconds())
@@ -227,7 +264,14 @@ def poll_run_status(id: str):
 
     # if the job already failed, schedule cleanup
     if run.job_status == 'FAILURE':
-        update_local_logs(f"Job {run.job_id} already failed, cleaning up in {cleanup_delay}m")
+        log = f"Job {run.job_id} already failed, cleaning up in {cleanup_delay}m"
+        update_local_logs(id, log)
+        async_to_sync(channel_layer.group_send)(id, {
+            'type': 'update_status',
+            'run': map_run(run),
+            'description': log,
+            'timestamp': timezone.now().isoformat()
+        })
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
 
     # otherwise poll the scheduler for its status
@@ -236,23 +280,61 @@ def poll_run_status(id: str):
         job_walltime = get_job_walltime(run)
         run.job_status = job_status
         run.job_walltime = job_walltime
+        run.save()
 
         if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED' or job_status == 'TIMEOUT':
-            update_local_logs(id, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.workdir_clean_delay)}")
+            log = f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.workdir_clean_delay)}"
+            update_local_logs(id, log)
+            async_to_sync(channel_layer.group_send)(id, {
+                'type': 'update_status',
+                'run': map_run(run),
+                'description': log,
+                'timestamp': timezone.now().isoformat()
+            })
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
-            update_local_logs(id, f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s")
+            log = f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"
+            update_local_logs(id, log)
+            async_to_sync(channel_layer.group_send)(id, {
+                'type': 'update_status',
+                'run': map_run(run),
+                'description': log,
+                'timestamp': timezone.now().isoformat()
+            })
             poll_run_status.s(id).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
             run.job_status = 'FAILURE'
-            update_local_logs(id, f"Job {run.job_id} not found, cleaning up in {str(run.target.workdir_clean_delay)}")
+            run.save()
+            log = f"Job {run.job_id} not found, cleaning up in {str(run.target.workdir_clean_delay)}"
+            update_local_logs(id, log)
+            async_to_sync(channel_layer.group_send)(id, {
+                'type': 'update_status',
+                'run': map_run(run),
+                'description': log,
+                'timestamp': timezone.now().isoformat()
+            })
         else:
-            update_local_logs(id, f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.workdir_clean_delay)}")
+            log = f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.workdir_clean_delay)}"
+            update_local_logs(id, log)
+            async_to_sync(channel_layer.group_send)(id, {
+                'type': 'update_status',
+                'run': map_run(run),
+                'description': log,
+                'timestamp': timezone.now().isoformat()
+            })
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     except:
         run.job_status = 'FAILURE'
-        update_local_logs(f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.workdir_clean_delay)}): {traceback.format_exc()}")
+        run.save()
+        f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.workdir_clean_delay)}): {traceback.format_exc()}"
+        update_local_logs(id, log)
+        async_to_sync(channel_layer.group_send)(id, {
+            'type': 'update_status',
+            'run': map_run(run),
+            'description': log,
+            'timestamp': timezone.now().isoformat()
+        })
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     finally:
         run.updated = timezone.now()
@@ -289,11 +371,12 @@ def clean_singularity_cache(target: str):
 
 
 @app.task()
-def run_command(target: str, command: str, pre_command: str = None):
-    target = Target.objects.get(name=target)
+def run_command(target_name: str, command: str, pre_command: str = None):
+    channel_layer = get_channel_layer()
+    target = Target.objects.get(name=target_name)
     ssh = SSH(target.hostname, target.port, target.username)
     with ssh:
-        execute_command(
+        lines = execute_command(
             ssh_client=ssh,
             pre_command=target.pre_commands + '' if pre_command is None else f"&& {pre_command}",
             command=command,

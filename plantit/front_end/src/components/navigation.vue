@@ -262,7 +262,11 @@
                         href="/apis/v1/idp/github_request_identity/"
                         class="ml-0 mr-0"
                     >
-                        <b-button class="mt-1 text-left" variant="success" size="sm">
+                        <b-button
+                            class="mt-1 text-left"
+                            variant="success"
+                            size="sm"
+                        >
                             <i class="fab fa-github"></i>
                             Log in to GitHub
                         </b-button>
@@ -381,9 +385,7 @@
                             Profile
                         </b-dropdown-item>
                         <b-dropdown-item
-                            :title="
-                                `${darkMode ? 'Light Mode' : 'Dark Mode'}`
-                            "
+                            :title="`${darkMode ? 'Light Mode' : 'Dark Mode'}`"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
                                 darkMode ? 'text-secondary' : 'text-dark'
@@ -410,15 +412,6 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
-      <b-navbar
-            toggleable="sm"
-            class="logo p-0"
-            style="min-height: 44px; max-height: 46px; z-index: 1000"
-            fixed="bottom"
-            :variant="darkMode ? 'dark' : 'white'"
-        >
-        hello
-      </b-navbar>
     </div>
 </template>
 
@@ -440,6 +433,8 @@ export default {
             SUCCESS: 'SUCCESS',
             FAILURE: 'FAILURE',
             REVOKED: 'REVOKED',
+            // websockets
+            socketMessage: '',
             // user data
             djangoProfile: null,
             cyverseProfile: null,
@@ -490,6 +485,9 @@ export default {
         await this.$store.dispatch('loadCurrentUser');
         // await this.loadUser();
         await this.loadRuns(0);
+        this.sockets.subscribe('update_status', data => {
+            alert(data.text);
+        });
     },
     watch: {
         $route() {
