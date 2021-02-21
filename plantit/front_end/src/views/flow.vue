@@ -968,7 +968,7 @@ export default {
                     router.push({
                         name: 'run',
                         params: {
-                            username: this.currentUserDjangoProfile.username,
+                            username: this.profile.djangoProfile.username,
                             id: response.data.id
                         }
                     });
@@ -980,14 +980,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters([
-            'currentUserDjangoProfile',
-            'currentUserGitHubProfile',
-            'currentUserCyVerseProfile',
-            'flowConfigs',
-            'loggedIn',
-            'darkMode'
-        ]),
+        ...mapGetters(['profile', 'flowConfigs', 'loggedIn', 'darkMode']),
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         },

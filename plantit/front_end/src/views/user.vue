@@ -182,7 +182,7 @@
                             </b-tab>
                             <b-tab
                                 v-if="
-                                    this.currentUserDjangoProfile.username ===
+                                    this.profile.djangoProfile.username ===
                                         this.$router.currentRoute.params
                                             .username
                                 "
@@ -222,7 +222,7 @@
                                     <b :class="tabLinkClass(2)">Flows</b>
                                 </template>
                                 <b-row
-                                    v-if="currentUserGitHubProfile === null"
+                                    v-if="profile.githubProfile === null"
                                     align-v="center"
                                     align-h="center"
                                 >
@@ -248,7 +248,7 @@
                                         class="m-1"
                                         :github-user="githubProfile.login"
                                         :github-token="
-                                            currentUserDjangoProfile.profile
+                                            profile.djangoProfile.profile
                                                 .github_token
                                         "
                                     >
@@ -494,9 +494,7 @@ export default {
         };
     },
     computed: mapGetters([
-        'currentUserDjangoProfile',
-        'currentUserGitHubProfile',
-        'currentUserCyVerseProfile',
+        'profile',
         'loggedIn',
         'darkMode'
     ]),
@@ -504,8 +502,8 @@ export default {
         await this.loadUser();
         this.loadingUser = false;
         await this.loadDirectory(
-            `/iplant/home/${this.currentUserDjangoProfile.username}/`,
-            this.currentUserDjangoProfile.profile.cyverse_token
+            `/iplant/home/${this.profile.djangoProfile.username}/`,
+            this.profile.djangoProfile.profile.cyverse_token
         );
         await this.loadTargets();
     },
@@ -594,7 +592,7 @@ export default {
                 name: 'run',
                 params: {
                     id: items[0].id,
-                    username: this.currentUserDjangoProfile.username
+                    username: this.profile.djangoProfile.username
                 }
             });
         },

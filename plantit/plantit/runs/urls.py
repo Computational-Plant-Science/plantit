@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path
 
 from . import views
 
@@ -11,12 +11,8 @@ urlpatterns = [
     path(r'<id>/output/<file>/', views.get_output_file),
     path(r'<id>/thumbnail/<file>/', views.get_thumbnail),
     path(r'<id>/submission_logs/', views.get_submission_logs),
-    path(r'<id>/submission_logs_text/<size>/', views.get_submission_logs_text),
-    path(r'<id>/target_logs/', views.get_target_logs),
-    path(r'<id>/target_logs_text/<size>/', views.get_target_logs_text),
     path(r'<id>/container_logs/', views.get_container_logs),
-    path(r'<id>/container_logs_text/<size>/', views.get_container_logs_text),
-    path(r'<id>/status/', views.update_status),
+    path(r'<id>/status/', views.status),
     path(r'<id>/cancel/', views.cancel)
 ]
 

@@ -10,7 +10,7 @@
         <br />
         <b-container class="pl-3 pt-3 mr-3" fluid>
             <b-row
-                v-if="currentUserGitHubProfile === null"
+                v-if="githubProfile === null"
                 align-v="center"
                 align-h="center"
                 class="p-2 text-center"
@@ -32,7 +32,7 @@
             <b-row v-else align-v="center" align-h="center">
                 <flows
                     :github-token="
-                        currentUserDjangoProfile.profile.github_token
+                        profile.djangoProfile.profile.github_token
                     "
                 >
                 </flows>
@@ -61,18 +61,13 @@ export default {
         flows
     },
     computed: mapGetters([
-        'currentUserDjangoProfile',
-        'currentUserGitHubProfile',
-        'currentUserCyVerseProfile',
+        'profile',
         'loggedIn',
         'darkMode'
     ]),
     methods: {
         tabLinkClass(idx) {
             if (this.currentTab === idx) {
-                // return this.darkMode
-                //     ? 'background-dark text-success'
-                //     : 'bg-light text-dark';
                 return this.darkMode ? '' : 'text-dark';
             } else {
                 return this.darkMode

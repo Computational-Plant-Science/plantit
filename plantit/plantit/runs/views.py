@@ -25,7 +25,7 @@ from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import update_local_logs, map_run
+from plantit.runs.utils import update_status, map_run, container_log_file_name, submission_log_file_name
 from plantit.targets.models import Target
 from plantit.utils import get_repo_config
 
@@ -212,13 +212,12 @@ def get_submission_logs_text(request, id, size):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.guid}.plantit.log")
+    log_path = submission_log_file_name(run)
     if Path(log_path).is_file():
         with open(log_path, 'r') as log:
             lines = log.readlines()[-int(size):]
-            return HttpResponse(lines, content_type='text/plain')
     else:
-        return HttpResponseNotFound()
+        return []
 
 
 @api_view(['GET'])
@@ -229,94 +228,8 @@ def get_submission_logs(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = join(os.environ.get('RUNS_LOGS'), f"{run.guid}.plantit.log")
+    log_path = submission_log_file_name(run)
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
-
-
-@api_view(['GET'])
-@login_required
-def get_target_logs_text(request, id, size):
-    try:
-        run = Run.objects.get(guid=id)
-    except Run.DoesNotExist:
-        return HttpResponseNotFound()
-
-    client = SSH(run.target.hostname, run.target.port, run.target.username)
-    work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.guid}.{run.target.name.lower()}.log"
-
-    with client:
-        with client.client.open_sftp() as sftp:
-            stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
-            errs = stderr.read()
-            if errs:
-                raise Exception(f"Failed to check existence of {log_file}: {errs}")
-            if not stdout.read().decode().strip() == 'exists':
-                return HttpResponseNotFound()
-
-            with tempfile.NamedTemporaryFile() as tf:
-                sftp.chdir(work_dir)
-                sftp.get(log_file, tf.name)
-                with open(tf.name, 'r') as file:
-                    lines = file.readlines()[-int(size):]
-                    return HttpResponse(lines, content_type='text/plain')
-
-
-@api_view(['GET'])
-@login_required
-def get_target_logs(request, id):
-    try:
-        run = Run.objects.get(guid=id)
-    except Run.DoesNotExist:
-        return HttpResponseNotFound()
-
-    client = SSH(run.target.hostname, run.target.port, run.target.username)
-    work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.guid}.{run.target.name.lower()}.log"
-
-    with client:
-        with client.client.open_sftp() as sftp:
-            stdin, stdout, stderr = client.client.exec_command(
-                'test -e {0} && echo exists'.format(join(work_dir, log_file)))
-            errs = stderr.read()
-            if errs:
-                raise Exception(f"Failed to check existence of {log_file}: {errs}")
-            if not stdout.read().decode().strip() == 'exists':
-                return HttpResponseNotFound()
-
-            with tempfile.NamedTemporaryFile() as tf:
-                sftp.chdir(work_dir)
-                sftp.get(log_file, tf.name)
-                return FileResponse(open(tf.name, 'rb'))
-
-
-@api_view(['GET'])
-@login_required
-def get_container_logs_text(request, id, size):
-    try:
-        run = Run.objects.get(guid=id)
-    except Run.DoesNotExist:
-        return HttpResponseNotFound()
-
-    client = SSH(run.target.hostname, run.target.port, run.target.username)
-    work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.guid}.{run.target.name.lower()}.log"
-
-    with client:
-        with client.client.open_sftp() as sftp:
-            stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
-            errs = stderr.read()
-            if errs:
-                raise Exception(f"Failed to check existence of {log_file}: {errs}")
-            if not stdout.read().decode().strip() == 'exists':
-                return HttpResponseNotFound()
-
-            with tempfile.NamedTemporaryFile() as tf:
-                sftp.chdir(work_dir)
-                sftp.get(log_file, tf.name)
-                with open(tf.name, 'r') as file:
-                    lines = file.readlines()[-int(size):]
-                    return HttpResponse(lines, content_type='text/plain')
 
 
 @api_view(['GET'])
@@ -360,6 +273,7 @@ def __create_run(username, flow, target) -> Run:
         flow_name=flow_name,
         flow_image_url=f"https://raw.githubusercontent.com/{flow_owner}/{flow_name}/master/{flow_config['logo']}",
         target=target,
+        job_status='CREATED',
         created=now,
         updated=now,
         token=binascii.hexlify(os.urandom(20)).decode())
@@ -394,7 +308,7 @@ def runs(request):
 def run(request, id):
     try:
         run = Run.objects.get(guid=id)
-        return JsonResponse(map_run(run))
+        return JsonResponse(map_run(run, True))
     except Run.DoesNotExist:
         return JsonResponse({
             'id': id,
@@ -432,36 +346,27 @@ def cancel(request, id):
     if run.is_sandbox:
         # cancel the Celery task
         AsyncResult(run.submission_id).revoke()
-        update_local_logs(run.guid, message)
         run.job_status = 'CANCELLED'
+        run.updated = timezone.now()
         run.save()
-        async_to_sync(channel_layer.group_send)(id, {
-            'type': 'update_status',
-            'run': map_run(run),
-            'description': 'Cancelled run',
-            'timestamp': timezone.now().isoformat()
-        })
+
+        update_status(run, message)
         return HttpResponse(message)
     else:
         # cancel the cluster scheduler job
         cancel_job(run)
-        update_local_logs(run.guid, message)
         run.job_status = 'CANCELLED'
+        run.updated = timezone.now()
         run.save()
-        async_to_sync(channel_layer.group_send)(id, {
-            'type': 'update_status',
-            'run': map_run(run),
-            'description': 'Cancelled job on cluster scheduler',
-            'timestamp': timezone.now().isoformat()
-        })
+
+        update_status(run, message)
         return HttpResponse(message)
 
 
 @api_view(['POST'])
 @login_required
 @csrf_exempt
-def update_status(request, id):
-    channel_layer = get_channel_layer()
+def status(request, id):
     status = request.data
 
     try:
@@ -470,28 +375,24 @@ def update_status(request, id):
         return HttpResponseNotFound()
 
     for chunk in status['description'].split('<br>'):
-        for line in chunk.split('\n'):
-            update_local_logs(run.guid, line)
+        run.job_status = 'RUNNING'
 
-            # catch singularity build failures
-            if 'FATAL' in line:
+        for line in chunk.split('\n'):
+            # catch singularity build failures etc
+            if 'FATAL' in line or int(status['state']) == 0:
                 run.job_status = 'FAILURE'
+                run.updated = timezone.now()
                 run.save()
-                async_to_sync(channel_layer.group_send)(id, {
-                    'type': 'update_status',
-                    'run': map_run(run),
-                    'description': line,
-                    'timestamp': timezone.now().isoformat()
-                })
-            else:
-                run.job_status = 'RUNNING'
+            elif int(status['state']) == 6:
+                run.job_status = 'SUCCESS'
+                run.updated = timezone.now()
                 run.save()
-                async_to_sync(channel_layer.group_send)(id, {
-                    'type': 'update_status',
-                    'run': map_run(run),
-                    'description': line,
-                    'timestamp': timezone.now().isoformat()
-                })
+
+            update_status(run, line)
+
+        run.updated = timezone.now()
+        run.save()
+
 
     return HttpResponse(status=200)
 
@@ -508,29 +409,8 @@ class RunConsumer(WebsocketConsumer):
         # async_to_sync(self.channel_layer.group_discard)(self.run_id, self.channel_name)
 
     def update_status(self, event):
-        print(f"Received status update for run {self.run_id}: {event['description']}")
         run = Run.objects.get(guid=self.run_id)
-        run_json = {
-            'id': run.guid,
-            'job_id': run.job_id,
-            'job_status': run.job_status,
-            'job_walltime': run.job_walltime,
-            'work_dir': run.work_dir,
-            'target': run.target.name,
-            'created': run.created.isoformat(),
-            'updated': run.updated.isoformat(),
-            'flow_owner': run.flow_owner,
-            'flow_name': run.flow_name,
-            'tags': [str(tag) for tag in run.tags.all()],
-            'is_complete': run.is_complete,
-            'is_success': run.is_success,
-            'is_failure': run.is_failure,
-            'is_cancelled': run.is_cancelled,
-            'is_timeout': run.is_timeout,
-            'flow_image_url': run.flow_image_url
-        }
+        print(f"Received status update for run {self.run_id} with status {run.job_status}")
         self.send(text_data=json.dumps({
-            'description': event['description'],
-            'run': run_json,
-            'timestamp': event['timestamp']
+            'run': map_run(run),
         }))

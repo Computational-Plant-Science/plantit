@@ -4,36 +4,36 @@ import jwtDecode from 'jwt-decode';
 
 export const user = {
     state: () => ({
-        currentUserDjangoProfile: null,
-        currentUserCyVerseProfile: null,
-        currentUserGitHubProfile: null,
+        loggedIn: false,
         keycloak: null,
         darkMode: false,
-        loggedIn: false
+        profile: {
+            djangoProfile: null,
+            cyverseProfile: null,
+            githubProfile: null
+        },
     }),
     getters: {
+        loggedIn: state => state.loggedIn,
         keycloak: state => state.keycloak,
         darkMode: state => state.darkMode,
-        currentUserDjangoProfile: state => state.currentUserDjangoProfile,
-        currentUserCyVerseProfile: state => state.currentUserCyVerseProfile,
-        currentUserGitHubProfile: state => state.currentUserGitHubProfile,
-        loggedIn: state => state.loggedIn
+        profile: state => state.profile,
     },
     mutations: {
-        setDarkMode(state, mode) {
-            state.darkMode = mode;
-        },
         setLoggedIn(state, loggedIn) {
             state.loggedIn = loggedIn;
         },
-        setCurrentUserDjangoProfile(state, profile) {
-            state.currentUserDjangoProfile = profile;
+        setDarkMode(state, mode) {
+            state.darkMode = mode;
         },
-        setCurrentUserCyVerseProfile(state, profile) {
-            state.currentUserCyVerseProfile = profile;
+        setDjangoProfile(state, profile) {
+            state.profile.djangoProfile = profile;
         },
-        setCurrentUserGitHubProfile(state, profile) {
-            state.currentUserGitHubProfile = profile;
+        setCyverseProfile(state, profile) {
+            state.profile.cyverseProfile = profile;
+        },
+        setGithubProfile(state, profile) {
+            state.profile.githubProfile = profile;
         }
     },
     actions: {
@@ -52,7 +52,7 @@ export const user = {
             return axios
                 .get('/apis/v1/users/retrieve/')
                 .then(django => {
-                    commit('setCurrentUserDjangoProfile', django.data);
+                    commit('setDjangoProfile', django.data);
                     if (django.data.profile.cyverse_token === '') {
                         commit('setLoggedIn', false);
                         //window.location.href = 'https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F';
@@ -80,7 +80,7 @@ export const user = {
                             .then(cyverse => {
                                 commit('setLoggedIn', true);
                                 commit(
-                                    'setCurrentUserCyVerseProfile',
+                                    'setCyverseProfile',
                                     cyverse.data[django.data.username]
                                 );
                                 commit(
@@ -110,7 +110,7 @@ export const user = {
                             )
                             .then(github =>
                                 commit(
-                                    'setCurrentUserGitHubProfile',
+                                    'setGithubProfile',
                                     github.data
                                 )
                             )

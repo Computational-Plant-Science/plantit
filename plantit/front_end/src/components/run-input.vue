@@ -124,9 +124,9 @@ export default {
     },
     computed: {
         ...mapGetters([
-            'currentUserDjangoProfile',
-            'currentUserGitHubProfile',
-            'currentUserCyVerseProfile',
+            'profile.djangoProfile',
+            'profile.githubProfile',
+            'profile.cyverseProfile',
             'flowConfigs',
             'loggedIn',
             'darkMode'
@@ -138,12 +138,12 @@ export default {
     async mounted() {
         await axios
             .get(
-                `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${this.currentUserDjangoProfile.username}/`,
+                `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${this.profile.djangoProfile.username}/`,
                 {
                     headers: {
                         Authorization:
                             'Bearer ' +
-                            this.currentUserDjangoProfile.profile.cyverse_token
+                            this.profile.djangoProfile.profile.cyverse_token
                     }
                 }
             )
@@ -162,7 +162,7 @@ export default {
                     headers: {
                         Authorization:
                             'Bearer ' +
-                            this.currentUserDjangoProfile.profile.cyverse_token
+                            this.profile.djangoProfile.profile.cyverse_token
                     }
                 }
             )

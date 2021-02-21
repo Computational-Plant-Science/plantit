@@ -327,57 +327,7 @@
                                                                 </h5>
                                                             </b-col>
                                                             <b-col
-                                                                align-self="end"
-                                                                class="text-right"
-                                                            >
-                                                                <small>
-                                                                    <b-dropdown
-                                                                        class="m-2"
-                                                                        :text="
-                                                                            submissionLogsPageSize
-                                                                        "
-                                                                        dropleft
-                                                                        :variant="
-                                                                            darkMode
-                                                                                ? 'outline-light'
-                                                                                : 'white'
-                                                                        "
-                                                                        :title="
-                                                                            'Showing last ' +
-                                                                                submissionLogsPageSize +
-                                                                                ' lines'
-                                                                        "
-                                                                        v-b-tooltip.hover
-                                                                        size="sm"
-                                                                    >
-                                                                        <b-dropdown-item
-                                                                            @click="
-                                                                                setLocalLogsPageSize(
-                                                                                    10
-                                                                                )
-                                                                            "
-                                                                            >10</b-dropdown-item
-                                                                        >
-                                                                        <b-dropdown-item
-                                                                            @click="
-                                                                                setLocalLogsPageSize(
-                                                                                    20
-                                                                                )
-                                                                            "
-                                                                            >20</b-dropdown-item
-                                                                        >
-                                                                        <b-dropdown-item
-                                                                            @click="
-                                                                                setLocalLogsPageSize(
-                                                                                    50
-                                                                                )
-                                                                            "
-                                                                            >50</b-dropdown-item
-                                                                        >
-                                                                    </b-dropdown>
-                                                                </small>
-                                                            </b-col>
-                                                            <b-col
+                                                                md="auto"
                                                                 align-self="end"
                                                                 class="mb-2"
                                                             >
@@ -395,63 +345,12 @@
                                                                     >
                                                                 </h5>
                                                             </b-col>
-                                                            <b-col
-                                                                md="auto"
-                                                                align-self="end"
-                                                            >
-                                                                <small>
-                                                                    <b-dropdown
-                                                                        class="m-2"
-                                                                        :text="
-                                                                            targetLogsPageSize
-                                                                        "
-                                                                        dropleft
-                                                                        :title="
-                                                                            'Showing last ' +
-                                                                                targetLogsPageSize +
-                                                                                ' lines'
-                                                                        "
-                                                                        v-b-tooltip.hover
-                                                                        :variant="
-                                                                            darkMode
-                                                                                ? 'outline-light'
-                                                                                : 'white'
-                                                                        "
-                                                                        size="sm"
-                                                                    >
-                                                                        <b-dropdown-item
-                                                                            @click="
-                                                                                setTargetLogsPageSize(
-                                                                                    10
-                                                                                )
-                                                                            "
-                                                                            >10</b-dropdown-item
-                                                                        >
-                                                                        <b-dropdown-item
-                                                                            @click="
-                                                                                setTargetLogsPageSize(
-                                                                                    20
-                                                                                )
-                                                                            "
-                                                                            >20</b-dropdown-item
-                                                                        >
-                                                                        <b-dropdown-item
-                                                                            @click="
-                                                                                setTargetLogsPageSize(
-                                                                                    50
-                                                                                )
-                                                                            "
-                                                                            >50</b-dropdown-item
-                                                                        >
-                                                                    </b-dropdown></small
-                                                                >
-                                                            </b-col>
                                                         </b-row>
                                                         <div>
                                                             <b-row
                                                                 align-h="center"
                                                                 v-if="
-                                                                    loadingSubmissionLogs
+                                                                    loadingRun
                                                                 "
                                                             >
                                                                 <b-spinner
@@ -463,11 +362,17 @@
                                                             </b-row>
                                                             <b-row class="m-0">
                                                                 <b-col
+                                                                    v-if="
+                                                                        run
+                                                                            .submission_logs
+                                                                            .length >
+                                                                            0
+                                                                    "
                                                                     class="m-0 p-0 pl-3 pr-3"
                                                                     style="white-space: pre-line;"
                                                                 >
                                                                     {{
-                                                                        statusLogs
+                                                                        run.submission_logs
                                                                     }}
                                                                     <!--<small
                                                                         v-for="log in statusList"
@@ -480,11 +385,17 @@
                                                                     /></small>-->
                                                                 </b-col>
                                                                 <b-col
+                                                                    v-if="
+                                                                        run
+                                                                            .container_logs
+                                                                            .length >
+                                                                            0
+                                                                    "
                                                                     class="pl-3 pr-3 pb-1 text-right"
                                                                     style="white-space: pre-line;"
                                                                 >
                                                                     {{
-                                                                        targetLogsText
+                                                                        run.container_logs
                                                                     }}
                                                                 </b-col>
                                                             </b-row>
@@ -1168,19 +1079,6 @@
                 :src="thumbnailUrl"
             ></b-embed>
         </b-modal>
-        <!--<b-popover
-            target="popover-reactive-1"
-            triggers="click"
-            :show.sync="thumbnailUrl !== ''"
-            placement="auto"
-            @hidden="onThumbnailHidden"
-        >
-            <template #title>
-                {{ thumbnailTitle }}
-            </template>
-            <b-img :src="thumbnailUrl" style="max-width: 70rem"> </b-img
-        >
-        </b-popover>-->
     </div>
 </template>
 <script>
@@ -1215,22 +1113,6 @@ export default {
             // walltime
             walltimeTotal: null,
             runtimeUpdateInterval: null,
-            // submission logs
-            loadingSubmissionLogs: false,
-            statusLogs: '',
-            statusList: [],
-            submissionLogsExpanded: true,
-            submissionLogsPageSize: 10,
-            // target logs
-            loadingTargetLogs: false,
-            targetLogsText: '',
-            targetLogsExpanded: true,
-            targetLogsPageSize: 10,
-            // container logs
-            loadingContainerLogs: false,
-            containerLogsText: '',
-            containerLogsExpanded: true,
-            containerLogsPageSize: 10,
             // output files
             loadingOutputFiles: false,
             outputFiles: [],
@@ -1255,8 +1137,6 @@ export default {
     methods: {
         subscribeToSocket(e) {
             let data = JSON.parse(e.data);
-            this.statusList.push(data);
-            this.statusLogs = this.statusLogs.trim() + `\n${data.description}`;
             this.run = data.run;
         },
         onCancel() {
@@ -1295,7 +1175,7 @@ export default {
                     router.push({
                         name: 'run',
                         params: {
-                            username: this.currentUserDjangoProfile.username,
+                            username: this.profile.djangoProfile.username,
                             id: response.data.id
                         }
                     });
@@ -1387,14 +1267,6 @@ export default {
         parseSeconds(seconds) {
             return moment.utc(seconds * 1000);
         },
-        setLocalLogsPageSize(size) {
-            this.submissionLogsPageSize = size;
-            this.reloadLocalLogs();
-        },
-        setTargetLogsPageSize(size) {
-            this.targetLogsPageSize = size;
-            this.reloadTargetLogs();
-        },
         listOutputFiles() {
             return this.outputFiles.slice(
                 (this.outputFilePage - 1) * this.outputPageSize,
@@ -1403,7 +1275,6 @@ export default {
         },
         setOutputFilesPageSize(size) {
             this.outputPageSize = size;
-            this.reloadTargetLogs();
         },
         reloadRun() {
             this.render = false;
@@ -1424,8 +1295,6 @@ export default {
                         this.run = response.data;
                     }
                     if (this.run.updated === null) return;
-                    this.reloadLocalLogs();
-                    this.reloadTargetLogs();
                     this.reloadOutputFiles();
                     this.loadFlow(
                         response.data.flow_owner,
@@ -1433,12 +1302,12 @@ export default {
                     );
                     axios
                         .get(
-                            `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${this.currentUserDjangoProfile.username}/`,
+                            `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${this.profile.djangoProfile.username}/`,
                             {
                                 headers: {
                                     Authorization:
                                         'Bearer ' +
-                                        this.currentUserDjangoProfile.profile
+                                        this.profile.djangoProfile.profile
                                             .cyverse_token
                                 }
                             }
@@ -1476,9 +1345,6 @@ export default {
                         throw error;
                     }
                 });
-        },
-        downloadZip() {
-            this.downloadFile(`${this.$router.currentRoute.params.id}.zip`);
         },
         thumbnailLoaded() {
             this.thumbnailDoneLoading = true;
@@ -1522,7 +1388,7 @@ export default {
                     return error;
                 });
         },
-        downloadLocalLogs() {
+        downloadSubmissionLogs() {
             axios
                 .get(
                     `/apis/v1/runs/${this.$router.currentRoute.params.id}/submission_logs/`
@@ -1537,76 +1403,13 @@ export default {
                     );
                     let link = document.createElement('a');
                     link.href = url;
-                    link.setAttribute('download', this.localLogFileName);
+                    link.setAttribute('download', this.submissionLogFileName);
                     link.click();
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    return error;
-                });
-        },
-        reloadLocalLogs() {
-            this.loadingSubmissionLogs = true;
-            axios
-                .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/submission_logs_text/${this.submissionLogsPageSize}/`
-                )
-                .then(response => {
-                    if (response && response.status === 404) {
-                        return;
-                    }
-                    this.statusLogs = response.data;
-                    this.loadingSubmissionLogs = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.loadingSubmissionLogs = false;
-                    return error;
-                });
-        },
-        downloadTargetLogs() {
-            axios
-                .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/target_logs/`
-                )
-                .then(response => {
-                    if (response && response.status === 404) {
-                        return;
-                    }
-
-                    let url = window.URL.createObjectURL(
-                        new Blob([response.data])
-                    );
-                    let link = document.createElement('a');
-                    link.href = url;
-                    link.setAttribute('download', this.targetLogFileName);
-                    link.click();
-                    window.URL.revokeObjectURL(url);
-                    this.downloading = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    return error;
-                });
-        },
-        reloadTargetLogs() {
-            this.loadingTargetLogs = true;
-            axios
-                .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/target_logs_text/${this.targetLogsPageSize}/`
-                )
-                .then(response => {
-                    if (response && response.status === 404) {
-                        return;
-                    }
-                    this.targetLogsText = response.data;
-                    this.loadingTargetLogs = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.loadingTargetLogs = false;
                     return error;
                 });
         },
@@ -1632,25 +1435,6 @@ export default {
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    return error;
-                });
-        },
-        reloadContainerLogs() {
-            this.loadingContainerLogs = true;
-            axios
-                .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/container_logs_text/${this.containerLogsPageSize}/`
-                )
-                .then(response => {
-                    if (response && response.status === 404) {
-                        return;
-                    }
-                    this.containerLogsText = response.data;
-                    this.loadingContainerLogs = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.loadingContainerLogs = false;
                     return error;
                 });
         },
@@ -1686,38 +1470,18 @@ export default {
         await this.reloadRun();
     },
     computed: {
-        latestLog() {
-            return this.statusList.length > 0
-                ? this.statusList.slice(-1).pop().description
-                : null;
-        },
         flowKey() {
             return `${this.flow.repo.owner.login}/${this.flow.repo.name}`;
         },
-        localLogFileName() {
+        submissionLogFileName() {
             return `${this.$router.currentRoute.params.id}.plantit.log`;
-        },
-        targetLogFileName() {
-            return `${
-                this.$router.currentRoute.params.id
-            }.${this.run.target.toLowerCase()}.log`;
         },
         containerLogFileName() {
             return `${
                 this.$router.currentRoute.params.id
             }.${this.run.target.toLowerCase()}.log`;
         },
-        ...mapGetters([
-            'currentUserDjangoProfile',
-            'currentUserCyVerseProfile',
-            'currentUserGitHubProfile',
-            'loggedIn',
-            'flowConfigs',
-            'darkMode'
-        ]),
-        updatedFormatted() {
-            return `${moment(this.run.updated).fromNow()}`;
-        }
+        ...mapGetters(['profile', 'loggedIn', 'flowConfigs', 'darkMode']),
     }
 };
 </script>

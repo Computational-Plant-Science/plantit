@@ -442,9 +442,9 @@ export default {
     },
     computed: {
         ...mapGetters([
-            'currentUserDjangoProfile',
-            'currentUserGitHubProfile',
-            'currentUserCyVerseProfile',
+            'profile.djangoProfile',
+            'profile.githubProfile',
+            'profile.cyverseProfile',
             'flowConfigs',
             'loggedIn',
             'darkMode'

@@ -256,7 +256,7 @@
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
                         v-if="
-                            loggedIn ? currentUserGitHubProfile === null : false
+                            loggedIn ? profile.githubProfile === null : false
                         "
                         title="Log in to GitHub"
                         href="/apis/v1/idp/github_request_identity/"
@@ -274,7 +274,7 @@
                     <b-nav-item-dropdown
                         right
                         v-if="loggedIn"
-                        :title="currentUserDjangoProfile.username"
+                        :title="profile.djangoProfile.username"
                         class="m-0 p-0 mt-1 dropdown-custom"
                         :menu-class="darkMode ? 'theme-dark' : 'theme-light'"
                         style="font-size: 12pt"
@@ -286,21 +286,21 @@
                                 size="sm"
                             >
                                 <b-img
-                                    v-if="currentUserGitHubProfile"
+                                    v-if="profile.githubProfile"
                                     class="avatar m-0 mb-1 p-0 github-hover logo"
                                     style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 1.5px; border: 1px solid white;"
                                     rounded="circle"
                                     :src="
-                                        currentUserGitHubProfile
-                                            ? currentUserGitHubProfile.avatar_url
+                                        profile.githubProfile
+                                            ? profile.githubProfile.avatar_url
                                             : ''
                                     "
                                 ></b-img>
                                 <i v-else class="far fa-user"></i>
                                 {{
-                                    currentUserCyVerseProfile
-                                        ? currentUserCyVerseProfile.first_name
-                                        : currentUserDjangoProfile.username
+                                    profile.cyverseProfile
+                                        ? profile.cyverseProfile.first_name
+                                        : profile.djangoProfile.username
                                 }}
                                 <i class="fas fa-caret-down fa-fw"></i>
                             </b-button>
@@ -377,7 +377,7 @@
                             "
                             :href="
                                 '/user/' +
-                                    currentUserDjangoProfile.username +
+                                    profile.djangoProfile.username +
                                     '/'
                             "
                         >
@@ -475,9 +475,7 @@ export default {
     },
     computed: mapGetters([
         'darkMode',
-        'currentUserDjangoProfile',
-        'currentUserCyVerseProfile',
-        'currentUserGitHubProfile',
+        'profile',
         'loggedIn'
     ]),
     created: async function() {
@@ -555,7 +553,7 @@ export default {
             this.loadingMoreRuns = !this.loadingRuns;
             return axios
                 .get(
-                    `/apis/v1/runs/${this.currentUserDjangoProfile.username}/get_by_user/${page}/`
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_by_user/${page}/`
                 )
                 .then(response => {
                     var ids = [];

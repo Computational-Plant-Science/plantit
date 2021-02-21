@@ -28,10 +28,6 @@ export default {
     },
     computed: mapGetters([
         'darkMode',
-        'currentUserDjangoProfile',
-        'currentUserCyVerseProfile',
-        'currentUserGitHubProfile',
-        'loggedIn'
     ]),
     data() {
         return {};

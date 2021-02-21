@@ -16,6 +16,21 @@ export const flows = {
     },
     actions: {
         loadFlows({ commit, state }) {
+            let url = (state.user.githubProfile !== undefined && state.user.githubProfile && state.user.githubProfile.username !== '') ? `/apis/v1/flows/${this.githubUser}/` : '/apis/v1/flows/list_all/'
+            axios
+                .get(url)
+                .then(response => {
+                    this.flows = response.data.flows
+                    this.loading = false;
+                })
+                .catch(error => {
+                    this.loading = false;
+                    if (error.status_code === 401) {
+                        this.login = true;
+                    } else {
+                        throw error;
+                    }
+                });
             if (state.user.github_token !== '') {
                 axios
                     .get(

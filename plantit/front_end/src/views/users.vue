@@ -117,9 +117,9 @@ export default {
         this.loadAll();
     },
     computed: mapGetters([
-        'currentUserDjangoProfile',
-        'currentUserGitHubProfile',
-        'currentUserCyVerseProfile',
+        'profile.djangoProfile',
+        'profile.githubProfile',
+        'profile.cyverseProfile',
         'loggedIn',
         'allUsers',
         'darkMode'

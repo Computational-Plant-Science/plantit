@@ -86,7 +86,7 @@
                                 class="m-0 p-0"
                                 :to="
                                     '/user/' +
-                                        currentUserDjangoProfile.username +
+                                        profile.djangoProfile.username +
                                         '/'
                                 "
                             >
@@ -96,13 +96,13 @@
                                     "
                                 >
                                     <b-img
-                                        v-if="currentUserGitHubProfile"
+                                        v-if="profile.githubProfile"
                                         class="avatar"
                                         rounded="circle"
                                         center
                                         :src="
-                                            currentUserGitHubProfile
-                                                ? currentUserGitHubProfile.avatar_url
+                                            profile.githubProfile
+                                                ? profile.githubProfile.avatar_url
                                                 : ''
                                         "
                                     ></b-img>
@@ -153,9 +153,9 @@ import { mapGetters } from 'vuex';
 export default {
     name: 'home-splash',
     computed: mapGetters([
-        'currentUserDjangoProfile',
-        'currentUserCyVerseProfile',
-        'currentUserGitHubProfile',
+        'profile.djangoProfile',
+        'profile.cyverseProfile',
+        'profile.githubProfile',
         'loggedIn',
         'darkMode'
     ]),

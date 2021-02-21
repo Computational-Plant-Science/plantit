@@ -93,7 +93,7 @@
                             uploadFiles(
                                 filesToUpload,
                                 internalLoaded ? internalNode.path : node.path,
-                                currentUserDjangoProfile.profile.cyverse_token
+                                profile.djangoProfile.profile.cyverse_token
                             )
                         "
                         :variant="darkMode ? 'outline-light' : 'outline-dark'"
@@ -117,7 +117,7 @@
                                     : node.path) +
                                     '/' +
                                     newDirectoryName,
-                                currentUserDjangoProfile.profile.cyverse_token
+                                profile.djangoProfile.profile.cyverse_token
                             )
                         "
                     >
@@ -139,7 +139,7 @@
                         @click="
                             deletePath(
                                 internalLoaded ? internalNode.path : node.path,
-                                currentUserDjangoProfile.profile.cyverse_token
+                                profile.djangoProfile.profile.cyverse_token
                             )
                         "
                         variant="outline-danger"
@@ -224,7 +224,7 @@
                     @click="
                         deletePath(
                             internalLoaded ? internalNode.path : node.path,
-                            currentUserDjangoProfile.profile.cyverse_token
+                            profile.djangoProfile.profile.cyverse_token
                         )
                     "
                     variant="outline-danger"
@@ -238,7 +238,7 @@
                     @click="
                         loadDirectory(
                             internalLoaded ? internalNode.path : node.path,
-                            currentUserDjangoProfile.profile.cyverse_token
+                            profile.djangoProfile.profile.cyverse_token
                         )
                     "
                     ><i
@@ -290,7 +290,7 @@
                         @click="
                             downloadFile(
                                 child.path,
-                                currentUserDjangoProfile.profile.cyverse_token
+                                profile.djangoProfile.profile.cyverse_token
                             )
                         "
                         :variant="darkMode ? 'outline-light' : 'outline-dark'"
@@ -305,7 +305,7 @@
                         @click="
                             deletePath(
                                 child.path,
-                                currentUserDjangoProfile.profile.cyverse_token
+                                profile.djangoProfile.profile.cyverse_token
                             )
                         "
                         variant="outline-danger"
@@ -334,7 +334,7 @@
                 @deleted="
                     loadDirectory(
                         node.path,
-                        this.currentUserDjangoProfile.profile.cyverse_token
+                        this.profile.djangoProfile.profile.cyverse_token
                     )
                 "
                 :key="index"
@@ -387,9 +387,9 @@ export default {
     },
     computed: {
         ...mapGetters([
-            'currentUserDjangoProfile',
-            'currentUserGitHubProfile',
-            'currentUserCyVerseProfile',
+            'profile.djangoProfile',
+            'profile.githubProfile',
+            'profile.cyverseProfile',
             'loggedIn',
             'darkMode'
         ]),
@@ -423,7 +423,7 @@ export default {
         refresh: function() {
             this.loadDirectory(
                 this.internalLoaded ? this.internalNode.path : this.node.path,
-                this.currentUserDjangoProfile.profile.cyverse_token
+                this.profile.djangoProfile.profile.cyverse_token
             );
         },
         async downloadFile(path, token) {
@@ -509,7 +509,7 @@ export default {
         refreshAfterDirectoryCreation() {
             this.loadDirectory(
                 this.internalNode.path,
-                this.currentUserDjangoProfile.profile.cyverse_token
+                this.profile.djangoProfile.profile.cyverse_token
             );
             this.creatingDirectory = false;
             // this.checkDirectoryCreation(path, response);
@@ -583,7 +583,7 @@ export default {
             }
             await this.loadDirectory(
                 to_path,
-                this.currentUserDjangoProfile.profile.cyverse_token
+                this.profile.djangoProfile.profile.cyverse_token
             );
             this.filesToUpload = [];
             this.uploading = false;

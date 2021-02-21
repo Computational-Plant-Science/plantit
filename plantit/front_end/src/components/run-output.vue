@@ -47,9 +47,9 @@ export default {
     },
     computed: {
         ...mapGetters([
-            'currentUserDjangoProfile',
-            'currentUserGitHubProfile',
-            'currentUserCyVerseProfile',
+            'profile.djangoProfile',
+            'profile.githubProfile',
+            'profile.cyverseProfile',
             'flowConfigs',
             'darkMode',
             'loggedIn'
@@ -60,8 +60,8 @@ export default {
     },
     async mounted() {
         await this.loadDirectory(
-            `/iplant/home/${this.currentUserDjangoProfile.username}/`,
-            this.currentUserDjangoProfile.profile.cyverse_token
+            `/iplant/home/${this.profile.djangoProfile.username}/`,
+            this.profile.djangoProfile.profile.cyverse_token
         );
         if (this.flowKey in this.flowConfigs) {
             let flowConfig = this.flowConfigs[this.flowKey];
