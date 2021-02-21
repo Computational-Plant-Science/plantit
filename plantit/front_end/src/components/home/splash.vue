@@ -153,9 +153,7 @@ import { mapGetters } from 'vuex';
 export default {
     name: 'home-splash',
     computed: mapGetters([
-        'profile.djangoProfile',
-        'profile.cyverseProfile',
-        'profile.githubProfile',
+        'profile',
         'loggedIn',
         'darkMode'
     ]),
