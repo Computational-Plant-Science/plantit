@@ -390,7 +390,7 @@
                                                                             .length >
                                                                             0
                                                                     "
-                                                                    class="m-0 p-0 pl-3 pr-3 pt-1"
+                                                                    class="m-0 p-0 pl-3 pr-3 pt-1 text-right"
                                                                     style="white-space: pre-line;"
                                                                 >
                                                                     <span

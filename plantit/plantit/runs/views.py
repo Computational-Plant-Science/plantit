@@ -425,5 +425,5 @@ class RunConsumer(WebsocketConsumer):
         run = Run.objects.get(guid=self.run_id)
         print(f"Received status update for run {self.run_id} with status {run.job_status}")
         self.send(text_data=json.dumps({
-            'run': map_run(run),
+            'run': map_run(run, True),
         }))
