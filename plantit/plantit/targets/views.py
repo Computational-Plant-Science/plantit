@@ -57,6 +57,11 @@ class TargetsViewSet(viewsets.ModelViewSet):
         }
 
     @action(methods=['get'], detail=False)
+    def get_all(self, request):
+        policies = list(TargetPolicy.objects.all())
+        return JsonResponse({'targets': [self.__map_target(policy.target, policy.role.value, policies) for policy in policies if policy.target.public or policy.user == request.user]})
+
+    @action(methods=['get'], detail=False)
     def get_by_name(self, request):
         name = request.GET.get('name')
 
@@ -112,8 +117,8 @@ class TargetsViewSet(viewsets.ModelViewSet):
     def get_by_username(self, request):
         user = request.user
         policies = TargetPolicy.objects.filter(user=user)
-        targets = [self.__map_target(target, policy.role.value.lower()) for target, policy in
-                   zip([policy.target for policy in policies], policies)] + [self.__map_target(target, 'none') for target in
+        targets = [self.__map_target(target, policy.role.value.lower(), list(policies)) for target, policy in
+                   zip([policy.target for policy in policies], policies)] + [self.__map_target(target, 'none', list(policies)) for target in
                                                                              Target.objects.exclude(targetpolicy__in=policies)]
         return JsonResponse({'targets': targets})
 

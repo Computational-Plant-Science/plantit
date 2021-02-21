@@ -359,6 +359,17 @@
                             <i class="fas fa-stream fa-1x fa-fw"></i>
                             Flows
                         </b-dropdown-item>
+                      <b-dropdown-item
+                            title="Targets"
+                            to="/targets"
+                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :link-class="
+                                darkMode ? 'text-secondary' : 'text-dark'
+                            "
+                        >
+                            <i class="fas fa-stream fa-1x fa-fw"></i>
+                            Targets
+                        </b-dropdown-item>
                         <b-dropdown-item
                             v-if="loggedIn"
                             class="m-0 p-0"

@@ -108,18 +108,14 @@ import { mapGetters } from 'vuex';
 import router from '@/router';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
-// import axios from 'axios';
-// import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'Users',
     mounted() {
-        this.loadAll();
+        this.loadUsers();
     },
     computed: mapGetters([
-        'profile.djangoProfile',
-        'profile.githubProfile',
-        'profile.cyverseProfile',
+        'profile',
         'loggedIn',
         'allUsers',
         'darkMode'
@@ -130,12 +126,12 @@ export default {
         };
     },
     methods: {
-        flows() {
+        goToFlows() {
             router.push({
                 name: 'flows'
             });
         },
-        loadAll() {
+        loadUsers() {
             axios
                 .get('/apis/v1/users/get_all/')
                 .then(response => {

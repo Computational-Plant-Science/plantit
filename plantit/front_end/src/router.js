@@ -7,6 +7,7 @@ import run from './views/run.vue';
 import target from './views/target.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
+import targets from './views/targets.vue';
 
 Vue.use(Router);
 
@@ -49,6 +50,21 @@ let router = new Router({
                     {
                         text: 'Flows',
                         href: '/flows'
+                    }
+                ],
+                requiresAuth: true
+            }
+        },
+        {
+            path: '/targets',
+            name: 'targets',
+            component: targets,
+            meta: {
+                title: 'Targets',
+                crumb: [
+                    {
+                        text: 'Targets',
+                        href: '/targets'
                     }
                 ],
                 requiresAuth: true
