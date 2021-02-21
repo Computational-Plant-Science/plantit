@@ -289,6 +289,19 @@ def __create_run(username, flow, target) -> Run:
     return run
 
 
+@api_view(['GET'])
+def get_by_user_and_flow(request, username, flow, page):
+    try:
+        # user = request.user
+        user = User.objects.get(username=username)
+        start = int(page) * 20
+        count = start + 20
+        runs = Run.objects.filter(user=user, flow_name=flow).order_by('-created')[start:(start + count)]
+        return JsonResponse([map_run(run) for run in runs], safe=False)
+    except:
+        return HttpResponseNotFound()
+
+
 @api_view(['GET', 'POST'])
 @login_required
 def runs(request):

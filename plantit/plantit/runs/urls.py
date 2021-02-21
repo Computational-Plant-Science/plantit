@@ -6,6 +6,7 @@ urlpatterns = [
     path(r'', views.runs),
     path(r'get_total_count/', views.get_total_count),
     path(r'<username>/get_by_user/<page>/', views.get_runs_by_user),
+    path(r'<username>/get_by_user_and_flow/<flow>/<page>/', views.get_by_user_and_flow),
     path(r'<id>/', views.run),
     path(r'<id>/outputs/', views.list_outputs),
     path(r'<id>/output/<file>/', views.get_output_file),
