@@ -289,7 +289,11 @@
                         ></b-row
                     >
                     <hr />
-                    <div v-for="task in target.tasks" v-bind:key="task.name" class="pb-2">
+                    <div
+                        v-for="task in target.tasks"
+                        v-bind:key="task.name"
+                        class="pb-2"
+                    >
                         <b-row class="pt-1">
                             <b-col
                                 md="auto"
@@ -327,7 +331,9 @@
                         >
                         <b-row
                             ><b-col md="auto" align-self="end" class="mb-1"
-                                ><small v-if="task.enabled">Next running {{ cronTime(task) }}<br /></small
+                                ><small v-if="task.enabled"
+                                    >Next running {{ cronTime(task)
+                                    }}<br /></small
                                 ><small v-if="task.last_run !== null"
                                     >Last ran
                                     {{ prettify(task.last_run) }}</small
@@ -355,6 +361,42 @@
                     </b-alert>
                 </b-col>
             </b-row>
+            <b-row no-gutters>
+                <b-col align-self="end"
+                    ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                        Users
+                    </h5></b-col
+                >
+            </b-row>
+            <hr />
+            <b-row
+                ><b-col align-self="end">
+                    <b-row v-if="!targetLoading && target.policies.length >= 1"
+                        ><b-col
+                            ><small>You are the only user with access to this
+                            deployment target.</small></b-col
+                        ></b-row
+                    >
+                    <b-row
+                        v-else
+                        v-for="policy in target.policies"
+                        v-bind:key="policy.user"
+                    >
+                        <div
+                            v-if="
+                                policy.user !== profile.djangoProfile.username
+                            "
+                        >
+                            <b-col>{{ policy.user }}</b-col
+                            ><b-col md="auto"
+                                ><small
+                                    >({{ policy.role.toLowerCase() }})</small
+                                ></b-col
+                            >
+                        </div></b-row
+                    >
+                </b-col></b-row
+            >
         </b-container>
         <b-modal
             centered
@@ -441,14 +483,7 @@ export default {
         this.loadTarget();
     },
     computed: {
-        ...mapGetters([
-            'profile.djangoProfile',
-            'profile.githubProfile',
-            'profile.cyverseProfile',
-            'flowConfigs',
-            'loggedIn',
-            'darkMode'
-        ])
+        ...mapGetters(['profile', 'flowConfigs', 'loggedIn', 'darkMode'])
     },
     methods: {
         cronTime(task) {

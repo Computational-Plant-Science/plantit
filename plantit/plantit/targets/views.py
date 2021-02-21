@@ -1,8 +1,7 @@
 import json
-from datetime import timedelta
 
 from django.http import JsonResponse, HttpResponseNotFound
-from django_celery_beat.models import IntervalSchedule, PeriodicTask, CrontabSchedule
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -30,7 +29,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
         }
 
     @staticmethod
-    def __map_target(target, role):
+    def __map_target(target, role, policies):
         tasks = TargetTask.objects.filter(target=target)
         return {
             'name': target.name,
@@ -42,6 +41,10 @@ class TargetsViewSet(viewsets.ModelViewSet):
             'max_mem': target.max_mem,
             'max_cores': target.max_cores,
             'max_processes': target.max_processes,
+            'policies': [{
+                'user': policy.user.username,
+                'role': str(policy.role.value)
+            } for policy in policies],
             'queue': target.queue,
             'project': target.project,
             'workdir': target.workdir,
@@ -69,7 +72,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
             return JsonResponse(self.__map_target(target, 'none'))
 
         policy = TargetPolicy.objects.get(user=user, target=target)
-        return JsonResponse(self.__map_target(target, policy.role.value))
+        return JsonResponse(self.__map_target(target, policy.role.value, list(policies)))
 
     @action(methods=['get'], detail=False)
     def status(self, request):
@@ -92,6 +95,18 @@ class TargetsViewSet(viewsets.ModelViewSet):
                 return JsonResponse({'healthy': True})
         except:
             return JsonResponse({'healthy': False})
+
+    @action(methods=['get'], detail=False)
+    def get_users(self, request):
+        name = request.GET.get('name')
+
+        try:
+            target = Target.objects.get(name=name)
+        except:
+            return HttpResponseNotFound()
+
+        policies = TargetPolicy.objects.filter(target=target)
+        JsonResponse({'policies': list(policies)})
 
     @action(methods=['get'], detail=False)
     def get_by_username(self, request):
