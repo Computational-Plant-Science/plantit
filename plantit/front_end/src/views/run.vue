@@ -368,35 +368,41 @@
                                                                             .length >
                                                                             0
                                                                     "
-                                                                    class="m-0 p-0 pl-3 pr-3"
+                                                                    class="m-0 p-0 pl-3 pr-3 pt-1"
                                                                     style="white-space: pre-line;"
                                                                 >
-                                                                    {{
-                                                                        run.submission_logs
-                                                                    }}
-                                                                    <!--<small
-                                                                        v-for="log in statusList"
+                                                                    <span
+                                                                        v-for="log in run.submission_logs"
                                                                         v-bind:key="
-                                                                            log.timestamp
+                                                                            log
                                                                         "
                                                                         >{{
-                                                                            log.description
-                                                                        }}<br
-                                                                    /></small>-->
+                                                                            log +
+                                                                                '\n'
+                                                                        }}</span
+                                                                    >
                                                                 </b-col>
                                                                 <b-col
+                                                                    md="auto"
                                                                     v-if="
                                                                         run
                                                                             .container_logs
                                                                             .length >
                                                                             0
                                                                     "
-                                                                    class="pl-3 pr-3 pb-1 text-right"
+                                                                    class="m-0 p-0 pl-3 pr-3 pt-1"
                                                                     style="white-space: pre-line;"
                                                                 >
-                                                                    {{
-                                                                        run.container_logs
-                                                                    }}
+                                                                    <span
+                                                                        v-for="log in run.container_logs"
+                                                                        v-bind:key="
+                                                                            log
+                                                                        "
+                                                                        >{{
+                                                                            log +
+                                                                                '\n'
+                                                                        }}</span
+                                                                    >
                                                                 </b-col>
                                                             </b-row>
                                                         </div>
@@ -1481,7 +1487,7 @@ export default {
                 this.$router.currentRoute.params.id
             }.${this.run.target.toLowerCase()}.log`;
         },
-        ...mapGetters(['profile', 'loggedIn', 'flowConfigs', 'darkMode']),
+        ...mapGetters(['profile', 'loggedIn', 'flowConfigs', 'darkMode'])
     }
 };
 </script>

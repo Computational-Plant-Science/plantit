@@ -47,9 +47,7 @@ export default {
     },
     computed: {
         ...mapGetters([
-            'profile.djangoProfile',
-            'profile.githubProfile',
-            'profile.cyverseProfile',
+            'profile',
             'flowConfigs',
             'darkMode',
             'loggedIn'

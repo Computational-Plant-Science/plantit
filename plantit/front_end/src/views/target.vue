@@ -373,8 +373,10 @@
                 ><b-col align-self="end">
                     <b-row v-if="!targetLoading && target.policies.length >= 1"
                         ><b-col
-                            ><small>You are the only user with access to this
-                            deployment target.</small></b-col
+                            ><small
+                                >You are the only user with access to this
+                                deployment target.</small
+                            ></b-col
                         ></b-row
                     >
                     <b-row

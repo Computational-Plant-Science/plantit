@@ -197,7 +197,6 @@ def submit_run(id: str, flow):
             __submit_run(run, ssh_client)
 
             if run.is_sandbox:
-                logger.info("-----------------------------------------------------------")
                 run.job_status = 'SUCCESS'
                 run.updated = timezone.now()
                 run.save()
@@ -283,6 +282,7 @@ def cleanup_run(id: str):
             command=f"rm -r {join(run.target.workdir, run.work_dir)}",
             directory=run.target.workdir,
             allow_stderr=True)
+    run.delete()
 
 
 @app.task()
