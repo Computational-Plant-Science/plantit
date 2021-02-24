@@ -63,6 +63,7 @@ def schedule_default_tasks(sender, instance, created, **kwargs):
 class TargetRole(Enum):
     own = 'OWN'
     run = 'USE'
+    none = 'NONE'
 
 
 class TargetPolicy(models.Model):

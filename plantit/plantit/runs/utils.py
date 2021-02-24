@@ -1,8 +1,11 @@
 import asyncio
+import binascii
 import os
 import re
 import tempfile
+import uuid
 from datetime import timedelta, datetime
+from dateutil import parser
 from os import environ
 from os.path import join
 from pathlib import Path
@@ -12,11 +15,15 @@ import httpx
 import requests
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.contrib.auth.models import User
+from django.utils import timezone
 from requests.auth import HTTPBasicAuth
 
 from plantit import settings
-from plantit.runs.models import Run
+from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
+from plantit.targets.models import Target
+from plantit.targets.utils import map_target
 from plantit.utils import get_repo_config, get_repo_config_internal
 
 
@@ -88,9 +95,9 @@ def get_flows(response, token):
 async def list_flows_for_users(usernames: List[str], token: str):
     urls = [f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}" for username in usernames]
     headers = {
-            "Authorization": f"token {token}",
-            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-        }
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+    }
     async with httpx.AsyncClient(headers=headers) as client:
         futures = [client.get(url) for url in urls]
         responses = await asyncio.gather(*futures)
@@ -202,6 +209,20 @@ def parse_job_id(line: str) -> str:
         raise Exception(f"Failed to parse job ID from: '{line}'")
 
 
+def map_run_task(task):
+    return {
+        'name': task.name,
+        'run': map_run(task.run),
+        # 'crontab': task.crontab if task.crontab is not None else None,
+        'interval': {
+            'every': task.interval.every,
+            'period': task.interval.period
+        } if task.interval is not None else None,
+        'enabled': task.enabled,
+        'last_run': task.last_run_at
+    }
+
+
 def map_run(run: Run, get_container_logs: bool = False):
     work_dir = join(run.target.workdir, run.work_dir)
     ssh_client = SSH(run.target.hostname, run.target.port, run.target.username)
@@ -261,3 +282,87 @@ def submission_log_file_name(run: Run):
 
 def container_log_file_name(run: Run):
     return f"{run.guid}.{run.target.name.lower()}.log"
+
+
+def create_run(username: str, target_name: str, flow: dict) -> Run:
+    now = timezone.now()
+    user = User.objects.get(username=username)
+    target = Target.objects.get(name=target_name)
+    flow_owner = flow['repo']['owner']['login']
+    flow_name = flow['repo']['name']
+    flow_config = get_repo_config(flow_name, flow_owner, user.profile.github_token)
+    run = Run.objects.create(
+        guid=str(uuid.uuid4()),
+        user=user,
+        flow_owner=flow_owner,
+        flow_name=flow_name,
+        flow_image_url=f"https://raw.githubusercontent.com/{flow_owner}/{flow_name}/master/{flow_config['logo']}",
+        target=target,
+        job_status='CREATED',
+        created=now,
+        updated=now,
+        token=binascii.hexlify(os.urandom(20)).decode())
+
+    # add tags
+    for tag in flow['config']['tags']:
+        run.tags.add(tag)
+
+    # guid for working directory name
+    run.work_dir = f"{run.guid}/"
+
+    run.save()
+    return run
+
+
+def parse_time(data: dict) -> datetime:
+    time_str = data['time']
+    time = parser.isoparse(time_str)
+    return time
+
+
+def parse_eta(data: dict) -> (datetime, int):
+    delay_value = data['delayValue']
+    delay_units = data['delayUnits']
+
+    if delay_units == 'Seconds':
+        seconds = int(delay_value)
+    elif delay_units == 'Minutes':
+        seconds = int(delay_value) * 60
+    elif delay_units == 'Hours':
+        seconds = int(delay_value) * 60 * 60
+    elif delay_units == 'Days':
+        seconds = int(delay_value) * 60 * 60 * 24
+    else:
+        raise ValueError(f"Unsupported delay units (expected: Seconds, Minutes, Hours, or Days)")
+
+    now = timezone.now()
+    eta = now + timedelta(seconds=seconds)
+
+    return eta, seconds
+
+
+def map_delayed_run_task(task: DelayedRunTask):
+    return {
+        'target': map_target(task.target),
+        'name': task.name,
+        'eta': task.eta,
+        'interval': {
+            'every': task.interval.every,
+            'period': task.interval.period
+        },
+        'last_run': task.last_run_at
+    }
+
+
+def map_repeating_run_task(task: RepeatingRunTask):
+    return {
+        'target': map_target(task.target),
+        'name': task.name,
+        'eta': task.eta,
+        'interval': {
+            'every': task.interval.every,
+            'period': task.interval.period
+        },
+        'enabled': task.enabled,
+        'last_run': task.last_run_at
+    }

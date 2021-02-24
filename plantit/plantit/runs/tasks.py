@@ -5,6 +5,7 @@ from os.path import join
 import yaml
 from celery.utils.log import get_task_logger
 from channels.layers import get_channel_layer
+from django.contrib.auth.models import User
 from django.utils import timezone
 
 from plantit import settings
@@ -12,7 +13,7 @@ from plantit.celery import app
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
-from plantit.runs.utils import update_status, execute_command, old_flow_config_to_new, remove_logs, parse_job_id
+from plantit.runs.utils import update_status, execute_command, old_flow_config_to_new, remove_logs, parse_job_id, create_run
 from plantit.targets.models import Target
 
 logger = get_task_logger(__name__)
@@ -168,6 +169,12 @@ def __submit_run(run: Run, ssh: SSH):
         run.job_id = job_id
         run.updated = timezone.now()
         run.save()
+
+
+@app.task(track_started=True)
+def create_and_submit_run(username: str, target_name: str, flow: dict):
+    run = create_run(username, target_name, flow)
+    submit_run.s(run.guid, flow).apply_async()
 
 
 @app.task(track_started=True)

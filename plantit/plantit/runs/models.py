@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db import models
 from django.forms import model_to_dict
 from django.utils import timezone
+from django_celery_beat.models import PeriodicTask
 from taggit.managers import TaggableManager
 
 from plantit.targets.models import Target
@@ -30,6 +31,7 @@ class Run(models.Model):
     flow_image_url = models.URLField(null=True, blank=True)
     target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.SET_NULL)
     work_dir = models.CharField(max_length=100, null=True, blank=True)
+    task = models.ForeignKey(PeriodicTask, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return json.dumps(model_to_dict(self))
@@ -57,6 +59,22 @@ class Run(models.Model):
     @property
     def is_timeout(self):
         return self.job_status == 'TIMEOUT'
+
+
+class DelayedRunTask(PeriodicTask):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
+    target = models.ForeignKey(Target, on_delete=models.CASCADE)
+    flow_owner = models.CharField(max_length=280, null=True, blank=True)
+    flow_name = models.CharField(max_length=280, null=True, blank=True)
+    eta = models.DateTimeField(null=False, blank=False)
+
+
+class RepeatingRunTask(PeriodicTask):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
+    target = models.ForeignKey(Target, on_delete=models.CASCADE)
+    flow_owner = models.CharField(max_length=280, null=True, blank=True)
+    flow_name = models.CharField(max_length=280, null=True, blank=True)
+    eta = models.DateTimeField(null=False, blank=False)
 
 
 class Output(models.Model):

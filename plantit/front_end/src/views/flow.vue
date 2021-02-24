@@ -10,6 +10,22 @@
         <br />
         <br />
         <b-container class="p-3 vl" fluid>
+            <b-row no-gutters class="mt-3">
+                <b-col v-if="showStatusAlert">
+                    <b-alert
+                        :show="showStatusAlert"
+                        :variant="
+                            statusAlertMessage.startsWith('Failed')
+                                ? 'danger'
+                                : 'success'
+                        "
+                        dismissible
+                        @dismissed="showStatusAlert = false"
+                    >
+                        {{ statusAlertMessage }}
+                    </b-alert>
+                </b-col>
+            </b-row>
             <b-row>
                 <b-col>
                     <b-row>
@@ -70,23 +86,78 @@
                                 </template>
                                 <template #append>
                                     <b-dropdown
-                                        :variant="darkMode ? 'dark' : 'light'"
+                                        variant="secondary"
                                         :text="submitType"
                                         v-model="submitType"
                                         block
                                     >
+                                        <template #button-content>
+                                            {{ submitType }}
+                                            <i
+                                                class="fas fa-caret-down fa-fw"
+                                            ></i>
+                                        </template>
                                         <b-dropdown-item
-                                            @click="submitType = 'Once'"
-                                            >Once</b-dropdown-item
+                                            @click="submitType = 'Now'"
+                                            >Now</b-dropdown-item
                                         >
                                         <!--<b-dropdown-item
-                                            @click="submitType = 'Periodically'"
-                                            >Periodically</b-dropdown-item
+                                            @click="submitType = 'After'"
+                                            >After</b-dropdown-item
                                         >-->
+                                        <b-dropdown-item
+                                            @click="submitType = 'Every'"
+                                            >Every</b-dropdown-item
+                                        >
                                     </b-dropdown>
                                 </template>
-                            </b-input-group> </b-col
-                        ><b-col
+                            </b-input-group>
+                        </b-col>
+                        <b-col
+                            md="auto"
+                            v-if="
+                                submitType === 'After' || submitType === 'Every'
+                            "
+                            ><b-input-group>
+                                <b-form-spinbutton
+                                    v-model="delayValue"
+                                    min="1"
+                                    max="100"
+                                ></b-form-spinbutton
+                                ><template #append>
+                                    <b-dropdown
+                                        variant="secondary"
+                                        :text="submitType"
+                                        v-model="submitType"
+                                        block
+                                    >
+                                        <template #button-content>
+                                            {{ delayUnits }}
+                                            <i
+                                                class="fas fa-caret-down fa-fw"
+                                            ></i>
+                                        </template>
+                                        <b-dropdown-item
+                                            @click="delayUnits = 'Seconds'"
+                                            >Seconds</b-dropdown-item
+                                        >
+                                        <b-dropdown-item
+                                            @click="delayUnits = 'Minutes'"
+                                            >Minutes</b-dropdown-item
+                                        >
+                                        <b-dropdown-item
+                                            @click="delayUnits = 'Hours'"
+                                            >Hours</b-dropdown-item
+                                        >
+                                        <b-dropdown-item
+                                            @click="delayUnits = 'Days'"
+                                            >Days</b-dropdown-item
+                                        >
+                                    </b-dropdown>
+                                </template></b-input-group
+                            ></b-col
+                        >
+                        <b-col
                             ><b-button
                                 :disabled="!flowReady"
                                 @click="onStart"
@@ -94,24 +165,43 @@
                                 block
                             >
                                 {{
-                                    submitType === 'Once' ? 'Start' : 'Schedule'
+                                    submitType === 'Now'
+                                        ? `Start ${flow.config.name}`
+                                        : `Schedule ${flow.config.name} to run ${scheduledTime}`
                                 }}
                             </b-button></b-col
                         ></b-row
                     >
                     <br />
-                    <b-row v-if="submitType === 'Periodically'"
+                    <!--<b-row v-if="submitType === 'Every'"
                         ><b-col
                             ><b-card
+                                :bg-variant="darkMode ? 'dark' : 'white'"
+                                :header-bg-variant="darkMode ? 'dark' : 'white'"
+                                border-variant="default"
+                                :header-border-variant="
+                                    darkMode ? 'dark' : 'white'
+                                "
+                                :text-variant="darkMode ? 'white' : 'dark'"
                                 ><b-form-group
+                                    :class="
+                                        darkMode ? 'theme-dark' : 'theme-light'
+                                    "
                                     id="input-group-4"
                                     label-for="input-4"
                                     description="Configure when this flow should run."
                                 >
                                     <VueCronEditorBuefy
-                                        v-model="submissionTime"
-                                    ></VueCronEditorBuefy> </b-form-group></b-card></b-col
-                    ></b-row>
+                                        :class="
+                                            darkMode
+                                                ? 'theme-dark'
+                                                : 'theme-light'
+                                        "
+                                        v-model="crontime"
+                                    ></VueCronEditorBuefy>
+                                </b-form-group> </b-card
+                            ><br /></b-col
+                    ></b-row>-->
                     <b-row>
                         <b-col>
                             <b-card-group deck columns>
@@ -162,7 +252,7 @@
                                             </b>
                                         </b-col>
                                     </b-row>
-                                    <b-row>
+                                    <b-row class="mt-1">
                                         <b-col>
                                             <multiselect
                                                 style="z-index: 100"
@@ -237,68 +327,39 @@
                                                 Configure parameters for this
                                                 run.
                                             </b>
-                                            <br /><b-table
-                                                :items="params"
-                                                :fields="fields"
-                                                responsive="sm"
-                                                borderless
-                                                small
-                                                sticky-header="true"
-                                                caption-top
-                                                :table-variant="
-                                                    darkMode ? 'dark' : 'white'
-                                                "
+                                            <br />
+                                            <b-row
+                                                class="mt-1"
+                                                v-for="param in params"
+                                                v-bind:key="param.key"
                                             >
-                                                <template
-                                                    v-slot:cell(name)="param"
-                                                >
-                                                    {{
-                                                        param.item.key
-                                                            .split('=')[0]
-                                                            .toLowerCase()
-                                                    }}
-                                                </template>
-                                                <template
-                                                    v-slot:cell(value)="param"
-                                                >
-                                                    <!--<multiselect
-                                            v-if="
-                                                param.key === 'filetype' &&
-                                                    this.input.patterns.length >
-                                                        0
-                                            "
-                                            :multiple="true"
-                                            :close-on-select="false"
-                                            :clear-on-select="false"
-                                            :preserve-search="true"
-                                            :preselect-first="true"
-                                            v-model="inputSelectedPatterns"
-                                            :options="input.patterns"
-                                        ></multiselect>-->
-                                                    <b-form-input
+                                                <b-col md="auto">{{
+                                                    param.key
+                                                        .split('=')[0]
+                                                        .toLowerCase()
+                                                }}</b-col
+                                                ><b-col
+                                                    ><b-form-input
                                                         size="sm"
-                                                        v-model="
-                                                            param.item.value
-                                                        "
+                                                        v-model="param.value"
                                                         :placeholder="
-                                                            param.item.key.split(
-                                                                '='
-                                                            ).length === 1
+                                                            param.key.split('=')
+                                                                .length === 1
                                                                 ? 'Enter a value for \'' +
-                                                                  param.item.key
+                                                                  param.key
                                                                       .split(
                                                                           '='
                                                                       )[0]
                                                                       .toLowerCase() +
                                                                   '\''
-                                                                : param.item.key
+                                                                : param.key
                                                                       .split(
                                                                           '='
                                                                       )[1]
                                                                       .toLowerCase()
                                                         "
-                                                    ></b-form-input>
-                                                </template> </b-table></b-col
+                                                    ></b-form-input></b-col
+                                            ></b-row> </b-col
                                     ></b-row>
                                 </b-card>
                                 <b-card
@@ -456,14 +517,14 @@
                                                 }}
                                             </h4>
                                         </b-col>
-                                        <b-col md="auto">
+                                        <!--<b-col md="auto">
                                             <b-form-checkbox
                                                 v-model="outputDirectory"
                                                 switch
                                                 size="md"
                                             >
                                             </b-form-checkbox>
-                                        </b-col>
+                                        </b-col>-->
                                     </b-row>
                                     <runoutput
                                         v-if="outputDirectory"
@@ -480,8 +541,8 @@
                                     :header-border-variant="
                                         darkMode ? 'dark' : 'white'
                                     "
-                                    style="min-width: 40rem"
                                     :text-variant="darkMode ? 'white' : 'dark'"
+                                    style="min-width: 40rem"
                                     class="mb-4"
                                 >
                                     <b-row align-v="center">
@@ -541,7 +602,7 @@
                                                     >{{ target.name }}</b-button
                                                 ></b-col
                                             >
-                                            <b-col>
+                                            <b-col align-self="end">
                                                 <small
                                                     >{{ target.max_cores }}
                                                     cores,
@@ -642,18 +703,18 @@
                     </b-row>
                 </b-col>
                 <b-col md="auto">
-                    <b-row
+                  <!--<b-row
                         ><b-col align-self="end"
                             ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
-                                Scheduled Runs
+                                Delayed Runs
                             </h5></b-col
                         ></b-row
                     >
                     <b-list-group class="text-left m-0 p-0">
-                        <b-row v-if="scheduledRuns.length === 0"
+                        <b-row v-if="delayedRuns.length === 0"
                             ><b-col
                                 ><small
-                                    >You haven't scheduled any
+                                    >You haven't scheduled any delayed
                                     {{ flow.config.name }} runs.</small
                                 ></b-col
                             ></b-row
@@ -661,7 +722,7 @@
                         <b-list-group-item
                             variant="default"
                             style="box-shadow: -2px 2px 2px #adb5bd"
-                            v-for="task in scheduledRuns"
+                            v-for="task in delayedRuns"
                             v-bind:key="task.id"
                             :class="
                                 darkMode
@@ -669,6 +730,105 @@
                                     : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                             "
                         >
+                            <b-row class="pt-1">
+                                <b-col align-self="end"
+                                    >{{
+                                        `After ${task.interval.every} ${task.interval.period} on ${task.target.name}`
+                                    }}<br /><b-row
+                                        ><b-col
+                                            md="auto"
+                                            align-self="end"
+                                            class="mb-1"
+                                            ></b-col
+                                        >
+                                    </b-row></b-col
+                                >
+                                <b-col
+                                    md="auto"
+                                    align-self="start"
+                                    class="mb-1"
+                                    ><b-button
+                                        size="sm"
+                                        variant="outline-danger"
+                                        @click="deleteDelayed(task)"
+                                        ><i class="fas fa-trash fa-fw"></i>
+                                        Cancel</b-button
+                                    ></b-col
+                                >
+                            </b-row>
+                        </b-list-group-item>
+                    </b-list-group>
+                    <hr />-->
+                    <b-row
+                        ><b-col align-self="end"
+                            ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                                Periodic Runs
+                            </h5></b-col
+                        ></b-row
+                    >
+                    <b-list-group class="text-left m-0 p-0">
+                        <b-row v-if="repeatingRuns.length === 0"
+                            ><b-col
+                                ><small
+                                    >You haven't scheduled any repeating
+                                    {{ flow.config.name }} runs.</small
+                                ></b-col
+                            ></b-row
+                        >
+                        <b-list-group-item
+                            variant="default"
+                            style="box-shadow: -2px 2px 2px #adb5bd"
+                            v-for="task in repeatingRuns"
+                            v-bind:key="task.id"
+                            :class="
+                                darkMode
+                                    ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
+                                    : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                            "
+                        >
+                            <b-row class="pt-1">
+                                <b-col
+                                    >{{
+                                        `Every ${task.interval.every} ${task.interval.period} on ${task.target.name}`
+                                    }}<br /><b-row
+                                        ><b-col
+                                            md="auto"
+                                            align-self="end"
+                                            class="mb-1"
+                                            ><!--<small v-if="task.enabled"
+                                    >Next running {{ cronTime(task)
+                                    }}<br /></small
+                                >--><small v-if="task.last_run !== null"
+                                                >Last ran
+                                                {{
+                                                    prettify(task.last_run)
+                                                }}</small
+                                            ><small v-else
+                                                >Task has not run yet</small
+                                            ></b-col
+                                        >
+                                    </b-row></b-col
+                                >
+                                <b-col
+                                    md="auto"
+                                    align-self="start"
+                                    ><!--<b-form-checkbox
+                                        class="text-right"
+                                        v-model="task.enabled"
+                                        @change="toggleRepeating(task)"
+                                        switch
+                                        size="md"
+                                    >
+                                    </b-form-checkbox
+                                    >--><b-button
+                                        size="sm"
+                                        variant="outline-danger"
+                                        @click="deleteRepeating(task)"
+                                        ><i class="fas fa-trash fa-fw"></i>
+                                        Remove</b-button
+                                    ></b-col
+                                >
+                            </b-row>
                         </b-list-group-item>
                     </b-list-group>
                     <hr />
@@ -753,7 +913,10 @@
                             <b-badge class="ml-0 mr-0" variant="secondary">{{
                                 run.target
                             }}</b-badge
-                            ><small> {{ prettify(run.updated) }}</small>
+                            ><small
+                                v-if="run.job_status === 'Scheduled'"
+                            ></small
+                            ><small v-else> {{ prettify(run.updated) }}</small>
                             <!--<br />
                                     <small class="mr-1"
                                         ><a
@@ -780,7 +943,6 @@
 </template>
 
 <script>
-import VueCronEditorBuefy from 'vue-cron-editor-buefy';
 import flowdetail from '../components/flow-detail';
 import runinput from '../components/run-input';
 import runoutput from '../components/run-output';
@@ -790,6 +952,8 @@ import * as Sentry from '@sentry/browser';
 import router from '../router';
 import Multiselect from 'vue-multiselect';
 import moment from 'moment';
+import parser from 'cron-parser';
+import cronstrue from 'cronstrue';
 
 String.prototype.capitalize = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
@@ -798,7 +962,6 @@ String.prototype.capitalize = function() {
 export default {
     name: 'flow',
     components: {
-        VueCronEditorBuefy,
         Multiselect,
         flowdetail,
         runinput,
@@ -814,10 +977,15 @@ export default {
     },
     data: function() {
         return {
-            submitType: 'Once',
-            submissionTime: '',
+            showStatusAlert: false,
+            statusAlertMessage: '',
+            submitType: 'Now',
+            crontime: '* */5 * * *',
+            delayValue: 10,
+            delayUnits: 'Minutes',
             runs: [],
-            scheduledRuns: [],
+            delayedRuns: [],
+            repeatingRuns: [],
             flow: null,
             flowLoading: true,
             flowValidated: false,
@@ -936,8 +1104,74 @@ export default {
         this.loadFlow();
         this.loadTargets();
         this.loadRuns();
+        this.loadDelayedRuns();
+        this.loadRepeatingRuns();
     },
     methods: {
+        deleteDelayed(task) {
+            return axios
+                .get(
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/remove_delayed/${this.name}/?name=${task.name}`
+                )
+                .then(() => {
+                    this.loadDelayedRuns();
+                    this.statusAlertMessage = `Deleted delayed run`;
+                    this.showStatusAlert = true;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.statusAlertMessage = `Failed to delete delayed run`;
+                    this.showStatusAlert = true;
+                    throw error;
+                });
+        },
+        deleteRepeating(task) {
+            return axios
+                .get(
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/remove_repeating/${this.name}/?name=${task.name}`
+                )
+                .then(() => {
+                    this.loadRepeatingRuns();
+                    this.statusAlertMessage = `Deleted periodic run`;
+                    this.showStatusAlert = true;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.statusAlertMessage = `Failed to delete periodic run`;
+                    this.showStatusAlert = true;
+                    throw error;
+                });
+        },
+        toggleRepeating: function(task) {
+            axios
+                .get(
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/toggle_repeating/${this.name}/?name=${task.name}`
+                )
+                .then(response => {
+                    this.statusAlertMessage = `${
+                        response.data.enabled ? 'Enabled' : 'Disabled'
+                    } periodic run (every ${response.data.interval.every} ${response.data.interval.period.toLowerCase()} on ${response.data.target.name})`;
+                    this.showStatusAlert = true;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) {
+                        this.statusAlertMessage = `Failed to disable repeating run ${task.name}`;
+                        this.showStatusAlert = true;
+                        throw error;
+                    }
+                });
+        },
+        parseCronTime(time) {
+            let cron = cronstrue.toString(time);
+            return cron.charAt(0).toLowerCase() + cron.slice(1);
+        },
+        nextScheduledTime(time) {
+            let parsed = parser.parseExpression(time);
+            return moment(parsed.next().toString()).format(
+                'MMMM Do YYYY, h:mm a'
+            );
+        },
         onRunSelected: function(items) {
             router.push({
                 name: 'run',
@@ -988,6 +1222,48 @@ export default {
                 )
                 .then(response => {
                     this.runs = response.data;
+                })
+                .catch(error => {
+                    if (error.status_code === 401) {
+                        this.login = true;
+                    } else {
+                        throw error;
+                    }
+                });
+        },
+        loadDelayedRuns() {
+            axios
+                .get(
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_delayed_by_user_and_flow/${this.name}/`,
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + this.githubToken
+                        }
+                    }
+                )
+                .then(response => {
+                    this.delayedRuns = response.data.filter(t => t.last_run === null);
+                })
+                .catch(error => {
+                    if (error.status_code === 401) {
+                        this.login = true;
+                    } else {
+                        throw error;
+                    }
+                });
+        },
+        loadRepeatingRuns() {
+            axios
+                .get(
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_repeating_by_user_and_flow/${this.name}/`,
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + this.githubToken
+                        }
+                    }
+                )
+                .then(response => {
+                    this.repeatingRuns = response.data;
                 })
                 .catch(error => {
                     if (error.status_code === 401) {
@@ -1183,38 +1459,110 @@ export default {
                 config: config
             });
 
-            // submit run
-            axios({
-                method: 'post',
-                url: `/apis/v1/runs/`,
-                data: {
-                    repo: this.flow.repo,
-                    config: config
-                },
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(response => {
-                    router.push({
-                        name: 'run',
-                        params: {
-                            username: this.profile.djangoProfile.username,
-                            id: response.data.id
-                        }
-                    });
+            if (this.submitType === 'Now')
+                // submit run immediately
+                axios({
+                    method: 'post',
+                    url: `/apis/v1/runs/`,
+                    data: {
+                        repo: this.flow.repo,
+                        config: config,
+                        type: this.submitType
+                    },
+                    headers: { 'Content-Type': 'application/json' }
                 })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
+                    .then(response => {
+                        router.push({
+                            name: 'run',
+                            params: {
+                                username: this.profile.djangoProfile.username,
+                                id: response.data.id
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        throw error;
+                    });
+            else if (this.submitType === 'After')
+                // schedule run after delay
+                axios({
+                    method: 'post',
+                    url: `/apis/v1/runs/`,
+                    data: {
+                        repo: this.flow.repo,
+                        config: config,
+                        type: this.submitType,
+                        delayUnits: this.delayUnits,
+                        delayValue: this.delayValue
+                    },
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                    .then(response => {
+                        this.statusAlertMessage =
+                            response.status === 200 && response.data.created
+                                ? `Scheduled run ${this.$router.currentRoute.params.name} on ${config.target.name}`
+                                : `Failed to schedule run ${this.$router.currentRoute.params.name} on ${config.target.name}`;
+                        this.showStatusAlert = true;
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.target.name}`;
+                        this.showStatusAlert = true;
+                        throw error;
+                    });
+            else if (this.submitType === 'Every')
+                // schedule run periodically
+                axios({
+                    method: 'post',
+                    url: `/apis/v1/runs/`,
+                    data: {
+                        repo: this.flow.repo,
+                        config: config,
+                        type: this.submitType,
+                        delayUnits: this.delayUnits,
+                        delayValue: this.delayValue
+                    },
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                    .then(response => {
+                        this.loadRepeatingRuns();
+                        this.statusAlertMessage =
+                            response.status === 200 && response.data.created
+                                ? `Scheduled repeating run ${this.$router.currentRoute.params.name} on ${config.target.name}`
+                                : `Failed to schedule repeating run ${this.$router.currentRoute.params.name} on ${config.target.name}`;
+                        this.showStatusAlert = true;
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.target.name}`;
+                        this.showStatusAlert = true;
+                        throw error;
+                    });
         }
     },
     computed: {
         ...mapGetters(['profile', 'flowConfigs', 'loggedIn', 'darkMode']),
+        scheduledTime: function() {
+            return `${this.submitType === 'After' ? 'in' : 'every'} ${
+                this.delayValue
+            } ${this.delayUnits.toLowerCase()}`;
+            // else return `${this.parseCronTime(this.crontime)}`;  TODO allow direct cron editing
+        },
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         },
         inputFiletypeSelected: function() {
             return this.inputSelectedPatterns.some(pattern => pattern !== '');
+        },
+        paramsReady: function() {
+            if (
+                this.flow !== null &&
+                this.flow.config.params !== undefined &&
+                this.flow.config.params.length !== 0
+            )
+                return this.params.every(param => param.value !== '');
+            else return true;
         },
         inputReady: function() {
             if (this.flow !== null && this.flow.config.input !== undefined)
@@ -1241,6 +1589,7 @@ export default {
             return (
                 !this.flowLoading &&
                 this.flowValidated &&
+                this.paramsReady &&
                 this.inputReady &&
                 this.outputReady &&
                 this.target.name !== ''

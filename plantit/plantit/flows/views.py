@@ -11,7 +11,7 @@ from django.http import JsonResponse, HttpResponse
 
 from plantit import settings
 from plantit.runs.utils import list_flows_for_users
-from plantit.utils import get_repo_config, validate_config
+from plantit.utils import get_repo_config, validate_flow_config
 
 
 @login_required
@@ -75,7 +75,7 @@ def validate(request, username, name):
         response = client.get(f"https://api.github.com/repos/{username}/{name}")
         repo = response.json()
         config = get_repo_config(repo['name'], repo['owner']['login'], request.user.profile.github_token)
-        result = validate_config(config, request.user.profile.cyverse_token)
+        result = validate_flow_config(config, request.user.profile.cyverse_token)
         if isinstance(result, bool):
             return JsonResponse({'result': result})
         else:

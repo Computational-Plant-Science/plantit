@@ -17,7 +17,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.utils import csrf_token
+from plantit.utils import get_csrf_token
 
 
 class IDPViewSet(viewsets.ViewSet):
@@ -103,7 +103,7 @@ class IDPViewSet(viewsets.ViewSet):
         return redirect(settings.GITHUB_AUTH_URI + '?' + urlencode({
             'client_id': settings.GITHUB_KEY,
             'redirect_uri': settings.GITHUB_REDIRECT_URI,
-            'state': csrf_token(request)}))
+            'state': get_csrf_token(request)}))
 
     @action(methods=['get'], detail=False)
     def github_handle_temporary_code(self, request):
@@ -113,7 +113,7 @@ class IDPViewSet(viewsets.ViewSet):
             return HttpResponseBadRequest()
         if state is None:
             return HttpResponseBadRequest()
-        elif state != csrf_token(request):
+        elif state != get_csrf_token(request):
             return HttpResponse('unauthorized', status=401)
 
         code = request.GET.get('code', None)

@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from django.http import JsonResponse, HttpResponseNotFound
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
@@ -8,8 +9,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import execute_command
-from plantit.targets.models import Target, TargetPolicy, TargetTask
+from plantit.targets.models import Target, TargetPolicy, TargetTask, TargetRole
 from plantit.targets.serializers import TargetSerializer
+from plantit.targets.utils import map_target, map_target_task
 
 
 class TargetsViewSet(viewsets.ModelViewSet):
@@ -17,49 +19,10 @@ class TargetsViewSet(viewsets.ModelViewSet):
     serializer_class = TargetSerializer
     permission_classes = (IsAuthenticated,)
 
-    @staticmethod
-    def __map_task(task):
-        return {
-            'name': task.name,
-            'description': task.description,
-            'command': task.command,
-            'crontab': str(task.crontab).rpartition("(")[0].strip(),
-            'enabled': task.enabled,
-            'last_run': task.last_run_at
-        }
-
-    @staticmethod
-    def __map_target(target, role, policies):
-        tasks = TargetTask.objects.filter(target=target)
-        return {
-            'name': target.name,
-            'role': role.lower(),
-            'description': target.description,
-            'hostname': target.hostname,
-            'pre_commands': target.pre_commands,
-            'max_walltime': target.max_walltime,
-            'max_mem': target.max_mem,
-            'max_cores': target.max_cores,
-            'max_processes': target.max_processes,
-            'policies': [{
-                'user': policy.user.username,
-                'role': str(policy.role.value)
-            } for policy in policies],
-            'queue': target.queue,
-            'project': target.project,
-            'workdir': target.workdir,
-            'executor': target.executor,
-            'disabled': target.disabled,
-            'public': target.public,
-            'gpu': target.gpu,
-            'tasks': [TargetsViewSet.__map_task(task) for task in tasks],
-            'logo': target.logo
-        }
-
     @action(methods=['get'], detail=False)
     def get_all(self, request):
         policies = list(TargetPolicy.objects.all())
-        return JsonResponse({'targets': [self.__map_target(policy.target, policy.role.value, policies) for policy in policies if policy.target.public or policy.user == request.user]})
+        return JsonResponse({'targets': [map_target(policy.target, policy.role, policies) for policy in policies if policy.target.public or policy.user == request.user]})
 
     @action(methods=['get'], detail=False)
     def get_by_name(self, request):
@@ -74,10 +37,10 @@ class TargetsViewSet(viewsets.ModelViewSet):
         policies = TargetPolicy.objects.filter(user=user)
 
         if target not in [policy.target for policy in policies]:
-            return JsonResponse(self.__map_target(target, 'none'))
+            return JsonResponse(map_target(target, TargetRole.none))
 
         policy = TargetPolicy.objects.get(user=user, target=target)
-        return JsonResponse(self.__map_target(target, policy.role.value, list(policies)))
+        return JsonResponse(map_target(target, policy.role, list(policies)))
 
     @action(methods=['get'], detail=False)
     def status(self, request):
@@ -117,8 +80,8 @@ class TargetsViewSet(viewsets.ModelViewSet):
     def get_by_username(self, request):
         user = request.user
         policies = TargetPolicy.objects.filter(user=user)
-        targets = [self.__map_target(target, policy.role.value.lower(), list(policies)) for target, policy in
-                   zip([policy.target for policy in policies], policies)] + [self.__map_target(target, 'none', list(policies)) for target in
+        targets = [map_target(target, policy.role, list(policies)) for target, policy in
+                   zip([policy.target for policy in policies], policies)] + [map_target(target, TargetRole.none, list(policies)) for target in
                                                                              Target.objects.exclude(targetpolicy__in=policies)]
         return JsonResponse({'targets': targets})
 
@@ -152,7 +115,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
             args=json.dumps([target.name, task_command]))
 
         return JsonResponse({
-            'task': self.__map_task(task),
+            'task': map_target_task(task),
             'created': created
         })
 
@@ -180,19 +143,3 @@ class TargetsViewSet(viewsets.ModelViewSet):
         task.enabled = not task.enabled
         task.save()
         return JsonResponse({'enabled': task.enabled})
-
-    @action(methods=['get'], detail=False)
-    def disable_singularity_cache_cleaning(self, request):
-        name = request.GET.get('name')
-
-        try:
-            target = Target.objects.get(name=name)
-            task = PeriodicTask.objects.get(name=f"Clean singularity cache on {name}")
-        except:
-            return HttpResponseNotFound()
-
-        task.delete()  # cancel the periodic task
-        target.singularity_cache_clean_enabled = False
-        target.save()
-
-        return JsonResponse({'enabled': False})

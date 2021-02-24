@@ -1,15 +1,11 @@
-import binascii
 import json
-import os
 import tempfile
-import uuid
 from os.path import join
 from pathlib import Path
 
 from asgiref.sync import async_to_sync
 from celery.result import AsyncResult
-from channels.db import database_sync_to_async
-from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
+from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -17,16 +13,19 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileRe
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from rest_framework.decorators import api_view
 
 from plantit import settings
 from plantit.runs.cluster import cancel_job
-from plantit.runs.models import Run
+from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import update_status, map_run, container_log_file_name, submission_log_file_name
+from plantit.runs.utils import update_status, map_run, submission_log_file_name, map_run_task, create_run, parse_eta, map_delayed_run_task, \
+    map_repeating_run_task
 from plantit.targets.models import Target
+from plantit.targets.utils import map_target
 from plantit.utils import get_repo_config
 
 
@@ -260,39 +259,9 @@ def get_container_logs(request, id):
                 return FileResponse(open(tf.name, 'rb'))
 
 
-def __create_run(username, flow, target) -> Run:
-    now = timezone.now()
-    user = User.objects.get(username=username)
-    flow_owner = flow['repo']['owner']['login']
-    flow_name = flow['repo']['name']
-    flow_config = get_repo_config(flow_name, flow_owner, user.profile.github_token)
-    run = Run.objects.create(
-        guid=str(uuid.uuid4()),
-        user=user,
-        flow_owner=flow_owner,
-        flow_name=flow_name,
-        flow_image_url=f"https://raw.githubusercontent.com/{flow_owner}/{flow_name}/master/{flow_config['logo']}",
-        target=target,
-        job_status='CREATED',
-        created=now,
-        updated=now,
-        token=binascii.hexlify(os.urandom(20)).decode())
-
-    # add tags
-    for tag in flow['config']['tags']:
-        run.tags.add(tag)
-
-    # guid for working directory name
-    run.work_dir = f"{run.guid}/"
-
-    run.save()
-    return run
-
-
 @api_view(['GET'])
-def get_by_user_and_flow(request, username, flow, page):
+def get_runs_by_user_and_flow(request, username, flow, page):
     try:
-        # user = request.user
         user = User.objects.get(username=username)
         start = int(page) * 20
         count = start + 20
@@ -302,18 +271,125 @@ def get_by_user_and_flow(request, username, flow, page):
         return HttpResponseNotFound()
 
 
+@api_view(['GET'])
+def get_delayed_runs_by_user_and_flow(request, username, flow):
+    user = User.objects.get(username=username)
+    tasks = []
+    try:
+        tasks = DelayedRunTask.objects.filter(user=user)
+    except:
+        return HttpResponseNotFound()
+
+    tasks = [task for task in tasks if task.flow_name == flow]
+    return JsonResponse([map_delayed_run_task(task) for task in tasks], safe=False)
+
+
+@api_view(['GET'])
+def remove_delayed(request):
+    task_name = request.GET.get('name', None)
+    if task_name is None:
+        return HttpResponseNotFound()
+
+    try:
+        task = DelayedRunTask.objects.get(name=task_name)
+    except:
+        return HttpResponseNotFound()
+
+    task.delete()
+    return JsonResponse({'deleted': True})
+
+
+@api_view(['GET'])
+def get_repeating_runs_by_user_and_flow(request, username, flow):
+    user = User.objects.get(username=username)
+    tasks = []
+    try:
+        tasks = RepeatingRunTask.objects.filter(user=user)
+    except:
+        return HttpResponseNotFound()
+
+    tasks = [task for task in tasks if task.flow_name == flow]
+    return JsonResponse([map_repeating_run_task(task) for task in tasks], safe=False)
+
+
+@api_view(['GET'])
+def toggle_repeating(request, username, flow):
+    task_name = request.GET.get('name', None)
+    if task_name is None:
+        return HttpResponseNotFound()
+
+    task = RepeatingRunTask.objects.get(name=task_name)
+    task.enabled = not task.enabled
+    task.save()
+    return JsonResponse(map_repeating_run_task(task))
+
+
+@api_view(['GET'])
+def remove_repeating(request, username, flow):
+    task_name = request.GET.get('name', None)
+    if task_name is None:
+        return HttpResponseNotFound()
+
+    try:
+        task = RepeatingRunTask.objects.get(name=task_name)
+    except:
+        return HttpResponseNotFound()
+
+    task.delete()
+    return JsonResponse({'deleted': True})
+
+
 @api_view(['GET', 'POST'])
 @login_required
 def runs(request):
+    user = request.user
+    flow = request.data
     if request.method == 'GET':
         runs = Run.objects.all()
         return JsonResponse([map_run(run) for run in runs], safe=False)
     elif request.method == 'POST':
-        target = Target.objects.get(name=request.data['config']['target']['name'])
-        run = __create_run(request.user.username, request.data, target)
-        submit_run.delay(run.guid, request.data)
-
-        return JsonResponse({'id': run.guid})
+        target = Target.objects.get(name=flow['config']['target']['name'])
+        if request.data['type'] == 'Now':
+            run = create_run(user.username, target.name, flow)
+            submit_run.delay(run.guid, flow)
+            return JsonResponse({'id': run.guid})
+        elif request.data['type'] == 'After':
+            eta, seconds = parse_eta(flow)
+            schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
+            task, created = DelayedRunTask.objects.get_or_create(
+                user=user,
+                interval=schedule,
+                target=target,
+                eta=eta,
+                one_off=True,
+                flow_owner=flow['repo']['owner']['login'],
+                flow_name=flow['repo']['name'],
+                name=f"User {user.username} flow {flow['repo']['name']} target {target.name} {schedule} once",
+                task='plantit.runs.tasks.create_and_submit_run',
+                args=json.dumps([user.username, target.name, flow]))
+            return JsonResponse({
+                'created': created,
+                'task': map_delayed_run_task(task)
+            })
+        elif request.data['type'] == 'Every':
+            eta, seconds = parse_eta(flow)
+            schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
+            task, created = RepeatingRunTask.objects.get_or_create(
+                user=user,
+                interval=schedule,
+                target=target,
+                eta=eta,
+                flow_owner=flow['repo']['owner']['login'],
+                flow_name=flow['repo']['name'],
+                name=f"User {user.username} flow {flow['repo']['name']} target {target.name} {schedule} repeating",
+                task='plantit.runs.tasks.create_and_submit_run',
+                args=json.dumps([user.username, target.name, flow]))
+            return JsonResponse({
+                'created': created,
+                'task': map_repeating_run_task(task)
+            })
+        else:
+            raise ValueError(f"Unsupported submission type (expected: Now, Later, or Periodically)")
 
 
 @api_view(['GET'])

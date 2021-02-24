@@ -82,7 +82,7 @@ def cyverse_path_exists(path, token):
     return True, input_type
 
 
-def __parse_docker_image_components(value):
+def parse_docker_image_components(value):
     container_split = value.split('/')
     container_name = container_split[-1]
     container_owner = None if container_split[-2] == '' else container_split[-2]
@@ -96,7 +96,7 @@ def __parse_docker_image_components(value):
     return container_owner, container_name, container_tag
 
 
-def validate_config(config, token):
+def validate_flow_config(config, token):
     errors = []
 
     # name (required)
@@ -123,7 +123,7 @@ def validate_config(config, token):
     elif type(config['image']) is not str:
         errors.append('Attribute \'image\' must be a str')
     else:
-        image_owner, image_name, image_tag = __parse_docker_image_components(config['image'])
+        image_owner, image_name, image_tag = parse_docker_image_components(config['image'])
         if 'docker' in config['image'] and not docker_image_exists(image_name, image_owner, image_tag):
             errors.append(f"Image '{config['image']}' not found on Docker Hub")
 
@@ -216,18 +216,18 @@ def validate_config(config, token):
     return True if len(errors) == 0 else (False, errors)
 
 
-def csrf_token(request):
+def get_csrf_token(request):
     token = request.session.get('csrfToken', None)
     if token is None:
-        token = secret_key()
+        token = generate_secret_key()
         request.session['csrfToken'] = token
     return token
 
 
-def random_string(length, allowed_chars='abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
+def generate_random_string(length, allowed_chars='abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
     return ''.join(choice(allowed_chars) for i in range(length))
 
 
-def secret_key():
+def generate_secret_key():
     chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
-    return random_string(40, chars)
+    return generate_random_string(40, chars)
