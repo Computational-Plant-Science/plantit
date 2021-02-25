@@ -9,7 +9,7 @@
     >
         <br />
         <b-container class="pl-3 pt-3" fluid>
-            <b-row align-v="center" align-h="center">
+            <b-row v-if="targets.length > 0" align-v="center" align-h="center">
                 <b-col>
                     <b-card-group deck columns class="justify-content-center">
                         <b-card
@@ -68,7 +68,7 @@
                                 right
                                 class="card-img-left fas fa-server fa-2x fa-fw"
                             ></i>
-                          </b-card>
+                        </b-card>
                     </b-card-group>
                     <!--<b-card-group deck columns class="justify-content-center">
                         <b-card
@@ -108,6 +108,11 @@
                             </b-col>
                         </b-row>
                     </b-card-group>-->
+                </b-col>
+            </b-row>
+            <b-row align-h="center" class="text-center" v-else>
+                <b-col>
+                    None to show.
                 </b-col>
             </b-row>
         </b-container>

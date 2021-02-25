@@ -255,7 +255,7 @@
                                     </flows>
                                 </b-row>
                             </b-tab>
-                            <b-tab :title-link-class="tabLinkClass(3)">
+                            <b-tab v-if="profile.djangoProfile.username === this.$router.currentRoute.params.username" :title-link-class="tabLinkClass(3)">
                                 <template v-slot:title>
                                     <b :class="tabLinkClass(3)">Targets</b>
                                 </template>
@@ -354,6 +354,7 @@
                                                 :variant="
                                                     darkMode ? 'dark' : 'white'
                                                 "
+                                                :disabled="target.role === 'none'"
                                                 @click="targetSelected(target)"
                                                 >{{ target.name }}</b-button
                                             ></b-col

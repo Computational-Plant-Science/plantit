@@ -46,22 +46,6 @@
             </b-col>
             <b-col md="auto">
                 <b-input-group size="sm">
-                    <b-button
-                        v-if="internalLoaded && !internalLoading"
-                        class="ml-1 mr-1"
-                        title="Refresh Directory"
-                        size="sm"
-                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                        @click="refresh"
-                    >
-                        <i class="fas fa-sync-alt fa-fw"></i>
-                    </b-button>
-                    <b-spinner
-                        v-else-if="internalLoaded && internalLoading"
-                        :variant="darkMode ? 'warning' : 'dark'"
-                        type="grow"
-                        label="Loading"
-                    ></b-spinner>
                     <b-form-file
                         v-if="upload"
                         style="min-width: 15rem"
@@ -86,7 +70,7 @@
                     ></b-form-file>
                     <b-button
                         v-if="upload"
-                        class="ml-1"
+                        class="ml-1 mr-1"
                         size="sm"
                         :disabled="filesToUpload.length === 0"
                         @click="
@@ -97,15 +81,31 @@
                             )
                         "
                         :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                        ><i class="fas fa-upload fa-fw"></i> Upload</b-button
-                    >
+                        ><i class="fas fa-upload fa-fw"></i
+                    ></b-button>
                     <b-button
-                        class="ml-1"
+                        class="ml-1 mr-1"
                         size="sm"
+                        title="Create Subdirectory"
                         v-b-modal.createDirectoryModal
                         :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                        ><i class="fas fa-plus fa-fw"></i> Directory</b-button
-                    >
+                        ><i class="fas fa-plus fa-fw"></i
+                    ></b-button>
+                    <b-modal
+                        id="shareDirectoryModal"
+                        title="Share Directory"
+                        close
+                        @ok="
+                            shareDirectory(
+                                (internalLoaded
+                                    ? internalNode.path
+                                    : node.path) +
+                                    '/' +
+                                    newDirectoryName,
+                                profile.djangoProfile.profile.cyverse_token
+                            )
+                        "
+                    ></b-modal>
                     <b-modal
                         id="createDirectoryModal"
                         title="Create Directory"
@@ -130,12 +130,38 @@
                         </b-form-group>
                     </b-modal>
                     <b-button
+                        v-if="internalLoaded && !internalLoading"
+                        class="ml-1 mr-1"
+                        title="Refresh Directory"
+                        size="sm"
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        @click="refresh"
+                    >
+                        <i class="fas fa-sync-alt fa-fw"></i>
+                    </b-button>
+                    <b-button
+                        v-if="!internalLoading"
+                        title="Share Directory"
+                        size="sm"
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        @click="share"
+                        class="ml-1 mr-1"
+                        ><i class="fas fa-share-alt fa-fw"></i
+                    ></b-button>
+                    <b-spinner
+                        v-if="internalLoaded && internalLoading"
+                        :variant="darkMode ? 'warning' : 'dark'"
+                        type="grow"
+                        label="Loading"
+                    ></b-spinner>
+                    <b-button
                         v-if="
                             internalLoaded &&
                                 internalNode.path.split('/').length > 4
                         "
-                        class="ml-1"
+                        class="ml-1 mr-1"
                         size="sm"
+                        title="Delete Directory"
                         @click="
                             deletePath(
                                 internalLoaded ? internalNode.path : node.path,
@@ -143,10 +169,10 @@
                             )
                         "
                         variant="outline-danger"
-                        ><i class="fas fa-trash fa-fw"></i> Delete</b-button
-                    >
+                        ><i class="fas fa-trash fa-fw"></i
+                    ></b-button>
                     <b-button
-                        class="ml-1"
+                        class="ml-1 mr-1"
                         title="Expand Directory"
                         v-if="!isOpen"
                         size="sm"
@@ -155,7 +181,7 @@
                     >
                         <i class="fas fa-caret-up fa-fw"></i> </b-button
                     ><b-button
-                        class="ml-1"
+                        class="ml-1 mr-1"
                         title="Collapse Directory"
                         v-else
                         size="sm"
@@ -201,6 +227,7 @@
                 <b-button
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'white'"
+                    class="ml-1 mr-1"
                     :disabled="
                         !select ||
                             (select !== 'directory' && select !== 'files')
@@ -217,10 +244,12 @@
                     }}</b-button
                 >
             </b-col>
-            <b-col v-if="node.path.split('/').length > 4" md="auto"
-                ><b-button
-                    class="ml-1"
+            <b-col :class="darkMode ? 'theme-dark' : 'theme-light'" md="auto">
+                <b-button
+                    v-if="node.path.split('/').length > 4"
+                    class="ml-1 mr-1"
                     size="sm"
+                    title="Delete Directory"
                     @click="
                         deletePath(
                             internalLoaded ? internalNode.path : node.path,
@@ -228,11 +257,11 @@
                         )
                     "
                     variant="outline-danger"
-                    ><i class="fas fa-trash fa-fw"></i> Delete</b-button
-                ></b-col
-            >
-            <b-col :class="darkMode ? 'theme-dark' : 'theme-light'" md="auto">
+                    ><i class="fas fa-trash fa-fw"></i
+                ></b-button>
                 <b-button
+                    title="Expand Directory"
+                    class="ml-1 mr-1"
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'white'"
                     @click="
@@ -283,25 +312,11 @@
                         {{ child.label }}</b-button
                     >
                 </b-col>
-                <b-col md="auto"
-                    ><b-button
-                        class="ml-1 mt-1 mb-1"
+                <b-col md="auto">
+                    <b-button
+                        class="m-1"
                         size="sm"
-                        @click="
-                            downloadFile(
-                                child.path,
-                                profile.djangoProfile.profile.cyverse_token
-                            )
-                        "
-                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                        ><i class="fas fa-download fa-fw"></i>
-                        Download</b-button
-                    ></b-col
-                >
-                <b-col md="auto"
-                    ><b-button
-                        class="ml-1 mt-1 mb-1"
-                        size="sm"
+                        title="Delete File"
                         @click="
                             deletePath(
                                 child.path,
@@ -309,9 +324,20 @@
                             )
                         "
                         variant="outline-danger"
-                        ><i class="fas fa-trash fa-fw"></i> Delete</b-button
-                    ></b-col
-                >
+                        ><i class="fas fa-trash fa-fw"></i></b-button
+                    ><b-button
+                        class="m-1"
+                        size="sm"
+                        title="Download File"
+                        @click="
+                            downloadFile(
+                                child.path,
+                                profile.djangoProfile.profile.cyverse_token
+                            )
+                        "
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        ><i class="fas fa-download fa-fw"></i></b-button
+                ></b-col>
             </b-row>
         </b-list-group-item>
         <b-list-group-item
@@ -330,6 +356,7 @@
                 :select="select"
                 :upload="upload"
                 :download="download"
+                title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
                 @deleted="
                     loadDirectory(
@@ -386,11 +413,7 @@ export default {
         };
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'loggedIn',
-            'darkMode'
-        ]),
+        ...mapGetters(['profile', 'loggedIn', 'darkMode']),
         isDir: function() {
             return !('file-size' in this);
         },
@@ -437,7 +460,9 @@ export default {
                     }
                 )
                 .then(response => {
-                    let url = window.URL.createObjectURL(new Blob([response.data]));
+                    let url = window.URL.createObjectURL(
+                        new Blob([response.data])
+                    );
                     let link = document.createElement('a');
                     link.href = url;
                     link.setAttribute('download', path);

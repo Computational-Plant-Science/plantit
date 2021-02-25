@@ -1,6 +1,6 @@
 from typing import List
 
-from plantit.targets.models import Target, TargetRole, TargetPolicy, TargetTask
+from plantit.targets.models import Target, TargetRole, TargetPolicy, TargetTask, TargetAccessRequest
 
 
 def map_target_task(task: TargetTask):
@@ -14,7 +14,7 @@ def map_target_task(task: TargetTask):
     }
 
 
-def map_target(target: Target, role: TargetRole = None, policies: List[TargetPolicy] = None):
+def map_target(target: Target, role: TargetRole = None, policies: List[TargetPolicy] = None, access_requests: List[TargetAccessRequest] = None):
     tasks = TargetTask.objects.filter(target=target)
     mapped = {
         'name': target.name,
@@ -44,6 +44,13 @@ def map_target(target: Target, role: TargetRole = None, policies: List[TargetPol
             'user': policy.user.username,
             'role': str(policy.role.value)
         } for policy in policies]
+
+    if access_requests is not None:
+        mapped['access_requests'] = [{
+            'user': request.user.username,
+            'created': request.created.isoformat(),
+            'granted': request.granted
+        } for request in access_requests]
 
     return mapped
 

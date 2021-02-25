@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
@@ -75,3 +76,10 @@ class TargetPolicy(models.Model):
 class TargetTask(PeriodicTask):
     target = models.ForeignKey(Target, on_delete=models.CASCADE)
     command = models.CharField(max_length=250, null=False, blank=False)
+
+
+class TargetAccessRequest(models.Model):
+    created = models.DateTimeField(default=timezone.now)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.CASCADE)
+    granted: bool = models.BooleanField(default=False)

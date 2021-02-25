@@ -1,7 +1,8 @@
 import json
 from typing import List
 
-from django.http import JsonResponse, HttpResponseNotFound
+from django.contrib.auth.models import User
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -9,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import execute_command
-from plantit.targets.models import Target, TargetPolicy, TargetTask, TargetRole
+from plantit.targets.models import Target, TargetPolicy, TargetTask, TargetRole, TargetAccessRequest
 from plantit.targets.serializers import TargetSerializer
 from plantit.targets.utils import map_target, map_target_task
 
@@ -21,26 +22,104 @@ class TargetsViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def get_all(self, request):
-        policies = list(TargetPolicy.objects.all())
-        return JsonResponse({'targets': [map_target(policy.target, policy.role, policies) for policy in policies if policy.target.public or policy.user == request.user]})
+        targets = list(Target.objects.filter(public=True))
+        return JsonResponse({'targets': [map_target(target) for target in targets]})
+
+    @action(methods=['get'], detail=False)
+    def grant_access(self, request):
+        target_name = request.GET.get('name', None)
+        user_name = request.GET.get('user', None)
+
+        if target_name is None or user_name is None:
+            return HttpResponseNotFound()
+
+        try:
+            target = Target.objects.get(name=target_name)
+            user = User.objects.get(username=user_name)
+        except:
+            return HttpResponseNotFound()
+
+        _, created = TargetPolicy.objects.get_or_create(user=user, target=target, role=TargetRole.run)
+        access_request = TargetAccessRequest.objects.get(user=user, target=target)
+        access_request.delete()
+
+        return JsonResponse({'granted': created})
+
+    @action(methods=['get'], detail=False)
+    def revoke_access(self, request):
+        target_name = request.GET.get('name', None)
+        user_name = request.GET.get('user', None)
+
+        if target_name is None or user_name is None:
+            return HttpResponseNotFound()
+
+        try:
+            target = Target.objects.get(name=target_name)
+            user = User.objects.get(username=user_name)
+            policy = TargetPolicy.objects.get(user=user, target=target)
+        except:
+            return HttpResponseNotFound()
+
+        policy.delete()
+        return HttpResponse()
+
+    @action(methods=['get'], detail=False)
+    def request_access(self, request):
+        target_name = request.GET.get('name', None)
+        if target_name is None:
+            return HttpResponseNotFound()
+
+        try:
+            target = Target.objects.get(name=target_name)
+        except:
+            return HttpResponseNotFound()
+
+        _, created = TargetAccessRequest.objects.get_or_create(user=request.user, target=target)
+        return JsonResponse({
+            'created': created
+        })
+
+    @action(methods=['get'], detail=False)
+    def toggle_public(self, request):
+        target_name = request.GET.get('name', None)
+        if target_name is None:
+            return HttpResponseNotFound()
+
+        try:
+            target = Target.objects.get(name=target_name)
+        except:
+            return HttpResponseNotFound()
+
+        target.public = not target.public
+        target.save()
+
+        return JsonResponse({'public': target.public})
 
     @action(methods=['get'], detail=False)
     def get_by_name(self, request):
-        name = request.GET.get('name')
+        target_name = request.GET.get('name')
 
         try:
-            target = Target.objects.get(name=name)
+            target = Target.objects.get(name=target_name)
         except:
             return HttpResponseNotFound()
 
         user = request.user
-        policies = TargetPolicy.objects.filter(user=user)
+        policies = TargetPolicy.objects.filter(target=target)
+
+        try:
+            access_requests = TargetAccessRequest.objects.filter(target=target)
+        except:
+            access_requests = None
 
         if target not in [policy.target for policy in policies]:
-            return JsonResponse(map_target(target, TargetRole.none))
+            return JsonResponse(map_target(target, TargetRole.none, None, access_requests))
 
-        policy = TargetPolicy.objects.get(user=user, target=target)
-        return JsonResponse(map_target(target, policy.role, list(policies)))
+        try:
+            role = TargetPolicy.objects.get(user=user, target=target).role
+        except:
+            role = TargetRole.none
+        return JsonResponse(map_target(target, role, list(policies), access_requests))
 
     @action(methods=['get'], detail=False)
     def status(self, request):
@@ -80,9 +159,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
     def get_by_username(self, request):
         user = request.user
         policies = TargetPolicy.objects.filter(user=user)
-        targets = [map_target(target, policy.role, list(policies)) for target, policy in
-                   zip([policy.target for policy in policies], policies)] + [map_target(target, TargetRole.none, list(policies)) for target in
-                                                                             Target.objects.exclude(targetpolicy__in=policies)]
+        targets = [map_target(target, policy.role, list(policies)) for target, policy in zip([policy.target for policy in policies], policies) if policy.role != TargetRole.none]  # + [map_target(target, TargetRole.none, list(policies)) for target in Target.objects.exclude(targetpolicy__in=policies)]
         return JsonResponse({'targets': targets})
 
     @action(methods=['post'], detail=False)
