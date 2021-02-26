@@ -27,6 +27,7 @@
                 :class="darkMode ? 'theme-dark' : 'theme-light'"
             >
                 <b-button
+                    :title="(internalLoaded ? internalNode : node).path"
                     size="sm"
                     :variant="darkMode ? 'outline-light' : 'white'"
                     :disabled="
@@ -40,9 +41,8 @@
                         )
                     "
                     ><i class="fas fa-folder fa-fw mr-2"></i>
-                    {{
-                        internalLoaded ? internalNode.label : node.label
-                    }}</b-button
+                    {{ internalLoaded ? internalNode.label : node.label }}
+                    </b-button
                 >
             </b-col>
             <b-col class="mt-1" md="auto">
@@ -58,12 +58,15 @@
                               }`
                             : ''
                     }}</small
-                >
+                ><small v-if="isShared">, shared by {{ sharedBy }}</small>
             </b-col>
             <b-col md="auto">
                 <b-input-group size="sm">
                     <b-form-file
-                        v-if="upload"
+                        v-if="
+                            upload &&
+                                !isShared
+                        "
                         style="min-width: 15rem"
                         :class="darkMode ? 'theme-dark' : 'theme-light'"
                         multiple
@@ -85,7 +88,10 @@
                         "
                     ></b-form-file>
                     <b-button
-                        v-if="upload"
+                        v-if="
+                            upload &&
+                                !isShared
+                        "
                         class="ml-1 mr-1"
                         size="sm"
                         :disabled="filesToUpload.length === 0"
@@ -100,6 +106,9 @@
                         ><i class="fas fa-upload fa-fw"></i
                     ></b-button>
                     <b-button
+                        v-if="
+                            !isShared
+                        "
                         class="ml-1 mr-1"
                         size="sm"
                         title="Create Subdirectory"
@@ -108,6 +117,9 @@
                         ><i class="fas fa-plus fa-fw"></i
                     ></b-button>
                     <b-modal
+                        v-if="
+                            !isShared
+                        "
                         :title-class="darkMode ? 'text-white' : 'text-dark'"
                         title="Create Directory"
                         :id="
@@ -163,7 +175,8 @@
                     <b-button
                         v-if="
                             !internalLoading &&
-                                internalNode.path.split('/').length > 4
+                                internalNode.path.split('/').length > 4 &&
+                                isShared
                         "
                         title="Share Directory"
                         size="sm"
@@ -173,6 +186,9 @@
                         ><i class="fas fa-share-alt fa-fw"></i
                     ></b-button>
                     <b-modal
+                        v-if="
+                          isShared
+                        "
                         :title-class="darkMode ? 'text-white' : 'text-dark'"
                         :title="
                             'Share ' +
@@ -347,7 +363,8 @@
                                 (internalLoaded
                                     ? internalNode.path
                                     : node.path
-                                ).split('/').length > 4
+                                ).split('/').length > 4 &&
+                                isShared
                         "
                         class="ml-1 mr-1"
                         size="sm"
@@ -441,7 +458,8 @@
                             (internalLoaded
                                 ? internalNode.path
                                 : node.path
-                            ).split('/').length > 4
+                            ).split('/').length > 4 &&
+                            isShared
                     "
                     class="ml-1 mr-1"
                     size="sm"
@@ -510,6 +528,9 @@
                 </b-col>
                 <b-col md="auto">
                     <b-button
+                        v-if="
+                            isShared
+                        "
                         class="m-1"
                         size="sm"
                         title="Delete File"
@@ -614,6 +635,23 @@ export default {
     },
     computed: {
         ...mapGetters(['profile', 'loggedIn', 'darkMode']),
+        sharedBy: function() {
+            if (this.isShared) {
+                let path = this.internalLoaded
+                    ? this.internalNode.path
+                    : this.node.path;
+                let split = path.split('/');
+                return split[3];
+            } else return null;
+        },
+        isShared: function() {
+            let path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
+            let split = path.split('/');
+            let user = split[3];
+            return user !== this.profile.djangoProfile.username && user !== 'shared';
+        },
         isDir: function() {
             return !('file-size' in this);
         },
@@ -669,16 +707,14 @@ export default {
         },
         async shareDirectory() {
             /** Terrain spec
-             * {
+             *{
              *  "sharing": [
              *    {
              *      "user": "string",
-             *      "sharing": [
+             *      "paths: [
              *        {
              *          "path": "string",
              *          "permission": "read",
-             *          "success": true,
-             *          "error": {}
              *        }
              *      ]
              *    }
@@ -688,31 +724,24 @@ export default {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
-            let users = this.sharedUsers.map(function(user) {
-                return {
-                    user: user,
-                    paths: [
-                        {
-                            path: path,
-                            permission: 'read'
-                        }
-                    ]
-                };
-            });
-            await axios
-                .post(
-                    `https://de.cyverse.org/terrain/secured/share`,
-                    {
-                        sharing: users
-                    },
-                    {
-                        headers: {
-                            Authorization:
-                                'Bearer ' +
-                                this.profile.djangoProfile.profile.cyverse_token
-                        }
-                    }
-                )
+            await axios({
+                method: 'post',
+                url: `/apis/v1/stores/share_directory/`,
+                data: {
+                    sharing: this.sharedUsers.map(function(user) {
+                        return {
+                            user: user,
+                            paths: [
+                                {
+                                    path: path,
+                                    permission: 'read'
+                                }
+                            ]
+                        };
+                    })
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
                 .then(() => {
                     this.sharedAlertMessage = `Shared directory ${
                         this.internalLoaded

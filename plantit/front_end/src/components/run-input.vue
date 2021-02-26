@@ -2,8 +2,10 @@
     <div>
         <b :class="darkMode ? 'text-white' : 'text-dark'">
             Select a public
-            {{ this.kind === 'files' ? 'directory' : this.kind }} from the Data Commons or your own
-            {{ this.kind === 'files' ? 'directory' : this.kind }} from the Data Store.
+            {{ this.kind === 'files' ? 'directory' : this.kind }} from the Data
+            Commons or your own
+            {{ this.kind === 'files' ? 'directory' : this.kind }} from the Data
+            Store.
         </b>
         <br />
         <b-tabs
@@ -16,13 +18,9 @@
         >
             <b-tab
                 :active="!this.path.startsWith('/iplant/home/shared')"
-                title="Data Store"
+                title="Your own data"
                 :title-link-class="darkMode ? 'text-white' : 'text-dark'"
-                :class="
-                    darkMode
-                        ? 'theme-dark m-0 p-3'
-                        : 'theme-light m-0 p-3'
-                "
+                :class="darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
             >
                 <b-row
                     ><b-col>
@@ -40,27 +38,43 @@
                             :node="userData"
                         ></datatree></b-col
                 ></b-row>
-                <b-alert
-                    class="mt-1"
-                    :variant="path ? 'success' : 'danger'"
-                    :show="true"
-                    >Selected: {{ path ? path : 'None' }}
-                    <i v-if="path" class="fas fa-check text-success"></i>
-                    <i v-else class="fas fa-exclamation text-danger"></i>
-                </b-alert>
             </b-tab>
+            <b-tab
+                :active="
+                    !this.path.startsWith('/iplant/home/shared') &&
+                        isShared(this.path)
+                "
+                title="Shared with you"
+                :title-link-class="darkMode ? 'text-white' : 'text-dark'"
+                :class="darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
+            >
+                <b-row v-if="directoriesShared.length > 0">
+                    <b-col>
+                        <b-spinner
+                            v-if="sharedDataLoading"
+                            type="grow"
+                            variant="success"
+                        ></b-spinner>
+                        <datatree
+                            v-else
+                            v-for="node in directoriesShared"
+                            v-bind:key="node.path"
+                            v-bind:node="node"
+                            :select="kind"
+                            @selectNode="selectNode"
+                            :upload="true"
+                            :download="true"
+                            :class="darkMode ? 'theme-dark' : 'theme-light'"
+                        ></datatree></b-col></b-row
+            ><b-row v-else><b-col>No shared directories.</b-col></b-row></b-tab>
             <b-tab
                 :active="
                     this.path === '' ||
                         this.path.startsWith('/iplant/home/shared')
                 "
-                title="Data Commons"
+                title="Public data"
                 :title-link-class="darkMode ? 'text-white' : 'text-dark'"
-                :class="
-                    darkMode
-                        ? 'theme-dark m-0 p-3'
-                        : 'theme-light m-0 p-3'
-                "
+                :class="darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
             >
                 <b-row
                     ><b-col>
@@ -78,7 +92,9 @@
                             :node="publicData"
                         ></datatree></b-col
                 ></b-row>
-                <b-alert
+            </b-tab>
+        </b-tabs>
+        <b-alert
                     class="mt-1"
                     :variant="path ? 'success' : 'danger'"
                     :show="true"
@@ -86,8 +102,6 @@
                     <i v-if="path" class="fas fa-check text-success"></i>
                     <i v-else class="fas fa-exclamation text-danger"></i>
                 </b-alert>
-            </b-tab>
-        </b-tabs>
     </div>
 </template>
 
@@ -118,17 +132,14 @@ export default {
             userDataLoading: true,
             publicData: null,
             userData: null,
+            directoriesShared: [],
+            sharedDataLoading: true,
             path: '',
             currentTab: 0
         };
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'flowConfigs',
-            'loggedIn',
-            'darkMode'
-        ]),
+        ...mapGetters(['profile', 'flowConfigs', 'loggedIn', 'darkMode']),
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }
@@ -184,8 +195,29 @@ export default {
             this.path = this.defaultPath;
         }
         this.publicDataLoading = false;
+        await this.loadDirectoryPolicies();
     },
     methods: {
+        isShared(path) {
+            let split = path.split('/');
+            let user = split[3];
+            return user !== this.profile.djangoProfile.username;
+        },
+        async loadDirectoryPolicies() {
+            this.sharedDataLoading = true;
+            await axios
+                .get(`/apis/v1/stores/get_directories_shared/`)
+                .then(response => {
+                    // this.directoryPolicies = response.data;
+                    this.directoriesShared = response.data;
+                    this.sharedDataLoading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.sharedDataLoading = false;
+                    throw error;
+                });
+        },
         selectNode(node) {
             this.path = node.path;
             this.$emit('inputSelected', node);

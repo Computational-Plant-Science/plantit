@@ -4,10 +4,9 @@ from datetime import datetime
 from pathlib import Path
 
 import httpx
-from asgiref.sync import sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 
 from plantit import settings
 from plantit.runs.utils import list_flows_for_users

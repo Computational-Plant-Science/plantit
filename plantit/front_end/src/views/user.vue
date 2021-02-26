@@ -6,12 +6,12 @@
             <div v-if="loadingUser">
                 <br />
                 <b-row>
-                  <b-col class="text-center">
-                    <b-spinner
-                        type="grow"
-                        label="Loading..."
-                        variant="secondary"
-                    ></b-spinner>
+                    <b-col class="text-center">
+                        <b-spinner
+                            type="grow"
+                            label="Loading..."
+                            variant="secondary"
+                        ></b-spinner>
                     </b-col>
                 </b-row>
             </div>
@@ -113,7 +113,7 @@
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
-                                        >Profile</b
+                                        >User Profile</b
                                     >
                                 </template>
                                 <b-card
@@ -128,6 +128,13 @@
                                         darkMode ? 'dark' : 'white'
                                     "
                                 >
+                                    <b-row
+                                        ><b-col
+                                            ><h5>
+                                                Your GitHub user profile
+                                            </h5></b-col
+                                        ></b-row
+                                    >
                                     <b-row>
                                         <b-col md="auto">
                                             <b-card-text
@@ -191,9 +198,12 @@
                                 :title-link-class="tabLinkClass(1)"
                             >
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(1)">Data</b>
+                                    <b :class="tabLinkClass(1)">Data Store</b>
                                 </template>
                                 <b-card
+                                    :sub-title-text-variant="
+                                        darkMode ? 'white' : 'dark'
+                                    "
                                     :header-bg-variant="
                                         darkMode ? 'dark' : 'white'
                                     "
@@ -205,6 +215,11 @@
                                         darkMode ? 'dark' : 'white'
                                     "
                                 >
+                                    <b-row
+                                        ><b-col
+                                            ><h5>Your own data</h5></b-col
+                                        ></b-row
+                                    >
                                     <b-row>
                                         <b-col>
                                             <datatree
@@ -217,11 +232,41 @@
                                                         ? 'theme-dark'
                                                         : 'theme-light'
                                                 "
-                                            ></datatree></b-col></b-row></b-card
-                            ></b-tab>
+                                            ></datatree></b-col
+                                    ></b-row>
+                                    <hr />
+                                    <b-row
+                                        ><b-col
+                                            ><h5>Shared with you</h5></b-col
+                                        ></b-row
+                                    >
+                                    <b-row v-if="directoriesShared.length > 0">
+                                        <b-col>
+                                            <datatree
+                                                v-for="node in directoriesShared"
+                                                v-bind:key="node.path"
+                                                v-bind:node="node"
+                                                select="directory"
+                                                :upload="true"
+                                                :download="true"
+                                                :class="
+                                                    darkMode
+                                                        ? 'theme-dark'
+                                                        : 'theme-light'
+                                                "
+                                            ></datatree></b-col></b-row
+                                    ><b-row v-else
+                                        ><b-col
+                                            ><small
+                                                >No shared directories.</small
+                                            ></b-col
+                                        ></b-row
+                                    ></b-card
+                                ></b-tab
+                            >
                             <b-tab :title-link-class="tabLinkClass(2)">
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(2)">Flows</b>
+                                    <b :class="tabLinkClass(2)">Workflows</b>
                                 </template>
                                 <b-row
                                     v-if="profile.githubProfile === null"
@@ -256,7 +301,14 @@
                                     </flows>
                                 </b-row>
                             </b-tab>
-                            <b-tab v-if="profile.djangoProfile.username === this.$router.currentRoute.params.username" :title-link-class="tabLinkClass(3)">
+                            <b-tab
+                                v-if="
+                                    profile.djangoProfile.username ===
+                                        this.$router.currentRoute.params
+                                            .username
+                                "
+                                :title-link-class="tabLinkClass(3)"
+                            >
                                 <template v-slot:title>
                                     <b :class="tabLinkClass(3)">Targets</b>
                                 </template>
@@ -271,7 +323,13 @@
                                                 :show="
                                                     showToggleSingularityCacheCleaningAlert
                                                 "
-                                                :variant="showToggleSingularityCacheCleaningMessage.startsWith('Failed') ? 'danger' : 'success'"
+                                                :variant="
+                                                    showToggleSingularityCacheCleaningMessage.startsWith(
+                                                        'Failed'
+                                                    )
+                                                        ? 'danger'
+                                                        : 'success'
+                                                "
                                                 dismissible
                                                 @dismissed="
                                                     showToggleSingularityCacheCleaningAlert = false
@@ -320,9 +378,7 @@
                                                 : 'theme-light'
                                         "
                                     />
-                                    <b-row
-                                        v-if="targetsLoading"
-                                    >
+                                    <b-row v-if="targetsLoading">
                                         <b-spinner
                                             type="grow"
                                             label="Loading..."
@@ -353,7 +409,9 @@
                                                 :variant="
                                                     darkMode ? 'dark' : 'white'
                                                 "
-                                                :disabled="target.role === 'none'"
+                                                :disabled="
+                                                    target.role === 'none'
+                                                "
                                                 @click="targetSelected(target)"
                                                 >{{ target.name }}</b-button
                                             ></b-col
@@ -366,11 +424,11 @@
                                                         : 'text-dark'
                                                 "
                                                 >{{
-
-                                                        target.role === 'own'
-                                                            ? "(owner)"
-                                                            : target.role === 'none' ? '(no access)' : '(guest)'
-
+                                                    target.role === 'own'
+                                                        ? '(owner)'
+                                                        : target.role === 'none'
+                                                        ? '(no access)'
+                                                        : '(guest)'
                                                 }}</small
                                             ></b-col
                                         >
@@ -484,6 +542,9 @@ export default {
             cyverseProfile: null,
             githubProfile: null,
             currentTab: 0,
+            directoriesShared: [],
+            directoryPolicies: [],
+            directoryPolicyNodes: [],
             data: {},
             flows: [],
             runs: [],
@@ -493,11 +554,7 @@ export default {
             showToggleSingularityCacheCleaningAlert: false
         };
     },
-    computed: mapGetters([
-        'profile',
-        'loggedIn',
-        'darkMode'
-    ]),
+    computed: mapGetters(['profile', 'loggedIn', 'darkMode']),
     async mounted() {
         await this.loadUser();
         this.loadingUser = false;
@@ -506,13 +563,26 @@ export default {
             this.profile.djangoProfile.profile.cyverse_token
         );
         await this.loadTargets();
+        await this.loadDirectoryPolicies();
     },
     methods: {
+        async loadDirectoryPolicies() {
+            await axios
+                .get(`/apis/v1/stores/get_directories_shared/`)
+                .then(response => {
+                    // this.directoryPolicies = response.data;
+                    this.directoriesShared = response.data;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
         targetSelected: function(target) {
             router.push({
                 name: 'target',
                 params: {
-                    name: target.name,
+                    name: target.name
                 }
             });
         },
@@ -635,6 +705,26 @@ export default {
                     name: flow['repo']['name']
                 }
             });
+        },
+        async getDirectory(path) {
+            await axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
+                    {
+                        headers: {
+                            Authorization:
+                                'Bearer ' +
+                                this.profile.djangoProfile.profile.cyverse_token
+                        }
+                    }
+                )
+                .then(response => {
+                    this.directoriesShared.push(response.data);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
         },
         async loadDirectory(path, token) {
             return axios

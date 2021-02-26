@@ -214,7 +214,7 @@
                                         darkMode ? 'dark' : 'white'
                                     "
                                     :text-variant="darkMode ? 'white' : 'dark'"
-                                    style="min-width: 20rem"
+                                    style="min-width: 40rem"
                                     class="mb-4"
                                 >
                                     <b-row>
@@ -289,7 +289,7 @@
                                         darkMode ? 'dark' : 'white'
                                     "
                                     :text-variant="darkMode ? 'white' : 'dark'"
-                                    style="min-width: 20rem"
+                                    style="min-width: 40rem"
                                     class="mb-4"
                                 >
                                     <b-row align-v="center">
@@ -462,7 +462,7 @@
                                         ></i>
                                     </b-alert>
                                 </b-card>
-                                <b-card
+                                <!--<b-card
                                     v-if="
                                         flow &&
                                             flow.config &&
@@ -516,21 +516,21 @@
                                                 }}
                                             </h4>
                                         </b-col>
-                                        <!--<b-col md="auto">
+                                        <b-col md="auto">
                                             <b-form-checkbox
                                                 v-model="outputDirectory"
                                                 switch
                                                 size="md"
                                             >
                                             </b-form-checkbox>
-                                        </b-col>-->
+                                        </b-col>
                                     </b-row>
                                     <runoutput
                                         v-if="outputDirectory"
                                         :user="user"
                                         v-on:outputSelected="outputSelected"
                                     ></runoutput>
-                                </b-card>
+                                </b-card>-->
                                 <b-card
                                     :bg-variant="darkMode ? 'dark' : 'white'"
                                     :header-bg-variant="
