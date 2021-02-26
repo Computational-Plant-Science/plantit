@@ -962,7 +962,7 @@ export default {
     components: {
         Multiselect,
         flowdetail,
-        runinput,
+        runinput
     },
     props: {
         username: {

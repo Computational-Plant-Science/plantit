@@ -158,7 +158,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=False)
     def get_by_username(self, request):
         user = request.user
-        policies = TargetPolicy.objects.filter(user=user)
+        policies = TargetPolicy.objects.filter(user=user, role__in=[TargetRole.own, TargetRole.run])
         targets = [map_target(target, policy.role, list(policies)) for target, policy in zip([policy.target for policy in policies], policies) if policy.role != TargetRole.none]  # + [map_target(target, TargetRole.none, list(policies)) for target in Target.objects.exclude(targetpolicy__in=policies)]
         return JsonResponse({'targets': targets})
 

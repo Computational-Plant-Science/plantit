@@ -130,8 +130,14 @@
                                 >
                                     <b-row
                                         ><b-col
-                                            ><h5>
-                                                Your GitHub user profile
+                                            ><h5
+                                                :class="
+                                                    darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                Your user profile
                                             </h5></b-col
                                         ></b-row
                                     >
@@ -217,7 +223,15 @@
                                 >
                                     <b-row
                                         ><b-col
-                                            ><h5>Your own data</h5></b-col
+                                            ><h5
+                                                :class="
+                                                    darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                Your own data
+                                            </h5></b-col
                                         ></b-row
                                     >
                                     <b-row>
@@ -237,7 +251,15 @@
                                     <hr />
                                     <b-row
                                         ><b-col
-                                            ><h5>Shared with you</h5></b-col
+                                            ><h5
+                                                :class="
+                                                    darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                Shared with you
+                                            </h5></b-col
                                         ></b-row
                                     >
                                     <b-row v-if="directoriesShared.length > 0">
@@ -266,7 +288,13 @@
                                     <hr />
                                     <b-row
                                         ><b-col
-                                            ><h5>
+                                            ><h5
+                                                :class="
+                                                    darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                            >
                                                 Data you've shared
                                             </h5></b-col
                                         ></b-row
