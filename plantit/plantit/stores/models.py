@@ -16,8 +16,8 @@ class DirectoryRole(Enum):
 
 
 class DirectoryPolicy(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    guest = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owner", on_delete=models.CASCADE)
+    guest = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="guest", on_delete=models.CASCADE)
     role = EnumChoiceField(DirectoryRole, default=DirectoryRole.read)
     path = models.CharField(max_length=250)
 

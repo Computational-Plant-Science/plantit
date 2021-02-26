@@ -944,7 +944,6 @@
 <script>
 import flowdetail from '../components/flow-detail';
 import runinput from '../components/run-input';
-import runoutput from '../components/run-output';
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
@@ -964,7 +963,6 @@ export default {
         Multiselect,
         flowdetail,
         runinput,
-        runoutput
     },
     props: {
         username: {
