@@ -73,10 +73,6 @@ export default {
         flow: {
             type: Object,
             required: true
-        },
-        selectable: {
-            type: String,
-            required: true
         }
     },
     methods: {

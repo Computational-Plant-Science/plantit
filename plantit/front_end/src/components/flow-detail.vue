@@ -239,22 +239,6 @@
                                         >
                                     </b-col>
                                 </b-row>
-                                <b-row v-if="selectable">
-                                    <b-col>
-                                        <br />
-                                        <br />
-                                        <b-button
-                                            block
-                                            class="text-left"
-                                            variant="success"
-                                            v-b-tooltip.hover
-                                            @click="flowSelected(flow)"
-                                        >
-                                            <i class="fas fa-terminal"></i>
-                                            Run
-                                        </b-button>
-                                    </b-col>
-                                </b-row>
                             </b-col>
                         </b-row>
                     </b-col>
@@ -336,10 +320,6 @@ export default {
             type: Object,
             required: true
         },
-        selectable: {
-            type: Boolean,
-            required: true
-        }
     },
     computed: {
         ...mapGetters([

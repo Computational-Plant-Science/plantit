@@ -5,16 +5,18 @@
         <b-container class="p-3 vl" fluid>
             <div v-if="loadingUser">
                 <br />
-                <b-row align-h="center">
+                <b-row>
+                  <b-col class="text-center">
                     <b-spinner
                         type="grow"
                         label="Loading..."
                         variant="secondary"
                     ></b-spinner>
+                    </b-col>
                 </b-row>
             </div>
             <div v-else>
-                <b-row align-v="start" align-h="center" class="mb-2">
+                <b-row align-v="start" class="mb-2">
                     <b-col
                         style="color: white"
                         align-self="end"
@@ -92,7 +94,7 @@
                         </b-row>
                     </b-col>
                 </b-row>
-                <b-row align-v="center" align-h="center"
+                <b-row align-v="center"
                     ><b-col>
                         <b-tabs
                             pills
@@ -126,7 +128,7 @@
                                         darkMode ? 'dark' : 'white'
                                     "
                                 >
-                                    <b-row align-h="left">
+                                    <b-row>
                                         <b-col md="auto">
                                             <b-card-text
                                                 v-if="cyverseProfile"
@@ -224,7 +226,6 @@
                                 <b-row
                                     v-if="profile.githubProfile === null"
                                     align-v="center"
-                                    align-h="center"
                                 >
                                     <b-col md="auto" class="mr-2 pr-0">
                                         <b-button
@@ -320,7 +321,6 @@
                                         "
                                     />
                                     <b-row
-                                        align-h="center"
                                         v-if="targetsLoading"
                                     >
                                         <b-spinner
@@ -330,7 +330,6 @@
                                         ></b-spinner>
                                     </b-row>
                                     <b-row
-                                        align-h="center"
                                         class="text-center"
                                         v-if="
                                             !targetsLoading &&

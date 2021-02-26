@@ -20,7 +20,6 @@
                     <WorkflowBlurb
                         :showPublic="false"
                         :flow="flow"
-                        selectable="Restart"
                     ></WorkflowBlurb>
                 </b-card>
             </b-col>

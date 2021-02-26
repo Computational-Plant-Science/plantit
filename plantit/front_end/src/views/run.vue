@@ -267,7 +267,6 @@
                                             <WorkflowBlurb
                                                 :showPublic="false"
                                                 :flow="flow"
-                                                selectable="Restart"
                                             ></WorkflowBlurb>
                                         </b-card-body>
                                     </b-card>
@@ -1052,8 +1051,8 @@
             :title-class="darkMode ? 'text-white' : 'text-dark'"
             :header-text-variant="darkMode ? 'white' : 'dark'"
             :body-text-variant="darkMode ? 'white' : 'dark'"
-            header-border-variant="secondary"
-            footer-border-variant="secondary"
+            :footer-border-variant="darkMode ? 'dark' : 'white'"
+            :header-border-variant="darkMode ? 'dark' : 'white'"
             ok-variant="secondary"
             ok-title="Close"
             size="xl"
@@ -1173,7 +1172,8 @@ export default {
                 url: `/apis/v1/runs/`,
                 data: {
                     repo: this.flow.repo,
-                    config: config
+                    config: config,
+                    type: 'Now'
                 },
                 headers: { 'Content-Type': 'application/json' }
             })

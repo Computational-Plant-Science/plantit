@@ -1,5 +1,21 @@
 <template>
     <b-list-group flush class="m-0">
+        <b-row v-if="showSharedAlert">
+            <b-col class="m-0 p-0">
+                <b-alert
+                    :show="showSharedAlert"
+                    :variant="
+                        sharedAlertMessage.startsWith('Failed')
+                            ? 'danger'
+                            : 'success'
+                    "
+                    dismissible
+                    @dismissed="showSharedAlert = false"
+                >
+                    {{ sharedAlertMessage }}
+                </b-alert>
+            </b-col>
+        </b-row>
         <b-row
             v-if="isDir && internalLoaded"
             class="mt-1 mb-1 ml-2 mr-0 p-0 text-left"
@@ -87,29 +103,28 @@
                         class="ml-1 mr-1"
                         size="sm"
                         title="Create Subdirectory"
-                        v-b-modal.createDirectoryModal
+                        @click="showCreateDirectoryModal"
                         :variant="darkMode ? 'outline-light' : 'outline-dark'"
                         ><i class="fas fa-plus fa-fw"></i
                     ></b-button>
                     <b-modal
-                        id="shareDirectoryModal"
-                        title="Share Directory"
-                        close
-                        @ok="
-                            shareDirectory(
-                                (internalLoaded
-                                    ? internalNode.path
-                                    : node.path) +
-                                    '/' +
-                                    newDirectoryName,
-                                profile.djangoProfile.profile.cyverse_token
-                            )
-                        "
-                    ></b-modal>
-                    <b-modal
-                        id="createDirectoryModal"
+                        :title-class="darkMode ? 'text-white' : 'text-dark'"
                         title="Create Directory"
+                        :id="
+                            'createDirectoryModal' +
+                                (internalLoaded
+                                    ? internalNode.label
+                                    : node.label)
+                        "
+                        centered
+                        :header-text-variant="darkMode ? 'white' : 'dark'"
+                        :header-bg-variant="darkMode ? 'dark' : 'white'"
+                        :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                        :body-bg-variant="darkMode ? 'dark' : 'white'"
+                        :header-border-variant="darkMode ? 'dark' : 'white'"
+                        :footer-border-variant="darkMode ? 'dark' : 'white'"
                         close
+                        @close="hideCreateDirectoryModal"
                         @ok="
                             createDirectory(
                                 (internalLoaded
@@ -139,15 +154,6 @@
                     >
                         <i class="fas fa-sync-alt fa-fw"></i>
                     </b-button>
-                    <b-button
-                        v-if="!internalLoading"
-                        title="Share Directory"
-                        size="sm"
-                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
-                        @click="share"
-                        class="ml-1 mr-1"
-                        ><i class="fas fa-share-alt fa-fw"></i
-                    ></b-button>
                     <b-spinner
                         v-if="internalLoaded && internalLoading"
                         :variant="darkMode ? 'warning' : 'dark'"
@@ -156,8 +162,192 @@
                     ></b-spinner>
                     <b-button
                         v-if="
-                            internalLoaded &&
+                            !internalLoading &&
                                 internalNode.path.split('/').length > 4
+                        "
+                        title="Share Directory"
+                        size="sm"
+                        :variant="darkMode ? 'outline-light' : 'outline-dark'"
+                        @click="showShareDirectoryModal"
+                        class="ml-1 mr-1"
+                        ><i class="fas fa-share-alt fa-fw"></i
+                    ></b-button>
+                    <b-modal
+                        :title-class="darkMode ? 'text-white' : 'text-dark'"
+                        :title="
+                            'Share ' +
+                                (internalLoaded ? internalNode.path : node.path)
+                        "
+                        centered
+                        :header-text-variant="darkMode ? 'white' : 'dark'"
+                        :header-bg-variant="darkMode ? 'dark' : 'white'"
+                        :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                        :body-bg-variant="darkMode ? 'dark' : 'white'"
+                        :header-border-variant="darkMode ? 'dark' : 'white'"
+                        :footer-border-variant="darkMode ? 'dark' : 'white'"
+                        @ok="shareDirectory"
+                        @close="hideShareDirectoryModal"
+                        :id="
+                            'shareDirectoryModal' +
+                                (internalLoaded
+                                    ? internalNode.label
+                                    : node.label)
+                        "
+                        ><b-container fluid>
+                            <b-row
+                                ><b-col
+                                    :class="
+                                        darkMode ? 'text-white' : 'text-dark'
+                                    "
+                                    ><small
+                                        >Choose who to share this directory
+                                        with.</small
+                                    ></b-col
+                                ></b-row
+                            >
+                            <b-row align-v="center" align-h="center">
+                                <b-col>
+                                    <b-form>
+                                        <b-form-group
+                                            v-slot="{ ariaDescribedby }"
+                                        >
+                                            <b-form-checkbox-group
+                                                v-model="sharedUsers"
+                                                :options="sharingUsers"
+                                                :aria-describedby="
+                                                    ariaDescribedby
+                                                "
+                                                stacked
+                                                buttons
+                                                size="lg"
+                                            >
+                                            </b-form-checkbox-group>
+                                        </b-form-group>
+                                    </b-form>
+                                    <!--<b-card-group
+                                        deck
+                                        columns
+                                        class="justify-content-center"
+                                    >
+                                        <b-card
+                                            v-for="user in users"
+                                            :key="user.username"
+                                            :bg-variant="
+                                                darkMode ? 'dark' : 'white'
+                                            "
+                                            :header-bg-variant="
+                                                darkMode ? 'dark' : 'white'
+                                            "
+                                            border-variant="default"
+                                            :header-border-variant="
+                                                darkMode
+                                                    ? 'secondary'
+                                                    : 'default'
+                                            "
+                                            :text-variant="
+                                                darkMode ? 'white' : 'dark'
+                                            "
+                                            style="min-width: 30rem; max-width: 40rem;"
+                                            class="overflow-hidden mb-4"
+                                        >
+                                            <b-row align-v="center">
+                                                <b-col
+                                                    style="color: white; cursor: pointer"
+                                                    @click="userSelected(user)"
+                                                >
+                                                    <h5
+                                                        :class="
+                                                            darkMode
+                                                                ? 'text-white'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        {{ user.first_name }}
+                                                        {{ user.last_name }}
+                                                        <small
+                                                            :class="
+                                                                darkMode
+                                                                    ? 'text-warning'
+                                                                    : 'text-dark'
+                                                            "
+                                                            >({{
+                                                                user.username
+                                                            }})</small
+                                                        >
+                                                    </h5>
+                                                </b-col>
+                                            </b-row>
+                                            <b-row align-v="center">
+                                                <b-col
+                                                    :class="
+                                                        darkMode
+                                                            ? 'text-white'
+                                                            : 'text-dark'
+                                                    "
+                                                >
+                                                    {{
+                                                        user.github_profile
+                                                            ? user
+                                                                  .github_profile
+                                                                  .bio
+                                                            : ''
+                                                    }}
+                                                </b-col>
+                                            </b-row>
+                                            <br />
+                                            <b-row
+                                                v-if="user.github_username"
+                                                align-v="center"
+                                            >
+                                                <b-col>
+                                                    <b-link
+                                                        :class="
+                                                            darkMode
+                                                                ? 'text-white'
+                                                                : 'text-dark'
+                                                        "
+                                                        :href="
+                                                            'https://github.com/' +
+                                                                user.github_username
+                                                        "
+                                                    >
+                                                        <i
+                                                            class="fab fa-github fa-fw fa-1x mr-2 ml-1 pl-1"
+                                                        ></i>
+                                                        <small>{{
+                                                            user.github_username
+                                                        }}</small>
+                                                    </b-link>
+                                                </b-col>
+                                                <b-col
+                                                    class="ml-0 mr-0"
+                                                    align-self="left"
+                                                >
+                                                    <b-img
+                                                        right
+                                                        rounded
+                                                        class="avatar card-img-right"
+                                                        style="max-height: 4rem; max-width: 4rem; opacity: 0.9; position: absolute; right: -15px; top: -25px; z-index:1;"
+                                                        :src="
+                                                            user.github_profile
+                                                                .avatar_url
+                                                        "
+                                                    ></b-img>
+                                                </b-col>
+                                            </b-row>
+                                        </b-card>
+                                    </b-card-group>-->
+                                </b-col>
+                            </b-row>
+                        </b-container></b-modal
+                    >
+                    <b-button
+                        v-if="
+                            internalLoaded &&
+                                (internalLoaded
+                                    ? internalNode.path
+                                    : node.path
+                                ).split('/').length > 4
                         "
                         class="ml-1 mr-1"
                         size="sm"
@@ -246,7 +436,13 @@
             </b-col>
             <b-col :class="darkMode ? 'theme-dark' : 'theme-light'" md="auto">
                 <b-button
-                    v-if="node.path.split('/').length > 4"
+                    v-if="
+                        internalLoaded &&
+                            (internalLoaded
+                                ? internalNode.path
+                                : node.path
+                            ).split('/').length > 4
+                    "
                     class="ml-1 mr-1"
                     size="sm"
                     title="Delete Directory"
@@ -396,6 +592,7 @@ export default {
     },
     data: function() {
         return {
+            users: [],
             internalNode: null,
             internalLoading: false,
             internalLoaded: false,
@@ -409,13 +606,30 @@ export default {
             uploadingIntervalId: '',
             creatingDirectoryIntervalId: '',
             deletingIntervalId: '',
-            downloading: false
+            downloading: false,
+            sharedUsers: [],
+            sharedAlertMessage: '',
+            showSharedAlert: false
         };
     },
     computed: {
         ...mapGetters(['profile', 'loggedIn', 'darkMode']),
         isDir: function() {
             return !('file-size' in this);
+        },
+        sharingUsers() {
+            let username = this.profile.djangoProfile.username;
+            return this.users
+                .map(function(user) {
+                    return {
+                        value: user.username,
+                        text: user.username
+                        // avatar: user.github_profile.avatar_url
+                    };
+                })
+                .filter(function(item) {
+                    return item.value !== username;
+                });
         },
         subDirCount: function() {
             return this.internalLoaded
@@ -437,6 +651,115 @@ export default {
         }
     },
     methods: {
+        showCreateDirectoryModal() {
+            this.$bvModal.show(
+                'createDirectoryModal' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        hideCreateDirectoryModal() {
+            this.$bvModal.hide(
+                'createDirectoryModal' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        async shareDirectory() {
+            /** Terrain spec
+             * {
+             *  "sharing": [
+             *    {
+             *      "user": "string",
+             *      "sharing": [
+             *        {
+             *          "path": "string",
+             *          "permission": "read",
+             *          "success": true,
+             *          "error": {}
+             *        }
+             *      ]
+             *    }
+             *  ]
+             *}
+             */
+            let path = this.internalLoaded
+                ? this.internalNode.path
+                : this.node.path;
+            let users = this.sharedUsers.map(function(user) {
+                return {
+                    user: user,
+                    paths: [
+                        {
+                            path: path,
+                            permission: 'read'
+                        }
+                    ]
+                };
+            });
+            await axios
+                .post(
+                    `https://de.cyverse.org/terrain/secured/share`,
+                    {
+                        sharing: users
+                    },
+                    {
+                        headers: {
+                            Authorization:
+                                'Bearer ' +
+                                this.profile.djangoProfile.profile.cyverse_token
+                        }
+                    }
+                )
+                .then(() => {
+                    this.sharedAlertMessage = `Shared directory ${
+                        this.internalLoaded
+                            ? this.internalNode.path
+                            : this.node.path
+                    } with ${this.sharedUsers.length} user(s)`;
+                    this.showSharedAlert = true;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.sharedAlertMessage = `Failed to share directory ${
+                        this.internalLoaded
+                            ? this.internalNode.path
+                            : this.node.path
+                    } with ${this.sharedUsers.length} user(s)`;
+                    this.showSharedAlert = true;
+                    throw error;
+                });
+        },
+        showShareDirectoryModal() {
+            this.loadUsers();
+            this.$bvModal.show(
+                'shareDirectoryModal' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        hideShareDirectoryModal() {
+            this.$bvModal.hide(
+                'shareDirectoryModal' +
+                    (this.internalLoaded
+                        ? this.internalNode.label
+                        : this.node.label)
+            );
+        },
+        loadUsers() {
+            axios
+                .get('/apis/v1/users/get_all/')
+                .then(response => {
+                    this.users = response.data.users;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
         toggle: function() {
             if (this.internalLoaded) this.isOpen = !this.isOpen;
             else this.loadDirectory();

@@ -67,7 +67,6 @@
                                 <flowdetail
                                     :show-public="true"
                                     :flow="flow"
-                                    :selectable="false"
                                 ></flowdetail>
                             </b-card>
                         </b-col>
