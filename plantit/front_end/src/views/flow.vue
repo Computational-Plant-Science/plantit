@@ -1403,7 +1403,7 @@ export default {
         loadTargets: function() {
             this.targetsLoading = true;
             return axios
-                .get('/apis/v1/targets/')
+                .get(`/apis/v1/targets/get_by_username/`)
                 .then(response => {
                     this.targets = response.data;
                     this.targetsLoading = false;
