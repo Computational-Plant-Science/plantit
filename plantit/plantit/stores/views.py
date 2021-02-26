@@ -92,10 +92,16 @@ def unshare_directory(request):
         policy = DirectoryPolicy.objects.get(owner=owner, guest=guest, role=role, path=path)
     except:
         return HttpResponseNotFound()
-    policy.delete()
 
     response = requests.post("https://de.cyverse.org/terrain/secured/unshare",
-                             data=request.data,
-                             headers={"Authorization": f"Bearer {owner.profile.cyverse_token}"})
+                             data=json.dumps({
+                                 'unshare': [{
+                                     'user': path,
+                                     'paths': [path]
+                                 }]
+                             }),
+                             headers={"Authorization": f"Bearer {owner.profile.cyverse_token}", "Content-Type": 'application/json;charset=utf-8'})
     response.raise_for_status()
+    policy.delete()
+
     return JsonResponse({'unshared': True})

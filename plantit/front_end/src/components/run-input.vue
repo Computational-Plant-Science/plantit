@@ -48,15 +48,17 @@
                 :title-link-class="darkMode ? 'text-white' : 'text-dark'"
                 :class="darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
             >
-                <b-row v-if="directoriesShared.length > 0">
-                    <b-col>
-                        <b-spinner
+                <b-row
+                    ><b-col class="text-center"
+                        ><b-spinner
                             v-if="sharedDataLoading"
                             type="grow"
-                            variant="success"
-                        ></b-spinner>
+                            variant="secondary"
+                        ></b-spinner></b-col
+                ></b-row>
+                <b-row v-if="directoriesShared.length > 0">
+                    <b-col>
                         <datatree
-                            v-else
                             v-for="node in directoriesShared"
                             v-bind:key="node.path"
                             v-bind:node="node"
@@ -66,7 +68,11 @@
                             :download="true"
                             :class="darkMode ? 'theme-dark' : 'theme-light'"
                         ></datatree></b-col></b-row
-            ><b-row v-else><b-col>No shared directories.</b-col></b-row></b-tab>
+                ><b-row
+                    v-if="!sharedDataLoading && directoriesShared.length === 0"
+                    ><b-col>No shared directories.</b-col></b-row
+                ></b-tab
+            >
             <b-tab
                 :active="
                     this.path === '' ||
@@ -95,13 +101,13 @@
             </b-tab>
         </b-tabs>
         <b-alert
-                    class="mt-1"
-                    :variant="path ? 'success' : 'danger'"
-                    :show="true"
-                    >Selected: {{ path ? path : 'None' }}
-                    <i v-if="path" class="fas fa-check text-success"></i>
-                    <i v-else class="fas fa-exclamation text-danger"></i>
-                </b-alert>
+            class="mt-1"
+            :variant="path ? 'success' : 'danger'"
+            :show="true"
+            >Selected: {{ path ? path : 'None' }}
+            <i v-if="path" class="fas fa-check text-success"></i>
+            <i v-else class="fas fa-exclamation text-danger"></i>
+        </b-alert>
     </div>
 </template>
 

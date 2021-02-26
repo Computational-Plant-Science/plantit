@@ -113,7 +113,7 @@
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
-                                        >User Profile</b
+                                        >Profile</b
                                     >
                                 </template>
                                 <b-card
@@ -198,7 +198,7 @@
                                 :title-link-class="tabLinkClass(1)"
                             >
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(1)">Data Store</b>
+                                    <b :class="tabLinkClass(1)">Store</b>
                                 </template>
                                 <b-card
                                     :sub-title-text-variant="
@@ -258,15 +258,84 @@
                                     ><b-row v-else
                                         ><b-col
                                             ><small
-                                                >No shared directories.</small
+                                                >Nobody has shared any
+                                                directories with you.</small
                                             ></b-col
                                         ></b-row
-                                    ></b-card
-                                ></b-tab
+                                    >
+                                    <hr />
+                                    <b-row
+                                        ><b-col
+                                            ><h5>
+                                                Data you've shared
+                                            </h5></b-col
+                                        ></b-row
+                                    >
+                                    <b-row v-if="showUnsharedAlertMessage">
+                                        <b-col class="m-0 p-0">
+                                            <b-alert
+                                                :show="showUnsharedAlertMessage"
+                                                :variant="
+                                                    unsharedAlertMessage.startsWith(
+                                                        'Failed'
+                                                    )
+                                                        ? 'danger'
+                                                        : 'success'
+                                                "
+                                                dismissible
+                                                @dismissed="
+                                                    showUnsharedAlertMessage = false
+                                                "
+                                            >
+                                                {{ unsharedAlertMessage }}
+                                            </b-alert>
+                                        </b-col>
+                                    </b-row>
+                                    <b-row
+                                        v-for="directory in sharedDirectories"
+                                        v-bind:key="directory.path"
+                                    >
+                                        <b-col
+                                            ><small>{{
+                                                directory.path
+                                            }}</small></b-col
+                                        ><b-col md="auto" class="mt-1">
+                                            <small
+                                                >Shared with
+                                                {{ directory.guest }}</small
+                                            ></b-col
+                                        ><b-col md="auto">
+                                            <b-button
+                                                class="mb-2"
+                                                size="sm"
+                                                :variant="
+                                                    darkMode
+                                                        ? 'outline-light'
+                                                        : 'outline-dark'
+                                                "
+                                                @click="
+                                                    unshareDirectory(directory)
+                                                "
+                                                ><i
+                                                    class="fas fa-user-lock fa-fw"
+                                                ></i>
+                                                Unshare</b-button
+                                            ></b-col
+                                        ></b-row
+                                    >
+                                    <b-row v-if="sharedDirectories.length === 0"
+                                        ><b-col
+                                            ><small
+                                                >You haven't shared any
+                                                directories with anyone.</small
+                                            ></b-col
+                                        ></b-row
+                                    >
+                                </b-card></b-tab
                             >
                             <b-tab :title-link-class="tabLinkClass(2)">
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(2)">Workflows</b>
+                                    <b :class="tabLinkClass(2)">Flows</b>
                                 </template>
                                 <b-row
                                     v-if="profile.githubProfile === null"
@@ -543,6 +612,7 @@ export default {
             githubProfile: null,
             currentTab: 0,
             directoriesShared: [],
+            sharedDirectories: [],
             directoryPolicies: [],
             directoryPolicyNodes: [],
             data: {},
@@ -551,7 +621,9 @@ export default {
             targets: [],
             targetsLoading: false,
             loadingUser: true,
-            showToggleSingularityCacheCleaningAlert: false
+            showToggleSingularityCacheCleaningAlert: false,
+            showUnsharedAlertMessage: false,
+            unsharedAlertMessage: ''
         };
     },
     computed: mapGetters(['profile', 'loggedIn', 'darkMode']),
@@ -564,8 +636,66 @@ export default {
         );
         await this.loadTargets();
         await this.loadDirectoryPolicies();
+        await this.loadSharedDirectories();
     },
     methods: {
+        async unshareDirectory(directory) {
+            /** Terrain spec
+             *{
+             *  "sharing": [
+             *    {
+             *      "user": "string",
+             *      "paths: [
+             *        {
+             *          "path": "string",
+             *          "permission": "read",
+             *        }
+             *      ]
+             *    }
+             *  ]
+             *}
+             */
+            await axios({
+                method: 'post',
+                url: `/apis/v1/stores/unshare_directory/`,
+                data: {
+                    user: directory.guest,
+                    path: directory.path,
+                    role: directory.role
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(() => {
+                    this.loadSharedDirectories();
+                    this.unsharedAlertMessage = `Unshared directory ${
+                        this.internalLoaded
+                            ? this.internalNode.path
+                            : this.node.path
+                    } with ${this.sharedUsers.length} user(s)`;
+                    this.showUnsharedAlertMessage = true;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.unsharedAlertMessage = `Failed to unshare directory ${
+                        this.internalLoaded
+                            ? this.internalNode.path
+                            : this.node.path
+                    } with ${this.sharedUsers.length} user(s)`;
+                    this.showUnsharedAlertMessage = true;
+                    throw error;
+                });
+        },
+        async loadSharedDirectories() {
+            await axios
+                .get(`/apis/v1/stores/get_shared_directories/`)
+                .then(response => {
+                    this.sharedDirectories = response.data;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
         async loadDirectoryPolicies() {
             await axios
                 .get(`/apis/v1/stores/get_directories_shared/`)

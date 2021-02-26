@@ -42,8 +42,7 @@
                     "
                     ><i class="fas fa-folder fa-fw mr-2"></i>
                     {{ internalLoaded ? internalNode.label : node.label }}
-                    </b-button
-                >
+                </b-button>
             </b-col>
             <b-col class="mt-1" md="auto">
                 <small :variant="darkMode ? 'outline-light' : 'outline-dark'">
@@ -63,10 +62,7 @@
             <b-col md="auto">
                 <b-input-group size="sm">
                     <b-form-file
-                        v-if="
-                            upload &&
-                                !isShared
-                        "
+                        v-if="upload && !isShared"
                         style="min-width: 15rem"
                         :class="darkMode ? 'theme-dark' : 'theme-light'"
                         multiple
@@ -88,10 +84,7 @@
                         "
                     ></b-form-file>
                     <b-button
-                        v-if="
-                            upload &&
-                                !isShared
-                        "
+                        v-if="upload && !isShared"
                         class="ml-1 mr-1"
                         size="sm"
                         :disabled="filesToUpload.length === 0"
@@ -106,9 +99,7 @@
                         ><i class="fas fa-upload fa-fw"></i
                     ></b-button>
                     <b-button
-                        v-if="
-                            !isShared
-                        "
+                        v-if="!isShared"
                         class="ml-1 mr-1"
                         size="sm"
                         title="Create Subdirectory"
@@ -117,9 +108,7 @@
                         ><i class="fas fa-plus fa-fw"></i
                     ></b-button>
                     <b-modal
-                        v-if="
-                            !isShared
-                        "
+                        v-if="!isShared"
                         :title-class="darkMode ? 'text-white' : 'text-dark'"
                         title="Create Directory"
                         :id="
@@ -176,7 +165,7 @@
                         v-if="
                             !internalLoading &&
                                 internalNode.path.split('/').length > 4 &&
-                                isShared
+                                !isShared
                         "
                         title="Share Directory"
                         size="sm"
@@ -186,9 +175,7 @@
                         ><i class="fas fa-share-alt fa-fw"></i
                     ></b-button>
                     <b-modal
-                        v-if="
-                          isShared
-                        "
+                        v-if="!isShared"
                         :title-class="darkMode ? 'text-white' : 'text-dark'"
                         :title="
                             'Share ' +
@@ -364,7 +351,7 @@
                                     ? internalNode.path
                                     : node.path
                                 ).split('/').length > 4 &&
-                                isShared
+                                !isShared
                         "
                         class="ml-1 mr-1"
                         size="sm"
@@ -459,7 +446,7 @@
                                 ? internalNode.path
                                 : node.path
                             ).split('/').length > 4 &&
-                            isShared
+                            !isShared
                     "
                     class="ml-1 mr-1"
                     size="sm"
@@ -528,9 +515,7 @@
                 </b-col>
                 <b-col md="auto">
                     <b-button
-                        v-if="
-                            isShared
-                        "
+                        v-if="!isShared"
                         class="m-1"
                         size="sm"
                         title="Delete File"
@@ -650,7 +635,10 @@ export default {
                 : this.node.path;
             let split = path.split('/');
             let user = split[3];
-            return user !== this.profile.djangoProfile.username && user !== 'shared';
+            return (
+                user !== this.profile.djangoProfile.username &&
+                user !== 'shared'
+            );
         },
         isDir: function() {
             return !('file-size' in this);
@@ -749,6 +737,17 @@ export default {
                             : this.node.path
                     } with ${this.sharedUsers.length} user(s)`;
                     this.showSharedAlert = true;
+
+                    this.$parent.$parent.$parent.$parent.$parent.$emit(
+                        'loadSharedDirectory'
+                    );
+                    this.$parent.$parent.$parent.$parent.$emit(
+                        'loadSharedDirectory'
+                    );
+                    this.$parent.$parent.$parent.$emit('loadSharedDirectory');
+                    this.$parent.$parent.$emit('loadSharedDirectory');
+                    this.$parent.$emit('loadSharedDirectory');
+                    this.$emit('loadSharedDirectory');
                 })
                 .catch(error => {
                     Sentry.captureException(error);
