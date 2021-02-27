@@ -576,79 +576,215 @@
                                             Select a cluster or server to submit
                                             this run to.
                                         </b>
-                                        <b-row
-                                            class="text-right"
-                                            v-for="target in targets"
-                                            v-bind:key="target.name"
+                                        <br />
+                                        <b-tabs
+                                            class="mt-2"
+                                            vertical
+                                            pills
+                                            nav-class="bg-transparent"
+                                            active-nav-item-class="bg-secondary text-dark"
                                         >
-                                            <b-col md="auto"
-                                                ><b-button
-                                                    size="md"
-                                                    class="text-left pt-2"
-                                                    @click="
-                                                        targetSelected(target)
-                                                    "
-                                                    :variant="
-                                                        darkMode
-                                                            ? 'dark'
-                                                            : 'white'
-                                                    "
-                                                    :disabled="
-                                                        targetUnsupported(
-                                                            target
-                                                        ) || target.disabled
-                                                    "
-                                                    >{{ target.name }}</b-button
-                                                ></b-col
+                                            <b-tab
+                                                title="Your deployment targets"
+                                                :title-link-class="
+                                                    darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                                :class="
+                                                    darkMode
+                                                        ? 'theme-dark m-0 p-3'
+                                                        : 'theme-light m-0 p-3'
+                                                "
                                             >
-                                            <b-col align-self="end">
-                                                <small
-                                                    >{{ target.max_cores }}
-                                                    cores,
-                                                    {{ target.max_processes }}
-                                                    processes, </small
-                                                ><span
-                                                    v-if="
-                                                        parseInt(
-                                                            target.max_mem
-                                                        ) >=
-                                                            parseInt(
-                                                                flow.config
-                                                                    .resources
-                                                                    .mem
-                                                            ) &&
-                                                            parseInt(
-                                                                target.max_mem
-                                                            ) > 0
-                                                    "
-                                                    >{{ target.max_mem }} GB
-                                                    memory</span
+                                                <b-row
+                                                    class="text-right"
+                                                    v-for="tgt in targets"
+                                                    v-bind:key="tgt.name"
                                                 >
-                                                <span
-                                                    v-else-if="
-                                                        parseInt(
-                                                            target.max_mem
-                                                        ) > 0
-                                                    "
-                                                    class="text-danger"
-                                                    >{{ target.max_mem }} GB
-                                                    memory</span
-                                                >
-                                                <span
-                                                    v-else-if="
-                                                        parseInt(
-                                                            target.max_mem
-                                                        ) === -1
-                                                    "
-                                                    >virtual memory</span
-                                                ><span v-if="target.gpu">
-                                                    , GPU
-                                                </span>
-                                                <span v-else
-                                                    >, No GPU
-                                                </span></b-col
+                                                    <b-col md="auto"
+                                                        ><b-button
+                                                            size="md"
+                                                            class="text-left pt-2"
+                                                            @click="
+                                                                targetSelected(
+                                                                    tgt
+                                                                )
+                                                            "
+                                                            :variant="
+                                                                darkMode
+                                                                    ? 'dark'
+                                                                    : 'white'
+                                                            "
+                                                            :disabled="
+                                                                targetUnsupported(
+                                                                    tgt
+                                                                ) ||
+                                                                    tgt.disabled
+                                                            "
+                                                            >{{
+                                                                tgt.name
+                                                            }}</b-button
+                                                        ></b-col
+                                                    >
+                                                    <b-col align-self="end">
+                                                        <small
+                                                            >{{ tgt.max_cores }}
+                                                            cores,
+                                                            {{
+                                                                tgt.max_processes
+                                                            }}
+                                                            processes, </small
+                                                        ><span
+                                                            v-if="
+                                                                parseInt(
+                                                                    tgt.max_mem
+                                                                ) >=
+                                                                    parseInt(
+                                                                        flow
+                                                                            .config
+                                                                            .resources
+                                                                            .mem
+                                                                    ) &&
+                                                                    parseInt(
+                                                                        tgt.max_mem
+                                                                    ) > 0
+                                                            "
+                                                            >{{
+                                                                tgt.max_mem
+                                                            }}
+                                                            GB memory</span
+                                                        >
+                                                        <span
+                                                            v-else-if="
+                                                                parseInt(
+                                                                    tgt.max_mem
+                                                                ) > 0
+                                                            "
+                                                            class="text-danger"
+                                                            >{{
+                                                                tgt.max_mem
+                                                            }}
+                                                            GB memory</span
+                                                        >
+                                                        <span
+                                                            v-else-if="
+                                                                parseInt(
+                                                                    tgt.max_mem
+                                                                ) === -1
+                                                            "
+                                                            >virtual
+                                                            memory</span
+                                                        ><span v-if="tgt.gpu">
+                                                            , GPU
+                                                        </span>
+                                                        <span v-else
+                                                            >, No GPU
+                                                        </span></b-col
+                                                    >
+                                                </b-row>
+                                            </b-tab>
+                                            <b-tab
+                                                title="Public deployment targets"
+                                                :title-link-class="
+                                                    darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                                :class="
+                                                    darkMode
+                                                        ? 'theme-dark m-0 p-3'
+                                                        : 'theme-light m-0 p-3'
+                                                "
                                             >
-                                        </b-row>
+                                                <b-row
+                                                    class="text-right"
+                                                    v-for="tgt in publicTargets"
+                                                    v-bind:key="tgt.name"
+                                                >
+                                                    <b-col md="auto"
+                                                        ><b-button
+                                                            size="md"
+                                                            class="text-left pt-2"
+                                                            @click="
+                                                                targetSelected(
+                                                                    tgt
+                                                                )
+                                                            "
+                                                            :variant="
+                                                                darkMode
+                                                                    ? 'dark'
+                                                                    : 'white'
+                                                            "
+                                                            :disabled="
+                                                                targetUnsupported(
+                                                                    tgt
+                                                                ) ||
+                                                                    tgt.disabled
+                                                            "
+                                                            >{{
+                                                                tgt.name
+                                                            }}</b-button
+                                                        ></b-col
+                                                    >
+                                                    <b-col align-self="end">
+                                                        <small
+                                                            >{{ tgt.max_cores }}
+                                                            cores,
+                                                            {{
+                                                                tgt.max_processes
+                                                            }}
+                                                            processes, </small
+                                                        ><span
+                                                            v-if="
+                                                                parseInt(
+                                                                    tgt.max_mem
+                                                                ) >=
+                                                                    parseInt(
+                                                                        flow
+                                                                            .config
+                                                                            .resources
+                                                                            .mem
+                                                                    ) &&
+                                                                    parseInt(
+                                                                        tgt.max_mem
+                                                                    ) > 0
+                                                            "
+                                                            >{{
+                                                                tgt.max_mem
+                                                            }}
+                                                            GB memory</span
+                                                        >
+                                                        <span
+                                                            v-else-if="
+                                                                parseInt(
+                                                                    tgt.max_mem
+                                                                ) > 0
+                                                            "
+                                                            class="text-danger"
+                                                            >{{
+                                                                tgt.max_mem
+                                                            }}
+                                                            GB memory</span
+                                                        >
+                                                        <span
+                                                            v-else-if="
+                                                                parseInt(
+                                                                    tgt.max_mem
+                                                                ) === -1
+                                                            "
+                                                            >virtual
+                                                            memory</span
+                                                        ><span v-if="tgt.gpu">
+                                                            , GPU
+                                                        </span>
+                                                        <span v-else
+                                                            >, No GPU
+                                                        </span></b-col
+                                                    >
+                                                </b-row>
+                                            </b-tab>
+                                        </b-tabs>
                                         <b-row
                                             align-h="center"
                                             v-if="targetsLoading"
@@ -702,7 +838,7 @@
                     </b-row>
                 </b-col>
                 <b-col md="auto">
-                  <!--<b-row
+                    <!--<b-row
                         ><b-col align-self="end"
                             ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
                                 Delayed Runs
@@ -808,9 +944,7 @@
                                         >
                                     </b-row></b-col
                                 >
-                                <b-col
-                                    md="auto"
-                                    align-self="start"
+                                <b-col md="auto" align-self="start"
                                     ><!--<b-form-checkbox
                                         class="text-right"
                                         v-model="task.enabled"
@@ -937,6 +1071,12 @@
                     </b-list-group>
                 </b-col>
             </b-row>
+            <b-modal
+                id="authenticate"
+                :title="'Authenticate with ' + this.target.name"
+            >
+                <p className="my-4">Hello from modal!</p>
+            </b-modal>
         </b-container>
     </div>
 </template>
@@ -974,6 +1114,7 @@ export default {
     },
     data: function() {
         return {
+            currentDeploymentTargetTab: 0,
             showStatusAlert: false,
             statusAlertMessage: '',
             submitType: 'Now',
@@ -1058,6 +1199,7 @@ export default {
                 name: ''
             },
             targets: [],
+            publicTargets: [],
             targetsLoading: false,
             targetFields: [
                 {
@@ -1100,6 +1242,7 @@ export default {
     mounted: function() {
         this.loadFlow();
         this.loadTargets();
+        this.loadPublicTargets();
         this.loadRuns();
         this.loadDelayedRuns();
         this.loadRepeatingRuns();
@@ -1147,7 +1290,11 @@ export default {
                 .then(response => {
                     this.statusAlertMessage = `${
                         response.data.enabled ? 'Enabled' : 'Disabled'
-                    } periodic run (every ${response.data.interval.every} ${response.data.interval.period.toLowerCase()} on ${response.data.target.name})`;
+                    } periodic run (every ${
+                        response.data.interval.every
+                    } ${response.data.interval.period.toLowerCase()} on ${
+                        response.data.target.name
+                    })`;
                     this.showStatusAlert = true;
                 })
                 .catch(error => {
@@ -1239,7 +1386,9 @@ export default {
                     }
                 )
                 .then(response => {
-                    this.delayedRuns = response.data.filter(t => t.last_run === null);
+                    this.delayedRuns = response.data.filter(
+                        t => t.last_run === null
+                    );
                 })
                 .catch(error => {
                     if (error.status_code === 401) {
@@ -1405,13 +1554,52 @@ export default {
             return axios
                 .get(`/apis/v1/targets/get_by_username/`)
                 .then(response => {
-                    this.targets = response.data;
+                    this.targets = response.data.targets;
                     this.targetsLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     throw error;
                 });
+        },
+        loadPublicTargets: function() {
+            this.publicTargetsLoading = true;
+            return axios
+                .get(`/apis/v1/targets/get_all/`)
+                .then(response => {
+                    this.publicTargets = response.data.targets;
+                    this.publicTargetsLoading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
+        showAuthenticateModal() {
+            const h = this.$createElement;
+            const titleVNode = h('div', {
+                domProps: { innerHTML: `Authenticate with ${this.target.name}` }
+            });
+            const messageVNode = h('div', { class: [''] }, [
+                h('b-form-input', {
+                    class: ['text-center'],
+                    props: {
+                        'v-model': 'authenticationUsername'
+                    }
+                }),
+                h('b-form-input', {
+                    class: ['text-center'],
+                    props: {
+                        'v-model': 'authenticationPassword'
+                    }
+                })
+            ]);
+            this.$bvModal.msgBoxOk([messageVNode], {
+                title: [titleVNode],
+                buttonSize: 'sm',
+                centered: true,
+                size: 'sm'
+            });
         },
         onStart() {
             if (!this.flow.config.resources && this.target.name !== 'Sandbox') {

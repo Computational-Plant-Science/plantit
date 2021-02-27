@@ -44,6 +44,8 @@ def map_target(target: Target, role: TargetRole = None, policies: List[TargetPol
             'user': policy.user.username,
             'role': str(policy.role.value)
         } for policy in policies]
+    else:
+        mapped['policies'] = []
 
     if access_requests is not None:
         mapped['access_requests'] = [{
@@ -51,6 +53,8 @@ def map_target(target: Target, role: TargetRole = None, policies: List[TargetPol
             'created': request.created.isoformat(),
             'granted': request.granted
         } for request in access_requests]
+    else:
+        mapped['access_requests'] = []
 
     return mapped
 
