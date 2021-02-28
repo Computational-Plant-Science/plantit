@@ -189,7 +189,14 @@ def submit_run(id: str, flow):
     logger.info(msg)
 
     try:
-        ssh_client = SSH(run.target.hostname, run.target.port, run.target.username)
+        if 'auth' in flow:
+            msg = f"Authenticating with username {flow['auth']['username']}"
+            update_status(run, msg)
+            logger.info(msg)
+            ssh_client = SSH(run.target.hostname, run.target.port, flow['auth']['username'], flow['auth']['password'])
+        else:
+            ssh_client = SSH(run.target.hostname, run.target.port, run.target.username)
+
         with ssh_client:
             msg = f"Creating working directory {join(run.target.workdir, run.guid)} and uploading files"
             update_status(run, msg)
@@ -225,7 +232,6 @@ def submit_run(id: str, flow):
         msg = f"Failed to submit run {run.guid}: {traceback.format_exc()}."
         update_status(run, msg)
         logger.error(msg)
-        raise
 
 
 @app.task()

@@ -159,7 +159,7 @@
                         <b-col
                             ><b-button
                                 :disabled="!flowReady"
-                                @click="onStart"
+                                @click="onTryStart"
                                 variant="success"
                                 block
                             >
@@ -1073,9 +1073,30 @@
             </b-row>
             <b-modal
                 id="authenticate"
+                :title-class="darkMode ? 'text-white' : 'text-dark'"
+                centered
+                close
+                :header-text-variant="darkMode ? 'white' : 'dark'"
+                :header-bg-variant="darkMode ? 'dark' : 'white'"
+                :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                :body-bg-variant="darkMode ? 'dark' : 'white'"
+                :header-border-variant="darkMode ? 'dark' : 'white'"
+                :footer-border-variant="darkMode ? 'dark' : 'white'"
                 :title="'Authenticate with ' + this.target.name"
+                @ok="onStart"
             >
-                <p className="my-4">Hello from modal!</p>
+                <b-form-input
+                    v-model="authenticationUsername"
+                    type="text"
+                    placeholder="Your username"
+                    required
+                ></b-form-input>
+                <b-form-input
+                    v-model="authenticationPassword"
+                    type="password"
+                    placeholder="Your password"
+                    required
+                ></b-form-input>
             </b-modal>
         </b-container>
     </div>
@@ -1114,6 +1135,8 @@ export default {
     },
     data: function() {
         return {
+            authenticationUsername: '',
+            authenticationPassword: '',
             currentDeploymentTargetTab: 0,
             showStatusAlert: false,
             statusAlertMessage: '',
@@ -1575,31 +1598,53 @@ export default {
                     throw error;
                 });
         },
+        onTryStart() {
+            if (this.mustAuthenticate) this.showAuthenticateModal();
+            else this.onStart();
+        },
         showAuthenticateModal() {
-            const h = this.$createElement;
-            const titleVNode = h('div', {
-                domProps: { innerHTML: `Authenticate with ${this.target.name}` }
-            });
-            const messageVNode = h('div', { class: [''] }, [
-                h('b-form-input', {
-                    class: ['text-center'],
-                    props: {
-                        'v-model': 'authenticationUsername'
-                    }
-                }),
-                h('b-form-input', {
-                    class: ['text-center'],
-                    props: {
-                        'v-model': 'authenticationPassword'
-                    }
-                })
-            ]);
-            this.$bvModal.msgBoxOk([messageVNode], {
-                title: [titleVNode],
-                buttonSize: 'sm',
-                centered: true,
-                size: 'sm'
-            });
+            this.$bvModal.show('authenticate');
+            // const h = this.$createElement;
+            // const titleVNode = h('div', {
+            //     class: [this.darkMode ? 'text-white' : 'text-dark'],
+            //     domProps: { innerHTML: `Authenticate with ${this.target.name}` }
+            // });
+            // const messageVNode = h('div', { class: [''] }, [
+            //     h('b-form-input', {
+            //         class: ['text-left'],
+            //         props: {
+            //             type: 'text',
+            //             placeholder: 'Your username',
+            //             'v-model': this.authenticationUsername
+            //         },
+            //         me
+            //     }),
+            //     h('b-form-input', {
+            //         class: ['text-left'],
+            //         props: {
+            //             type: 'password',
+            //             placeholder: 'Your password',
+            //             'v-model': this.authenticationPassword
+            //         }
+            //     })
+            // ]);
+            // this.$bvModal
+            //     .msgBoxOk([messageVNode], {
+            //         title: [titleVNode],
+            //         buttonSize: 'sm',
+            //         centered: true,
+            //         close: true,
+            //         size: 'sm',
+            //         headerTextVariant: this.darkMode ? 'white' : 'dark',
+            //         headerBgVariant: this.darkMode ? 'dark' : 'white',
+            //         footerBgVariant: this.darkMode ? 'dark' : 'white',
+            //         bodyBgVariant: this.darkMode ? 'dark' : 'white',
+            //         headerBorderVariant: this.darkMode ? 'dark' : 'white',
+            //         footerBorderVariant: this.darkMode ? 'dark' : 'white'
+            //     })
+            //     .then(() => {
+            //         this.onStart();
+            //     });
         },
         onStart() {
             if (!this.flow.config.resources && this.target.name !== 'Sandbox') {
@@ -1644,16 +1689,23 @@ export default {
                 config: config
             });
 
+            let data = {
+                repo: this.flow.repo,
+                config: config,
+                type: this.submitType
+            };
+            if (this.mustAuthenticate)
+                data['auth'] = {
+                    username: this.authenticationUsername,
+                    password: this.authenticationPassword
+                };
+
             if (this.submitType === 'Now')
                 // submit run immediately
                 axios({
                     method: 'post',
                     url: `/apis/v1/runs/`,
-                    data: {
-                        repo: this.flow.repo,
-                        config: config,
-                        type: this.submitType
-                    },
+                    data: data,
                     headers: { 'Content-Type': 'application/json' }
                 })
                     .then(response => {
@@ -1728,6 +1780,14 @@ export default {
     },
     computed: {
         ...mapGetters(['profile', 'flowConfigs', 'loggedIn', 'darkMode']),
+        mustAuthenticate() {
+            return !this.target.policies.some(
+                p =>
+                    p.user === this.profile.djangoProfile.username &&
+                    (p.role.toLowerCase() == 'use' ||
+                        p.role.toLowerCase() === 'own')
+            );
+        },
         scheduledTime: function() {
             return `${this.submitType === 'After' ? 'in' : 'every'} ${
                 this.delayValue

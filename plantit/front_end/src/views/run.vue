@@ -190,7 +190,7 @@
                                     </small></b-col
                                 >
                                 <b-col
-                                    v-if="run.is_complete"
+                                    v-if="run.is_complete && run.can_restart"
                                     md="auto"
                                     class="m-0 mb-2"
                                     align-self="start"

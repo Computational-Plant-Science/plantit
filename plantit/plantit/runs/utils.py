@@ -22,7 +22,7 @@ from requests.auth import HTTPBasicAuth
 from plantit import settings
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
-from plantit.targets.models import Target
+from plantit.targets.models import Target, TargetPolicy, TargetRole
 from plantit.targets.utils import map_target
 from plantit.utils import get_repo_config, get_repo_config_internal
 
@@ -253,7 +253,14 @@ def map_run(run: Run, get_container_logs: bool = False):
     else:
         container_logs = []
 
+    try:
+        TargetPolicy.objects.get(user=run.user, target=run.target, role__in=[TargetRole.own, TargetRole.run])
+        can_restart = True
+    except:
+        can_restart = False
+
     return {
+        'can_restart': can_restart,
         'id': run.guid,
         'job_id': run.job_id,
         'job_status': run.job_status,
