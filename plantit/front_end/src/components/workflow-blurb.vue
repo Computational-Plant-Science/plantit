@@ -7,18 +7,16 @@
                         :class="darkMode ? 'text-white' : 'text-dark'"
                         variant="outline-dark"
                         v-b-tooltip.hover
-                        @click="flowSelected"
+                        @click="workflowSelected"
                     >
-                        {{ flow.config.name }}
+                        {{ workflow.config.name }}
                     </b-link>
                 </h2>
-                <b-badge
-                    v-if="!flow.config.public"
-                    variant="warning"
+                <b-badge v-if="!workflow.config.public" variant="warning"
                     >Private</b-badge
                 >
-              <b-badge
-                    v-for="topic in flow.repo.topics"
+                <b-badge
+                    v-for="topic in workflow.repo.topics"
                     v-bind:key="topic"
                     class="mr-1 mb-0"
                     variant="secondary"
@@ -31,18 +29,18 @@
                         @click="
                             openRepo(
                                 'https://github.com/' +
-                                    flow.repo.owner.login +
+                                    workflow.repo.owner.login +
                                     '/' +
-                                    flow.repo.name
+                                    workflow.repo.name
                             )
                         "
                     >
                         <i class="fab fa-github fa-fw"></i>
-                        {{ flow.repo.owner.login }}/{{ flow.repo.name }}
+                        {{ workflow.repo.owner.login }}/{{ workflow.repo.name }}
                     </b-link>
                 </small>
                 <br />
-                <small>{{ flow.repo.description }}</small>
+                <small>{{ workflow.repo.description }}</small>
                 <br />
             </b-col>
             <b-col cols="1"></b-col>
@@ -53,7 +51,7 @@
             style="max-width: 6rem;opacity: 0.8;position: absolute;right: -25px;top: -15px;z-index:1;"
             right
             :src="
-                `https://raw.githubusercontent.com/${flow.repo.owner.login}/${flow.repo.name}/master/${flow.config.logo}`
+                `https://raw.githubusercontent.com/${workflow.repo.owner.login}/${workflow.repo.name}/master/${workflow.config.logo}`
             "
         ></b-img>
     </div>
@@ -64,24 +62,24 @@ import router from '@/router';
 import { mapGetters } from 'vuex';
 
 export default {
-    name: 'flow-blurb',
+    name: 'workflow-blurb',
     props: {
         showPublic: {
             type: Boolean,
             required: true
         },
-        flow: {
+        workflow: {
             type: Object,
             required: true
         }
     },
     methods: {
-        flowSelected() {
+        workflowSelected() {
             router.push({
-                name: 'flow',
+                name: 'workflow',
                 params: {
-                    username: this.flow['repo']['owner']['login'],
-                    name: this.flow['repo']['name']
+                    username: this.workflow['repo']['owner']['login'],
+                    name: this.workflow['repo']['name']
                 }
             });
         },
@@ -89,13 +87,7 @@ export default {
             window.open(url);
         }
     },
-    computed: mapGetters([
-        'profile.djangoProfile',
-        'profile.githubProfile',
-        'profile.cyverseProfile',
-        'loggedIn',
-        'darkMode'
-    ])
+    computed: mapGetters(['profile', 'loggedIn', 'darkMode'])
 };
 </script>
 <style scoped lang="sass">

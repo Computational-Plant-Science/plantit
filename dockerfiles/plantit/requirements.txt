@@ -32,3 +32,4 @@ Twisted[tls,http2]
 sphinx
 recommonmark
 httpx==0.16.1
+tenacity

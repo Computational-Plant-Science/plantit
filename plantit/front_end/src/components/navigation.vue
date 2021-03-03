@@ -181,7 +181,7 @@
                                 "
                                 v-else
                             >
-                                You haven't run any flows yet.
+                                You haven't run any workflows yet.
                             </p>
                         </b-col>
                     </b-row>
@@ -255,9 +255,7 @@
                 </transition>
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
-                        v-if="
-                            loggedIn ? profile.githubProfile === null : false
-                        "
+                        v-if="loggedIn ? profile.githubProfile === null : false"
                         title="Log in to GitHub"
                         href="/apis/v1/idp/github_request_identity/"
                         class="ml-0 mr-0"
@@ -275,7 +273,7 @@
                         right
                         v-if="loggedIn"
                         :title="profile.djangoProfile.username"
-                        class="m-0 p-0 mt-1 dropdown-custom"
+                        class="p-2 m-3 dropdown-custom"
                         :menu-class="darkMode ? 'theme-dark' : 'theme-light'"
                         style="font-size: 12pt"
                     >
@@ -306,26 +304,39 @@
                             </b-button>
                         </template>
                         <b-dropdown-item
-                            v-if="loggedIn"
-                            class="m-0 p-0"
-                            disabled
-                        >
-                            <small
-                                :class="darkMode ? 'text-light' : 'text-dark'"
-                                >Navigation</small
-                            >
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                            title="Home"
-                            to="/"
+                            title="Workflows"
+                            to="/workflows"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
                                 darkMode ? 'text-secondary' : 'text-dark'
                             "
                         >
-                            <i class="fas fa-home fa-1x fa-fw"></i>
-                            Home
+                            <i class="fas fa-stream fa-1x fa-fw"></i>
+                            Workflows
                         </b-dropdown-item>
+                        <b-dropdown-item
+                            title="Servers"
+                            to="/servers"
+                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :link-class="
+                                darkMode ? 'text-secondary' : 'text-dark'
+                            "
+                        >
+                            <i class="fas fa-server fa-1x fa-fw"></i>
+                            Servers
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            title="Users"
+                            to="/users"
+                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :link-class="
+                                darkMode ? 'text-secondary' : 'text-dark'
+                            "
+                        >
+                            <i class="fas fa-users fa-1x fa-fw"></i>
+                            Users
+                        </b-dropdown-item>
+                        <hr />
                         <b-dropdown-item
                             title="Docs"
                             href="https://plantit.readthedocs.io/en/latest"
@@ -338,48 +349,28 @@
                             Docs
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="Users"
-                            to="/users"
+                            href="https://github.com/Computational-Plant-Science/plantit"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
                                 darkMode ? 'text-secondary' : 'text-dark'
                             "
+                            title="GitHub"
                         >
-                            <i class="fas fa-user fa-1x fa-fw"></i>
-                            Users
+                            <i class="fab fa-github fa-1x fa-fw"></i>
+                            Github
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="Flows"
-                            to="/flows"
+                            href="#"
                             :class="darkMode ? 'text-light' : 'text-dark'"
                             :link-class="
                                 darkMode ? 'text-secondary' : 'text-dark'
                             "
+                            title="Slack"
                         >
-                            <i class="fas fa-stream fa-1x fa-fw"></i>
-                            Flows
+                            <i class="fab fa-slack fa-1x fa-fw"></i>
+                            Slack
                         </b-dropdown-item>
-                      <b-dropdown-item
-                            title="Targets"
-                            to="/targets"
-                            :class="darkMode ? 'text-light' : 'text-dark'"
-                            :link-class="
-                                darkMode ? 'text-secondary' : 'text-dark'
-                            "
-                        >
-                            <i class="fas fa-stream fa-1x fa-fw"></i>
-                            Targets
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                            v-if="loggedIn"
-                            class="m-0 p-0"
-                            disabled
-                        >
-                            <small
-                                :class="darkMode ? 'text-light' : 'text-dark'"
-                                >User</small
-                            >
-                        </b-dropdown-item>
+                        <hr />
                         <b-dropdown-item
                             title="Profile"
                             :class="darkMode ? 'text-light' : 'text-dark'"
@@ -387,13 +378,11 @@
                                 darkMode ? 'text-secondary' : 'text-dark'
                             "
                             :href="
-                                '/user/' +
-                                    profile.djangoProfile.username +
-                                    '/'
+                                '/user/' + profile.djangoProfile.username + '/'
                             "
                         >
                             <i class="fas fa-user fa-1x fa-fw"></i>
-                            Profile
+                            User Profile
                         </b-dropdown-item>
                         <b-dropdown-item
                             :title="`${darkMode ? 'Light Mode' : 'Dark Mode'}`"
@@ -484,11 +473,7 @@ export default {
             ]
         };
     },
-    computed: mapGetters([
-        'darkMode',
-        'profile',
-        'loggedIn'
-    ]),
+    computed: mapGetters(['darkMode', 'profile', 'loggedIn']),
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadCurrentUser');

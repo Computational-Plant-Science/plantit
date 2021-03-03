@@ -36,7 +36,7 @@
                                 variant="secondary"
                             ></b-spinner>
                         </b-row>
-                        <div v-else-if="flow.config">
+                        <div v-else-if="workflow.config">
                             <b-row class="m-0 p-0">
                                 <b-col v-if="showCanceledAlert" class="m-0 p-0">
                                     <b-alert
@@ -201,7 +201,7 @@
                                         "
                                         size="sm"
                                         v-b-tooltip.hover
-                                        :title="'Restart ' + flow.config.name"
+                                        :title="'Restart ' + workflow.config.name"
                                         @click="onRestart"
                                     >
                                         <i class="fas fa-level-up-alt"></i>
@@ -266,7 +266,7 @@
                                         >
                                             <WorkflowBlurb
                                                 :showPublic="false"
-                                                :flow="flow"
+                                                :workflow="workflow"
                                             ></WorkflowBlurb>
                                         </b-card-body>
                                     </b-card>
@@ -429,8 +429,8 @@
                                                     <div class="mt-0 pt-0">
                                                         <b-row
                                                             v-if="
-                                                                flow.config &&
-                                                                    flow.config
+                                                                workflow.config &&
+                                                                    workflow.config
                                                                         .output
                                                             "
                                                             align-h="center"
@@ -444,8 +444,8 @@
                                                         </b-row>
                                                         <b-row
                                                             v-if="
-                                                                flow.config &&
-                                                                    flow.config
+                                                                workflow.config &&
+                                                                    workflow.config
                                                                         .output
                                                             "
                                                             align-h="center"
@@ -461,77 +461,77 @@
                                                                                 : 'theme-light'
                                                                         "
                                                                         >{{
-                                                                            flow
-                                                                                .config
-                                                                                .output
-                                                                                .path
-                                                                                ? flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .path +
-                                                                                  '/'
-                                                                                : ''
-                                                                        }}{{
-                                                                            flow
-                                                                                .config
-                                                                                .output
-                                                                                .include
-                                                                                ? (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .exclude
-                                                                                      ? '+ '
-                                                                                      : '') +
-                                                                                  (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .include
-                                                                                      .patterns
-                                                                                      ? '*.' +
-                                                                                        flow.config.output.include.patterns.join(
-                                                                                            ', *.'
-                                                                                        )
-                                                                                      : []) +
-                                                                                  (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .include
-                                                                                      .names
-                                                                                      ? ', ' +
-                                                                                        flow.config.output.include.names.join(
-                                                                                            ', '
-                                                                                        )
-                                                                                      : [])
-                                                                                : ''
-                                                                        }}{{
-                                                                            flow
-                                                                                .config
-                                                                                .output
-                                                                                .exclude
-                                                                                ? ' - ' +
-                                                                                  (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .exclude
-                                                                                      .patterns
-                                                                                      ? '*.' +
-                                                                                        flow.config.output.exclude.patterns.join(
-                                                                                            ', *.'
-                                                                                        )
-                                                                                      : []) +
-                                                                                  (flow
-                                                                                      .config
-                                                                                      .output
-                                                                                      .exclude
-                                                                                      .names
-                                                                                      ? ', ' +
-                                                                                        flow.config.output.exclude.names.join(
-                                                                                            ', '
-                                                                                        )
-                                                                                      : [])
-                                                                                : ''
-                                                                        }}
-                                                                    </code></b
+                                                                    workflow
+                                                                        .config
+                                                                        .output
+                                                                        .path
+                                                                        ? workflow
+                                                                            .config
+                                                                            .output
+                                                                            .path +
+                                                                        '/'
+                                                                        : ''
+                                                                  }}{{
+                                                                    workflow
+                                                                        .config
+                                                                        .output
+                                                                        .include
+                                                                        ? (workflow
+                                                                            .config
+                                                                            .output
+                                                                            .exclude
+                                                                        ? '+ '
+                                                                        : '') +
+                                                                        (workflow
+                                                                            .config
+                                                                            .output
+                                                                            .include
+                                                                            .patterns
+                                                                            ? '*.' +
+                                                                            workflow.config.output.include.patterns.join(
+                                                                                ', *.'
+                                                                            )
+                                                                            : []) +
+                                                                        (workflow
+                                                                            .config
+                                                                            .output
+                                                                            .include
+                                                                            .names
+                                                                            ? ', ' +
+                                                                            workflow.config.output.include.names.join(
+                                                                                ', '
+                                                                            )
+                                                                            : [])
+                                                                        : ''
+                                                                  }}{{
+                                                                    workflow
+                                                                        .config
+                                                                        .output
+                                                                        .exclude
+                                                                        ? ' - ' +
+                                                                        (workflow
+                                                                            .config
+                                                                            .output
+                                                                            .exclude
+                                                                            .patterns
+                                                                            ? '*.' +
+                                                                            workflow.config.output.exclude.patterns.join(
+                                                                                ', *.'
+                                                                            )
+                                                                            : []) +
+                                                                        (workflow
+                                                                            .config
+                                                                            .output
+                                                                            .exclude
+                                                                            .names
+                                                                            ? ', ' +
+                                                                            workflow.config.output.exclude.names.join(
+                                                                                ', '
+                                                                            )
+                                                                            : [])
+                                                                        : ''
+                                                                  }}
+                                                                </code></b
                                                                 >
                                                             </b-col>
                                                             <br />
@@ -1087,7 +1087,7 @@
     </div>
 </template>
 <script>
-import WorkflowBlurb from '@/components/flow-blurb.vue';
+import WorkflowBlurb from '@/components/workflow-blurb.vue';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import axios from 'axios';
@@ -1109,8 +1109,8 @@ export default {
             REVOKED: 'REVOKED',
             // user data
             userData: null,
-            // flow
-            flow: null,
+            // workflow
+            workflow: null,
             // run
             loadingRun: true,
             run: null,
@@ -1164,14 +1164,14 @@ export default {
         },
         onRestart() {
             // retrieve config
-            let config = this.flowConfigs[this.flowKey];
+            let config = this.workflowConfigs[this.workflowKey];
 
             // resubmit run
             axios({
                 method: 'post',
                 url: `/apis/v1/runs/`,
                 data: {
-                    repo: this.flow.repo,
+                    repo: this.workflow.repo,
                     config: config,
                     type: 'Now'
                 },
@@ -1302,9 +1302,9 @@ export default {
                     }
                     if (this.run.updated === null) return;
                     this.reloadOutputFiles();
-                    this.loadFlow(
-                        response.data.flow_owner,
-                        response.data.flow_name
+                    this.loadWorkflow(
+                        response.data.workflow_owner,
+                        response.data.workflow_name
                     );
                     axios
                         .get(
@@ -1332,16 +1332,16 @@ export default {
                     return error;
                 });
         },
-        loadFlow(owner, name) {
+        loadWorkflow(owner, name) {
             this.loadingRun = true;
             axios
-                .get(`/apis/v1/flows/${owner}/${name}/`, {
+                .get(`/apis/v1/workflows/${owner}/${name}/`, {
                     headers: {
                         Authorization: 'Bearer ' + this.githubToken
                     }
                 })
                 .then(response => {
-                    this.flow = response.data;
+                    this.workflow = response.data;
                     this.loadingRun = false;
                 })
                 .catch(error => {
@@ -1476,8 +1476,8 @@ export default {
         await this.reloadRun();
     },
     computed: {
-        flowKey() {
-            return `${this.flow.repo.owner.login}/${this.flow.repo.name}`;
+        workflowKey() {
+            return `${this.workflow.repo.owner.login}/${this.workflow.repo.name}`;
         },
         submissionLogFileName() {
             return `${this.$router.currentRoute.params.id}.plantit.log`;
@@ -1487,7 +1487,7 @@ export default {
                 this.$router.currentRoute.params.id
             }.${this.run.target.toLowerCase()}.log`;
         },
-        ...mapGetters(['profile', 'loggedIn', 'flowConfigs', 'darkMode'])
+        ...mapGetters(['profile', 'loggedIn', 'workflowConfigs', 'darkMode'])
     }
 };
 </script>

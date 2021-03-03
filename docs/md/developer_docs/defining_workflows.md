@@ -2,28 +2,28 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Defining Flows](#defining-flows)
+- [Defining Workflows](#defining-workflows)
   - [The `plantit.yaml` file](#the-plantityaml-file)
     - [Parameters](#parameters)
-    - [Flow input/output](#flow-inputoutput)
-      - [Flow input](#flow-input)
+    - [Workflow input/output](#workflow-inputoutput)
+      - [Workflow input](#workflow-input)
         - [Input types (`file`, `files`, and `directory`)](#input-types-file-files-and-directory)
         - [Input filetypes](#input-filetypes)
-      - [Flow output](#flow-output)
+      - [Workflow output](#workflow-output)
       - [A super simple example](#a-super-simple-example)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Defining Flows
+# Defining Workflows
 
 ## The `plantit.yaml` file
 
-To host code (that is, a **Flow**) on PlantIT, just add a `plantit.yaml` file to your GitHub repository. It should look something like this:
+To host code (that is, a **Workflow**) on PlantIT, just add a `plantit.yaml` file to your GitHub repository. It should look something like this:
 
 ```yaml
 name: Hello Groot
 author: Groot
-public: True                  # should this flow be visible to other users of PlantIT?
+public: True                  # should this workflow be visible to other users of PlantIT?
 clone: False                  # should this workflow's repository be cloned to the deployment target before running?
 image: docker://alpine        # the Docker or Singularity image your workflow's container(s) will be built from
 commands: echo "I am Groot!"  # the commands to run inside your container(s)
@@ -37,13 +37,13 @@ Note that no resource requirements are specified. PlantIT supports 3 deployment 
  
 In the **Sandbox** your code will run in a very resource-constrained environment. Please keep your runs small (<1GB memory and disk space), and be aware that they will fail if the environment cannot service them.
 
-To deploy your **Flow** on one of the clusters, add a `resources` section to your `plantit.yaml` file. For example, to request 1 processor on 1 node and 1GB of memory for 1 hour:
+To deploy your **Workflow** on one of the clusters, add a `resources` section to your `plantit.yaml` file. For example, to request 1 processor on 1 node and 1GB of memory for 1 hour:
 
 ```yaml
 resources:
   time: "01:00:00"
   mem: "1GB"
-  tasks: 1
+  processes: 1
   cores: 1
 ```
 
@@ -53,7 +53,7 @@ Note also that your runs will fail if they do not complete within the requested 
 
 ### Parameters
 
-To parametrize your **Flow**, add a `params` section. For example, to allow the user to configure the message printed by the trivial workflow above:
+To parametrize your **Workflow**, add a `params` section. For example, to allow the user to configure the message printed by the trivial workflow above:
 
 ```yaml
 name: Hello Who?
@@ -68,19 +68,19 @@ params:
 
 This will cause the value of `message`, specified by the user in the browser, to be substituted into the `command` at runtime.
 
-### Flow input/output
+### Workflow input/output
 
-PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) onto the file system in your deployment environment, then push output files back to the Data Store after your code runs. To configure inputs and outputs for your **Flow**, add `from` and `to` attributes to your configuration.
+PlantIT can automatically copy input files from the [CyVerse Data Store](https://www.cyverse.org/data-store) onto the file system in your deployment environment, then push output files back to the Data Store after your code runs. To configure inputs and outputs for your **Workflow**, add `from` and `to` attributes to your configuration.
 
-#### Flow input
+#### Workflow input
 
-If your flow requires inputs, add an `input` section to your configuration file, containing at minimum a `path` attribute (pointing either to a directory- or file-path in the CyVerse Data Store or Data Commons, or left blank) and a `kind` attribute indicating whether this flow operates on a single `file`, multiple `files`, or an entire `directory`. For example:
+If your workflow requires inputs, add an `input` section to your configuration file, containing at minimum a `path` attribute (pointing either to a directory- or file-path in the CyVerse Data Store or Data Commons, or left blank) and a `kind` attribute indicating whether this workflow operates on a single `file`, multiple `files`, or an entire `directory`. For example:
 
 ##### Input types (`file`, `files`, and `directory`)
 
-To indicate that your flow should pull a single file from the Data Store and spawn a single container to process it, use `kind: file`. To pull a directory from the Data Store and spawn a container for each file, use `kind: files`. To pull a directory and spawn a single container to process it, use `kind: directory`.
+To indicate that your workflow should pull a single file from the Data Store and spawn a single container to process it, use `kind: file`. To pull a directory from the Data Store and spawn a container for each file, use `kind: files`. To pull a directory and spawn a single container to process it, use `kind: directory`.
 
-It's generally a good idea for `path` to reference a community-released or curated public dataset in the CyVerse Data Commons, so prospective users can test your flow on real data. For instance, a simple flow which operates on a single file:
+It's generally a good idea for `path` to reference a community-released or curated public dataset in the CyVerse Data Commons, so prospective users can test your workflow on real data. For instance, a simple workflow which operates on a single file:
 
 ```yaml
 input:
@@ -90,7 +90,7 @@ input:
 
 ##### Input filetypes
 
-To specify which filetypes your flow is permitted to accept, add a `filetypes` attribute to the `input` section:
+To specify which filetypes your workflow is permitted to accept, add a `filetypes` attribute to the `input` section:
 
 ```yaml
 input:
@@ -100,7 +100,7 @@ input:
     - txt
 ```
 
-Any values provided to `filetypes` will be joined (with `,`) and substituted for `$FILETYPES` in your flow's command. Use this to inform your code which filetypes to expect, e.g.:
+Any values provided to `filetypes` will be joined (with `,`) and substituted for `$FILETYPES` in your workflow's command. Use this to inform your code which filetypes to expect, e.g.:
 
 ```yaml
 commands: ls "$INPUT"/*.{"$FILETYPES"} >> things_cow_say.txt
@@ -112,16 +112,16 @@ input:
     - md     
 ```
 
-#### Flow output
+#### Workflow output
 
-If your flow produces outputs, add an `output` section with a `path` attribute to your configuration file. This attribute may be left blank if your flow writes output files to the working directory; otherwise the value should be a directory path relative to the working directory. For example, to indicate that your flow will deposit output files in a directory `output/directory` relative to the flow's working directory:
+If your workflow produces outputs, add an `output` section with a `path` attribute to your configuration file. This attribute may be left blank if your workflow writes output files to the working directory; otherwise the value should be a directory path relative to the working directory. For example, to indicate that your workflow will deposit output files in a directory `output/directory` relative to the workflow's working directory:
 
 ```yaml
 output:
   path: output/directory
 ```
 
-By default, all files under the given `path` are uploaded to the location in the CyVerse Data Store provided by the user. To explicitly indicate which files to include/exclude (this is suggested especially if you flow deposits files in the working directory), add `include` and `exclude` sections under `output`:
+By default, all files under the given `path` are uploaded to the location in the CyVerse Data Store provided by the user. To explicitly indicate which files to include/exclude (this is suggested especially if you workflow deposits files in the working directory), add `include` and `exclude` sections under `output`:
 
 ```yaml
 output:
@@ -161,4 +161,4 @@ output:
       - cowsaid.txt
 ```
 
-PlantIT will prompt users of your flow to select input and output locations in the CyVerse Data Store.
+PlantIT will prompt users of your workflow to select input and output locations in the CyVerse Data Store.

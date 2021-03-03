@@ -11,13 +11,13 @@
     <b-row align-h="center" v-else>
         <b-col
             :class="darkMode ? 'text-light' : 'text-dark'"
-            v-if="flows.length === 0 && !loading"
-            >No flows to show!</b-col
+            v-if="workflows.length === 0 && !loading"
+            >No workflows to show!</b-col
         >
         <b-card-group deck columns class="justify-content-center">
             <b-card
-                v-for="flow in flows"
-                :key="flow.repo.name"
+                v-for="workflow in workflows"
+                :key="workflow.repo.name"
                 :bg-variant="darkMode ? 'dark' : 'white'"
                 :header-bg-variant="darkMode ? 'dark' : 'white'"
                 border-variant="default"
@@ -28,8 +28,8 @@
             >
                 <blurb
                     :showPublic="false"
-                    :flow="flow"
-                    v-on:flowSelected="flowSelected"
+                    :workflow="workflow"
+                    v-on:flowSelected="workflowSelected"
                 ></blurb>
             </b-card>
         </b-card-group>
@@ -38,12 +38,12 @@
 
 <script>
 import axios from 'axios';
-import blurb from '@/components/flow-blurb.vue';
+import blurb from '@/components/workflow-blurb.vue';
 import router from '@/router';
 import { mapGetters } from 'vuex';
 
 export default {
-    name: 'flows',
+    name: 'workflows',
     components: {
         blurb
     },
@@ -59,52 +59,50 @@ export default {
     },
     data: function() {
         return {
-            flows: [],
+            workflows: [],
             login: false,
             loading: true
         };
     },
     mounted: function() {
-        this.loadFlows();
+        this.loadWorkflows();
     },
     methods: {
-        loadFlows() {
-            let url = (this.githubUser !== undefined && this.githubUser !== null && this.githubUser !== '') ? `/apis/v1/flows/${this.githubUser}/` : '/apis/v1/flows/list_all/'
+        loadWorkflows() {
+            let url =
+                this.githubUser !== undefined &&
+                this.githubUser !== null &&
+                this.githubUser !== ''
+                    ? `/apis/v1/workflows/${this.githubUser}/`
+                    : '/apis/v1/workflows/list_all/';
             axios
                 .get(url)
                 .then(response => {
-                    this.flows = response.data.flows
+                    this.workflows = response.data.workflows;
                     this.loading = false;
                 })
                 .catch(error => {
                     this.loading = false;
-                    if (error.status_code === 401) {
-                        this.login = true;
-                    } else {
-                        throw error;
-                    }
+                    if (error.status_code === 401) this.login = true;
+                    else throw error;
                 });
         },
-        sortFlows(l, r) {
-            if (l.config.name < r.config.name) return -1;
-            if (l.config.name > r.config.name) return 1;
+        sortWorkflows(left, right) {
+            if (left.config.name < right.config.name) return -1;
+            if (left.config.name > right.config.name) return 1;
             return 0;
         },
-        flowSelected: function(flow) {
+        workflowSelected: function(workflow) {
             router.push({
-                name: 'flow',
+                name: 'workflow',
                 params: {
-                    username: flow['repo']['owner']['login'],
-                    name: flow['repo']['name']
+                    username: workflow['repo']['owner']['login'],
+                    name: workflow['repo']['name']
                 }
             });
         }
     },
-    computed: mapGetters([
-        'profile',
-        'loggedIn',
-        'darkMode'
-    ])
+    computed: mapGetters(['profile', 'loggedIn', 'darkMode'])
 };
 </script>
 <style scoped lang="sass">

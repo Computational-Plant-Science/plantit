@@ -17,14 +17,14 @@ Welcome to PlantIT's documentation!
    :caption: User Guide
 
    md/user_guide/user_quickstart.md
-   md/user_guide/running_flows.md
+   md/user_guide/running_workflows.md
 
 .. toctree::
    :maxdepth: 3
    :caption: Developer Docs
 
    md/developer_docs/developer_quickstart.md
-   md/developer_docs/defining_flows.md
+   md/developer_docs/defining_workflows.md
 
 
 Indices and tables

@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import { createLocalVue, mount } from '@vue/test-utils';
-import { user, users, flows, data } from '@/store/store';
+import { user, users, workflows, data } from '@/store/store';
 import Vuex from 'vuex';
 import flow from '../src/views/flow';
 import Cookies from 'js-cookie';

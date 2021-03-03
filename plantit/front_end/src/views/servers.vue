@@ -9,11 +9,11 @@
     >
         <br />
         <b-container class="pl-3 pt-3" fluid>
-            <b-row v-if="targets.length > 0" align-v="center" align-h="center">
+            <b-row v-if="servers.length > 0" align-v="center" align-h="center">
                 <b-col>
                     <b-card-group deck columns class="justify-content-center">
                         <b-card
-                            v-for="target in targets"
+                            v-for="target in servers"
                             v-bind:key="target.name"
                             :bg-variant="darkMode ? 'dark' : 'white'"
                             :header-bg-variant="darkMode ? 'dark' : 'white'"
@@ -36,7 +36,7 @@
                                             "
                                             variant="outline-dark"
                                             v-b-tooltip.hover
-                                            @click="targetSelected(target)"
+                                            @click="serverSelected(target)"
                                         >
                                             {{ target.name }}
                                         </b-link>
@@ -129,31 +129,34 @@ export default {
     name: 'targets.vue',
     data: function() {
         return {
-            targets: []
+            servers: [],
+            serversLoading: false
         };
     },
     mounted() {
-        this.loadTargets();
+        this.loadServers();
     },
     computed: mapGetters(['profile', 'loggedIn', 'allUsers', 'darkMode']),
     methods: {
-        loadTargets() {
-            this.targetsLoading = true;
+        loadServers() {
+            this.serversLoading = true;
             axios
-                .get('/apis/v1/targets/get_all/')
+                .get('/apis/v1/servers/get_all/')
                 .then(response => {
-                    this.targets = response.data.targets;
+                    this.servers = response.data.servers;
+                    this.serversLoading = false;
                 })
                 .catch(error => {
+                    this.serversLoading = false;
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
         },
-        targetSelected(target) {
+        serverSelected(server) {
             router.push({
-                name: 'target',
+                name: 'server',
                 params: {
-                    name: target.name
+                    name: server.name
                 }
             });
         }

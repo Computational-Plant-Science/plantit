@@ -23,7 +23,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=False)
     def get_all(self, request):
         targets = list(Target.objects.filter(public=True))
-        return JsonResponse({'targets': [map_target(target) for target in targets]})
+        return JsonResponse({'servers': [map_target(target) for target in targets]})
 
     @action(methods=['get'], detail=False)
     def grant_access(self, request):
@@ -160,7 +160,7 @@ class TargetsViewSet(viewsets.ModelViewSet):
         user = request.user
         policies = TargetPolicy.objects.filter(user=user, role__in=[TargetRole.own, TargetRole.run])
         targets = [map_target(target, policy.role, list(policies)) for target, policy in zip([policy.target for policy in policies], policies) if policy.role != TargetRole.none]  # + [map_target(target, TargetRole.none, list(policies)) for target in Target.objects.exclude(targetpolicy__in=policies)]
-        return JsonResponse({'targets': targets})
+        return JsonResponse({'servers': targets})
 
     @action(methods=['post'], detail=False)
     def create_task(self, request):

@@ -19,7 +19,7 @@
                 >
                     <WorkflowBlurb
                         :showPublic="false"
-                        :flow="flow"
+                        workflow="flow"
                     ></WorkflowBlurb>
                 </b-card>
             </b-col>
@@ -54,7 +54,7 @@
 </template>
 
 <script>
-import WorkflowBlurb from '@/components/flow-blurb.vue';
+import WorkflowBlurb from '@/components/workflow-blurb.vue';
 import router from '@/router';
 import { mapGetters } from 'vuex';
 

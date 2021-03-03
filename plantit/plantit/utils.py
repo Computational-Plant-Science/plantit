@@ -96,7 +96,7 @@ def parse_docker_image_components(value):
     return container_owner, container_name, container_tag
 
 
-def validate_flow_config(config, token):
+def validate_workflow_config(config, token):
     errors = []
 
     # name (required)

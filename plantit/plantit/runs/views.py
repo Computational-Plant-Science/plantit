@@ -54,18 +54,18 @@ def get_total_count(request):
 def list_outputs(request, id):
     try:
         run = Run.objects.get(guid=id)
-        flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
+        workflow = get_repo_config(run.workflow_name, run.workflow_owner, run.user.profile.github_token)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    included_by_name = ((flow_config['output']['include']['names'] if 'names' in flow_config['output'][
-        'include'] else [])) if 'output' in flow_config else []  # [f"{run.task_id}.zip"]
+    included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
+        'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
     included_by_name.append(f"{run.guid}.{run.target.name.lower()}.log")
     if run.job_id is not None and run.job_id != '':
         included_by_name.append(f"plantit.{run.job_id}.out")
         included_by_name.append(f"plantit.{run.job_id}.err")
     included_by_pattern = (
-        flow_config['output']['include']['patterns'] if 'patterns' in flow_config['output']['include'] else []) if 'output' in flow_config else []
+        workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
 
     client = SSH(run.target.hostname, run.target.port, run.target.username)
     work_dir = join(run.target.workdir, run.work_dir)
@@ -179,7 +179,6 @@ def get_thumbnail(request, id, file):
 def get_output_file(request, id, file):
     try:
         run = Run.objects.get(guid=id)
-        # flow_config = get_repo_config(run.flow_name, run.flow_owner, run.user.profile.github_token)
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -260,27 +259,26 @@ def get_container_logs(request, id):
 
 
 @api_view(['GET'])
-def get_runs_by_user_and_flow(request, username, flow, page):
+def get_runs_by_user_and_workflow(request, username, workflow, page):
     try:
         user = User.objects.get(username=username)
         start = int(page) * 20
         count = start + 20
-        runs = Run.objects.filter(user=user, flow_name=flow).order_by('-created')[start:(start + count)]
+        runs = Run.objects.filter(user=user, workflow_name=workflow).order_by('-created')[start:(start + count)]
         return JsonResponse([map_run(run) for run in runs], safe=False)
     except:
         return HttpResponseNotFound()
 
 
 @api_view(['GET'])
-def get_delayed_runs_by_user_and_flow(request, username, flow):
+def get_delayed_runs_by_user_and_workflow(request, username, workflow):
     user = User.objects.get(username=username)
-    tasks = []
     try:
         tasks = DelayedRunTask.objects.filter(user=user)
     except:
         return HttpResponseNotFound()
 
-    tasks = [task for task in tasks if task.flow_name == flow]
+    tasks = [task for task in tasks if task.workflow_name == workflow]
     return JsonResponse([map_delayed_run_task(task) for task in tasks], safe=False)
 
 
@@ -300,20 +298,19 @@ def remove_delayed(request):
 
 
 @api_view(['GET'])
-def get_repeating_runs_by_user_and_flow(request, username, flow):
+def get_repeating_runs_by_user_and_workflow(request, username, workflow):
     user = User.objects.get(username=username)
-    tasks = []
     try:
         tasks = RepeatingRunTask.objects.filter(user=user)
     except:
         return HttpResponseNotFound()
 
-    tasks = [task for task in tasks if task.flow_name == flow]
+    tasks = [task for task in tasks if task.workflow_name == workflow]
     return JsonResponse([map_repeating_run_task(task) for task in tasks], safe=False)
 
 
 @api_view(['GET'])
-def toggle_repeating(request, username, flow):
+def toggle_repeating(request, username, workflow):
     task_name = request.GET.get('name', None)
     if task_name is None:
         return HttpResponseNotFound()
@@ -325,7 +322,7 @@ def toggle_repeating(request, username, flow):
 
 
 @api_view(['GET'])
-def remove_repeating(request, username, flow):
+def remove_repeating(request, username, workflow):
     task_name = request.GET.get('name', None)
     if task_name is None:
         return HttpResponseNotFound()
@@ -343,18 +340,18 @@ def remove_repeating(request, username, flow):
 @login_required
 def runs(request):
     user = request.user
-    flow = request.data
+    workflow = request.data
     if request.method == 'GET':
         runs = Run.objects.all()
         return JsonResponse([map_run(run) for run in runs], safe=False)
     elif request.method == 'POST':
-        target = Target.objects.get(name=flow['config']['target']['name'])
+        target = Target.objects.get(name=workflow['config']['target']['name'])
         if request.data['type'] == 'Now':
-            run = create_run(user.username, target.name, flow)
-            submit_run.delay(run.guid, flow)
+            run = create_run(user.username, target.name, workflow)
+            submit_run.delay(run.guid, workflow)
             return JsonResponse({'id': run.guid})
         elif request.data['type'] == 'After':
-            eta, seconds = parse_eta(flow)
+            eta, seconds = parse_eta(workflow)
             schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
             task, created = DelayedRunTask.objects.get_or_create(
                 user=user,
@@ -362,28 +359,28 @@ def runs(request):
                 target=target,
                 eta=eta,
                 one_off=True,
-                flow_owner=flow['repo']['owner']['login'],
-                flow_name=flow['repo']['name'],
-                name=f"User {user.username} flow {flow['repo']['name']} target {target.name} {schedule} once",
+                workflow_owner=workflow['repo']['owner']['login'],
+                workflow_name=workflow['repo']['name'],
+                name=f"User {user.username} workflow {workflow['repo']['name']} target {target.name} {schedule} once",
                 task='plantit.runs.tasks.create_and_submit_run',
-                args=json.dumps([user.username, target.name, flow]))
+                args=json.dumps([user.username, target.name, workflow]))
             return JsonResponse({
                 'created': created,
                 'task': map_delayed_run_task(task)
             })
         elif request.data['type'] == 'Every':
-            eta, seconds = parse_eta(flow)
+            eta, seconds = parse_eta(workflow)
             schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
             task, created = RepeatingRunTask.objects.get_or_create(
                 user=user,
                 interval=schedule,
                 target=target,
                 eta=eta,
-                flow_owner=flow['repo']['owner']['login'],
-                flow_name=flow['repo']['name'],
-                name=f"User {user.username} flow {flow['repo']['name']} target {target.name} {schedule} repeating",
+                workflow_owner=workflow['repo']['owner']['login'],
+                workflow_name=workflow['repo']['name'],
+                name=f"User {user.username} workflow {workflow['repo']['name']} target {target.name} {schedule} repeating",
                 task='plantit.runs.tasks.create_and_submit_run',
-                args=json.dumps([user.username, target.name, flow]))
+                args=json.dumps([user.username, target.name, workflow]))
             return JsonResponse({
                 'created': created,
                 'task': map_repeating_run_task(task)
@@ -408,8 +405,8 @@ def run(request, id):
             'target': None,
             'created': None,
             'updated': None,
-            'flow_owner': None,
-            'flow_name': None,
+            'workflow_owner': None,
+            'workflow_name': None,
             'tags': [],
             'is_complete': False,
             'is_success': False,

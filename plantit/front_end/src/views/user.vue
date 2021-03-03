@@ -204,7 +204,7 @@
                                 :title-link-class="tabLinkClass(1)"
                             >
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(1)">Store</b>
+                                    <b :class="tabLinkClass(1)">Datasets</b>
                                 </template>
                                 <b-card
                                     :sub-title-text-variant="
@@ -363,7 +363,7 @@
                             >
                             <b-tab :title-link-class="tabLinkClass(2)">
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(2)">Flows</b>
+                                    <b :class="tabLinkClass(2)">Workflows</b>
                                 </template>
                                 <b-row
                                     v-if="profile.githubProfile === null"
@@ -382,12 +382,12 @@
                                     <b-col md="auto" class="ml-0 pl-0">
                                         <b
                                             class="text-center align-center ml-0 pl-0"
-                                            >to load flows.</b
+                                            >to load workflows.</b
                                         >
                                     </b-col>
                                 </b-row>
                                 <b-row v-else-if="githubProfile">
-                                    <flows
+                                    <workflows
                                         class="m-1"
                                         :github-user="githubProfile.login"
                                         :github-token="
@@ -395,7 +395,7 @@
                                                 .github_token
                                         "
                                     >
-                                    </flows>
+                                    </workflows>
                                 </b-row>
                             </b-tab>
                             <b-tab
@@ -407,7 +407,7 @@
                                 :title-link-class="tabLinkClass(3)"
                             >
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(3)">Targets</b>
+                                    <b :class="tabLinkClass(3)">Servers</b>
                                 </template>
                                 <div>
                                     <b-row
@@ -621,7 +621,7 @@
 <script>
 import router from '../router';
 import { mapGetters } from 'vuex';
-import flows from '@/components/flows.vue';
+import workflows from '@/components/workflows.vue';
 import datatree from '@/components/data-tree.vue';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
@@ -630,7 +630,7 @@ import moment from 'moment';
 export default {
     name: 'User',
     components: {
-        flows,
+        workflows,
         datatree
     },
     data: function() {
@@ -644,7 +644,7 @@ export default {
             directoryPolicies: [],
             directoryPolicyNodes: [],
             data: {},
-            flows: [],
+            workflows: [],
             runs: [],
             targets: [],
             targetsLoading: false,
@@ -728,7 +728,6 @@ export default {
             await axios
                 .get(`/apis/v1/stores/get_directories_shared/`)
                 .then(response => {
-                    // this.directoryPolicies = response.data;
                     this.directoriesShared = response.data;
                 })
                 .catch(error => {
@@ -738,7 +737,7 @@ export default {
         },
         targetSelected: function(target) {
             router.push({
-                name: 'target',
+                name: 'server',
                 params: {
                     name: target.name
                 }
@@ -748,7 +747,7 @@ export default {
             if (target.singularity_cache_clean_enabled)
                 axios
                     .get(
-                        `/apis/v1/targets/unschedule_singularity_cache_cleaning/?name=${target.name}`
+                        `/apis/v1/servers/unschedule_singularity_cache_cleaning/?name=${target.name}`
                     )
                     .then(() => {
                         this.showToggleSingularityCacheCleaningMessage = `Disabled Singularity cache cleaning on ${target.name}`;
@@ -766,7 +765,7 @@ export default {
             else
                 axios
                     .get(
-                        `/apis/v1/targets/schedule_singularity_cache_cleaning/?name=${
+                        `/apis/v1/servers/schedule_singularity_cache_cleaning/?name=${
                             target.name
                         }&delay=${moment
                             .duration(
@@ -844,10 +843,10 @@ export default {
         async loadTargets() {
             this.targetsLoading = true;
             return axios
-                .get(`/apis/v1/targets/get_by_username/`)
+                .get(`/apis/v1/servers/get_by_username/`)
                 .then(response => {
                     this.targetsLoading = false;
-                    this.targets = response.data.targets;
+                    this.targets = response.data.servers;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -855,12 +854,12 @@ export default {
                     if (error.response.status === 500) throw error;
                 });
         },
-        flowSelected: function(flow) {
+        workflowSelected: function(workflow) {
             router.push({
-                name: 'flow',
+                name: 'workflow',
                 params: {
-                    owner: flow['repo']['owner']['login'],
-                    name: flow['repo']['name']
+                    owner: workflow['repo']['owner']['login'],
+                    name: workflow['repo']['name']
                 }
             });
         },

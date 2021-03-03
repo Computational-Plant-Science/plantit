@@ -2,10 +2,10 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Running Flows](#running-flows)
+- [Running Workflows](#running-workflows)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Running Flows
+# Running Workflows
 
 *This section is under construction.*

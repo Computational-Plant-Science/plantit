@@ -18,6 +18,7 @@ from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
 from django.utils import timezone
 from requests.auth import HTTPBasicAuth
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from plantit import settings
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
@@ -33,6 +34,10 @@ def clean_html(raw_html):
     return text
 
 
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=retry_if_exception_type())
 def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: str, allow_stderr: bool = False) -> List[str]:
     full_command = f"{pre_command} && cd {directory} && {command}" if directory else command
     output = []
@@ -83,89 +88,75 @@ def remove_logs(id: str, target: str):
     # os.remove(target_log_path)
 
 
-def get_flows(response, token):
+def format_workflows(response, token):
     response_json = response.json()
-    flows = [{
+    workflows = [{
         'repo': item['repository'],
         'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], token)
     } for item in response_json['items']] if 'items' in response_json else []
-    return flows
+    return workflows
 
 
-async def list_flows_for_users(usernames: List[str], token: str):
+async def list_workflows_for_users(usernames: List[str], token: str):
     urls = [f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}" for username in usernames]
     headers = {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
     }
+
     async with httpx.AsyncClient(headers=headers) as client:
         futures = [client.get(url) for url in urls]
         responses = await asyncio.gather(*futures)
-        return [flow for flows in [get_flows(response, token) for response in responses] for flow in flows]
+        return [workflow for workflows in [format_workflows(response, token) for response in responses] for workflow in workflows]
 
 
-def list_flows_for_user(username: str, token: str):
+def list_workflows_for_user(username: str, token: str):
     response = requests.get(
         f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
         headers={
             "Authorization": f"token {token}",
             "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
         })
-    flows = get_flows(response, token)
-    return [flow for flow in flows]  # if flow['config']['public']]
+    workflows = format_workflows(response, token)
+    return [flow for flow in workflows]
 
 
-def list_by_user_internal(username):
-    response = requests.get(
-        f"https://api.github.com/search/code?q=filename:plantit.yaml+user:{username}",
-        auth=HTTPBasicAuth(settings.GITHUB_USERNAME, settings.GITHUB_KEY),
-        headers={
-            "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-        })
-    flows = [{
-        'repo': item['repository'],
-        'config': get_repo_config_internal(item['repository']['name'], item['repository']['owner']['login'])
-    } for item in response.json()['items']]
-
-    return [flow for flow in flows if flow['config']['public']]
-
-
-def old_flow_config_to_new(flow: dict, run: Run, resources: dict):
-    new_flow = {
-        'image': flow['config']['image'],
-        'command': flow['config']['commands'],
-        'workdir': flow['config']['workdir'],
+def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
+    new_config = {
+        'image': old_config['config']['image'],
+        'command': old_config['config']['commands'],
+        'workdir': old_config['config']['workdir'],
         'log_file': f"{run.guid}.{run.target.name.lower()}.log"
     }
 
-    del flow['config']['target']
+    del old_config['config']['target']
 
-    if 'mount' in flow['config']:
-        new_flow['bind_mounts'] = flow['config']['mount']
+    if 'mount' in old_config['config']:
+        new_config['bind_mounts'] = old_config['config']['mount']
 
-    if 'parameters' in flow['config']:
-        new_flow['parameters'] = flow['config']['parameters']
+    if 'parameters' in old_config['config']:
+        new_config['parameters'] = old_config['config']['parameters']
 
-    if 'input' in flow['config']:
-        input_kind = flow['config']['input']['kind'] if 'kind' in flow['config']['input'] else None
-        new_flow['input'] = dict()
+    if 'input' in old_config['config']:
+        input_kind = old_config['config']['input']['kind'] if 'kind' in old_config['config']['input'] else None
+        new_config['input'] = dict()
         if input_kind == 'directory':
-            new_flow['input']['directory'] = dict()
-            new_flow['input']['directory']['path'] = join(run.target.workdir, run.work_dir, 'input')
-            new_flow['input']['directory']['patterns'] = flow['config']['input']['patterns']
+            new_config['input']['directory'] = dict()
+            new_config['input']['directory']['path'] = join(run.target.workdir, run.work_dir, 'input')
+            new_config['input']['directory']['patterns'] = old_config['config']['input']['patterns']
         elif input_kind == 'files':
-            new_flow['input']['files'] = dict()
-            new_flow['input']['files']['path'] = join(run.target.workdir, run.work_dir, 'input')
-            new_flow['input']['files']['patterns'] = flow['config']['input']['patterns']
+            new_config['input']['files'] = dict()
+            new_config['input']['files']['path'] = join(run.target.workdir, run.work_dir, 'input')
+            new_config['input']['files']['patterns'] = old_config['config']['input']['patterns']
         elif input_kind == 'file':
-            new_flow['input']['file'] = dict()
-            new_flow['input']['file']['path'] = join(run.target.workdir, run.work_dir, 'input', flow['config']['input']['from'].rpartition('/')[2])
+            new_config['input']['file'] = dict()
+            new_config['input']['file']['path'] = join(run.target.workdir, run.work_dir, 'input', old_config['config']['input']['from'].rpartition('/')[2])
 
     sandbox = run.target.name == 'Sandbox'
     work_dir = join(run.target.workdir, run.work_dir)
     if not sandbox:
-        new_flow['jobqueue'] = dict()
-        new_flow['jobqueue']['slurm'] = {
+        new_config['jobqueue'] = dict()
+        new_config['jobqueue']['slurm'] = {
             'cores': resources['cores'],
             'processes': resources['processes'],
             'walltime': resources['time'],
@@ -175,23 +166,23 @@ def old_flow_config_to_new(flow: dict, run: Run, resources: dict):
         }
 
         if 'mem' in resources:
-            new_flow['jobqueue']['slurm']['memory'] = resources['mem']
+            new_config['jobqueue']['slurm']['memory'] = resources['mem']
         if run.target.queue is not None and run.target.queue != '':
-            new_flow['jobqueue']['slurm']['queue'] = run.target.queue
+            new_config['jobqueue']['slurm']['queue'] = run.target.queue
         if run.target.project is not None and run.target.project != '':
-            new_flow['jobqueue']['slurm']['project'] = run.target.project
+            new_config['jobqueue']['slurm']['project'] = run.target.project
         if run.target.header_skip is not None and run.target.header_skip != '':
-            new_flow['jobqueue']['slurm']['header_skip'] = run.target.header_skip.split(',')
+            new_config['jobqueue']['slurm']['header_skip'] = run.target.header_skip.split(',')
 
-        if 'gpu' in flow['config'] and flow['config']['gpu']:
+        if 'gpu' in old_config['config'] and old_config['config']['gpu']:
             if run.target.gpu:
-                new_flow['gpu'] = True
-                new_flow['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:K40:1"]
-                new_flow['jobqueue']['slurm']['queue'] = run.target.gpu_queue
+                new_config['gpu'] = True
+                new_config['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:K40:1"]
+                new_config['jobqueue']['slurm']['queue'] = run.target.gpu_queue
             else:
                 print(f"No GPU support on {run.target.name}")
 
-    return new_flow
+    return new_config
 
 
 def parse_walltime(walltime) -> timedelta:
@@ -271,15 +262,15 @@ def map_run(run: Run, get_container_logs: bool = False):
         'target': run.target.name,
         'created': run.created.isoformat(),
         'updated': run.updated.isoformat(),
-        'flow_owner': run.flow_owner,
-        'flow_name': run.flow_name,
+        'workflow_owner': run.workflow_owner,
+        'workflow_name': run.workflow_name,
         'tags': [str(tag) for tag in run.tags.all()],
         'is_complete': run.is_complete,
         'is_success': run.is_success,
         'is_failure': run.is_failure,
         'is_cancelled': run.is_cancelled,
         'is_timeout': run.is_timeout,
-        'flow_image_url': run.flow_image_url
+        'workflow_image_url': run.workflow_image_url
     }
 
 
@@ -291,27 +282,29 @@ def container_log_file_name(run: Run):
     return f"{run.guid}.{run.target.name.lower()}.log"
 
 
-def create_run(username: str, target_name: str, flow: dict) -> Run:
+def create_run(username: str, target_name: str, workflow: dict) -> Run:
     now = timezone.now()
     user = User.objects.get(username=username)
     target = Target.objects.get(name=target_name)
-    flow_owner = flow['repo']['owner']['login']
-    flow_name = flow['repo']['name']
-    flow_config = get_repo_config(flow_name, flow_owner, user.profile.github_token)
+    workflow_owner = workflow['repo']['owner']['login']
+    workflow_name = workflow['repo']['name']
+    workflow_config = get_repo_config(workflow_name, workflow_owner, user.profile.github_token)
     run = Run.objects.create(
         guid=str(uuid.uuid4()),
         user=user,
-        flow_owner=flow_owner,
-        flow_name=flow_name,
-        flow_image_url=f"https://raw.githubusercontent.com/{flow_owner}/{flow_name}/master/{flow_config['logo']}",
+        workflow_owner=workflow_owner,
+        workflow_name=workflow_name,
         target=target,
         job_status='CREATED',
         created=now,
         updated=now,
         token=binascii.hexlify(os.urandom(20)).decode())
 
+    if 'logo' in workflow_config:
+        run.workflow_image_url = f"https://raw.githubusercontent.com/{workflow_owner}/{workflow_name}/master/{workflow_config['logo']}"
+
     # add tags
-    for tag in flow['config']['tags']:
+    for tag in workflow['config']['tags']:
         run.tags.add(tag)
 
     # guid for working directory name

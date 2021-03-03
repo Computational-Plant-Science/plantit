@@ -1,13 +1,13 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import home from './views/home.vue';
-import flows from './views/explore-flows.vue';
-import flow from './views/flow.vue';
-import run from './views/run.vue';
-import target from './views/target.vue';
+import workflows from './views/explore-flows.vue';
+import workflow from './views/flow.vue';
+import server from './views/server.vue';
+import servers from './views/servers.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
-import targets from './views/targets.vue';
+import run from './views/run.vue';
 
 Vue.use(Router);
 
@@ -41,42 +41,42 @@ let router = new Router({
             }
         },
         {
-            path: '/flows',
-            name: 'flows',
-            component: flows,
+            path: '/workflows',
+            name: 'workflows',
+            component: workflows,
             meta: {
-                title: 'Flows',
+                title: 'Workflows',
                 crumb: [
                     {
-                        text: 'Flows',
-                        href: '/flows'
+                        text: 'Workflows',
+                        href: '/workflows'
                     }
                 ],
                 requiresAuth: true
             }
         },
         {
-            path: '/targets',
-            name: 'targets',
-            component: targets,
+            path: '/servers',
+            name: 'servers',
+            component: servers,
             meta: {
-                title: 'Targets',
+                title: 'Servers',
                 crumb: [
                     {
-                        text: 'Targets',
-                        href: '/targets'
+                        text: 'Servers',
+                        href: '/servers'
                     }
                 ],
                 requiresAuth: true
             }
         },
         {
-            path: '/flow/:username/:name',
-            name: 'flow',
+            path: '/workflow/:username/:name',
+            name: 'workflow',
             props: true,
-            component: flow,
+            component: workflow,
             meta: {
-                title: 'Flow',
+                title: 'Workflow',
                 crumb: [],
                 requiresAuth: true
             }
@@ -93,12 +93,12 @@ let router = new Router({
             }
         },
         {
-            path: '/target/:name',
-            name: 'target',
+            path: '/server/:name',
+            name: 'server',
             props: true,
-            component: target,
+            component: server,
             meta: {
-                title: 'Target',
+                title: 'Server',
                 crumb: [],
                 requiresAuth: true
             }
@@ -133,16 +133,16 @@ let router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
-    if (to.name === 'flow') to.meta.title = `Flow: ${to.params.name}`;
+    if (to.name === 'workflow') to.meta.title = `Workflow: ${to.params.name}`;
     if (to.name === 'run') to.meta.title = `Run: ${to.params.id}`;
-    if (to.name === 'target') to.meta.title = `Target: ${to.params.name}`;
+    if (to.name === 'server') to.meta.title = `Server: ${to.params.name}`;
     if (to.name === 'user') to.meta.title = `User: ${to.params.username}`;
     if (to.meta.name !== null) document.title = to.meta.title;
-    if (to.matched.some(record => record.name === 'flow')) {
+    if (to.matched.some(record => record.name === 'workflow')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `Flow: ${to.params.username}/${to.params.name}`,
-            href: `/flow/${to.params.username}/${to.params.name}`
+            text: `Workflow: ${to.params.username}/${to.params.name}`,
+            href: `/workflow/${to.params.username}/${to.params.name}`
         });
     }
     if (to.matched.some(record => record.name === 'run')) {
@@ -152,11 +152,11 @@ router.beforeEach((to, from, next) => {
             href: `/run/${to.params.id}`
         });
     }
-    if (to.matched.some(record => record.name === 'target')) {
+    if (to.matched.some(record => record.name === 'server')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `Target: ${to.params.name}`,
-            href: `/target/${to.params.name}`
+            text: `Server: ${to.params.name}`,
+            href: `/server/${to.params.name}`
         });
     }
     if (to.matched.some(record => record.name === 'user')) {

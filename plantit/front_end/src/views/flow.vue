@@ -26,7 +26,14 @@
                     </b-alert>
                 </b-col>
             </b-row>
-            <b-row>
+            <b-row align-h="center" v-if="workflowLoading">
+                <b-spinner
+                    type="grow"
+                    label="Loading..."
+                    variant="secondary"
+                ></b-spinner>
+            </b-row>
+            <b-row v-else>
                 <b-col>
                     <b-row>
                         <b-col>
@@ -43,7 +50,8 @@
                                 <b-alert
                                     id="flowInvalid"
                                     :show="
-                                        !this.flowLoading && !this.flowValidated
+                                        !this.workflowLoading &&
+                                            !this.workflowValid
                                     "
                                     variant="danger"
                                     >This flow's configuration is invalid. It
@@ -62,11 +70,13 @@
                                         >File an issue?</b-link
                                     ><br />
                                     Errors:
-                                    {{ this.flowValidationErrors.join(', ') }}
+                                    {{
+                                        this.workflowValidationErrors.join(', ')
+                                    }}
                                 </b-alert>
                                 <flowdetail
                                     :show-public="true"
-                                    :flow="flow"
+                                    :workflow="workflow"
                                 ></flowdetail>
                             </b-card>
                         </b-col>
@@ -79,7 +89,7 @@
                                     <b-input-group-text
                                         >Run
                                         {{
-                                            flow.config.name
+                                            workflow.config.name
                                         }}</b-input-group-text
                                     >
                                 </template>
@@ -165,8 +175,8 @@
                             >
                                 {{
                                     submitType === 'Now'
-                                        ? `Start ${flow.config.name}`
-                                        : `Schedule ${flow.config.name} to run ${scheduledTime}`
+                                        ? `Start ${workflow.config.name}`
+                                        : `Schedule ${workflow.config.name} to run ${scheduledTime}`
                                 }}
                             </b-button></b-col
                         ></b-row
@@ -275,9 +285,10 @@
                                 </b-card>
                                 <b-card
                                     v-if="
-                                        flow !== null &&
-                                        flow.config.params !== undefined
-                                            ? flow.config.params.length !== 0
+                                        workflow !== null &&
+                                        workflow.config.params !== undefined
+                                            ? workflow.config.params.length !==
+                                              0
                                             : false
                                     "
                                     :bg-variant="darkMode ? 'dark' : 'white'"
@@ -363,9 +374,11 @@
                                 </b-card>
                                 <b-card
                                     v-if="
-                                        flow !== null &&
-                                            flow.config.input !== undefined &&
-                                            flow.config.input.path !== undefined
+                                        workflow !== null &&
+                                            workflow.config.input !==
+                                                undefined &&
+                                            workflow.config.input.path !==
+                                                undefined
                                     "
                                     :bg-variant="darkMode ? 'dark' : 'white'"
                                     :header-bg-variant="
@@ -407,7 +420,9 @@
                                         </b-col>
                                     </b-row>
                                     <runinput
-                                        :default-path="flow.config.input.path"
+                                        :default-path="
+                                            workflow.config.input.path
+                                        "
                                         :user="user"
                                         :kind="input.kind"
                                         v-on:inputSelected="inputSelected"
@@ -561,7 +576,7 @@
                                                     v-else
                                                     class="fas fa-server fa-fw"
                                                 ></i>
-                                                Deployment Target
+                                                Server
                                             </h4>
                                         </b-col>
                                     </b-row>
@@ -573,7 +588,7 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Select a cluster or server to submit
+                                            Select a server to submit
                                             this run to.
                                         </b>
                                         <br />
@@ -585,7 +600,7 @@
                                             active-nav-item-class="bg-secondary text-dark"
                                         >
                                             <b-tab
-                                                title="Your deployment targets"
+                                                title="Your servers"
                                                 :title-link-class="
                                                     darkMode
                                                         ? 'text-white'
@@ -641,7 +656,7 @@
                                                                     tgt.max_mem
                                                                 ) >=
                                                                     parseInt(
-                                                                        flow
+                                                                        workflow
                                                                             .config
                                                                             .resources
                                                                             .mem
@@ -685,7 +700,7 @@
                                                 </b-row>
                                             </b-tab>
                                             <b-tab
-                                                title="Public deployment targets"
+                                                title="Public servers"
                                                 :title-link-class="
                                                     darkMode
                                                         ? 'text-white'
@@ -741,7 +756,7 @@
                                                                     tgt.max_mem
                                                                 ) >=
                                                                     parseInt(
-                                                                        flow
+                                                                        workflow
                                                                             .config
                                                                             .resources
                                                                             .mem
@@ -906,7 +921,7 @@
                             ><b-col
                                 ><small
                                     >You haven't scheduled any repeating
-                                    {{ flow.config.name }} runs.</small
+                                    {{ workflow.config.name }} runs.</small
                                 ></b-col
                             ></b-row
                         >
@@ -989,7 +1004,7 @@
                             ><b-col
                                 ><small
                                     >You haven't run
-                                    {{ flow.config.name }} yet.</small
+                                    {{ workflow.config.name }} yet.</small
                                 ></b-col
                             ></b-row
                         >
@@ -1082,7 +1097,7 @@
                 :body-bg-variant="darkMode ? 'dark' : 'white'"
                 :header-border-variant="darkMode ? 'dark' : 'white'"
                 :footer-border-variant="darkMode ? 'dark' : 'white'"
-                :title="'Authenticate with ' + this.target.name"
+                :title="'Authenticate with server ' + this.target.name"
                 @ok="onStart"
             >
                 <b-form-input
@@ -1103,7 +1118,7 @@
 </template>
 
 <script>
-import flowdetail from '../components/flow-detail';
+import flowdetail from '../components/workflow-detail';
 import runinput from '../components/run-input';
 import { mapGetters } from 'vuex';
 import axios from 'axios';
@@ -1147,10 +1162,10 @@ export default {
             runs: [],
             delayedRuns: [],
             repeatingRuns: [],
-            flow: null,
-            flowLoading: true,
-            flowValidated: false,
-            flowValidationErrors: [],
+            workflow: null,
+            workflowLoading: true,
+            workflowValid: false,
+            workflowValidationErrors: [],
             tags: [],
             tagOptions: [],
             params: [],
@@ -1263,7 +1278,7 @@ export default {
         };
     },
     mounted: function() {
-        this.loadFlow();
+        this.loadWorkflow();
         this.loadTargets();
         this.loadPublicTargets();
         this.loadRuns();
@@ -1358,16 +1373,19 @@ export default {
         },
         validate() {
             axios
-                .get(`/apis/v1/flows/${this.username}/${this.name}/validate/`, {
-                    headers: {
-                        Authorization: 'Bearer ' + this.githubToken
+                .get(
+                    `/apis/v1/workflows/${this.username}/${this.name}/validate/`,
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + this.githubToken
+                        }
                     }
-                })
+                )
                 .then(response => {
-                    this.flowValidated = response.data.result;
-                    if (!this.flowValidated)
-                        this.flowValidationErrors = response.data.errors;
-                    this.flowLoading = false;
+                    this.workflowValid = response.data.result;
+                    if (!this.workflowValid)
+                        this.workflowValidationErrors = response.data.errors;
+                    this.workflowLoading = false;
                 })
                 .catch(error => {
                     if (error.status_code === 401) {
@@ -1380,7 +1398,7 @@ export default {
         loadRuns() {
             axios
                 .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_by_user_and_flow/${this.name}/0/`,
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_by_user_and_workflow/${this.name}/0/`,
                     {
                         headers: {
                             Authorization: 'Bearer ' + this.githubToken
@@ -1401,7 +1419,7 @@ export default {
         loadDelayedRuns() {
             axios
                 .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_delayed_by_user_and_flow/${this.name}/`,
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_delayed_by_user_and_workflow/${this.name}/`,
                     {
                         headers: {
                             Authorization: 'Bearer ' + this.githubToken
@@ -1424,7 +1442,7 @@ export default {
         loadRepeatingRuns() {
             axios
                 .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_repeating_by_user_and_flow/${this.name}/`,
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_repeating_by_user_and_workflow/${this.name}/`,
                     {
                         headers: {
                             Authorization: 'Bearer ' + this.githubToken
@@ -1442,15 +1460,16 @@ export default {
                     }
                 });
         },
-        loadFlow() {
+        loadWorkflow() {
+            this.workflowLoading = true;
             axios
-                .get(`/apis/v1/flows/${this.username}/${this.name}/`, {
+                .get(`/apis/v1/workflows/${this.username}/${this.name}/`, {
                     headers: {
                         Authorization: 'Bearer ' + this.githubToken
                     }
                 })
                 .then(response => {
-                    this.flow = response.data;
+                    this.workflow = response.data;
                     this.validate();
 
                     // if a local input path is specified, set it
@@ -1529,9 +1548,9 @@ export default {
                     // if we have pre-configured values for this flow, populate them
                     if (
                         `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}` in
-                        this.flowConfigs
+                        this.workflowConfigs
                     ) {
-                        let flowConfig = this.flowConfigs[
+                        let flowConfig = this.workflowConfigs[
                             `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`
                         ];
                         this.params =
@@ -1544,11 +1563,9 @@ export default {
                     }
                 })
                 .catch(error => {
-                    if (error.status_code === 401) {
-                        this.login = true;
-                    } else {
-                        throw error;
-                    }
+                    this.workflowLoading = false;
+                    if (error.status_code === 401) this.login = true;
+                    else throw error;
                 });
         },
         inputSelected(node) {
@@ -1564,20 +1581,20 @@ export default {
             return (
                 (parseInt(target.max_mem) !== -1 &&
                     parseInt(target.max_mem) <
-                        parseInt(this.flow.config.resources.mem)) ||
+                        parseInt(this.workflow.config.resources.mem)) ||
                 parseInt(target.max_cores) <
-                    parseInt(this.flow.config.resources.cores) ||
+                    parseInt(this.workflow.config.resources.cores) ||
                 parseInt(target.max_processes) <
-                    parseInt(this.flow.config.resources.processes)
+                    parseInt(this.workflow.config.resources.processes)
             );
             // TODO walltime
         },
         loadTargets: function() {
             this.targetsLoading = true;
             return axios
-                .get(`/apis/v1/targets/get_by_username/`)
+                .get(`/apis/v1/servers/get_by_username/`)
                 .then(response => {
-                    this.targets = response.data.targets;
+                    this.targets = response.data.servers;
                     this.targetsLoading = false;
                 })
                 .catch(error => {
@@ -1588,9 +1605,9 @@ export default {
         loadPublicTargets: function() {
             this.publicTargetsLoading = true;
             return axios
-                .get(`/apis/v1/targets/get_all/`)
+                .get(`/apis/v1/servers/get_all/`)
                 .then(response => {
-                    this.publicTargets = response.data.targets;
+                    this.publicTargets = response.data.servers;
                     this.publicTargetsLoading = false;
                 })
                 .catch(error => {
@@ -1647,7 +1664,10 @@ export default {
             //     });
         },
         onStart() {
-            if (!this.flow.config.resources && this.target.name !== 'Sandbox') {
+            if (
+                !this.workflow.config.resources &&
+                this.target.name !== 'Sandbox'
+            ) {
                 alert('This flow can only run in the Sandbox.');
                 return;
             }
@@ -1656,21 +1676,22 @@ export default {
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
             let target = this.target;
-            if (this.flow.config.resources)
-                target['resources'] = this.flow.config.resources;
+            if (this.workflow.config.resources)
+                target['resources'] = this.workflow.config.resources;
             let config = {
-                name: this.flow.config.name,
-                image: this.flow.config.image,
+                name: this.workflow.config.name,
+                image: this.workflow.config.image,
                 parameters: this.params,
                 target: target,
-                commands: this.flow.config.commands,
+                commands: this.workflow.config.commands,
                 tags: this.tags
             };
-            if ('gpu' in this.flow.config) config['gpu'] = this.flow.config.gpu;
-            if ('branch' in this.flow.config)
-                config['branch'] = this.flow.config.branch;
-            if (this.flow.config.mount !== null)
-                config['mount'] = this.flow.config.mount;
+            if ('gpu' in this.workflow.config)
+                config['gpu'] = this.workflow.config.gpu;
+            if ('branch' in this.workflow.config)
+                config['branch'] = this.workflow.config.branch;
+            if (this.workflow.config.mount !== null)
+                config['mount'] = this.workflow.config.mount;
             if (this.input !== undefined && this.input.from) {
                 config.input = this.input;
                 config.input.patterns =
@@ -1684,13 +1705,13 @@ export default {
             }
 
             // save config
-            this.$store.dispatch('setFlowConfig', {
-                name: this.flowKey,
+            this.$store.dispatch('setWorkflowConfig', {
+                name: this.workflowKey,
                 config: config
             });
 
             let data = {
-                repo: this.flow.repo,
+                repo: this.workflow.repo,
                 config: config,
                 type: this.submitType
             };
@@ -1727,7 +1748,7 @@ export default {
                     method: 'post',
                     url: `/apis/v1/runs/`,
                     data: {
-                        repo: this.flow.repo,
+                        repo: this.workflow.repo,
                         config: config,
                         type: this.submitType,
                         delayUnits: this.delayUnits,
@@ -1754,7 +1775,7 @@ export default {
                     method: 'post',
                     url: `/apis/v1/runs/`,
                     data: {
-                        repo: this.flow.repo,
+                        repo: this.workflow.repo,
                         config: config,
                         type: this.submitType,
                         delayUnits: this.delayUnits,
@@ -1779,12 +1800,12 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['profile', 'flowConfigs', 'loggedIn', 'darkMode']),
+        ...mapGetters(['profile', 'workflowConfigs', 'loggedIn', 'darkMode']),
         mustAuthenticate() {
             return !this.target.policies.some(
                 p =>
                     p.user === this.profile.djangoProfile.username &&
-                    (p.role.toLowerCase() == 'use' ||
+                    (p.role.toLowerCase() === 'use' ||
                         p.role.toLowerCase() === 'own')
             );
         },
@@ -1794,7 +1815,7 @@ export default {
             } ${this.delayUnits.toLowerCase()}`;
             // else return `${this.parseCronTime(this.crontime)}`;  TODO allow direct cron editing
         },
-        flowKey: function() {
+        workflowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         },
         inputFiletypeSelected: function() {
@@ -1802,17 +1823,20 @@ export default {
         },
         paramsReady: function() {
             if (
-                this.flow !== null &&
-                this.flow.config.params !== undefined &&
-                this.flow.config.params.length !== 0
+                this.workflow !== null &&
+                this.workflow.config.params !== undefined &&
+                this.workflow.config.params.length !== 0
             )
                 return this.params.every(param => param.value !== '');
             else return true;
         },
         inputReady: function() {
-            if (this.flow !== null && this.flow.config.input !== undefined)
+            if (
+                this.workflow !== null &&
+                this.workflow.config.input !== undefined
+            )
                 return (
-                    this.flow.config.input.path !== undefined &&
+                    this.workflow.config.input.path !== undefined &&
                     this.input.from !== '' &&
                     this.input.kind !== '' &&
                     this.inputFiletypeSelected
@@ -1822,18 +1846,18 @@ export default {
         outputReady: function() {
             if (
                 this.outputDirectory &&
-                this.flow &&
-                this.flow.config &&
-                this.flow.config.input !== undefined &&
-                this.flow.config.output.path !== undefined
+                this.workflow &&
+                this.workflow.config &&
+                this.workflow.config.input !== undefined &&
+                this.workflow.config.output.path !== undefined
             )
                 return this.output.to !== '';
             return true;
         },
         flowReady: function() {
             return (
-                !this.flowLoading &&
-                this.flowValidated &&
+                !this.workflowLoading &&
+                this.workflowValid &&
                 this.paramsReady &&
                 this.inputReady &&
                 this.outputReady &&

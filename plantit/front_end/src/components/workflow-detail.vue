@@ -1,16 +1,16 @@
 <template>
     <div
-        v-if="flow && flow.config"
+        v-if="workflow && workflow.config"
         :class="darkMode ? 'theme-dark' : 'theme-light'"
     >
         <b-img
-            v-if="flow.config.logo"
+            v-if="workflow.config.logo"
             rounded
             class="card-img-right"
             style="max-width: 12rem;position: absolute;right: 20px;top: 20px;z-index:1"
             right
             :src="
-                `https://raw.githubusercontent.com/${flow.repo.owner.login}/${flow.repo.name}/master/${flow.config.logo}`
+                `https://raw.githubusercontent.com/${workflow.repo.owner.login}/${workflow.repo.name}/master/${workflow.config.logo}`
             "
         ></b-img>
         <b-img
@@ -25,18 +25,18 @@
                 <b-row>
                     <b-col md="auto" class="mr-0">
                         <h2 :class="darkMode ? 'text-white' : 'text-dark'">
-                            {{ flow.config.name }}
+                            {{ workflow.config.name }}
                         </h2>
                         <b-badge
                             class="mr-1"
                             :variant="
-                                flow.config.public ? 'success' : 'warning'
+                                workflow.config.public ? 'success' : 'warning'
                             "
                             >{{
-                                flow.config.public ? 'Public' : 'Private'
+                                workflow.config.public ? 'Public' : 'Private'
                             }}</b-badge
                         ><b-badge
-                            v-for="topic in flow.repo.topics"
+                            v-for="topic in workflow.repo.topics"
                             v-bind:key="topic"
                             class="mr-1"
                             variant="secondary"
@@ -51,13 +51,15 @@
                                 :class="darkMode ? 'text-light' : 'text-dark'"
                                 :href="
                                     'https://github.com/' +
-                                        flow.repo.owner.login +
+                                        workflow.repo.owner.login +
                                         '/' +
-                                        flow.repo.name
+                                        workflow.repo.name
                                 "
                             >
                                 <i class="fab fa-github fa-fw"></i>
-                                {{ flow.repo.owner.login }}/{{ flow.repo.name }}
+                                {{ workflow.repo.owner.login }}/{{
+                                    workflow.repo.name
+                                }}
                             </b-link>
                         </small>
                     </b-col>
@@ -66,11 +68,13 @@
                     <b-col>
                         <b-row>
                             <b-col>
-                                {{ flow.repo.description }}
+                                {{ workflow.repo.description }}
                             </b-col>
                         </b-row>
                         <br />
-                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">Configuration</h5>
+                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">
+                            Configuration
+                        </h5>
                         <hr />
                         <b-row>
                             <b-col>
@@ -79,7 +83,7 @@
                                         <small>Author</small>
                                     </b-col>
                                     <b-col cols="10">
-                                        <b>{{ flow.config.author }}</b>
+                                        <b>{{ workflow.config.author }}</b>
                                     </b-col>
                                 </b-row>
                                 <b-row>
@@ -87,63 +91,37 @@
                                         <small>Image</small>
                                     </b-col>
                                     <b-col cols="10">
-                                        <b>{{ flow.config.image }}</b>
+                                        <b>{{ workflow.config.image }}</b>
                                     </b-col>
                                 </b-row>
-                                <!--<b-row v-if="flow.config.gpu !== undefined">-->
                                 <b-row>
                                     <b-col>
                                         <small>GPU</small>
                                     </b-col>
                                     <b-col cols="10">
-                                        {{ flow.config.gpu ? 'Yes' : 'No' }}
+                                        {{ workflow.config.gpu ? 'Yes' : 'No' }}
                                     </b-col>
                                 </b-row>
-                                <!--<b-row v-if="flow.config.mount !== undefined">-->
                                 <b-row>
                                     <b-col>
                                         <small>Mount</small>
                                     </b-col>
                                     <b-col cols="10">
                                         {{
-                                            flow.config.mount
-                                                ? flow.config.mount
+                                            workflow.config.mount
+                                                ? workflow.config.mount
                                                 : 'None'
                                         }}
                                     </b-col>
                                 </b-row>
-                                <!--<b-row>
-                                    <b-col>
-                                        <small>From</small>
-                                    </b-col>
-                                    <b-col cols="10">
-                                        <b>{{
-                                            flow.config.from
-                                                ? flow.config.from.capitalize()
-                                                : 'None'
-                                        }}</b>
-                                    </b-col>
-                                </b-row>
-                                <b-row>
-                                    <b-col>
-                                        <small>To</small>
-                                    </b-col>
-                                    <b-col cols="10">
-                                        <b>{{
-                                            flow.config.to
-                                                ? flow.config.to.capitalize()
-                                                : 'None'
-                                        }}</b>
-                                    </b-col>
-                                </b-row>-->
                                 <b-row>
                                     <b-col>
                                         <small>Parameters</small>
                                     </b-col>
                                     <b-col cols="10">
                                         <b>{{
-                                            flow.config.params
-                                                ? flow.config.params.length
+                                            workflow.config.params
+                                                ? workflow.config.params.length
                                                 : 'None'
                                         }}</b>
                                     </b-col>
@@ -155,12 +133,14 @@
                                     <b-col cols="10">
                                         <b
                                             ><code>{{
-                                                ' ' + flow.config.commands
+                                                ' ' + workflow.config.commands
                                             }}</code></b
                                         >
                                     </b-col>
                                 </b-row>
-                                <b-row v-if="flow.config.input !== undefined">
+                                <b-row
+                                    v-if="workflow.config.input !== undefined"
+                                >
                                     <b-col>
                                         <small>Input</small>
                                     </b-col>
@@ -168,12 +148,13 @@
                                         <b
                                             ><code
                                                 >[working directory]/input/{{
-                                                    flow.config.input.filetypes
+                                                    workflow.config.input
+                                                        .filetypes
                                                         ? '[' +
-                                                          (flow.config.input
+                                                          (workflow.config.input
                                                               .filetypes
                                                               ? '*.' +
-                                                                flow.config.input.filetypes.join(
+                                                                workflow.config.input.filetypes.join(
                                                                     ', *.'
                                                                 )
                                                               : []) +
@@ -184,7 +165,9 @@
                                         >
                                     </b-col>
                                 </b-row>
-                                <b-row v-if="flow.config.output !== undefined">
+                                <b-row
+                                    v-if="workflow.config.output !== undefined"
+                                >
                                     <b-col>
                                         <small>Output</small>
                                     </b-col>
@@ -192,44 +175,52 @@
                                         <b
                                             ><code
                                                 >[working directory]/{{
-                                                    flow.config.output.path
-                                                        ? flow.config.output
+                                                    workflow.config.output.path
+                                                        ? workflow.config.output
                                                               .path + '/'
                                                         : ''
                                                 }}{{
-                                                    flow.config.output.include
+                                                    workflow.config.output
+                                                        .include
                                                         ? '[' +
-                                                          (flow.config.output
-                                                              .exclude
+                                                          (workflow.config
+                                                              .output.exclude
                                                               ? '+ '
                                                               : '') +
-                                                          (flow.config.output
-                                                              .include.patterns
+                                                          (workflow.config
+                                                              .output.include
+                                                              .patterns
                                                               ? '*.' +
-                                                                flow.config.output.include.patterns.join(
+                                                                workflow.config.output.include.patterns.join(
                                                                     ', *.'
                                                                 )
                                                               : []) +
-                                                          (flow.config.output
-                                                              .include.names
-                                                              ? ', ' + flow.config.output.include.names.join(
+                                                          (workflow.config
+                                                              .output.include
+                                                              .names
+                                                              ? ', ' +
+                                                                workflow.config.output.include.names.join(
                                                                     ', '
                                                                 )
                                                               : [])
                                                         : ''
                                                 }}{{
-                                                    flow.config.output.exclude
+                                                    workflow.config.output
+                                                        .exclude
                                                         ? ' - ' +
-                                                          (flow.config.output
-                                                              .exclude.patterns
+                                                          (workflow.config
+                                                              .output.exclude
+                                                              .patterns
                                                               ? '*.' +
-                                                                flow.config.output.exclude.patterns.join(
+                                                                workflow.config.output.exclude.patterns.join(
                                                                     ', *.'
                                                                 )
                                                               : []) +
-                                                          (flow.config.output
-                                                              .exclude.names
-                                                              ? ', ' + flow.config.output.exclude.names.join(
+                                                          (workflow.config
+                                                              .output.exclude
+                                                              .names
+                                                              ? ', ' +
+                                                                workflow.config.output.exclude.names.join(
                                                                     ', '
                                                                 )
                                                               : [])
@@ -249,21 +240,23 @@
                         align-self="end"
                         md="auto"
                         class="text-right"
-                        v-if="!flow.config.resources"
+                        v-if="!workflow.config.resources"
                     >
                         <b-alert show variant="warning"
-                            >This flow does not specify cluster resources and
+                            >This workflow does not specify cluster resources and
                             can only be run in the <b>Sandbox</b>.</b-alert
                         >
                     </b-col>
                     <b-col align-self="end" class="text-left" v-else>
-                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">Resource Requests</h5>
+                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">
+                            Resource Requests
+                        </h5>
                         <hr />
                         <b-row align-v="right" align-h="right">
                             <b-col>
                                 <b
                                     ><code>{{
-                                        ' ' + flow.config.resources.time
+                                        ' ' + workflow.config.resources.time
                                     }}</code></b
                                 >
                                 <small> time</small>
@@ -273,7 +266,7 @@
                             <b-col>
                                 <b
                                     ><code>{{
-                                        ' ' + flow.config.resources.mem
+                                        ' ' + workflow.config.resources.mem
                                     }}</code></b
                                 >
                                 <small> memory</small>
@@ -283,7 +276,8 @@
                             <b-col>
                                 <b
                                     ><code>{{
-                                        ' ' + flow.config.resources.processes
+                                        ' ' +
+                                            workflow.config.resources.processes
                                     }}</code></b
                                 >
                                 <small> process(es)</small>
@@ -293,7 +287,7 @@
                             <b-col>
                                 <b
                                     ><code>{{
-                                        ' ' + flow.config.resources.cores
+                                        ' ' + workflow.config.resources.cores
                                     }}</code></b
                                 >
                                 <small> core(s)</small>
@@ -310,29 +304,23 @@
 import { mapGetters } from 'vuex';
 
 export default {
-    name: 'flow-detail',
+    name: 'workflow-detail',
     props: {
         showPublic: {
             type: Boolean,
             required: true
         },
-        flow: {
+        workflow: {
             type: Object,
             required: true
-        },
+        }
     },
     computed: {
-        ...mapGetters([
-            'profile.djangoProfile',
-            'profile.githubProfile',
-            'profile.cyverseProfile',
-            'loggedIn',
-            'darkMode'
-        ])
+        ...mapGetters(['profile', 'loggedIn', 'darkMode'])
     },
     methods: {
-        flowSelected: function(flow) {
-            this.$emit('flowSelected', flow);
+        workflowSelected: function(workflow) {
+            this.$emit('workflowSelected', workflow);
         }
     }
 };

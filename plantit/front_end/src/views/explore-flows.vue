@@ -10,7 +10,7 @@
         <br />
         <b-container class="pl-3 pt-3 mr-3" fluid>
             <b-row
-                v-if="githubProfile === null"
+                v-if="profile.githubProfile === null"
                 align-v="center"
                 align-h="center"
                 class="p-2 text-center"
@@ -26,16 +26,16 @@
                     </b-button>
                 </b-col>
                 <b-col class="ml-0 pl-0 text-left">
-                    <b class="ml-0 pl-0">to load flows.</b>
+                    <b class="ml-0 pl-0">to load workflows.</b>
                 </b-col>
             </b-row>
             <b-row v-else align-v="center" align-h="center">
-                <flows
+                <workflows
                     :github-token="
                         profile.djangoProfile.profile.github_token
                     "
                 >
-                </flows>
+                </workflows>
             </b-row>
         </b-container>
     </div>
@@ -44,21 +44,21 @@
 <script>
 import router from '../router';
 import { mapGetters } from 'vuex';
-import flows from '@/components/flows.vue';
+import workflows from '@/components/workflows.vue';
 
 String.prototype.capitalize = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
 };
 
 export default {
-    name: 'explore-flows',
+    name: 'explore-workflows',
     data() {
         return {
             currentTab: 0
         };
     },
     components: {
-        flows
+        workflows
     },
     computed: mapGetters([
         'profile',

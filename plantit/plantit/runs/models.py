@@ -26,9 +26,9 @@ class Run(models.Model):
     job_id = models.CharField(max_length=7, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
     job_walltime = models.CharField(max_length=8, null=True, blank=True)
-    flow_owner = models.CharField(max_length=280, null=True, blank=True)
-    flow_name = models.CharField(max_length=280, null=True, blank=True)
-    flow_image_url = models.URLField(null=True, blank=True)
+    workflow_owner = models.CharField(max_length=280, null=True, blank=True)
+    workflow_name = models.CharField(max_length=280, null=True, blank=True)
+    workflow_image_url = models.URLField(null=True, blank=True)
     target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.SET_NULL)
     work_dir = models.CharField(max_length=100, null=True, blank=True)
     task = models.ForeignKey(PeriodicTask, null=True, blank=True, on_delete=models.CASCADE)
@@ -64,16 +64,16 @@ class Run(models.Model):
 class DelayedRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     target = models.ForeignKey(Target, on_delete=models.CASCADE)
-    flow_owner = models.CharField(max_length=280, null=True, blank=True)
-    flow_name = models.CharField(max_length=280, null=True, blank=True)
+    workflow_owner = models.CharField(max_length=280, null=True, blank=True)
+    workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
 
 
 class RepeatingRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     target = models.ForeignKey(Target, on_delete=models.CASCADE)
-    flow_owner = models.CharField(max_length=280, null=True, blank=True)
-    flow_name = models.CharField(max_length=280, null=True, blank=True)
+    workflow_owner = models.CharField(max_length=280, null=True, blank=True)
+    workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
 
 

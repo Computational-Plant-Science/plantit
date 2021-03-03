@@ -324,8 +324,7 @@
                                                                   target.role
                                                         }`
                                                     }}
-                                                    this deployment
-                                                    target.</small
+                                                    this server.</small
                                                 ></b-col
                                             >
                                             <b-col
@@ -388,8 +387,7 @@
                                         ><b-col
                                             ><small
                                                 >You are the only user with
-                                                access to this deployment
-                                                target.</small
+                                                access.</small
                                             ></b-col
                                         ></b-row
                                     >
@@ -407,7 +405,7 @@
                                             }}<small>
                                                 can
                                                 {{ policy.role.toLowerCase() }}
-                                                this deployment target.</small
+                                                this server.</small
                                             ></b-col
                                         ><b-col
                                             class="ml-0"
@@ -653,7 +651,7 @@ import VueCronEditorBuefy from 'vue-cron-editor-buefy';
 import parser from 'cron-parser';
 
 export default {
-    name: 'target.vue',
+    name: 'server',
     components: {
         VueCronEditorBuefy
     },
@@ -695,7 +693,7 @@ export default {
         revokeAccess(user) {
             axios
                 .get(
-                    `/apis/v1/targets/revoke_access/?name=${this.$route.params.name}&user=${user}`
+                    `/apis/v1/servers/revoke_access/?name=${this.$route.params.name}&user=${user}`
                 )
                 .then(() => {
                     this.loadTarget();
@@ -714,7 +712,7 @@ export default {
         grantAccess(user) {
             axios
                 .get(
-                    `/apis/v1/targets/grant_access/?name=${this.$route.params.name}&user=${user}`
+                    `/apis/v1/servers/grant_access/?name=${this.$route.params.name}&user=${user}`
                 )
                 .then(response => {
                     this.loadTarget();
@@ -736,20 +734,20 @@ export default {
         requestAccess() {
             axios
                 .get(
-                    `/apis/v1/targets/request_access/?name=${this.$route.params.name}`
+                    `/apis/v1/servers/request_access/?name=${this.$route.params.name}`
                 )
                 .then(response => {
                     this.loadTarget();
                     if (response.data.created)
-                        this.statusAlertMessage = `Requested access to target ${this.$route.params.name}}`;
+                        this.statusAlertMessage = `Requested access to server ${this.$route.params.name}`;
                     else
-                        this.statusAlertMessage = `You've already requested access to target ${this.$route.params.name}}`;
+                        this.statusAlertMessage = `You've already requested access to server ${this.$route.params.name}`;
                     this.showStatusAlert = true;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) {
-                        this.statusAlertMessage = `Failed to request access to target ${this.$route.params.name}`;
+                        this.statusAlertMessage = `Failed to request access to server ${this.$route.params.name}`;
                         this.showStatusAlert = true;
                         throw error;
                     }
@@ -758,11 +756,11 @@ export default {
         togglePublic() {
             axios
                 .get(
-                    `/apis/v1/targets/toggle_public/?name=${this.$route.params.name}`
+                    `/apis/v1/servers/toggle_public/?name=${this.$route.params.name}`
                 )
                 .then(response => {
                     this.target.public = response.data.public;
-                    this.statusAlertMessage = `Target ${
+                    this.statusAlertMessage = `Server ${
                         this.$route.params.name
                     } is now ${this.target.public ? 'public' : 'private'}`;
                     this.showStatusAlert = true;
@@ -770,7 +768,7 @@ export default {
                 .catch(error => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) {
-                        this.statusAlertMessage = `Failed to toggle target ${this.$route.params.name} visibility`;
+                        this.statusAlertMessage = `Failed to toggle server ${this.$route.params.name} visibility`;
                         this.showStatusAlert = true;
                         throw error;
                     }
@@ -792,7 +790,7 @@ export default {
         },
         deleteTask(task) {
             return axios
-                .get(`/apis/v1/targets/remove_task/?name=${task.name}`)
+                .get(`/apis/v1/servers/remove_task/?name=${task.name}`)
                 .then(() => {
                     this.loadTarget();
                     this.statusAlertMessage = `Deleted task ${task.name} on ${this.target.name}`;
@@ -811,7 +809,7 @@ export default {
             event.preventDefault();
             axios({
                 method: 'post',
-                url: `/apis/v1/targets/create_task/`,
+                url: `/apis/v1/servers/create_task/`,
                 data: {
                     name: this.createTaskForm.name,
                     target: this.target.name,
@@ -869,7 +867,7 @@ export default {
             this.targetLoading = true;
             return axios
                 .get(
-                    `/apis/v1/targets/get_by_name/?name=${this.$route.params.name}`
+                    `/apis/v1/servers/get_by_name/?name=${this.$route.params.name}`
                 )
                 .then(response => {
                     this.target = response.data;
@@ -885,7 +883,7 @@ export default {
         checkStatus: function() {
             this.checkingStatus = true;
             return axios
-                .get(`/apis/v1/targets/status/?name=${this.$route.params.name}`)
+                .get(`/apis/v1/servers/status/?name=${this.$route.params.name}`)
                 .then(response => {
                     this.statusAlertMessage = response.data.healthy
                         ? `Connection to ${this.target.name} succeeded`
@@ -903,7 +901,7 @@ export default {
         },
         toggleTask: function(task) {
             axios
-                .get(`/apis/v1/targets/toggle_task/?name=${task.name}`)
+                .get(`/apis/v1/servers/toggle_task/?name=${task.name}`)
                 .then(response => {
                     this.loadTarget();
                     this.statusAlertMessage = `${

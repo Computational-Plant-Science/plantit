@@ -13,7 +13,7 @@ from plantit.celery import app
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
-from plantit.runs.utils import update_status, execute_command, old_flow_config_to_new, remove_logs, parse_job_id, create_run
+from plantit.runs.utils import update_status, execute_command, map_old_workflow_config_to_new, remove_logs, parse_job_id, create_run
 from plantit.targets.models import Target
 
 logger = get_task_logger(__name__)
@@ -36,7 +36,7 @@ def __upload_run(flow, run: Run, ssh: SSH):
     resources = None if 'resources' not in flow['config']['target'] else flow['config']['target']['resources']  # cluster resource requests, if any
     callback_url = settings.API_URL + 'runs/' + run.guid + '/status/'  # PlantIT status update callback URL
     work_dir = join(run.target.workdir, run.work_dir)
-    new_flow = old_flow_config_to_new(flow, run, resources)  # TODO update flow UI page
+    new_flow = map_old_workflow_config_to_new(flow, run, resources)  # TODO update flow UI page
 
     # create working directory
     execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.target.workdir, allow_stderr=True)

@@ -1,26 +1,31 @@
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
-export const flows = {
+export const workflows = {
     state: () => ({
-        flows: [],
-        flowConfigs: {}
+        workflows: [],
+        workflowConfigs: {}
     }),
     mutations: {
-        setFlows(state, flows) {
-            state.flows = flows;
+        setWorkflows(state, workflows) {
+            state.workflows = workflows;
         },
-        setFlowConfig(state, { name, config }) {
-            state.flowConfigs[name] = config;
+        setWorkflowConfig(state, { name, config }) {
+            state.workflowConfigs[name] = config;
         }
     },
     actions: {
-        loadFlows({ commit, state }) {
-            let url = (state.user.githubProfile !== undefined && state.user.githubProfile && state.user.githubProfile.username !== '') ? `/apis/v1/flows/${this.githubUser}/` : '/apis/v1/flows/list_all/'
+        loadWorkflows({ commit, state }) {
+            let url =
+                state.user.githubProfile !== undefined &&
+                state.user.githubProfile &&
+                state.user.githubProfile.username !== ''
+                    ? `/apis/v1/workflows/${this.githubUser}/`
+                    : '/apis/v1/workflows/list_all/';
             axios
                 .get(url)
                 .then(response => {
-                    this.flows = response.data.flows
+                    this.workflows = response.data.workflows;
                     this.loading = false;
                 })
                 .catch(error => {
@@ -43,7 +48,7 @@ export const flows = {
                         }
                     )
                     .then(response => {
-                        commit('setFlows', response.data);
+                        commit('setWorkflows', response.data);
                     })
                     .catch(error => {
                         Sentry.captureException(error);
@@ -53,19 +58,19 @@ export const flows = {
                 return [];
             }
         },
-        setFlowConfig({ commit }, payload) {
-            commit('setFlowConfig', payload);
+        setWorkflowConfig({ commit }, payload) {
+            commit('setWorkflowConfig', payload);
         }
     },
     getters: {
-        flows: state => state.flows,
-        flow: state => (owner, name) => {
-            return state.flows.find(
+        workflows: state => state.workflows,
+        workflow: state => (owner, name) => {
+            return state.workflows.find(
                 repo =>
                     owner === repo.repository.owner.login &&
                     name === repo.repository.name
             );
         },
-        flowConfigs: state => state.flowConfigs
+        workflowConfigs: state => state.workflowConfigs
     }
 };

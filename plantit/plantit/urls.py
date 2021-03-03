@@ -11,7 +11,7 @@ from .users.views import UsersViewSet, IDPViewSet
 router = routers.DefaultRouter()
 router.register('users', UsersViewSet)
 router.register('idp', IDPViewSet, basename='idp')
-router.register('targets', TargetsViewSet)
+router.register('servers', TargetsViewSet)
 router.register('miappe/investigations', InvestigationViewSet)
 router.register('miappe/studies', StudyViewSet)
 router.register('miappe/roles', RoleViewSet)
@@ -29,7 +29,7 @@ urlpatterns = [
     url('auth/login/', login_view),
     url('auth/logout/', logout_view),
     url('runs/', include("plantit.runs.urls")),
-    url('flows/', include("plantit.flows.urls")),
+    url('workflows/', include("plantit.workflows.urls")),
     url('stores/', include("plantit.stores.urls")),
     url('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'))),
 ]

@@ -145,8 +145,8 @@ export default {
         };
     },
     computed: {
-        ...mapGetters(['profile', 'flowConfigs', 'loggedIn', 'darkMode']),
-        flowKey: function() {
+        ...mapGetters(['profile', 'workflowConfigs', 'loggedIn', 'darkMode']),
+        workflowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }
     },
@@ -188,14 +188,10 @@ export default {
                 Sentry.captureException(error);
                 throw error;
             });
-        if (this.flowKey in this.flowConfigs) {
-            let flowConfig = this.flowConfigs[this.flowKey];
-            if (
-                flowConfig.input !== undefined &&
-                flowConfig.input.from !== undefined
-            ) {
-                this.path = flowConfig.input.from;
-            }
+        if (this.workflowKey in this.workflowConfigs) {
+            let config = this.workflowConfigs[this.workflowKey];
+            if (config.input !== undefined && config.input.from !== undefined)
+                this.path = config.input.from;
         }
         if (this.defaultPath !== undefined && this.defaultPath !== null) {
             this.path = this.defaultPath;

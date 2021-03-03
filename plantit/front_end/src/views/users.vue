@@ -128,7 +128,7 @@ export default {
     methods: {
         goToFlows() {
             router.push({
-                name: 'flows'
+                name: 'workflows'
             });
         },
         loadUsers() {
