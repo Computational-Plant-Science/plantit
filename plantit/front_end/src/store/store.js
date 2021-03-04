@@ -26,7 +26,6 @@ const store = new Vuex.Store({
         user,
         users,
         workflows
-        // data
     }
 });
 

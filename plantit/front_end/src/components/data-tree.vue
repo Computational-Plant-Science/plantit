@@ -92,7 +92,7 @@
                             uploadFiles(
                                 filesToUpload,
                                 internalLoaded ? internalNode.path : node.path,
-                                profile.djangoProfile.profile.cyverse_token
+                                profile.djangoProfile.cyverse_token
                             )
                         "
                         :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
@@ -133,7 +133,7 @@
                                     : node.path) +
                                     '/' +
                                     newDirectoryName,
-                                profile.djangoProfile.profile.cyverse_token
+                                profile.djangoProfile.cyverse_token
                             )
                         "
                     >
@@ -359,7 +359,7 @@
                         @click="
                             deletePath(
                                 internalLoaded ? internalNode.path : node.path,
-                                profile.djangoProfile.profile.cyverse_token
+                                profile.djangoProfile.cyverse_token
                             )
                         "
                         variant="outline-danger"
@@ -454,7 +454,7 @@
                     @click="
                         deletePath(
                             internalLoaded ? internalNode.path : node.path,
-                            profile.djangoProfile.profile.cyverse_token
+                            profile.djangoProfile.cyverse_token
                         )
                     "
                     variant="outline-danger"
@@ -468,7 +468,7 @@
                     @click="
                         loadDirectory(
                             internalLoaded ? internalNode.path : node.path,
-                            profile.djangoProfile.profile.cyverse_token
+                            profile.djangoProfile.cyverse_token
                         )
                     "
                     ><i
@@ -522,7 +522,7 @@
                         @click="
                             deletePath(
                                 child.path,
-                                profile.djangoProfile.profile.cyverse_token
+                                profile.djangoProfile.cyverse_token
                             )
                         "
                         variant="outline-danger"
@@ -534,7 +534,7 @@
                         @click="
                             downloadFile(
                                 child.path,
-                                profile.djangoProfile.profile.cyverse_token
+                                profile.djangoProfile.cyverse_token
                             )
                         "
                         :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
@@ -563,7 +563,7 @@
                 @deleted="
                     loadDirectory(
                         node.path,
-                        this.profile.djangoProfile.profile.cyverse_token
+                        this.profile.djangoProfile.cyverse_token
                     )
                 "
                 :key="index"
@@ -795,7 +795,7 @@ export default {
         refresh: function() {
             this.loadDirectory(
                 this.internalLoaded ? this.internalNode.path : this.node.path,
-                this.profile.djangoProfile.profile.cyverse_token
+                this.profile.djangoProfile.cyverse_token
             );
         },
         async downloadFile(path, token) {
@@ -883,7 +883,7 @@ export default {
         refreshAfterDirectoryCreation() {
             this.loadDirectory(
                 this.internalNode.path,
-                this.profile.djangoProfile.profile.cyverse_token
+                this.profile.djangoProfile.cyverse_token
             );
             this.creatingDirectory = false;
             // this.checkDirectoryCreation(path, response);
@@ -957,7 +957,7 @@ export default {
             }
             await this.loadDirectory(
                 to_path,
-                this.profile.djangoProfile.profile.cyverse_token
+                this.profile.djangoProfile.cyverse_token
             );
             this.filesToUpload = [];
             this.uploading = false;

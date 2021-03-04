@@ -6,14 +6,13 @@ from pathlib import Path
 from asgiref.sync import async_to_sync
 from celery.result import AsyncResult
 from channels.generic.websocket import WebsocketConsumer
-from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
+from django_celery_beat.models import IntervalSchedule
 from rest_framework.decorators import api_view
 
 from plantit import settings
@@ -22,10 +21,9 @@ from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import update_status, map_run, submission_log_file_name, map_run_task, create_run, parse_eta, map_delayed_run_task, \
+from plantit.runs.utils import update_status, map_run, submission_log_file_name, create_run, parse_eta, map_delayed_run_task, \
     map_repeating_run_task
 from plantit.targets.models import Target
-from plantit.targets.utils import map_target
 from plantit.utils import get_repo_config
 
 
@@ -259,6 +257,7 @@ def get_container_logs(request, id):
 
 
 @api_view(['GET'])
+@login_required
 def get_runs_by_user_and_workflow(request, username, workflow, page):
     try:
         user = User.objects.get(username=username)
@@ -271,6 +270,7 @@ def get_runs_by_user_and_workflow(request, username, workflow, page):
 
 
 @api_view(['GET'])
+@login_required
 def get_delayed_runs_by_user_and_workflow(request, username, workflow):
     user = User.objects.get(username=username)
     try:
@@ -283,6 +283,7 @@ def get_delayed_runs_by_user_and_workflow(request, username, workflow):
 
 
 @api_view(['GET'])
+@login_required
 def remove_delayed(request):
     task_name = request.GET.get('name', None)
     if task_name is None:
@@ -298,6 +299,7 @@ def remove_delayed(request):
 
 
 @api_view(['GET'])
+@login_required
 def get_repeating_runs_by_user_and_workflow(request, username, workflow):
     user = User.objects.get(username=username)
     try:
@@ -310,6 +312,7 @@ def get_repeating_runs_by_user_and_workflow(request, username, workflow):
 
 
 @api_view(['GET'])
+@login_required
 def toggle_repeating(request, username, workflow):
     task_name = request.GET.get('name', None)
     if task_name is None:
@@ -322,6 +325,7 @@ def toggle_repeating(request, username, workflow):
 
 
 @api_view(['GET'])
+@login_required
 def remove_repeating(request, username, workflow):
     task_name = request.GET.get('name', None)
     if task_name is None:
@@ -419,7 +423,6 @@ def run(request, id):
 @api_view(['GET'])
 @login_required
 def cancel(request, id):
-    channel_layer = get_channel_layer()
     try:
         run = Run.objects.get(guid=id)
     except:

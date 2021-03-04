@@ -535,7 +535,7 @@ export default {
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
-        // TODO await this.$store.dispatch('loadRuns');
+        await this.$store.dispatch('loadRuns');
 
         // subscribe to run update channel
         this.sockets.subscribe('update_status', data => {

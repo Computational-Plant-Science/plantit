@@ -19,8 +19,14 @@
             <b-tab
                 :active="!this.path.startsWith('/iplant/home/shared')"
                 title="Your own data"
-                :title-link-class="profile.darkMode ? 'text-white' : 'text-dark'"
-                :class="profile.darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
+                :title-link-class="
+                    profile.darkMode ? 'text-white' : 'text-dark'
+                "
+                :class="
+                    profile.darkMode
+                        ? 'theme-dark m-0 p-3'
+                        : 'theme-light m-0 p-3'
+                "
             >
                 <b-row
                     ><b-col>
@@ -45,8 +51,14 @@
                         isShared(this.path)
                 "
                 title="Shared with you"
-                :title-link-class="profile.darkMode ? 'text-white' : 'text-dark'"
-                :class="profile.darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
+                :title-link-class="
+                    profile.darkMode ? 'text-white' : 'text-dark'
+                "
+                :class="
+                    profile.darkMode
+                        ? 'theme-dark m-0 p-3'
+                        : 'theme-light m-0 p-3'
+                "
             >
                 <b-row
                     ><b-col class="text-center"
@@ -66,7 +78,9 @@
                             @selectNode="selectNode"
                             :upload="true"
                             :download="true"
-                            :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+                            :class="
+                                profile.darkMode ? 'theme-dark' : 'theme-light'
+                            "
                         ></datatree></b-col></b-row
                 ><b-row
                     v-if="!sharedDataLoading && directoriesShared.length === 0"
@@ -79,8 +93,14 @@
                         this.path.startsWith('/iplant/home/shared')
                 "
                 title="Public data"
-                :title-link-class="profile.darkMode ? 'text-white' : 'text-dark'"
-                :class="profile.darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
+                :title-link-class="
+                    profile.darkMode ? 'text-white' : 'text-dark'
+                "
+                :class="
+                    profile.darkMode
+                        ? 'theme-dark m-0 p-3'
+                        : 'theme-light m-0 p-3'
+                "
             >
                 <b-row
                     ><b-col>
@@ -157,8 +177,7 @@ export default {
                 {
                     headers: {
                         Authorization:
-                            'Bearer ' +
-                            this.profile.djangoProfile.cyverse_token
+                            'Bearer ' + this.profile.djangoProfile.cyverse_token
                     }
                 }
             )
@@ -176,8 +195,7 @@ export default {
                 {
                     headers: {
                         Authorization:
-                            'Bearer ' +
-                            this.profile.djangoProfile.cyverse_token
+                            'Bearer ' + this.profile.djangoProfile.cyverse_token
                     }
                 }
             )
