@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b :class="darkMode ? 'text-white' : 'text-dark'">
+        <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
             Select a public
             {{ this.kind === 'files' ? 'directory' : this.kind }} from the Data
             Commons or your own
@@ -19,8 +19,8 @@
             <b-tab
                 :active="!this.path.startsWith('/iplant/home/shared')"
                 title="Your own data"
-                :title-link-class="darkMode ? 'text-white' : 'text-dark'"
-                :class="darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
+                :title-link-class="profile.darkMode ? 'text-white' : 'text-dark'"
+                :class="profile.darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
             >
                 <b-row
                     ><b-col>
@@ -45,8 +45,8 @@
                         isShared(this.path)
                 "
                 title="Shared with you"
-                :title-link-class="darkMode ? 'text-white' : 'text-dark'"
-                :class="darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
+                :title-link-class="profile.darkMode ? 'text-white' : 'text-dark'"
+                :class="profile.darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
             >
                 <b-row
                     ><b-col class="text-center"
@@ -66,7 +66,7 @@
                             @selectNode="selectNode"
                             :upload="true"
                             :download="true"
-                            :class="darkMode ? 'theme-dark' : 'theme-light'"
+                            :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
                         ></datatree></b-col></b-row
                 ><b-row
                     v-if="!sharedDataLoading && directoriesShared.length === 0"
@@ -79,8 +79,8 @@
                         this.path.startsWith('/iplant/home/shared')
                 "
                 title="Public data"
-                :title-link-class="darkMode ? 'text-white' : 'text-dark'"
-                :class="darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
+                :title-link-class="profile.darkMode ? 'text-white' : 'text-dark'"
+                :class="profile.darkMode ? 'theme-dark m-0 p-3' : 'theme-light m-0 p-3'"
             >
                 <b-row
                     ><b-col>
@@ -145,7 +145,7 @@ export default {
         };
     },
     computed: {
-        ...mapGetters(['profile', 'workflowConfigs', 'loggedIn', 'darkMode']),
+        ...mapGetters(['profile', 'workflowsRecentlyRun']),
         workflowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }
@@ -188,8 +188,8 @@ export default {
                 Sentry.captureException(error);
                 throw error;
             });
-        if (this.workflowKey in this.workflowConfigs) {
-            let config = this.workflowConfigs[this.workflowKey];
+        if (this.workflowKey in this.workflowsRecentlyRun) {
+            let config = this.workflowsRecentlyRun[this.workflowKey];
             if (config.input !== undefined && config.input.from !== undefined)
                 this.path = config.input.from;
         }
@@ -228,12 +228,12 @@ export default {
         },
         tabLinkClass(idx) {
             if (this.currentTab === idx) {
-                // return this.darkMode
+                // return this.profile.darkMode
                 //     ? 'background-dark text-success'
                 //     : 'bg-light text-dark';
-                return this.darkMode ? '' : 'text-dark';
+                return this.profile.darkMode ? '' : 'text-dark';
             } else {
-                return this.darkMode
+                return this.profile.darkMode
                     ? 'background-dark text-light'
                     : 'text-dark';
             }

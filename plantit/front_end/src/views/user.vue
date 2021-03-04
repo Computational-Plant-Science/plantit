@@ -3,7 +3,7 @@
         <br />
         <br />
         <b-container class="p-3 vl" fluid>
-            <div v-if="loadingUser">
+            <div v-if="profileLoading">
                 <br />
                 <b-row>
                     <b-col class="text-center">
@@ -22,7 +22,7 @@
                         align-self="end"
                         class="ml-0 mr-0"
                     >
-                        <div v-if="githubProfile">
+                        <div v-if="userProfile.githubProfile">
                             <b-row
                                 ><b-col
                                     md="auto"
@@ -34,11 +34,11 @@
                                         rounded
                                         style="max-height: 9rem; max-width: 9rem; position: relative; top: 38px; box-shadow: -2px 2px 2px #adb5bd"
                                         :src="
-                                            githubProfile
-                                                ? githubProfile.avatar_url
+                                            userProfile.githubProfile
+                                                ? userProfile.githubProfile.avatar_url
                                                 : ''
                                         "
-                                        v-if="githubProfile"
+                                        v-if="userProfile.githubProfile"
                                     ></b-img>
                                     <i
                                         v-else
@@ -50,44 +50,52 @@
                             <br />
                         </div>
                         <b-row
-                            :class="darkMode ? 'text-light' : 'text-secondary'"
+                            :class="
+                                profile.darkMode
+                                    ? 'text-light'
+                                    : 'text-secondary'
+                            "
                         >
                             <b-col class="ml-0 mr-0" align-self="end">
                                 <h3
                                     :class="
-                                        darkMode ? 'text-light' : 'text-dark'
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
                                     "
                                 >
                                     {{
-                                        cyverseProfile
-                                            ? `${cyverseProfile.first_name} ${cyverseProfile.last_name} `
-                                            : githubProfile
-                                            ? githubProfile.login
+                                        userProfile.cyverseProfile
+                                            ? `${userProfile.cyverseProfile.first_name} ${userProfile.cyverseProfile.last_name} `
+                                            : userProfile.githubProfile
+                                            ? userProfile.githubProfile.login
                                             : ''
                                     }}<small
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'text-warning'
                                                 : 'text-dark'
                                         "
-                                        v-if="djangoProfile !== null"
-                                        >({{ djangoProfile.username }})</small
+                                        v-if="userProfile.djangoProfile !== null"
+                                        >({{ userProfile.djangoProfile.username }})</small
                                     >
                                 </h3>
                                 <a
-                                    v-if="githubProfile"
+                                    v-if="userProfile.githubProfile"
                                     :class="
-                                        darkMode ? 'text-light' : 'text-dark'
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
                                     "
                                     :href="
                                         'https://github.com/' +
-                                            githubProfile.login
+                                            userProfile.githubProfile.login
                                     "
                                 >
                                     <i class="fab fa-github fa-1x fa-fw"></i>
                                     {{
                                         'https://github.com/' +
-                                            githubProfile.login
+                                            userProfile.githubProfile.login
                                     }}
                                 </a>
                             </b-col>
@@ -102,14 +110,14 @@
                             content-class="mt-2 mr-3"
                             v-model="currentTab"
                             :active-nav-item-class="
-                                darkMode ? 'bg-dark' : 'bg-secondary'
+                                profile.darkMode ? 'bg-dark' : 'bg-secondary'
                             "
                         >
-                            <b-tab v-if="djangoProfile" title="Profile" active>
+                            <b-tab v-if="userProfile.djangoProfile" title="Profile" active>
                                 <template v-slot:title>
                                     <b
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
@@ -118,21 +126,23 @@
                                 </template>
                                 <b-card
                                     :header-bg-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
-                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
                                     :border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                     :header-border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                 >
                                     <b-row
                                         ><b-col
                                             ><h5
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -144,9 +154,9 @@
                                     <b-row>
                                         <b-col md="auto">
                                             <b-card-text
-                                                v-if="cyverseProfile"
+                                                v-if="userProfile.cyverseProfile"
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'theme-dark'
                                                         : 'theme-light'
                                                 "
@@ -154,11 +164,11 @@
                                                 <p>
                                                     <small>Email</small>
                                                     <br />
-                                                    {{ cyverseProfile.email }}
+                                                    {{ userProfile.cyverseProfile.email }}
                                                     <br />
                                                     {{
-                                                        githubProfile
-                                                            ? githubProfile.email
+                                                        userProfile.githubProfile
+                                                            ? userProfile.githubProfile.email
                                                             : ''
                                                     }}
                                                 </p>
@@ -166,18 +176,18 @@
                                                     <small>Affiliation</small>
                                                     <br />
                                                     {{
-                                                        cyverseProfile ===
+                                                        userProfile.cyverseProfile ===
                                                         undefined
                                                             ? ''
-                                                            : cyverseProfile.institution
+                                                            : userProfile.cyverseProfile.institution
                                                     }}
                                                 </p>
                                                 <p>
                                                     <small>Bio</small>
                                                     <br />
                                                     {{
-                                                        githubProfile
-                                                            ? githubProfile.bio
+                                                        userProfile.githubProfile
+                                                            ? userProfile.githubProfile.bio
                                                             : 'None'
                                                     }}
                                                 </p>
@@ -185,8 +195,8 @@
                                                     <small>Location</small>
                                                     <br />
                                                     {{
-                                                        githubProfile
-                                                            ? githubProfile.location
+                                                        userProfile.githubProfile
+                                                            ? userProfile.githubProfile.location
                                                             : 'None'
                                                     }}
                                                 </p>
@@ -197,9 +207,8 @@
                             </b-tab>
                             <b-tab
                                 v-if="
-                                    this.profile.djangoProfile.username ===
-                                        this.$router.currentRoute.params
-                                            .username
+                                    profile.djangoProfile.username ===
+                                        $router.currentRoute.params.username
                                 "
                                 :title-link-class="tabLinkClass(1)"
                             >
@@ -208,24 +217,26 @@
                                 </template>
                                 <b-card
                                     :sub-title-text-variant="
-                                        darkMode ? 'white' : 'dark'
+                                        profile.darkMode ? 'white' : 'dark'
                                     "
                                     :header-bg-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
-                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
                                     :border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                     :header-border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                 >
                                     <b-row
                                         ><b-col
                                             ><h5
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -242,7 +253,7 @@
                                                 :upload="true"
                                                 :download="true"
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'theme-dark'
                                                         : 'theme-light'
                                                 "
@@ -253,7 +264,7 @@
                                         ><b-col
                                             ><h5
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -272,7 +283,7 @@
                                                 :upload="true"
                                                 :download="true"
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'theme-dark'
                                                         : 'theme-light'
                                                 "
@@ -290,7 +301,7 @@
                                         ><b-col
                                             ><h5
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -337,7 +348,7 @@
                                                 class="mb-2"
                                                 size="sm"
                                                 :variant="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'outline-light'
                                                         : 'outline-dark'
                                                 "
@@ -386,14 +397,15 @@
                                         >
                                     </b-col>
                                 </b-row>
-                                <b-row v-else-if="githubProfile">
+                                <b-row v-else-if="userProfile.githubProfile && profile.djangoProfile.github_token !== undefined">
                                     <workflows
                                         class="m-1"
-                                        :github-user="githubProfile.login"
+                                        :github-user="profile.githubProfile.login"
                                         :github-token="
-                                            profile.djangoProfile.profile
+                                            profile.djangoProfile
                                                 .github_token
                                         "
+                                        :workflows="userWorkflows"
                                     >
                                     </workflows>
                                 </b-row>
@@ -401,8 +413,7 @@
                             <b-tab
                                 v-if="
                                     profile.djangoProfile.username ===
-                                        this.$router.currentRoute.params
-                                            .username
+                                        $router.currentRoute.params.username
                                 "
                                 :title-link-class="tabLinkClass(3)"
                             >
@@ -445,7 +456,7 @@
                                             ><h5>
                                                 <small
                                                     :class="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'text-white'
                                                             : 'text-dark'
                                                     "
@@ -459,7 +470,7 @@
                                             ><h5>
                                                 <small
                                                     :class="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'text-white'
                                                             : 'text-dark'
                                                     "
@@ -470,7 +481,7 @@
                                     </b-row>
                                     <hr
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'theme-dark'
                                                 : 'theme-light'
                                         "
@@ -504,7 +515,9 @@
                                                 block
                                                 class="text-left pt-2"
                                                 :variant="
-                                                    darkMode ? 'dark' : 'white'
+                                                    profile.darkMode
+                                                        ? 'dark'
+                                                        : 'white'
                                                 "
                                                 :disabled="
                                                     target.role === 'none'
@@ -516,7 +529,7 @@
                                         <b-col align-self="center text-left"
                                             ><small
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -532,7 +545,7 @@
                                         <b-col
                                             align-self="center"
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-white'
                                                     : 'text-dark'
                                             "
@@ -543,7 +556,7 @@
                                         <b-col
                                             align-self="center"
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-white'
                                                     : 'text-dark'
                                             "
@@ -554,7 +567,7 @@
                                         <b-col
                                             align-self="center"
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-white'
                                                     : 'text-dark'
                                             "
@@ -583,7 +596,7 @@
                                         <b-col
                                             align-self="center"
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-white'
                                                     : 'text-dark'
                                             "
@@ -626,6 +639,7 @@ import datatree from '@/components/data-tree.vue';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import moment from 'moment';
+import jwtDecode from 'jwt-decode';
 
 export default {
     name: 'User',
@@ -635,32 +649,63 @@ export default {
     },
     data: function() {
         return {
-            djangoProfile: null,
-            cyverseProfile: null,
-            githubProfile: null,
             currentTab: 0,
             directoriesShared: [],
             sharedDirectories: [],
             directoryPolicies: [],
             directoryPolicyNodes: [],
             data: {},
-            workflows: [],
+            // workflows: [],
             runs: [],
             targets: [],
             targetsLoading: false,
-            loadingUser: true,
             showToggleSingularityCacheCleaningAlert: false,
             showUnsharedAlertMessage: false,
             unsharedAlertMessage: ''
         };
     },
-    computed: mapGetters(['profile', 'loggedIn', 'darkMode']),
+    computed: {
+        ...mapGetters(['profile', 'profileLoading', 'workflows', 'workflowsLoading']),
+        userWorkflows() {
+            if (this.workflowsLoading) return [];
+            return this.workflows.filter(
+                wf =>
+                    wf.repo.owner.login === this.profile.githubProfile.username
+            );
+        }
+    },
+    asyncComputed: {
+        async userProfile() {
+            if (
+                this.$router.currentRoute.params.username ===
+                this.profile.djangoProfile.username
+            )
+                return this.profile;
+            else {
+                return await axios
+                    .get(`/apis/v1/users/get_current`)
+                    .then(response => {
+                        return {
+                            djangoProfile: response.data.django_profile,
+                            cyverseProfile: response.data.cyverse_profile,
+                            githubProfile: response.data.github_profile
+                        };
+                    })
+                    .catch(error => {
+                        Sentry.captureException(error);
+                        if (error.response.status === 500) throw error;
+                    });
+            }
+        }
+    },
+    created: function() {
+        this.$store.dispatch('loadWorkflows');
+        this.$store.dispatch('loadProfile');
+    },
     async mounted() {
-        await this.loadUser();
-        this.loadingUser = false;
         await this.loadDirectory(
             `/iplant/home/${this.profile.djangoProfile.username}/`,
-            this.profile.djangoProfile.profile.cyverse_token
+            this.profile.djangoProfile.cyverse_token
         );
         await this.loadTargets();
         await this.loadDirectoryPolicies();
@@ -792,26 +837,14 @@ export default {
             return moment.duration(dur, 'seconds').humanize();
         },
         tabLinkClass(idx) {
-            if (this.djangoProfile === null)
-                return this.darkMode ? '' : 'text-dark';
+            if (this.profile.djangoProfile === null)
+                return this.profile.darkMode ? '' : 'text-dark';
             if (this.currentTab === idx) {
-                return this.darkMode ? '' : 'text-dark';
+                return this.profile.darkMode ? '' : 'text-dark';
             } else {
-                return this.darkMode
+                return this.profile.darkMode
                     ? 'background-dark text-light'
                     : 'text-dark';
-            }
-        },
-        statusToString(status) {
-            switch (status) {
-                case 1:
-                    return 'Completed';
-                case 2:
-                    return 'Failed';
-                case 3:
-                    return 'Running';
-                case 4:
-                    return 'Created';
             }
         },
         onRunSelected: function(items) {
@@ -822,23 +855,6 @@ export default {
                     username: this.profile.djangoProfile.username
                 }
             });
-        },
-        async loadUser() {
-            return axios
-                .get(
-                    `/apis/v1/users/get_by_username/?username=${this.$router.currentRoute.params.username}`
-                )
-                .then(response => {
-                    if (response.data.django_profile)
-                        this.djangoProfile = response.data.django_profile;
-                    if (response.data.cyverse_profile)
-                        this.cyverseProfile = response.data.cyverse_profile;
-                    this.githubProfile = response.data.github_profile;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
         },
         async loadTargets() {
             this.targetsLoading = true;
@@ -871,7 +887,7 @@ export default {
                         headers: {
                             Authorization:
                                 'Bearer ' +
-                                this.profile.djangoProfile.profile.cyverse_token
+                                this.profile.djangoProfile.cyverse_token
                         }
                     }
                 )

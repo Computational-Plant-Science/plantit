@@ -4,40 +4,46 @@ import * as Sentry from '@sentry/browser';
 export const workflows = {
     state: () => ({
         workflows: [],
-        workflowConfigs: {}
+        workflowsLoading: true,
+        workflowsRecentlyRun: {}
     }),
     mutations: {
         setWorkflows(state, workflows) {
             state.workflows = workflows;
         },
-        setWorkflowConfig(state, { name, config }) {
-            state.workflowConfigs[name] = config;
+        setWorkflowsLoading(state, loading) {
+            state.workflowsLoading = loading;
+        },
+        setWorkflowRecentlyRun(state, { name, config }) {
+            state.workflowsRecentlyRun[name] = config;
         }
     },
     actions: {
-        loadWorkflows({ commit, state }) {
+        loadWorkflows({ commit, rootState }) {
+            commit('setWorkflowsLoading', true);
             axios
                 .get(
-                    state.user.githubProfile !== undefined &&
-                        state.user.githubProfile &&
-                        state.user.githubProfile.username !== ''
+                    rootState.user.githubProfile !== undefined &&
+                        rootState.user.githubProfile &&
+                        rootState.user.githubProfile.username !== ''
                         ? `/apis/v1/workflows/${this.githubUser}/`
                         : '/apis/v1/workflows/list_all/'
                 )
                 .then(response => {
                     commit('setWorkflows', response.data.workflows);
+                    commit('setWorkflowsLoading', false);
                 })
                 .catch(error => {
+                    commit('setWorkflowsLoading', false);
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        setWorkflowConfig({ commit }, payload) {
-            commit('setWorkflowConfig', payload);
+        setWorkflowRecentlyRun({ commit }, payload) {
+            commit('setWorkflowRecentlyRun', payload);
         }
     },
     getters: {
-        workflows: state => state.workflows,
         workflow: state => (owner, name) => {
             return state.workflows.find(
                 repo =>
@@ -45,6 +51,8 @@ export const workflows = {
                     name === repo.repository.name
             );
         },
-        workflowConfigs: state => state.workflowConfigs
+        workflows: state => state.workflows,
+        workflowsLoading: state => state.workflowsLoading,
+        workflowsRecentlyRun: state => state.workflowsRecentlyRun
     }
 };

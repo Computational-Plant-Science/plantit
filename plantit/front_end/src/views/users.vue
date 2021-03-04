@@ -2,7 +2,7 @@
     <div
         class="w-100 h-100 pl-3 pt-3"
         :style="
-            darkMode
+            profile.darkMode
                 ? 'background-color: #d6df5D'
                 : 'background-color: white' + '; min-height: 100%'
         "
@@ -15,13 +15,13 @@
                         <b-card
                             v-for="user in users"
                             :key="user.username"
-                            :bg-variant="darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="darkMode ? 'dark' : 'white'"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="default"
                             :header-border-variant="
-                                darkMode ? 'secondary' : 'default'
+                                profile.darkMode ? 'secondary' : 'default'
                             "
-                            :text-variant="darkMode ? 'white' : 'dark'"
+                            :text-variant="profile.darkMode ? 'white' : 'dark'"
                             style="min-width: 30rem; max-width: 40rem;"
                             class="overflow-hidden mb-4"
                         >
@@ -32,7 +32,7 @@
                                 >
                                     <h5
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
@@ -41,7 +41,7 @@
                                         {{ user.last_name }}
                                         <small
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-warning'
                                                     : 'text-dark'
                                             "
@@ -53,7 +53,7 @@
                             <b-row align-v="center">
                                 <b-col
                                     :class="
-                                        darkMode ? 'text-white' : 'text-dark'
+                                        profile.darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
                                     {{
@@ -68,7 +68,7 @@
                                 <b-col>
                                     <b-link
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
@@ -116,9 +116,7 @@ export default {
     },
     computed: mapGetters([
         'profile',
-        'loggedIn',
-        'allUsers',
-        'darkMode'
+        'users',
     ]),
     data: function() {
         return {

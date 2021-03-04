@@ -2,7 +2,7 @@
     <div
         class="w-100 h-100 p-2"
         :style="
-            darkMode
+            profile.darkMode
                 ? 'background-color: #616163'
                 : 'background-color: white' + '; min-height: 100%'
         "
@@ -38,13 +38,19 @@
                     <b-row>
                         <b-col>
                             <b-card
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :header-bg-variant="darkMode ? 'dark' : 'white'"
+                                :bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :header-bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
                                 border-variant="default"
                                 :header-border-variant="
-                                    darkMode ? 'dark' : 'white'
+                                    profile.darkMode ? 'dark' : 'white'
                                 "
-                                :text-variant="darkMode ? 'white' : 'dark'"
+                                :text-variant="
+                                    profile.darkMode ? 'white' : 'dark'
+                                "
                                 class="overflow-hidden"
                             >
                                 <b-alert
@@ -185,16 +191,16 @@
                     <!--<b-row v-if="submitType === 'Every'"
                         ><b-col
                             ><b-card
-                                :bg-variant="darkMode ? 'dark' : 'white'"
-                                :header-bg-variant="darkMode ? 'dark' : 'white'"
+                                :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
                                 border-variant="default"
                                 :header-border-variant="
-                                    darkMode ? 'dark' : 'white'
+                                    profile.darkMode ? 'dark' : 'white'
                                 "
-                                :text-variant="darkMode ? 'white' : 'dark'"
+                                :text-variant="profile.darkMode ? 'white' : 'dark'"
                                 ><b-form-group
                                     :class="
-                                        darkMode ? 'theme-dark' : 'theme-light'
+                                        profile.darkMode ? 'theme-dark' : 'theme-light'
                                     "
                                     id="input-group-4"
                                     label-for="input-4"
@@ -202,7 +208,7 @@
                                 >
                                     <VueCronEditorBuefy
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'theme-dark'
                                                 : 'theme-light'
                                         "
@@ -215,15 +221,19 @@
                         <b-col>
                             <b-card-group deck columns>
                                 <b-card
-                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
                                     :header-bg-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                     border-variant="default"
                                     :header-border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
-                                    :text-variant="darkMode ? 'white' : 'dark'"
+                                    :text-variant="
+                                        profile.darkMode ? 'white' : 'dark'
+                                    "
                                     style="min-width: 40rem"
                                     class="mb-4"
                                 >
@@ -231,7 +241,7 @@
                                         <b-col>
                                             <h4
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -252,7 +262,7 @@
                                         ><b-col
                                             ><b
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -291,15 +301,19 @@
                                               0
                                             : false
                                     "
-                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
                                     :header-bg-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                     border-variant="default"
                                     :header-border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
-                                    :text-variant="darkMode ? 'white' : 'dark'"
+                                    :text-variant="
+                                        profile.darkMode ? 'white' : 'dark'
+                                    "
                                     style="min-width: 40rem"
                                     class="mb-4"
                                 >
@@ -307,7 +321,7 @@
                                         <b-col>
                                             <h4
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -380,15 +394,19 @@
                                             workflow.config.input.path !==
                                                 undefined
                                     "
-                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
                                     :header-bg-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                     border-variant="default"
                                     :header-border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
-                                    :text-variant="darkMode ? 'white' : 'dark'"
+                                    :text-variant="
+                                        profile.darkMode ? 'white' : 'dark'
+                                    "
                                     style="min-width: 50rem"
                                     class="mb-4"
                                 >
@@ -396,7 +414,7 @@
                                         <b-col>
                                             <h4
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -431,7 +449,7 @@
                                         <b-col>
                                             <b
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -485,22 +503,22 @@
                                             flow.config.output.path !==
                                                 undefined
                                     "
-                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :bg-variant="profile.darkMode ? 'dark' : 'white'"
                                     :header-bg-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                     border-variant="default"
                                     :header-border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
-                                    :text-variant="darkMode ? 'white' : 'dark'"
+                                    :text-variant="profile.darkMode ? 'white' : 'dark'"
                                     style="min-width: 50rem"
                                 >
                                     <b-row align-v="center">
                                         <b-col>
                                             <h4
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -512,14 +530,14 @@
                                                 <i
                                                     v-else-if="
                                                         !outputDirectory &&
-                                                            darkMode
+                                                            profile.darkMode
                                                     "
                                                     class="fas fa-upload fa-fw text-white"
                                                 ></i>
                                                 <i
                                                     v-else-if="
                                                         !outputDirectory &&
-                                                            !darkMode
+                                                            !profile.darkMode
                                                     "
                                                     class="fas fa-upload fa-fw text-dark"
                                                 ></i>
@@ -547,15 +565,19 @@
                                     ></runoutput>
                                 </b-card>-->
                                 <b-card
-                                    :bg-variant="darkMode ? 'dark' : 'white'"
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
                                     :header-bg-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
                                     border-variant="default"
                                     :header-border-variant="
-                                        darkMode ? 'dark' : 'white'
+                                        profile.darkMode ? 'dark' : 'white'
                                     "
-                                    :text-variant="darkMode ? 'white' : 'dark'"
+                                    :text-variant="
+                                        profile.darkMode ? 'white' : 'dark'
+                                    "
                                     style="min-width: 40rem"
                                     class="mb-4"
                                 >
@@ -563,7 +585,7 @@
                                         <b-col>
                                             <h4
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
@@ -583,13 +605,13 @@
                                     <div>
                                         <b
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-white'
                                                     : 'text-dark'
                                             "
                                         >
-                                            Select a server to submit
-                                            this run to.
+                                            Select a server to submit this run
+                                            to.
                                         </b>
                                         <br />
                                         <b-tabs
@@ -602,12 +624,12 @@
                                             <b-tab
                                                 title="Your servers"
                                                 :title-link-class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'theme-dark m-0 p-3'
                                                         : 'theme-light m-0 p-3'
                                                 "
@@ -627,7 +649,7 @@
                                                                 )
                                                             "
                                                             :variant="
-                                                                darkMode
+                                                                profile.darkMode
                                                                     ? 'dark'
                                                                     : 'white'
                                                             "
@@ -702,12 +724,12 @@
                                             <b-tab
                                                 title="Public servers"
                                                 :title-link-class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
                                                 :class="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'theme-dark m-0 p-3'
                                                         : 'theme-light m-0 p-3'
                                                 "
@@ -727,7 +749,7 @@
                                                                 )
                                                             "
                                                             :variant="
-                                                                darkMode
+                                                                profile.darkMode
                                                                     ? 'dark'
                                                                     : 'white'
                                                             "
@@ -855,7 +877,7 @@
                 <b-col md="auto">
                     <!--<b-row
                         ><b-col align-self="end"
-                            ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                            ><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
                                 Delayed Runs
                             </h5></b-col
                         ></b-row
@@ -875,7 +897,7 @@
                             v-for="task in delayedRuns"
                             v-bind:key="task.id"
                             :class="
-                                darkMode
+                                profile.darkMode
                                     ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                     : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                             "
@@ -911,7 +933,13 @@
                     <hr />-->
                     <b-row
                         ><b-col align-self="end"
-                            ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-white'
+                                        : 'text-dark'
+                                "
+                            >
                                 Periodic Runs
                             </h5></b-col
                         ></b-row
@@ -931,7 +959,7 @@
                             v-for="task in repeatingRuns"
                             v-bind:key="task.id"
                             :class="
-                                darkMode
+                                profile.darkMode
                                     ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                     : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                             "
@@ -982,12 +1010,18 @@
                     <hr />
                     <b-row
                         ><b-col align-self="end"
-                            ><h5 :class="darkMode ? 'text-white' : 'text-dark'">
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-white'
+                                        : 'text-dark'
+                                "
+                            >
                                 Recent Runs
                             </h5></b-col
                         ><!--<b-col class="mb-1" align-self="start" md="auto"
                             ><b-button
-                                :variant="darkMode ? 'outline-light' : 'white'"
+                                :variant="profile.darkMode ? 'outline-light' : 'white'"
                                 size="sm"
                                 v-b-tooltip.hover
                                 title="Create Periodic Task"
@@ -1014,7 +1048,7 @@
                             v-for="run in runs"
                             v-bind:key="run.id"
                             :class="
-                                darkMode
+                                profile.darkMode
                                     ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                     : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                             "
@@ -1032,7 +1066,11 @@
                                         :src="run.flow_image_url"
                                     ></b-img>-->
                             <a
-                                :class="darkMode ? 'text-light' : 'text-dark'"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
                                 :href="`/run/${run.id}`"
                                 >{{ run.id }}</a
                             >
@@ -1069,7 +1107,7 @@
                                     <small class="mr-1"
                                         ><a
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-light'
                                                     : 'text-dark'
                                             "
@@ -1088,15 +1126,15 @@
             </b-row>
             <b-modal
                 id="authenticate"
-                :title-class="darkMode ? 'text-white' : 'text-dark'"
+                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
                 centered
                 close
-                :header-text-variant="darkMode ? 'white' : 'dark'"
-                :header-bg-variant="darkMode ? 'dark' : 'white'"
-                :footer-bg-variant="darkMode ? 'dark' : 'white'"
-                :body-bg-variant="darkMode ? 'dark' : 'white'"
-                :header-border-variant="darkMode ? 'dark' : 'white'"
-                :footer-border-variant="darkMode ? 'dark' : 'white'"
+                :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
                 :title="'Authenticate with server ' + this.target.name"
                 @ok="onStart"
             >
@@ -1119,7 +1157,7 @@
 
 <script>
 import workflowdetail from '../components/workflow-detail';
-import runinput from '../components/run-input'
+import runinput from '../components/run-input';
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
@@ -1548,9 +1586,9 @@ export default {
                     // if we have pre-configured values for this flow, populate them
                     if (
                         `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}` in
-                        this.workflowConfigs
+                        this.workflowsRecentlyRun
                     ) {
-                        let flowConfig = this.workflowConfigs[
+                        let flowConfig = this.workflowsRecentlyRun[
                             `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`
                         ];
                         this.params =
@@ -1623,7 +1661,7 @@ export default {
             this.$bvModal.show('authenticate');
             // const h = this.$createElement;
             // const titleVNode = h('div', {
-            //     class: [this.darkMode ? 'text-white' : 'text-dark'],
+            //     class: [this.profile.darkMode ? 'text-white' : 'text-dark'],
             //     domProps: { innerHTML: `Authenticate with ${this.target.name}` }
             // });
             // const messageVNode = h('div', { class: [''] }, [
@@ -1652,12 +1690,12 @@ export default {
             //         centered: true,
             //         close: true,
             //         size: 'sm',
-            //         headerTextVariant: this.darkMode ? 'white' : 'dark',
-            //         headerBgVariant: this.darkMode ? 'dark' : 'white',
-            //         footerBgVariant: this.darkMode ? 'dark' : 'white',
-            //         bodyBgVariant: this.darkMode ? 'dark' : 'white',
-            //         headerBorderVariant: this.darkMode ? 'dark' : 'white',
-            //         footerBorderVariant: this.darkMode ? 'dark' : 'white'
+            //         headerTextVariant: this.profile.darkMode ? 'white' : 'dark',
+            //         headerBgVariant: this.profile.darkMode ? 'dark' : 'white',
+            //         footerBgVariant: this.profile.darkMode ? 'dark' : 'white',
+            //         bodyBgVariant: this.profile.darkMode ? 'dark' : 'white',
+            //         headerBorderVariant: this.profile.darkMode ? 'dark' : 'white',
+            //         footerBorderVariant: this.profile.darkMode ? 'dark' : 'white'
             //     })
             //     .then(() => {
             //         this.onStart();
@@ -1705,7 +1743,7 @@ export default {
             }
 
             // save config
-            this.$store.dispatch('setWorkflowConfig', {
+            this.$store.dispatch('setWorkflowRecentlyRun', {
                 name: this.workflowKey,
                 config: config
             });
@@ -1800,7 +1838,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['profile', 'workflowConfigs', 'loggedIn', 'darkMode']),
+        ...mapGetters(['profile', 'workflowsRecentlyRun']),
         mustAuthenticate() {
             return !this.target.policies.some(
                 p =>

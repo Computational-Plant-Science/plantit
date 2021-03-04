@@ -2,7 +2,7 @@
     <div v-if="flow.config">
         <!--<b-row class="mb-0">
             <b-col class="mb-0" align-self="end" md="auto">
-                <h5 :class="darkMode ? 'theme-dark' : 'theme-light'">
+                <h5 :class="profile.darkMode ? 'theme-dark' : 'theme-light'">
                     {{ run.id }}
                 </h5>
             </b-col>
@@ -10,10 +10,10 @@
         <b-row class="mt-0">
             <b-col class="mt-0">
                 <b-card
-                    :bg-variant="darkMode ? 'dark' : 'white'"
-                    :footer-bg-variant="darkMode ? 'dark' : 'white'"
+                    :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                    :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
                     border-variant="default"
-                    :footer-border-variant="darkMode ? 'dark' : 'white'"
+                    :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
                     style="min-height: 5rem;"
                     class="overflow-hidden mt-0"
                 >
@@ -26,7 +26,7 @@
         </b-row>
       <!--<b-row class="mt-1">
             <b-col align-self="end">
-                <h4 :class="darkMode ? 'theme-dark' : 'theme-light'">
+                <h4 :class="profile.darkMode ? 'theme-dark' : 'theme-light'">
                     <b-badge
                         :variant="
                             run.state === 2
@@ -98,11 +98,7 @@ export default {
     },
     computed: {
         ...mapGetters([
-            'profile.djangoProfile',
-            'profile.cyverseProfile',
-            'profile.githubProfile',
-            'loggedIn',
-            'darkMode'
+            'profile',
         ])
     }
 };

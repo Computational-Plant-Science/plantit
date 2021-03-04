@@ -2,13 +2,22 @@
     <div
         class="w-100 h-100 pl-3 pt-3 pr-0 m-0"
         :style="
-            darkMode
+            profile.darkMode
                 ? 'background-color: #616163'
                 : 'background-color: white' + '; min-height: 100%'
         "
     >
         <br />
         <b-container class="pl-3 pt-3 mr-3" fluid>
+            <b-row align-v="center" align-h="center" v-if="workflowsLoading">
+                <b-col align-self="end" class="text-center">
+                    <b-spinner
+                        type="grow"
+                        label="Loading..."
+                        variant="secondary"
+                    ></b-spinner>
+                </b-col>
+            </b-row>
             <b-row
                 v-if="profile.githubProfile === null"
                 align-v="center"
@@ -31,9 +40,8 @@
             </b-row>
             <b-row v-else align-v="center" align-h="center">
                 <workflows
-                    :github-token="
-                        profile.djangoProfile.profile.github_token
-                    "
+                    :github-token="profile.djangoProfile.github_token"
+                    :workflows="workflows"
                 >
                 </workflows>
             </b-row>
@@ -60,17 +68,13 @@ export default {
     components: {
         workflows
     },
-    computed: mapGetters([
-        'profile',
-        'loggedIn',
-        'darkMode'
-    ]),
+    computed: mapGetters(['profile', 'workflows', 'workflowsLoading']),
     methods: {
         tabLinkClass(idx) {
             if (this.currentTab === idx) {
-                return this.darkMode ? '' : 'text-dark';
+                return this.profile.darkMode ? '' : 'text-dark';
             } else {
-                return this.darkMode
+                return this.profile.darkMode
                     ? 'background-dark text-light'
                     : 'text-dark';
             }
@@ -80,7 +84,7 @@ export default {
                 name: 'users'
             });
         },
-        flowSelected: function(flow) {
+        workflowSelected: function(flow) {
             router.push({
                 name: 'flow',
                 params: {

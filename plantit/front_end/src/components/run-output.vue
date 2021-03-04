@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b :class="darkMode ? 'text-white' : 'text-dark'">
+        <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
             Select a directory in the CyVerse Data Store to upload output files to.
         </b>
         <b-row class="mt-2"
@@ -48,9 +48,7 @@ export default {
     computed: {
         ...mapGetters([
             'profile',
-            'flowConfigs',
-            'darkMode',
-            'loggedIn'
+            'workflowsRecentlyRun',
         ]),
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
@@ -61,8 +59,8 @@ export default {
             `/iplant/home/${this.profile.djangoProfile.username}/`,
             this.profile.djangoProfile.profile.cyverse_token
         );
-        if (this.flowKey in this.flowConfigs) {
-            let flowConfig = this.flowConfigs[this.flowKey];
+        if (this.flowKey in this.workflowsRecentlyRun) {
+            let flowConfig = this.workflowsRecentlyRun[this.flowKey];
             if (
                 flowConfig.output !== undefined &&
                 flowConfig.output.to !== undefined

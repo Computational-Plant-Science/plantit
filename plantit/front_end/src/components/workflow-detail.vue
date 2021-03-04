@@ -1,7 +1,7 @@
 <template>
     <div
         v-if="workflow && workflow.config"
-        :class="darkMode ? 'theme-dark' : 'theme-light'"
+        :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
     >
         <b-img
             v-if="workflow.config.logo"
@@ -24,7 +24,7 @@
             <b-col>
                 <b-row>
                     <b-col md="auto" class="mr-0">
-                        <h2 :class="darkMode ? 'text-white' : 'text-dark'">
+                        <h2 :class="profile.darkMode ? 'text-white' : 'text-dark'">
                             {{ workflow.config.name }}
                         </h2>
                         <b-badge
@@ -48,7 +48,7 @@
                     <b-col>
                         <small>
                             <b-link
-                                :class="darkMode ? 'text-light' : 'text-dark'"
+                                :class="profile.darkMode ? 'text-light' : 'text-dark'"
                                 :href="
                                     'https://github.com/' +
                                         workflow.repo.owner.login +
@@ -72,7 +72,7 @@
                             </b-col>
                         </b-row>
                         <br />
-                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">
+                        <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                             Configuration
                         </h5>
                         <hr />
@@ -248,7 +248,7 @@
                         >
                     </b-col>
                     <b-col align-self="end" class="text-left" v-else>
-                        <h5 :class="darkMode ? 'text-light' : 'text-dark'">
+                        <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                             Resource Requests
                         </h5>
                         <hr />
@@ -316,7 +316,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['profile', 'loggedIn', 'darkMode'])
+        ...mapGetters(['profile'])
     },
     methods: {
         workflowSelected: function(workflow) {

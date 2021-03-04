@@ -188,6 +188,43 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         })
 
     @action(detail=False, methods=['get'])
+    def get_current(self, request):
+        user = request.user
+        response = {
+            'django_profile': {
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'dark_mode': user.profile.dark_mode,
+                'github_token': user.profile.github_token,
+                'cyverse_token': user.profile.cyverse_token
+            }
+        }
+
+        if request.user.profile.cyverse_token != '':
+            cyverse_response = requests.get(
+                f"https://de.cyverse.org/terrain/secured/user-info?username={user.username}",
+                headers={'Authorization': f"Bearer {request.user.profile.cyverse_token}"})
+            if cyverse_response.status_code == 401:
+                response['cyverse_profile'] = 'expired token'
+            else:
+                cyverse_profile = cyverse_response.json()
+                if user.username in cyverse_profile:
+                    response['cyverse_profile'] = cyverse_response.json()[user.username]
+                    user.first_name = response['cyverse_profile']['first_name']
+                    user.last_name = response['cyverse_profile']['last_name']
+                    user.save()
+                else:
+                    print(f"No CyVerse profile")
+        if request.user.profile.github_token != '' and user.profile.github_username != '':
+            github_response = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
+                                           headers={'Authorization':
+                                                        f"Bearer {request.user.profile.github_token}"})
+            response['github_profile'] = github_response.json()
+        return JsonResponse(response)
+
+    @action(detail=False, methods=['get'])
     def get_by_username(self, request):
         username = request.GET.get('username', None)
 

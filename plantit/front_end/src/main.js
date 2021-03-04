@@ -10,6 +10,7 @@ import router from './router';
 import store from './store/store';
 import Axios from 'axios';
 import VueAnalytics from 'vue-analytics';
+import AsyncComputed from 'vue-async-computed'
 import * as Sentry from '@sentry/browser';
 import * as Integrations from '@sentry/integrations';
 // import Keycloak from 'keycloak-js';
@@ -18,6 +19,8 @@ Axios.defaults.xsrfCookieName = 'csrftoken';
 Axios.defaults.xsrfHeaderName = 'X-CSRFTOKEN';
 
 Vue.config.productionTip = false;
+
+Vue.use(AsyncComputed);
 
 Vue.use(
     new VueSocketIO({

@@ -3,8 +3,8 @@
         <b-sidebar
             id="sidebar-left"
             shadow="lg"
-            :bg-variant="darkMode ? 'dark' : 'light'"
-            :text-variant="darkMode ? 'dark' : 'light'"
+            :bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :text-variant="profile.darkMode ? 'dark' : 'light'"
             no-header-close
             width="550px"
         >
@@ -20,7 +20,7 @@
                             md="auto"
                         >
                             <b-button
-                                :variant="darkMode ? 'dark' : 'light'"
+                                :variant="profile.darkMode ? 'dark' : 'light'"
                                 class="text-left m-0"
                                 @click="hide"
                             >
@@ -33,7 +33,7 @@
                                 disabled
                                 block
                                 size="lg"
-                                :variant="darkMode ? 'dark' : 'light'"
+                                :variant="profile.darkMode ? 'dark' : 'light'"
                                 class="text-center m-0"
                             >
                                 <b>Your Runs</b>
@@ -45,7 +45,7 @@
                             align-self="center"
                         >
                             <b-button
-                                :variant="darkMode ? 'dark' : 'light'"
+                                :variant="profile.darkMode ? 'dark' : 'light'"
                                 class="text-right m-0"
                                 @click="loadRuns(0)"
                             >
@@ -67,7 +67,7 @@
                                     v-for="run in runs"
                                     v-bind:key="run.id"
                                     :class="
-                                        darkMode
+                                        profile.darkMode
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                             : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                                     "
@@ -86,7 +86,7 @@
                                     ></b-img>
                                     <a
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'text-light'
                                                 : 'text-dark'
                                         "
@@ -126,7 +126,7 @@
                                     <small class="mr-1"
                                         ><a
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-light'
                                                     : 'text-dark'
                                             "
@@ -160,7 +160,9 @@
                             >
                                 <b-nav-item class="m-0 p-0">
                                     <b-button
-                                        :variant="darkMode ? 'dark' : 'light'"
+                                        :variant="
+                                            profile.darkMode ? 'dark' : 'light'
+                                        "
                                         :disabled="loadingRuns"
                                         block
                                         class="text-center m-0"
@@ -175,7 +177,7 @@
                             </b-nav>
                             <p
                                 :class="
-                                    darkMode
+                                    profile.darkMode
                                         ? 'text-center text-light'
                                         : 'text-center text-dark'
                                 "
@@ -193,7 +195,7 @@
             class="logo p-0"
             style="min-height: 44px; max-height: 46px; z-index: 1000"
             fixed="top"
-            :variant="darkMode ? 'dark' : 'white'"
+            :variant="profile.darkMode ? 'dark' : 'white'"
         >
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-1 mr-1">
@@ -224,10 +226,16 @@
                         <b-breadcrumb-item
                             disabled
                             class="ml-3"
-                            :class="darkMode ? 'crumb-dark' : 'crumb-light'"
+                            :class="
+                                profile.darkMode ? 'crumb-dark' : 'crumb-light'
+                            "
                         >
                             <h5
-                                :class="darkMode ? 'crumb-dark' : 'crumb-light'"
+                                :class="
+                                    profile.darkMode
+                                        ? 'crumb-dark'
+                                        : 'crumb-light'
+                                "
                             >
                                 Your Runs
                             </h5>
@@ -246,7 +254,11 @@
                             class="ml-0 mr-0"
                         >
                             <h5
-                                :class="darkMode ? 'crumb-dark' : 'crumb-light'"
+                                :class="
+                                    profile.darkMode
+                                        ? 'crumb-dark'
+                                        : 'crumb-light'
+                                "
                             >
                                 {{ crumb.text }}
                             </h5>
@@ -255,7 +267,11 @@
                 </transition>
                 <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
-                        v-if="loggedIn ? profile.githubProfile === null : false"
+                        v-if="
+                            profile.loggedIn
+                                ? profile.githubProfile === null
+                                : false
+                        "
                         title="Log in to GitHub"
                         href="/apis/v1/idp/github_request_identity/"
                         class="ml-0 mr-0"
@@ -271,15 +287,19 @@
                     </b-nav-item>
                     <b-nav-item-dropdown
                         right
-                        v-if="loggedIn"
+                        v-if="profile.loggedIn"
                         :title="profile.djangoProfile.username"
                         class="p-2 m-3 dropdown-custom"
-                        :menu-class="darkMode ? 'theme-dark' : 'theme-light'"
+                        :menu-class="
+                            profile.darkMode ? 'theme-dark' : 'theme-light'
+                        "
                         style="font-size: 12pt"
                     >
                         <template #button-content>
                             <b-button
-                                :variant="darkMode ? 'outline-light' : 'white'"
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
                                 class="m-0 ml-0 mr-2 text-left"
                                 size="sm"
                             >
@@ -306,9 +326,13 @@
                         <b-dropdown-item
                             title="Workflows"
                             to="/workflows"
-                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             :link-class="
-                                darkMode ? 'text-secondary' : 'text-dark'
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
                             "
                         >
                             <i class="fas fa-stream fa-1x fa-fw"></i>
@@ -317,9 +341,13 @@
                         <b-dropdown-item
                             title="Servers"
                             to="/servers"
-                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             :link-class="
-                                darkMode ? 'text-secondary' : 'text-dark'
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
                             "
                         >
                             <i class="fas fa-server fa-1x fa-fw"></i>
@@ -328,9 +356,13 @@
                         <b-dropdown-item
                             title="Users"
                             to="/users"
-                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             :link-class="
-                                darkMode ? 'text-secondary' : 'text-dark'
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
                             "
                         >
                             <i class="fas fa-users fa-1x fa-fw"></i>
@@ -340,9 +372,13 @@
                         <b-dropdown-item
                             title="Docs"
                             href="https://plantit.readthedocs.io/en/latest"
-                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             :link-class="
-                                darkMode ? 'text-secondary' : 'text-dark'
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
                             "
                         >
                             <i class="fas fa-book fa-1x fa-fw"></i>
@@ -350,9 +386,13 @@
                         </b-dropdown-item>
                         <b-dropdown-item
                             href="https://github.com/Computational-Plant-Science/plantit"
-                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             :link-class="
-                                darkMode ? 'text-secondary' : 'text-dark'
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
                             "
                             title="GitHub"
                         >
@@ -361,9 +401,13 @@
                         </b-dropdown-item>
                         <b-dropdown-item
                             href="#"
-                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             :link-class="
-                                darkMode ? 'text-secondary' : 'text-dark'
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
                             "
                             title="Slack"
                         >
@@ -373,11 +417,15 @@
                         <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-dropdown-item
                             title="Profile"
-                            :class="darkMode ? 'text-light' : 'text-dark'"
-                            :link-class="
-                                darkMode ? 'text-secondary' : 'text-dark'
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
                             "
-                            :href="
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            :to="
                                 '/user/' + profile.djangoProfile.username + '/'
                             "
                         >
@@ -385,19 +433,29 @@
                             User Profile
                         </b-dropdown-item>
                         <b-dropdown-item
-                            :title="`${darkMode ? 'Light Mode' : 'Dark Mode'}`"
-                            :class="darkMode ? 'text-light' : 'text-dark'"
+                            :title="
+                                `${
+                                    profile.darkMode
+                                        ? 'Light Mode'
+                                        : 'Dark Mode'
+                                }`
+                            "
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             :link-class="
-                                darkMode ? 'text-secondary' : 'text-dark'
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
                             "
                             @click="toggleDarkMode"
                         >
                             <i
-                                v-if="darkMode"
+                                v-if="profile.darkMode"
                                 class="fas fa-sun fa-1x fa-fw"
                             ></i>
                             <i v-else class="fas fa-moon fa-1x fa-fw"></i>
-                            {{ darkMode ? 'Light Mode' : 'Dark Mode' }}
+                            {{ profile.darkMode ? 'Light Mode' : 'Dark Mode' }}
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Log Out"
@@ -473,10 +531,10 @@ export default {
             ]
         };
     },
-    computed: mapGetters(['darkMode', 'profile', 'loggedIn']),
+    computed: mapGetters(['profile']),
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
-        await this.$store.dispatch('loadCurrentUser');
+        await this.$store.dispatch('loadProfile');
         // await this.loadUser();
         await this.loadRuns(0);
         this.sockets.subscribe('update_status', data => {
@@ -508,24 +566,6 @@ export default {
                     id: items[0].id
                 }
             });
-        },
-        statusToString(status) {
-            switch (status) {
-                case 0:
-                    return 'Failed';
-                case 1:
-                    return 'Creating';
-                case 2:
-                    return 'Pulling';
-                case 3:
-                    return 'Running';
-                case 4:
-                    return 'Zipping';
-                case 5:
-                    return 'Pushing';
-                case 6:
-                    return 'Completed';
-            }
         },
         async loadUser() {
             return axios

@@ -258,6 +258,7 @@ plantit/.telemetry
 sandbox/*
 node_modules/
 flows.json
+workflows.json
 
 *.postgresql
 plantit/postgres

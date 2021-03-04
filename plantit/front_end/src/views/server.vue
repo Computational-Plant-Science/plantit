@@ -2,7 +2,7 @@
     <div
         class="w-100 h-100 p-2"
         :style="
-            darkMode
+            profile.darkMode
                 ? 'background-color: #616163'
                 : 'background-color: white' + '; min-height: 100%'
         "
@@ -50,15 +50,15 @@
                 <b-row v-else>
                     <b-col
                         ><b-card
-                            :bg-variant="darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="darkMode ? 'dark' : 'white'"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="default"
-                            :header-border-variant="darkMode ? 'dark' : 'white'"
-                            :text-variant="darkMode ? 'white' : 'dark'"
+                            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+                            :text-variant="profile.darkMode ? 'white' : 'dark'"
                             class="overflow-hidden"
                         >
                             <div
-                                :class="darkMode ? 'theme-dark' : 'theme-light'"
+                                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
                             >
                                 <b-img
                                     v-if="target.logo"
@@ -80,7 +80,7 @@
                                             <b-col>
                                                 <h2
                                                     :class="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'text-white'
                                                             : 'text-dark'
                                                     "
@@ -97,7 +97,7 @@
                                             ><b-col>
                                                 <h5
                                                     :class="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'text-white'
                                                             : 'text-dark'
                                                     "
@@ -147,7 +147,7 @@
                                             <b-col>
                                                 <h5
                                                     :class="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'text-white'
                                                             : 'text-dark'
                                                     "
@@ -257,7 +257,7 @@
                                                 ><b-button
                                                     class="ml-0"
                                                     :variant="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'outline-light'
                                                             : 'white'
                                                     "
@@ -283,7 +283,7 @@
                                                 ><b-button
                                                     class="ml-0"
                                                     :variant="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'outline-light'
                                                             : 'white'
                                                     "
@@ -308,7 +308,7 @@
                                                 align-self="center text-right"
                                                 ><small
                                                     :class="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'text-white'
                                                             : 'text-dark'
                                                     "
@@ -338,7 +338,7 @@
                                                 ><b-button
                                                     class="ml-0"
                                                     :variant="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'outline-light'
                                                             : 'white'
                                                     "
@@ -368,7 +368,7 @@
                                 <b-col align-self="end"
                                     ><h5
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
@@ -414,7 +414,7 @@
                                             ><b-button
                                                 class="ml-0"
                                                 :variant="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'outline-light'
                                                         : 'white'
                                                 "
@@ -444,7 +444,7 @@
                                 <b-col align-self="end"
                                     ><h5
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
@@ -483,7 +483,7 @@
                                             ><b-button
                                                 class="ml-0"
                                                 :variant="
-                                                    darkMode
+                                                    profile.darkMode
                                                         ? 'outline-light'
                                                         : 'white'
                                                 "
@@ -513,7 +513,7 @@
                             ><b-col align-self="end"
                                 ><h5
                                     :class="
-                                        darkMode ? 'text-white' : 'text-dark'
+                                        profile.darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
                                     Periodic Tasks
@@ -521,7 +521,7 @@
                             ><b-col class="mb-1" align-self="start" md="auto"
                                 ><b-button
                                     :variant="
-                                        darkMode ? 'outline-light' : 'white'
+                                        profile.darkMode ? 'outline-light' : 'white'
                                     "
                                     size="sm"
                                     v-b-tooltip.hover
@@ -545,7 +545,7 @@
                                     v-if="target.role === 'own'"
                                     align-self="end"
                                     :class="
-                                        darkMode
+                                        profile.darkMode
                                             ? 'text-white mb-1'
                                             : 'text-dark mb-1'
                                     "
@@ -677,7 +677,7 @@ export default {
         this.loadTarget();
     },
     computed: {
-        ...mapGetters(['profile', 'flowConfigs', 'loggedIn', 'darkMode']),
+        ...mapGetters(['profile', 'workflowsRecentlyRun']),
         accessRequested: function() {
             return this.target.access_requests.some(
                 r => r.user === this.profile.djangoProfile.username

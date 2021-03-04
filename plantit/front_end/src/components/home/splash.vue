@@ -6,9 +6,9 @@
                 class="p-3 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
-                :border-variant="darkMode ? 'secondary' : 'default'"
-                :text-variant="darkMode ? 'dark' : 'white'"
-                :bg-variant="darkMode ? 'dark' : 'white'"
+                :border-variant="profile.darkMode ? 'secondary' : 'default'"
+                :text-variant="profile.darkMode ? 'dark' : 'white'"
+                :bg-variant="profile.darkMode ? 'dark' : 'white'"
                 style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
             >
                 <b-row align-v="center" class="justify-content-md-center">
@@ -19,7 +19,7 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h2 :class="darkMode ? 'text-white' : 'text-dark'">
+                        <h2 :class="profile.darkMode ? 'text-white' : 'text-dark'">
                             plant<small
                                 class="mb-3 text-success"
                                 style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
@@ -38,7 +38,7 @@
                             >
                                 <b-button
                                     :variant="
-                                        darkMode
+                                        profile.darkMode
                                             ? 'outline-light'
                                             : 'outline-dark'
                                     "
@@ -55,7 +55,7 @@
                             >
                                 <b-button
                                     :variant="
-                                        darkMode
+                                        profile.darkMode
                                             ? 'outline-light'
                                             : 'outline-dark'
                                     "
@@ -69,7 +69,7 @@
                             <b-nav-item class="m-0 p-0" title="Slack">
                                 <b-button
                                     :variant="
-                                        darkMode
+                                        profile.darkMode
                                             ? 'outline-light'
                                             : 'outline-dark'
                                     "
@@ -81,7 +81,7 @@
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item
-                                v-if="loggedIn"
+                                v-if="profile.loggedIn"
                                 title="Enter PlantIT"
                                 class="m-0 p-0"
                                 :to="
@@ -92,7 +92,7 @@
                             >
                                 <b-button
                                     :variant="
-                                        darkMode ? 'outline-light' : 'white'
+                                        profile.darkMode ? 'outline-light' : 'white'
                                     "
                                 >
                                     <b-img
@@ -116,10 +116,10 @@
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <b-row class="m-0 p-0" v-if="!loggedIn">
+                <b-row class="m-0 p-0" v-if="!profile.loggedIn">
                     <b-col class="m-0 p-0">
                         <b-button
-                            :variant="darkMode ? 'outline-light' : 'white'"
+                            :variant="profile.darkMode ? 'outline-light' : 'white'"
                             block
                             class="text-center"
                             href="/apis/v1/idp/cyverse_login/"
@@ -154,12 +154,10 @@ export default {
     name: 'home-splash',
     computed: mapGetters([
         'profile',
-        'loggedIn',
-        'darkMode'
     ]),
     created: function() {
         this.crumbs = this.$route.meta.crumb;
-        this.$store.dispatch('loadCurrentUser');
+        this.$store.dispatch('loadProfile');
     }
 };
 </script>

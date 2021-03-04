@@ -383,7 +383,7 @@ export default {
     //     this.$store.dispatch('loadUsers');
     // },
     computed: {
-        ...mapGetters(['allUsers']),
+        ...mapGetters(['users']),
         pipelineDevelopers: function() {
             // TODO filter only users who have contributed workflows
             return this.allUsers;

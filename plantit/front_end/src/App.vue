@@ -1,7 +1,7 @@
 <template>
     <div
         id="app"
-        :class="darkMode ? 'theme-dark' : 'theme-light' + ' m-0'"
+        :class="profile.darkMode ? 'theme-dark' : 'theme-light' + ' m-0'"
         style="width: 100vw; min-height: 100vh;"
     >
         <b-container
@@ -11,7 +11,7 @@
         >
             <Navigation v-if="$route.path !== '/'"></Navigation>
             <router-view
-                :class="darkMode ? 'theme-dark' : 'theme-light'"
+                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             ></router-view>
         </b-container>
     </div>
@@ -26,12 +26,7 @@ export default {
     components: {
         Navigation
     },
-    computed: mapGetters([
-        'darkMode',
-    ]),
-    data() {
-        return {};
-    }
+    computed: mapGetters(['profile'])
 };
 </script>
 

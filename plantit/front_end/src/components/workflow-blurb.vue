@@ -4,7 +4,7 @@
             <b-col cols="10">
                 <h2>
                     <b-link
-                        :class="darkMode ? 'text-white' : 'text-dark'"
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
                         variant="outline-dark"
                         v-b-tooltip.hover
                         @click="workflowSelected"
@@ -25,7 +25,7 @@
                 <br />
                 <small>
                     <b-link
-                        :class="darkMode ? 'text-light' : 'text-dark'"
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
                         @click="
                             openRepo(
                                 'https://github.com/' +
@@ -64,10 +64,6 @@ import { mapGetters } from 'vuex';
 export default {
     name: 'workflow-blurb',
     props: {
-        showPublic: {
-            type: Boolean,
-            required: true
-        },
         workflow: {
             type: Object,
             required: true
@@ -87,7 +83,7 @@ export default {
             window.open(url);
         }
     },
-    computed: mapGetters(['profile', 'loggedIn', 'darkMode'])
+    computed: mapGetters(['profile'])
 };
 </script>
 <style scoped lang="sass">

@@ -3,7 +3,7 @@
         v-if="render"
         class="w-100 h-100 p-2"
         :style="
-            darkMode
+            profile.darkMode
                 ? 'background-color: #616163'
                 : 'background-color: white' + '; min-height: 100%'
         "
@@ -16,7 +16,7 @@
                     <b-col>
                         <h5
                             :class="
-                                darkMode
+                                profile.darkMode
                                     ? 'text-center text-white'
                                     : 'text-center text-dark'
                             "
@@ -100,7 +100,7 @@
                                 <b-col align-self="end" class="m-0 p-0">
                                     <h5
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'theme-dark'
                                                 : 'theme-light'
                                         "
@@ -197,7 +197,7 @@
                                 >
                                     <b-button
                                         :variant="
-                                            darkMode ? 'outline-light' : 'white'
+                                            profile.darkMode ? 'outline-light' : 'white'
                                         "
                                         size="sm"
                                         v-b-tooltip.hover
@@ -232,7 +232,7 @@
                                 >
                                     <b-button
                                         :variant="
-                                            darkMode ? 'outline-light' : 'white'
+                                            profile.darkMode ? 'outline-light' : 'white'
                                         "
                                         size="sm"
                                         v-b-tooltip.hover
@@ -248,14 +248,14 @@
                                 <b-col>
                                     <b-card
                                         :bg-variant="
-                                            darkMode ? 'dark' : 'white'
+                                            profile.darkMode ? 'dark' : 'white'
                                         "
                                         :footer-bg-variant="
-                                            darkMode ? 'dark' : 'white'
+                                            profile.darkMode ? 'dark' : 'white'
                                         "
                                         border-variant="default"
                                         :footer-border-variant="
-                                            darkMode ? 'dark' : 'white'
+                                            profile.darkMode ? 'dark' : 'white'
                                         "
                                         style="min-height: 5rem;"
                                         class="overflow-hidden mt-0"
@@ -284,12 +284,12 @@
                                                     title="Logs"
                                                     active
                                                     :title-link-class="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'text-white'
                                                             : 'text-dark'
                                                     "
                                                     :class="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'theme-container-dark m-0 p-3'
                                                             : 'theme-container-light m-0 p-3'
                                                     "
@@ -298,7 +298,7 @@
                                                     </template>
                                                     <div
                                                         :class="
-                                                            darkMode
+                                                            profile.darkMode
                                                                 ? 'theme-container-dark m-0 p-0'
                                                                 : 'theme-container-light m-0 p-0'
                                                         "
@@ -332,7 +332,7 @@
                                                             >
                                                                 <h5
                                                                     :class="
-                                                                        darkMode
+                                                                        profile.darkMode
                                                                             ? 'text-white'
                                                                             : 'text-dark'
                                                                     "
@@ -411,7 +411,7 @@
                                                     title="Outputs"
                                                     class="m-0 p-3"
                                                     :title-link-class="
-                                                        darkMode
+                                                        profile.darkMode
                                                             ? 'text-white'
                                                             : 'text-dark'
                                                     "
@@ -456,7 +456,7 @@
                                                                 <b
                                                                     ><code
                                                                         :class="
-                                                                            darkMode
+                                                                            profile.darkMode
                                                                                 ? 'theme-dark'
                                                                                 : 'theme-light'
                                                                         "
@@ -591,7 +591,7 @@
                                                                     "
                                                                     v-b-tooltip.hover
                                                                     :variant="
-                                                                        darkMode
+                                                                        profile.darkMode
                                                                             ? 'outline-light'
                                                                             : 'white'
                                                                     "
@@ -808,7 +808,7 @@
                                                                                 ))
                                                                     "
                                                                     :variant="
-                                                                        darkMode
+                                                                        profile.darkMode
                                                                             ? 'outline-light'
                                                                             : 'white'
                                                                     "
@@ -839,7 +839,7 @@
                                                                         !file.exists
                                                                     "
                                                                     :variant="
-                                                                        darkMode
+                                                                        profile.darkMode
                                                                             ? 'outline-light'
                                                                             : 'white'
                                                                     "
@@ -1045,14 +1045,14 @@
         </b-container>
         <b-modal
             ok-only
-            :body-bg-variant="darkMode ? 'dark' : 'light'"
-            :header-bg-variant="darkMode ? 'dark' : 'light'"
-            :footer-bg-variant="darkMode ? 'dark' : 'light'"
-            :title-class="darkMode ? 'text-white' : 'text-dark'"
-            :header-text-variant="darkMode ? 'white' : 'dark'"
-            :body-text-variant="darkMode ? 'white' : 'dark'"
-            :footer-border-variant="darkMode ? 'dark' : 'white'"
-            :header-border-variant="darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :body-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             ok-variant="secondary"
             ok-title="Close"
             size="xl"
@@ -1164,7 +1164,7 @@ export default {
         },
         onRestart() {
             // retrieve config
-            let config = this.workflowConfigs[this.workflowKey];
+            let config = this.workflowsRecentlyRun[this.workflowKey];
 
             // resubmit run
             axios({
@@ -1487,7 +1487,7 @@ export default {
                 this.$router.currentRoute.params.id
             }.${this.run.target.toLowerCase()}.log`;
         },
-        ...mapGetters(['profile', 'loggedIn', 'workflowConfigs', 'darkMode'])
+        ...mapGetters(['profile', 'workflowsRecentlyRun', ])
     }
 };
 </script>

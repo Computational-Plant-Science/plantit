@@ -2,7 +2,7 @@
     <div
         class="w-100 h-100 pl-3 pt-3"
         :style="
-            darkMode
+            profile.darkMode
                 ? 'background-color: #d6df5D'
                 : 'background-color: white' + '; min-height: 100%'
         "
@@ -15,13 +15,13 @@
                         <b-card
                             v-for="target in servers"
                             v-bind:key="target.name"
-                            :bg-variant="darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="darkMode ? 'dark' : 'white'"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="default"
                             :header-border-variant="
-                                darkMode ? 'secondary' : 'default'
+                                profile.darkMode ? 'secondary' : 'default'
                             "
-                            :text-variant="darkMode ? 'white' : 'dark'"
+                            :text-variant="profile.darkMode ? 'white' : 'dark'"
                             style="min-width: 30rem; max-width: 40rem;"
                             class="overflow-hidden mb-4"
                         >
@@ -30,7 +30,7 @@
                                     <h2>
                                         <b-link
                                             :class="
-                                                darkMode
+                                                profile.darkMode
                                                     ? 'text-white'
                                                     : 'text-dark'
                                             "
@@ -74,13 +74,13 @@
                         <b-card
                             v-for="target in targets"
                             v-bind:key="target.name"
-                            :bg-variant="darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="darkMode ? 'dark' : 'white'"
+                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
                             border-variant="default"
                             :header-border-variant="
-                                darkMode ? 'secondary' : 'default'
+                                profile.darkMode ? 'secondary' : 'default'
                             "
-                            :text-variant="darkMode ? 'white' : 'dark'"
+                            :text-variant="profile.darkMode ? 'white' : 'dark'"
                             style="min-width: 30rem; max-width: 40rem;"
                             class="overflow-hidden mb-4"
                         >
@@ -92,13 +92,13 @@
                             >
                                 <h5
                                     :class="
-                                        darkMode ? 'text-white' : 'text-dark'
+                                        profile.darkMode ? 'text-white' : 'text-dark'
                                     "
                                 >
                                     {{ target.name }}
                                     <small
                                         :class="
-                                            darkMode
+                                            profile.darkMode
                                                 ? 'text-warning'
                                                 : 'text-dark'
                                         "
@@ -136,7 +136,7 @@ export default {
     mounted() {
         this.loadServers();
     },
-    computed: mapGetters(['profile', 'loggedIn', 'allUsers', 'darkMode']),
+    computed: mapGetters(['profile', 'users']),
     methods: {
         loadServers() {
             this.serversLoading = true;
