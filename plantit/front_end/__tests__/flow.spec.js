@@ -2,7 +2,7 @@
 import { createLocalVue, mount } from '@vue/test-utils';
 import { user, users, workflows, data } from '@/store/store';
 import Vuex from 'vuex';
-import flow from '../src/views/flow';
+import flow from '@/views/workflow';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 

@@ -37,7 +37,6 @@
 </template>
 
 <script>
-import axios from 'axios';
 import blurb from '@/components/workflow-blurb.vue';
 import router from '@/router';
 import { mapGetters } from 'vuex';
@@ -59,7 +58,6 @@ export default {
     },
     data: function() {
         return {
-            workflows: [],
             login: false,
             loading: true
         };
@@ -68,25 +66,6 @@ export default {
         this.loadWorkflows();
     },
     methods: {
-        loadWorkflows() {
-            let url =
-                this.githubUser !== undefined &&
-                this.githubUser !== null &&
-                this.githubUser !== ''
-                    ? `/apis/v1/workflows/${this.githubUser}/`
-                    : '/apis/v1/workflows/list_all/';
-            axios
-                .get(url)
-                .then(response => {
-                    this.workflows = response.data.workflows;
-                    this.loading = false;
-                })
-                .catch(error => {
-                    this.loading = false;
-                    if (error.status_code === 401) this.login = true;
-                    else throw error;
-                });
-        },
         sortWorkflows(left, right) {
             if (left.config.name < right.config.name) return -1;
             if (left.config.name > right.config.name) return 1;
@@ -102,7 +81,7 @@ export default {
             });
         }
     },
-    computed: mapGetters(['profile', 'loggedIn', 'darkMode'])
+    computed: mapGetters(['workflows', 'profile', 'loggedIn', 'darkMode'])
 };
 </script>
 <style scoped lang="sass">

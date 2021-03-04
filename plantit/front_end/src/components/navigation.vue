@@ -336,7 +336,7 @@
                             <i class="fas fa-users fa-1x fa-fw"></i>
                             Users
                         </b-dropdown-item>
-                        <hr />
+                        <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-dropdown-item
                             title="Docs"
                             href="https://plantit.readthedocs.io/en/latest"
@@ -370,7 +370,7 @@
                             <i class="fab fa-slack fa-1x fa-fw"></i>
                             Slack
                         </b-dropdown-item>
-                        <hr />
+                        <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-dropdown-item
                             title="Profile"
                             :class="darkMode ? 'text-light' : 'text-dark'"

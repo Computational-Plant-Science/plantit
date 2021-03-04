@@ -16,47 +16,21 @@ export const workflows = {
     },
     actions: {
         loadWorkflows({ commit, state }) {
-            let url =
-                state.user.githubProfile !== undefined &&
-                state.user.githubProfile &&
-                state.user.githubProfile.username !== ''
-                    ? `/apis/v1/workflows/${this.githubUser}/`
-                    : '/apis/v1/workflows/list_all/';
             axios
-                .get(url)
+                .get(
+                    state.user.githubProfile !== undefined &&
+                        state.user.githubProfile &&
+                        state.user.githubProfile.username !== ''
+                        ? `/apis/v1/workflows/${this.githubUser}/`
+                        : '/apis/v1/workflows/list_all/'
+                )
                 .then(response => {
-                    this.workflows = response.data.workflows;
-                    this.loading = false;
+                    commit('setWorkflows', response.data.workflows);
                 })
                 .catch(error => {
-                    this.loading = false;
-                    if (error.status_code === 401) {
-                        this.login = true;
-                    } else {
-                        throw error;
-                    }
+                    Sentry.captureException(error);
+                    throw error;
                 });
-            if (state.user.github_token !== '') {
-                axios
-                    .get(
-                        `https://api.github.com/search/code?q=filename:plantit.yaml+org:computational-plant-science+user:@me`,
-                        {
-                            headers: {
-                                Authorization:
-                                    'Bearer ' + state.user.github_token
-                            }
-                        }
-                    )
-                    .then(response => {
-                        commit('setWorkflows', response.data);
-                    })
-                    .catch(error => {
-                        Sentry.captureException(error);
-                        throw error;
-                    });
-            } else {
-                return [];
-            }
         },
         setWorkflowConfig({ commit }, payload) {
             commit('setWorkflowConfig', payload);

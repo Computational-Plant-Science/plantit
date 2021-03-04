@@ -74,10 +74,10 @@
                                         this.workflowValidationErrors.join(', ')
                                     }}
                                 </b-alert>
-                                <flowdetail
+                                <workflowdetail
                                     :show-public="true"
                                     :workflow="workflow"
-                                ></flowdetail>
+                                ></workflowdetail>
                             </b-card>
                         </b-col>
                     </b-row>
@@ -1118,8 +1118,8 @@
 </template>
 
 <script>
-import flowdetail from '../components/workflow-detail';
-import runinput from '../components/run-input';
+import workflowdetail from '../components/workflow-detail';
+import runinput from '../components/run-input'
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
@@ -1134,10 +1134,10 @@ String.prototype.capitalize = function() {
 };
 
 export default {
-    name: 'flow',
+    name: 'workflow',
     components: {
         Multiselect,
-        flowdetail,
+        workflowdetail,
         runinput
     },
     props: {
