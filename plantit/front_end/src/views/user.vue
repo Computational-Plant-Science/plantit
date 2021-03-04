@@ -421,6 +421,22 @@
                                     </b-col>
                                 </b-row>
                                 <b-row
+                                    align-v="center"
+                                    align-h="center"
+                                    v-if="
+                                        userWorkflows.length === 0 &&
+                                            !workflowsLoading
+                                    "
+                                    ><b-col
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >No workflows to show!</b-col
+                                    ></b-row
+                                >
+                                <b-row
                                     v-else-if="
                                         userProfile.githubProfile &&
                                             profile.djangoProfile
@@ -684,7 +700,6 @@ export default {
             directoryPolicies: [],
             directoryPolicyNodes: [],
             data: {},
-            // workflows: [],
             runs: [],
             targets: [],
             targetsLoading: false,

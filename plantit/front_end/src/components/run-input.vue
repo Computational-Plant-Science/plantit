@@ -158,7 +158,7 @@ export default {
                     headers: {
                         Authorization:
                             'Bearer ' +
-                            this.profile.djangoProfile.profile.cyverse_token
+                            this.profile.djangoProfile.cyverse_token
                     }
                 }
             )
@@ -177,7 +177,7 @@ export default {
                     headers: {
                         Authorization:
                             'Bearer ' +
-                            this.profile.djangoProfile.profile.cyverse_token
+                            this.profile.djangoProfile.cyverse_token
                     }
                 }
             )
