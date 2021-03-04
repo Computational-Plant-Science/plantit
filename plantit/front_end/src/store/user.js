@@ -69,9 +69,9 @@ export const user = {
                         response.data.django_profile.cyverse_token
                     );
                     let now = Math.floor(Date.now() / 1000);
-                    if (now > decoded.exp) {
-                        commit('setLoggedIn', false);
-                    }
+                    if (now > decoded.exp) commit('setLoggedIn', false);
+                    else commit('setLoggedIn', true);
+
 
                     commit('setProfileLoading', false);
                 })

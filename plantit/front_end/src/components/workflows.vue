@@ -1,10 +1,5 @@
 <template>
     <b-row align-h="center">
-        <b-col
-            :class="profile.darkMode ? 'text-light' : 'text-dark'"
-            v-if="workflows.length === 0"
-            >No workflows to show!</b-col
-        >
         <b-card-group deck columns class="justify-content-center">
             <b-card
                 v-for="workflow in workflows"

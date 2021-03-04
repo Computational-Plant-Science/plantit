@@ -35,7 +35,8 @@
                                         style="max-height: 9rem; max-width: 9rem; position: relative; top: 38px; box-shadow: -2px 2px 2px #adb5bd"
                                         :src="
                                             userProfile.githubProfile
-                                                ? userProfile.githubProfile.avatar_url
+                                                ? userProfile.githubProfile
+                                                      .avatar_url
                                                 : ''
                                         "
                                         v-if="userProfile.githubProfile"
@@ -76,8 +77,12 @@
                                                 ? 'text-warning'
                                                 : 'text-dark'
                                         "
-                                        v-if="userProfile.djangoProfile !== null"
-                                        >({{ userProfile.djangoProfile.username }})</small
+                                        v-if="
+                                            userProfile.djangoProfile !== null
+                                        "
+                                        >({{
+                                            userProfile.djangoProfile.username
+                                        }})</small
                                     >
                                 </h3>
                                 <a
@@ -113,7 +118,11 @@
                                 profile.darkMode ? 'bg-dark' : 'bg-secondary'
                             "
                         >
-                            <b-tab v-if="userProfile.djangoProfile" title="Profile" active>
+                            <b-tab
+                                v-if="userProfile.djangoProfile"
+                                title="Profile"
+                                active
+                            >
                                 <template v-slot:title>
                                     <b
                                         :class="
@@ -154,7 +163,9 @@
                                     <b-row>
                                         <b-col md="auto">
                                             <b-card-text
-                                                v-if="userProfile.cyverseProfile"
+                                                v-if="
+                                                    userProfile.cyverseProfile
+                                                "
                                                 :class="
                                                     profile.darkMode
                                                         ? 'theme-dark'
@@ -164,11 +175,17 @@
                                                 <p>
                                                     <small>Email</small>
                                                     <br />
-                                                    {{ userProfile.cyverseProfile.email }}
+                                                    {{
+                                                        userProfile
+                                                            .cyverseProfile
+                                                            .email
+                                                    }}
                                                     <br />
                                                     {{
                                                         userProfile.githubProfile
-                                                            ? userProfile.githubProfile.email
+                                                            ? userProfile
+                                                                  .githubProfile
+                                                                  .email
                                                             : ''
                                                     }}
                                                 </p>
@@ -179,7 +196,9 @@
                                                         userProfile.cyverseProfile ===
                                                         undefined
                                                             ? ''
-                                                            : userProfile.cyverseProfile.institution
+                                                            : userProfile
+                                                                  .cyverseProfile
+                                                                  .institution
                                                     }}
                                                 </p>
                                                 <p>
@@ -187,7 +206,9 @@
                                                     <br />
                                                     {{
                                                         userProfile.githubProfile
-                                                            ? userProfile.githubProfile.bio
+                                                            ? userProfile
+                                                                  .githubProfile
+                                                                  .bio
                                                             : 'None'
                                                     }}
                                                 </p>
@@ -196,7 +217,9 @@
                                                     <br />
                                                     {{
                                                         userProfile.githubProfile
-                                                            ? userProfile.githubProfile.location
+                                                            ? userProfile
+                                                                  .githubProfile
+                                                                  .location
                                                             : 'None'
                                                     }}
                                                 </p>
@@ -397,13 +420,20 @@
                                         >
                                     </b-col>
                                 </b-row>
-                                <b-row v-else-if="userProfile.githubProfile && profile.djangoProfile.github_token !== undefined">
+                                <b-row
+                                    v-else-if="
+                                        userProfile.githubProfile &&
+                                            profile.djangoProfile
+                                                .github_token !== undefined
+                                    "
+                                >
                                     <workflows
                                         class="m-1"
-                                        :github-user="profile.githubProfile.login"
+                                        :github-user="
+                                            profile.githubProfile.login
+                                        "
                                         :github-token="
-                                            profile.djangoProfile
-                                                .github_token
+                                            profile.djangoProfile.github_token
                                         "
                                         :workflows="userWorkflows"
                                     >
@@ -639,7 +669,6 @@ import datatree from '@/components/data-tree.vue';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import moment from 'moment';
-import jwtDecode from 'jwt-decode';
 
 export default {
     name: 'User',
@@ -665,13 +694,17 @@ export default {
         };
     },
     computed: {
-        ...mapGetters(['profile', 'profileLoading', 'workflows', 'workflowsLoading']),
+        ...mapGetters([
+            'profile',
+            'profileLoading',
+            'workflows',
+            'workflowsLoading'
+        ]),
         userWorkflows() {
             if (this.workflowsLoading) return [];
-            return this.workflows.filter(
-                wf =>
-                    wf.repo.owner.login === this.profile.githubProfile.username
-            );
+            return this.workflows.filter(wf => {
+                return wf.repo.owner.login === this.profile.githubProfile.login;
+            });
         }
     },
     asyncComputed: {
@@ -698,11 +731,8 @@ export default {
             }
         }
     },
-    created: function() {
-        this.$store.dispatch('loadWorkflows');
-        this.$store.dispatch('loadProfile');
-    },
     async mounted() {
+        await this.$store.dispatch('loadWorkflows');
         await this.loadDirectory(
             `/iplant/home/${this.profile.djangoProfile.username}/`,
             this.profile.djangoProfile.cyverse_token

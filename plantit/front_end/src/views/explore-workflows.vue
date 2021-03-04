@@ -19,6 +19,14 @@
                 </b-col>
             </b-row>
             <b-row
+                align-v="center"
+                align-h="center"
+                v-if="workflows.length === 0 && !workflowsLoading"
+                ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    >No workflows to show!</b-col
+                ></b-row
+            >
+            <b-row
                 v-if="profile.githubProfile === null"
                 align-v="center"
                 align-h="center"
@@ -41,7 +49,7 @@
             <b-row v-else align-v="center" align-h="center">
                 <workflows
                     :github-token="profile.djangoProfile.github_token"
-                    :workflows="workflows"
+                    :workflows="publicWorkflows"
                 >
                 </workflows>
             </b-row>
@@ -68,7 +76,16 @@ export default {
     components: {
         workflows
     },
-    computed: mapGetters(['profile', 'workflows', 'workflowsLoading']),
+    async mounted() {
+        await this.$store.dispatch('loadWorkflows');
+    },
+    computed: {
+        ...mapGetters(['profile', 'workflows', 'workflowsLoading']),
+        publicWorkflows() {
+            if (this.workflowsLoading) return [];
+            return this.workflows.filter(wf => wf.config.public);
+        }
+    },
     methods: {
         tabLinkClass(idx) {
             if (this.currentTab === idx) {

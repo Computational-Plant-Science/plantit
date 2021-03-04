@@ -19,16 +19,10 @@ export const workflows = {
         }
     },
     actions: {
-        loadWorkflows({ commit, rootState }) {
+        loadWorkflows({ commit }) {
             commit('setWorkflowsLoading', true);
             axios
-                .get(
-                    rootState.user.githubProfile !== undefined &&
-                        rootState.user.githubProfile &&
-                        rootState.user.githubProfile.username !== ''
-                        ? `/apis/v1/workflows/${this.githubUser}/`
-                        : '/apis/v1/workflows/list_all/'
-                )
+                .get('/apis/v1/workflows/list_all/')
                 .then(response => {
                     commit('setWorkflows', response.data.workflows);
                     commit('setWorkflowsLoading', false);

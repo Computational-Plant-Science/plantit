@@ -25,7 +25,7 @@ def list_all(request):
     if not workflows_path.exists():
         print(f"No workflows cached, retrieving")
         workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
-        workflows = [wf for wf in workflows if wf['config']['public']]  # return only public flows
+        # workflows = [wf for wf in workflows if wf['config']['public']]  # return only public flows
 
         # create the cache
         with open(workflows_file, 'w') as file:
@@ -44,7 +44,7 @@ def list_all(request):
         else:
             print(f"Workflow cache is stale, refreshing")
             workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
-            workflows = [wf for wf in workflows if wf['config']['public']]  # return only public flows
+            # workflows = [wf for wf in workflows if wf['config']['public']]  # return only public flows
 
             # update the cache
             with open(workflows_file, 'w') as file:

@@ -131,11 +131,11 @@
                                                     : 'text-dark'
                                             "
                                             :href="
-                                                `https://github.com/${run.flow_owner}/${run.flow_name}`
+                                                `https://github.com/${run.workflow_owner}/${run.workflow_name}`
                                             "
                                             ><i class="fab fa-github fa-fw"></i>
-                                            {{ run.flow_owner }}/{{
-                                                run.flow_name
+                                            {{ run.workflow_owner }}/{{
+                                                run.workflow_name
                                             }}</a
                                         >
                                     </small>
@@ -265,7 +265,7 @@
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                 </transition>
-                <b-navbar-nav class="ml-auto m-0 p-0">
+              <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
                         v-if="
                             profile.loggedIn
@@ -524,7 +524,7 @@ export default {
                     }
                 },
                 {
-                    key: 'flow_name',
+                    key: 'workflow_name',
                     label: 'Workflow',
                     sortable: true
                 }
@@ -535,8 +535,9 @@ export default {
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
-        // await this.loadUser();
-        await this.loadRuns(0);
+        // TODO await this.$store.dispatch('loadRuns');
+
+        // subscribe to run update channel
         this.sockets.subscribe('update_status', data => {
             alert(data.text);
         });
