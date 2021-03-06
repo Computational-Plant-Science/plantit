@@ -197,11 +197,15 @@
                                 >
                                     <b-button
                                         :variant="
-                                            profile.darkMode ? 'outline-light' : 'white'
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
                                         "
                                         size="sm"
                                         v-b-tooltip.hover
-                                        :title="'Restart ' + workflow.config.name"
+                                        :title="
+                                            'Restart ' + workflow.config.name
+                                        "
                                         @click="onRestart"
                                     >
                                         <i class="fas fa-level-up-alt"></i>
@@ -215,7 +219,11 @@
                                     align-self="start"
                                 >
                                     <b-button
-                                        variant="outline-danger"
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
+                                        "
                                         size="sm"
                                         v-b-tooltip.hover
                                         title="Cancel Run"
@@ -226,13 +234,33 @@
                                     </b-button>
                                 </b-col>
                                 <b-col
+                                    v-if="run.is_complete"
                                     md="auto"
                                     class="m-0 mb-2"
                                     align-self="start"
                                 >
                                     <b-button
+                                        variant="outline-danger"
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        title="Delete Run"
+                                        @click="showDeletePrompt"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                        Delete
+                                    </b-button>
+                                </b-col>
+                                <b-col
+                                    md="auto"
+                                    class="m-0 mb-2"
+                                    align-self="start"
+                                    v-if="!run.is_complete"
+                                >
+                                    <b-button
                                         :variant="
-                                            profile.darkMode ? 'outline-light' : 'white'
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
                                         "
                                         size="sm"
                                         v-b-tooltip.hover
@@ -430,7 +458,8 @@
                                                         <b-row
                                                             v-if="
                                                                 workflow.config &&
-                                                                    workflow.config
+                                                                    workflow
+                                                                        .config
                                                                         .output
                                                             "
                                                             align-h="center"
@@ -445,7 +474,8 @@
                                                         <b-row
                                                             v-if="
                                                                 workflow.config &&
-                                                                    workflow.config
+                                                                    workflow
+                                                                        .config
                                                                         .output
                                                             "
                                                             align-h="center"
@@ -461,77 +491,77 @@
                                                                                 : 'theme-light'
                                                                         "
                                                                         >{{
-                                                                    workflow
-                                                                        .config
-                                                                        .output
-                                                                        .path
-                                                                        ? workflow
-                                                                            .config
-                                                                            .output
-                                                                            .path +
-                                                                        '/'
-                                                                        : ''
-                                                                  }}{{
-                                                                    workflow
-                                                                        .config
-                                                                        .output
-                                                                        .include
-                                                                        ? (workflow
-                                                                            .config
-                                                                            .output
-                                                                            .exclude
-                                                                        ? '+ '
-                                                                        : '') +
-                                                                        (workflow
-                                                                            .config
-                                                                            .output
-                                                                            .include
-                                                                            .patterns
-                                                                            ? '*.' +
-                                                                            workflow.config.output.include.patterns.join(
-                                                                                ', *.'
-                                                                            )
-                                                                            : []) +
-                                                                        (workflow
-                                                                            .config
-                                                                            .output
-                                                                            .include
-                                                                            .names
-                                                                            ? ', ' +
-                                                                            workflow.config.output.include.names.join(
-                                                                                ', '
-                                                                            )
-                                                                            : [])
-                                                                        : ''
-                                                                  }}{{
-                                                                    workflow
-                                                                        .config
-                                                                        .output
-                                                                        .exclude
-                                                                        ? ' - ' +
-                                                                        (workflow
-                                                                            .config
-                                                                            .output
-                                                                            .exclude
-                                                                            .patterns
-                                                                            ? '*.' +
-                                                                            workflow.config.output.exclude.patterns.join(
-                                                                                ', *.'
-                                                                            )
-                                                                            : []) +
-                                                                        (workflow
-                                                                            .config
-                                                                            .output
-                                                                            .exclude
-                                                                            .names
-                                                                            ? ', ' +
-                                                                            workflow.config.output.exclude.names.join(
-                                                                                ', '
-                                                                            )
-                                                                            : [])
-                                                                        : ''
-                                                                  }}
-                                                                </code></b
+                                                                            workflow
+                                                                                .config
+                                                                                .output
+                                                                                .path
+                                                                                ? workflow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .path +
+                                                                                  '/'
+                                                                                : ''
+                                                                        }}{{
+                                                                            workflow
+                                                                                .config
+                                                                                .output
+                                                                                .include
+                                                                                ? (workflow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .exclude
+                                                                                      ? '+ '
+                                                                                      : '') +
+                                                                                  (workflow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .include
+                                                                                      .patterns
+                                                                                      ? '*.' +
+                                                                                        workflow.config.output.include.patterns.join(
+                                                                                            ', *.'
+                                                                                        )
+                                                                                      : []) +
+                                                                                  (workflow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .include
+                                                                                      .names
+                                                                                      ? ', ' +
+                                                                                        workflow.config.output.include.names.join(
+                                                                                            ', '
+                                                                                        )
+                                                                                      : [])
+                                                                                : ''
+                                                                        }}{{
+                                                                            workflow
+                                                                                .config
+                                                                                .output
+                                                                                .exclude
+                                                                                ? ' - ' +
+                                                                                  (workflow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .exclude
+                                                                                      .patterns
+                                                                                      ? '*.' +
+                                                                                        workflow.config.output.exclude.patterns.join(
+                                                                                            ', *.'
+                                                                                        )
+                                                                                      : []) +
+                                                                                  (workflow
+                                                                                      .config
+                                                                                      .output
+                                                                                      .exclude
+                                                                                      .names
+                                                                                      ? ', ' +
+                                                                                        workflow.config.output.exclude.names.join(
+                                                                                            ', '
+                                                                                        )
+                                                                                      : [])
+                                                                                : ''
+                                                                        }}
+                                                                    </code></b
                                                                 >
                                                             </b-col>
                                                             <br />
@@ -1044,6 +1074,25 @@
             </div>
         </b-container>
         <b-modal
+            id="delete"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            ok-variant="outline-danger"
+            title="Delete this run?"
+            @ok="onDelete"
+        >
+            <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                This cannot be undone.
+            </p>
+        </b-modal>
+        <b-modal
             ok-only
             :body-bg-variant="profile.darkMode ? 'dark' : 'light'"
             :header-bg-variant="profile.darkMode ? 'dark' : 'light'"
@@ -1162,6 +1211,34 @@ export default {
                     return error;
                 });
         },
+        onDelete() {
+            axios
+                .get(
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/delete/`
+                )
+                .then(response => {
+                    if (response.status === 200) {
+                        this.showCanceledAlert = true;
+                        this.canceledAlertMessage = response.data;
+                        this.$store.dispatch('loadRuns');
+                        router.push({
+                            name: 'user',
+                            params: {
+                                username: this.profile.djangoProfile.username
+                            }
+                        });
+                    } else {
+                        this.showFailedToCancelAlert = true;
+                    }
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
+        showDeletePrompt() {
+            this.$bvModal.show('delete');
+        },
         onRestart() {
             // retrieve config
             let config = this.workflowsRecentlyRun[this.workflowKey];
@@ -1173,7 +1250,8 @@ export default {
                 data: {
                     repo: this.workflow.repo,
                     config: config,
-                    type: 'Now'
+                    type: 'Now',
+                    delete: false
                 },
                 headers: { 'Content-Type': 'application/json' }
             })
@@ -1487,7 +1565,12 @@ export default {
                 this.$router.currentRoute.params.id
             }.${this.run.target.toLowerCase()}.log`;
         },
-        ...mapGetters(['profile', 'workflowsRecentlyRun', ])
+        ...mapGetters(['profile', 'workflowsRecentlyRun'])
+    },
+    watch: {
+        $route() {
+            this.reloadRun();
+        }
     }
 };
 </script>

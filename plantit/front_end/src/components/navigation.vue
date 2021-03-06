@@ -67,7 +67,6 @@
                                 v-if="runningRuns.length > 0"
                                 class="text-left m-0 p-0"
                             >
-                                {{ runningRuns.length }}
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
@@ -78,7 +77,10 @@
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                             : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                                     "
-                                    @click="onRunSelected(run)"
+                                    :to="{
+                                        name: 'run',
+                                        params: { id: run.id }
+                                    }"
                                 >
                                     <b-img
                                         v-if="
@@ -92,14 +94,18 @@
                                         right
                                         :src="run.workflow_image_url"
                                     ></b-img>
-                                    <a
+                                    <b-link
                                         :class="
                                             profile.darkMode
                                                 ? 'text-light'
                                                 : 'text-dark'
                                         "
-                                        :href="`/run/${run.id}`"
-                                        >{{ run.id }}</a
+                                        :to="{
+                                            name: 'run',
+                                            params: { id: run.id }
+                                        }"
+                                        replace
+                                        >{{ run.id }}</b-link
                                     >
                                     <br />
                                     <div
@@ -189,11 +195,11 @@
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                             : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                                     "
-                                    @click="onRunSelected(run)"
                                 >
                                     <b-img
                                         v-if="
-                                            run.workflow_image_url !== undefined &&
+                                            run.workflow_image_url !==
+                                                undefined &&
                                                 run.workflow_image_url !== null
                                         "
                                         rounded
@@ -202,14 +208,18 @@
                                         right
                                         :src="run.workflow_image_url"
                                     ></b-img>
-                                    <a
+                                    <b-link
                                         :class="
                                             profile.darkMode
                                                 ? 'text-light'
                                                 : 'text-dark'
                                         "
-                                        :href="`/run/${run.id}`"
-                                        >{{ run.id }}</a
+                                        :to="{
+                                            name: 'run',
+                                            params: { id: run.id }
+                                        }"
+                                        replace
+                                        >{{ run.id }}</b-link
                                     >
                                     <br />
                                     <div
@@ -300,7 +310,10 @@
                                 </b-nav-item>
                             </b-nav>
                         </b-col>-->
-                        <b-col v-if="!runsLoading && completedRuns.length === 0" class="m-0 pl-0 pr-0 text-center">
+                        <b-col
+                            v-if="!runsLoading && completedRuns.length === 0"
+                            class="m-0 pl-0 pr-0 text-center"
+                        >
                             <p
                                 :class="
                                     profile.darkMode
@@ -323,7 +336,7 @@
             :variant="profile.darkMode ? 'dark' : 'white'"
         >
             <b-collapse class="m-0 p-0" is-nav>
-                <b-navbar-nav class="m-0 p-0 pl-1 mr-1">
+                <b-navbar-nav class="m-0 p-0 pl-3 mr-1">
                     <b-nav-item class="m-0 p-0" v-b-toggle.sidebar-left>
                         <b-button
                             class="brand-img m-0 p-0"
@@ -603,7 +616,6 @@ import { mapGetters } from 'vuex';
 import moment from 'moment';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
-import router from '@/router';
 
 export default {
     name: 'Navigation',
@@ -664,7 +676,6 @@ export default {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
         await this.$store.dispatch('loadRuns');
-        // await this.loadRunning(0);
 
         // subscribe to run update channel
         this.sockets.subscribe('update_status', data => {
@@ -688,14 +699,6 @@ export default {
         },
         toggleDarkMode: function() {
             this.$store.dispatch('toggleDarkMode');
-        },
-        onRunSelected: function(run) {
-            router.push({
-                name: 'run',
-                params: {
-                    id: run.id
-                }
-            });
         },
         async loadUser() {
             return axios

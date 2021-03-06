@@ -475,6 +475,21 @@ def cancel(request, id):
         return HttpResponse(message)
 
 
+@api_view(['GET'])
+@login_required
+def delete(request, id):
+    try:
+        run = Run.objects.get(guid=id)
+    except:
+        return HttpResponseNotFound()
+
+    if not run.is_complete:
+        raise ValueError(f"Run is not complete")
+
+    run.delete()
+    return HttpResponse()
+
+
 @api_view(['POST'])
 @login_required
 @csrf_exempt

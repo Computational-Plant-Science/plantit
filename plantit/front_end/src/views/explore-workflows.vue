@@ -48,12 +48,20 @@
                 </b-col>
             </b-row>
             <b-row v-else
-                ><b-col><b-row><b-col md="auto"
-                    ><h3 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Public Workflows
-                    </h3> </b-col
                 ><b-col
-                    ><b-input-group size="sm"
+                    ><b-row
+                        ><b-col md="auto"
+                            ><h3
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Public Workflows
+                            </h3> </b-col
+                        ><b-col
+                            ><b-input-group size="sm"
                                 ><template #prepend>
                                     <b-input-group-text
                                         ><i class="fas fa-search"></i

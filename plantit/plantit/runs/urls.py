@@ -19,7 +19,8 @@ urlpatterns = [
     path(r'<id>/submission_logs/', views.get_submission_logs),
     path(r'<id>/container_logs/', views.get_container_logs),
     path(r'<id>/status/', views.status),
-    path(r'<id>/cancel/', views.cancel)
+    path(r'<id>/cancel/', views.cancel),
+    path(r'<id>/delete/', views.delete)
 ]
 
 websocket_urlpatterns = [
