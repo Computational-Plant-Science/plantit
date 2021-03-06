@@ -45,7 +45,11 @@
                 </b-button>
             </b-col>
             <b-col class="mt-1" md="auto">
-                <small :variant="profile.darkMode ? 'outline-light' : 'outline-dark'">
+                <small
+                    :variant="
+                        profile.darkMode ? 'outline-light' : 'outline-dark'
+                    "
+                >
                     {{
                         isDir
                             ? `${subDirCount} ${
@@ -95,7 +99,9 @@
                                 profile.djangoProfile.cyverse_token
                             )
                         "
-                        :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
                         ><i class="fas fa-upload fa-fw"></i
                     ></b-button>
                     <b-button
@@ -104,12 +110,16 @@
                         size="sm"
                         title="Create Subdirectory"
                         @click="showCreateDirectoryModal"
-                        :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
                         ><i class="fas fa-plus fa-fw"></i
                     ></b-button>
                     <b-modal
                         v-if="!isShared"
-                        :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        :title-class="
+                            profile.darkMode ? 'text-white' : 'text-dark'
+                        "
                         title="Create Directory"
                         :id="
                             'createDirectoryModal' +
@@ -118,12 +128,18 @@
                                     : node.label)
                         "
                         centered
-                        :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+                        :header-text-variant="
+                            profile.darkMode ? 'white' : 'dark'
+                        "
                         :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
                         :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
                         :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-                        :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+                        :header-border-variant="
+                            profile.darkMode ? 'dark' : 'white'
+                        "
+                        :footer-border-variant="
+                            profile.darkMode ? 'dark' : 'white'
+                        "
                         close
                         @close="hideCreateDirectoryModal"
                         @ok="
@@ -150,11 +166,14 @@
                         class="ml-1 mr-1"
                         title="Refresh Directory"
                         size="sm"
-                        :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
                         @click="refresh"
                     >
                         <i class="fas fa-sync-alt fa-fw"></i>
                     </b-button>
+                    <br />
                     <b-spinner
                         v-if="internalLoaded && internalLoading"
                         :variant="profile.darkMode ? 'warning' : 'dark'"
@@ -169,25 +188,35 @@
                         "
                         title="Share Directory"
                         size="sm"
-                        :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
                         @click="showShareDirectoryModal"
                         class="ml-1 mr-1"
                         ><i class="fas fa-share-alt fa-fw"></i
                     ></b-button>
                     <b-modal
                         v-if="!isShared"
-                        :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        :title-class="
+                            profile.darkMode ? 'text-white' : 'text-dark'
+                        "
                         :title="
                             'Share ' +
                                 (internalLoaded ? internalNode.path : node.path)
                         "
                         centered
-                        :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+                        :header-text-variant="
+                            profile.darkMode ? 'white' : 'dark'
+                        "
                         :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
                         :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
                         :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-                        :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+                        :header-border-variant="
+                            profile.darkMode ? 'dark' : 'white'
+                        "
+                        :footer-border-variant="
+                            profile.darkMode ? 'dark' : 'white'
+                        "
                         @ok="shareDirectory"
                         @close="hideShareDirectoryModal"
                         :id="
@@ -200,7 +229,9 @@
                             <b-row
                                 ><b-col
                                     :class="
-                                        profile.darkMode ? 'text-white' : 'text-dark'
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
                                     "
                                     ><small
                                         >Choose who to share this directory
@@ -208,7 +239,19 @@
                                     ></b-col
                                 ></b-row
                             >
-                            <b-row align-v="center" align-h="center">
+                            <b-row v-if="usersLoading"
+                                ><b-col align-self="end" class="text-center">
+                                    <b-spinner
+                                        type="grow"
+                                        label="Loading..."
+                                        variant="secondary"
+                                    ></b-spinner> </b-col
+                            ></b-row>
+                            <b-row
+                                v-else-if="sharingUsers.length > 0"
+                                align-v="center"
+                                align-h="center"
+                            >
                                 <b-col>
                                     <b-form>
                                         <b-form-group
@@ -216,14 +259,39 @@
                                         >
                                             <b-form-checkbox-group
                                                 v-model="sharedUsers"
-                                                :options="sharingUsers"
                                                 :aria-describedby="
                                                     ariaDescribedby
                                                 "
-                                                stacked
                                                 buttons
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'outline-light'
+                                                        : 'outline-dark'
+                                                "
                                                 size="lg"
                                             >
+                                                <b-form-checkbox
+                                                    size="sm"
+                                                    button
+                                                    :button-variant="
+                                                    profile.darkMode
+                                                        ? 'outline-light'
+                                                        : 'outline-dark'
+                                                "
+                                                    v-for="user in sharingUsers"
+                                                    v-model="sharedUsers"
+                                                    v-bind:key="user.username"
+                                                    :value="user.username"
+                                                    >{{ user.username }}
+                                                    <i
+                                                        v-if="
+                                                            sharedUsers.includes(
+                                                                user.username
+                                                            )
+                                                        "
+                                                        class="fas fa-check"
+                                                    ></i
+                                                ></b-form-checkbox>
                                             </b-form-checkbox-group>
                                         </b-form-group>
                                     </b-form>
@@ -342,8 +410,8 @@
                                     </b-card-group>-->
                                 </b-col>
                             </b-row>
-                        </b-container></b-modal
-                    >
+                            <b-row v-else><b-col></b-col></b-row> </b-container
+                    ></b-modal>
                     <b-button
                         v-if="
                             internalLoaded &&
@@ -370,7 +438,9 @@
                         title="Expand Directory"
                         v-if="!isOpen"
                         size="sm"
-                        :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
                         @click="toggle"
                     >
                         <i class="fas fa-caret-up fa-fw"></i> </b-button
@@ -379,7 +449,9 @@
                         title="Collapse Directory"
                         v-else
                         size="sm"
-                        :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
                         @click="toggle"
                     >
                         <i class="fas fa-caret-down fa-fw"></i>
@@ -438,7 +510,10 @@
                     }}</b-button
                 >
             </b-col>
-            <b-col :class="profile.darkMode ? 'theme-dark' : 'theme-light'" md="auto">
+            <b-col
+                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+                md="auto"
+            >
                 <b-button
                     v-if="
                         internalLoaded &&
@@ -507,7 +582,9 @@
                         class="mt-1 mb-1 ml-4"
                         :disabled="!select || select !== 'file'"
                         size="sm"
-                        :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
                         @click="selectNode(child, 'file')"
                         ><i class="fas fa-file fa-fw"></i>
                         {{ child.label }}</b-button
@@ -537,7 +614,9 @@
                                 profile.djangoProfile.cyverse_token
                             )
                         "
-                        :variant="profile.darkMode ? 'outline-light' : 'outline-dark'"
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
                         ><i class="fas fa-download fa-fw"></i></b-button
                 ></b-col>
             </b-row>
@@ -598,7 +677,6 @@ export default {
     },
     data: function() {
         return {
-            users: [],
             internalNode: null,
             internalLoading: false,
             internalLoaded: false,
@@ -619,7 +697,7 @@ export default {
         };
     },
     computed: {
-        ...mapGetters(['profile']),
+        ...mapGetters(['profile', 'users', 'usersLoading']),
         sharedBy: function() {
             if (this.isShared) {
                 let path = this.internalLoaded
@@ -645,17 +723,19 @@ export default {
         },
         sharingUsers() {
             let username = this.profile.djangoProfile.username;
-            return this.users
-                .map(function(user) {
-                    return {
-                        value: user.username,
-                        text: user.username
-                        // avatar: user.github_profile.avatar_url
-                    };
-                })
-                .filter(function(item) {
-                    return item.value !== username;
-                });
+            return (
+                this.users
+                    // .map(function(user) {
+                    //     return {
+                    //         value: user.username,
+                    //         text: user.username
+                    //         // avatar: user.github_profile.avatar_url
+                    //     };
+                    // })
+                    .filter(function(item) {
+                        return item.value !== username;
+                    })
+            );
         },
         subDirCount: function() {
             return this.internalLoaded
@@ -761,7 +841,6 @@ export default {
                 });
         },
         showShareDirectoryModal() {
-            this.loadUsers();
             this.$bvModal.show(
                 'shareDirectoryModal' +
                     (this.internalLoaded
@@ -776,17 +855,6 @@ export default {
                         ? this.internalNode.label
                         : this.node.label)
             );
-        },
-        loadUsers() {
-            axios
-                .get('/apis/v1/users/get_all/')
-                .then(response => {
-                    this.users = response.data.users;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
         },
         toggle: function() {
             if (this.internalLoaded) this.isOpen = !this.isOpen;

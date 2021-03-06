@@ -1315,7 +1315,8 @@ export default {
             ]
         };
     },
-    mounted: function() {
+    async mounted() {
+        await this.$store.dispatch('loadUsers');
         this.loadWorkflow();
         this.loadTargets();
         this.loadPublicTargets();

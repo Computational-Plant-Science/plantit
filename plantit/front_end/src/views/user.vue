@@ -748,6 +748,7 @@ export default {
     },
     async mounted() {
         await this.$store.dispatch('loadWorkflows');
+        await this.$store.dispatch('loadUsers');
         await this.loadDirectory(
             `/iplant/home/${this.profile.djangoProfile.username}/`,
             this.profile.djangoProfile.cyverse_token
