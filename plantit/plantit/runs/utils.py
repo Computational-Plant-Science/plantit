@@ -74,6 +74,10 @@ def update_status(run: Run, description: str):
         'type': 'update_status',
         'run': map_run(run, True),
     })
+    async_to_sync(channel_layer.group_send)(run.user.username, {
+        'type': 'push_notification',
+        'message': f"Run {run.guid}: {description}",
+    })
 
 
 def stat_logs(id: str):

@@ -608,6 +608,15 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
+        <b-toast
+            v-if="$route.name !== 'run'"
+            id="notification"
+            :variant="profile.darkMode ? 'dark text-light' : 'light text-dark'"
+            solid
+            :title="now()"
+        >
+            {{ notifications[notifications.length - 1] }}
+        </b-toast>
     </div>
 </template>
 
@@ -639,6 +648,7 @@ export default {
             titleContent: 'breadcrumb',
             currentRunPage: 0,
             loadingMoreRuns: false,
+            notifications: [],
             fields: [
                 {
                     key: 'id',
@@ -655,7 +665,7 @@ export default {
                     formatter: value => {
                         return `${moment(value).fromNow()} (${moment(
                             value
-                        ).format('MMMM Do YYYY, h:mm a')})`;
+                        ).format('h:mm a')})`;
                     }
                 },
                 {
@@ -677,10 +687,12 @@ export default {
         await this.$store.dispatch('loadProfile');
         await this.$store.dispatch('loadRuns');
 
-        // subscribe to run update channel
-        this.sockets.subscribe('update_status', data => {
-            alert(data.text);
-        });
+        // subscribe to update channel
+        let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        this.socket = new WebSocket(
+            `${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
+        );
+        this.socket.onmessage = this.subscribeToSocket;
     },
     watch: {
         $route() {
@@ -688,6 +700,14 @@ export default {
         }
     },
     methods: {
+        now() {
+            return moment().format('MMMM Do YYYY, h:mm:ss a');
+        },
+        subscribeToSocket(e) {
+            let data = JSON.parse(e.data);
+            this.notifications.push(data.message);
+            this.$bvToast.show('notification');
+        },
         logOut() {
             sessionStorage.clear();
             window.location.replace('/apis/v1/idp/cyverse_logout/');

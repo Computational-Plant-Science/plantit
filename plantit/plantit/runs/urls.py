@@ -25,4 +25,5 @@ urlpatterns = [
 
 websocket_urlpatterns = [
     path(r'ws/run/<id>/', views.RunConsumer.as_asgi()),
+    path(r'ws/notifications/<username>/', views.NotificationConsumer.as_asgi())
 ]

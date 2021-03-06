@@ -296,7 +296,12 @@ def poll_run_status(id: str):
 
 @app.task()
 def cleanup_run(id: str):
-    run = Run.objects.get(guid=id)
+    try:
+        run = Run.objects.get(guid=id)
+    except:
+        logger.info(f"Could not find run {id} (might have been deleted?)")
+        return
+
     logger.info(f"Cleaning up run {id} local working directory {run.target.workdir}")
     remove_logs(run.guid, run.target.name)
     logger.info(f"Cleaning up run {id} target working directory {run.target.workdir}")

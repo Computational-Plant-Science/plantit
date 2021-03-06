@@ -1543,6 +1543,7 @@ export default {
         }
     },
     async mounted() {
+        // subscribe to  update channel
         this.socket = new WebSocket(
             (location.protocol === 'https:' ? 'wss://' : 'ws://') +
                 window.location.host +
@@ -1551,6 +1552,8 @@ export default {
                 '/'
         );
         this.socket.onmessage = this.subscribeToSocket;
+
+        // fetch the latest run data
         await this.reloadRun();
     },
     computed: {
