@@ -39,9 +39,11 @@ class TargetsViewSet(viewsets.ModelViewSet):
         except:
             return HttpResponseNotFound()
 
-        _, created = TargetPolicy.objects.get_or_create(user=user, target=target, role=TargetRole.run)
+        policy, created = TargetPolicy.objects.get_or_create(user=user, target=target, role=TargetRole.run)
         access_request = TargetAccessRequest.objects.get(user=user, target=target)
         access_request.delete()
+
+
 
         return JsonResponse({'granted': created})
 

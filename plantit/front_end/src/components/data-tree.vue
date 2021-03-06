@@ -274,10 +274,10 @@
                                                     size="sm"
                                                     button
                                                     :button-variant="
-                                                    profile.darkMode
-                                                        ? 'outline-light'
-                                                        : 'outline-dark'
-                                                "
+                                                        profile.darkMode
+                                                            ? 'outline-light'
+                                                            : 'outline-dark'
+                                                    "
                                                     v-for="user in sharingUsers"
                                                     v-model="sharedUsers"
                                                     v-bind:key="user.username"

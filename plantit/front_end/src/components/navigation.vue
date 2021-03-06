@@ -427,7 +427,7 @@
                         right
                         v-if="profile.loggedIn"
                         :title="profile.djangoProfile.username"
-                        class="p-1 m-2 dropdown-custom"
+                        class="p-1 m-2 mr-0 ml-0 dropdown-custom"
                         :menu-class="
                             profile.darkMode ? 'theme-dark' : 'theme-light'
                         "
@@ -438,13 +438,32 @@
                                 :variant="
                                     profile.darkMode ? 'outline-light' : 'white'
                                 "
-                                class="m-0 ml-0 mr-0 text-left"
-                                size="sm"
+                                class="ml-0 mr-0 mt-2 text-left"
+                                size="md"
                             >
+                                <!--<span
+                                    :title="
+                                        'Notifications (' +
+                                            (notifications === undefined
+                                                ? []
+                                                : notifications
+                                            ).length +
+                                            ')'
+                                    "
+                                    v-if="
+                                        notifications !== undefined &&
+                                            notifications.some(n => !n.read)
+                                    "
+                                    class="fa-stack mr-2"
+                                    ><i
+                                        class="fas fa-ellipsis-v text-success fa-stack-1x"
+                                    ></i
+                                    ><i class="far fa-bell fa-stack-1x"></i
+                                ></span>-->
                                 <b-img
                                     v-if="profile.githubProfile"
                                     class="avatar m-0 mb-1 p-0 github-hover logo"
-                                    style="min-width: 22px; min-height: 22px; position: relative; left: -3px; top: 1.5px; border: 1px solid white;"
+                                    style="min-width: 30px; min-height: 30px; position: relative; left: -3px; top: 1.5px; border: 1px solid white;"
                                     rounded="circle"
                                     :src="
                                         profile.githubProfile
@@ -610,12 +629,12 @@
         </b-navbar>
         <b-toast
             v-if="$route.name !== 'run'"
-            id="notification"
+            id="toast"
             :variant="profile.darkMode ? 'dark text-light' : 'light text-dark'"
             solid
             :title="now()"
         >
-            {{ notifications[notifications.length - 1] }}
+            {{ toasts[toasts.length - 1] }}
         </b-toast>
     </div>
 </template>
@@ -638,7 +657,8 @@ export default {
             FAILURE: 'FAILURE',
             REVOKED: 'REVOKED',
             // websockets
-            socketMessage: '',
+            toastSocket: null,
+            notificationSocket: null,
             // user data
             djangoProfile: null,
             cyverseProfile: null,
@@ -648,6 +668,7 @@ export default {
             titleContent: 'breadcrumb',
             currentRunPage: 0,
             loadingMoreRuns: false,
+            toasts: [],
             notifications: [],
             fields: [
                 {
@@ -685,14 +706,23 @@ export default {
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
+        await this.loadNotifications();
+        // await this.$store.dispatch('loadNotifications');  TODO
         await this.$store.dispatch('loadRuns');
 
-        // subscribe to update channel
         let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-        this.socket = new WebSocket(
-            `${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
+
+        // subscribe to toast channel
+        this.toastSocket = new WebSocket(
+            `${protocol}${window.location.host}/ws/toast/${this.profile.djangoProfile.username}/`
         );
-        this.socket.onmessage = this.subscribeToSocket;
+        this.toastSocket.onmessage = this.subscribeToToasts;
+
+        // subscribe to notification channel
+        this.toastSocket = new WebSocket(
+            `${protocol}${window.location.host}/ws/notification/${this.profile.djangoProfile.username}/`
+        );
+        this.toastSocket.onmessage = this.subscribeToToasts;
     },
     watch: {
         $route() {
@@ -703,10 +733,14 @@ export default {
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');
         },
-        subscribeToSocket(e) {
+        subscribeToToasts(e) {
             let data = JSON.parse(e.data);
-            this.notifications.push(data.message);
-            this.$bvToast.show('notification');
+            this.toasts.push(data.message);
+            this.$bvToast.show('toast');
+        },
+        subscribeToNotifications(e) {
+            let data = JSON.parse(e.data);
+            this.notifications.push(data);
         },
         logOut() {
             sessionStorage.clear();
@@ -720,48 +754,17 @@ export default {
         toggleDarkMode: function() {
             this.$store.dispatch('toggleDarkMode');
         },
-        async loadUser() {
+        async loadNotifications() {
             return axios
                 .get(
-                    `/apis/v1/users/get_by_username/?username=${this.$router.currentRoute.params.username}`
+                    `/apis/v1/notifications/${this.profile.djangoProfile.username}/get_by_user/?page=0`
                 )
                 .then(response => {
-                    if (response.data.django_profile)
-                        this.djangoProfile = response.data.django_profile;
-                    if (response.data.cyverse_profile)
-                        this.cyverseProfile = response.data.cyverse_profile;
-                    this.githubProfile = response.data.github_profile;
+                    this.notifications = response.data;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
-                });
-        },
-        async loadRunning(page) {
-            return axios
-                .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_by_user/?page=${page}&running=true`
-                )
-                .then(response => {
-                    var ids = [];
-                    this.runningRuns = this.runningRuns.concat(response.data);
-                    this.runningRuns = this.runningRuns.filter(function(run) {
-                        if (ids.indexOf(run.id) >= 0) return false;
-                        ids.push(run.id);
-                        return true;
-                    });
-                    this.runningRuns.sort(function(a, b) {
-                        return new Date(b.updated) - new Date(a.updated);
-                    });
-                    // this.runsLoading = false;
-                    // this.loadingMoreRuns = false;
-                    // this.currentRunningRunPage = page + 1;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    //this.runsLoading = false;
-                    //this.loadingMoreRuns = false;
-                    throw error;
                 });
         }
     }

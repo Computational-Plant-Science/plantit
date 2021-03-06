@@ -3,13 +3,15 @@ from os import environ
 from os.path import join
 
 import yaml
+from asgiref.sync import async_to_sync
 from celery.utils.log import get_task_logger
 from channels.layers import get_channel_layer
-from django.contrib.auth.models import User
 from django.utils import timezone
 
 from plantit import settings
 from plantit.celery import app
+from plantit.notifications.models import RunCompletionNotification
+from plantit.notifications.utils import map_run_completion_notification
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
@@ -17,6 +19,15 @@ from plantit.runs.utils import update_status, execute_command, map_old_workflow_
 from plantit.targets.models import Target
 
 logger = get_task_logger(__name__)
+
+
+def __push_notification(run: Run, message: str):
+    now = timezone.now()
+    notification = RunCompletionNotification.objects.create(user=run.user, run=run, created=now, message=message)
+    async_to_sync(get_channel_layer().group_send)(f"notification-{run.user.username}", {
+        'type': 'push_notification',
+        'notification': map_run_completion_notification(notification)
+    })
 
 
 def __upload_run(flow, run: Run, ssh: SSH):
@@ -266,10 +277,13 @@ def poll_run_status(id: str):
             run.completed = now
             run.save()
 
-            update_status(run, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.workdir_clean_delay)}")
+            msg = f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.workdir_clean_delay)}"
+            update_status(run, msg)
+            __push_notification(run, msg)
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
-            update_status(run, f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s")
+            msg = f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"
+            update_status(run, msg)
             poll_run_status.s(id).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
@@ -279,7 +293,9 @@ def poll_run_status(id: str):
             run.completed = now
             run.save()
 
-            update_status(run, f"Job {run.job_id} not found, cleaning up in {str(run.target.workdir_clean_delay)}")
+            msg = f"Job {run.job_id} not found, cleaning up in {str(run.target.workdir_clean_delay)}"
+            update_status(run, msg)
+            __push_notification(run, msg)
         else:
             update_status(run, f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.workdir_clean_delay)}")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
@@ -290,7 +306,9 @@ def poll_run_status(id: str):
         run.completed = now
         run.save()
 
-        update_status(run, f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.workdir_clean_delay)}): {traceback.format_exc()}")
+        msg = f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.workdir_clean_delay)}): {traceback.format_exc()}"
+        update_status(run, msg)
+        __push_notification(run, msg)
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
 
 
@@ -331,7 +349,6 @@ def clean_singularity_cache(target: str):
 
 @app.task()
 def run_command(target_name: str, command: str, pre_command: str = None):
-    channel_layer = get_channel_layer()
     target = Target.objects.get(name=target_name)
     ssh = SSH(target.hostname, target.port, target.username)
     with ssh:

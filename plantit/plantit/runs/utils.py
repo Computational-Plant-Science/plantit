@@ -17,15 +17,13 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
 from django.utils import timezone
-from requests.auth import HTTPBasicAuth
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
-from plantit import settings
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
 from plantit.targets.models import Target, TargetPolicy, TargetRole
 from plantit.targets.utils import map_target
-from plantit.utils import get_repo_config, get_repo_config_internal
+from plantit.utils import get_repo_config
 
 
 def clean_html(raw_html):
@@ -74,8 +72,8 @@ def update_status(run: Run, description: str):
         'type': 'update_status',
         'run': map_run(run, True),
     })
-    async_to_sync(channel_layer.group_send)(run.user.username, {
-        'type': 'push_notification',
+    async_to_sync(channel_layer.group_send)(f"toast-{run.user.username}", {
+        'type': 'push_toast',
         'message': f"Run {run.guid}: {description}",
     })
 
