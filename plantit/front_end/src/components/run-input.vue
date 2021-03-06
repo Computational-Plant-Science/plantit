@@ -18,7 +18,7 @@
         >
             <b-tab
                 :active="!this.path.startsWith('/iplant/home/shared')"
-                title="Your own data"
+                title="Your data"
                 :title-link-class="
                     profile.darkMode ? 'text-white' : 'text-dark'
                 "

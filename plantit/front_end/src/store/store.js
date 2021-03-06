@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 import { user } from '@/store/user';
 import { users } from '@/store/users';
 import { workflows } from '@/store/workflows';
-// import { data } from '@/store/data';
+import { runs } from '@/store/runs';
 
 Vue.use(Vuex);
 
@@ -25,7 +25,8 @@ const store = new Vuex.Store({
     modules: {
         user,
         users,
-        workflows
+        workflows,
+        runs
     }
 });
 

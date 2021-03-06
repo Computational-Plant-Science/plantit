@@ -212,7 +212,9 @@ def submit_run(id: str, flow):
 
             if run.is_sandbox:
                 run.job_status = 'SUCCESS'
-                run.updated = timezone.now()
+                now = timezone.now()
+                run.updated = now
+                run.completed = now
                 run.save()
 
                 cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
@@ -226,7 +228,9 @@ def submit_run(id: str, flow):
                 poll_run_status.s(run.guid).apply_async(countdown=delay)
     except Exception:
         run.job_status = 'FAILURE'
-        run.updated = timezone.now()
+        now = timezone.now()
+        run.updated = now
+        run.completed = now
         run.save()
 
         msg = f"Failed to submit run {run.guid}: {traceback.format_exc()}."
@@ -253,10 +257,15 @@ def poll_run_status(id: str):
         job_walltime = get_job_walltime(run)
         run.job_status = job_status
         run.job_walltime = job_walltime
-        run.updated = timezone.now()
+
+        now = timezone.now()
+        run.updated = now
         run.save()
 
         if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED' or job_status == 'TIMEOUT':
+            run.completed = now
+            run.save()
+
             update_status(run, f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.workdir_clean_delay)}")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
@@ -265,7 +274,9 @@ def poll_run_status(id: str):
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
             run.job_status = 'FAILURE'
-            run.updated = timezone.now()
+            now = timezone.now()
+            run.updated = now
+            run.completed = now
             run.save()
 
             update_status(run, f"Job {run.job_id} not found, cleaning up in {str(run.target.workdir_clean_delay)}")
@@ -274,7 +285,9 @@ def poll_run_status(id: str):
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     except:
         run.job_status = 'FAILURE'
-        run.updated = timezone.now()
+        now = timezone.now()
+        run.updated = now
+        run.completed = now
         run.save()
 
         update_status(run, f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.workdir_clean_delay)}): {traceback.format_exc()}")

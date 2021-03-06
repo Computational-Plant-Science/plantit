@@ -19,9 +19,9 @@ export const workflows = {
         }
     },
     actions: {
-        loadWorkflows({ commit }) {
+        async loadWorkflows({ commit }) {
             commit('setWorkflowsLoading', true);
-            axios
+            await axios
                 .get('/apis/v1/workflows/list_all/')
                 .then(response => {
                     commit('setWorkflows', response.data.workflows);

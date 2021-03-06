@@ -8,15 +8,60 @@
         "
     >
         <br />
+        <br />
         <b-container class="pl-3 pt-3" fluid>
-            <b-row align-v="center" align-h="center">
+            <b-row align-v="center" align-h="center" v-if="usersLoading">
+                <b-col align-self="end" class="text-center">
+                    <b-spinner
+                        type="grow"
+                        label="Loading..."
+                        variant="secondary"
+                    ></b-spinner>
+                </b-col>
+            </b-row>
+            <b-row v-else align-v="center" align-h="center">
                 <b-col>
-                    <b-card-group deck columns class="justify-content-center">
+                    <b-row
+                        ><b-col md="auto"
+                            ><h3
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                User Registry
+                            </h3> </b-col
+                        ><b-col
+                            ><b-input-group size="sm"
+                                ><template #prepend>
+                                    <b-input-group-text
+                                        ><i class="fas fa-search"></i
+                                    ></b-input-group-text> </template
+                                ><b-form-input
+                                    :class="
+                                        profile.darkMode
+                                            ? 'theme-search-dark'
+                                            : 'theme-search-light'
+                                    "
+                                    size="lg"
+                                    type="search"
+                                    v-model="searchText"
+                                ></b-form-input> </b-input-group></b-col
+                    ></b-row>
+                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <b-card-group
+                        deck
+                        columns
+                        class="justify-content-center mt-3"
+                    >
                         <b-card
                             v-for="user in users"
                             :key="user.username"
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            :header-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
                             border-variant="default"
                             :header-border-variant="
                                 profile.darkMode ? 'secondary' : 'default'
@@ -53,7 +98,9 @@
                             <b-row align-v="center">
                                 <b-col
                                     :class="
-                                        profile.darkMode ? 'text-white' : 'text-dark'
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
                                     "
                                 >
                                     {{
@@ -106,39 +153,21 @@
 <script>
 import { mapGetters } from 'vuex';
 import router from '@/router';
-import axios from 'axios';
-import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'Users',
-    mounted() {
-        this.loadUsers();
+    async mounted() {
+        await this.$store.dispatch('loadUsers');
     },
-    computed: mapGetters([
-        'profile',
-        'users',
-    ]),
+    computed: mapGetters(['profile', 'users', 'usersLoading']),
     data: function() {
         return {
-            users: []
+            searchText: ''
         };
     },
     methods: {
         goToFlows() {
-            router.push({
-                name: 'workflows'
-            });
-        },
-        loadUsers() {
-            axios
-                .get('/apis/v1/users/get_all/')
-                .then(response => {
-                    this.users = response.data.users;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
+            router.push({ name: 'workflows' });
         },
         userSelected(user) {
             router.push({

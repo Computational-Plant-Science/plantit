@@ -262,6 +262,7 @@ def map_run(run: Run, get_container_logs: bool = False):
         'target': run.target.name,
         'created': run.created.isoformat(),
         'updated': run.updated.isoformat(),
+        'completed': run.completed.isoformat() if run.completed is not None else None,
         'workflow_owner': run.workflow_owner,
         'workflow_name': run.workflow_name,
         'tags': [str(tag) for tag in run.tags.all()],

@@ -15,8 +15,9 @@ export const users = {
         }
     },
     actions: {
-        loadUsers({ commit }) {
-            axios
+        async loadUsers({ commit }) {
+            commit('setUsersLoading', true);
+            await axios
                 .get('/apis/v1/users/')
                 .then(response => {
                     commit('setUsers', response.data);
@@ -30,7 +31,8 @@ export const users = {
         }
     },
     getters: {
-        users: state => state.users
+        users: state => state.users,
+        usersLoading: state => state.usersLoading
         // TODO add 'developers' (users who've contributed workflows)
     }
 };

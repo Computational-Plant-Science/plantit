@@ -313,7 +313,7 @@
                                                             >
                                                                 <h5
                                                                     :class="
-                                                                        darkMode
+                                                                        profile.darkMode
                                                                             ? 'text-white'
                                                                             : 'text-dark'
                                                                     "

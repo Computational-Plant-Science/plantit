@@ -2,6 +2,7 @@ import json
 import tempfile
 from os.path import join
 from pathlib import Path
+from itertools import chain
 
 from asgiref.sync import async_to_sync
 from celery.result import AsyncResult
@@ -29,16 +30,33 @@ from plantit.utils import get_repo_config
 
 @api_view(['GET'])
 @login_required
-def get_runs_by_user(request, username, page):
+def get_by_user(request, username):
+    params = request.query_params
+    page = params.get('page') if 'page' in params else 0
     start = int(page) * 20
     count = start + 20
 
     try:
         user = User.objects.get(username=username)
-        runs = Run.objects.filter(user=user).order_by('-created')[start:(start + count)]
-        return JsonResponse([map_run(run) for run in runs], safe=False)
     except:
         return HttpResponseNotFound()
+
+    runs = Run.objects.filter(user=user)
+
+    if 'running' in params and params.get('running') == 'True':
+        runs = [run for run in runs.filter(completed__isnull=True).order_by('-created') if not run.is_complete]
+        runs = runs[start:(start + count)]
+    elif 'running' in params and params.get('running') == 'False':
+        runs = runs[start:(start + count)]
+        old_complete = [run for run in runs if run.is_complete]
+        runs = old_complete
+        # new_complete = [run for run in runs.filter(completed__isnull=False).order_by('-created') if run.is_complete]
+        # new_complete()
+        # runs = list(set(chain(old_complete, new_complete)))
+
+    # order runs and select page
+
+    return JsonResponse([map_run(run) for run in runs], safe=False)
 
 
 @api_view(['GET'])
@@ -409,6 +427,7 @@ def run(request, id):
             'target': None,
             'created': None,
             'updated': None,
+            'completed': None,
             'workflow_owner': None,
             'workflow_name': None,
             'tags': [],
@@ -435,8 +454,10 @@ def cancel(request, id):
     if run.is_sandbox:
         # cancel the Celery task
         AsyncResult(run.submission_id).revoke()
+        now = timezone.now()
         run.job_status = 'CANCELLED'
-        run.updated = timezone.now()
+        run.updated = now
+        run.completed = now
         run.save()
 
         update_status(run, message)
@@ -444,8 +465,10 @@ def cancel(request, id):
     else:
         # cancel the cluster scheduler job
         cancel_job(run)
+        now = timezone.now()
         run.job_status = 'CANCELLED'
-        run.updated = timezone.now()
+        run.updated = now
+        run.completed = now
         run.save()
 
         update_status(run, message)

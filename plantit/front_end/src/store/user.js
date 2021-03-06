@@ -36,7 +36,7 @@ export const user = {
     },
     actions: {
         async toggleDarkMode({ commit }) {
-            return axios
+            await axios
                 .get('/apis/v1/users/toggle_dark_mode/')
                 .then(response => {
                     commit('setDarkMode', response.data['dark_mode']);
@@ -50,7 +50,7 @@ export const user = {
             commit('setProfileLoading', true);
 
             // fetch Django user profile
-            return axios
+            await axios
                 .get(`/apis/v1/users/get_current/`)
                 .then(response => {
                     // set profile info

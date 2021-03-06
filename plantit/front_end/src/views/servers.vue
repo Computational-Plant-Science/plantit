@@ -8,15 +8,76 @@
         "
     >
         <br />
+        <br />
         <b-container class="pl-3 pt-3" fluid>
-            <b-row v-if="servers.length > 0" align-v="center" align-h="center">
+            <b-row align-v="center" align-h="center" v-if="serversLoading">
+                <b-col align-self="end" class="text-center">
+                    <b-spinner
+                        type="grow"
+                        label="Loading..."
+                        variant="secondary"
+                    ></b-spinner>
+                </b-col>
+            </b-row>
+            <b-row
+                v-else-if="servers.length > 0"
+                align-v="center"
+                align-h="center"
+            >
                 <b-col>
-                    <b-card-group deck columns class="justify-content-center">
+                    <b-row
+                        ><b-col md="auto"
+                            ><h3
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Public Servers
+                            </h3> </b-col
+                        ><b-col
+                            ><b-input-group size="sm"
+                                ><template #prepend>
+                                    <b-input-group-text
+                                        ><i class="fas fa-search"></i
+                                    ></b-input-group-text> </template
+                                ><b-form-input
+                                    :class="
+                                        profile.darkMode
+                                            ? 'theme-search-dark'
+                                            : 'theme-search-light'
+                                    "
+                                    size="lg"
+                                    type="search"
+                                    v-model="searchText"
+                                ></b-form-input>
+                                <!--<template #append>
+                                    <b-input-group-text
+                                        ><b-form-checkbox
+                                            class="mt-1"
+                                            v-model="includeTags"
+                                        >
+                                        </b-form-checkbox
+                                        >Include Tags</b-input-group-text
+                                    >
+                                </template>--></b-input-group
+                            ></b-col
+                        ></b-row
+                    >
+                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <b-card-group
+                        deck
+                        columns
+                        class="justify-content-center mt-3"
+                    >
                         <b-card
-                            v-for="target in servers"
+                            v-for="target in filteredServers"
                             v-bind:key="target.name"
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            :header-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
                             border-variant="default"
                             :header-border-variant="
                                 profile.darkMode ? 'secondary' : 'default'
@@ -70,6 +131,13 @@
                             ></i>
                         </b-card>
                     </b-card-group>
+                    <b-row
+                        class="text-center"
+                        v-if="
+                            filteredServers.length === 0 && servers.length !== 0
+                        "
+                        ><b-col>No servers matched your search.</b-col></b-row
+                    >
                     <!--<b-card-group deck columns class="justify-content-center">
                         <b-card
                             v-for="target in targets"
@@ -130,13 +198,20 @@ export default {
     data: function() {
         return {
             servers: [],
-            serversLoading: false
+            serversLoading: false,
+            searchText: '',
+            includeTags: false
         };
     },
     mounted() {
         this.loadServers();
     },
-    computed: mapGetters(['profile', 'users']),
+    computed: {
+        ...mapGetters(['profile', 'users']),
+        filteredServers() {
+            return this.servers.filter(s => s.name.includes(this.searchText));
+        }
+    },
     methods: {
         loadServers() {
             this.serversLoading = true;

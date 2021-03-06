@@ -8,6 +8,7 @@
         "
     >
         <br />
+        <br />
         <b-container class="pl-3 pt-3 mr-3" fluid>
             <b-row align-v="center" align-h="center" v-if="workflowsLoading">
                 <b-col align-self="end" class="text-center">
@@ -21,13 +22,13 @@
             <b-row
                 align-v="center"
                 align-h="center"
-                v-if="workflows.length === 0 && !workflowsLoading"
+                v-else-if="workflows.length === 0"
                 ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'"
                     >No workflows to show!</b-col
                 ></b-row
             >
             <b-row
-                v-if="profile.githubProfile === null"
+                v-else-if="profile.githubProfile === null"
                 align-v="center"
                 align-h="center"
                 class="p-2 text-center"
@@ -46,13 +47,48 @@
                     <b class="ml-0 pl-0">to load workflows.</b>
                 </b-col>
             </b-row>
-            <b-row v-else align-v="center" align-h="center">
-                <workflows
-                    :github-token="profile.djangoProfile.github_token"
-                    :workflows="publicWorkflows"
-                >
-                </workflows>
-            </b-row>
+            <b-row v-else
+                ><b-col><b-row><b-col md="auto"
+                    ><h3 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Public Workflows
+                    </h3> </b-col
+                ><b-col
+                    ><b-input-group size="sm"
+                                ><template #prepend>
+                                    <b-input-group-text
+                                        ><i class="fas fa-search"></i
+                                    ></b-input-group-text> </template
+                                ><b-form-input
+                                    :class="
+                                        profile.darkMode
+                                            ? 'theme-search-dark'
+                                            : 'theme-search-light'
+                                    "
+                                    size="lg"
+                                    type="search"
+                                    v-model="searchText"
+                                ></b-form-input>
+                                <!--<template #append>
+                                    <b-input-group-text
+                                        ><b-form-checkbox
+                                            class="mt-1"
+                                            v-model="includeTags"
+                                        >
+                                        </b-form-checkbox
+                                        >Include Tags</b-input-group-text
+                                    >
+                                </template>--></b-input-group
+                            >
+                        </b-col></b-row
+                    >
+                    <hr class="mt-2 mb-2" style="border-color: gray"/>
+                    <workflows
+                        class="mt-3"
+                        :github-token="profile.djangoProfile.github_token"
+                        :workflows="filteredWorkflows"
+                    >
+                    </workflows></b-col
+            ></b-row>
         </b-container>
     </div>
 </template>
@@ -70,7 +106,8 @@ export default {
     name: 'explore-workflows',
     data() {
         return {
-            currentTab: 0
+            currentTab: 0,
+            searchText: ''
         };
     },
     components: {
@@ -84,6 +121,11 @@ export default {
         publicWorkflows() {
             if (this.workflowsLoading) return [];
             return this.workflows.filter(wf => wf.config.public);
+        },
+        filteredWorkflows() {
+            return this.publicWorkflows.filter(wf =>
+                wf.config.name.includes(this.searchText)
+            );
         }
     },
     methods: {

@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     path(r'', views.runs),
     path(r'get_total_count/', views.get_total_count),
-    path(r'<username>/get_by_user/<page>/', views.get_runs_by_user),
+    path(r'<username>/get_by_user/', views.get_by_user),
     path(r'<username>/get_by_user_and_workflow/<workflow>/<page>/', views.get_runs_by_user_and_workflow),
     path(r'<username>/get_delayed_by_user_and_workflow/<workflow>/', views.get_delayed_runs_by_user_and_workflow),
     path(r'<username>/get_repeating_by_user_and_workflow/<workflow>/', views.get_repeating_runs_by_user_and_workflow),

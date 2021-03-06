@@ -56,7 +56,7 @@ def schedule_default_tasks(sender, instance, created, **kwargs):
     healthcheck_task = TargetTask.objects.create(
         target=instance,
         interval=every_minute,
-        name='Healthcheck',
+        name=f"{instance.name} healthcheck",
         task='plantit.runs.tasks.run_command',
         args=json.dumps([instance.name, 'pwd']))
 

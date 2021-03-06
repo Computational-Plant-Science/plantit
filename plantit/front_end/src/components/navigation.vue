@@ -4,18 +4,32 @@
             id="sidebar-left"
             shadow="lg"
             :bg-variant="profile.darkMode ? 'dark' : 'light'"
-            :text-variant="profile.darkMode ? 'dark' : 'light'"
+            :text-variant="profile.darkMode ? 'light' : 'dark'"
             no-header-close
             width="550px"
         >
             <template v-slot:default="{ hide }">
                 <b-container class="p-0">
                     <b-row
-                        class="ml-4 mr-4 mb-4 mt-2 pl-0 pr-0 text-left"
+                        class="ml-3 mr-3 mb-3 mt-0 pt-0 pl-0 pr-0 text-left"
                         align-v="start"
                     >
                         <b-col
-                            class="ml-0 mr-0 pl-0 pr-0"
+                            class="ml-3 mr-0 pl-0 pt-0 pr-0 mt-1"
+                            align-self="center"
+                        >
+                            <h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Your Runs
+                            </h5>
+                        </b-col>
+                        <b-col
+                            class="ml-0 mr-0 pl-0 pr-0 pt-0 mt-0"
                             align-self="center"
                             md="auto"
                         >
@@ -28,18 +42,7 @@
                                 Hide
                             </b-button>
                         </b-col>
-                        <b-col class="ml-0 mr-0 pl-0 pr-0" align-self="start">
-                            <b-button
-                                disabled
-                                block
-                                size="lg"
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                class="text-center m-0"
-                            >
-                                <b>Your Runs</b>
-                            </b-button>
-                        </b-col>
-                        <b-col
+                        <!--<b-col
                             md="auto"
                             class="ml-0 mr-0 pl-0 pr-0 text-right"
                             align-self="center"
@@ -52,19 +55,23 @@
                                 <i class="fas fa-sync-alt fa-1x fa-fw"></i>
                                 Reload
                             </b-button>
-                        </b-col>
+                        </b-col>-->
                     </b-row>
-                    <b-row
-                        v-if="!loadingRuns"
-                        class="m-4 mb-1 pl-0 pr-0"
-                        align-v="center"
-                    >
-                        <b-col class="m-0 pl-0 pr-0 text-center">
-                            <b-list-group class="text-left m-0 p-0">
+                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center">
+                        <b-col><b>Running</b></b-col>
+                    </b-row>
+                    <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
+                        ><b-col class="m-0 pl-0 pr-0 text-center">
+                            <b-list-group
+                                v-if="runningRuns.length > 0"
+                                class="text-left m-0 p-0"
+                            >
+                                {{ runningRuns.length }}
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="run in runs"
+                                    v-for="run in runningRuns"
                                     v-bind:key="run.id"
                                     :class="
                                         profile.darkMode
@@ -75,14 +82,15 @@
                                 >
                                     <b-img
                                         v-if="
-                                            run.flow_image_url !== undefined &&
-                                                run.flow_image_url !== null
+                                            run.workflow_image_url !==
+                                                undefined &&
+                                                run.workflow_image_url !== null
                                         "
                                         rounded
                                         class="card-img-right"
                                         style="max-width: 4rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                         right
-                                        :src="run.flow_image_url"
+                                        :src="run.workflow_image_url"
                                     ></b-img>
                                     <a
                                         :class="
@@ -94,14 +102,131 @@
                                         >{{ run.id }}</a
                                     >
                                     <br />
+                                    <div
+                                        v-if="
+                                            run.tags !== undefined &&
+                                                run.tags.length > 0
+                                        "
+                                    >
+                                        <b-badge
+                                            v-for="tag in run.tags"
+                                            v-bind:key="tag"
+                                            class="mr-1"
+                                            variant="secondary"
+                                            >{{ tag }}
+                                        </b-badge>
+                                        <br />
+                                    </div>
+                                    <small v-if="!run.is_complete"
+                                        >Running</small
+                                    >
                                     <b-badge
-                                        v-for="tag in run.tags"
-                                        v-bind:key="tag"
-                                        class="mr-1"
+                                        :variant="
+                                            run.is_failure || run.is_timeout
+                                                ? 'danger'
+                                                : run.is_cancelled
+                                                ? 'secondary'
+                                                : 'success'
+                                        "
+                                        v-else
+                                        >{{ run.job_status }}</b-badge
+                                    >
+                                    <small> on </small>
+                                    <b-badge
+                                        class="ml-0 mr-0"
                                         variant="secondary"
-                                        >{{ tag }}
-                                    </b-badge>
-                                    <br v-if="run.tags.length > 0" />
+                                        >{{ run.target }}</b-badge
+                                    ><small> {{ prettify(run.updated) }}</small>
+                                    <br />
+                                    <small class="mr-1"
+                                        ><a
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                            :href="
+                                                `https://github.com/${run.workflow_owner}/${run.workflow_name}`
+                                            "
+                                            ><i class="fab fa-github fa-fw"></i>
+                                            {{ run.workflow_owner }}/{{
+                                                run.workflow_name
+                                            }}</a
+                                        >
+                                    </small>
+                                </b-list-group-item>
+                            </b-list-group>
+                            <p
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-left text-light pl-3 pr-3'
+                                        : 'text-left text-dark pl-3 pr-3'
+                                "
+                                v-if="runningRuns.length === 0"
+                            >
+                                No workflows running.
+                            </p>
+                        </b-col></b-row
+                    >
+                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center">
+                        <b-col><b>Completed</b></b-col>
+                    </b-row>
+
+                    <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
+                        ><b-col
+                            v-if="!runsLoading && completedRuns.length > 0"
+                            class="m-0 pl-0 pr-0 text-center"
+                        >
+                            <b-list-group class="text-left m-0 p-0">
+                                <b-list-group-item
+                                    variant="default"
+                                    style="box-shadow: -2px 2px 2px #adb5bd"
+                                    v-for="run in completedRuns"
+                                    v-bind:key="run.id"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
+                                            : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                                    "
+                                    @click="onRunSelected(run)"
+                                >
+                                    <b-img
+                                        v-if="
+                                            run.workflow_image_url !== undefined &&
+                                                run.workflow_image_url !== null
+                                        "
+                                        rounded
+                                        class="card-img-right"
+                                        style="max-width: 4rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
+                                        right
+                                        :src="run.workflow_image_url"
+                                    ></b-img>
+                                    <a
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        :href="`/run/${run.id}`"
+                                        >{{ run.id }}</a
+                                    >
+                                    <br />
+                                    <div
+                                        v-if="
+                                            run.tags !== undefined &&
+                                                run.tags.length > 0
+                                        "
+                                    >
+                                        <b-badge
+                                            v-for="tag in run.tags"
+                                            v-bind:key="tag"
+                                            class="mr-1"
+                                            variant="secondary"
+                                            >{{ tag }}
+                                        </b-badge>
+                                        <br v-if="run.tags.length > 0" />
+                                    </div>
                                     <small v-if="!run.is_complete"
                                         >Running</small
                                     >
@@ -142,28 +267,27 @@
                                 </b-list-group-item>
                             </b-list-group>
                         </b-col>
-                    </b-row>
-                    <b-row
-                        class="ml-0 mr-0 pl-0 pr-0 mt-0 mb-3 text-center"
-                        align-v="start"
-                    >
-                        <b-col align-self="start" class="m-0 pl-0 pr-0">
+
+                        <b-col
+                            v-if="runsLoading || loadingMoreRuns"
+                            class="m-0 pl-0 pr-0 text-center"
+                        >
                             <b-spinner
-                                v-if="loadingRuns || loadingMoreRuns"
                                 type="grow"
                                 variant="secondary"
-                            ></b-spinner>
-                            <b-nav
-                                v-else-if="runs.length > 0"
-                                vertical
-                                class="m-0 pl-0 pr-0"
-                            >
+                            ></b-spinner
+                        ></b-col>
+                        <!--<b-col
+                            v-else-if="completedRuns.length > 0"
+                            class="m-0 pl-0 pr-0 text-center"
+                        >
+                            <b-nav vertical class="m-0 p-0">
                                 <b-nav-item class="m-0 p-0">
                                     <b-button
                                         :variant="
                                             profile.darkMode ? 'dark' : 'light'
                                         "
-                                        :disabled="loadingRuns"
+                                        :disabled="runsLoading"
                                         block
                                         class="text-center m-0"
                                         @click="loadRuns(currentRunPage + 1)"
@@ -175,13 +299,14 @@
                                     </b-button>
                                 </b-nav-item>
                             </b-nav>
+                        </b-col>-->
+                        <b-col v-if="!runsLoading && completedRuns.length === 0" class="m-0 pl-0 pr-0 text-center">
                             <p
                                 :class="
                                     profile.darkMode
-                                        ? 'text-center text-light'
-                                        : 'text-center text-dark'
+                                        ? 'text-left text-light pl-3 pr-3'
+                                        : 'text-left text-dark pl-3 pr-3'
                                 "
-                                v-else
                             >
                                 You haven't run any workflows yet.
                             </p>
@@ -265,7 +390,7 @@
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                 </transition>
-              <b-navbar-nav class="ml-auto m-0 p-0">
+                <b-navbar-nav class="ml-auto m-0 p-0">
                     <b-nav-item
                         v-if="
                             profile.loggedIn
@@ -289,7 +414,7 @@
                         right
                         v-if="profile.loggedIn"
                         :title="profile.djangoProfile.username"
-                        class="p-2 m-3 dropdown-custom"
+                        class="p-1 m-2 dropdown-custom"
                         :menu-class="
                             profile.darkMode ? 'theme-dark' : 'theme-light'
                         "
@@ -300,7 +425,7 @@
                                 :variant="
                                     profile.darkMode ? 'outline-light' : 'white'
                                 "
-                                class="m-0 ml-0 mr-2 text-left"
+                                class="m-0 ml-0 mr-0 text-left"
                                 size="sm"
                             >
                                 <b-img
@@ -500,9 +625,7 @@ export default {
             crumbs: [],
             notFound: false,
             titleContent: 'breadcrumb',
-            runs: [],
             currentRunPage: 0,
-            loadingRuns: false,
             loadingMoreRuns: false,
             fields: [
                 {
@@ -531,11 +654,17 @@ export default {
             ]
         };
     },
-    computed: mapGetters(['profile']),
+    computed: mapGetters([
+        'profile',
+        'runsLoading',
+        'runningRuns',
+        'completedRuns'
+    ]),
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
         await this.$store.dispatch('loadRuns');
+        // await this.loadRunning(0);
 
         // subscribe to run update channel
         this.sockets.subscribe('update_status', data => {
@@ -560,11 +689,11 @@ export default {
         toggleDarkMode: function() {
             this.$store.dispatch('toggleDarkMode');
         },
-        onRunSelected: function(items) {
+        onRunSelected: function(run) {
             router.push({
                 name: 'run',
                 params: {
-                    id: items[0].id
+                    id: run.id
                 }
             });
         },
@@ -585,32 +714,30 @@ export default {
                     if (error.response.status === 500) throw error;
                 });
         },
-        async loadRuns(page) {
-            this.loadingRuns = page === 0;
-            this.loadingMoreRuns = !this.loadingRuns;
+        async loadRunning(page) {
             return axios
                 .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_by_user/${page}/`
+                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_by_user/?page=${page}&running=true`
                 )
                 .then(response => {
                     var ids = [];
-                    this.runs = this.runs.concat(response.data);
-                    this.runs = this.runs.filter(function(run) {
+                    this.runningRuns = this.runningRuns.concat(response.data);
+                    this.runningRuns = this.runningRuns.filter(function(run) {
                         if (ids.indexOf(run.id) >= 0) return false;
                         ids.push(run.id);
                         return true;
                     });
-                    this.runs.sort(function(a, b) {
+                    this.runningRuns.sort(function(a, b) {
                         return new Date(b.updated) - new Date(a.updated);
                     });
-                    this.loadingRuns = false;
-                    this.loadingMoreRuns = false;
-                    this.currentRunPage = page + 1;
+                    // this.runsLoading = false;
+                    // this.loadingMoreRuns = false;
+                    // this.currentRunningRunPage = page + 1;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.loadingRuns = false;
-                    this.loadingMoreRuns = false;
+                    //this.runsLoading = false;
+                    //this.loadingMoreRuns = false;
                     throw error;
                 });
         }

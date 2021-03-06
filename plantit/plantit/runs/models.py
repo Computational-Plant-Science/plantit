@@ -18,6 +18,7 @@ class Run(models.Model):
     tags = TaggableManager()
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(default=timezone.now)
+    completed = models.DateTimeField(null=True, blank=True)
     token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     submission_id = models.CharField(max_length=50, null=True, blank=True)
@@ -47,12 +48,12 @@ class Run(models.Model):
         return self.job_status == 'FAILURE' or self.job_status == 'FAILED' or self.job_status == 'NODE_FAIL'
 
     @property
-    def is_complete(self):
-        return self.is_success or self.is_failure or self.is_cancelled or self.is_timeout
-
-    @property
     def is_cancelled(self):
         return self.job_status == 'REVOKED' or self.job_status == 'CANCELLED'
+
+    @property
+    def is_complete(self):
+        return self.is_success or self.is_failure or self.is_cancelled or self.is_timeout
 
     @property
     def is_timeout(self):
