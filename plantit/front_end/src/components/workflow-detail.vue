@@ -24,7 +24,11 @@
             <b-col>
                 <b-row>
                     <b-col md="auto" class="mr-0">
-                        <h2 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                        <h2
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                        >
                             {{ workflow.config.name }}
                         </h2>
                         <b-badge
@@ -48,7 +52,11 @@
                     <b-col>
                         <small>
                             <b-link
-                                :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
                                 :href="
                                     'https://github.com/' +
                                         workflow.repo.owner.login +
@@ -72,9 +80,13 @@
                             </b-col>
                         </b-row>
                         <br />
-                        <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                            Configuration
-                        </h5>
+                        <b
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            Metadata
+                        </b>
                         <hr />
                         <b-row>
                             <b-col>
@@ -86,6 +98,27 @@
                                         <b>{{ workflow.config.author }}</b>
                                     </b-col>
                                 </b-row>
+                                <b-row v-if="workflow.config.doi !== undefined">
+                                    <b-col>
+                                        <small>DOI</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        <b-link :href="`https://doi.org/${workflow.config.doi}`">{{ workflow.config.doi }}</b-link>
+                                    </b-col>
+                                </b-row>
+                            </b-col>
+                        </b-row>
+                        <br/>
+                        <b
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            Configuration
+                        </b>
+                        <hr />
+                        <b-row>
+                            <b-col>
                                 <b-row>
                                     <b-col>
                                         <small>Image</small>
@@ -243,14 +276,18 @@
                         v-if="!workflow.config.resources"
                     >
                         <b-alert show variant="warning"
-                            >This workflow does not specify cluster resources and
-                            can only be run in the <b>Sandbox</b>.</b-alert
+                            >This workflow does not specify cluster resources
+                            and can only be run in the <b>Sandbox</b>.</b-alert
                         >
                     </b-col>
                     <b-col align-self="end" class="text-left" v-else>
-                        <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        <b
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
                             Resource Requests
-                        </h5>
+                        </b>
                         <hr />
                         <b-row align-v="right" align-h="right">
                             <b-col>

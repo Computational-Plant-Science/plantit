@@ -213,6 +213,11 @@ def validate_workflow_config(config, token):
                         type(name) is str for name in config['output']['exclude']['names']):
                     errors.append('Attribute \'output.exclude.names\' must be a list of str')
 
+    # doi (optional)
+    if 'doi' in config:
+        if type(config['doi']) is not str:
+            errors.append('Attribute \'doi\' must be a str')
+
     return True if len(errors) == 0 else (False, errors)
 
 
