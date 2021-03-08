@@ -9,18 +9,18 @@ from plantit.runs.utils import map_run
 
 class RunConsumer(WebsocketConsumer):
     def connect(self):
-        self.run_id = self.scope['url_route']['kwargs']['id']
-        print(f"Socket connected for run {self.run_id}")
-        async_to_sync(self.channel_layer.group_add)(self.run_id, self.channel_name)
+        self.username = self.scope['url_route']['kwargs']['username']
+        print(f"Socket connected for user {self.username} notifications")
+        async_to_sync(self.channel_layer.group_add)(f"runs-{self.username}", self.channel_name)
         self.accept()
 
     def disconnect(self, code):
-        print(f"Socket disconnected for run {self.run_id}")
-        async_to_sync(self.channel_layer.group_discard)(self.run_id, self.channel_name)
+        print(f"Socket disconnected for user {self.username} runs")
+        async_to_sync(self.channel_layer.group_discard)(f"runs-{self.username}", self.channel_name)
 
     def update_status(self, event):
-        run = Run.objects.get(guid=self.run_id)
-        print(f"Received status update for run {self.run_id} with status {run.job_status}")
+        run = event['run']
+        print(f"Received status update for run {event['run']['id']} with status {event['run']['job_status']}")
         self.send(text_data=json.dumps({
-            'run': map_run(run, True),
+            'run': run,
         }))

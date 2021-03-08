@@ -68,14 +68,14 @@ def update_status(run: Run, description: str):
         log.write(f"{description}\n")
 
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(run.guid, {
+    async_to_sync(channel_layer.group_send)(f"runs-{run.user.username}", {
         'type': 'update_status',
         'run': map_run(run, True),
     })
-    async_to_sync(channel_layer.group_send)(f"toast-{run.user.username}", {
-        'type': 'push_toast',
-        'message': f"Run {run.guid}: {description}",
-    })
+    # async_to_sync(channel_layer.group_send)(f"runs-{run.user.username}", {
+    #     'type': 'push_toast',
+    #     'message': f"Run {run.guid}: {description}",
+    # })
 
 
 def stat_logs(id: str):
@@ -314,6 +314,8 @@ def create_run(username: str, target_name: str, workflow: dict) -> Run:
     run.work_dir = f"{run.guid}/"
 
     run.save()
+    update_status(run, f"Created run {run.guid}")
+
     return run
 
 

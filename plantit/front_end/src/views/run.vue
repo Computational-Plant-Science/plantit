@@ -1543,17 +1543,6 @@ export default {
         }
     },
     async mounted() {
-        // subscribe to run channel
-        this.socket = new WebSocket(
-            (location.protocol === 'https:' ? 'wss://' : 'ws://') +
-                window.location.host +
-                '/ws/run/' +
-                this.$router.currentRoute.params.id +
-                '/'
-        );
-        this.socket.onmessage = this.subscribeToSocket;
-
-        // fetch the latest run data
         await this.reloadRun();
     },
     computed: {

@@ -79,7 +79,7 @@
                                         "
                                         rounded
                                         class="card-img-right"
-                                        style="max-width: 4rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
+                                        style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                         right
                                         :src="run.workflow_image_url"
                                     ></b-img>
@@ -199,7 +199,7 @@
                                                 "
                                                 rounded
                                                 class="card-img-right"
-                                                style="max-width: 4rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
+                                                style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                 right
                                                 :src="run.workflow_image_url"
                                             ></b-img>
@@ -439,16 +439,22 @@
                         </b-col>
                     </b-row>
                     <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <b-row
+                        class="m-3 mb-1 pl-0 pr-0 text-center"
+                        align-v="center"
+                    >
+                        <b-col><b>Unread</b></b-col>
+                    </b-row>
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col class="m-0 pl-0 pr-0 text-center">
                             <b-list-group
-                                v-if="notifications.length > 0"
+                                v-if="unreadNotifications.length > 0"
                                 class="text-left m-0 p-0"
                             >
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="notification in notifications"
+                                    v-for="notification in unreadNotifications"
                                     v-bind:key="notification.created"
                                     :class="
                                         profile.darkMode
@@ -491,13 +497,78 @@
                                         ? 'text-center text-light pl-3 pr-3'
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
-                                v-if="notifications.length === 0"
+                                v-if="unreadNotifications.length === 0"
                             >
                                 No notifications to show.
                             </p>
                         </b-col>
                     </b-row>
-                </b-container>
+                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <b-row
+                        class="m-3 mb-1 pl-0 pr-0 text-center"
+                        align-v="center"
+                    >
+                        <b-col><b>Read</b></b-col>
+                    </b-row>
+                    <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
+                        ><b-col class="m-0 pl-0 pr-0 text-center">
+                            <b-list-group
+                                v-if="unreadNotifications.length > 0"
+                                class="text-left m-0 p-0"
+                            >
+                                <b-list-group-item
+                                    variant="default"
+                                    style="box-shadow: -2px 2px 2px #adb5bd"
+                                    v-for="notification in unreadNotifications"
+                                    v-bind:key="notification.created"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
+                                            : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                                    "
+                                >
+                                    <p v-if="notification.run_id !== undefined">
+                                        <b>Run {{ notification.run_id }}</b
+                                        ><br />{{ notification.message
+                                        }}<br /><small>{{
+                                            prettify(notification.created)
+                                        }}</small>
+                                    </p>
+                                    <p
+                                        v-else-if="
+                                            notification.policy !== undefined &&
+                                                notification.policy.path !==
+                                                    undefined
+                                        "
+                                    ></p>
+                                    <p v-else></p>
+                                    <b-checkbox
+                                        button
+                                        v-model="notification.read"
+                                        :disabled="notification.read"
+                                        :variant="
+                                            profile.darkMode ? 'dark' : 'light'
+                                        "
+                                        class="text-left m-0"
+                                        @click="hide"
+                                    >
+                                        Read
+                                    </b-checkbox>
+                                </b-list-group-item>
+                            </b-list-group>
+                            <p
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-center text-light pl-3 pr-3'
+                                        : 'text-center text-dark pl-3 pr-3'
+                                "
+                                v-if="readNotifications.length === 0"
+                            >
+                                No notifications to show.
+                            </p>
+                        </b-col>
+                    </b-row>
+                  </b-container>
             </template>
         </b-sidebar>
         <b-navbar
@@ -616,15 +687,12 @@
                                 <span
                                     :title="
                                         'Notifications (' +
-                                            (notifications === undefined
-                                                ? []
-                                                : notifications
-                                            ).length +
+                                            unreadNotifications
+                                            .length +
                                             ')'
                                     "
                                     v-if="
-                                        notifications !== undefined &&
-                                            notifications.some(n => !n.read)
+                                        unreadNotifications.length > 0
                                     "
                                     class="fa-stack mr-2"
                                     ><i
@@ -749,10 +817,7 @@
                         <b-dropdown-item
                             :title="
                                 'Notifications (' +
-                                    (notifications === undefined
-                                        ? []
-                                        : notifications
-                                    ).length +
+                                    unreadNotifications.length +
                                     ')'
                             "
                             :class="
@@ -830,13 +895,13 @@
             </b-collapse>
         </b-navbar>
         <b-toast
-            v-if="$route.name !== 'run'"
+            v-if="$route.name !== 'run' && toastRun !== null"
             id="toast"
             :variant="profile.darkMode ? 'dark text-light' : 'light text-dark'"
             solid
             :title="now()"
         >
-            {{ toasts[toasts.length - 1] }}
+            {{ toastRun.submission_logs[toastRun.submission_logs.length - 1] }}
         </b-toast>
     </div>
 </template>
@@ -872,7 +937,7 @@ export default {
             currentRunPage: 0,
             loadingMoreRuns: false,
             toasts: [],
-            notifications: [],
+            toastRun: null,
             fields: [
                 {
                     key: 'id',
@@ -905,35 +970,25 @@ export default {
             'profile',
             'runsLoading',
             'runningRuns',
-            'completedRuns'
+            'completedRuns',
+            'notificationsLoading',
+            'unreadNotifications',
+            'readNotifications'
         ]),
-        unreadNotifications() {
-          return this.notifications.filter(n => !n.read);
-        }
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
-        await this.loadNotifications();
-        // await this.$store.dispatch('loadNotifications');  TODO
         await this.$store.dispatch('loadRuns');
-
-        let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        await this.$store.dispatch('loadNotifications');
 
         // subscribe to run channel
-        this.socket = new WebSocket(
-            (location.protocol === 'https:' ? 'wss://' : 'ws://') +
-                window.location.host +
-                '/ws/run/' +
-                this.$router.currentRoute.params.id +
-                '/'
-        );
-        this.socket.onmessage = this.onRunUpdate;
+        let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        this.toastSocket = new WebSocket(`${protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`);
+        this.toastSocket.onmessage = this.onRunUpdate;
 
         // subscribe to notification channel
-        this.toastSocket = new WebSocket(
-            `${protocol}${window.location.host}/ws/notification/${this.profile.djangoProfile.username}/`
-        );
+        this.toastSocket = new WebSocket(`${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`);
         this.toastSocket.onmessage = this.onNotification;
     },
     watch: {
@@ -942,9 +997,16 @@ export default {
         }
     },
     methods: {
-        onRunUpdate(e) {
-            let data = JSON.parse(e.data);
-            this.run = data.run;
+        onRunUpdate(event) {
+            let data = JSON.parse(event.data);
+            this.$store.dispatch('updateRun', data.run);
+            this.toastRun = data.run;
+            this.$bvToast.show('toast');
+        },
+        onNotification(event) {
+            let data = JSON.parse(event.data);
+            this.$store.dispatch('addNotification', data.notification);
+            this.toasts.push(data.message);
         },
         onDelete(run) {
             axios
@@ -975,15 +1037,6 @@ export default {
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');
         },
-        onNotification(e) {
-            let data = JSON.parse(e.data);
-            this.toasts.push(data.message);
-            this.$bvToast.show('toast');
-        },
-        subscribeToNotifications(e) {
-            let data = JSON.parse(e.data);
-            this.notifications.push(data);
-        },
         logOut() {
             sessionStorage.clear();
             window.location.replace('/apis/v1/idp/cyverse_logout/');
@@ -996,19 +1049,6 @@ export default {
         toggleDarkMode: function() {
             this.$store.dispatch('toggleDarkMode');
         },
-        async loadNotifications() {
-            return axios
-                .get(
-                    `/apis/v1/notifications/${this.profile.djangoProfile.username}/get_by_user/?page=0`
-                )
-                .then(response => {
-                    this.notifications = response.data;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
-        }
     }
 };
 </script>

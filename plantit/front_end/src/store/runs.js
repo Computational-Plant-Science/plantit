@@ -8,18 +8,28 @@ export const runs = {
         loading: true
     }),
     mutations: {
-        setRunning(state, running) {
-            state.running = running;
+        setRunning(state, runs) {
+            state.running = runs;
         },
-        setCompleted(state, completed) {
-            state.completed = completed;
+        setCompleted(state, runs) {
+            state.completed = runs;
         },
         setLoading(state, loading) {
             state.loading = loading;
         },
+        update(state, run) {
+            if (run.is_complete) {
+                state.running = state.running.filter(r => r.guid !== run.guid);
+                state.completed.unshift(run);
+            } else {
+                let i = state.running.findIndex(r => r.guid === run.guid);
+                if (i === -1) state.running.unshift(run);
+                else state.running[state.running.findIndex(r => r.guid === run.guid)] = run;
+            }
+        },
         complete(state, run) {
             state.running = state.running.filter(r => r.guid !== run.guid);
-            state.completed.push(run);
+            state.completed.unshift(run);
         }
     },
     actions: {
@@ -83,13 +93,16 @@ export const runs = {
             ]);
 
             commit('setLoading', false);
+        },
+        updateRun({ commit }, run) {
+            commit('update', run);
         }
     },
     getters: {
         run: state => guid => {
-            let running = state.running.find(run => guid === run.guid);
-            if (running === undefined)
-                return state.completed.find(run => guid === run.guid);
+            let found = state.running.find(r => guid === r.guid);
+            if (found !== undefined) return found;
+            return state.completed.find(run => guid === run.guid);
         },
         runningRuns: state =>
             state.running === undefined ? [] : state.running,
