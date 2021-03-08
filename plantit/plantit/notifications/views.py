@@ -2,7 +2,7 @@ from itertools import chain
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponseNotFound, JsonResponse
+from django.http import HttpResponseNotFound, JsonResponse, HttpResponse
 from rest_framework.decorators import api_view
 
 from plantit.notifications.models import Notification, TargetPolicyNotification, DirectoryPolicyNotification
@@ -27,3 +27,27 @@ def get_by_user(request, username):
         list(TargetPolicyNotification.objects.filter(user=user))))
     notifications = notifications[start:(start + count)]
     return JsonResponse([map_notification(n) for n in notifications], safe=False)
+
+
+@api_view(['POST'])
+@login_required
+def mark_many_read(request, username):
+    # TODO
+    pass
+
+
+@api_view(['POST'])
+@login_required
+def mark_read(request, username):
+    user = request.user
+    guid = request.data['notification']['id']
+
+    try:
+        notification = Notification.objects.get(user=user, guid=guid)
+    except:
+        return HttpResponseNotFound()
+
+    notification.read = True
+    return JsonResponse({
+        'notification': map_notification(notification)
+    })

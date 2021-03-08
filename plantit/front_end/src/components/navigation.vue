@@ -428,6 +428,14 @@
                             align-self="center"
                             md="auto"
                         >
+                            <!--<b-button
+                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                class="text-left m-0"
+                                @click="markAllRead"
+                            >
+                                Mark All Read
+                                <i class="fas fa-check-double fa-1x fa-fw"></i>
+                            </b-button>-->
                             <b-button
                                 :variant="profile.darkMode ? 'dark' : 'light'"
                                 class="text-left m-0"
@@ -455,40 +463,39 @@
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
                                     v-for="notification in unreadNotifications"
-                                    v-bind:key="notification.created"
+                                    v-bind:key="notification.id"
                                     :class="
                                         profile.darkMode
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                             : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                                     "
                                 >
-                                    <p v-if="notification.run_id !== undefined">
-                                        <b>Run {{ notification.run_id }}</b
-                                        ><br />{{ notification.message
-                                        }}<br /><small>{{
-                                            prettify(notification.created)
-                                        }}</small>
-                                    </p>
                                     <p
-                                        v-else-if="
+                                        v-if="
                                             notification.policy !== undefined &&
                                                 notification.policy.path !==
                                                     undefined
                                         "
-                                    ></p>
+                                    >
+                                        {{ notification.message }}
+                                        <br />
+                                        <small>{{
+                                            prettify(notification.created)
+                                        }}</small>
+                                    </p>
                                     <p v-else></p>
-                                    <b-checkbox
-                                        button
-                                        v-model="notification.read"
+                                    <b-button
+                                        size="sm"
                                         :disabled="notification.read"
                                         :variant="
                                             profile.darkMode ? 'dark' : 'light'
                                         "
                                         class="text-left m-0"
-                                        @click="hide"
+                                        @click="markRead(notification)"
                                     >
-                                        Read
-                                    </b-checkbox>
+                                        Mark Read
+                                        <i class="fas fa-check"></i>
+                                    </b-button>
                                 </b-list-group-item>
                             </b-list-group>
                             <p
@@ -513,13 +520,13 @@
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col class="m-0 pl-0 pr-0 text-center">
                             <b-list-group
-                                v-if="unreadNotifications.length > 0"
+                                v-if="readNotifications.length > 0"
                                 class="text-left m-0 p-0"
                             >
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="notification in unreadNotifications"
+                                    v-for="notification in readNotifications"
                                     v-bind:key="notification.created"
                                     :class="
                                         profile.darkMode
@@ -568,7 +575,7 @@
                             </p>
                         </b-col>
                     </b-row>
-                  </b-container>
+                </b-container>
             </template>
         </b-sidebar>
         <b-navbar
@@ -650,15 +657,16 @@
                     <b-nav-item
                         v-if="
                             profile.loggedIn
-                                ? profile.githubProfile === null
+                                ? profile.githubProfile === null ||
+                                  profile.githubProfile === undefined
                                 : false
                         "
                         title="Log in to GitHub"
                         href="/apis/v1/idp/github_request_identity/"
-                        class="ml-0 mr-0"
+                        class="p-1 mt-3 ml-0 mr-0"
                     >
                         <b-button
-                            class="mt-1 text-left"
+                            class="mt-2 text-left"
                             variant="success"
                             size="sm"
                         >
@@ -687,13 +695,10 @@
                                 <span
                                     :title="
                                         'Notifications (' +
-                                            unreadNotifications
-                                            .length +
+                                            unreadNotifications.length +
                                             ')'
                                     "
-                                    v-if="
-                                        unreadNotifications.length > 0
-                                    "
+                                    v-if="unreadNotifications.length > 0"
                                     class="fa-stack mr-2"
                                     ><i
                                         class="fas fa-dot-circle fa-stack-2x text-warning"
@@ -833,10 +838,7 @@
                             <i class="fas fa-bell fa-1x fa-fw"></i>
                             Notifications
                             <span v-if="unreadNotifications.length > 0"
-                                >({{
-                                    unreadNotifications.length
-                                }}
-                                unread)</span
+                                >({{ unreadNotifications.length }} unread)</span
                             >
                         </b-dropdown-item>
                         <b-dropdown-item
@@ -974,7 +976,7 @@ export default {
             'notificationsLoading',
             'unreadNotifications',
             'readNotifications'
-        ]),
+        ])
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
@@ -984,11 +986,15 @@ export default {
 
         // subscribe to run channel
         let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-        this.toastSocket = new WebSocket(`${protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`);
+        this.toastSocket = new WebSocket(
+            `${protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
+        );
         this.toastSocket.onmessage = this.onRunUpdate;
 
         // subscribe to notification channel
-        this.toastSocket = new WebSocket(`${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`);
+        this.toastSocket = new WebSocket(
+            `${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
+        );
         this.toastSocket.onmessage = this.onNotification;
     },
     watch: {
@@ -997,6 +1003,27 @@ export default {
         }
     },
     methods: {
+        markAllRead() {},
+        markRead(notification) {
+            axios({
+                method: 'post',
+                url: `/apis/v1/notifications/${this.profile.djangoProfile.username}/mark_read/`,
+                data: {
+                    notification: notification
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    this.$store.dispatch(
+                        'updateNotification',
+                        response.data.notification
+                    );
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
         onRunUpdate(event) {
             let data = JSON.parse(event.data);
             this.$store.dispatch('updateRun', data.run);
@@ -1005,7 +1032,7 @@ export default {
         },
         onNotification(event) {
             let data = JSON.parse(event.data);
-            this.$store.dispatch('addNotification', data.notification);
+            this.$store.dispatch('updateNotification', data.notification);
             this.toasts.push(data.message);
         },
         onDelete(run) {
@@ -1048,7 +1075,7 @@ export default {
         },
         toggleDarkMode: function() {
             this.$store.dispatch('toggleDarkMode');
-        },
+        }
     }
 };
 </script>

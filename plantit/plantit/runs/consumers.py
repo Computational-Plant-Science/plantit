@@ -20,7 +20,7 @@ class RunConsumer(WebsocketConsumer):
 
     def update_status(self, event):
         run = event['run']
-        print(f"Received status update for run {event['run']['id']} with status {event['run']['job_status']}")
+        print(f"Received status update for run {run['id']} with status {run['job_status']}")
         self.send(text_data=json.dumps({
             'run': run,
         }))

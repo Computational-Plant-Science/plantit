@@ -67,15 +67,10 @@ def update_status(run: Run, description: str):
     with open(log_path, 'a') as log:
         log.write(f"{description}\n")
 
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(f"runs-{run.user.username}", {
+    async_to_sync(get_channel_layer().group_send)(f"runs-{run.user.username}", {
         'type': 'update_status',
         'run': map_run(run, True),
     })
-    # async_to_sync(channel_layer.group_send)(f"runs-{run.user.username}", {
-    #     'type': 'push_toast',
-    #     'message': f"Run {run.guid}: {description}",
-    # })
 
 
 def stat_logs(id: str):

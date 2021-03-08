@@ -27,10 +27,6 @@ export const runs = {
                 else state.running[state.running.findIndex(r => r.guid === run.guid)] = run;
             }
         },
-        complete(state, run) {
-            state.running = state.running.filter(r => r.guid !== run.guid);
-            state.completed.unshift(run);
-        }
     },
     actions: {
         async loadRuns({ commit, rootState }) {

@@ -1,9 +1,10 @@
 from plantit.notifications.models import DirectoryPolicyNotification, TargetPolicyNotification, Notification
-from plantit.stores.views import map_directory_policy
+from plantit.stores.utils import map_directory_policy
 
 
 def map_directory_policy_notification(notification: DirectoryPolicyNotification):
     return {
+        'id': notification.guid,
         'username': notification.user.username,
         'created': notification.created.isoformat(),
         'message': notification.message,
@@ -14,6 +15,7 @@ def map_directory_policy_notification(notification: DirectoryPolicyNotification)
 
 def map_target_policy_notification(notification: TargetPolicyNotification):
     return {
+        'id': notification.guid,
         'username': notification.user.username,
         'created': notification.created.isoformat(),
         'message': notification.message,

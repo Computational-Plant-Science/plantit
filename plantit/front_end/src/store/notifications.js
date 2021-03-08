@@ -8,24 +8,25 @@ export const notifications = {
         loading: true
     }),
     mutations: {
-        setUnread(state, unread) {
-            this.unread = unread;
+        setUnread(state, notifications) {
+            this.unread = notifications;
         },
-        setRead(state, read) {
-            this.read = read;
+        setRead(state, notifications) {
+            this.read = notifications;
         },
         setLoading(state, loading) {
             this.loading = loading;
         },
-        add(state, notification) {
-            state.unread.push(notification);
+        update(state, notification) {
+            if (notification.read) {
+                state.unread = state.unread.filter(n => n.id !== notification.id);
+                state.read.unshift(notification);
+            } else {
+                let i = state.unread.findIndex(n => n.id === notification.id);
+                if (i === -1) state.unread.unshift(notification);
+                else state.unread[state.unread.findIndex(n => n.id === notification.id)] = notification;
+            }
         },
-        markRead(state, notification) {
-            state.unread = state.unread.filter(
-                n => n.guid !== notification.guid
-            );
-            state.read.push(notification);
-        }
     },
     actions: {
         async loadNotifications({ commit, rootState }) {
@@ -36,8 +37,23 @@ export const notifications = {
                     `/apis/v1/notifications/${rootState.user.profile.djangoProfile.username}/get_by_user/?page=0`
                 )
                 .then(response => {
-                    commit('setUnread', response.data.filter(n => !n.read));
-                    commit('setRead', response.data.filter(n => n.read));
+                    var ids = [];
+                    var notifications = Array.prototype.slice.call(response.data);
+
+                    // filter unique?
+                    notifications = notifications.filter(function(n) {
+                        if (ids.indexOf(n.id) >= 0) return false;
+                        ids.push(n.id);
+                        return true;
+                    });
+
+                    // sort by last created
+                    notifications.sort(function(a, b) {
+                        return new Date(b.created) - new Date(a.created);
+                    });
+
+                    commit('setUnread', notifications.filter(n => !n.read));
+                    commit('setRead', notifications.filter(n => n.read));
                     commit('setLoading', false);
                 })
                 .catch(error => {
@@ -46,18 +62,15 @@ export const notifications = {
                     if (error.response.status === 500) throw error;
                 });
         },
-        async addNotification({ commit }, notification) {
-            commit('add', notification);
+        async updateNotification({ commit }, notification) {
+            commit('update', notification);
         },
-        async markRead({ commit }, notification) {
-            commit('markRead', notification);
-        }
     },
     getters: {
-        notification: state => guid => {
-            let found = state.unread.find(n => guid === n.guid);
+        notification: state => id => {
+            let found = state.unread.find(n => id === n.id);
             if (found !== undefined) return found;
-            return state.read.find(n => guid === n.guid);
+            return state.read.find(n => id === n.id);
         },
         notificationsLoading: state => state.loading,
         unreadNotifications: state =>

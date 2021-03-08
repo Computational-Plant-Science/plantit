@@ -1,23 +1,19 @@
-import asyncio
 import json
+import uuid
 
 import httpx
 import requests
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonResponse, HttpResponse
+from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonResponse
+from django.utils import timezone
 from rest_framework.decorators import api_view
 
+from plantit.notifications.models import DirectoryPolicyNotification
 from plantit.stores.models import DirectoryPolicy, DirectoryRole
-
-
-def map_directory_policy(policy: DirectoryPolicy):
-    return {
-        'owner': policy.owner.username,
-        'guest': policy.guest.username,
-        'path': policy.path,
-        'role': policy.role.value
-    }
+from plantit.stores.utils import map_directory_policy
 
 
 @login_required
@@ -63,10 +59,28 @@ def share_directory(request):
             'policy': map_directory_policy(policy)
         })
 
+        notification = DirectoryPolicyNotification.objects.create(
+            guid=str(uuid.uuid4()),
+            user=request.user,
+            created=timezone.now(),
+            policy=policy,
+            message=f"{owner.username} shared directory {policy.path} with you")
+        async_to_sync(get_channel_layer().group_send)(f"notifications-{user.username}", {
+            'type': 'push_notification',
+            'notification': {
+                'username': notification.user.username,
+                'created': notification.created.isoformat(),
+                'message': notification.message,
+                'read': notification.read,
+                'policy': map_directory_policy(notification.policy)
+            }
+        })
+
     response = requests.post("https://de.cyverse.org/terrain/secured/share",
                              data=json.dumps(request.data),
                              headers={"Authorization": f"Bearer {owner.profile.cyverse_token}", "Content-Type": 'application/json;charset=utf-8'})
     response.raise_for_status()
+
     return JsonResponse({'policies': policies})
 
 
@@ -92,6 +106,23 @@ def unshare_directory(request):
         policy = DirectoryPolicy.objects.get(owner=owner, guest=guest, role=role, path=path)
     except:
         return HttpResponseNotFound()
+
+    notification = DirectoryPolicyNotification.objects.create(
+        guid=str(uuid.uuid4()),
+        user=guest,
+        created=timezone.now(),
+        policy=policy,
+        message=f"{owner.username} revoked your access to directory {policy.path}")
+    async_to_sync(get_channel_layer().group_send)(f"notifications-{guest.username}", {
+        'type': 'push_notification',
+        'notification': {
+            'username': notification.user.username,
+            'created': notification.created.isoformat(),
+            'message': notification.message,
+            'read': notification.read,
+            'policy': map_directory_policy(notification.policy)
+        }
+    })
 
     response = requests.post("https://de.cyverse.org/terrain/secured/unshare",
                              data=json.dumps({
