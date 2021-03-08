@@ -17,6 +17,7 @@
                         <b-col
                             class="ml-0 mr-0 pl-0 pr-0 pt-0 mt-0"
                             align-self="center"
+                            md="auto"
                         >
                             <b-button
                                 :variant="profile.darkMode ? 'dark' : 'light'"
@@ -26,6 +27,24 @@
                                 <i class="fas fa-arrow-left fa-1x fa-fw"></i>
                                 Hide
                             </b-button>
+                        </b-col>
+                        <b-col align-self="center"
+                            ><b-input-group size="sm"
+                                ><template #prepend>
+                                    <b-input-group-text
+                                        ><i class="fas fa-search"></i
+                                    ></b-input-group-text> </template
+                                ><b-form-input
+                                    :class="
+                                        profile.darkMode
+                                            ? 'theme-search-dark'
+                                            : 'theme-search-light'
+                                    "
+                                    size="lg"
+                                    type="search"
+                                    v-model="runSearchText"
+                                ></b-form-input>
+                            </b-input-group>
                         </b-col>
                         <b-col
                             class="ml-3 mr-0 pl-0 pt-0 pr-0 mt-1"
@@ -59,7 +78,7 @@
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="run in runningRuns"
+                                    v-for="run in filteredRunningRuns"
                                     v-bind:key="run.id"
                                     :class="
                                         profile.darkMode
@@ -180,7 +199,7 @@
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="run in completedRuns"
+                                    v-for="run in filteredCompletedRuns"
                                     v-bind:key="run.id"
                                     :class="
                                         profile.darkMode
@@ -962,7 +981,10 @@ export default {
                     label: 'Workflow',
                     sortable: true
                 }
-            ]
+            ],
+            // run search
+            runSearchText: ''
+            // notification search
         };
     },
     computed: {
@@ -978,6 +1000,20 @@ export default {
         },
         completedRuns() {
             return this.runs.filter(r => r.is_complete);
+        },
+        filteredRunningRuns() {
+            return this.runningRuns.filter(
+                r =>
+                    r.workflow_name.includes(this.runSearchText) ||
+                    r.tags.some(t => t.includes(this.runSearchText))
+            );
+        },
+        filteredCompletedRuns() {
+            return this.completedRuns.filter(
+                r =>
+                    r.workflow_name.includes(this.runSearchText) ||
+                    r.tags.some(t => t.includes(this.runSearchText))
+            );
         },
         unreadNotifications() {
             return this.notifications.filter(n => !n.read);

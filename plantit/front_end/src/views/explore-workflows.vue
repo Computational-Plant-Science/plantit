@@ -76,19 +76,8 @@
                                     type="search"
                                     v-model="searchText"
                                 ></b-form-input>
-                                <!--<template #append>
-                                    <b-input-group-text
-                                        ><b-form-checkbox
-                                            class="mt-1"
-                                            v-model="includeTags"
-                                        >
-                                        </b-form-checkbox
-                                        >Include Tags</b-input-group-text
-                                    >
-                                </template>--></b-input-group
-                            >
-                        </b-col></b-row
-                    >
+                            </b-input-group> </b-col
+                    ></b-row>
                     <hr class="mt-2 mb-2" style="border-color: gray"/>
                     <workflows
                         class="mt-3"
