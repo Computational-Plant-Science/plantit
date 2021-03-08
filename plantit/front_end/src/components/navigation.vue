@@ -883,13 +883,26 @@
             </b-collapse>
         </b-navbar>
         <b-toast
+            auto-hide-delay="10000"
             v-if="$route.name !== 'run' && toastRun !== null"
             id="toast"
             :variant="profile.darkMode ? 'dark text-light' : 'light text-dark'"
             solid
-            :title="now()"
+            :title="`Run ${toastRun.id}`"
         >
-            {{ toastRun.submission_logs[toastRun.submission_logs.length - 1] }}
+            <small>
+                <b v-if="!toastRun.is_complete">Running</b>
+                <b class="ml-0 mr-0" v-else>{{ toastRun.job_status }}</b>
+                on
+                <b>{{ toastRun.target }}</b>
+                {{ prettifyShort(toastRun.updated) }}
+                <br />
+                {{
+                    toastRun.submission_logs[
+                        toastRun.submission_logs.length - 1
+                    ]
+                }}
+            </small>
         </b-toast>
     </div>
 </template>
@@ -913,7 +926,7 @@ export default {
             FAILURE: 'FAILURE',
             REVOKED: 'REVOKED',
             // websockets
-            toastSocket: null,
+            runSocket: null,
             notificationSocket: null,
             // user data
             djangoProfile: null,
@@ -924,7 +937,6 @@ export default {
             titleContent: 'breadcrumb',
             currentRunPage: 0,
             loadingMoreRuns: false,
-            toasts: [],
             toastRun: null,
             fields: [
                 {
@@ -957,12 +969,22 @@ export default {
         ...mapGetters([
             'profile',
             'runsLoading',
-            'runningRuns',
-            'completedRuns',
+            'runs',
             'notificationsLoading',
-            'unreadNotifications',
-            'readNotifications'
-        ])
+            'notifications'
+        ]),
+        runningRuns() {
+            return this.runs.filter(r => !r.is_complete);
+        },
+        completedRuns() {
+            return this.runs.filter(r => r.is_complete);
+        },
+        unreadNotifications() {
+            return this.notifications.filter(n => !n.read);
+        },
+        readNotifications() {
+            return this.notifications.filter(n => n.read);
+        }
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
@@ -972,16 +994,16 @@ export default {
 
         // subscribe to run channel
         let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-        this.toastSocket = new WebSocket(
+        this.runSocket = new WebSocket(
             `${protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
         );
-        this.toastSocket.onmessage = this.onRunUpdate;
+        this.runSocket.onmessage = this.onRunUpdate;
 
         // subscribe to notification channel
-        this.toastSocket = new WebSocket(
+        this.notificationSocket = new WebSocket(
             `${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
         );
-        this.toastSocket.onmessage = this.onNotification;
+        this.notificationSocket.onmessage = this.onNotification;
     },
     watch: {
         $route() {
@@ -1010,16 +1032,15 @@ export default {
                     return error;
                 });
         },
-        onRunUpdate(event) {
+        async onRunUpdate(event) {
             let data = JSON.parse(event.data);
-            this.$store.dispatch('updateRun', data.run);
+            await this.$store.dispatch('updateRun', data.run);
             this.toastRun = data.run;
             this.$bvToast.show('toast');
         },
-        onNotification(event) {
+        async onNotification(event) {
             let data = JSON.parse(event.data);
-            this.$store.dispatch('updateNotification', data.notification);
-            this.toasts.push(data.message);
+            await this.$store.dispatch('updateNotification', data.notification);
         },
         onDelete(run) {
             axios
@@ -1058,6 +1079,9 @@ export default {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
+        },
+        prettifyShort: function(date) {
+            return `${moment(date).fromNow()}`;
         },
         toggleDarkMode: function() {
             this.$store.dispatch('toggleDarkMode');

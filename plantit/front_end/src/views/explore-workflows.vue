@@ -155,8 +155,8 @@ export default {
             router.push({
                 name: 'flow',
                 params: {
-                    username: flow['repository']['owner']['login'],
-                    name: flow['repository']['name']
+                    username: flow['repo']['owner']['login'],
+                    name: flow['repo']['name']
                 }
             });
         }

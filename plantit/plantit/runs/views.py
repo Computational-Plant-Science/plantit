@@ -29,9 +29,7 @@ from plantit.utils import get_repo_config
 @login_required
 def get_by_user(request, username):
     params = request.query_params
-    page = params.get('page') if 'page' in params else 0
-    start = int(page) * 20
-    count = start + 20
+    page = params.get('page') if 'page' in params else -1
 
     try:
         user = User.objects.get(username=username)
@@ -42,16 +40,17 @@ def get_by_user(request, username):
 
     if 'running' in params and params.get('running') == 'True':
         runs = [run for run in runs.filter(completed__isnull=True).order_by('-created') if not run.is_complete]
-        runs = runs[start:(start + count)]
     elif 'running' in params and params.get('running') == 'False':
-        runs = runs[start:(start + count)]
-        old_complete = [run for run in runs if run.is_complete]
-        runs = old_complete
-        # new_complete = [run for run in runs.filter(completed__isnull=False).order_by('-created') if run.is_complete]
-        # new_complete()
-        # runs = list(set(chain(old_complete, new_complete)))
-
-    # order runs and select page
+        runs = [run for run in runs if run.is_complete]
+        if page > -1:
+            start = int(page) * 20
+            count = start + 20
+            runs = runs[start:(start + count)]
+    else:
+        if page > -1:
+            start = int(page) * 20
+            count = start + 20
+            runs = runs[start:(start + count)]
 
     return JsonResponse([map_run(run) for run in runs], safe=False)
 
