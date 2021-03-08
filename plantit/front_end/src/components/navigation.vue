@@ -466,8 +466,8 @@
                                     v-bind:key="notification.id"
                                     :class="
                                         profile.darkMode
-                                            ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
-                                            : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                                            ? 'text-light bg-dark m-0 p-2 mb-2 overflow-hidden'
+                                            : 'text-dark bg-white m-0 p-2 mb-2 overflow-hidden'
                                     "
                                 >
                                     <p
@@ -527,40 +527,26 @@
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
                                     v-for="notification in readNotifications"
-                                    v-bind:key="notification.created"
+                                    v-bind:key="notification.id"
                                     :class="
                                         profile.darkMode
-                                            ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
-                                            : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                                            ? 'text-light bg-dark m-0 p-2 mb-2 overflow-hidden'
+                                            : 'text-dark bg-white m-0 p-2 mb-2 overflow-hidden'
                                     "
                                 >
-                                    <p v-if="notification.run_id !== undefined">
-                                        <b>Run {{ notification.run_id }}</b
-                                        ><br />{{ notification.message
-                                        }}<br /><small>{{
-                                            prettify(notification.created)
-                                        }}</small>
-                                    </p>
                                     <p
-                                        v-else-if="
+                                        v-if="
                                             notification.policy !== undefined &&
                                                 notification.policy.path !==
                                                     undefined
                                         "
-                                    ></p>
-                                    <p v-else></p>
-                                    <b-checkbox
-                                        button
-                                        v-model="notification.read"
-                                        :disabled="notification.read"
-                                        :variant="
-                                            profile.darkMode ? 'dark' : 'light'
-                                        "
-                                        class="text-left m-0"
-                                        @click="hide"
                                     >
-                                        Read
-                                    </b-checkbox>
+                                        {{ notification.message }}
+                                        <br />
+                                        <small>{{
+                                            prettify(notification.created)
+                                        }}</small>
+                                    </p>
                                 </b-list-group-item>
                             </b-list-group>
                             <p
@@ -663,12 +649,12 @@
                         "
                         title="Log in to GitHub"
                         href="/apis/v1/idp/github_request_identity/"
-                        class="p-1 mt-3 ml-0 mr-0"
+                        class="p-1 mt-2 ml-0 mr-0"
                     >
                         <b-button
                             class="mt-2 text-left"
                             variant="success"
-                            size="sm"
+                            size="md"
                         >
                             <i class="fab fa-github"></i>
                             Log in to GitHub

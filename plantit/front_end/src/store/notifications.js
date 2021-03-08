@@ -9,13 +9,13 @@ export const notifications = {
     }),
     mutations: {
         setUnread(state, notifications) {
-            this.unread = notifications;
+            state.unread = notifications;
         },
         setRead(state, notifications) {
-            this.read = notifications;
+            state.read = notifications;
         },
         setLoading(state, loading) {
-            this.loading = loading;
+            state.loading = loading;
         },
         update(state, notification) {
             if (notification.read) {

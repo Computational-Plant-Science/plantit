@@ -43,11 +43,15 @@ def mark_read(request, username):
     guid = request.data['notification']['id']
 
     try:
-        notification = Notification.objects.get(user=user, guid=guid)
+        notifications = list(chain(
+            list(DirectoryPolicyNotification.objects.filter(user=user, guid=guid)),
+            list(TargetPolicyNotification.objects.filter(user=user, guid=guid))))
+        notification = notifications[0]
     except:
         return HttpResponseNotFound()
 
     notification.read = True
+    notification.save()
     return JsonResponse({
         'notification': map_notification(notification)
     })

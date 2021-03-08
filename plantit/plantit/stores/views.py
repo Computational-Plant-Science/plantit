@@ -61,13 +61,14 @@ def share_directory(request):
 
         notification = DirectoryPolicyNotification.objects.create(
             guid=str(uuid.uuid4()),
-            user=request.user,
+            user=user,
             created=timezone.now(),
             policy=policy,
             message=f"{owner.username} shared directory {policy.path} with you")
         async_to_sync(get_channel_layer().group_send)(f"notifications-{user.username}", {
             'type': 'push_notification',
             'notification': {
+                'id': notification.guid,
                 'username': notification.user.username,
                 'created': notification.created.isoformat(),
                 'message': notification.message,
@@ -116,6 +117,7 @@ def unshare_directory(request):
     async_to_sync(get_channel_layer().group_send)(f"notifications-{guest.username}", {
         'type': 'push_notification',
         'notification': {
+            'id': notification.guid,
             'username': notification.user.username,
             'created': notification.created.isoformat(),
             'message': notification.message,
