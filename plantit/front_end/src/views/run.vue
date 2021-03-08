@@ -1543,7 +1543,7 @@ export default {
         }
     },
     async mounted() {
-        // subscribe to  update channel
+        // subscribe to run channel
         this.socket = new WebSocket(
             (location.protocol === 'https:' ? 'wss://' : 'ws://') +
                 window.location.host +

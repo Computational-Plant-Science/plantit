@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import views, consumers
 
 urlpatterns = [
     path(r'', views.runs),
@@ -24,7 +24,5 @@ urlpatterns = [
 ]
 
 websocket_urlpatterns = [
-    path(r'ws/run/<id>/', views.RunConsumer.as_asgi()),
-    path(r'ws/toast/<username>/', views.ToastConsumer.as_asgi()),
-    path(r'ws/notification/<username>/', views.NotificationConsumer.as_asgi())
+    path(r'ws/run/<id>/', consumers.RunConsumer.as_asgi())
 ]

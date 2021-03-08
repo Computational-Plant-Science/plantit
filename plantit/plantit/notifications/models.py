@@ -17,10 +17,6 @@ class Notification(models.Model):
         abstract = True
 
 
-class RunCompletionNotification(Notification):
-    run = models.ForeignKey(Run, on_delete=models.CASCADE)
-
-
 class DirectoryPolicyNotification(Notification):
     policy = models.ForeignKey(DirectoryPolicy, on_delete=models.CASCADE)
 

@@ -301,10 +301,7 @@
                                         </b-col></b-row
                                     >
                                     <b-modal
-                                        :id="
-                            'delete ' +
-                                run.id
-                        "
+                                        :id="'delete ' + run.id"
                                         :title-class="
                                             profile.darkMode
                                                 ? 'text-white'
@@ -461,11 +458,10 @@
                                 >
                                     <p v-if="notification.run_id !== undefined">
                                         <b>Run {{ notification.run_id }}</b
-                                        ><br />{{
-                                            notification.message
+                                        ><br />{{ notification.message
                                         }}<br /><small>{{
                                             prettify(notification.created)
-                                      }}</small>
+                                        }}</small>
                                     </p>
                                     <p
                                         v-else-if="
@@ -475,16 +471,18 @@
                                         "
                                     ></p>
                                     <p v-else></p>
-                                  <b-checkbox
-                                      button
-                                      v-model="notification.read"
-                                      :disabled="notification.read"
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                class="text-left m-0"
-                                @click="hide"
-                            >
-                                Read
-                            </b-checkbox>
+                                    <b-checkbox
+                                        button
+                                        v-model="notification.read"
+                                        :disabled="notification.read"
+                                        :variant="
+                                            profile.darkMode ? 'dark' : 'light'
+                                        "
+                                        class="text-left m-0"
+                                        @click="hide"
+                                    >
+                                        Read
+                                    </b-checkbox>
                                 </b-list-group-item>
                             </b-list-group>
                             <p
@@ -768,7 +766,13 @@
                             v-b-toggle.notifications
                         >
                             <i class="fas fa-bell fa-1x fa-fw"></i>
-                            Notifications ({{ notifications.filter(n => !n.read).length }} unread)
+                            Notifications
+                            <span v-if="unreadNotifications.length > 0"
+                                >({{
+                                    unreadNotifications.length
+                                }}
+                                unread)</span
+                            >
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Profile"
@@ -896,12 +900,17 @@ export default {
             ]
         };
     },
-    computed: mapGetters([
-        'profile',
-        'runsLoading',
-        'runningRuns',
-        'completedRuns'
-    ]),
+    computed: {
+        ...mapGetters([
+            'profile',
+            'runsLoading',
+            'runningRuns',
+            'completedRuns'
+        ]),
+        unreadNotifications() {
+          return this.notifications.filter(n => !n.read);
+        }
+    },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
@@ -911,17 +920,21 @@ export default {
 
         let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
 
-        // subscribe to toast channel
-        this.toastSocket = new WebSocket(
-            `${protocol}${window.location.host}/ws/toast/${this.profile.djangoProfile.username}/`
+        // subscribe to run channel
+        this.socket = new WebSocket(
+            (location.protocol === 'https:' ? 'wss://' : 'ws://') +
+                window.location.host +
+                '/ws/run/' +
+                this.$router.currentRoute.params.id +
+                '/'
         );
-        this.toastSocket.onmessage = this.subscribeToToasts;
+        this.socket.onmessage = this.onRunUpdate;
 
         // subscribe to notification channel
         this.toastSocket = new WebSocket(
             `${protocol}${window.location.host}/ws/notification/${this.profile.djangoProfile.username}/`
         );
-        this.toastSocket.onmessage = this.subscribeToToasts;
+        this.toastSocket.onmessage = this.onNotification;
     },
     watch: {
         $route() {
@@ -929,6 +942,10 @@ export default {
         }
     },
     methods: {
+        onRunUpdate(e) {
+            let data = JSON.parse(e.data);
+            this.run = data.run;
+        },
         onDelete(run) {
             axios
                 .get(`/apis/v1/runs/${run.id}/delete/`)
@@ -958,7 +975,7 @@ export default {
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');
         },
-        subscribeToToasts(e) {
+        onNotification(e) {
             let data = JSON.parse(e.data);
             this.toasts.push(data.message);
             this.$bvToast.show('toast');
