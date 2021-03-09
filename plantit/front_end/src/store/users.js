@@ -18,9 +18,9 @@ export const users = {
         async loadUsers({ commit }) {
             commit('setUsersLoading', true);
             await axios
-                .get('/apis/v1/users/')
+                .get('/apis/v1/users/get_all/')
                 .then(response => {
-                    commit('setUsers', response.data);
+                    commit('setUsers', response.data.users);
                     commit('setUsersLoading', false);
                 })
                 .catch(error => {

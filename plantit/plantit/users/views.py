@@ -1,4 +1,8 @@
+import asyncio
+import json
 import os
+from datetime import datetime
+from pathlib import Path
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
@@ -154,14 +158,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             'dark_mode': user.profile.dark_mode
         })
 
-    @action(detail=False, methods=['get'])
-    def get_all(self, request):
+    def list_users(self, github_token):
         users = []
         for user in list(self.queryset):
             if user.profile.github_username:
                 github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
-                                              headers={'Authorization':
-                                                           f"Bearer {request.user.profile.github_token}"}).json()
+                                              headers={'Authorization': f"Bearer {github_token}"}).json()
                 if 'login' in github_profile:
                     users.append({
                         'username': user.username,
@@ -183,9 +185,34 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                     'last_name': user.last_name,
                 })
 
-        return JsonResponse({
-            'users': users
-        })
+        return users
+
+    @action(detail=False, methods=['get'])
+    def get_all(self, request):
+        users_file = settings.USERS_CACHE
+        users_path = Path(users_file)
+        refresh_minutes = int(settings.USERS_REFRESH_MINUTES)
+
+        if not users_path.exists():
+            print(f"Creating user cache")
+            users = self.list_users(request.user.profile.github_token)
+            with open(users_file, 'w') as file:
+                json.dump(users, file)
+        else:
+            now = datetime.now()
+            last_modified = datetime.fromtimestamp(users_path.stat().st_ctime)
+            elapsed_minutes = (now - last_modified).total_seconds() / 60.0
+
+            if elapsed_minutes < refresh_minutes:
+                with open(users_file, 'r') as file:
+                    users = json.load(file)
+            else:
+                print(f"User cache is stale, refreshing")
+                users = self.list_users(request.user.profile.github_token)
+                with open(users_file, 'w') as file:
+                    json.dump(users, file)
+
+        return JsonResponse({'users': users})
 
     @action(detail=False, methods=['get'])
     def get_current(self, request):
