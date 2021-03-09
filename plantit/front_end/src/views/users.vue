@@ -111,8 +111,8 @@
                                 </b-col>
                             </b-row>
                             <br />
-                            <b-row v-if="user.github_username" align-v="center">
-                                <b-col>
+                            <b-row align-v="center">
+                                <b-col v-if="user.github_username">
                                     <b-link
                                         :class="
                                             profile.darkMode
@@ -134,12 +134,19 @@
                                 </b-col>
                                 <b-col class="ml-0 mr-0" align-self="left">
                                     <b-img
+                                        v-if="user.github_profile !== undefined"
                                         right
                                         rounded
                                         class="avatar card-img-right"
                                         style="max-height: 4rem; max-width: 4rem; opacity: 0.9; position: absolute; right: -15px; top: -25px; z-index:1;"
                                         :src="user.github_profile.avatar_url"
                                     ></b-img>
+                                    <span
+                                        v-else
+                                        style="max-height: 4rem; max-width: 4rem; opacity: 0.9; position: absolute; right: -15px; top: 15px; z-index:1;"
+                                    >
+                                        <i class="far fa-user fa-fw fa-3x"></i>
+                                    </span>
                                 </b-col>
                             </b-row>
                         </b-card>
