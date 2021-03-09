@@ -3,10 +3,14 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic import RedirectView
 from rest_framework import routers
 
+from django.urls import path
+
 from .auth.views import login_view, logout_view
 from .miappe.views import *
 from .targets.views import TargetsViewSet
 from .users.views import UsersViewSet, IDPViewSet
+from .runs.consumers import RunConsumer
+from .notifications.consumers import NotificationConsumer
 
 router = routers.DefaultRouter()
 router.register('users', UsersViewSet)
@@ -33,4 +37,9 @@ urlpatterns = [
     url('stores/', include("plantit.stores.urls")),
     url('notifications/', include("plantit.notifications.urls")),
     url('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'))),
+]
+
+websocket_urlpatterns = [
+    path(r'ws/runs/<username>/', RunConsumer.as_asgi()),
+    path(r'ws/notifications/<username>/', NotificationConsumer.as_asgi())
 ]

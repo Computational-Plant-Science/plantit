@@ -16,97 +16,6 @@
                 </b-row>
             </div>
             <div v-else>
-                <b-row align-v="start" class="mb-2">
-                    <b-col
-                        style="color: white"
-                        align-self="end"
-                        class="ml-0 mr-0"
-                    >
-                        <div v-if="userProfile.githubProfile">
-                            <b-row
-                                ><b-col
-                                    md="auto"
-                                    class="ml-0 mr-0"
-                                    align-self="end"
-                                >
-                                    <b-img
-                                        class="avatar"
-                                        rounded
-                                        style="max-height: 9rem; max-width: 9rem; position: relative; top: 38px; box-shadow: -2px 2px 2px #adb5bd"
-                                        :src="
-                                            userProfile.githubProfile
-                                                ? userProfile.githubProfile
-                                                      .avatar_url
-                                                : ''
-                                        "
-                                        v-if="userProfile.githubProfile"
-                                    ></b-img>
-                                    <i
-                                        v-else
-                                        class="far fa-user fa-fw fa-4x"
-                                    ></i>
-                                </b-col>
-                            </b-row>
-                            <br />
-                            <br />
-                        </div>
-                        <b-row
-                            :class="
-                                profile.darkMode
-                                    ? 'text-light'
-                                    : 'text-secondary'
-                            "
-                        >
-                            <b-col class="ml-0 mr-0" align-self="end">
-                                <h3
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    {{
-                                        userProfile.cyverseProfile
-                                            ? `${userProfile.cyverseProfile.first_name} ${userProfile.cyverseProfile.last_name} `
-                                            : userProfile.githubProfile
-                                            ? userProfile.githubProfile.login
-                                            : ''
-                                    }}<small
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-warning'
-                                                : 'text-dark'
-                                        "
-                                        v-if="
-                                            userProfile.djangoProfile !== null
-                                        "
-                                        >({{
-                                            userProfile.djangoProfile.username
-                                        }})</small
-                                    >
-                                </h3>
-                                <a
-                                    v-if="userProfile.githubProfile"
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                    :href="
-                                        'https://github.com/' +
-                                            userProfile.githubProfile.login
-                                    "
-                                >
-                                    <i class="fab fa-github fa-1x fa-fw"></i>
-                                    {{
-                                        'https://github.com/' +
-                                            userProfile.githubProfile.login
-                                    }}
-                                </a>
-                            </b-col>
-                        </b-row>
-                    </b-col>
-                </b-row>
                 <b-row align-v="center"
                     ><b-col>
                         <b-tabs
@@ -147,20 +56,128 @@
                                         profile.darkMode ? 'dark' : 'white'
                                     "
                                 >
-                                    <b-row
-                                        ><b-col
-                                            ><h5
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
+                                    <b-row align-v="start" class="mb-2">
+                                        <b-col md="auto">
+                                            <div
+                                                v-if="
+                                                    !(
+                                                        userProfile.githubProfile ===
+                                                            null ||
+                                                        userProfile.githubProfile ===
+                                                            undefined
+                                                    )
                                                 "
                                             >
-                                                Your user profile
-                                            </h5></b-col
-                                        ></b-row
-                                    >
-                                    <b-row>
+                                                <b-row
+                                                    ><b-col
+                                                    v-if="userProfile.githubProfile"
+                                                        md="auto"
+                                                        class="ml-0 mr-0"
+                                                        align-self="end"
+                                                    >
+                                                        <b-img
+                                                            class="avatar"
+                                                            rounded
+                                                            style="max-height: 6rem; max-width: 6rem; position: relative; top: 20px; box-shadow: -2px 2px 2px #adb5bd"
+                                                            :src="
+                                                                userProfile.githubProfile
+                                                                    ? userProfile
+                                                                          .githubProfile
+                                                                          .avatar_url
+                                                                    : ''
+                                                            "
+                                                            v-if="
+                                                                userProfile.githubProfile
+                                                            "
+                                                        ></b-img>
+                                                        <i
+                                                            v-else
+                                                            class="far fa-user fa-fw fa-3x"
+                                                        ></i>
+                                                    </b-col>
+                                                </b-row>
+                                                <br />
+                                            </div>
+                                        </b-col>
+                                        <b-col
+                                            style="color: white; right: 12px"
+                                            align-self="end"
+                                            class="ml-0 mr-0"
+                                        >
+                                            <b-row
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-secondary'
+                                                "
+                                            >
+                                                <b-col
+                                                    class="ml-0 mr-0"
+                                                    align-self="end"
+                                                >
+                                                    <h3
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                    >
+                                                        {{
+                                                            userProfile.cyverseProfile
+                                                                ? `${userProfile.cyverseProfile.first_name} ${userProfile.cyverseProfile.last_name} `
+                                                                : userProfile.githubProfile
+                                                                ? userProfile
+                                                                      .githubProfile
+                                                                      .login
+                                                                : ''
+                                                        }}<small
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'text-warning'
+                                                                    : 'text-dark'
+                                                            "
+                                                            v-if="
+                                                                userProfile.djangoProfile !==
+                                                                    null
+                                                            "
+                                                            >({{
+                                                                userProfile
+                                                                    .djangoProfile
+                                                                    .username
+                                                            }})</small
+                                                        >
+                                                    </h3>
+                                                    <a
+                                                        v-if="
+                                                            userProfile.githubProfile
+                                                        "
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                        :href="
+                                                            'https://github.com/' +
+                                                                userProfile
+                                                                    .githubProfile
+                                                                    .login
+                                                        "
+                                                    >
+                                                        <i
+                                                            class="fab fa-github fa-1x fa-fw"
+                                                        ></i>
+                                                        {{
+                                                            'https://github.com/' +
+                                                                userProfile
+                                                                    .githubProfile
+                                                                    .login
+                                                        }}
+                                                    </a>
+                                                </b-col>
+                                            </b-row>
+                                        </b-col>
+                                    </b-row>
+                                    <b-row class="mt-3">
                                         <b-col md="auto">
                                             <b-card-text
                                                 v-if="
@@ -716,7 +733,7 @@ export default {
             'workflowsLoading'
         ]),
         userWorkflows() {
-            if (this.workflowsLoading) return [];
+            if (this.workflowsLoading || this.workflows === undefined || this.profile.githubProfile === undefined) return [];
             return this.workflows.filter(wf => {
                 return wf.repo.owner.login === this.profile.githubProfile.login;
             });

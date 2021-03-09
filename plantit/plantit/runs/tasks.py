@@ -10,8 +10,6 @@ from django.utils import timezone
 
 from plantit import settings
 from plantit.celery import app
-from plantit.notifications.models import RunCompletionNotification
-from plantit.notifications.utils import map_run_completion_notification
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
@@ -19,15 +17,6 @@ from plantit.runs.utils import update_status, execute_command, map_old_workflow_
 from plantit.targets.models import Target
 
 logger = get_task_logger(__name__)
-
-
-def __push_notification(run: Run, message: str):
-    now = timezone.now()
-    notification = RunCompletionNotification.objects.create(user=run.user, run=run, created=now, message=message)
-    async_to_sync(get_channel_layer().group_send)(f"notification-{run.user.username}", {
-        'type': 'push_notification',
-        'notification': map_run_completion_notification(notification)
-    })
 
 
 def __upload_run(flow, run: Run, ssh: SSH):
@@ -279,7 +268,6 @@ def poll_run_status(id: str):
 
             msg = f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.workdir_clean_delay)}"
             update_status(run, msg)
-            __push_notification(run, msg)
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
             msg = f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"
@@ -295,7 +283,6 @@ def poll_run_status(id: str):
 
             msg = f"Job {run.job_id} not found, cleaning up in {str(run.target.workdir_clean_delay)}"
             update_status(run, msg)
-            __push_notification(run, msg)
         else:
             update_status(run, f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.workdir_clean_delay)}")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
@@ -308,7 +295,6 @@ def poll_run_status(id: str):
 
         msg = f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.workdir_clean_delay)}): {traceback.format_exc()}"
         update_status(run, msg)
-        __push_notification(run, msg)
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
 
 

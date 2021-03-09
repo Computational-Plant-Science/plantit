@@ -1,80 +1,51 @@
+import Vue from 'vue';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export const runs = {
     state: () => ({
-        running: [],
-        completed: [],
+        runs: [],
         loading: true
     }),
     mutations: {
-        setRunning(state, running) {
-            state.running = running;
+        setRuns(state, runs) {
+            state.runs = runs;
         },
-        setCompleted(state, completed) {
-            state.completed = completed;
-        },
-        setLoading(state, loading) {
+        setRunsLoading(state, loading) {
             state.loading = loading;
         },
-        complete(state, run) {
-            state.running = state.running.filter(r => r.guid !== run.guid);
-            state.completed.push(run);
+        updateRun(state, run) {
+            let i = state.runs.findIndex(r => r.id === run.id);
+            if (i === -1) state.runs.unshift(run);
+            else Vue.set(state.runs, i, run);
         }
     },
     actions: {
         async loadRuns({ commit, rootState }) {
-            commit('setLoading', true);
+            commit('setRunsLoading', true);
 
-            // load running
             await Promise.all([
                 axios
                     .get(
-                        `/apis/v1/runs/${rootState.user.profile.djangoProfile.username}/get_by_user/?page=0&running=True`
+                        `/apis/v1/runs/${rootState.user.profile.djangoProfile.username}/get_by_user/`
                     )
                     .then(response => {
                         var ids = [];
-                        var running = Array.prototype.slice.call(response.data);
+                        var runs = Array.prototype.slice.call(response.data);
 
                         // filter unique?
-                        running = running.filter(function(run) {
+                        runs = runs.filter(function(run) {
                             if (ids.indexOf(run.id) >= 0) return false;
                             ids.push(run.id);
                             return true;
                         });
 
                         // sort by last updated
-                        running.sort(function(a, b) {
+                        runs.sort(function(a, b) {
                             return new Date(b.updated) - new Date(a.updated);
                         });
 
-                        commit('setRunning', running);
-                    })
-                    .catch(error => {
-                        Sentry.captureException(error);
-                        throw error;
-                    }),
-                axios
-                    .get(
-                        `/apis/v1/runs/${rootState.user.profile.djangoProfile.username}/get_by_user/?page=0&running=False`
-                    )
-                    .then(response => {
-                        var ids = [];
-                        var completed = Array.prototype.slice.call(response.data);
-
-                        // filter unique?
-                        completed = completed.filter(function(run) {
-                            if (ids.indexOf(run.id) >= 0) return false;
-                            ids.push(run.id);
-                            return true;
-                        });
-
-                        // sort by last updated
-                        completed.sort(function(a, b) {
-                            return new Date(b.updated) - new Date(a.updated);
-                        });
-
-                        commit('setCompleted', completed);
+                        commit('setRuns', runs);
                     })
                     .catch(error => {
                         Sentry.captureException(error);
@@ -82,19 +53,30 @@ export const runs = {
                     })
             ]);
 
-            commit('setLoading', false);
+            commit('setRunsLoading', false);
+        },
+        updateRun({ commit }, run) {
+            commit('updateRun', run);
+        },
+        refreshRun({ commit }, id) {
+            axios
+                .get(`/apis/v1/runs/${id}/`)
+                .then(response => {
+                    commit('updateRun', response.data);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
         }
     },
     getters: {
-        run: state => guid => {
-            let running = state.running.find(run => guid === run.guid);
-            if (running === undefined)
-                return state.completed.find(run => guid === run.guid);
+        run: state => id => {
+            let found = state.runs.find(run => id === run.id);
+            if (found !== undefined) return found;
+            return null;
         },
-        runningRuns: state =>
-            state.running === undefined ? [] : state.running,
-        completedRuns: state =>
-            state.completed === undefined ? [] : state.completed,
+        runs: state => (state.runs === undefined ? [] : state.runs),
         runsLoading: state => state.loading
     }
 };

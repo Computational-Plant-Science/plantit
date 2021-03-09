@@ -17,6 +17,7 @@
                         <b-col
                             class="ml-0 mr-0 pl-0 pr-0 pt-0 mt-0"
                             align-self="center"
+                            md="auto"
                         >
                             <b-button
                                 :variant="profile.darkMode ? 'dark' : 'light'"
@@ -26,6 +27,24 @@
                                 <i class="fas fa-arrow-left fa-1x fa-fw"></i>
                                 Hide
                             </b-button>
+                        </b-col>
+                        <b-col align-self="center"
+                            ><b-input-group size="sm"
+                                ><template #prepend>
+                                    <b-input-group-text
+                                        ><i class="fas fa-search"></i
+                                    ></b-input-group-text> </template
+                                ><b-form-input
+                                    :class="
+                                        profile.darkMode
+                                            ? 'theme-search-dark'
+                                            : 'theme-search-light'
+                                    "
+                                    size="lg"
+                                    type="search"
+                                    v-model="runSearchText"
+                                ></b-form-input>
+                            </b-input-group>
                         </b-col>
                         <b-col
                             class="ml-3 mr-0 pl-0 pt-0 pr-0 mt-1"
@@ -59,7 +78,7 @@
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="run in runningRuns"
+                                    v-for="run in filteredRunningRuns"
                                     v-bind:key="run.id"
                                     :class="
                                         profile.darkMode
@@ -79,7 +98,7 @@
                                         "
                                         rounded
                                         class="card-img-right"
-                                        style="max-width: 4rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
+                                        style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                         right
                                         :src="run.workflow_image_url"
                                     ></b-img>
@@ -180,7 +199,7 @@
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="run in completedRuns"
+                                    v-for="run in filteredCompletedRuns"
                                     v-bind:key="run.id"
                                     :class="
                                         profile.darkMode
@@ -199,7 +218,7 @@
                                                 "
                                                 rounded
                                                 class="card-img-right"
-                                                style="max-width: 4rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
+                                                style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                 right
                                                 :src="run.workflow_image_url"
                                             ></b-img>
@@ -301,10 +320,7 @@
                                         </b-col></b-row
                                     >
                                     <b-modal
-                                        :id="
-                            'delete ' +
-                                run.id
-                        "
+                                        :id="'delete ' + run.id"
                                         :title-class="
                                             profile.darkMode
                                                 ? 'text-white'
@@ -431,6 +447,14 @@
                             align-self="center"
                             md="auto"
                         >
+                            <!--<b-button
+                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                class="text-left m-0"
+                                @click="markAllRead"
+                            >
+                                Mark All Read
+                                <i class="fas fa-check-double fa-1x fa-fw"></i>
+                            </b-button>-->
                             <b-button
                                 :variant="profile.darkMode ? 'dark' : 'light'"
                                 class="text-left m-0"
@@ -442,49 +466,55 @@
                         </b-col>
                     </b-row>
                     <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <b-row
+                        class="m-3 mb-1 pl-0 pr-0 text-center"
+                        align-v="center"
+                    >
+                        <b-col><b>Unread</b></b-col>
+                    </b-row>
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col class="m-0 pl-0 pr-0 text-center">
                             <b-list-group
-                                v-if="notifications.length > 0"
+                                v-if="unreadNotifications.length > 0"
                                 class="text-left m-0 p-0"
                             >
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="notification in notifications"
-                                    v-bind:key="notification.created"
+                                    v-for="notification in unreadNotifications"
+                                    v-bind:key="notification.id"
                                     :class="
                                         profile.darkMode
-                                            ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
-                                            : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                                            ? 'text-light bg-dark m-0 p-2 mb-2 overflow-hidden'
+                                            : 'text-dark bg-white m-0 p-2 mb-2 overflow-hidden'
                                     "
                                 >
-                                    <p v-if="notification.run_id !== undefined">
-                                        <b>Run {{ notification.run_id }}</b
-                                        ><br />{{
-                                            notification.message
-                                        }}<br /><small>{{
-                                            prettify(notification.created)
-                                      }}</small>
-                                    </p>
                                     <p
-                                        v-else-if="
+                                        v-if="
                                             notification.policy !== undefined &&
                                                 notification.policy.path !==
                                                     undefined
                                         "
-                                    ></p>
+                                    >
+                                        {{ notification.message }}
+                                        <br />
+                                        <small>{{
+                                            prettify(notification.created)
+                                        }}</small>
+                                    </p>
                                     <p v-else></p>
-                                  <b-checkbox
-                                      button
-                                      v-model="notification.read"
-                                      :disabled="notification.read"
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                class="text-left m-0"
-                                @click="hide"
-                            >
-                                Read
-                            </b-checkbox>
+                                    <b-button
+                                        size="sm"
+                                        :disabled="notification.read"
+                                        :variant="
+                                            profile.darkMode ? 'dark' : 'light'
+                                        "
+                                        class="text-left m-0"
+                                        @click="markRead(notification)"
+                                    >
+                                        Mark Read
+                                        <i class="fas fa-check"></i>
+                                    </b-button>
                                 </b-list-group-item>
                             </b-list-group>
                             <p
@@ -493,7 +523,58 @@
                                         ? 'text-center text-light pl-3 pr-3'
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
-                                v-if="notifications.length === 0"
+                                v-if="unreadNotifications.length === 0"
+                            >
+                                No notifications to show.
+                            </p>
+                        </b-col>
+                    </b-row>
+                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <b-row
+                        class="m-3 mb-1 pl-0 pr-0 text-center"
+                        align-v="center"
+                    >
+                        <b-col><b>Read</b></b-col>
+                    </b-row>
+                    <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
+                        ><b-col class="m-0 pl-0 pr-0 text-center">
+                            <b-list-group
+                                v-if="readNotifications.length > 0"
+                                class="text-left m-0 p-0"
+                            >
+                                <b-list-group-item
+                                    variant="default"
+                                    style="box-shadow: -2px 2px 2px #adb5bd"
+                                    v-for="notification in readNotifications"
+                                    v-bind:key="notification.id"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light bg-dark m-0 p-2 mb-2 overflow-hidden'
+                                            : 'text-dark bg-white m-0 p-2 mb-2 overflow-hidden'
+                                    "
+                                >
+                                    <p
+                                        v-if="
+                                            notification.policy !== undefined &&
+                                                notification.policy.path !==
+                                                    undefined
+                                        "
+                                    >
+                                        {{ notification.message }}
+                                        <br />
+                                        <small>{{
+                                            prettify(notification.created)
+                                        }}</small>
+                                    </p>
+                                </b-list-group-item>
+                            </b-list-group>
+                            <p
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-center text-light pl-3 pr-3'
+                                        : 'text-center text-dark pl-3 pr-3'
+                                "
+                                v-if="readNotifications.length === 0"
                             >
                                 No notifications to show.
                             </p>
@@ -581,17 +662,18 @@
                     <b-nav-item
                         v-if="
                             profile.loggedIn
-                                ? profile.githubProfile === null
+                                ? profile.githubProfile === null ||
+                                  profile.githubProfile === undefined
                                 : false
                         "
                         title="Log in to GitHub"
                         href="/apis/v1/idp/github_request_identity/"
-                        class="ml-0 mr-0"
+                        class="p-1 mt-2 ml-0 mr-0"
                     >
                         <b-button
-                            class="mt-1 text-left"
+                            class="mt-2 text-left"
                             variant="success"
-                            size="sm"
+                            size="md"
                         >
                             <i class="fab fa-github"></i>
                             Log in to GitHub
@@ -618,16 +700,10 @@
                                 <span
                                     :title="
                                         'Notifications (' +
-                                            (notifications === undefined
-                                                ? []
-                                                : notifications
-                                            ).length +
+                                            unreadNotifications.length +
                                             ')'
                                     "
-                                    v-if="
-                                        notifications !== undefined &&
-                                            notifications.some(n => !n.read)
-                                    "
+                                    v-if="unreadNotifications.length > 0"
                                     class="fa-stack mr-2"
                                     ><i
                                         class="fas fa-dot-circle fa-stack-2x text-warning"
@@ -751,10 +827,7 @@
                         <b-dropdown-item
                             :title="
                                 'Notifications (' +
-                                    (notifications === undefined
-                                        ? []
-                                        : notifications
-                                    ).length +
+                                    unreadNotifications.length +
                                     ')'
                             "
                             :class="
@@ -768,7 +841,10 @@
                             v-b-toggle.notifications
                         >
                             <i class="fas fa-bell fa-1x fa-fw"></i>
-                            Notifications ({{ notifications.filter(n => !n.read).length }} unread)
+                            Notifications
+                            <span v-if="unreadNotifications.length > 0"
+                                >({{ unreadNotifications.length }} unread)</span
+                            >
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Profile"
@@ -826,13 +902,26 @@
             </b-collapse>
         </b-navbar>
         <b-toast
-            v-if="$route.name !== 'run'"
+            auto-hide-delay="10000"
+            v-if="$route.name !== 'run' && toastRun !== null"
             id="toast"
             :variant="profile.darkMode ? 'dark text-light' : 'light text-dark'"
             solid
-            :title="now()"
+            :title="`Run ${toastRun.id}`"
         >
-            {{ toasts[toasts.length - 1] }}
+            <small>
+                <b v-if="!toastRun.is_complete">Running</b>
+                <b class="ml-0 mr-0" v-else>{{ toastRun.job_status }}</b>
+                on
+                <b>{{ toastRun.target }}</b>
+                {{ prettifyShort(toastRun.updated) }}
+                <br />
+                {{
+                    toastRun.submission_logs[
+                        toastRun.submission_logs.length - 1
+                    ]
+                }}
+            </small>
         </b-toast>
     </div>
 </template>
@@ -856,7 +945,7 @@ export default {
             FAILURE: 'FAILURE',
             REVOKED: 'REVOKED',
             // websockets
-            toastSocket: null,
+            runSocket: null,
             notificationSocket: null,
             // user data
             djangoProfile: null,
@@ -867,8 +956,7 @@ export default {
             titleContent: 'breadcrumb',
             currentRunPage: 0,
             loadingMoreRuns: false,
-            toasts: [],
-            notifications: [],
+            toastRun: null,
             fields: [
                 {
                     key: 'id',
@@ -893,35 +981,65 @@ export default {
                     label: 'Workflow',
                     sortable: true
                 }
-            ]
+            ],
+            // run search
+            runSearchText: ''
+            // notification search
         };
     },
-    computed: mapGetters([
-        'profile',
-        'runsLoading',
-        'runningRuns',
-        'completedRuns'
-    ]),
+    computed: {
+        ...mapGetters([
+            'profile',
+            'runsLoading',
+            'runs',
+            'notificationsLoading',
+            'notifications'
+        ]),
+        runningRuns() {
+            return this.runs.filter(r => !r.is_complete);
+        },
+        completedRuns() {
+            return this.runs.filter(r => r.is_complete);
+        },
+        filteredRunningRuns() {
+            return this.runningRuns.filter(
+                r =>
+                    r.workflow_name.includes(this.runSearchText) ||
+                    r.tags.some(t => t.includes(this.runSearchText))
+            );
+        },
+        filteredCompletedRuns() {
+            return this.completedRuns.filter(
+                r =>
+                    r.workflow_name.includes(this.runSearchText) ||
+                    r.tags.some(t => t.includes(this.runSearchText))
+            );
+        },
+        unreadNotifications() {
+            return this.notifications.filter(n => !n.read);
+        },
+        readNotifications() {
+            return this.notifications.filter(n => n.read);
+        }
+    },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
-        await this.loadNotifications();
-        // await this.$store.dispatch('loadNotifications');  TODO
         await this.$store.dispatch('loadRuns');
+        await this.$store.dispatch('loadNotifications');
 
+        // subscribe to run channel
         let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-
-        // subscribe to toast channel
-        this.toastSocket = new WebSocket(
-            `${protocol}${window.location.host}/ws/toast/${this.profile.djangoProfile.username}/`
+        this.runSocket = new WebSocket(
+            `${protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
         );
-        this.toastSocket.onmessage = this.subscribeToToasts;
+        this.runSocket.onmessage = this.onRunUpdate;
 
         // subscribe to notification channel
-        this.toastSocket = new WebSocket(
-            `${protocol}${window.location.host}/ws/notification/${this.profile.djangoProfile.username}/`
+        this.notificationSocket = new WebSocket(
+            `${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
         );
-        this.toastSocket.onmessage = this.subscribeToToasts;
+        this.notificationSocket.onmessage = this.onNotification;
     },
     watch: {
         $route() {
@@ -929,6 +1047,37 @@ export default {
         }
     },
     methods: {
+        markAllRead() {},
+        markRead(notification) {
+            axios({
+                method: 'post',
+                url: `/apis/v1/notifications/${this.profile.djangoProfile.username}/mark_read/`,
+                data: {
+                    notification: notification
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    this.$store.dispatch(
+                        'updateNotification',
+                        response.data.notification
+                    );
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
+        async onRunUpdate(event) {
+            let data = JSON.parse(event.data);
+            await this.$store.dispatch('updateRun', data.run);
+            this.toastRun = data.run;
+            this.$bvToast.show('toast');
+        },
+        async onNotification(event) {
+            let data = JSON.parse(event.data);
+            await this.$store.dispatch('updateNotification', data.notification);
+        },
         onDelete(run) {
             axios
                 .get(`/apis/v1/runs/${run.id}/delete/`)
@@ -958,15 +1107,6 @@ export default {
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');
         },
-        subscribeToToasts(e) {
-            let data = JSON.parse(e.data);
-            this.toasts.push(data.message);
-            this.$bvToast.show('toast');
-        },
-        subscribeToNotifications(e) {
-            let data = JSON.parse(e.data);
-            this.notifications.push(data);
-        },
         logOut() {
             sessionStorage.clear();
             window.location.replace('/apis/v1/idp/cyverse_logout/');
@@ -976,21 +1116,11 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
+        prettifyShort: function(date) {
+            return `${moment(date).fromNow()}`;
+        },
         toggleDarkMode: function() {
             this.$store.dispatch('toggleDarkMode');
-        },
-        async loadNotifications() {
-            return axios
-                .get(
-                    `/apis/v1/notifications/${this.profile.djangoProfile.username}/get_by_user/?page=0`
-                )
-                .then(response => {
-                    this.notifications = response.data;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) throw error;
-                });
         }
     }
 };

@@ -3,10 +3,7 @@ import tempfile
 from os.path import join
 from pathlib import Path
 
-from asgiref.sync import async_to_sync
 from celery.result import AsyncResult
-from channels.generic.websocket import WebsocketConsumer
-from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
@@ -17,8 +14,6 @@ from django_celery_beat.models import IntervalSchedule
 from rest_framework.decorators import api_view
 
 from plantit import settings
-from plantit.notifications.models import RunCompletionNotification
-from plantit.notifications.utils import map_run_completion_notification
 from plantit.runs.cluster import cancel_job
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
@@ -34,9 +29,7 @@ from plantit.utils import get_repo_config
 @login_required
 def get_by_user(request, username):
     params = request.query_params
-    page = params.get('page') if 'page' in params else 0
-    start = int(page) * 20
-    count = start + 20
+    page = params.get('page') if 'page' in params else -1
 
     try:
         user = User.objects.get(username=username)
@@ -47,16 +40,17 @@ def get_by_user(request, username):
 
     if 'running' in params and params.get('running') == 'True':
         runs = [run for run in runs.filter(completed__isnull=True).order_by('-created') if not run.is_complete]
-        runs = runs[start:(start + count)]
     elif 'running' in params and params.get('running') == 'False':
-        runs = runs[start:(start + count)]
-        old_complete = [run for run in runs if run.is_complete]
-        runs = old_complete
-        # new_complete = [run for run in runs.filter(completed__isnull=False).order_by('-created') if run.is_complete]
-        # new_complete()
-        # runs = list(set(chain(old_complete, new_complete)))
-
-    # order runs and select page
+        runs = [run for run in runs if run.is_complete]
+        if page > -1:
+            start = int(page) * 20
+            count = start + 20
+            runs = runs[start:(start + count)]
+    else:
+        if page > -1:
+            start = int(page) * 20
+            count = start + 20
+            runs = runs[start:(start + count)]
 
     return JsonResponse([map_run(run) for run in runs], safe=False)
 
@@ -492,15 +486,6 @@ def delete(request, id):
     return HttpResponse()
 
 
-def __push_notification(run: Run, message: str):
-    now = timezone.now()
-    notification = RunCompletionNotification.objects.create(user=run.user, run=run, created=now, message=message)
-    async_to_sync(get_channel_layer().group_send)(f"notification-{run.user.username}", {
-        'type': 'push_notification',
-        'notification': map_run_completion_notification(notification)
-    })
-
-
 @api_view(['POST'])
 @login_required
 @csrf_exempt
@@ -521,12 +506,10 @@ def status(request, id):
                 run.job_status = 'FAILURE'
                 run.updated = timezone.now()
                 run.save()
-                __push_notification(run, line)
             elif int(status['state']) == 6:
                 run.job_status = 'SUCCESS'
                 run.updated = timezone.now()
                 run.save()
-                __push_notification(run, line)
 
             update_status(run, line)
 
@@ -535,58 +518,3 @@ def status(request, id):
 
 
     return HttpResponse(status=200)
-
-
-class RunConsumer(WebsocketConsumer):
-    def connect(self):
-        self.run_id = self.scope['url_route']['kwargs']['id']
-        print(f"Socket connected for run {self.run_id}")
-        async_to_sync(self.channel_layer.group_add)(self.run_id, self.channel_name)
-        self.accept()
-
-    def disconnect(self, code):
-        print(f"Socket disconnected for run {self.run_id}")
-        # async_to_sync(self.channel_layer.group_discard)(self.run_id, self.channel_name)
-
-    def update_status(self, event):
-        run = Run.objects.get(guid=self.run_id)
-        print(f"Received status update for run {self.run_id} with status {run.job_status}")
-        self.send(text_data=json.dumps({
-            'run': map_run(run, True),
-        }))
-
-
-class NotificationConsumer(WebsocketConsumer):
-    def connect(self):
-        self.username = self.scope['url_route']['kwargs']['username']
-        print(f"Socket connected for user {self.username} notifications")
-        async_to_sync(self.channel_layer.group_add)(f"notification-{self.username}", self.channel_name)
-        self.accept()
-
-    def disconnect(self, code):
-        print(f"Socket disconnected for user {self.username} notifications")
-        # async_to_sync(self.channel_layer.group_discard)(self.run_id, self.channel_name)
-
-    def push_notification(self, event):
-        print(f"Received notification for user {self.username}: {event['notification']}")
-        self.send(text_data=json.dumps({
-            'notification': event['notification'],
-        }))
-
-
-class ToastConsumer(WebsocketConsumer):
-    def connect(self):
-        self.username = self.scope['url_route']['kwargs']['username']
-        print(f"Socket connected for user {self.username} toasts")
-        async_to_sync(self.channel_layer.group_add)(f"toast-{self.username}", self.channel_name)
-        self.accept()
-
-    def disconnect(self, code):
-        print(f"Socket disconnected for user {self.username} toasts")
-        # async_to_sync(self.channel_layer.group_discard)(self.run_id, self.channel_name)
-
-    def push_toast(self, event):
-        print(f"Received toast for user {self.username}: {event['message']}")
-        self.send(text_data=json.dumps({
-            'message': event['message'],
-        }))

@@ -1,4 +1,5 @@
 import json
+from itertools import chain
 
 from django.conf import settings
 from django.db import models
@@ -33,7 +34,14 @@ class Run(models.Model):
     task = models.ForeignKey(PeriodicTask, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return json.dumps(model_to_dict(self))
+        opts = self._meta
+        data = {}
+        for f in chain(opts.concrete_fields, opts.private_fields):
+            data[f.name] = f.value_from_object(self)
+        for f in opts.many_to_many:
+            data[f.name] = [i.id for i in f.value_from_object(self)]
+        return json.dumps(data)
+        # return json.dumps(model_to_dict(self))
 
     @property
     def is_sandbox(self):

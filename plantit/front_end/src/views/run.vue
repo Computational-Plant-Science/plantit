@@ -14,19 +14,26 @@
             <div v-if="runNotFound">
                 <b-row align-content="center">
                     <b-col>
-                        <h5
+                        <p
                             :class="
                                 profile.darkMode
                                     ? 'text-center text-white'
                                     : 'text-center text-dark'
                             "
                         >
+                            <i
+                                class="fas fa-exclamation-circle fa-3x fa-fw"
+                            ></i>
+                            <br />
+                            <br />
                             This run does not exist.
-                        </h5>
+                            <br />
+                            It may have been cleaned up.
+                        </p>
                     </b-col>
                 </b-row>
             </div>
-            <div v-if="!runNotFound">
+            <div v-else>
                 <b-row>
                     <b-col>
                         <b-row align-h="center" v-if="loadingRun">
@@ -36,7 +43,7 @@
                                 variant="secondary"
                             ></b-spinner>
                         </b-row>
-                        <div v-else-if="workflow.config">
+                        <div v-else-if="getWorkflow.config">
                             <b-row class="m-0 p-0">
                                 <b-col v-if="showCanceledAlert" class="m-0 p-0">
                                     <b-alert
@@ -66,7 +73,7 @@
                                             showFailedToCancelAlert = false
                                         "
                                     >
-                                        Failed to cancel run {{ run.id }}.
+                                        Failed to cancel run {{ getRun.id }}.
                                     </b-alert>
                                 </b-col>
                             </b-row>
@@ -75,19 +82,19 @@
                                     <h4>
                                         <b-badge
                                             :variant="
-                                                run.is_failure ||
-                                                run.is_timeout ||
-                                                run.is_cancelled
+                                                getRun.is_failure ||
+                                                getRun.is_timeout ||
+                                                getRun.is_cancelled
                                                     ? 'danger'
-                                                    : run.is_success
+                                                    : getRun.is_success
                                                     ? 'success'
                                                     : 'warning'
                                             "
                                             class="mr-2"
-                                            >{{ run.job_status }}</b-badge
+                                            >{{ getRun.job_status }}</b-badge
                                         >
                                         <b-badge
-                                            v-for="tag in run.tags"
+                                            v-for="tag in getRun.tags"
                                             v-bind:key="tag"
                                             class="mr-2"
                                             variant="secondary"
@@ -108,11 +115,11 @@
                                         <b-spinner
                                             class="mb-1 mr-1"
                                             small
-                                            v-if="!run.is_complete"
+                                            v-if="!getRun.is_complete"
                                             variant="secondary"
                                         >
                                         </b-spinner>
-                                        <b class="ml-1 mr-0">{{ run.id }}</b>
+                                        <b class="ml-1 mr-0">{{ getRun.id }}</b>
                                         <!--<small
                                                         v-if="
                                                             walltimeRemaining !==
@@ -150,35 +157,35 @@
                                                         >Exceeded time
                                                         allocation ({{
                                                             parseSeconds(
-                                                                run.timeout
+                                                                getRun.timeout
                                                             ).hours()
                                                         }}
                                                         hours,
                                                         {{
                                                             parseSeconds(
-                                                                run.timeout
+                                                                getRun.timeout
                                                             ).minutes()
                                                         }}
                                                         minutes,
                                                         {{
                                                             parseSeconds(
-                                                                run.timeout
+                                                                getRun.timeout
                                                             ).seconds()
                                                         }}
                                                         seconds)</small
                                                     >-->
                                         <!--<b-badge
                                             :variant="
-                                                run.state === FAILURE
+                                                getRun.state === FAILURE
                                                     ? 'danger'
-                                                    : run.state === SUCCESS
+                                                    : getRun.state === SUCCESS
                                                     ? 'success'
                                                     : 'warning'
                                             "
-                                            >{{ run.state }}
+                                            >{{ getRun.state }}
                                         </b-badge>-->
                                         <small> on </small>
-                                        <b class="mr-0">{{ run.target }}</b>
+                                        <b class="mr-0">{{ getRun.target }}</b>
                                     </h5>
                                 </b-col>
                                 <b-col
@@ -186,11 +193,14 @@
                                     align-self="center"
                                     class="mb-2"
                                     ><small>
-                                        Last updated {{ prettify(run.updated) }}
+                                        Last updated
+                                        {{ prettify(getRun.updated) }}
                                     </small></b-col
                                 >
                                 <b-col
-                                    v-if="run.is_complete && run.can_restart"
+                                    v-if="
+                                        getRun.is_complete && getRun.can_restart
+                                    "
                                     md="auto"
                                     class="m-0 mb-2"
                                     align-self="start"
@@ -204,7 +214,7 @@
                                         size="sm"
                                         v-b-tooltip.hover
                                         :title="
-                                            'Restart ' + workflow.config.name
+                                            'Restart ' + getWorkflow.config.name
                                         "
                                         @click="onRestart"
                                     >
@@ -213,7 +223,7 @@
                                     </b-button>
                                 </b-col>
                                 <b-col
-                                    v-if="!run.is_complete"
+                                    v-if="!getRun.is_complete"
                                     md="auto"
                                     class="m-0 mb-2"
                                     align-self="start"
@@ -234,7 +244,7 @@
                                     </b-button>
                                 </b-col>
                                 <b-col
-                                    v-if="run.is_complete"
+                                    v-if="getRun.is_complete"
                                     md="auto"
                                     class="m-0 mb-2"
                                     align-self="start"
@@ -254,7 +264,7 @@
                                     md="auto"
                                     class="m-0 mb-2"
                                     align-self="start"
-                                    v-if="!run.is_complete"
+                                    v-if="!getRun.is_complete"
                                 >
                                     <b-button
                                         :variant="
@@ -265,7 +275,7 @@
                                         size="sm"
                                         v-b-tooltip.hover
                                         title="Refresh Run"
-                                        @click="reloadRun(true)"
+                                        @click="refreshRun"
                                     >
                                         <i class="fas fa-redo"></i>
                                         Refresh
@@ -294,7 +304,7 @@
                                         >
                                             <WorkflowBlurb
                                                 :showPublic="false"
-                                                :workflow="workflow"
+                                                :workflow="getWorkflow"
                                             ></WorkflowBlurb>
                                         </b-card-body>
                                     </b-card>
@@ -390,7 +400,7 @@
                                                             <b-row class="m-0">
                                                                 <b-col
                                                                     v-if="
-                                                                        run
+                                                                        getRun
                                                                             .submission_logs
                                                                             .length >
                                                                             0
@@ -399,7 +409,7 @@
                                                                     style="white-space: pre-line;"
                                                                 >
                                                                     <span
-                                                                        v-for="log in run.submission_logs"
+                                                                        v-for="log in getRun.submission_logs"
                                                                         v-bind:key="
                                                                             log
                                                                         "
@@ -412,7 +422,7 @@
                                                                 <b-col
                                                                     md="auto"
                                                                     v-if="
-                                                                        run
+                                                                        getRun
                                                                             .container_logs
                                                                             .length >
                                                                             0
@@ -421,7 +431,7 @@
                                                                     style="white-space: pre-line;"
                                                                 >
                                                                     <span
-                                                                        v-for="log in run.container_logs"
+                                                                        v-for="log in getRun.container_logs"
                                                                         v-bind:key="
                                                                             log
                                                                         "
@@ -457,8 +467,8 @@
                                                     <div class="mt-0 pt-0">
                                                         <b-row
                                                             v-if="
-                                                                workflow.config &&
-                                                                    workflow
+                                                                getWorkflow.config &&
+                                                                    getWorkflow
                                                                         .config
                                                                         .output
                                                             "
@@ -473,8 +483,8 @@
                                                         </b-row>
                                                         <b-row
                                                             v-if="
-                                                                workflow.config &&
-                                                                    workflow
+                                                                getWorkflow.config &&
+                                                                    getWorkflow
                                                                         .config
                                                                         .output
                                                             "
@@ -491,71 +501,71 @@
                                                                                 : 'theme-light'
                                                                         "
                                                                         >{{
-                                                                            workflow
+                                                                            getWorkflow
                                                                                 .config
                                                                                 .output
                                                                                 .path
-                                                                                ? workflow
+                                                                                ? getWorkflow
                                                                                       .config
                                                                                       .output
                                                                                       .path +
                                                                                   '/'
                                                                                 : ''
                                                                         }}{{
-                                                                            workflow
+                                                                            getWorkflow
                                                                                 .config
                                                                                 .output
                                                                                 .include
-                                                                                ? (workflow
+                                                                                ? (getWorkflow
                                                                                       .config
                                                                                       .output
                                                                                       .exclude
                                                                                       ? '+ '
                                                                                       : '') +
-                                                                                  (workflow
+                                                                                  (getWorkflow
                                                                                       .config
                                                                                       .output
                                                                                       .include
                                                                                       .patterns
                                                                                       ? '*.' +
-                                                                                        workflow.config.output.include.patterns.join(
+                                                                                        getWorkflow.config.output.include.patterns.join(
                                                                                             ', *.'
                                                                                         )
                                                                                       : []) +
-                                                                                  (workflow
+                                                                                  (getWorkflow
                                                                                       .config
                                                                                       .output
                                                                                       .include
                                                                                       .names
                                                                                       ? ', ' +
-                                                                                        workflow.config.output.include.names.join(
+                                                                                        getWorkflow.config.output.include.names.join(
                                                                                             ', '
                                                                                         )
                                                                                       : [])
                                                                                 : ''
                                                                         }}{{
-                                                                            workflow
+                                                                            getWorkflow
                                                                                 .config
                                                                                 .output
                                                                                 .exclude
                                                                                 ? ' - ' +
-                                                                                  (workflow
+                                                                                  (getWorkflow
                                                                                       .config
                                                                                       .output
                                                                                       .exclude
                                                                                       .patterns
                                                                                       ? '*.' +
-                                                                                        workflow.config.output.exclude.patterns.join(
+                                                                                        getWorkflow.config.output.exclude.patterns.join(
                                                                                             ', *.'
                                                                                         )
                                                                                       : []) +
-                                                                                  (workflow
+                                                                                  (getWorkflow
                                                                                       .config
                                                                                       .output
                                                                                       .exclude
                                                                                       .names
                                                                                       ? ', ' +
-                                                                                        workflow.config.output.exclude.names.join(
+                                                                                        getWorkflow.config.output.exclude.names.join(
                                                                                             ', '
                                                                                         )
                                                                                       : [])
@@ -798,7 +808,7 @@
                                                                     class="m-0 p-0"
                                                                     v-if="
                                                                         !file.exists &&
-                                                                            !run.is_complete
+                                                                            !getRun.is_complete
                                                                     "
                                                                     type="grow"
                                                                     small
@@ -807,7 +817,7 @@
                                                                 <i
                                                                     v-else-if="
                                                                         !file.exists &&
-                                                                            run.is_complete
+                                                                            getRun.is_complete
                                                                     "
                                                                     class="far fa-times-circle text-danger fa-fw"
                                                                 ></i>
@@ -919,7 +929,7 @@
                                                         v-else-if="
                                                             flow.config
                                                                 .output &&
-                                                                run.is_complete
+                                                                getRun.is_complete
                                                         "
                                                         class="mt-0 pt-0"
                                                     >
@@ -1028,7 +1038,7 @@
                                     <!--<b-card
                                     v-if="
                                         flow.config.output &&
-                                            (run.state === 6 || run.state === 0)
+                                            (getRun.state === 6 || getRun.state === 0)
                                     "
                                     :bg-variant="darkMode ? 'dark' : 'white'"
                                     :footer-bg-variant="
@@ -1158,12 +1168,8 @@ export default {
             REVOKED: 'REVOKED',
             // user data
             userData: null,
-            // workflow
-            workflow: null,
             // run
             loadingRun: true,
-            run: null,
-            runNotFound: false,
             // walltime
             walltimeTotal: null,
             runtimeUpdateInterval: null,
@@ -1183,15 +1189,12 @@ export default {
             showCanceledAlert: false,
             showFailedToCancelAlert: false,
             // the "v-if hack" (https://michaelnthiessen.com/force-re-render/)
-            render: true,
-            // websocket
-            socket: null
+            render: true
         };
     },
     methods: {
-        subscribeToSocket(e) {
-            let data = JSON.parse(e.data);
-            this.run = data.run;
+        refreshRun() {
+          this.$store.dispatch('refreshRun', this.$router.currentRoute.params.id);
         },
         onCancel() {
             axios
@@ -1248,7 +1251,7 @@ export default {
                 method: 'post',
                 url: `/apis/v1/runs/`,
                 data: {
-                    repo: this.workflow.repo,
+                    repo: this.getWorkflow.repo,
                     config: config,
                     type: 'Now',
                     delete: false
@@ -1359,76 +1362,6 @@ export default {
         },
         setOutputFilesPageSize(size) {
             this.outputPageSize = size;
-        },
-        reloadRun() {
-            this.render = false;
-            this.$nextTick(() => {
-                this.render = true;
-            });
-
-            this.loadingRun = true;
-            this.showCanceledAlert = false;
-            this.showFailedToCancelAlert = false;
-            axios
-                .get(`/apis/v1/runs/${this.$router.currentRoute.params.id}/`)
-                .then(response => {
-                    if (response && response.status === 404) {
-                        this.runNotFound = true;
-                    } else {
-                        this.runNotFound = false;
-                        this.run = response.data;
-                    }
-                    if (this.run.updated === null) return;
-                    this.reloadOutputFiles();
-                    this.loadWorkflow(
-                        response.data.workflow_owner,
-                        response.data.workflow_name
-                    );
-                    axios
-                        .get(
-                            `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${this.profile.djangoProfile.username}/`,
-                            {
-                                headers: {
-                                    Authorization:
-                                        'Bearer ' +
-                                        this.profile.djangoProfile.profile
-                                            .cyverse_token
-                                }
-                            }
-                        )
-                        .then(response => {
-                            this.userData = response.data;
-                            this.loadingRun = false;
-                        })
-                        .catch(error => {
-                            Sentry.captureException(error);
-                            throw error;
-                        });
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    return error;
-                });
-        },
-        loadWorkflow(owner, name) {
-            this.loadingRun = true;
-            axios
-                .get(`/apis/v1/workflows/${owner}/${name}/`, {
-                    headers: {
-                        Authorization: 'Bearer ' + this.githubToken
-                    }
-                })
-                .then(response => {
-                    this.workflow = response.data;
-                    this.loadingRun = false;
-                })
-                .catch(error => {
-                    if (error.status_code === 401) {
-                        this.login = true;
-                    } else {
-                        throw error;
-                    }
-                });
         },
         thumbnailLoaded() {
             this.thumbnailDoneLoading = true;
@@ -1543,22 +1476,35 @@ export default {
         }
     },
     async mounted() {
-        // subscribe to  update channel
-        this.socket = new WebSocket(
-            (location.protocol === 'https:' ? 'wss://' : 'ws://') +
-                window.location.host +
-                '/ws/run/' +
-                this.$router.currentRoute.params.id +
-                '/'
-        );
-        this.socket.onmessage = this.subscribeToSocket;
-
-        // fetch the latest run data
-        await this.reloadRun();
+        this.loadingRun = true;
+        await this.$store.dispatch('refreshRun', this.$router.currentRoute.params.id);
+        this.loadingRun = false;
     },
     computed: {
+        ...mapGetters([
+            'profile',
+            'workflow',
+            'workflowsRecentlyRun',
+            'run',
+            'runs',
+            'runsLoading'
+        ]),
         workflowKey() {
-            return `${this.workflow.repo.owner.login}/${this.workflow.repo.name}`;
+            return `${this.getWorkflow.repo.owner.login}/${this.getWorkflow.repo.name}`;
+        },
+        getRun() {
+            let run = this.run(this.$router.currentRoute.params.id);
+            if (run !== undefined) return run;
+            return null;
+        },
+        runNotFound() {
+            return this.getRun === null && !this.loadingRun;
+        },
+        getWorkflow() {
+            return this.workflow(
+                this.getRun.workflow_owner,
+                this.getRun.workflow_name
+            );
         },
         submissionLogFileName() {
             return `${this.$router.currentRoute.params.id}.plantit.log`;
@@ -1566,13 +1512,12 @@ export default {
         containerLogFileName() {
             return `${
                 this.$router.currentRoute.params.id
-            }.${this.run.target.toLowerCase()}.log`;
-        },
-        ...mapGetters(['profile', 'workflowsRecentlyRun'])
+            }.${this.getRun.target.toLowerCase()}.log`;
+        }
     },
     watch: {
-        $route() {
-            this.reloadRun();
+        async $route() {
+            await this.$store.dispatch('refreshRun', this.getRun);
         }
     }
 };

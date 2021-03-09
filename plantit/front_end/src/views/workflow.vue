@@ -82,7 +82,7 @@
                                 </b-alert>
                                 <workflowdetail
                                     :show-public="true"
-                                    :workflow="workflow"
+                                    :workflow="getWorkflow"
                                 ></workflowdetail>
                             </b-card>
                         </b-col>
@@ -95,7 +95,7 @@
                                     <b-input-group-text
                                         >Run
                                         {{
-                                            workflow.config.name
+                                            getWorkflow.config.name
                                         }}</b-input-group-text
                                     >
                                 </template>
@@ -181,8 +181,8 @@
                             >
                                 {{
                                     submitType === 'Now'
-                                        ? `Start ${workflow.config.name}`
-                                        : `Schedule ${workflow.config.name} to run ${scheduledTime}`
+                                        ? `Start ${getWorkflow.config.name}`
+                                        : `Schedule ${getWorkflow.config.name} to run ${scheduledTime}`
                                 }}
                             </b-button></b-col
                         ></b-row
@@ -296,9 +296,9 @@
                                 <b-card
                                     v-if="
                                         workflow !== null &&
-                                        workflow.config.params !== undefined
-                                            ? workflow.config.params.length !==
-                                              0
+                                        getWorkflow.config.params !== undefined
+                                            ? getWorkflow.config.params
+                                                  .length !== 0
                                             : false
                                     "
                                     :bg-variant="
@@ -389,9 +389,9 @@
                                 <b-card
                                     v-if="
                                         workflow !== null &&
-                                            workflow.config.input !==
+                                            getWorkflow.config.input !==
                                                 undefined &&
-                                            workflow.config.input.path !==
+                                            getWorkflow.config.input.path !==
                                                 undefined
                                     "
                                     :bg-variant="
@@ -439,7 +439,7 @@
                                     </b-row>
                                     <runinput
                                         :default-path="
-                                            workflow.config.input.path
+                                            getWorkflow.config.input.path
                                         "
                                         :user="user"
                                         :kind="input.kind"
@@ -678,7 +678,7 @@
                                                                     tgt.max_mem
                                                                 ) >=
                                                                     parseInt(
-                                                                        workflow
+                                                                        getWorkflow
                                                                             .config
                                                                             .resources
                                                                             .mem
@@ -778,7 +778,7 @@
                                                                     tgt.max_mem
                                                                 ) >=
                                                                     parseInt(
-                                                                        workflow
+                                                                        getWorkflow
                                                                             .config
                                                                             .resources
                                                                             .mem
@@ -829,7 +829,7 @@
                                             <b-spinner
                                                 type="grow"
                                                 label="Loading..."
-                                                variant="success"
+                                                variant="secondary"
                                             ></b-spinner>
                                         </b-row>
                                         <b-row
@@ -949,7 +949,7 @@
                             ><b-col
                                 ><small
                                     >You haven't scheduled any repeating
-                                    {{ workflow.config.name }} runs.</small
+                                    {{ getWorkflow.config.name }} runs.</small
                                 ></b-col
                             ></b-row
                         >
@@ -1038,7 +1038,7 @@
                             ><b-col
                                 ><small
                                     >You haven't run
-                                    {{ workflow.config.name }} yet.</small
+                                    {{ getWorkflow.config.name }} yet.</small
                                 ></b-col
                             ></b-row
                         >
@@ -1200,7 +1200,6 @@ export default {
             runs: [],
             delayedRuns: [],
             repeatingRuns: [],
-            workflow: null,
             workflowLoading: true,
             workflowValid: false,
             workflowValidationErrors: [],
@@ -1317,7 +1316,14 @@ export default {
     },
     async mounted() {
         await this.$store.dispatch('loadUsers');
-        this.loadWorkflow();
+
+        await this.$store.dispatch('refreshWorkflow', {
+            owner: this.$router.currentRoute.params.username,
+            name: this.$router.currentRoute.params.name
+        });
+        this.validate();
+        this.populateComponents();
+
         this.loadTargets();
         this.loadPublicTargets();
         this.loadRuns();
@@ -1386,12 +1392,6 @@ export default {
         parseCronTime(time) {
             let cron = cronstrue.toString(time);
             return cron.charAt(0).toLowerCase() + cron.slice(1);
-        },
-        nextScheduledTime(time) {
-            let parsed = parser.parseExpression(time);
-            return moment(parsed.next().toString()).format(
-                'MMMM Do YYYY, h:mm a'
-            );
         },
         onRunSelected: function(items) {
             router.push({
@@ -1499,113 +1499,89 @@ export default {
                     }
                 });
         },
-        loadWorkflow() {
-            this.workflowLoading = true;
-            axios
-                .get(`/apis/v1/workflows/${this.username}/${this.name}/`, {
-                    headers: {
-                        Authorization: 'Bearer ' + this.githubToken
-                    }
-                })
-                .then(response => {
-                    this.workflow = response.data;
-                    this.validate();
+        populateComponents() {
+            // if a local input path is specified, set it
+            if (
+                'input' in this.getWorkflow.config &&
+                this.getWorkflow.config.input !== undefined &&
+                this.getWorkflow.config.input.path !== undefined &&
+                this.getWorkflow.config.input.kind !== undefined
+            ) {
+                this.input.from =
+                    this.getWorkflow.config.input.path !== null
+                        ? this.getWorkflow.config.input.path
+                        : '';
+                this.input.kind = this.getWorkflow.config.input.kind;
+                this.input.filetypes =
+                    this.getWorkflow.config.input.filetypes !== undefined &&
+                    this.getWorkflow.config.input.filetypes !== null
+                        ? this.getWorkflow.config.input.filetypes
+                        : [];
+                if (this.input.filetypes.length > 0)
+                    this.inputSelectedPatterns = this.input.filetypes;
+            }
 
-                    // if a local input path is specified, set it
-                    if (
-                        'input' in response.data.config &&
-                        response.data.config.input !== undefined &&
-                        response.data.config.input.path !== undefined &&
-                        response.data.config.input.kind !== undefined
-                    ) {
-                        this.input.from =
-                            response.data.config.input.path !== null
-                                ? response.data.config.input.path
-                                : '';
-                        this.input.kind = response.data.config.input.kind;
-                        this.input.filetypes =
-                            response.data.config.input.filetypes !==
-                                undefined &&
-                            response.data.config.input.filetypes !== null
-                                ? response.data.config.input.filetypes
-                                : [];
-                        if (this.input.filetypes.length > 0)
-                            this.inputSelectedPatterns = this.input.filetypes;
-                    }
+            // if a local output path is specified, add it to included files
+            if (
+                this.getWorkflow.config.output !== undefined &&
+                this.getWorkflow.config.output.path !== undefined
+            ) {
+                this.output.from =
+                    this.getWorkflow.config.output.path !== null
+                        ? this.getWorkflow.config.output.path
+                        : '';
+                if (
+                    this.getWorkflow.config.output.include !== undefined &&
+                    this.getWorkflow.config.output.include.names !== undefined
+                )
+                    this.output.include.names = this.getWorkflow.config.output.include.names;
+                if (
+                    this.getWorkflow.config.output.include !== undefined &&
+                    this.getWorkflow.config.output.include.patterns !==
+                        undefined
+                )
+                    this.output.include.patterns = this.getWorkflow.config.output.include.patterns;
+                if (
+                    this.getWorkflow.config.output.exclude !== undefined &&
+                    this.getWorkflow.config.output.exclude.names !== undefined
+                )
+                    this.output.exclude.names = this.getWorkflow.config.output.exclude.names;
+                if (
+                    this.getWorkflow.config.output.exclude !== undefined &&
+                    this.getWorkflow.config.output.exclude.patterns !==
+                        undefined
+                )
+                    this.output.exclude.patterns = this.getWorkflow.config.output.exclude.patterns;
+            }
 
-                    // if a local output path is specified, add it to included files
-                    if (
-                        response.data.config.output !== undefined &&
-                        response.data.config.output.path !== undefined
-                    ) {
-                        this.output.from =
-                            response.data.config.output.path !== null
-                                ? response.data.config.output.path
-                                : '';
-                        if (
-                            response.data.config.output.include !== undefined &&
-                            response.data.config.output.include.names !==
-                                undefined
-                        )
-                            this.output.include.names =
-                                response.data.config.output.include.names;
-                        if (
-                            response.data.config.output.include !== undefined &&
-                            response.data.config.output.include.patterns !==
-                                undefined
-                        )
-                            this.output.include.patterns =
-                                response.data.config.output.include.patterns;
-                        if (
-                            response.data.config.output.exclude !== undefined &&
-                            response.data.config.output.exclude.names !==
-                                undefined
-                        )
-                            this.output.exclude.names =
-                                response.data.config.output.exclude.names;
-                        if (
-                            response.data.config.output.exclude !== undefined &&
-                            response.data.config.output.exclude.patterns !==
-                                undefined
-                        )
-                            this.output.exclude.patterns =
-                                response.data.config.output.exclude.patterns;
+            // if params are specified, set them
+            if ('params' in this.getWorkflow['config'])
+                this.params = this.getWorkflow['config']['params'].map(
+                    param => {
+                        let split = param.split('=');
+                        return {
+                            key: split[0],
+                            value: split.length === 2 ? split[1] : ''
+                        };
                     }
+                );
 
-                    // if params are specified, set them
-                    if ('params' in response.data['config'])
-                        this.params = response.data['config']['params'].map(
-                            param => {
-                                let split = param.split('=');
-                                return {
-                                    key: split[0],
-                                    value: split.length === 2 ? split[1] : ''
-                                };
-                            }
-                        );
-
-                    // if we have pre-configured values for this flow, populate them
-                    if (
-                        `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}` in
-                        this.workflowsRecentlyRun
-                    ) {
-                        let flowConfig = this.workflowsRecentlyRun[
-                            `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`
-                        ];
-                        this.params =
-                            flowConfig.params !== undefined
-                                ? flowConfig.params
-                                : this.params;
-                        this.input = flowConfig.input;
-                        this.output = flowConfig.output;
-                        this.target = flowConfig.target;
-                    }
-                })
-                .catch(error => {
-                    this.workflowLoading = false;
-                    if (error.status_code === 401) this.login = true;
-                    else throw error;
-                });
+            // if we have pre-configured values for this flow, populate them
+            if (
+                `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}` in
+                this.workflowsRecentlyRun
+            ) {
+                let flowConfig = this.workflowsRecentlyRun[
+                    `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`
+                ];
+                this.params =
+                    flowConfig.params !== undefined
+                        ? flowConfig.params
+                        : this.params;
+                this.input = flowConfig.input;
+                this.output = flowConfig.output;
+                this.target = flowConfig.target;
+            }
         },
         inputSelected(node) {
             this.input.from = node.path;
@@ -1620,11 +1596,11 @@ export default {
             return (
                 (parseInt(target.max_mem) !== -1 &&
                     parseInt(target.max_mem) <
-                        parseInt(this.workflow.config.resources.mem)) ||
+                        parseInt(this.getWorkflow.config.resources.mem)) ||
                 parseInt(target.max_cores) <
-                    parseInt(this.workflow.config.resources.cores) ||
+                    parseInt(this.getWorkflow.config.resources.cores) ||
                 parseInt(target.max_processes) <
-                    parseInt(this.workflow.config.resources.processes)
+                    parseInt(this.getWorkflow.config.resources.processes)
             );
             // TODO walltime
         },
@@ -1704,7 +1680,7 @@ export default {
         },
         onStart() {
             if (
-                !this.workflow.config.resources &&
+                !this.getWorkflow.config.resources &&
                 this.target.name !== 'Sandbox'
             ) {
                 alert('This flow can only run in the Sandbox.');
@@ -1715,22 +1691,22 @@ export default {
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
             let target = this.target;
-            if (this.workflow.config.resources)
-                target['resources'] = this.workflow.config.resources;
+            if (this.getWorkflow.config.resources)
+                target['resources'] = this.getWorkflow.config.resources;
             let config = {
-                name: this.workflow.config.name,
-                image: this.workflow.config.image,
+                name: this.getWorkflow.config.name,
+                image: this.getWorkflow.config.image,
                 parameters: this.params,
                 target: target,
-                commands: this.workflow.config.commands,
+                commands: this.getWorkflow.config.commands,
                 tags: this.tags
             };
-            if ('gpu' in this.workflow.config)
-                config['gpu'] = this.workflow.config.gpu;
-            if ('branch' in this.workflow.config)
-                config['branch'] = this.workflow.config.branch;
-            if (this.workflow.config.mount !== null)
-                config['mount'] = this.workflow.config.mount;
+            if ('gpu' in this.getWorkflow.config)
+                config['gpu'] = this.getWorkflow.config.gpu;
+            if ('branch' in this.getWorkflow.config)
+                config['branch'] = this.getWorkflow.config.branch;
+            if (this.getWorkflow.config.mount !== null)
+                config['mount'] = this.getWorkflow.config.mount;
             if (this.input !== undefined && this.input.from) {
                 config.input = this.input;
                 config.input.patterns =
@@ -1750,7 +1726,7 @@ export default {
             });
 
             let data = {
-                repo: this.workflow.repo,
+                repo: this.getWorkflow.repo,
                 config: config,
                 type: this.submitType
             };
@@ -1787,7 +1763,7 @@ export default {
                     method: 'post',
                     url: `/apis/v1/runs/`,
                     data: {
-                        repo: this.workflow.repo,
+                        repo: this.getWorkflow.repo,
                         config: config,
                         type: this.submitType,
                         delayUnits: this.delayUnits,
@@ -1814,7 +1790,7 @@ export default {
                     method: 'post',
                     url: `/apis/v1/runs/`,
                     data: {
-                        repo: this.workflow.repo,
+                        repo: this.getWorkflow.repo,
                         config: config,
                         type: this.submitType,
                         delayUnits: this.delayUnits,
@@ -1839,7 +1815,14 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['profile', 'workflowsRecentlyRun']),
+        ...mapGetters(['profile', 'workflow', 'workflowsRecentlyRun']),
+        getWorkflow() {
+            let wf = this.workflow(
+                this.$router.currentRoute.params.username,
+                this.$router.currentRoute.params.name
+            );
+            return wf;
+        },
         mustAuthenticate() {
             return !this.target.policies.some(
                 p =>
@@ -1862,20 +1845,20 @@ export default {
         },
         paramsReady: function() {
             if (
-                this.workflow !== null &&
-                this.workflow.config.params !== undefined &&
-                this.workflow.config.params.length !== 0
+                this.getWorkflow !== null &&
+                this.getWorkflow.config.params !== undefined &&
+                this.getWorkflow.config.params.length !== 0
             )
                 return this.params.every(param => param.value !== '');
             else return true;
         },
         inputReady: function() {
             if (
-                this.workflow !== null &&
-                this.workflow.config.input !== undefined
+                this.getWorkflow !== null &&
+                this.getWorkflow.config.input !== undefined
             )
                 return (
-                    this.workflow.config.input.path !== undefined &&
+                    this.getWorkflow.config.input.path !== undefined &&
                     this.input.from !== '' &&
                     this.input.kind !== '' &&
                     this.inputFiletypeSelected
@@ -1885,10 +1868,10 @@ export default {
         outputReady: function() {
             if (
                 this.outputDirectory &&
-                this.workflow &&
-                this.workflow.config &&
-                this.workflow.config.input !== undefined &&
-                this.workflow.config.output.path !== undefined
+                this.getWorkflow &&
+                this.getWorkflow.config &&
+                this.getWorkflow.config.input !== undefined &&
+                this.getWorkflow.config.output.path !== undefined
             )
                 return this.output.to !== '';
             return true;

@@ -10,9 +10,56 @@
         <br />
         <br />
         <b-container class="p-3 vl" fluid>
-            <b-row no-gutters v-if="target.role !== 'own' && !target.public"
+            <b-row
+                no-gutters
+                v-if="
+                    target.role !== 'own' &&
+                        target.role !== 'run' &&
+                        !target.public
+                "
                 ><b-col class="text-center"
-                    >This resource is not available to you.</b-col
+                    ><p
+                        :class="
+                            profile.darkMode
+                                ? 'text-center text-white'
+                                : 'text-center text-dark'
+                        "
+                    >
+                        <i class="fas fa-exclamation-circle fa-3x fa-fw"></i>
+                        <br />
+                        <br />
+                        You do not have access to this resource.
+                        <br />
+                        <b-button
+                            v-if="!accessRequested"
+                            class="ml-0"
+                            :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
+                            size="md"
+                            v-b-tooltip.hover
+                            :title="'Request access to ' + target.name"
+                            @click="requestAccess"
+                        >
+                            <i class="fas fa-key fa-fw"></i>
+                            Request Access
+                        </b-button>
+                        <b-button
+                            v-else
+                            class="ml-0"
+                            :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
+                            size="sm"
+                            v-b-tooltip.hover
+                            :disabled="true"
+                        >
+                            <i class="fas fa-key fa-fw"></i>
+                            You requested access
+                            {{ prettify(accessRequest.created) }}. Your request
+                            is pending.
+                        </b-button>
+                    </p></b-col
                 ></b-row
             >
             <div v-else>
@@ -51,14 +98,22 @@
                     <b-col
                         ><b-card
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                            :header-bg-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
                             border-variant="default"
-                            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+                            :header-border-variant="
+                                profile.darkMode ? 'dark' : 'white'
+                            "
                             :text-variant="profile.darkMode ? 'white' : 'dark'"
                             class="overflow-hidden"
                         >
                             <div
-                                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+                                :class="
+                                    profile.darkMode
+                                        ? 'theme-dark'
+                                        : 'theme-light'
+                                "
                             >
                                 <b-img
                                     v-if="target.logo"
@@ -513,7 +568,9 @@
                             ><b-col align-self="end"
                                 ><h5
                                     :class="
-                                        profile.darkMode ? 'text-white' : 'text-dark'
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
                                     "
                                 >
                                     Periodic Tasks
@@ -521,7 +578,9 @@
                             ><b-col class="mb-1" align-self="start" md="auto"
                                 ><b-button
                                     :variant="
-                                        profile.darkMode ? 'outline-light' : 'white'
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
                                     "
                                     size="sm"
                                     v-b-tooltip.hover

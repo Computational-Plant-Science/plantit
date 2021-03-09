@@ -733,7 +733,7 @@ export default {
                     //     };
                     // })
                     .filter(function(item) {
-                        return item.value !== username;
+                        return item.username !== username;
                     })
             );
         },
