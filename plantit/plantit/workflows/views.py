@@ -23,11 +23,8 @@ def list_all(request):
     usernames = [user.profile.github_username for user in users] + ['Computational-Plant-Science', 'van-der-knaap-lab', 'burke-lab']
 
     if not workflows_path.exists():
-        print(f"No workflows cached, retrieving")
+        print(f"Creating workflow cache")
         workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
-        # workflows = [wf for wf in workflows if wf['config']['public']]  # return only public flows
-
-        # create the cache
         with open(workflows_file, 'w') as file:
             json.dump(workflows, file)
     else:
@@ -36,17 +33,11 @@ def list_all(request):
         elapsed_minutes = (now - last_modified).total_seconds() / 60.0
 
         if elapsed_minutes < refresh_minutes:
-            print(f"Using workflows cached in: {workflows_file}")
-
-            # load the cache
             with open(workflows_file, 'r') as file:
                 workflows = json.load(file)
         else:
             print(f"Workflow cache is stale, refreshing")
             workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
-            # workflows = [wf for wf in workflows if wf['config']['public']]  # return only public flows
-
-            # update the cache
             with open(workflows_file, 'w') as file:
                 json.dump(workflows, file)
 

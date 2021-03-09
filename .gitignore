@@ -259,6 +259,7 @@ sandbox/*
 node_modules/
 flows.json
 workflows.json
+users.json
 
 *.postgresql
 plantit/postgres
