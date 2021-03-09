@@ -1,13 +1,18 @@
 import json
+import uuid
 from typing import List
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
+from django.utils import timezone
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
+from plantit.notifications.models import TargetPolicyNotification
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import execute_command
 from plantit.targets.models import Target, TargetPolicy, TargetTask, TargetRole, TargetAccessRequest
@@ -43,7 +48,26 @@ class TargetsViewSet(viewsets.ModelViewSet):
         access_request = TargetAccessRequest.objects.get(user=user, target=target)
         access_request.delete()
 
-
+        notification = TargetPolicyNotification.objects.create(
+            guid=str(uuid.uuid4()),
+            user=user,
+            created=timezone.now(),
+            policy=policy,
+            message=f"You were granted access to {policy.target.name}")
+        async_to_sync(get_channel_layer().group_send)(f"notifications-{user.username}", {
+            'type': 'push_notification',
+            'notification': {
+                'id': notification.guid,
+                'username': notification.user.username,
+                'created': notification.created.isoformat(),
+                'message': notification.message,
+                'read': notification.read,
+                'policy': {
+                    'user': user.username,
+                    'role': str(notification.policy.role)
+                }
+            }
+        })
 
         return JsonResponse({'granted': created})
 
@@ -61,6 +85,27 @@ class TargetsViewSet(viewsets.ModelViewSet):
             policy = TargetPolicy.objects.get(user=user, target=target)
         except:
             return HttpResponseNotFound()
+
+        notification = TargetPolicyNotification.objects.create(
+            guid=str(uuid.uuid4()),
+            user=user,
+            created=timezone.now(),
+            policy=policy,
+            message=f"Your access to {policy.target.name} was revoked")
+        async_to_sync(get_channel_layer().group_send)(f"notifications-{user.username}", {
+            'type': 'push_notification',
+            'notification': {
+                'id': notification.guid,
+                'username': notification.user.username,
+                'created': notification.created.isoformat(),
+                'message': notification.message,
+                'read': notification.read,
+                'policy': {
+                    'user': user.username,
+                    'role': str(notification.policy.role)
+                }
+            }
+        })
 
         policy.delete()
         return HttpResponse()
@@ -161,7 +206,8 @@ class TargetsViewSet(viewsets.ModelViewSet):
     def get_by_username(self, request):
         user = request.user
         policies = TargetPolicy.objects.filter(user=user, role__in=[TargetRole.own, TargetRole.run])
-        targets = [map_target(target, policy.role, list(policies)) for target, policy in zip([policy.target for policy in policies], policies) if policy.role != TargetRole.none]  # + [map_target(target, TargetRole.none, list(policies)) for target in Target.objects.exclude(targetpolicy__in=policies)]
+        targets = [map_target(target, policy.role, list(policies)) for target, policy in zip([policy.target for policy in policies], policies) if
+                   policy.role != TargetRole.none]  # + [map_target(target, TargetRole.none, list(policies)) for target in Target.objects.exclude(targetpolicy__in=policies)]
         return JsonResponse({'servers': targets})
 
     @action(methods=['post'], detail=False)

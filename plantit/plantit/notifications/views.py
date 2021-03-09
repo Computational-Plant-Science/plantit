@@ -2,10 +2,10 @@ from itertools import chain
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponseNotFound, JsonResponse, HttpResponse
+from django.http import HttpResponseNotFound, JsonResponse
 from rest_framework.decorators import api_view
 
-from plantit.notifications.models import Notification, TargetPolicyNotification, DirectoryPolicyNotification
+from plantit.notifications.models import TargetPolicyNotification, DirectoryPolicyNotification
 from plantit.notifications.utils import map_notification
 
 

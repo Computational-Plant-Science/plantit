@@ -489,32 +489,40 @@
                                             : 'text-dark bg-white m-0 p-2 mb-2 overflow-hidden'
                                     "
                                 >
-                                    <p
-                                        v-if="
-                                            notification.policy !== undefined &&
-                                                notification.policy.path !==
-                                                    undefined
-                                        "
-                                    >
-                                        {{ notification.message }}
-                                        <br />
-                                        <small>{{
-                                            prettify(notification.created)
-                                        }}</small>
-                                    </p>
-                                    <p v-else></p>
-                                    <b-button
-                                        size="sm"
-                                        :disabled="notification.read"
-                                        :variant="
-                                            profile.darkMode ? 'dark' : 'light'
-                                        "
-                                        class="text-left m-0"
-                                        @click="markRead(notification)"
-                                    >
-                                        Mark Read
-                                        <i class="fas fa-check"></i>
-                                    </b-button>
+                                    <b-row>
+                                        <b-col>
+                                            <p
+                                                v-if="
+                                                    notification.policy !==
+                                                        undefined
+                                                "
+                                            >
+                                                {{ notification.message }}
+                                                <br />
+                                                <small>{{
+                                                    prettify(
+                                                        notification.created
+                                                    )
+                                                }}</small>
+                                            </p>
+                                        </b-col>
+                                        <b-col md="auto">
+                                            <b-button
+                                                size="sm"
+                                                :disabled="notification.read"
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'dark'
+                                                        : 'light'
+                                                "
+                                                class="text-left m-0"
+                                                @click="markRead(notification)"
+                                            >
+                                                Mark Read
+                                                <i class="fas fa-check"></i>
+                                            </b-button>
+                                        </b-col>
+                                    </b-row>
                                 </b-list-group-item>
                             </b-list-group>
                             <p
@@ -553,19 +561,12 @@
                                             : 'text-dark bg-white m-0 p-2 mb-2 overflow-hidden'
                                     "
                                 >
-                                    <p
-                                        v-if="
-                                            notification.policy !== undefined &&
-                                                notification.policy.path !==
-                                                    undefined
-                                        "
-                                    >
-                                        {{ notification.message }}
-                                        <br />
-                                        <small>{{
-                                            prettify(notification.created)
-                                        }}</small>
-                                    </p>
+                                    {{ notification.message }}
+                                    <br />
+                                    <br />
+                                    <small>{{
+                                        prettify(notification.created)
+                                    }}</small>
                                 </b-list-group-item>
                             </b-list-group>
                             <p
