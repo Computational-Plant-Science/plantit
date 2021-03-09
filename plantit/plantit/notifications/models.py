@@ -2,9 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from plantit.runs.models import Run
 from plantit.stores.models import DirectoryPolicy
-from plantit.targets.models import TargetAccessRequest, TargetPolicy
+from plantit.targets.models import TargetPolicy
 
 
 class Notification(models.Model):

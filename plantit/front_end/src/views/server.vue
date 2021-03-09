@@ -220,11 +220,13 @@
                                                 <br />
                                                 <span
                                                     v-if="
-                                                        parseInt(target.max_mem)
+                                                        parseInt(
+                                                            target.max_mem
+                                                        ) < 0
                                                     "
-                                                    >{{ target.max_mem }}
+                                                >
                                                     <small
-                                                        >GB memory</small
+                                                        >Virtual memory</small
                                                     ></span
                                                 >
                                                 <span

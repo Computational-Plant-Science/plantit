@@ -70,7 +70,9 @@
                                             >
                                                 <b-row
                                                     ><b-col
-                                                    v-if="userProfile.githubProfile"
+                                                        v-if="
+                                                            userProfile.githubProfile
+                                                        "
                                                         md="auto"
                                                         class="ml-0 mr-0"
                                                         align-self="end"
@@ -553,7 +555,7 @@
                                         <b-spinner
                                             type="grow"
                                             label="Loading..."
-                                            variant="success"
+                                            variant="secondary"
                                         ></b-spinner>
                                     </b-row>
                                     <b-row
@@ -636,26 +638,19 @@
                                             "
                                             cols="1"
                                             ><span
-                                                v-if="parseInt(target.max_mem)"
-                                                >{{ target.max_mem }} GB
-                                                memory</span
+                                                v-if="
+                                                    parseInt(target.max_mem) < 0
+                                                "
+                                                >Virtual memory</span
                                             >
                                             <span
                                                 v-else-if="
                                                     parseInt(target.max_mem) > 0
                                                 "
-                                                class="text-danger"
                                                 >{{ target.max_mem }} GB
                                                 memory</span
                                             >
-                                            <span
-                                                v-else-if="
-                                                    parseInt(target.max_mem) ===
-                                                        -1
-                                                "
-                                                >virtual memory</span
-                                            ></b-col
-                                        >
+                                        </b-col>
                                         <b-col
                                             align-self="center"
                                             :class="
@@ -733,7 +728,12 @@ export default {
             'workflowsLoading'
         ]),
         userWorkflows() {
-            if (this.workflowsLoading || this.workflows === undefined || this.profile.githubProfile === undefined) return [];
+            if (
+                this.workflowsLoading ||
+                this.workflows === undefined ||
+                this.profile.githubProfile === undefined
+            )
+                return [];
             return this.workflows.filter(wf => {
                 return wf.repo.owner.login === this.profile.githubProfile.login;
             });

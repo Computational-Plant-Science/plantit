@@ -226,10 +226,11 @@ def map_run(run: Run, get_container_logs: bool = False):
     if get_container_logs:
         with ssh_client:
             with ssh_client.client.open_sftp() as sftp:
-                stdin, stdout, stderr = ssh_client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, container_log_file)))
-                errs = stderr.read()
-                if errs:
-                    raise Exception(f"Failed to check existence of {container_log_file}: {errs}")
+                cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
+                stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
+                # errs = stderr.read()
+                # if errs:
+                #     raise Exception(f"Failed to check existence of {container_log_file}: {errs}")
                 if not stdout.read().decode().strip() == 'exists':
                     container_logs = []
                 else:

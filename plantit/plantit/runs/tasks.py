@@ -242,7 +242,7 @@ def submit_run(id: str, flow):
 def poll_run_status(id: str):
     run = Run.objects.get(guid=id)
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-    cleanup_delay = int(run.target.workdir_clean_delay.total_seconds())
+    cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
 
     logger.info(f"Checking {run.target.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
@@ -266,7 +266,7 @@ def poll_run_status(id: str):
             run.completed = now
             run.save()
 
-            msg = f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {str(run.target.workdir_clean_delay)}"
+            msg = f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             update_status(run, msg)
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
@@ -281,10 +281,10 @@ def poll_run_status(id: str):
             run.completed = now
             run.save()
 
-            msg = f"Job {run.job_id} not found, cleaning up in {str(run.target.workdir_clean_delay)}"
+            msg = f"Job {run.job_id} not found, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             update_status(run, msg)
         else:
-            update_status(run, f"Job {run.job_id} already succeeded, cleaning up in {str(run.target.workdir_clean_delay)}")
+            update_status(run, f"Job {run.job_id} already succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m")
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
     except:
         run.job_status = 'FAILURE'
@@ -293,7 +293,7 @@ def poll_run_status(id: str):
         run.completed = now
         run.save()
 
-        msg = f"Job {run.job_id} encountered unexpected error (cleaning up in {str(run.target.workdir_clean_delay)}): {traceback.format_exc()}"
+        msg = f"Job {run.job_id} encountered unexpected error (cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
         update_status(run, msg)
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
 
