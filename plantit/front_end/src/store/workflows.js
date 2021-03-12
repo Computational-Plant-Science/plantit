@@ -18,7 +18,7 @@ export const workflows = {
                     wf.repo.owner.login === workflow.repo.owner.login &&
                     wf.repo.name === workflow.repo.name
             );
-            if (i === -1) state.workflow.unshift(workflow);
+            if (i === -1) state.workflows.unshift(workflow);
             else Vue.set(state.workflows, i, workflow);
         },
         setWorkflowsLoading(state, loading) {

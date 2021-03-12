@@ -271,6 +271,10 @@
                                             </b>
                                         </b-col>
                                     </b-row>
+                                    <hr
+                                        class="mt-2 mb-2"
+                                        style="border-color: gray"
+                                    />
                                     <b-row class="mt-1">
                                         <b-col>
                                             <multiselect
@@ -331,7 +335,7 @@
                                                         params &&
                                                             params.every(
                                                                 p =>
-                                                                    p.value !==
+                                                                    p.name !==
                                                                     ''
                                                             )
                                                     "
@@ -345,46 +349,96 @@
                                             </h4>
                                         </b-col>
                                     </b-row>
+                                  <b-row
+                                        ><b-col
+                                            ><b
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                Configure parameters for this run.
+                                            </b>
+                                        </b-col>
+                                    </b-row>
+                                    <hr
+                                        class="mt-2 mb-2"
+                                        style="border-color: gray"
+                                    />
                                     <b-row
                                         ><b-col
-                                            ><b>
-                                                Configure parameters for this
-                                                run.
-                                            </b>
-                                            <br />
+                                            >
                                             <b-row
                                                 class="mt-1"
                                                 v-for="param in params"
-                                                v-bind:key="param.key"
+                                                v-bind:key="param.name"
                                             >
-                                                <b-col md="auto">{{
-                                                    param.key
-                                                        .split('=')[0]
-                                                        .toLowerCase()
+                                                <b-col>{{
+                                                    param.name.toLowerCase()
                                                 }}</b-col
-                                                ><b-col
-                                                    ><b-form-input
+                                                ><b-col>
+                                                    <b-form-input
+                                                        v-if="
+                                                            param.type ===
+                                                                'string'
+                                                        "
                                                         size="sm"
                                                         v-model="param.value"
                                                         :placeholder="
-                                                            param.key.split('=')
-                                                                .length === 1
+                                                            param.value === ''
                                                                 ? 'Enter a value for \'' +
-                                                                  param.key
-                                                                      .split(
-                                                                          '='
-                                                                      )[0]
-                                                                      .toLowerCase() +
+                                                                  param.name.toLowerCase() +
                                                                   '\''
-                                                                : param.key
-                                                                      .split(
-                                                                          '='
-                                                                      )[1]
-                                                                      .toLowerCase()
+                                                                : param.value
                                                         "
-                                                    ></b-form-input></b-col
-                                            ></b-row> </b-col
-                                    ></b-row>
+                                                    ></b-form-input>
+                                                    <b-form-select
+                                                        v-if="
+                                                            param.type ===
+                                                                'select'
+                                                        "
+                                                        size="sm"
+                                                        v-model="param.value"
+                                                        :options="param.options"
+                                                    ></b-form-select>
+                                                    <b-form-checkbox-group
+                                                        v-if="
+                                                            param.type ===
+                                                                'multiselect'
+                                                        "
+                                                        size="sm"
+                                                        v-model="param.value"
+                                                        :options="param.options"
+                                                    ></b-form-checkbox-group>
+                                                    <b-form-spinbutton
+                                                        v-if="
+                                                            param.type ===
+                                                                'number'
+                                                        "
+                                                        size="sm"
+                                                        v-model="param.value"
+                                                        :min="param.min"
+                                                        :max="param.max"
+                                                        :step="param.step"
+                                                    ></b-form-spinbutton>
+                                                    <b-form-checkbox
+                                                        v-if="
+                                                            param.type ===
+                                                                'boolean'
+                                                        "
+                                                        size="sm"
+                                                        v-model="param.value"
+                                                        switch
+                                                    >
+                                                        <b>
+                                                            {{ param.value }}</b
+                                                        >
+                                                    </b-form-checkbox>
+                                                </b-col></b-row
+                                            >
+                                        </b-col></b-row
+                                    >
                                 </b-card>
                                 <b-card
                                     v-if="
@@ -613,7 +667,10 @@
                                             Select a server to submit this run
                                             to.
                                         </b>
-                                        <br />
+                                        <hr
+                                            class="mt-2 mb-2"
+                                            style="border-color: gray"
+                                        />
                                         <b-tabs
                                             class="mt-2"
                                             vertical
@@ -1164,7 +1221,6 @@ import * as Sentry from '@sentry/browser';
 import router from '../router';
 import Multiselect from 'vue-multiselect';
 import moment from 'moment';
-import parser from 'cron-parser';
 import cronstrue from 'cronstrue';
 
 String.prototype.capitalize = function() {
@@ -1499,6 +1555,36 @@ export default {
                     }
                 });
         },
+        mapParam(param) {
+            if (param.type === 'string')
+                return {
+                    name: param.name,
+                    type: param.type,
+                    value: param.default !== undefined ? param.default : ''
+                };
+            else if (param.type === 'select')
+                return {
+                    name: param.name,
+                    type: param.type,
+                    value: param.default !== undefined ? param.default : null,
+                    options: param.options
+                };
+            else if (param.type === 'number')
+                return {
+                    name: param.name,
+                    type: param.type,
+                    value: param.default !== undefined ? param.default : 0
+                };
+            else if (param.type === 'boolean')
+                return {
+                    name: param.name,
+                    type: param.type,
+                    value:
+                        param.default !== undefined
+                            ? param.default.toString().toLowerCase() === 'false'
+                            : false
+                };
+        },
         populateComponents() {
             // if a local input path is specified, set it
             if (
@@ -1556,14 +1642,8 @@ export default {
 
             // if params are specified, set them
             if ('params' in this.getWorkflow['config'])
-                this.params = this.getWorkflow['config']['params'].map(
-                    param => {
-                        let split = param.split('=');
-                        return {
-                            key: split[0],
-                            value: split.length === 2 ? split[1] : ''
-                        };
-                    }
+                this.params = this.getWorkflow['config']['params'].map(param =>
+                    this.mapParam(param)
                 );
 
             // if we have pre-configured values for this flow, populate them
@@ -1849,7 +1929,12 @@ export default {
                 this.getWorkflow.config.params !== undefined &&
                 this.getWorkflow.config.params.length !== 0
             )
-                return this.params.every(param => param.value !== '');
+                return this.params.every(
+                    param =>
+                        param !== undefined &&
+                        param.value !== undefined &&
+                        param.value !== ''
+                );
             else return true;
         },
         inputReady: function() {

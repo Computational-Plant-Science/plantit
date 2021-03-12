@@ -87,7 +87,10 @@
                         >
                             Metadata
                         </b>
-                        <hr />
+                      <hr
+                                        class="mt-2 mb-2"
+                                        style="border-color: gray"
+                                    />
                         <b-row>
                             <b-col>
                                 <b-row>
@@ -116,7 +119,10 @@
                         >
                             Configuration
                         </b>
-                        <hr />
+                      <hr
+                                        class="mt-2 mb-2"
+                                        style="border-color: gray"
+                                    />
                         <b-row>
                             <b-col>
                                 <b-row>
@@ -288,7 +294,10 @@
                         >
                             Resource Requests
                         </b>
-                        <hr />
+                      <hr
+                                        class="mt-2 mb-2"
+                                        style="border-color: gray"
+                                    />
                         <b-row align-v="right" align-h="right">
                             <b-col>
                                 <b

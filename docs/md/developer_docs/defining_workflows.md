@@ -63,10 +63,47 @@ clone: False
 image: docker://alpine
 commands: echo "$MESSAGE"
 params:
- - message
+ - name: message
+   type: string
 ```
 
 This will cause the value of `message`, specified by the user in the browser, to be substituted into the `command` at runtime.
+
+Note that PlantIT parameters are explicitly typed. The following parameter types are supported:
+
+- `string`
+- `select`
+- `number`
+- `boolean`
+
+For example, a workflow with one of each parameter type might have the following `params` section:
+
+```yaml
+...
+params:
+  - name: String
+    type: string
+    default: Hello, world!
+  - name: Select
+    type: select
+    options:
+      - Option 1
+      - Option 2
+    default: Option 1
+  - name: Number
+    type: number
+    default: 42
+    step: 1
+    min: 0
+    max: 100
+  - name: Boolean
+    type: boolean
+    default: False
+```
+
+#### Default values
+
+To provide default values for your workflow's parameters, you can use a `default` attribute (see above).
 
 ### Workflow input/output
 

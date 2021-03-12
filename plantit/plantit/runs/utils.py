@@ -132,7 +132,30 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
         new_config['bind_mounts'] = old_config['config']['mount']
 
     if 'parameters' in old_config['config']:
-        new_config['parameters'] = old_config['config']['parameters']
+        old_params = old_config['config']['parameters']
+        params = []
+        for p in old_params:
+            if p['type'] == 'string':
+                params.append({
+                    'key': p['name'],
+                    'value': str(p['value'])
+                })
+            elif p['type'] == 'select':
+                params.append({
+                    'key': p['name'],
+                    'value': str(p['value'])
+                })
+            elif p['type'] == 'number':
+                params.append({
+                    'key': p['name'],
+                    'value': str(p['value'])
+                })
+            elif p['type'] == 'boolean':
+                params.append({
+                    'key': p['name'],
+                    'value': str(p['value'])
+                })
+        new_config['parameters'] = params
 
     if 'input' in old_config['config']:
         input_kind = old_config['config']['input']['kind'] if 'kind' in old_config['config']['input'] else None
