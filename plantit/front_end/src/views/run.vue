@@ -185,7 +185,7 @@
                                             >{{ getRun.state }}
                                         </b-badge>-->
                                         <small> on </small>
-                                        <b class="mr-0">{{ getRun.target }}</b>
+                                        <b class="mr-0">{{ getRun.cluster }}</b>
                                     </h5>
                                 </b-col>
                                 <b-col
@@ -1512,7 +1512,7 @@ export default {
         containerLogFileName() {
             return `${
                 this.$router.currentRoute.params.id
-            }.${this.getRun.target.toLowerCase()}.log`;
+            }.${this.getRun.cluster.toLowerCase()}.log`;
         }
     },
     watch: {

@@ -12,17 +12,17 @@ from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import update_status, execute_command, map_old_workflow_config_to_new, remove_logs, parse_job_id, create_run
-from plantit.targets.models import Target
+from plantit.clusters.models import Cluster
 
 logger = get_task_logger(__name__)
 
 
 def __upload_run(flow, run: Run, ssh: SSH):
     # update flow config before uploading
-    flow['config']['workdir'] = join(run.target.workdir, run.guid)
-    flow['config']['log_file'] = f"{run.guid}.{run.target.name.lower()}.log"
+    flow['config']['workdir'] = join(run.cluster.workdir, run.guid)
+    flow['config']['log_file'] = f"{run.guid}.{run.cluster.name.lower()}.log"
     if 'output' in flow['config']:
-        flow['config']['output']['from'] = join(run.target.workdir, run.work_dir, flow['config']['output']['from'])
+        flow['config']['output']['from'] = join(run.cluster.workdir, run.work_dir, flow['config']['output']['from'])
 
     # if flow has outputs, make sure we don't push configuration or job scripts
     if 'output' in flow['config']:
@@ -31,20 +31,20 @@ def __upload_run(flow, run: Run, ssh: SSH):
             "template_local_run.sh",
             "template_slurm_run.sh"]
 
-    resources = None if 'resources' not in flow['config']['target'] else flow['config']['target']['resources']  # cluster resource requests, if any
+    resources = None if 'resources' not in flow['config']['cluster'] else flow['config']['cluster']['resources']  # cluster resource requests, if any
     callback_url = settings.API_URL + 'runs/' + run.guid + '/status/'  # PlantIT status update callback URL
-    work_dir = join(run.target.workdir, run.work_dir)
+    work_dir = join(run.cluster.workdir, run.work_dir)
     new_flow = map_old_workflow_config_to_new(flow, run, resources)  # TODO update flow UI page
 
     # create working directory
-    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.target.workdir, allow_stderr=True)
+    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.cluster.workdir, allow_stderr=True)
 
     # upload flow config and job script
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
 
         # TODO refactor to allow multiple cluster schedulers
-        sandbox = run.target.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
+        sandbox = run.cluster.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
         template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
         template_name = template.split('/')[-1]
 
@@ -66,12 +66,12 @@ def __upload_run(flow, run: Run, ssh: SSH):
                     script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
                 if 'time' in resources:
                     script.write(f"#SBATCH --time={resources['time']}\n")
-                if 'mem' in resources and (run.target.header_skip is None or '--mem' not in str(run.target.header_skip)):
+                if 'mem' in resources and (run.cluster.header_skip is None or '--mem' not in str(run.cluster.header_skip)):
                     script.write(f"#SBATCH --mem={resources['mem']}\n")
-                if run.target.queue is not None and run.target.queue != '':
-                    script.write(f"#SBATCH --partition={run.target.queue}\n")
-                if run.target.project is not None and run.target.project != '':
-                    script.write(f"#SBATCH -A {run.target.project}\n")
+                if run.cluster.queue is not None and run.cluster.queue != '':
+                    script.write(f"#SBATCH --partition={run.cluster.queue}\n")
+                if run.cluster.project is not None and run.cluster.project != '':
+                    script.write(f"#SBATCH -A {run.cluster.project}\n")
 
                 script.write("#SBATCH --mail-type=END,FAIL\n")
                 script.write(f"#SBATCH --mail-user={run.user.email}\n")
@@ -79,13 +79,13 @@ def __upload_run(flow, run: Run, ssh: SSH):
                 script.write("#SBATCH --error=plantit.%j.err\n")
 
             # add precommands
-            script.write(run.target.pre_commands + '\n')
+            script.write(run.cluster.pre_commands + '\n')
 
             # if we have inputs, add pull command
             if 'input' in flow['config']:
-                sftp.mkdir(join(run.target.workdir, run.work_dir, 'input'))
+                sftp.mkdir(join(run.cluster.workdir, run.work_dir, 'input'))
                 pull_commands = f"plantit terrain pull {flow['config']['input']['from']}" \
-                                f" -p {join(run.target.workdir, run.work_dir, 'input')}" \
+                                f" -p {join(run.cluster.workdir, run.work_dir, 'input')}" \
                                 f" {' '.join(['--pattern ' + pattern for pattern in flow['config']['input']['patterns']])}" \
                                 f""f" --plantit_url '{callback_url}'" \
                                 f""f" --plantit_token '{run.token}'" \
@@ -144,24 +144,24 @@ def __upload_run(flow, run: Run, ssh: SSH):
 
 def __submit_run(run: Run, ssh: SSH):
     # TODO refactor to allow multiple cluster schedulers
-    sandbox = run.target.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
+    sandbox = run.cluster.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
     template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
     template_name = template.split('/')[-1]
 
     if run.is_sandbox:
         execute_command(
             ssh_client=ssh,
-            pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
+            pre_command='; '.join(str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
             command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
-            directory=join(run.target.workdir, run.work_dir),
+            directory=join(run.cluster.workdir, run.work_dir),
             allow_stderr=True)
     else:
         output_lines = execute_command(
             ssh_client=ssh,
-            pre_command='; '.join(str(run.target.pre_commands).splitlines()) if run.target.pre_commands else ':',
+            pre_command='; '.join(str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
             # if the cluster scheduler prohibits nested job submissions, we need to run the CLI from a login node
-            command=f"chmod +x {template_name} && ./{template_name}" if run.target.no_nested else f"chmod +x {template_name} && sbatch {template_name}",
-            directory=join(run.target.workdir, run.work_dir),
+            command=f"chmod +x {template_name} && ./{template_name}" if run.cluster.no_nested else f"chmod +x {template_name} && sbatch {template_name}",
+            directory=join(run.cluster.workdir, run.work_dir),
             allow_stderr=True)
         job_id = parse_job_id(output_lines[-1])
         run.job_id = job_id
@@ -170,8 +170,8 @@ def __submit_run(run: Run, ssh: SSH):
 
 
 @app.task(track_started=True)
-def create_and_submit_run(username: str, target_name: str, flow: dict):
-    run = create_run(username, target_name, flow)
+def create_and_submit_run(username: str, cluster_name: str, flow: dict):
+    run = create_run(username, cluster_name, flow)
     submit_run.s(run.guid, flow).apply_async()
 
 
@@ -182,7 +182,7 @@ def submit_run(id: str, flow):
     run.submission_id = submit_run.request.id  # set this task's ID on the run so user can cancel it
     run.save()
 
-    msg = f"Deploying run {run.guid} to {run.target.name}"
+    msg = f"Deploying run {run.guid} to {run.cluster.name}"
     update_status(run, msg)
     logger.info(msg)
 
@@ -191,12 +191,12 @@ def submit_run(id: str, flow):
             msg = f"Authenticating with username {flow['auth']['username']}"
             update_status(run, msg)
             logger.info(msg)
-            ssh_client = SSH(run.target.hostname, run.target.port, flow['auth']['username'], flow['auth']['password'])
+            ssh_client = SSH(run.cluster.hostname, run.cluster.port, flow['auth']['username'], flow['auth']['password'])
         else:
-            ssh_client = SSH(run.target.hostname, run.target.port, run.target.username)
+            ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
 
         with ssh_client:
-            msg = f"Creating working directory {join(run.target.workdir, run.guid)} and uploading files"
+            msg = f"Creating working directory {join(run.cluster.workdir, run.guid)} and uploading files"
             update_status(run, msg)
             logger.info(msg)
 
@@ -242,7 +242,7 @@ def poll_run_status(id: str):
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
     cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
 
-    logger.info(f"Checking {run.target.name} scheduler status for run {id} (SLURM job {run.job_id})")
+    logger.info(f"Checking {run.cluster.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
     # if the job already failed, schedule cleanup
     if run.job_status == 'FAILURE':
@@ -304,41 +304,41 @@ def cleanup_run(id: str):
         logger.info(f"Could not find run {id} (might have been deleted?)")
         return
 
-    logger.info(f"Cleaning up run {id} local working directory {run.target.workdir}")
-    remove_logs(run.guid, run.target.name)
-    logger.info(f"Cleaning up run {id} target working directory {run.target.workdir}")
-    ssh = SSH(run.target.hostname, run.target.port, run.target.username)
+    logger.info(f"Cleaning up run {id} local working directory {run.cluster.workdir}")
+    remove_logs(run.guid, run.cluster.name)
+    logger.info(f"Cleaning up run {id} cluster working directory {run.cluster.workdir}")
+    ssh = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
     with ssh:
         execute_command(
             ssh_client=ssh,
-            pre_command=run.target.pre_commands,
-            command=f"rm -r {join(run.target.workdir, run.work_dir)}",
-            directory=run.target.workdir,
+            pre_command=run.cluster.pre_commands,
+            command=f"rm -r {join(run.cluster.workdir, run.work_dir)}",
+            directory=run.cluster.workdir,
             allow_stderr=True)
     run.delete()
 
 
 @app.task()
-def clean_singularity_cache(target: str):
-    target = Target.objects.get(name=target)
-    ssh = SSH(target.hostname, target.port, target.username)
+def clean_singularity_cache(cluster: str):
+    cluster = Cluster.objects.get(name=cluster)
+    ssh = SSH(cluster.hostname, cluster.port, cluster.username)
     with ssh:
         execute_command(
             ssh_client=ssh,
-            pre_command=target.pre_commands,
+            pre_command=cluster.pre_commands,
             command="singularity cache clean",
-            directory=target.workdir,
+            directory=cluster.workdir,
             allow_stderr=True)
 
 
 @app.task()
-def run_command(target_name: str, command: str, pre_command: str = None):
-    target = Target.objects.get(name=target_name)
-    ssh = SSH(target.hostname, target.port, target.username)
+def run_command(cluster_name: str, command: str, pre_command: str = None):
+    cluster = Cluster.objects.get(name=cluster_name)
+    ssh = SSH(cluster.hostname, cluster.port, cluster.username)
     with ssh:
         lines = execute_command(
             ssh_client=ssh,
-            pre_command=target.pre_commands + '' if pre_command is None else f"&& {pre_command}",
+            pre_command=cluster.pre_commands + '' if pre_command is None else f"&& {pre_command}",
             command=command,
-            directory=target.workdir,
+            directory=cluster.workdir,
             allow_stderr=True)

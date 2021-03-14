@@ -10,7 +10,7 @@
         <br />
         <br />
         <b-container class="pl-3 pt-3" fluid>
-            <b-row align-v="center" align-h="center" v-if="serversLoading">
+            <b-row align-v="center" align-h="center" v-if="clustersLoading">
                 <b-col align-self="end" class="text-center">
                     <b-spinner
                         type="grow"
@@ -20,7 +20,7 @@
                 </b-col>
             </b-row>
             <b-row
-                v-else-if="servers.length > 0"
+                v-else-if="clusters.length > 0"
                 align-v="center"
                 align-h="center"
             >
@@ -34,7 +34,7 @@
                                         : 'text-dark'
                                 "
                             >
-                                Public Servers
+                                Public Clusters
                             </h3> </b-col
                         ><b-col
                             ><b-input-group size="sm"
@@ -72,8 +72,8 @@
                         class="justify-content-center mt-3"
                     >
                         <b-card
-                            v-for="target in filteredServers"
-                            v-bind:key="target.name"
+                            v-for="cluster in filteredClusters"
+                            v-bind:key="cluster.name"
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             :header-bg-variant="
                                 profile.darkMode ? 'dark' : 'white'
@@ -97,31 +97,31 @@
                                             "
                                             variant="outline-dark"
                                             v-b-tooltip.hover
-                                            @click="serverSelected(target)"
+                                            @click="clusterSelected(cluster)"
                                         >
-                                            {{ target.name }}
+                                            {{ cluster.name }}
                                         </b-link>
                                     </h2>
                                     <b-badge
-                                        v-if="!target.public"
+                                        v-if="!cluster.public"
                                         variant="warning"
                                         >Private</b-badge
                                     >
                                     <br />
                                     <small>
-                                        {{ target.description }}
+                                        {{ cluster.description }}
                                     </small>
                                     <br />
                                 </b-col>
                                 <b-col cols="1"></b-col>
                             </b-row>
                             <b-img
-                                v-if="target.logo"
+                                v-if="cluster.logo"
                                 rounded
                                 class="card-img-right overflow-hidden"
                                 style="max-height: 5rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                 right
-                                :src="target.logo"
+                                :src="cluster.logo"
                             ></b-img>
                             <i
                                 v-else
@@ -134,48 +134,10 @@
                     <b-row
                         class="text-center"
                         v-if="
-                            filteredServers.length === 0 && servers.length !== 0
+                            filteredClusters.length === 0 && clusters.length !== 0
                         "
-                        ><b-col>No servers matched your search.</b-col></b-row
+                        ><b-col>No clusters matched your search.</b-col></b-row
                     >
-                    <!--<b-card-group deck columns class="justify-content-center">
-                        <b-card
-                            v-for="target in targets"
-                            v-bind:key="target.name"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            border-variant="default"
-                            :header-border-variant="
-                                profile.darkMode ? 'secondary' : 'default'
-                            "
-                            :text-variant="profile.darkMode ? 'white' : 'dark'"
-                            style="min-width: 30rem; max-width: 40rem;"
-                            class="overflow-hidden mb-4"
-                        >
-                        </b-card>
-                        <b-row align-v="center">
-                            <b-col
-                                style="color: white; cursor: pointer"
-                                @click="targetSelected(target)"
-                            >
-                                <h5
-                                    :class="
-                                        profile.darkMode ? 'text-white' : 'text-dark'
-                                    "
-                                >
-                                    {{ target.name }}
-                                    <small
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-warning'
-                                                : 'text-dark'
-                                        "
-                                        >({{ target.hostname }})</small
-                                    >
-                                </h5>
-                            </b-col>
-                        </b-row>
-                    </b-card-group>-->
                 </b-col>
             </b-row>
             <b-row align-h="center" class="text-center" v-else>
@@ -194,44 +156,44 @@ import router from '@/router';
 import { mapGetters } from 'vuex';
 
 export default {
-    name: 'targets.vue',
+    name: 'clusters',
     data: function() {
         return {
-            servers: [],
-            serversLoading: false,
+            clusters: [],
+            clustersLoading: false,
             searchText: '',
             includeTags: false
         };
     },
     mounted() {
-        this.loadServers();
+        this.loadClusters();
     },
     computed: {
         ...mapGetters(['profile', 'users']),
-        filteredServers() {
-            return this.servers.filter(s => s.name.includes(this.searchText));
+        filteredClusters() {
+            return this.clusters.filter(cluster => cluster.name.includes(this.searchText));
         }
     },
     methods: {
-        loadServers() {
-            this.serversLoading = true;
+        loadClusters() {
+            this.clustersLoading = true;
             axios
-                .get('/apis/v1/servers/get_all/')
+                .get('/apis/v1/clusters/get_all/')
                 .then(response => {
-                    this.servers = response.data.servers;
-                    this.serversLoading = false;
+                    this.clusters = response.data.clusters;
+                    this.clustersLoading = false;
                 })
                 .catch(error => {
-                    this.serversLoading = false;
+                    this.clustersLoading = false;
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
         },
-        serverSelected(server) {
+        clusterSelected(cluster) {
             router.push({
-                name: 'server',
+                name: 'cluster',
                 params: {
-                    name: server.name
+                    name: cluster.name
                 }
             });
         }

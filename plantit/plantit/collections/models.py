@@ -2,23 +2,18 @@ from enum import Enum
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.utils import timezone
-from django.utils.translation import gettext_lazy
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
 
 
-class DirectoryRole(Enum):
+class CollectionRole(Enum):
     read = 'READ'
     write = 'WRITE'
 
 
-class DirectoryPolicy(models.Model):
+class CollectionAccessPolicy(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owner", on_delete=models.CASCADE)
     guest = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="guest", on_delete=models.CASCADE)
-    role = EnumChoiceField(DirectoryRole, default=DirectoryRole.read)
+    role = EnumChoiceField(CollectionRole, default=CollectionRole.read)
     path = models.CharField(max_length=250)
 
 

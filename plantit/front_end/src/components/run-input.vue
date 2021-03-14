@@ -63,15 +63,15 @@
                 <b-row
                     ><b-col class="text-center"
                         ><b-spinner
-                            v-if="sharedDataLoading"
+                            v-if="sharedCollectionsLoading"
                             type="grow"
                             variant="secondary"
                         ></b-spinner></b-col
                 ></b-row>
-                <b-row v-if="directoriesShared.length > 0">
+                <b-row v-if="sharedCollections.length > 0">
                     <b-col>
                         <datatree
-                            v-for="node in directoriesShared"
+                            v-for="node in sharedCollections"
                             v-bind:key="node.path"
                             v-bind:node="node"
                             :select="kind"
@@ -83,7 +83,7 @@
                             "
                         ></datatree></b-col></b-row
                 ><b-row
-                    v-if="!sharedDataLoading && directoriesShared.length === 0"
+                    v-if="!sharedCollectionsLoading && sharedCollections.length === 0"
                     ><b-col>No shared directories.</b-col></b-row
                 ></b-tab
             >
@@ -158,8 +158,8 @@ export default {
             userDataLoading: true,
             publicData: null,
             userData: null,
-            directoriesShared: [],
-            sharedDataLoading: true,
+            sharedCollections: [],
+            sharedCollectionsLoading: true,
             path: '',
             currentTab: 0
         };
@@ -215,7 +215,7 @@ export default {
             this.path = this.defaultPath;
         }
         this.publicDataLoading = false;
-        await this.loadDirectoryPolicies();
+        await this.loadSharedCollections();
     },
     methods: {
         isShared(path) {
@@ -223,18 +223,17 @@ export default {
             let user = split[3];
             return user !== this.profile.djangoProfile.username;
         },
-        async loadDirectoryPolicies() {
-            this.sharedDataLoading = true;
+        async loadSharedCollections() {
+            this.sharedCollectionsLoading = true;
             await axios
-                .get(`/apis/v1/stores/get_directories_shared/`)
+                .get(`/apis/v1/collections/shared/`)
                 .then(response => {
-                    // this.directoryPolicies = response.data;
-                    this.directoriesShared = response.data;
-                    this.sharedDataLoading = false;
+                    this.sharedCollections = response.data;
+                    this.sharedCollectionsLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.sharedDataLoading = false;
+                    this.sharedCollectionsLoading = false;
                     throw error;
                 });
         },

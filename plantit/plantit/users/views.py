@@ -19,6 +19,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from plantit.clusters.utils import map_cluster
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
 from plantit.utils import get_csrf_token
@@ -224,6 +225,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'dark_mode': user.profile.dark_mode,
+                'interactive_mode': map_cluster(user.profile.interactive_mode) if user.profile.interactive_mode is not None else None,
                 'github_token': user.profile.github_token,
                 'cyverse_token': user.profile.cyverse_token
             }

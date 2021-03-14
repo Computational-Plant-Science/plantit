@@ -349,7 +349,7 @@
                                             </h4>
                                         </b-col>
                                     </b-row>
-                                  <b-row
+                                    <b-row
                                         ><b-col
                                             ><b
                                                 :class="
@@ -358,7 +358,8 @@
                                                         : 'text-dark'
                                                 "
                                             >
-                                                Configure parameters for this run.
+                                                Configure parameters for this
+                                                run.
                                             </b>
                                         </b-col>
                                     </b-row>
@@ -367,8 +368,7 @@
                                         style="border-color: gray"
                                     />
                                     <b-row
-                                        ><b-col
-                                            >
+                                        ><b-col>
                                             <b-row
                                                 class="mt-1"
                                                 v-for="param in params"
@@ -645,14 +645,17 @@
                                                 "
                                             >
                                                 <i
-                                                    v-if="target.name !== ''"
+                                                    v-if="
+                                                        selectedCluster.name !==
+                                                            ''
+                                                    "
                                                     class="fas fa-server fa-fw text-warning"
                                                 ></i>
                                                 <i
                                                     v-else
                                                     class="fas fa-server fa-fw"
                                                 ></i>
-                                                Server
+                                                Cluster
                                             </h4>
                                         </b-col>
                                     </b-row>
@@ -664,7 +667,7 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Select a server to submit this run
+                                            Select a cluster to submit this run
                                             to.
                                         </b>
                                         <hr
@@ -679,7 +682,7 @@
                                             active-nav-item-class="bg-secondary text-dark"
                                         >
                                             <b-tab
-                                                title="Your servers"
+                                                title="Your clusters"
                                                 :title-link-class="
                                                     profile.darkMode
                                                         ? 'text-white'
@@ -693,7 +696,124 @@
                                             >
                                                 <b-row
                                                     class="text-right"
-                                                    v-for="tgt in targets"
+                                                    v-for="cluster in clusters"
+                                                    v-bind:key="cluster.name"
+                                                >
+                                                    <b-col md="auto"
+                                                        ><b-button
+                                                            size="md"
+                                                            class="text-left pt-2"
+                                                            @click="
+                                                                clusterSelected(
+                                                                    cluster
+                                                                )
+                                                            "
+                                                            :variant="
+                                                                profile.darkMode
+                                                                    ? 'dark'
+                                                                    : 'white'
+                                                            "
+                                                            :disabled="
+                                                                clusterUnsupported(
+                                                                    cluster
+                                                                ) ||
+                                                                    cluster.disabled
+                                                            "
+                                                            >{{
+                                                                cluster.name
+                                                            }}</b-button
+                                                        ></b-col
+                                                    >
+                                                    <b-col align-self="end">
+                                                        <small
+                                                            >{{
+                                                                cluster.max_cores
+                                                            }}
+                                                            cores,
+                                                            {{
+                                                                cluster.max_processes
+                                                            }}
+                                                            processes, </small
+                                                        ><span
+                                                            v-if="
+                                                                parseInt(
+                                                                    cluster.max_mem
+                                                                ) >=
+                                                                    parseInt(
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .resources
+                                                                            .mem
+                                                                    ) &&
+                                                                    parseInt(
+                                                                        cluster.max_mem
+                                                                    ) > 0
+                                                            "
+                                                            >{{
+                                                                cluster.max_mem
+                                                            }}
+                                                            GB memory</span
+                                                        >
+                                                        <span
+                                                            v-else-if="
+                                                                parseInt(
+                                                                    cluster.max_mem
+                                                                ) > 0
+                                                            "
+                                                            class="text-danger"
+                                                            >{{
+                                                                cluster.max_mem
+                                                            }}
+                                                            GB memory</span
+                                                        >
+                                                        <span
+                                                            v-else-if="
+                                                                parseInt(
+                                                                    cluster.max_mem
+                                                                ) === -1
+                                                            "
+                                                            >virtual
+                                                            memory</span
+                                                        ><span
+                                                            v-if="cluster.gpu"
+                                                        >
+                                                            , GPU
+                                                        </span>
+                                                        <span v-else
+                                                            >, No GPU
+                                                        </span></b-col
+                                                    >
+                                                </b-row>
+                                                <b-row
+                                                    align-h="center"
+                                                    class="text-center"
+                                                    v-if="
+                                                        !publicClustersLoading &&
+                                                            clusters.length ===
+                                                                0
+                                                    "
+                                                >
+                                                    <b-col>
+                                                        None to show.
+                                                    </b-col>
+                                                </b-row>
+                                            </b-tab>
+                                            <b-tab
+                                                title="Public clusters"
+                                                :title-link-class="
+                                                    profile.darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'theme-dark m-0 p-3'
+                                                        : 'theme-light m-0 p-3'
+                                                "
+                                            >
+                                                <b-row
+                                                    class="text-right"
+                                                    v-for="tgt in publicClusters"
                                                     v-bind:key="tgt.name"
                                                 >
                                                     <b-col md="auto"
@@ -701,7 +821,7 @@
                                                             size="md"
                                                             class="text-left pt-2"
                                                             @click="
-                                                                targetSelected(
+                                                                clusterSelected(
                                                                     tgt
                                                                 )
                                                             "
@@ -711,7 +831,7 @@
                                                                     : 'white'
                                                             "
                                                             :disabled="
-                                                                targetUnsupported(
+                                                                clusterUnsupported(
                                                                     tgt
                                                                 ) ||
                                                                     tgt.disabled
@@ -777,111 +897,24 @@
                                                         </span></b-col
                                                     >
                                                 </b-row>
-                                            </b-tab>
-                                            <b-tab
-                                                title="Public servers"
-                                                :title-link-class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-dark m-0 p-3'
-                                                        : 'theme-light m-0 p-3'
-                                                "
-                                            >
                                                 <b-row
-                                                    class="text-right"
-                                                    v-for="tgt in publicTargets"
-                                                    v-bind:key="tgt.name"
+                                                    align-h="center"
+                                                    class="text-center"
+                                                    v-if="
+                                                        !clustersLoading &&
+                                                            publicClusters.length ===
+                                                                0
+                                                    "
                                                 >
-                                                    <b-col md="auto"
-                                                        ><b-button
-                                                            size="md"
-                                                            class="text-left pt-2"
-                                                            @click="
-                                                                targetSelected(
-                                                                    tgt
-                                                                )
-                                                            "
-                                                            :variant="
-                                                                profile.darkMode
-                                                                    ? 'dark'
-                                                                    : 'white'
-                                                            "
-                                                            :disabled="
-                                                                targetUnsupported(
-                                                                    tgt
-                                                                ) ||
-                                                                    tgt.disabled
-                                                            "
-                                                            >{{
-                                                                tgt.name
-                                                            }}</b-button
-                                                        ></b-col
-                                                    >
-                                                    <b-col align-self="end">
-                                                        <small
-                                                            >{{ tgt.max_cores }}
-                                                            cores,
-                                                            {{
-                                                                tgt.max_processes
-                                                            }}
-                                                            processes, </small
-                                                        ><span
-                                                            v-if="
-                                                                parseInt(
-                                                                    tgt.max_mem
-                                                                ) >=
-                                                                    parseInt(
-                                                                        getWorkflow
-                                                                            .config
-                                                                            .resources
-                                                                            .mem
-                                                                    ) &&
-                                                                    parseInt(
-                                                                        tgt.max_mem
-                                                                    ) > 0
-                                                            "
-                                                            >{{
-                                                                tgt.max_mem
-                                                            }}
-                                                            GB memory</span
-                                                        >
-                                                        <span
-                                                            v-else-if="
-                                                                parseInt(
-                                                                    tgt.max_mem
-                                                                ) > 0
-                                                            "
-                                                            class="text-danger"
-                                                            >{{
-                                                                tgt.max_mem
-                                                            }}
-                                                            GB memory</span
-                                                        >
-                                                        <span
-                                                            v-else-if="
-                                                                parseInt(
-                                                                    tgt.max_mem
-                                                                ) === -1
-                                                            "
-                                                            >virtual
-                                                            memory</span
-                                                        ><span v-if="tgt.gpu">
-                                                            , GPU
-                                                        </span>
-                                                        <span v-else
-                                                            >, No GPU
-                                                        </span></b-col
-                                                    >
+                                                    <b-col>
+                                                        None to show.
+                                                    </b-col>
                                                 </b-row>
                                             </b-tab>
                                         </b-tabs>
                                         <b-row
                                             align-h="center"
-                                            v-if="targetsLoading"
+                                            v-if="clustersLoading"
                                         >
                                             <b-spinner
                                                 type="grow"
@@ -889,35 +922,25 @@
                                                 variant="secondary"
                                             ></b-spinner>
                                         </b-row>
-                                        <b-row
-                                            align-h="center"
-                                            class="text-center"
-                                            v-else-if="
-                                                !targetsLoading &&
-                                                    targets.length === 0
-                                            "
-                                        >
-                                            <b-col>
-                                                None to show.
-                                            </b-col>
-                                        </b-row>
                                         <b-alert
                                             v-else
                                             class="mt-1"
                                             :variant="
-                                                target.name !== ''
+                                                selectedCluster.name !== ''
                                                     ? 'success'
                                                     : 'danger'
                                             "
                                             :show="true"
                                             >Selected:
                                             {{
-                                                target.name !== ''
-                                                    ? target.name
+                                                selectedCluster.name !== ''
+                                                    ? selectedCluster.name
                                                     : 'None'
                                             }}
                                             <i
-                                                v-if="target.name !== ''"
+                                                v-if="
+                                                    selectedCluster.name !== ''
+                                                "
                                                 class="fas fa-check text-success"
                                             ></i>
                                             <i
@@ -962,7 +985,7 @@
                             <b-row class="pt-1">
                                 <b-col align-self="end"
                                     >{{
-                                        `After ${task.interval.every} ${task.interval.period} on ${task.target.name}`
+                                        `After ${task.interval.every} ${task.interval.period} on ${task.cluster.name}`
                                     }}<br /><b-row
                                         ><b-col
                                             md="auto"
@@ -1024,7 +1047,7 @@
                             <b-row class="pt-1">
                                 <b-col
                                     >{{
-                                        `Every ${task.interval.every} ${task.interval.period} on ${task.target.name}`
+                                        `Every ${task.interval.every} ${task.interval.period} on ${task.cluster.name}`
                                     }}<br /><b-row
                                         ><b-col
                                             md="auto"
@@ -1082,7 +1105,7 @@
                                 size="sm"
                                 v-b-tooltip.hover
                                 title="Create Periodic Task"
-                                :disabled="target.role !== 'own'"
+                                :disabled="cluster.role !== 'own'"
                                 v-b-modal.createTask
                             >
                                 <i class="fas fa-plus fa-fw"></i>
@@ -1154,7 +1177,7 @@
                             >
                             <small> on </small>
                             <b-badge class="ml-0 mr-0" variant="secondary">{{
-                                run.target
+                                run.cluster
                             }}</b-badge
                             ><small
                                 v-if="run.job_status === 'Scheduled'"
@@ -1192,7 +1215,7 @@
                 :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
                 :header-border-variant="profile.darkMode ? 'dark' : 'white'"
                 :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :title="'Authenticate with server ' + this.target.name"
+                :title="'Authenticate with ' + this.selectedCluster.name"
                 @ok="onStart"
             >
                 <b-form-input
@@ -1246,7 +1269,7 @@ export default {
         return {
             authenticationUsername: '',
             authenticationPassword: '',
-            currentDeploymentTargetTab: 0,
+            currentClusterTab: 0,
             showStatusAlert: false,
             statusAlertMessage: '',
             submitType: 'Now',
@@ -1268,7 +1291,7 @@ export default {
                 filetypes: []
             },
             inputSelectedPatterns: [],
-            outputDirectory: false,
+            outputCollection: false,
             outputSpecified: false,
             output: {
                 from: '',
@@ -1326,13 +1349,13 @@ export default {
                     label: 'Actions'
                 }
             ],
-            target: {
+            selectedCluster: {
                 name: ''
             },
-            targets: [],
-            publicTargets: [],
-            targetsLoading: false,
-            targetFields: [
+            clusters: [],
+            publicClusters: [],
+            clustersLoading: false,
+            clusterFields: [
                 {
                     key: 'name',
                     label: ''
@@ -1380,8 +1403,8 @@ export default {
         this.validate();
         this.populateComponents();
 
-        this.loadTargets();
-        this.loadPublicTargets();
+        this.loadClusters();
+        this.loadPublicClusters();
         this.loadRuns();
         this.loadDelayedRuns();
         this.loadRepeatingRuns();
@@ -1432,7 +1455,7 @@ export default {
                     } periodic run (every ${
                         response.data.interval.every
                     } ${response.data.interval.period.toLowerCase()} on ${
-                        response.data.target.name
+                        response.data.cluster.name
                     })`;
                     this.showStatusAlert = true;
                 })
@@ -1660,7 +1683,7 @@ export default {
                         : this.params;
                 this.input = flowConfig.input;
                 this.output = flowConfig.output;
-                this.target = flowConfig.target;
+                this.selectedCluster = flowConfig.cluster;
             }
         },
         inputSelected(node) {
@@ -1669,41 +1692,41 @@ export default {
         outputSelected(node) {
             this.output.to = node.path;
         },
-        targetSelected(target) {
-            this.target = target;
+        clusterSelected(cluster) {
+            this.selectedCluster = cluster;
         },
-        targetUnsupported(target) {
+        clusterUnsupported(cluster) {
             return (
-                (parseInt(target.max_mem) !== -1 &&
-                    parseInt(target.max_mem) <
+                (parseInt(cluster.max_mem) !== -1 &&
+                    parseInt(cluster.max_mem) <
                         parseInt(this.getWorkflow.config.resources.mem)) ||
-                parseInt(target.max_cores) <
+                parseInt(cluster.max_cores) <
                     parseInt(this.getWorkflow.config.resources.cores) ||
-                parseInt(target.max_processes) <
+                parseInt(cluster.max_processes) <
                     parseInt(this.getWorkflow.config.resources.processes)
             );
             // TODO walltime
         },
-        loadTargets: function() {
-            this.targetsLoading = true;
+        loadClusters: function() {
+            this.clustersLoading = true;
             return axios
-                .get(`/apis/v1/servers/get_by_username/`)
+                .get(`/apis/v1/clusters/get_by_username/`)
                 .then(response => {
-                    this.targets = response.data.servers;
-                    this.targetsLoading = false;
+                    this.clusters = response.data.clusters;
+                    this.clustersLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        loadPublicTargets: function() {
-            this.publicTargetsLoading = true;
+        loadPublicClusters: function() {
+            this.publicClustersLoading = true;
             return axios
-                .get(`/apis/v1/servers/get_all/`)
+                .get(`/apis/v1/clusters/get_all/`)
                 .then(response => {
-                    this.publicTargets = response.data.servers;
-                    this.publicTargetsLoading = false;
+                    this.publicClusters = response.data.clusters;
+                    this.publicClustersLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1716,52 +1739,11 @@ export default {
         },
         showAuthenticateModal() {
             this.$bvModal.show('authenticate');
-            // const h = this.$createElement;
-            // const titleVNode = h('div', {
-            //     class: [this.profile.darkMode ? 'text-white' : 'text-dark'],
-            //     domProps: { innerHTML: `Authenticate with ${this.target.name}` }
-            // });
-            // const messageVNode = h('div', { class: [''] }, [
-            //     h('b-form-input', {
-            //         class: ['text-left'],
-            //         props: {
-            //             type: 'text',
-            //             placeholder: 'Your username',
-            //             'v-model': this.authenticationUsername
-            //         },
-            //         me
-            //     }),
-            //     h('b-form-input', {
-            //         class: ['text-left'],
-            //         props: {
-            //             type: 'password',
-            //             placeholder: 'Your password',
-            //             'v-model': this.authenticationPassword
-            //         }
-            //     })
-            // ]);
-            // this.$bvModal
-            //     .msgBoxOk([messageVNode], {
-            //         title: [titleVNode],
-            //         buttonSize: 'sm',
-            //         centered: true,
-            //         close: true,
-            //         size: 'sm',
-            //         headerTextVariant: this.profile.darkMode ? 'white' : 'dark',
-            //         headerBgVariant: this.profile.darkMode ? 'dark' : 'white',
-            //         footerBgVariant: this.profile.darkMode ? 'dark' : 'white',
-            //         bodyBgVariant: this.profile.darkMode ? 'dark' : 'white',
-            //         headerBorderVariant: this.profile.darkMode ? 'dark' : 'white',
-            //         footerBorderVariant: this.profile.darkMode ? 'dark' : 'white'
-            //     })
-            //     .then(() => {
-            //         this.onStart();
-            //     });
         },
         onStart() {
             if (
                 !this.getWorkflow.config.resources &&
-                this.target.name !== 'Sandbox'
+                this.selectedCluster.name !== 'Sandbox'
             ) {
                 alert('This flow can only run in the Sandbox.');
                 return;
@@ -1770,14 +1752,14 @@ export default {
             // prepare run definition
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
-            let target = this.target;
+            let cluster = this.selectedCluster;
             if (this.getWorkflow.config.resources)
-                target['resources'] = this.getWorkflow.config.resources;
+                cluster['resources'] = this.getWorkflow.config.resources;
             let config = {
                 name: this.getWorkflow.config.name,
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
-                target: target,
+                cluster: cluster,
                 commands: this.getWorkflow.config.commands,
                 tags: this.tags
             };
@@ -1796,7 +1778,7 @@ export default {
             }
             if (this.output !== undefined) {
                 config.output = this.output;
-                if (!this.outputDirectory) delete config.output['to'];
+                if (!this.outputCollection) delete config.output['to'];
             }
 
             // save config
@@ -1854,13 +1836,13 @@ export default {
                     .then(response => {
                         this.statusAlertMessage =
                             response.status === 200 && response.data.created
-                                ? `Scheduled run ${this.$router.currentRoute.params.name} on ${config.target.name}`
-                                : `Failed to schedule run ${this.$router.currentRoute.params.name} on ${config.target.name}`;
+                                ? `Scheduled run ${this.$router.currentRoute.params.name} on ${config.cluster.name}`
+                                : `Failed to schedule run ${this.$router.currentRoute.params.name} on ${config.cluster.name}`;
                         this.showStatusAlert = true;
                     })
                     .catch(error => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.target.name}`;
+                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedCluster.name}`;
                         this.showStatusAlert = true;
                         throw error;
                     });
@@ -1882,13 +1864,13 @@ export default {
                         this.loadRepeatingRuns();
                         this.statusAlertMessage =
                             response.status === 200 && response.data.created
-                                ? `Scheduled repeating run ${this.$router.currentRoute.params.name} on ${config.target.name}`
-                                : `Failed to schedule repeating run ${this.$router.currentRoute.params.name} on ${config.target.name}`;
+                                ? `Scheduled repeating run ${this.$router.currentRoute.params.name} on ${config.cluster.name}`
+                                : `Failed to schedule repeating run ${this.$router.currentRoute.params.name} on ${config.cluster.name}`;
                         this.showStatusAlert = true;
                     })
                     .catch(error => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.target.name}`;
+                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedCluster.name}`;
                         this.showStatusAlert = true;
                         throw error;
                     });
@@ -1904,7 +1886,7 @@ export default {
             return wf;
         },
         mustAuthenticate() {
-            return !this.target.policies.some(
+            return !this.selectedCluster.policies.some(
                 p =>
                     p.user === this.profile.djangoProfile.username &&
                     (p.role.toLowerCase() === 'use' ||
@@ -1952,7 +1934,7 @@ export default {
         },
         outputReady: function() {
             if (
-                this.outputDirectory &&
+                this.outputCollection &&
                 this.getWorkflow &&
                 this.getWorkflow.config &&
                 this.getWorkflow.config.input !== undefined &&
@@ -1968,7 +1950,7 @@ export default {
                 this.paramsReady &&
                 this.inputReady &&
                 this.outputReady &&
-                this.target.name !== ''
+                this.selectedCluster.name !== ''
             );
         }
     }

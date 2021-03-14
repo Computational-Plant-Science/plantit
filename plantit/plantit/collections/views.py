@@ -12,21 +12,21 @@ from django.utils import timezone
 from rest_framework.decorators import api_view
 
 from plantit.notifications.models import DirectoryPolicyNotification
-from plantit.stores.models import DirectoryPolicy, DirectoryRole
-from plantit.stores.utils import map_directory_policy
+from plantit.collections.models import CollectionAccessPolicy, CollectionRole
+from plantit.collections.utils import map_collection_policy
 
 
 @login_required
-def get_shared_directories(request):  # directories the current user has shared
+def sharing(request):  # directories the current user is sharing
     owner = request.user
-    policies = DirectoryPolicy.objects.filter(owner=owner)
-    return JsonResponse([map_directory_policy(policy) for policy in policies], safe=False)
+    policies = CollectionAccessPolicy.objects.filter(owner=owner)
+    return JsonResponse([map_collection_policy(policy) for policy in policies], safe=False)
 
 
 @login_required
-def get_directories_shared(request):  # directories shared with the current user
+def shared(request):  # directories shared with the current user
     guest = request.user
-    policies = DirectoryPolicy.objects.filter(guest=guest)
+    policies = CollectionAccessPolicy.objects.filter(guest=guest)
 
     urls = [f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={policy.path}" for policy in policies]
     headers = {
@@ -40,7 +40,7 @@ def get_directories_shared(request):  # directories shared with the current user
 
 @api_view(['POST'])
 @login_required
-def share_directory(request):
+def share(request):
     owner = request.user
     guests = request.data['sharing']
     policies = []
@@ -52,11 +52,11 @@ def share_directory(request):
             return HttpResponseNotFound()
 
         path = guest['paths'][0]['path']
-        role = DirectoryRole.read if guest['paths'][0]['permission'].lower() == 'read' else DirectoryRole.write
-        policy, created = DirectoryPolicy.objects.get_or_create(owner=owner, guest=user, role=role, path=path)
+        role = CollectionRole.read if guest['paths'][0]['permission'].lower() == 'read' else CollectionRole.write
+        policy, created = CollectionAccessPolicy.objects.get_or_create(owner=owner, guest=user, role=role, path=path)
         policies.append({
             'created': created,
-            'policy': map_directory_policy(policy)
+            'policy': map_collection_policy(policy)
         })
 
         notification = DirectoryPolicyNotification.objects.create(
@@ -73,7 +73,7 @@ def share_directory(request):
                 'created': notification.created.isoformat(),
                 'message': notification.message,
                 'read': notification.read,
-                'policy': map_directory_policy(notification.policy)
+                'policy': map_collection_policy(notification.policy)
             }
         })
 
@@ -87,7 +87,7 @@ def share_directory(request):
 
 @api_view(['POST'])
 @login_required
-def unshare_directory(request):
+def unshare(request):
     owner = request.user
     guest_username = request.data['user']
     path = request.data['path']
@@ -96,7 +96,7 @@ def unshare_directory(request):
     if role_str.lower() != 'read' and role_str.lower() != 'write':
         return HttpResponseBadRequest(f"Unsupported role {role_str} (allowed: read, write)")
     else:
-        role = DirectoryRole.read if role_str.lower() == 'read' else DirectoryRole.write
+        role = CollectionRole.read if role_str.lower() == 'read' else CollectionRole.write
 
     try:
         guest = User.objects.get(username=guest_username)
@@ -104,7 +104,7 @@ def unshare_directory(request):
         return HttpResponseNotFound()
 
     try:
-        policy = DirectoryPolicy.objects.get(owner=owner, guest=guest, role=role, path=path)
+        policy = CollectionAccessPolicy.objects.get(owner=owner, guest=guest, role=role, path=path)
     except:
         return HttpResponseNotFound()
 
@@ -122,7 +122,7 @@ def unshare_directory(request):
             'created': notification.created.isoformat(),
             'message': notification.message,
             'read': notification.read,
-            'policy': map_directory_policy(notification.policy)
+            'policy': map_collection_policy(notification.policy)
         }
     })
 

@@ -2,8 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from plantit.stores.models import DirectoryPolicy
-from plantit.targets.models import TargetPolicy
+from plantit.collections.models import CollectionAccessPolicy
+from plantit.clusters.models import ClusterAccessPolicy
 
 
 class Notification(models.Model):
@@ -18,8 +18,8 @@ class Notification(models.Model):
 
 
 class DirectoryPolicyNotification(Notification):
-    policy = models.ForeignKey(DirectoryPolicy, on_delete=models.CASCADE)
+    policy = models.ForeignKey(CollectionAccessPolicy, on_delete=models.CASCADE)
 
 
 class TargetPolicyNotification(Notification):
-    policy = models.ForeignKey(TargetPolicy, on_delete=models.CASCADE)
+    policy = models.ForeignKey(ClusterAccessPolicy, on_delete=models.CASCADE)

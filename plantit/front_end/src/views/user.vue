@@ -315,10 +315,10 @@
                                             </h5></b-col
                                         ></b-row
                                     >
-                                    <b-row v-if="directoriesShared.length > 0">
+                                    <b-row v-if="sharedCollections.length > 0">
                                         <b-col>
                                             <datatree
-                                                v-for="node in directoriesShared"
+                                                v-for="node in sharedCollections"
                                                 v-bind:key="node.path"
                                                 v-bind:node="node"
                                                 select="directory"
@@ -352,12 +352,12 @@
                                             </h5></b-col
                                         ></b-row
                                     >
-                                    <b-row v-if="showUnsharedAlertMessage">
+                                    <b-row v-if="alertEnabled">
                                         <b-col class="m-0 p-0">
                                             <b-alert
-                                                :show="showUnsharedAlertMessage"
+                                                :show="alertEnabled"
                                                 :variant="
-                                                    unsharedAlertMessage.startsWith(
+                                                    alertMessage.startsWith(
                                                         'Failed'
                                                     )
                                                         ? 'danger'
@@ -365,15 +365,15 @@
                                                 "
                                                 dismissible
                                                 @dismissed="
-                                                    showUnsharedAlertMessage = false
+                                                    alertEnabled = false
                                                 "
                                             >
-                                                {{ unsharedAlertMessage }}
+                                                {{ alertMessage }}
                                             </b-alert>
                                         </b-col>
                                     </b-row>
                                     <b-row
-                                        v-for="directory in sharedDirectories"
+                                        v-for="directory in sharingCollections"
                                         v-bind:key="directory.path"
                                     >
                                         <b-col
@@ -395,7 +395,7 @@
                                                         : 'outline-dark'
                                                 "
                                                 @click="
-                                                    unshareDirectory(directory)
+                                                    unshareCollection(directory)
                                                 "
                                                 ><i
                                                     class="fas fa-user-lock fa-fw"
@@ -404,7 +404,8 @@
                                             ></b-col
                                         ></b-row
                                     >
-                                    <b-row v-if="sharedDirectories.length === 0"
+                                    <b-row
+                                        v-if="sharingCollections.length === 0"
                                         ><b-col
                                             ><small
                                                 >You haven't shared any
@@ -483,7 +484,7 @@
                                 :title-link-class="tabLinkClass(3)"
                             >
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(3)">Servers</b>
+                                    <b :class="tabLinkClass(3)">Clusters</b>
                                 </template>
                                 <div>
                                     <b-row
@@ -551,7 +552,7 @@
                                                 : 'theme-light'
                                         "
                                     />
-                                    <b-row v-if="targetsLoading">
+                                    <b-row v-if="clustersLoading">
                                         <b-spinner
                                             type="grow"
                                             label="Loading..."
@@ -561,18 +562,32 @@
                                     <b-row
                                         class="text-center"
                                         v-if="
-                                            !targetsLoading &&
-                                                targets.length === 0
+                                            !clustersLoading &&
+                                                clusters.length === 0
                                         "
                                     >
                                         <b-col>
-                                            None to show.
+                                            You have no cluster permissions. See
+                                            <b-link
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                to="/clusters"
+                                                ><i
+                                                    class="fas fa-server fa-1x fa-fw"
+                                                ></i>
+                                                Clusters</b-link
+                                            >
+                                            to connect or request access to a
+                                            cluster.
                                         </b-col>
                                     </b-row>
                                     <b-row
                                         class="text-right"
-                                        v-for="target in targets"
-                                        v-bind:key="target.name"
+                                        v-for="cluster in clusters"
+                                        v-bind:key="cluster.name"
                                     >
                                         <b-col md="auto"
                                             ><b-button
@@ -585,10 +600,12 @@
                                                         : 'white'
                                                 "
                                                 :disabled="
-                                                    target.role === 'none'
+                                                    cluster.role === 'none'
                                                 "
-                                                @click="targetSelected(target)"
-                                                >{{ target.name }}</b-button
+                                                @click="
+                                                    clusterSelected(cluster)
+                                                "
+                                                >{{ cluster.name }}</b-button
                                             ></b-col
                                         >
                                         <b-col align-self="center text-left"
@@ -599,9 +616,10 @@
                                                         : 'text-dark'
                                                 "
                                                 >{{
-                                                    target.role === 'own'
+                                                    cluster.role === 'own'
                                                         ? '(owner)'
-                                                        : target.role === 'none'
+                                                        : cluster.role ===
+                                                          'none'
                                                         ? '(no access)'
                                                         : '(guest)'
                                                 }}</small
@@ -615,7 +633,7 @@
                                                     : 'text-dark'
                                             "
                                             cols="1"
-                                            ><b>{{ target.max_cores }}</b>
+                                            ><b>{{ cluster.max_cores }}</b>
                                             cores</b-col
                                         >
                                         <b-col
@@ -626,7 +644,7 @@
                                                     : 'text-dark'
                                             "
                                             cols="1"
-                                            ><b>{{ target.max_processes }}</b>
+                                            ><b>{{ cluster.max_processes }}</b>
                                             processes</b-col
                                         >
                                         <b-col
@@ -639,15 +657,17 @@
                                             cols="1"
                                             ><span
                                                 v-if="
-                                                    parseInt(target.max_mem) < 0
+                                                    parseInt(cluster.max_mem) <
+                                                        0
                                                 "
                                                 >Virtual memory</span
                                             >
                                             <span
                                                 v-else-if="
-                                                    parseInt(target.max_mem) > 0
+                                                    parseInt(cluster.max_mem) >
+                                                        0
                                                 "
-                                                >{{ target.max_mem }} GB
+                                                >{{ cluster.max_mem }} GB
                                                 memory</span
                                             >
                                         </b-col>
@@ -660,11 +680,11 @@
                                             "
                                             cols="1"
                                         >
-                                            <span v-if="target.gpu">
+                                            <span v-if="cluster.gpu">
                                                 GPU
                                                 <i
                                                     :class="
-                                                        target.gpu
+                                                        cluster.gpu
                                                             ? 'text-warning'
                                                             : ''
                                                     "
@@ -707,17 +727,16 @@ export default {
     data: function() {
         return {
             currentTab: 0,
-            directoriesShared: [],
-            sharedDirectories: [],
+            sharedCollections: [],
+            sharingCollections: [],
             directoryPolicies: [],
             directoryPolicyNodes: [],
             data: {},
             runs: [],
-            targets: [],
-            targetsLoading: false,
-            showToggleSingularityCacheCleaningAlert: false,
-            showUnsharedAlertMessage: false,
-            unsharedAlertMessage: ''
+            clusters: [],
+            clustersLoading: false,
+            alertEnabled: false,
+            alertMessage: ''
         };
     },
     computed: {
@@ -766,34 +785,19 @@ export default {
     async mounted() {
         await this.$store.dispatch('loadWorkflows');
         await this.$store.dispatch('loadUsers');
-        await this.loadDirectory(
+        await this.loadCollection(
             `/iplant/home/${this.profile.djangoProfile.username}/`,
             this.profile.djangoProfile.cyverse_token
         );
-        await this.loadTargets();
-        await this.loadDirectoryPolicies();
-        await this.loadSharedDirectories();
+        await this.loadClusters();
+        await this.loadSharedCollections();
+        await this.loadSharingCollections();
     },
     methods: {
-        async unshareDirectory(directory) {
-            /** Terrain spec
-             *{
-             *  "sharing": [
-             *    {
-             *      "user": "string",
-             *      "paths: [
-             *        {
-             *          "path": "string",
-             *          "permission": "read",
-             *        }
-             *      ]
-             *    }
-             *  ]
-             *}
-             */
+        async unshareCollection(directory) {
             await axios({
                 method: 'post',
-                url: `/apis/v1/stores/unshare_directory/`,
+                url: `/apis/v1/collections/unshare/`,
                 data: {
                     user: directory.guest,
                     path: directory.path,
@@ -802,99 +806,54 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(() => {
-                    this.loadSharedDirectories();
-                    this.unsharedAlertMessage = `Unshared directory ${
+                    this.loadSharingCollections();
+                    this.alertMessage = `Unshared collection ${
                         this.internalLoaded
                             ? this.internalNode.path
                             : this.node.path
                     } with ${this.sharedUsers.length} user(s)`;
-                    this.showUnsharedAlertMessage = true;
+                    this.alertEnabled = true;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.unsharedAlertMessage = `Failed to unshare directory ${
+                    this.alertMessage = `Failed to unshare collection ${
                         this.internalLoaded
                             ? this.internalNode.path
                             : this.node.path
                     } with ${this.sharedUsers.length} user(s)`;
-                    this.showUnsharedAlertMessage = true;
+                    this.alertEnabled = true;
                     throw error;
                 });
         },
-        async loadSharedDirectories() {
+        async loadSharingCollections() {
             await axios
-                .get(`/apis/v1/stores/get_shared_directories/`)
+                .get(`/apis/v1/collections/sharing/`)
                 .then(response => {
-                    this.sharedDirectories = response.data;
+                    this.sharingCollections = response.data;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        async loadDirectoryPolicies() {
+        async loadSharedCollections() {
             await axios
-                .get(`/apis/v1/stores/get_directories_shared/`)
+                .get(`/apis/v1/collections/shared/`)
                 .then(response => {
-                    this.directoriesShared = response.data;
+                    this.sharedCollections = response.data;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        targetSelected: function(target) {
+        clusterSelected: function(cluster) {
             router.push({
-                name: 'server',
+                name: 'cluster',
                 params: {
-                    name: target.name
+                    name: cluster.name
                 }
             });
-        },
-        toggleSingularityCacheCleanDelay: function(target) {
-            if (target.singularity_cache_clean_enabled)
-                axios
-                    .get(
-                        `/apis/v1/servers/unschedule_singularity_cache_cleaning/?name=${target.name}`
-                    )
-                    .then(() => {
-                        this.showToggleSingularityCacheCleaningMessage = `Disabled Singularity cache cleaning on ${target.name}`;
-                        this.showToggleSingularityCacheCleaningAlert = true;
-                        this.loadTargets();
-                    })
-                    .catch(error => {
-                        Sentry.captureException(error);
-                        if (error.response.status === 500) {
-                            this.showToggleSingularityCacheCleaningMessage = `Failed to disable Singularity cache cleaning on ${target.name}`;
-                            this.showToggleSingularityCacheCleaningAlert = true;
-                            throw error;
-                        }
-                    });
-            else
-                axios
-                    .get(
-                        `/apis/v1/servers/schedule_singularity_cache_cleaning/?name=${
-                            target.name
-                        }&delay=${moment
-                            .duration(
-                                target.singularity_cache_clean_delay,
-                                'seconds'
-                            )
-                            .asSeconds()}`
-                    )
-                    .then(() => {
-                        this.showToggleSingularityCacheCleaningMessage = `Enabled Singularity cache cleaning on ${target.name}`;
-                        this.showToggleSingularityCacheCleaningAlert = true;
-                        this.loadTargets();
-                    })
-                    .catch(error => {
-                        Sentry.captureException(error);
-                        if (error.response.status === 500) {
-                            this.showToggleSingularityCacheCleaningMessage = `Failed to enable Singularity cache cleaning on ${target.name}`;
-                            this.showToggleSingularityCacheCleaningAlert = true;
-                            throw error;
-                        }
-                    });
         },
         prettifyDuration: function(dur) {
             return moment.duration(dur, 'seconds').humanize();
@@ -919,17 +878,17 @@ export default {
                 }
             });
         },
-        async loadTargets() {
-            this.targetsLoading = true;
+        async loadClusters() {
+            this.clustersLoading = true;
             return axios
-                .get(`/apis/v1/servers/get_by_username/`)
+                .get(`/apis/v1/clusters/get_by_username/`)
                 .then(response => {
-                    this.targetsLoading = false;
-                    this.targets = response.data.servers;
+                    this.clustersLoading = false;
+                    this.clusters = response.data.clusters;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.targetsLoading = false;
+                    this.clustersLoading = false;
                     if (error.response.status === 500) throw error;
                 });
         },
@@ -955,14 +914,14 @@ export default {
                     }
                 )
                 .then(response => {
-                    this.directoriesShared.push(response.data);
+                    this.sharedCollections.push(response.data);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        async loadDirectory(path, token) {
+        async loadCollection(path, token) {
             return axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,

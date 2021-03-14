@@ -3,8 +3,8 @@ import Router from 'vue-router';
 import home from './views/home.vue';
 import workflows from './views/explore-workflows.vue';
 import workflow from './views/workflow.vue';
-import server from './views/server.vue';
-import servers from './views/servers.vue';
+import cluster from './views/cluster.vue';
+import clusters from './views/clusters.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
 import run from './views/run.vue';
@@ -56,15 +56,15 @@ let router = new Router({
             }
         },
         {
-            path: '/servers',
-            name: 'servers',
-            component: servers,
+            path: '/clusters',
+            name: 'clusters',
+            component: clusters,
             meta: {
-                title: 'Servers',
+                title: 'Clusters',
                 crumb: [
                     {
-                        text: 'Servers',
-                        href: '/servers'
+                        text: 'Clusters',
+                        href: '/clusters'
                     }
                 ],
                 requiresAuth: true
@@ -93,10 +93,10 @@ let router = new Router({
             }
         },
         {
-            path: '/server/:name',
-            name: 'server',
+            path: '/cluster/:name',
+            name: 'cluster',
             props: true,
-            component: server,
+            component: cluster,
             meta: {
                 title: 'Server',
                 crumb: [],
@@ -135,7 +135,7 @@ let router = new Router({
 router.beforeEach((to, from, next) => {
     if (to.name === 'workflow') to.meta.title = `Workflow: ${to.params.name}`;
     if (to.name === 'run') to.meta.title = `Run: ${to.params.id}`;
-    if (to.name === 'server') to.meta.title = `Server: ${to.params.name}`;
+    if (to.name === 'cluster') to.meta.title = `Cluster: ${to.params.name}`;
     if (to.name === 'user') to.meta.title = `User: ${to.params.username}`;
     if (to.meta.name !== null) document.title = to.meta.title;
     if (to.matched.some(record => record.name === 'workflow')) {
@@ -152,11 +152,11 @@ router.beforeEach((to, from, next) => {
             href: `/run/${to.params.id}`
         });
     }
-    if (to.matched.some(record => record.name === 'server')) {
+    if (to.matched.some(record => record.name === 'cluster')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `Server: ${to.params.name}`,
-            href: `/server/${to.params.name}`
+            text: `Cluster: ${to.params.name}`,
+            href: `/cluster/${to.params.name}`
         });
     }
     if (to.matched.some(record => record.name === 'user')) {

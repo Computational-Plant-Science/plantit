@@ -217,7 +217,7 @@
                         :footer-border-variant="
                             profile.darkMode ? 'dark' : 'white'
                         "
-                        @ok="shareDirectory"
+                        @ok="shareCollection"
                         @close="hideShareDirectoryModal"
                         :id="
                             'shareDirectoryModal' +
@@ -773,28 +773,13 @@ export default {
                         : this.node.label)
             );
         },
-        async shareDirectory() {
-            /** Terrain spec
-             *{
-             *  "sharing": [
-             *    {
-             *      "user": "string",
-             *      "paths: [
-             *        {
-             *          "path": "string",
-             *          "permission": "read",
-             *        }
-             *      ]
-             *    }
-             *  ]
-             *}
-             */
+        async shareCollection() {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
             await axios({
                 method: 'post',
-                url: `/apis/v1/stores/share_directory/`,
+                url: `/apis/v1/collections/share/`,
                 data: {
                     sharing: this.sharedUsers.map(function(user) {
                         return {

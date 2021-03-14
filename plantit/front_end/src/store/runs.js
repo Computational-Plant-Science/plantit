@@ -23,7 +23,6 @@ export const runs = {
     actions: {
         async loadRuns({ commit, rootState }) {
             commit('setRunsLoading', true);
-
             await Promise.all([
                 axios
                     .get(
@@ -52,7 +51,6 @@ export const runs = {
                         throw error;
                     })
             ]);
-
             commit('setRunsLoading', false);
         },
         updateRun({ commit }, run) {

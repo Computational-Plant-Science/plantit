@@ -1,7 +1,7 @@
-from plantit.stores.models import DirectoryPolicy
+from plantit.collections.models import CollectionAccessPolicy
 
 
-def map_directory_policy(policy: DirectoryPolicy):
+def map_collection_policy(policy: CollectionAccessPolicy):
     return {
         'owner': policy.owner.username,
         'guest': policy.guest.username,

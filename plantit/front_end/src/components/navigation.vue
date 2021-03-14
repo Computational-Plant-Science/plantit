@@ -149,7 +149,7 @@
                                     <b-badge
                                         class="ml-0 mr-0"
                                         variant="secondary"
-                                        >{{ run.target }}</b-badge
+                                        >{{ run.cluster }}</b-badge
                                     ><small> {{ prettify(run.updated) }}</small>
                                     <br />
                                     <small class="mr-1"
@@ -275,7 +275,7 @@
                                             <b-badge
                                                 class="ml-0 mr-0"
                                                 variant="secondary"
-                                                >{{ run.target }}</b-badge
+                                                >{{ run.cluster }}</b-badge
                                             ><small>
                                                 {{
                                                     prettify(run.updated)
@@ -749,8 +749,8 @@
                             Workflows
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="Servers"
-                            to="/servers"
+                            title="Clusters"
+                            to="/clusters"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -761,7 +761,7 @@
                             "
                         >
                             <i class="fas fa-server fa-1x fa-fw"></i>
-                            Servers
+                            Clusters
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Users"
@@ -902,6 +902,45 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
+        <b-navbar
+            v-if="sessionLoading || (session !== undefined && session !== null)"
+            toggleable="sm"
+            fixed="bottom"
+            style="border-top: 1px solid lightgray"
+            :variant="profile.darkMode ? 'dark' : 'light'"
+        >
+            <b-navbar-nav v-if="sessionLoading">
+                <b-spinner
+                    :variant="profile.darkMode ? 'light' : 'dark'"
+                    small
+                    class="mr-2"
+                ></b-spinner>
+            </b-navbar-nav>
+            <b-navbar-nav v-else-if="session !== null && session !== undefined">
+                <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                    <i class="fas fa-circle-notch text-success fa-fw mr-2"></i
+                    ><small
+                        >Session open on <b>{{ session.cluster }}</b></small
+                    >
+                </b></b-navbar-nav
+            >
+            <b-navbar-nav
+                class="ml-auto"
+                v-if="session !== null && session !== undefined"
+            >
+                <small>{{ session.output[session.output.length - 1] }}</small>
+            </b-navbar-nav>
+            <b-navbar-nav class="ml-auto" v-if="!sessionLoading">
+                <b-button
+                    :variant="profile.darkMode ? 'dark' : 'light'"
+                    class="text-left m-0"
+                    @click="disconnectSession"
+                >
+                    <i class="fas fa-door-closed fa-1x fa-fw"></i>
+                    Disconnect
+                </b-button>
+            </b-navbar-nav>
+        </b-navbar>
         <b-toast
             auto-hide-delay="10000"
             v-if="$route.name !== 'run' && toastRun !== null"
@@ -914,7 +953,7 @@
                 <b v-if="!toastRun.is_complete">Running</b>
                 <b class="ml-0 mr-0" v-else>{{ toastRun.job_status }}</b>
                 on
-                <b>{{ toastRun.target }}</b>
+                <b>{{ toastRun.cluster }}</b>
                 {{ prettifyShort(toastRun.updated) }}
                 <br />
                 {{
@@ -939,6 +978,9 @@ export default {
     components: {},
     data() {
         return {
+            // cluster authentication
+            authenticationUsername: '',
+            authenticationPassword: '',
             // run status constants
             PENDING: 'PENDING',
             STARTED: 'STARTED',
@@ -948,6 +990,7 @@ export default {
             // websockets
             runSocket: null,
             notificationSocket: null,
+            interactiveSocket: null,
             // user data
             djangoProfile: null,
             cyverseProfile: null,
@@ -985,7 +1028,6 @@ export default {
             ],
             // run search
             runSearchText: ''
-            // notification search
         };
     },
     computed: {
@@ -994,7 +1036,9 @@ export default {
             'runsLoading',
             'runs',
             'notificationsLoading',
-            'notifications'
+            'notifications',
+            'session',
+            'sessionLoading'
         ]),
         runningRuns() {
             return this.runs.filter(r => !r.is_complete);
@@ -1026,6 +1070,7 @@ export default {
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
+        await this.$store.dispatch('loadSession');
         await this.$store.dispatch('loadRuns');
         await this.$store.dispatch('loadNotifications');
 
@@ -1041,6 +1086,14 @@ export default {
             `${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
         );
         this.notificationSocket.onmessage = this.onNotification;
+
+        // subscribe to session channel
+        if (this.session !== null && this.session !== undefined) {
+            this.interactiveSocket = new WebSocket(
+                `${protocol}${window.location.host}/ws/sessions/${this.profile.djangoProfile.username}/${this.session.cluster}/`
+            );
+            this.interactiveSocket.onmessage = this.onSessionEvent;
+        }
     },
     watch: {
         $route() {
@@ -1048,6 +1101,9 @@ export default {
         }
     },
     methods: {
+        async disconnectSession() {
+            await this.$store.dispatch('disconnectSession');
+        },
         markAllRead() {},
         markRead(notification) {
             axios({
@@ -1078,6 +1134,10 @@ export default {
         async onNotification(event) {
             let data = JSON.parse(event.data);
             await this.$store.dispatch('updateNotification', data.notification);
+        },
+        async onSessionEvent(event) {
+            let data = JSON.parse(event.data);
+            await this.$store.dispatch('updateSession', data.session);
         },
         onDelete(run) {
             axios
