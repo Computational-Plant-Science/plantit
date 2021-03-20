@@ -1093,13 +1093,14 @@ export default {
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
-        await this.$store.dispatch('loadProfile');
+        // await this.$store.dispatch('loadProfile');
         await this.$store.dispatch('loadCollectionSession');
         await this.$store.dispatch('loadRuns');
         await this.$store.dispatch('loadNotifications');
 
-        // subscribe to run channel
         let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+
+        // subscribe to run channel
         this.runSocket = new WebSocket(
             `${protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
         );

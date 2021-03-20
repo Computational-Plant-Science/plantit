@@ -46,6 +46,9 @@ export const user = {
                     if (error.response.status === 500) throw error;
                 });
         },
+        logIn({ commit }) {
+            commit('setLoggedIn', true);
+        },
         async loadProfile({ commit }) {
             commit('setProfileLoading', true);
 

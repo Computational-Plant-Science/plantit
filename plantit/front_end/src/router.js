@@ -10,6 +10,7 @@ import users from './views/users.vue';
 import run from './views/run.vue';
 import collection from './views/collection.vue';
 import artifact from './views/artifact.vue';
+import store from './store/store.js';
 
 Vue.use(Router);
 
@@ -156,12 +157,13 @@ let router = new Router({
     ]
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     if (to.name === 'workflow') to.meta.title = `Workflow: ${to.params.name}`;
     if (to.name === 'run') to.meta.title = `Run: ${to.params.id}`;
     if (to.name === 'cluster') to.meta.title = `Cluster: ${to.params.name}`;
     if (to.name === 'user') to.meta.title = `User: ${to.params.username}`;
-    if (to.name === 'collection') to.meta.title = `Collection: ${to.params.path}`;
+    if (to.name === 'collection')
+        to.meta.title = `Collection: ${to.params.path}`;
     if (to.name === 'artifact') to.meta.title = `Artifact: ${to.params.path}`;
     if (to.meta.name !== null) document.title = to.meta.title;
     if (to.matched.some(record => record.name === 'workflow')) {
@@ -206,7 +208,12 @@ router.beforeEach((to, from, next) => {
             href: `/artifact/${to.params.path}`
         });
     }
-    next();
+
+    await store.dispatch('loadProfile');
+
+    if (to.meta.requiresAuth && !store.getters.profile.loggedIn) {
+        window.location.replace(process.env.VUE_APP_URL + '/apis/v1/idp/cyverse_login/');
+    } else next();
 });
 
 export default router;
