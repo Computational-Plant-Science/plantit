@@ -38,11 +38,11 @@
                             "
                             size="md"
                             v-b-tooltip.hover
-                            :title="'Request access pass for ' + cluster.name"
+                            :title="'Request guest access for ' + cluster.name"
                             @click="requestAccess"
                         >
                             <i class="fas fa-key fa-fw"></i>
-                            Request Access Pass
+                            Request Guest Access
                         </b-button>
                         <b-button
                             v-else
@@ -55,7 +55,7 @@
                             :disabled="true"
                         >
                             <i class="fas fa-key fa-fw"></i>
-                            You requested an access pass
+                            You requested guest access
                             {{ prettify(accessRequest.created) }}. Your request
                             is pending.
                         </b-button>
@@ -142,6 +142,19 @@
                                                 >
                                                     {{ cluster.name }}
                                                 </h2>
+                                                <b-badge
+                                                    v-if="
+                                                        cluster.role === 'use'
+                                                    "
+                                                    variant="warning"
+                                                    >Guest</b-badge
+                                                >
+                                                <b-badge
+                                                    v-else-if="cluster.role === 'own'"
+                                                    variant="success"
+                                                    >Owner</b-badge
+                                                >
+                                                <br />
                                                 <small>{{
                                                     cluster.description
                                                 }}</small>
@@ -327,9 +340,10 @@
                                                     <i
                                                         class="fas fa-key fa-fw"
                                                     ></i>
-                                                    Request Access Pass
+                                                    Request Guest Access
                                                 </b-button></b-col
                                             >
+                                            <b-col></b-col>
                                             <b-col
                                                 v-if="cluster.role !== 'none'"
                                                 class="ml-0"
@@ -355,31 +369,6 @@
                                                     ></i>
                                                     Check Status
                                                 </b-button></b-col
-                                            >
-                                            <b-col
-                                                md="auto"
-                                                v-if="!accessRequested"
-                                                align-self="center text-right"
-                                                ><small
-                                                    :class="
-                                                        profile.darkMode
-                                                            ? 'text-white'
-                                                            : 'text-dark'
-                                                    "
-                                                    >{{
-                                                        `You ${
-                                                            cluster.role ===
-                                                            'own'
-                                                                ? cluster.role
-                                                                : cluster.role ===
-                                                                  'none'
-                                                                ? 'do not have an access pass for '
-                                                                : 'can ' +
-                                                                  cluster.role
-                                                        }`
-                                                    }}
-                                                    this cluster.</small
-                                                ></b-col
                                             >
                                             <b-col
                                                 v-if="
@@ -411,7 +400,7 @@
                                                     }}. Your request is pending.
                                                 </b-button></b-col
                                             >
-                                            <b-col></b-col>
+                                            <!--<b-col></b-col>
                                             <b-col md="auto"
                                                 ><b-button
                                                     class="ml-0"
@@ -428,9 +417,9 @@
                                                     "
                                                     size="sm"
                                                     v-b-tooltip.hover
-                                                    title="Start interactive session"
+                                                    title="Start interactive collections"
                                                     @click="
-                                                        tryStartInteractiveMode
+                                                        tryOpenCollection
                                                     "
                                                 >
                                                     <i
@@ -438,7 +427,7 @@
                                                     ></i>
                                                     Start Session
                                                 </b-button></b-col
-                                            >
+                                            >-->
                                         </b-row>
                                     </b-col>
                                 </b-row>
@@ -737,7 +726,7 @@
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
             :title="'Authenticate with ' + this.cluster.name"
-            @ok="startInteractiveMode"
+            @ok="openCollection"
         >
             <b-form-input
                 v-model="authenticationUsername"
@@ -821,39 +810,39 @@ export default {
         }
     },
     methods: {
-        tryStartInteractiveMode() {
+        tryOpenCollection() {
             if (this.mustAuthenticate) this.showAuthenticateModal();
-            else this.startInteractiveMode();
+            else this.openCollection();
         },
         showAuthenticateModal() {
             this.$bvModal.show('authenticate');
         },
-        startInteractiveMode() {
-            this.$store.dispatch('updateSessionLoading', true);
-            let data = { cluster: this.cluster.name };
-            if (this.mustAuthenticate)
-                data['auth'] = {
-                    username: this.authenticationUsername,
-                    password: this.authenticationPassword
-                };
+        // openCollection() {
+        //     this.$store.dispatch('updateSessionLoading', true);
+        //     let data = { cluster: this.cluster.name };
+        //     if (this.mustAuthenticate)
+        //         data['auth'] = {
+        //             username: this.authenticationUsername,
+        //             password: this.authenticationPassword
+        //         };
 
-            axios({
-                method: 'post',
-                url: `/apis/v1/sessions/start/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(async response => {
-                    await this.$store.dispatch(
-                        'updateSession',
-                        response.data.session
-                    );
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
+        //     axios({
+        //         method: 'post',
+        //         url: `/apis/v1/collections/open/`,
+        //         data: data,
+        //         headers: { 'Content-Type': 'application/json' }
+        //     })
+        //         .then(async response => {
+        //             await this.$store.dispatch(
+        //                 'updateCollectionSession',
+        //                 response.data.session
+        //             );
+        //         })
+        //         .catch(error => {
+        //             Sentry.captureException(error);
+        //             throw error;
+        //         });
+        // },
         revokeAccess(user) {
             axios
                 .get(
@@ -924,9 +913,9 @@ export default {
                 )
                 .then(response => {
                     this.cluster.public = response.data.public;
-                    this.alertMessage = `Server ${
-                        this.$route.params.name
-                    } is now ${this.cluster.public ? 'public' : 'private'}`;
+                    this.alertMessage = `${this.$route.params.name} is now ${
+                        this.cluster.public ? 'public' : 'private'
+                    }`;
                     this.alertEnabled = true;
                 })
                 .catch(error => {

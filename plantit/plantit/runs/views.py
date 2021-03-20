@@ -138,19 +138,10 @@ def get_thumbnail(request, id, file):
             # make thumbnail directory for this run if it does not already exist
             Path(run_dir).mkdir(exist_ok=True, parents=True)
 
-            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith(
-                    'out') or file.endswith('err') or file.endswith('log'):
+            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
                 with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
-                    # stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
-                    # errs = stderr.read()
-                    # if errs:
-                    #     raise Exception(f"Failed to check existence of {log_file}: {errs}")
-                    # if not stdout.read().decode().strip() == 'exists':
-                    #     return HttpResponseNotFound()
-
                     sftp.chdir(work_dir)
                     sftp.get(file, temp_file.name)
-
                     with tempfile.NamedTemporaryFile() as tf:
                         sftp.chdir(work_dir)
                         sftp.get(file, tf.name)
@@ -163,8 +154,6 @@ def get_thumbnail(request, id, file):
                 sftp.chdir(work_dir)
                 sftp.get(file, temp_file.name)
                 return HttpResponse(temp_file, content_type="image/png")
-                # thumbnail = Thumbnail(source=temp_file).generate()
-                # thumbnail_file.write(thumbnail.read())
 
             if Path(thumbnail_path).exists():
                 print(f"Using existing thumbnail: {thumbnail_path}")

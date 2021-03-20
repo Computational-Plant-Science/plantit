@@ -9,7 +9,7 @@
     >
         <br />
         <br />
-        <b-container class="pl-3 pt-3" fluid>
+        <b-container class="pl-3 pt-3">
             <b-row align-v="center" align-h="center" v-if="usersLoading">
                 <b-col align-self="end" class="text-center">
                     <b-spinner
@@ -22,7 +22,7 @@
             <b-row v-else align-v="center" align-h="center">
                 <b-col>
                     <b-row
-                        ><b-col md="auto"
+                        ><b-col
                             ><h3
                                 :class="
                                     profile.darkMode
@@ -32,6 +32,15 @@
                             >
                                 User Registry
                             </h3> </b-col
+                        ><!--<b-col md="auto"
+                            ><b-dropdown
+                                dropleft
+                                :variant="
+                                    profile.darkMode ? 'outline-white' : 'white'
+                                "
+                                ><template #button-content>Actions</template
+                                ><b-dropdown-item></b-dropdown-item></b-dropdown></b-col>--></b-row
+                    ><b-row
                         ><b-col
                             ><b-input-group size="sm"
                                 ><template #prepend>
@@ -49,7 +58,6 @@
                                     v-model="searchText"
                                 ></b-form-input> </b-input-group></b-col
                     ></b-row>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
                     <b-card-group
                         deck
                         columns

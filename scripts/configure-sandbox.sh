@@ -11,4 +11,4 @@ if Cluster.objects.filter(name='Sandbox').count()==0:
 else:
     print('Sandbox already exists!')
 "
-printf "$script" | python manage.py sell
+printf "$script" | python manage.py shell

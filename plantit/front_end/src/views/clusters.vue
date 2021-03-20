@@ -9,7 +9,7 @@
     >
         <br />
         <br />
-        <b-container class="pl-3 pt-3" fluid>
+        <b-container class="pl-3 pt-3">
             <b-row align-v="center" align-h="center" v-if="clustersLoading">
                 <b-col align-self="end" class="text-center">
                     <b-spinner
@@ -36,7 +36,7 @@
                             >
                                 Public Clusters
                             </h3> </b-col
-                        ><b-col
+                    ></b-row><b-row><b-col
                             ><b-input-group size="sm"
                                 ><template #prepend>
                                     <b-input-group-text
@@ -65,7 +65,6 @@
                             ></b-col
                         ></b-row
                     >
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
                     <b-card-group
                         deck
                         columns

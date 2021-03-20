@@ -8,6 +8,8 @@ import clusters from './views/clusters.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
 import run from './views/run.vue';
+import collection from './views/collection.vue';
+import artifact from './views/artifact.vue';
 
 Vue.use(Router);
 
@@ -115,6 +117,28 @@ let router = new Router({
             }
         },
         {
+            path: '/collection/:path',
+            name: 'collection',
+            props: true,
+            component: collection,
+            meta: {
+                title: 'Collection',
+                crumb: [],
+                requiresAuth: true
+            }
+        },
+        {
+            path: '/artifact/:path',
+            name: 'artifact',
+            props: true,
+            component: artifact,
+            meta: {
+                title: 'Artifact',
+                crumb: [],
+                requiresAuth: true
+            }
+        },
+        {
             path: '*',
             name: '404',
             component: () =>
@@ -137,6 +161,8 @@ router.beforeEach((to, from, next) => {
     if (to.name === 'run') to.meta.title = `Run: ${to.params.id}`;
     if (to.name === 'cluster') to.meta.title = `Cluster: ${to.params.name}`;
     if (to.name === 'user') to.meta.title = `User: ${to.params.username}`;
+    if (to.name === 'collection') to.meta.title = `Collection: ${to.params.path}`;
+    if (to.name === 'artifact') to.meta.title = `Artifact: ${to.params.path}`;
     if (to.meta.name !== null) document.title = to.meta.title;
     if (to.matched.some(record => record.name === 'workflow')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
@@ -164,6 +190,20 @@ router.beforeEach((to, from, next) => {
         to.meta.crumb.push({
             text: `User: ${to.params.username}`,
             href: `/user/${to.params.username}`
+        });
+    }
+    if (to.matched.some(record => record.name === 'collection')) {
+        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
+        to.meta.crumb.push({
+            text: `Collection: ${to.params.path}`,
+            href: `/collection/${to.params.path}`
+        });
+    }
+    if (to.matched.some(record => record.name === 'artifact')) {
+        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
+        to.meta.crumb.push({
+            text: `Artifact: ${to.params.path}`,
+            href: `/artifact/${to.params.path}`
         });
     }
     next();

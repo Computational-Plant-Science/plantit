@@ -1,6 +1,6 @@
 <template>
     <div
-        class="w-100 h-100 pl-3 pt-3 pr-0 m-0"
+        class="w-100 h-100 pl-3 pt-3"
         :style="
             profile.darkMode
                 ? 'background-color: #616163'
@@ -9,7 +9,7 @@
     >
         <br />
         <br />
-        <b-container class="pl-3 pt-3 mr-3" fluid>
+        <b-container class="pl-3 pt-3">
             <b-row align-v="center" align-h="center" v-if="workflowsLoading">
                 <b-col align-self="end" class="text-center">
                     <b-spinner
@@ -59,7 +59,9 @@
                                 "
                             >
                                 Public Workflows
-                            </h3> </b-col
+                            </h3>
+                        </b-col></b-row
+                    ><b-row
                         ><b-col
                             ><b-input-group size="sm"
                                 ><template #prepend>
@@ -78,7 +80,6 @@
                                 ></b-form-input>
                             </b-input-group> </b-col
                     ></b-row>
-                    <hr class="mt-2 mb-2" style="border-color: gray"/>
                     <workflows
                         class="mt-3"
                         :github-token="profile.djangoProfile.github_token"

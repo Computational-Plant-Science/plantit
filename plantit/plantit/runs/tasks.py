@@ -8,6 +8,8 @@ from django.utils import timezone
 
 from plantit import settings
 from plantit.celery import app
+from plantit.collections.models import CollectionSession
+from plantit.collections.utils import update_collection_session
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
@@ -49,11 +51,11 @@ def __upload_run(flow, run: Run, ssh: SSH):
         template_name = template.split('/')[-1]
 
         # upload flow config file
-        with sftp.open('flow.yaml', 'w') as flow_file:
+        with open('flow.yaml', 'w') as flow_file:
             yaml.dump(new_flow, flow_file, default_flow_style=False)
 
         # compose and upload job script
-        with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
+        with open(template, 'r') as template_script, open(template_name, 'w') as script:
             for line in template_script:
                 script.write(line)
 
@@ -319,15 +321,15 @@ def cleanup_run(id: str):
 
 
 @app.task()
-def clean_singularity_cache(cluster: str):
-    cluster = Cluster.objects.get(name=cluster)
-    ssh = SSH(cluster.hostname, cluster.port, cluster.username)
+def clean_singularity_cache(cluster_name: str):
+    cluster_name = Cluster.objects.get(name=cluster_name)
+    ssh = SSH(cluster_name.hostname, cluster_name.port, cluster_name.username)
     with ssh:
         execute_command(
             ssh_client=ssh,
-            pre_command=cluster.pre_commands,
+            pre_command=cluster_name.pre_commands,
             command="singularity cache clean",
-            directory=cluster.workdir,
+            directory=cluster_name.workdir,
             allow_stderr=True)
 
 
@@ -342,3 +344,37 @@ def run_command(cluster_name: str, command: str, pre_command: str = None):
             command=command,
             directory=cluster.workdir,
             allow_stderr=True)
+
+
+@app.task()
+def open_collection_session(id: str):
+    try:
+        session = CollectionSession.objects.get(guid=id)
+
+        msg = f"Opening collection session {session.guid} on {session.cluster.name}"
+        update_collection_session(session, [msg])
+        logger.info(msg)
+
+        ssh_client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+
+        with ssh_client:
+            msg = f"Transferring files from {session.path} to {session.cluster.name}"
+            update_collection_session(session, [msg])
+            logger.info(msg)
+
+            command = f"plantit terrain pull {session.path} --terrain_token {session.user.profile.cyverse_token}\n"
+            lines = execute_command(
+                ssh_client=ssh_client,
+                pre_command=session.cluster.pre_commands,
+                command=command,
+                directory=session.workdir,
+                allow_stderr=True)
+            update_collection_session(session, lines)
+    except:
+        msg = f"Failed to open session: {traceback.format_exc()}."
+        logger.error(msg)
+
+
+@app.task()
+def close_collection_session(id: str):
+    pass

@@ -1,8 +1,7 @@
 from django.contrib import admin
 
 from plantit.clusters.models import Cluster, ClusterAccessPolicy
-from plantit.collections.models import CollectionAccessPolicy
-from plantit.sessions.models import Session
+from plantit.collections.models import CollectionAccessPolicy, CollectionSession
 
 
 @admin.register(Cluster)
@@ -20,6 +19,6 @@ class CollectionAccessPolicyAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(Session)
+@admin.register(CollectionSession)
 class SessionAdmin(admin.ModelAdmin):
     pass

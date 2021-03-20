@@ -6,9 +6,9 @@ from rest_framework import routers
 from django.urls import path
 
 from .auth.views import login_view, logout_view
+from .collections.consumers import CollectionSessionConsumer
 from .miappe.views import *
 from .clusters.views import ClustersViewSet
-from .sessions.consumers import SessionConsumer
 from .users.views import UsersViewSet, IDPViewSet
 from .runs.consumers import RunConsumer
 from .notifications.consumers import NotificationConsumer
@@ -34,7 +34,6 @@ urlpatterns = [
     url('auth/login/', login_view),
     url('auth/logout/', logout_view),
     url('runs/', include("plantit.runs.urls")),
-    url('sessions/', include("plantit.sessions.urls")),
     url('workflows/', include("plantit.workflows.urls")),
     url('collections/', include("plantit.collections.urls")),
     url('notifications/', include("plantit.notifications.urls")),
@@ -44,5 +43,5 @@ urlpatterns = [
 websocket_urlpatterns = [
     path(r'ws/runs/<username>/', RunConsumer.as_asgi()),
     path(r'ws/notifications/<username>/', NotificationConsumer.as_asgi()),
-    path(r'ws/sessions/<username>/<cluster>/', SessionConsumer.as_asgi())
+    path(r'ws/sessions/<username>/', CollectionSessionConsumer.as_asgi())
 ]

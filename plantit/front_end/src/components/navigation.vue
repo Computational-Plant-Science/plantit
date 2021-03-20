@@ -903,41 +903,65 @@
             </b-collapse>
         </b-navbar>
         <b-navbar
-            v-if="sessionLoading || (session !== undefined && session !== null)"
+            v-if="
+                collectionSessionLoading ||
+                    (collectionSession !== undefined &&
+                        collectionSession !== null)
+            "
             toggleable="sm"
             fixed="bottom"
-            style="border-top: 1px solid lightgray"
-            :variant="profile.darkMode ? 'dark' : 'light'"
+            style="border-top: 1px solid gray"
+            :variant="profile.darkMode ? 'dark' : 'white'"
         >
-            <b-navbar-nav v-if="sessionLoading">
+            <b-navbar-nav v-if="collectionSessionLoading">
                 <b-spinner
                     :variant="profile.darkMode ? 'light' : 'dark'"
                     small
                     class="mr-2"
                 ></b-spinner>
             </b-navbar-nav>
-            <b-navbar-nav v-else-if="session !== null && session !== undefined">
+            <b-navbar-nav
+                v-else-if="
+                    collectionSession !== null &&
+                        collectionSession !== undefined
+                "
+            >
                 <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
-                    <i class="fas fa-circle-notch text-success fa-fw mr-2"></i
-                    ><small
-                        >Session open on <b>{{ session.cluster }}</b></small
+                    <i class="far fa-folder-open fa-fw mr-2"></i>
+                    <small
+                        >Collection {{ collectionSession.path }} open on
+                        <b>{{ collectionSession.cluster }}</b></small
                     >
                 </b></b-navbar-nav
             >
             <b-navbar-nav
                 class="ml-auto"
-                v-if="session !== null && session !== undefined"
+                v-if="
+                    collectionSession !== null &&
+                        collectionSession !== undefined
+                "
             >
-                <small>{{ session.output[session.output.length - 1] }}</small>
+                <small>{{
+                    collectionSession.output[
+                        collectionSession.output.length - 1
+                    ]
+                }}</small>
             </b-navbar-nav>
-            <b-navbar-nav class="ml-auto" v-if="!sessionLoading">
+            <b-navbar-nav class="ml-auto" v-if="!collectionSessionLoading">
+                <!--<b-nav-item-dropdown dropup>
+                    <template #button-content>
+                        Transfer
+                    </template>
+                    <b-dropdown-item href="#">Profile</b-dropdown-item>
+                    <b-dropdown-item href="#">Sign Out</b-dropdown-item>
+                </b-nav-item-dropdown>-->
                 <b-button
-                    :variant="profile.darkMode ? 'dark' : 'light'"
+                    variant="outline-danger"
                     class="text-left m-0"
-                    @click="disconnectSession"
+                    @click="closeCollection"
                 >
-                    <i class="fas fa-door-closed fa-1x fa-fw"></i>
-                    Disconnect
+                    <i class="far fa-folder fa-1x fa-fw"></i>
+                    Close
                 </b-button>
             </b-navbar-nav>
         </b-navbar>
@@ -1037,8 +1061,8 @@ export default {
             'runs',
             'notificationsLoading',
             'notifications',
-            'session',
-            'sessionLoading'
+            'collectionSession',
+            'collectionSessionLoading'
         ]),
         runningRuns() {
             return this.runs.filter(r => !r.is_complete);
@@ -1070,7 +1094,7 @@ export default {
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         await this.$store.dispatch('loadProfile');
-        await this.$store.dispatch('loadSession');
+        await this.$store.dispatch('loadCollectionSession');
         await this.$store.dispatch('loadRuns');
         await this.$store.dispatch('loadNotifications');
 
@@ -1087,10 +1111,13 @@ export default {
         );
         this.notificationSocket.onmessage = this.onNotification;
 
-        // subscribe to session channel
-        if (this.session !== null && this.session !== undefined) {
+        // subscribe to collection session channel
+        if (
+            this.collectionSession !== null &&
+            this.collectionSession !== undefined
+        ) {
             this.interactiveSocket = new WebSocket(
-                `${protocol}${window.location.host}/ws/sessions/${this.profile.djangoProfile.username}/${this.session.cluster}/`
+                `${protocol}${window.location.host}/ws/sessions/${this.profile.djangoProfile.username}/`
             );
             this.interactiveSocket.onmessage = this.onSessionEvent;
         }
@@ -1101,8 +1128,8 @@ export default {
         }
     },
     methods: {
-        async disconnectSession() {
-            await this.$store.dispatch('disconnectSession');
+        async closeCollection() {
+            await this.$store.dispatch('closeCollectionSession');
         },
         markAllRead() {},
         markRead(notification) {
@@ -1137,7 +1164,7 @@ export default {
         },
         async onSessionEvent(event) {
             let data = JSON.parse(event.data);
-            await this.$store.dispatch('updateSession', data.session);
+            await this.$store.dispatch('updateCollectionSession', data.session);
         },
         onDelete(run) {
             axios
