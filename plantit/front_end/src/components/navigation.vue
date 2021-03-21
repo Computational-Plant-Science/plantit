@@ -906,7 +906,8 @@
             v-if="
                 collectionSessionLoading ||
                     (collectionSession !== undefined &&
-                        collectionSession !== null)
+                        collectionSession !== null &&
+                        !viewingCollection)
             "
             toggleable="sm"
             fixed="bottom"
@@ -930,7 +931,9 @@
                     <i class="far fa-folder-open fa-fw mr-2"></i>
                     <small
                         >Collection {{ collectionSession.path }} open on
-                        <b>{{ collectionSession.cluster }}</b></small
+                        <b>{{ collectionSession.cluster }}</b
+                        >, {{ collectionSession.modified.length }} file(s)
+                        modified</small
                     >
                 </b></b-navbar-nav
             >
@@ -948,20 +951,48 @@
                 }}</small>
             </b-navbar-nav>
             <b-navbar-nav class="ml-auto" v-if="!collectionSessionLoading">
-                <!--<b-nav-item-dropdown dropup>
+                <b-button
+                    :variant="
+                        profile.darkMode ? 'outline-light' : 'outline-dark'
+                    "
+                    title="View collection"
+                    class="mr-2"
+                    :to="{
+                        name: 'collection',
+                        params: { path: collectionSession.path }
+                    }"
+                >
+                    <span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    >
+                        View
+                        <i class="fas fa-th fa-1x fa-fw"></i
+                    ></span>
+                </b-button>
+                <b-dropdown
+                    v-if="collectionSession.modified.length !== 0"
+                    dropup
+                    :variant="profile.darkMode ? 'outline-light' : 'white'"
+                    class="mr-2"
+                >
                     <template #button-content>
-                        Transfer
+                        Save
                     </template>
-                    <b-dropdown-item href="#">Profile</b-dropdown-item>
-                    <b-dropdown-item href="#">Sign Out</b-dropdown-item>
-                </b-nav-item-dropdown>-->
+                    <b-dropdown-item @click="saveSession(false)"
+                        >All files</b-dropdown-item
+                    >
+                    <b-dropdown-item @click="saveSession(true)"
+                        >Only modified files</b-dropdown-item
+                    >
+                </b-dropdown>
                 <b-button
                     variant="outline-danger"
+                    title="Close collection"
                     class="text-left m-0"
                     @click="closeCollection"
                 >
-                    <i class="far fa-folder fa-1x fa-fw"></i>
                     Close
+                    <i class="far fa-folder fa-1x fa-fw"></i>
                 </b-button>
             </b-navbar-nav>
         </b-navbar>
@@ -1002,6 +1033,7 @@ export default {
     components: {},
     data() {
         return {
+            viewingCollection: false,
             // cluster authentication
             authenticationUsername: '',
             authenticationPassword: '',
@@ -1093,22 +1125,24 @@ export default {
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
-        // await this.$store.dispatch('loadProfile');
-        await this.$store.dispatch('loadCollectionSession');
-        await this.$store.dispatch('loadRuns');
-        await this.$store.dispatch('loadNotifications');
+        this.viewingCollection = this.$router.currentRoute.name === 'collection';
+        let ws_protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
 
-        let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        await Promise.all([
+            this.$store.dispatch('loadRuns'),
+            this.$store.dispatch('loadNotifications'),
+            this.$store.dispatch('loadCollectionSession')
+        ]);
 
         // subscribe to run channel
         this.runSocket = new WebSocket(
-            `${protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
+            `${ws_protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
         );
         this.runSocket.onmessage = this.onRunUpdate;
 
         // subscribe to notification channel
         this.notificationSocket = new WebSocket(
-            `${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
+            `${ws_protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
         );
         this.notificationSocket.onmessage = this.onNotification;
 
@@ -1118,7 +1152,7 @@ export default {
             this.collectionSession !== undefined
         ) {
             this.interactiveSocket = new WebSocket(
-                `${protocol}${window.location.host}/ws/sessions/${this.profile.djangoProfile.username}/`
+                `${ws_protocol}${window.location.host}/ws/sessions/${this.profile.djangoProfile.username}/`
             );
             this.interactiveSocket.onmessage = this.onSessionEvent;
         }
@@ -1126,11 +1160,33 @@ export default {
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
+            this.viewingCollection =
+                this.$router.currentRoute.name === 'collection';
         }
     },
     methods: {
+        // async saveCollection(onlyModified) {},
         async closeCollection() {
-            await this.$store.dispatch('closeCollectionSession');
+            await this.$bvModal
+                .msgBoxConfirm(
+                    `Are you sure you want to close ${this.collectionSession.path} on ${this.collectionSession.cluster}?`,
+                    {
+                        title: 'Close Collection?',
+                        size: 'sm',
+                        okVariant: 'outline-danger',
+                        cancelVariant: 'white',
+                        okTitle: 'Yes',
+                        cancelTitle: 'No',
+                        centered: true
+                    }
+                )
+                .then(async value => {
+                    if (value)
+                        await this.$store.dispatch('closeCollectionSession');
+                })
+                .catch(err => {
+                    throw err;
+                });
         },
         markAllRead() {},
         markRead(notification) {

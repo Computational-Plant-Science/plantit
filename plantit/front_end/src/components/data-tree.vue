@@ -1116,12 +1116,12 @@ export default {
         async deletePath(path, token) {
             await this.$bvModal
                 .msgBoxConfirm(`Are you sure you want to delete '${path}'?`, {
-                    title: 'Confirm Deletion',
+                    title: `Delete ${path}?`,
                     size: 'sm',
                     okVariant: 'outline-danger',
-                    cancelVariant: 'outline-dark',
+                    cancelVariant: 'white',
                     okTitle: 'Yes',
-                    cancelTitle: 'Cancel',
+                    cancelTitle: 'No',
                     centered: true
                 })
                 .then(async value => {

@@ -376,5 +376,37 @@ def open_collection_session(id: str):
 
 
 @app.task()
+def save_collection_session(id: str, only_modified: bool):
+    try:
+        session = CollectionSession.objects.get(guid=id)
+
+        msg = f"Saving collection session {session.guid} on {session.cluster.name}"
+        update_collection_session(session, [msg])
+        logger.info(msg)
+
+        ssh_client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+
+        with ssh_client:
+            msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.cluster.name} to {session.path}"
+            update_collection_session(session, [msg])
+            logger.info(msg)
+
+            command = f"plantit terrain push {session.path} --terrain_token {session.user.profile.cyverse_token}"
+            for file in session.modified:
+                command += f" --include_name {file}"
+
+            lines = execute_command(
+                ssh_client=ssh_client,
+                pre_command=session.cluster.pre_commands,
+                command=command,
+                directory=session.workdir,
+                allow_stderr=True)
+            update_collection_session(session, lines)
+    except:
+        msg = f"Failed to open session: {traceback.format_exc()}."
+        logger.error(msg)
+
+
+@app.task()
 def close_collection_session(id: str):
     pass

@@ -93,7 +93,10 @@ MIDDLEWARE = [
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)]
+        }
     }
 }
 
@@ -109,7 +112,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'front_end', 'dist'),
-            os.path.join(BASE_DIR, 'templates') # This is temporary until cyverse login is implemented
+            os.path.join(BASE_DIR, 'templates')  # This is temporary until cyverse login is implemented
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -172,4 +175,3 @@ REST_FRAMEWORK = {
 }
 
 TAGGIT_CASE_INSENSITIVE = True
-

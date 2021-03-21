@@ -168,7 +168,7 @@
                                                         : 'theme-light'
                                                 "
                                             >
-                                                <h5>Your user profile</h5>
+                                                <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">Your user profile</h5>
                                                 <p>
                                                     <small>Email</small>
                                                     <br />
@@ -698,15 +698,17 @@ export default {
         }
     },
     async mounted() {
-        await this.$store.dispatch('loadWorkflows');
-        await this.$store.dispatch('loadUsers');
-        await this.loadCollection(
-            `/iplant/home/${this.profile.djangoProfile.username}/`,
-            this.profile.djangoProfile.cyverse_token
-        );
-        await this.loadClusters();
-        await this.loadSharedCollections();
-        await this.loadSharingCollections();
+        await Promise.all([
+            this.$store.dispatch('loadWorkflows'),
+            this.$store.dispatch('loadUsers'),
+            this.loadCollection(
+                `/iplant/home/${this.profile.djangoProfile.username}/`,
+                this.profile.djangoProfile.cyverse_token
+            ),
+            this.loadClusters(),
+            this.loadSharedCollections(),
+            this.loadSharingCollections()
+        ]);
     },
     methods: {
         openCollection() {

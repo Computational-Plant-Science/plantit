@@ -3,6 +3,7 @@ from enum import Enum
 from itertools import chain
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django_enum_choices.fields import EnumChoiceField
 
@@ -31,6 +32,8 @@ class CollectionSession(models.Model):
     cluster = models.ForeignKey(Cluster, null=True, blank=True, on_delete=models.SET_NULL)
     workdir = models.CharField(max_length=100, null=True, blank=True)
     token = models.CharField(max_length=40)
+    modified = ArrayField(models.CharField(max_length=250), blank=True, null=True)
+    save_task_id = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         opts = self._meta

@@ -1,8 +1,10 @@
 import binascii
 import json
 import os
+import tempfile
 import uuid
 from os.path import join
+from pathlib import Path
 
 import httpx
 import requests
@@ -14,6 +16,7 @@ from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonRespon
 from django.utils import timezone
 from rest_framework.decorators import api_view
 
+from plantit import settings
 from plantit.clusters.models import Cluster, ClusterAccessPolicy, ClusterRole
 from plantit.notifications.models import DirectoryPolicyNotification
 from plantit.collections.models import CollectionAccessPolicy, CollectionRole, CollectionSession
@@ -214,6 +217,21 @@ def open_session(request):
 
 @api_view(['GET'])
 @login_required
+def save_session(request):
+    user = request.user
+    try:
+        session = CollectionSession.objects.get(user=user)
+    except:
+        return HttpResponseNotFound()
+
+    if session.save_task_id is not None:
+        return JsonResponse({'saved': False})
+
+
+
+
+@api_view(['GET'])
+@login_required
 def close_session(request):
     user = request.user
     try:
@@ -238,20 +256,91 @@ def close_session(request):
 
 @api_view(['GET'])
 @login_required
-def get_thumbnail(request, path):
+def get_thumbnail(request):
     user = request.user
     try:
         session = CollectionSession.objects.get(user=user)
     except:
         return HttpResponseNotFound()
 
+    path = request.GET.get('path')
+    file_name = path.rpartition('/')[2]
+    file = join(session.workdir, file_name)
+    client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
 
-    thumbnail_name = path.rpartition('/')[2]
-    thumbnail_path = join(os.environ.get('SESSIONS_LOGS'), thumbnail_name)
-    file = requests.get(f"https://de.cyverse.org/terrain/secured/fileio/download?path={path}",
-                        headers={'Authorization': f"Bearer {user.profile.cyverse_token}"}).content
+    with client:
+        with client.client.open_sftp() as sftp:
+            stdin, stdout, stderr = client.client.exec_command(f"test -e {join(session.workdir, file)} && echo exists")
+            errs = stderr.read()
+            if errs:
+                raise Exception(f"Failed to check existence of {file}: {errs}")
 
-    if thumbnail_name.endswith('txt') or thumbnail_name.endswith('csv') or thumbnail_name.endswith('yml') or thumbnail_name.endswith('yaml') or thumbnail_name.endswith('tsv') or thumbnail_name.endswith('out') or thumbnail_name.endswith('err') or thumbnail_name.endswith('log'):
-        return HttpResponse(file, content_type='text/plain')
+            run_dir = join(settings.MEDIA_ROOT, session.guid)
+            thumbnail_path = f"{run_dir}{file_name}"
 
-    return HttpResponse(file, content_type="image/jpg")
+            # make thumbnail directory for this run if it does not already exist
+            Path(run_dir).mkdir(exist_ok=True, parents=True)
+
+            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
+                with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
+                    sftp.chdir(session.workdir)
+                    sftp.get(file, temp_file.name)
+                    with tempfile.NamedTemporaryFile() as tf:
+                        sftp.chdir(session.workdir)
+                        sftp.get(file, tf.name)
+                        with open(tf.name, 'r') as file:
+                            lines = file.readlines()
+                            return HttpResponse(lines, content_type='text/plain')
+
+            with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
+                print(f"Creating new thumbnail: {thumbnail_path}")
+                sftp.chdir(session.workdir)
+                sftp.get(file, temp_file.name)
+                return HttpResponse(temp_file, content_type="image/png")
+
+            # if Path(thumbnail_path).exists():
+            #     print(f"Using existing thumbnail: {thumbnail_path}")
+            #     return redirect(thumbnail_path)
+            #     # thumbnail = open(thumbnail_path, 'rb')
+            # else:
+            #     with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
+            #         print(f"Creating new thumbnail: {thumbnail_path}")
+            #         sftp.chdir(session.workdir)
+            #         sftp.get(file, temp_file.name)
+            #         thumbnail = Thumbnail(source=temp_file).generate()
+            #         thumbnail_file.write(thumbnail.read())
+
+            # if thumbnail_name_lower.endswith('png'):
+            #     return HttpResponse(thumbnail, content_type="image/png")
+            # elif thumbnail_name_lower.endswith('jpg') or thumbnail_name_lower.endswith('jpeg'):
+            #     return HttpResponse(thumbnail, content_type="image/jpg")
+            # else:
+            #     return HttpResponseNotFound()
+
+
+@api_view(['POST'])
+@login_required
+def duplicate_file(request):
+    user = request.user
+    file = request.data['file']
+    try:
+        session = CollectionSession.objects.get(user=user)
+    except:
+        return HttpResponseNotFound()
+
+    update_collection_session(session, [f"Duplicating file {file}"])
+
+    if file not in session.modified:
+        session.modified.append(file)
+        session.save()
+
+    ssh_client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+    with ssh_client:
+        output = execute_command(
+            ssh_client=ssh_client,
+            pre_command=':',
+            command=f"cp {file} {timezone.now()}.{file}",
+            directory=session.cluster.workdir)
+        update_collection_session(session, output)
+
+    return HttpResponse()

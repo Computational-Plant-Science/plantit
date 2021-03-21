@@ -31,6 +31,7 @@ def map_collection_session(session: CollectionSession):
         'path': session.path,
         'workdir': session.workdir,
         'cluster': session.cluster.name,
+        'modified': session.modified if session.modified is not None else [],
         'output': lines
     }
 
@@ -41,7 +42,8 @@ def update_collection_session(session: CollectionSession, output: List[str]):
         for line in output:
             log.write(f"{line}\n")
 
-    async_to_sync(get_channel_layer().group_send)(f"collection-sessions-{session.user.username}", {
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.send)(f"sessions-{session.user.username}", {
         'type': 'update_session',
         'session': map_collection_session(session),
     })

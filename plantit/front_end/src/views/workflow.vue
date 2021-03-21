@@ -1394,20 +1394,20 @@ export default {
         };
     },
     async mounted() {
-        await this.$store.dispatch('loadUsers');
-
-        await this.$store.dispatch('refreshWorkflow', {
-            owner: this.$router.currentRoute.params.username,
-            name: this.$router.currentRoute.params.name
-        });
-        this.validate();
+        await Promise.all([
+            this.$store.dispatch('loadUsers'),
+            this.$store.dispatch('refreshWorkflow', {
+                owner: this.$router.currentRoute.params.username,
+                name: this.$router.currentRoute.params.name
+            }),
+            this.validate(),
+            this.loadClusters(),
+            this.loadPublicClusters(),
+            this.loadRuns(),
+            this.loadDelayedRuns(),
+            this.loadRepeatingRuns()
+        ]);
         this.populateComponents();
-
-        this.loadClusters();
-        this.loadPublicClusters();
-        this.loadRuns();
-        this.loadDelayedRuns();
-        this.loadRepeatingRuns();
     },
     methods: {
         deleteDelayed(task) {
@@ -1489,8 +1489,8 @@ export default {
             this.tags.push(tag);
             this.tagOptions.push(tag);
         },
-        validate() {
-            axios
+        async validate() {
+            await axios
                 .get(
                     `/apis/v1/workflows/${this.username}/${this.name}/validate/`,
                     {
@@ -1513,8 +1513,8 @@ export default {
                     }
                 });
         },
-        loadRuns() {
-            axios
+        async loadRuns() {
+            await axios
                 .get(
                     `/apis/v1/runs/${this.profile.djangoProfile.username}/get_by_user_and_workflow/${this.name}/0/`,
                     {
@@ -1534,8 +1534,8 @@ export default {
                     }
                 });
         },
-        loadDelayedRuns() {
-            axios
+        async loadDelayedRuns() {
+            await axios
                 .get(
                     `/apis/v1/runs/${this.profile.djangoProfile.username}/get_delayed_by_user_and_workflow/${this.name}/`,
                     {
@@ -1557,8 +1557,8 @@ export default {
                     }
                 });
         },
-        loadRepeatingRuns() {
-            axios
+        async loadRepeatingRuns() {
+            await axios
                 .get(
                     `/apis/v1/runs/${this.profile.djangoProfile.username}/get_repeating_by_user_and_workflow/${this.name}/`,
                     {
@@ -1707,9 +1707,9 @@ export default {
             );
             // TODO walltime
         },
-        loadClusters: function() {
+        async loadClusters() {
             this.clustersLoading = true;
-            return axios
+            return await axios
                 .get(`/apis/v1/clusters/get_by_username/`)
                 .then(response => {
                     this.clusters = response.data.clusters;
@@ -1720,9 +1720,9 @@ export default {
                     throw error;
                 });
         },
-        loadPublicClusters: function() {
+        async loadPublicClusters() {
             this.publicClustersLoading = true;
-            return axios
+            return await axios
                 .get(`/apis/v1/clusters/get_all/`)
                 .then(response => {
                     this.publicClusters = response.data.clusters;
@@ -1740,7 +1740,7 @@ export default {
         showAuthenticateModal() {
             this.$bvModal.show('authenticate');
         },
-        onStart() {
+        async onStart() {
             if (
                 !this.getWorkflow.config.resources &&
                 this.selectedCluster.name !== 'Sandbox'
@@ -1800,7 +1800,7 @@ export default {
 
             if (this.submitType === 'Now')
                 // submit run immediately
-                axios({
+                await axios({
                     method: 'post',
                     url: `/apis/v1/runs/`,
                     data: data,
@@ -1821,7 +1821,7 @@ export default {
                     });
             else if (this.submitType === 'After')
                 // schedule run after delay
-                axios({
+                await axios({
                     method: 'post',
                     url: `/apis/v1/runs/`,
                     data: {
@@ -1848,7 +1848,7 @@ export default {
                     });
             else if (this.submitType === 'Every')
                 // schedule run periodically
-                axios({
+                await axios({
                     method: 'post',
                     url: `/apis/v1/runs/`,
                     data: {
@@ -1879,11 +1879,10 @@ export default {
     computed: {
         ...mapGetters(['profile', 'workflow', 'workflowsRecentlyRun']),
         getWorkflow() {
-            let wf = this.workflow(
+            return this.workflow(
                 this.$router.currentRoute.params.username,
                 this.$router.currentRoute.params.name
             );
-            return wf;
         },
         mustAuthenticate() {
             return !this.selectedCluster.policies.some(

@@ -83,7 +83,10 @@
                             "
                         ></datatree></b-col></b-row
                 ><b-row
-                    v-if="!sharedCollectionsLoading && sharedCollections.length === 0"
+                    v-if="
+                        !sharedCollectionsLoading &&
+                            sharedCollections.length === 0
+                    "
                     ><b-col>No shared directories.</b-col></b-row
                 ></b-tab
             >
@@ -171,41 +174,46 @@ export default {
         }
     },
     async mounted() {
-        await axios
-            .get(
-                `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${this.profile.djangoProfile.username}/`,
-                {
-                    headers: {
-                        Authorization:
-                            'Bearer ' + this.profile.djangoProfile.cyverse_token
+        await Promise.all([
+            axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${this.profile.djangoProfile.username}/`,
+                    {
+                        headers: {
+                            Authorization:
+                                'Bearer ' +
+                                this.profile.djangoProfile.cyverse_token
+                        }
                     }
-                }
-            )
-            .then(response => {
-                this.userData = response.data;
-            })
-            .catch(error => {
-                Sentry.captureException(error);
-                throw error;
-            });
-        this.userDataLoading = false;
-        await axios
-            .get(
-                `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=100&path=/iplant/home/shared/`,
-                {
-                    headers: {
-                        Authorization:
-                            'Bearer ' + this.profile.djangoProfile.cyverse_token
+                )
+                .then(response => {
+                    this.userData = response.data;
+                    this.userDataLoading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.userDataLoading = false;
+                    throw error;
+                }),
+            axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=100&path=/iplant/home/shared/`,
+                    {
+                        headers: {
+                            Authorization:
+                                'Bearer ' +
+                                this.profile.djangoProfile.cyverse_token
+                        }
                     }
-                }
-            )
-            .then(response => {
-                this.publicData = response.data;
-            })
-            .catch(error => {
-                Sentry.captureException(error);
-                throw error;
-            });
+                )
+                .then(response => {
+                    this.publicData = response.data;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                })
+        ]);
         if (this.workflowKey in this.workflowsRecentlyRun) {
             let config = this.workflowsRecentlyRun[this.workflowKey];
             if (config.input !== undefined && config.input.from !== undefined)

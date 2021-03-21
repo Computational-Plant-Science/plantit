@@ -8,12 +8,12 @@ class CollectionSessionConsumer(WebsocketConsumer):
     def connect(self):
         self.username = self.scope['url_route']['kwargs']['username']
         print(f"Socket connected for user {self.username} collection session")
-        async_to_sync(self.channel_layer.group_add)(f"collection-sessions-{self.username}", self.channel_name)
+        async_to_sync(self.channel_layer.group_add)(f"sessions-{self.username}", self.channel_name)
         self.accept()
 
     def disconnect(self, code):
         print(f"Socket disconnected for user {self.username} collection session")
-        async_to_sync(self.channel_layer.group_discard)(f"collection-sessions-{self.username}", self.channel_name)
+        async_to_sync(self.channel_layer.group_discard)(f"sessions-{self.username}", self.channel_name)
 
     def update_session(self, event):
         session = event['session']
