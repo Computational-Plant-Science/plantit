@@ -168,7 +168,7 @@ export default {
         this.loadClusters();
     },
     computed: {
-        ...mapGetters(['profile', 'users']),
+        ...mapGetters('user', ['profile']),
         filteredClusters() {
             return this.clusters.filter(cluster => cluster.name.includes(this.searchText));
         }

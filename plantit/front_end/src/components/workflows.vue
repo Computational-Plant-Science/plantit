@@ -61,7 +61,7 @@ export default {
             return 0;
         }
     },
-    computed: mapGetters(['profile'])
+    computed: mapGetters('user', ['profile'])
 };
 </script>
 <style scoped lang="sass">

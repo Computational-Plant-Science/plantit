@@ -2,58 +2,102 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export const collections = {
+    namespaced: true,
     state: () => ({
-        session: null,
+        opened: null,
+        openedSocket: null,
         loading: true
     }),
     mutations: {
-        setSession(state, session) {
-            state.session = session;
+        openSocket(state, guid) {
+            let ws_protocol =
+                location.protocol === 'https:' ? 'wss://' : 'ws://';
+            state.openedSocket = new WebSocket(
+                `${ws_protocol}${window.location.host}/ws/sessions/${guid}/`
+            );
+            state.openedSocket.onmessage = function(event) {
+                let data = JSON.parse(event.data);
+                state.opened = data.session;
+            };
         },
-        setSessionLoading(state, loading) {
+        closeSocket(state) {
+            state.openedSocket.close();
+            state.openedSocket = null;
+        },
+        setOpened(state, opened) {
+            state.opened = opened;
+        },
+        setLoading(state, loading) {
             state.loading = loading;
         }
     },
     actions: {
-        async loadCollectionSession({ commit }) {
-            commit('setSessionLoading', true);
+        async loadOpened({ commit }) {
+            commit('setLoading', true);
             await axios
                 .get(`/apis/v1/collections/opened/`)
                 .then(response => {
-                    commit('setSession', response.data.session);
-                    commit('setSessionLoading', false);
+                    commit('setOpened', response.data.session);
+                    if (response.data.session !== null)
+                        commit('openSocket', response.data.session.guid);
+                    commit('setLoading', false);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    commit('setSession', null);
-                    commit('setSessionLoading', false);
+                    commit('setOpened', null);
+                    commit('setLoading', false);
                     throw error;
                 });
         },
-        updateCollectionSession({ commit }, session) {
-            commit('setSession', session);
-            commit('setSessionLoading', false);
+        updateOpened({ commit }, session) {
+            commit('setOpened', session);
+            commit('setLoading', false);
         },
-        updateCollectionSessionLoading({ commit }, loading) {
-            commit('setSessionLoading', loading);
+        updateLoading({ commit }, loading) {
+            commit('setLoading', loading);
         },
-        async closeCollectionSession({ commit }) {
-            commit('setSessionLoading', true);
-            await axios
-                .get(`/apis/v1/collections/close/`)
-                .then(() => {
-                    commit('setSession', null);
-                    commit('setSessionLoading', false);
+        async open({ commit }, payload) {
+            commit('setLoading', true);
+            let data = {
+                cluster: payload.cluster.name,
+                path: payload.path
+            };
+
+            axios({
+                method: 'post',
+                url: `/apis/v1/collections/open/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    commit('setOpened', response.data.session);
+                    commit('openSocket', response.data.session.guid);
+                    commit('setLoading', false);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    commit('setSessionLoading', false);
+                    commit('setLoading', false);
+                    throw error;
+                });
+        },
+        async closeOpened({ commit }) {
+            commit('setLoading', true);
+            await axios
+                .get(`/apis/v1/collections/close/`)
+                .then(() => {
+                    commit('setOpened', null);
+                    commit('closeSocket');
+                    commit('setLoading', false);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    commit('setLoading', false);
                     throw error;
                 });
         }
     },
     getters: {
-        collectionSession: state => state.session,
-        collectionSessionLoading: state => state.loading
+        openedCollection: state => state.opened,
+        openedCollectionLoading: state => state.loading
     }
 };

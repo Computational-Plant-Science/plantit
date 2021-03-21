@@ -83,7 +83,7 @@ export default {
             window.open(url);
         }
     },
-    computed: mapGetters(['profile'])
+    computed: mapGetters('user', ['profile'])
 };
 </script>
 <style scoped lang="sass">

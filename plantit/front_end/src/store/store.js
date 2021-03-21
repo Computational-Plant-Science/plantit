@@ -29,7 +29,7 @@ const store = new Vuex.Store({
         users,
         workflows,
         runs,
-        session: collections,
+        collections,
         notifications
     }
 });

@@ -185,7 +185,6 @@ def open_session(request):
             return HttpResponseBadRequest(f"User not authorized; you must provide authentication information")
         username = request.data['auth']['username']
         password = request.data['auth']['password']
-        ssh_client = SSH(cluster.hostname, cluster.port, username, password)
 
     guid = str(uuid.uuid4())
     path = request.data['path']
@@ -196,22 +195,9 @@ def open_session(request):
         cluster=cluster,
         token=binascii.hexlify(os.urandom(20)).decode(),
         workdir=join(cluster.workdir, f"{guid}"))
-    update_collection_session(session, [f"Creating working directory for collection session {session.guid} on {cluster.name}"])
 
-    try:
-        with ssh_client:
-            print(execute_command(
-                    ssh_client=ssh_client,
-                    pre_command=':',
-                    command=f"mkdir {guid}/",
-                    directory=cluster.workdir))
-    except:
-        update_collection_session(session, [f"Failed to create working directory for collection session {session.guid} on {cluster.name}"])
-        session.delete()
-
-    open_collection_session.s(session.guid).apply_async()
-
-    # update_collection_session(session, [f"Opening collection {session.path} on {cluster.name} in working directory {join(session.cluster.workdir, session.workdir)}"])
+    open_collection_session.s(session.guid).apply_async(countdown=5)
+    update_collection_session(session, [f"Opening collection {session.path} on {cluster.name} in working directory {join(session.cluster.workdir, session.workdir)}"])
     return JsonResponse({'session': map_collection_session(session)})
 
 
@@ -239,16 +225,21 @@ def close_session(request):
     except:
         return HttpResponseNotFound()
 
-    update_collection_session(session, [f"Closing collection session on {session.cluster.name}"])
+    update_collection_session(session, [f"Closing collection session {session.guid}"])
 
     ssh_client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
     with ssh_client:
-        output = execute_command(
-                ssh_client=ssh_client,
-                pre_command=':',
-                command=f"rm -r {session.guid}/",
-                directory=session.cluster.workdir)
-        update_collection_session(session, output)
+        with ssh_client.client.open_sftp() as sftp:
+            try:
+                sftp.stat(join(session.cluster.workdir, session.guid))
+                execute_command(
+                    ssh_client=ssh_client,
+                    pre_command=':',
+                    command=f"rm -r {session.guid}/",
+                    directory=session.cluster.workdir)
+                update_collection_session(session, [f"Removed collection session {session.guid} working directory {session.workdir}"])
+            except:
+                update_collection_session(session, [f"Directory {session.guid} does not exist, skipping"])
 
     session.delete()
     return HttpResponse()
@@ -276,7 +267,7 @@ def get_thumbnail(request):
                 raise Exception(f"Failed to check existence of {file}: {errs}")
 
             run_dir = join(settings.MEDIA_ROOT, session.guid)
-            thumbnail_path = f"{run_dir}{file_name}"
+            thumbnail_path = f"{run_dir}/{file_name}"
 
             # make thumbnail directory for this run if it does not already exist
             Path(run_dir).mkdir(exist_ok=True, parents=True)
@@ -293,7 +284,7 @@ def get_thumbnail(request):
                             return HttpResponse(lines, content_type='text/plain')
 
             with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
-                print(f"Creating new thumbnail: {thumbnail_path}")
+                print(f"Creating thumbnail: {thumbnail_path}")
                 sftp.chdir(session.workdir)
                 sftp.get(file, temp_file.name)
                 return HttpResponse(temp_file, content_type="image/png")

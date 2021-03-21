@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/browser';
 import jwtDecode from 'jwt-decode';
 
 export const user = {
+    namespaced: true,
     state: () => ({
         profile: {
             loggedIn: false,

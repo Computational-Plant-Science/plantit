@@ -904,9 +904,9 @@
         </b-navbar>
         <b-navbar
             v-if="
-                collectionSessionLoading ||
-                    (collectionSession !== undefined &&
-                        collectionSession !== null &&
+                openedCollectionLoading ||
+                    (openedCollection !== undefined &&
+                        openedCollection !== null &&
                         !viewingCollection)
             "
             toggleable="sm"
@@ -914,7 +914,7 @@
             style="border-top: 1px solid gray"
             :variant="profile.darkMode ? 'dark' : 'white'"
         >
-            <b-navbar-nav v-if="collectionSessionLoading">
+            <b-navbar-nav v-if="openedCollectionLoading">
                 <b-spinner
                     :variant="profile.darkMode ? 'light' : 'dark'"
                     small
@@ -923,54 +923,55 @@
             </b-navbar-nav>
             <b-navbar-nav
                 v-else-if="
-                    collectionSession !== null &&
-                        collectionSession !== undefined
+                    openedCollection !== null && openedCollection !== undefined
                 "
             >
                 <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
-                    <i class="far fa-folder-open fa-fw mr-2"></i>
-                    <small
-                        >Collection {{ collectionSession.path }} open on
-                        <b>{{ collectionSession.cluster }}</b
-                        >, {{ collectionSession.modified.length }} file(s)
-                        modified</small
+                    <span v-if="openedCollection.opening">
+                        <b-spinner
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            small
+                            class="mr-2"
+                        ></b-spinner
+                        >Opening <b>{{ openedCollection.path }}</b> on
+                        <b>{{ openedCollection.cluster }}</b>
+                    </span>
+                    <span v-else>
+                        <i class="far fa-folder-open fa-fw mr-2"></i>
+                        <b>{{ openedCollection.path }}</b> open on
+                        <b>{{ openedCollection.cluster }}</b
+                        >, {{ openedCollection.modified.length }} file(s)
+                        modified</span
                     >
                 </b></b-navbar-nav
             >
             <b-navbar-nav
                 class="ml-auto"
                 v-if="
-                    collectionSession !== null &&
-                        collectionSession !== undefined
+                    openedCollection !== null && openedCollection !== undefined && openedCollection.opening
                 "
             >
                 <small>{{
-                    collectionSession.output[
-                        collectionSession.output.length - 1
-                    ]
+                    openedCollection.output[openedCollection.output.length - 1]
                 }}</small>
             </b-navbar-nav>
-            <b-navbar-nav class="ml-auto" v-if="!collectionSessionLoading">
+            <b-navbar-nav class="ml-auto" v-if="!openedCollectionLoading">
                 <b-button
                     :variant="
-                        profile.darkMode ? 'outline-light' : 'outline-dark'
+                        profile.darkMode ? 'outline-light' : 'white'
                     "
                     title="View collection"
                     class="mr-2"
                     :to="{
                         name: 'collection',
-                        params: { path: collectionSession.path }
+                        params: { path: openedCollection.path }
                     }"
                 >
-                    <span
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                    >
-                        View
-                        <i class="fas fa-th fa-1x fa-fw"></i
-                    ></span>
+                    View
+                    <i class="fas fa-th fa-1x fa-fw"></i>
                 </b-button>
                 <b-dropdown
-                    v-if="collectionSession.modified.length !== 0"
+                    v-if="openedCollection.modified.length !== 0"
                     dropup
                     :variant="profile.darkMode ? 'outline-light' : 'white'"
                     class="mr-2"
@@ -1087,14 +1088,15 @@ export default {
         };
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'runsLoading',
-            'runs',
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('runs', ['runsLoading', 'runs']),
+        ...mapGetters('notifications', [
             'notificationsLoading',
-            'notifications',
-            'collectionSession',
-            'collectionSessionLoading'
+            'notifications'
+        ]),
+        ...mapGetters('collections', [
+            'openedCollection',
+            'openedCollectionLoading'
         ]),
         runningRuns() {
             return this.runs.filter(r => !r.is_complete);
@@ -1125,14 +1127,9 @@ export default {
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
-        this.viewingCollection = this.$router.currentRoute.name === 'collection';
+        this.viewingCollection =
+            this.$router.currentRoute.name === 'collection';
         let ws_protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-
-        await Promise.all([
-            this.$store.dispatch('loadRuns'),
-            this.$store.dispatch('loadNotifications'),
-            this.$store.dispatch('loadCollectionSession')
-        ]);
 
         // subscribe to run channel
         this.runSocket = new WebSocket(
@@ -1147,21 +1144,31 @@ export default {
         this.notificationSocket.onmessage = this.onNotification;
 
         // subscribe to collection session channel
-        if (
-            this.collectionSession !== null &&
-            this.collectionSession !== undefined
-        ) {
-            this.interactiveSocket = new WebSocket(
-                `${ws_protocol}${window.location.host}/ws/sessions/${this.profile.djangoProfile.username}/`
-            );
-            this.interactiveSocket.onmessage = this.onSessionEvent;
-        }
+        // if (
+        //     this.openedCollection !== null &&
+        //     this.openedCollection !== undefined
+        // ) {
+        //     this.interactiveSocket = new WebSocket(
+        //         `${ws_protocol}${window.location.host}/ws/sessions/${this.openedCollection.guid}/`
+        //     );
+        //     this.interactiveSocket.onmessage = this.onSessionEvent;
+        // }
+
+        await Promise.all([
+            this.$store.dispatch('runs/loadAll'),
+            this.$store.dispatch('notifications/loadAll'),
+            this.$store.dispatch('collections/loadOpened')
+        ]);
     },
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
             this.viewingCollection =
                 this.$router.currentRoute.name === 'collection';
+        },
+        openedCollection() {
+            // need this noop watch so the bottom navbar will hide itself after collection is closed
+            // alert(this.openedCollection === null);
         }
     },
     methods: {
@@ -1169,7 +1176,7 @@ export default {
         async closeCollection() {
             await this.$bvModal
                 .msgBoxConfirm(
-                    `Are you sure you want to close ${this.collectionSession.path} on ${this.collectionSession.cluster}?`,
+                    `Are you sure you want to close ${this.openedCollection.path} on ${this.openedCollection.cluster}?`,
                     {
                         title: 'Close Collection?',
                         size: 'sm',
@@ -1182,7 +1189,7 @@ export default {
                 )
                 .then(async value => {
                     if (value)
-                        await this.$store.dispatch('closeCollectionSession');
+                        await this.$store.dispatch('collections/closeOpened');
                 })
                 .catch(err => {
                     throw err;
@@ -1209,19 +1216,26 @@ export default {
                     return error;
                 });
         },
+        // TODO move to VUEX
         async onRunUpdate(event) {
             let data = JSON.parse(event.data);
-            await this.$store.dispatch('updateRun', data.run);
+            await this.$store.dispatch('runs/update', data.run);
             this.toastRun = data.run;
             this.$bvToast.show('toast');
         },
         async onNotification(event) {
             let data = JSON.parse(event.data);
-            await this.$store.dispatch('updateNotification', data.notification);
+            await this.$store.dispatch(
+                'notifications/update',
+                data.notification
+            );
         },
         async onSessionEvent(event) {
             let data = JSON.parse(event.data);
-            await this.$store.dispatch('updateCollectionSession', data.session);
+            await this.$store.dispatch(
+                'collections/updateOpened',
+                data.session
+            );
         },
         onDelete(run) {
             axios
@@ -1230,7 +1244,7 @@ export default {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('loadRuns');
+                        this.$store.dispatch('runs/loadAll');
                         router.push({
                             name: 'user',
                             params: {
@@ -1265,7 +1279,7 @@ export default {
             return `${moment(date).fromNow()}`;
         },
         toggleDarkMode: function() {
-            this.$store.dispatch('toggleDarkMode');
+            this.$store.dispatch('user/toggleDarkMode');
         }
     }
 };

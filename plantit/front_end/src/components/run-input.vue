@@ -168,7 +168,8 @@ export default {
         };
     },
     computed: {
-        ...mapGetters(['profile', 'workflowsRecentlyRun']),
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('workflows', ['workflowsRecentlyRun']),
         workflowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }

@@ -115,7 +115,8 @@ export default {
         await this.$store.dispatch('loadWorkflows');
     },
     computed: {
-        ...mapGetters(['profile', 'workflows', 'workflowsLoading']),
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('workflows', ['workflows', 'workflowsLoading']),
         publicWorkflows() {
             if (this.workflowsLoading) return [];
             return this.workflows.filter(wf => wf.config.public);

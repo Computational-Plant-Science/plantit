@@ -3,18 +3,19 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export const notifications = {
+    namespaced: true,
     state: () => ({
         notifications: [],
         loading: true
     }),
     mutations: {
-        setNotifications(state, notifications) {
+        setAll(state, notifications) {
             state.notifications = notifications;
         },
-        setNotificationsLoading(state, loading) {
+        setLoading(state, loading) {
             state.loading = loading;
         },
-        updateNotification(state, notification) {
+        update(state, notification) {
             let i = state.notifications.findIndex(
                 n => n.id === notification.id
             );
@@ -23,8 +24,8 @@ export const notifications = {
         }
     },
     actions: {
-        async loadNotifications({ commit, rootState }) {
-            commit('setNotificationsLoading', true);
+        async loadAll({ commit, rootState }) {
+            commit('setLoading', true);
             await axios
                 .get(
                     `/apis/v1/notifications/${rootState.user.profile.djangoProfile.username}/get_by_user/?page=0`
@@ -47,17 +48,17 @@ export const notifications = {
                         return new Date(b.created) - new Date(a.created);
                     });
 
-                    commit('setNotifications', notifications);
-                    commit('setNotificationsLoading', false);
+                    commit('setAll', notifications);
+                    commit('setLoading', false);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    commit('setNotificationsLoading', false);
+                    commit('setLoading', false);
                     if (error.response.status === 500) throw error;
                 });
         },
-        async updateNotification({ commit }, notification) {
-            commit('updateNotification', notification);
+        async update({ commit }, notification) {
+            commit('update', notification);
         }
     },
     getters: {

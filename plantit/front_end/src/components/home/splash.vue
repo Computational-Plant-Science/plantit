@@ -152,12 +152,12 @@ import { mapGetters } from 'vuex';
 
 export default {
     name: 'home-splash',
-    computed: mapGetters([
+    computed: mapGetters('user', [
         'profile',
     ]),
     created: function() {
         this.crumbs = this.$route.meta.crumb;
-        this.$store.dispatch('loadProfile');
+        this.$store.dispatch('user/loadProfile');
     }
 };
 </script>

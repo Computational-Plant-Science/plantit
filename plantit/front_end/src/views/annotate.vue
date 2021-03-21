@@ -9,7 +9,7 @@
     >
         <br />
         <br />
-        <b-container class="p-3 vl" fluid>
+        <b-container class="p-3 vl">
             <div v-if="dataNotFound">
                 <b-row align-content="center">
                     <b-col>
@@ -54,7 +54,7 @@
 import { mapGetters } from 'vuex';
 
 export default {
-    name: 'artifact',
+    name: 'annotate',
     data: function() {
         return {
             data: null,
@@ -64,12 +64,11 @@ export default {
         };
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'workflow',
-            'workflowsRecentlyRun',
-            'session',
-            'sessionLoading'
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
+        ...mapGetters('collections', [
+            'openedCollection',
+            'openedCollectionLoading'
         ])
     }
 };

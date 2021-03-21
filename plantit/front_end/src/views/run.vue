@@ -1194,7 +1194,10 @@ export default {
     },
     methods: {
         refreshRun() {
-          this.$store.dispatch('refreshRun', this.$router.currentRoute.params.id);
+            this.$store.dispatch(
+                'refreshRun',
+                this.$router.currentRoute.params.id
+            );
         },
         onCancel() {
             axios
@@ -1477,18 +1480,16 @@ export default {
     },
     async mounted() {
         this.loadingRun = true;
-        await this.$store.dispatch('refreshRun', this.$router.currentRoute.params.id);
+        await this.$store.dispatch(
+            'runs/refresh',
+            this.$router.currentRoute.params.id
+        );
         this.loadingRun = false;
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'workflow',
-            'workflowsRecentlyRun',
-            'run',
-            'runs',
-            'runsLoading'
-        ]),
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
+        ...mapGetters('runs', ['run', 'runs', 'runsLoading']),
         workflowKey() {
             return `${this.getWorkflow.repo.owner.login}/${this.getWorkflow.repo.name}`;
         },
@@ -1517,7 +1518,7 @@ export default {
     },
     watch: {
         async $route() {
-            await this.$store.dispatch('refreshRun', this.getRun);
+            await this.$store.dispatch('runs/refresh', this.getRun);
         }
     }
 };

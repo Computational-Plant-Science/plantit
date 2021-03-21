@@ -43,5 +43,5 @@ urlpatterns = [
 websocket_urlpatterns = [
     path(r'ws/runs/<username>/', RunConsumer.as_asgi()),
     path(r'ws/notifications/<username>/', NotificationConsumer.as_asgi()),
-    path(r'ws/sessions/<username>/', CollectionSessionConsumer.as_asgi())
+    path(r'ws/sessions/<guid>/', CollectionSessionConsumer.as_asgi())
 ]

@@ -64,7 +64,7 @@
                         class="justify-content-center mt-3"
                     >
                         <b-card
-                            v-for="user in users"
+                            v-for="user in allUsers"
                             :key="user.username"
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             :header-bg-variant="
@@ -172,9 +172,12 @@ import router from '@/router';
 export default {
     name: 'Users',
     async mounted() {
-        await this.$store.dispatch('loadUsers');
+        await this.$store.dispatch('users/loadAll');
     },
-    computed: mapGetters(['profile', 'users', 'usersLoading']),
+    computed: {
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('users', ['allUsers', 'usersLoading'])
+    },
     data: function() {
         return {
             searchText: ''

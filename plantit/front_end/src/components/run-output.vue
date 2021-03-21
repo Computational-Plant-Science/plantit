@@ -1,7 +1,8 @@
 <template>
     <div>
         <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
-            Select a directory in the CyVerse Data Store to upload output files to.
+            Select a directory in the CyVerse Data Store to upload output files
+            to.
         </b>
         <b-row class="mt-2"
             ><b-col>
@@ -19,7 +20,10 @@
                     :node="data"
                 ></datatree></b-col
         ></b-row>
-        <b-alert class="mt-1" :variant="path ? 'success' : 'danger'" :show="true"
+        <b-alert
+            class="mt-1"
+            :variant="path ? 'success' : 'danger'"
+            :show="true"
             >Selected: {{ path ? path : 'None' }}
             <i v-if="path" class="fas fa-check text-success"></i>
             <i v-else class="fas fa-exclamation text-danger"></i>
@@ -46,10 +50,8 @@ export default {
         };
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'workflowsRecentlyRun',
-        ]),
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('workflows', ['workflowsRecentlyRun']),
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }

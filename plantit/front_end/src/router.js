@@ -9,7 +9,7 @@ import user from './views/user.vue';
 import users from './views/users.vue';
 import run from './views/run.vue';
 import collection from './views/collection.vue';
-import artifact from './views/artifact.vue';
+import annotate from './views/annotate.vue';
 import store from './store/store.js';
 
 Vue.use(Router);
@@ -129,12 +129,12 @@ let router = new Router({
             }
         },
         {
-            path: '/artifact/:path',
-            name: 'artifact',
+            path: '/annotate/:path',
+            name: 'annotate',
             props: true,
-            component: artifact,
+            component: annotate,
             meta: {
-                title: 'Artifact',
+                title: 'Annotate',
                 crumb: [],
                 requiresAuth: true
             }
@@ -209,10 +209,11 @@ router.beforeEach(async (to, from, next) => {
         });
     }
 
-    await store.dispatch('loadProfile');
-
-    if (to.meta.requiresAuth && !store.getters.profile.loggedIn) {
-        window.location.replace(process.env.VUE_APP_URL + '/apis/v1/idp/cyverse_login/');
+    await store.dispatch('user/loadProfile');
+    if (to.meta.requiresAuth && !store.getters['user/profile'].loggedIn) {
+        window.location.replace(
+            process.env.VUE_APP_URL + '/apis/v1/idp/cyverse_login/'
+        );
     } else next();
 });
 

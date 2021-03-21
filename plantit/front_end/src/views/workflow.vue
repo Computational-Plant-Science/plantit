@@ -1395,8 +1395,8 @@ export default {
     },
     async mounted() {
         await Promise.all([
-            this.$store.dispatch('loadUsers'),
-            this.$store.dispatch('refreshWorkflow', {
+            this.$store.dispatch('users/loadAll'),
+            this.$store.dispatch('workflows/refresh', {
                 owner: this.$router.currentRoute.params.username,
                 name: this.$router.currentRoute.params.name
             }),
@@ -1782,7 +1782,7 @@ export default {
             }
 
             // save config
-            this.$store.dispatch('setWorkflowRecentlyRun', {
+            this.$store.dispatch('workflows/setRecentlyRun', {
                 name: this.workflowKey,
                 config: config
             });
@@ -1877,7 +1877,8 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['profile', 'workflow', 'workflowsRecentlyRun']),
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
         getWorkflow() {
             return this.workflow(
                 this.$router.currentRoute.params.username,

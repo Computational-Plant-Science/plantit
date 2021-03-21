@@ -97,7 +97,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters([
+        ...mapGetters('user', [
             'profile',
         ])
     }

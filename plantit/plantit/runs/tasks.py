@@ -350,14 +350,19 @@ def run_command(cluster_name: str, command: str, pre_command: str = None):
 def open_collection_session(id: str):
     try:
         session = CollectionSession.objects.get(guid=id)
-
-        msg = f"Opening collection session {session.guid} on {session.cluster.name}"
-        update_collection_session(session, [msg])
-        logger.info(msg)
-
         ssh_client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
 
         with ssh_client:
+            msg = f"Creating working directory {session.workdir}"
+            update_collection_session(session, [f"Creating working directory {session.workdir}"])
+            logger.info(msg)
+
+            execute_command(
+                ssh_client=ssh_client,
+                pre_command=':',
+                command=f"mkdir {session.guid}/",
+                directory=session.cluster.workdir)
+
             msg = f"Transferring files from {session.path} to {session.cluster.name}"
             update_collection_session(session, [msg])
             logger.info(msg)
@@ -370,6 +375,12 @@ def open_collection_session(id: str):
                 directory=session.workdir,
                 allow_stderr=True)
             update_collection_session(session, lines)
+
+            session.opening = False
+            session.save()
+            msg = f"Succesfully opened collection"
+            update_collection_session(session, [msg])
+            logger.info(msg)
     except:
         msg = f"Failed to open session: {traceback.format_exc()}."
         logger.error(msg)

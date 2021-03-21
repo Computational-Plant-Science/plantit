@@ -200,10 +200,10 @@
                         v-if="
                             internalLoaded &&
                                 !internalLoading &&
-                                !collectionSessionLoading &&
+                                !openedCollectionLoading &&
                                 internalNode.path.split('/').length > 4
                         "
-                        :disabled="collectionSession !== null"
+                        :disabled="openedCollection !== null"
                         title="Open Collection"
                         size="sm"
                         dropleft
@@ -218,7 +218,12 @@
                             Select a cluster to open this collection.
                         </b-dropdown-text>
                         <b-dropdown-divider></b-dropdown-divider>
-                        <b-dropdown-text v-if="clusters.length === 0"
+                        <b-dropdown-text
+                            v-if="
+                                clusters !== undefined &&
+                                    clusters !== null &&
+                                    clusters.length === 0
+                            "
                             ><b class="text-danger"
                                 >You have no cluster permissions.</b
                             ><br />See
@@ -812,12 +817,11 @@ export default {
         };
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'users',
-            'usersLoading',
-            'collectionSession',
-            'collectionSessionLoading'
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('users', ['allUsers', 'usersLoading']),
+        ...mapGetters('collections', [
+            'openedCollection',
+            'openedCollectionLoading'
         ]),
         sharedBy: function() {
             if (this.isShared) {
@@ -845,7 +849,7 @@ export default {
         sharingUsers() {
             let username = this.profile.djangoProfile.username;
             return (
-                this.users
+                this.allUsers
                     // .map(function(user) {
                     //     return {
                     //         value: user.username,
@@ -879,35 +883,12 @@ export default {
     },
     methods: {
         openCollection(cluster) {
-            this.$store.dispatch('updateCollectionSessionLoading', true);
-            let data = {
-                cluster: cluster.name,
+            this.$store.dispatch('collections/open', {
+                cluster: cluster,
                 path: this.internalLoaded
                     ? this.internalNode.path
                     : this.node.path
-            };
-            // if (this.mustAuthenticate)
-            //     data['auth'] = {
-            //         username: this.authenticationUsername,
-            //         password: this.authenticationPassword
-            //     };
-
-            axios({
-                method: 'post',
-                url: `/apis/v1/collections/open/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(async response => {
-                    await this.$store.dispatch(
-                        'updateCollectionSession',
-                        response.data.session
-                    );
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
+            });
         },
         fileIsImage(file) {
             return (

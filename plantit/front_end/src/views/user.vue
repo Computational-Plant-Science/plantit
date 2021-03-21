@@ -15,17 +15,19 @@
                     </b-col>
                 </b-row>
             </div>
-            <div v-else>
+            <div
+                v-else-if="
+                    !(
+                        userProfile === null ||
+                        userProfile === undefined ||
+                        userProfile.githubProfile === null ||
+                        userProfile.githubProfile === undefined
+                    )
+                "
+            >
                 <b-row align-v="start" class="mb-2">
                     <b-col md="auto">
-                        <div
-                            v-if="
-                                !(
-                                    userProfile.githubProfile === null ||
-                                    userProfile.githubProfile === undefined
-                                )
-                            "
-                        >
+                        <div>
                             <b-row
                                 ><b-col
                                     v-if="userProfile.githubProfile"
@@ -168,7 +170,15 @@
                                                         : 'theme-light'
                                                 "
                                             >
-                                                <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">Your user profile</h5>
+                                                <h5
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                >
+                                                    Your user profile
+                                                </h5>
                                                 <p>
                                                     <small>Email</small>
                                                     <br />
@@ -301,6 +311,7 @@
                                                 v-bind:key="node.path"
                                                 v-bind:node="node"
                                                 select="directory"
+                                                :clusters="clusters"
                                                 :upload="true"
                                                 :download="true"
                                                 :class="
@@ -653,13 +664,11 @@ export default {
         };
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'profileLoading',
-            'workflows',
-            'workflowsLoading',
-            'collectionSession',
-            'collectionSessionLoading'
+        ...mapGetters('user', ['profile', 'profileLoading']),
+        ...mapGetters('workflows', ['workflows', 'workflowsLoading']),
+        ...mapGetters('collections', [
+            'openedCollection',
+            'openedCollectionLoading'
         ]),
         userWorkflows() {
             if (
@@ -699,8 +708,8 @@ export default {
     },
     async mounted() {
         await Promise.all([
-            this.$store.dispatch('loadWorkflows'),
-            this.$store.dispatch('loadUsers'),
+            this.$store.dispatch('workflows/loadAll'),
+            this.$store.dispatch('users/loadAll'),
             this.loadCollection(
                 `/iplant/home/${this.profile.djangoProfile.username}/`,
                 this.profile.djangoProfile.cyverse_token
@@ -712,7 +721,7 @@ export default {
     },
     methods: {
         openCollection() {
-            this.$store.dispatch('updateSessionLoading', true);
+            this.$store.dispatch('collections/updateLoading', true);
             let data = { cluster: this.cluster.name };
             // if (this.mustAuthenticate)
             //     data['auth'] = {
@@ -728,7 +737,7 @@ export default {
             })
                 .then(async response => {
                     await this.$store.dispatch(
-                        'updateSession',
+                        'collections/updateOpened',
                         response.data.session
                     );
                 })

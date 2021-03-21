@@ -34,6 +34,8 @@ class CollectionSession(models.Model):
     token = models.CharField(max_length=40)
     modified = ArrayField(models.CharField(max_length=250), blank=True, null=True)
     save_task_id = models.CharField(max_length=50, null=True, blank=True)
+    channel_name = models.CharField(max_length=200, null=True, blank=True)
+    opening = models.BooleanField(default=True, null=False, blank=False)
 
     def __str__(self):
         opts = self._meta

@@ -150,7 +150,9 @@
                                                     >Guest</b-badge
                                                 >
                                                 <b-badge
-                                                    v-else-if="cluster.role === 'own'"
+                                                    v-else-if="
+                                                        cluster.role === 'own'
+                                                    "
                                                     variant="success"
                                                     >Owner</b-badge
                                                 >
@@ -780,11 +782,11 @@ export default {
         this.loadTarget();
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'workflowsRecentlyRun',
-            'session',
-            'sessionLoading'
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('workflows', ['workflowsRecentlyRun']),
+        ...mapGetters('collections', [
+            'openedCollectionLoading',
+            'openedCollection'
         ]),
         mustAuthenticate() {
             return (
