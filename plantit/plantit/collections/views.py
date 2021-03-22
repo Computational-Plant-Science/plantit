@@ -272,22 +272,22 @@ def get_thumbnail(request):
             # make thumbnail directory for this run if it does not already exist
             Path(run_dir).mkdir(exist_ok=True, parents=True)
 
-            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
-                with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
-                    sftp.chdir(session.workdir)
-                    sftp.get(file, temp_file.name)
-                    with tempfile.NamedTemporaryFile() as tf:
-                        sftp.chdir(session.workdir)
-                        sftp.get(file, tf.name)
-                        with open(tf.name, 'r') as file:
-                            lines = file.readlines()
-                            return HttpResponse(lines, content_type='text/plain')
-
-            with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
-                print(f"Creating thumbnail: {thumbnail_path}")
+            with tempfile.NamedTemporaryFile() as temp_file:
+                print(f"Creating thumbnail for {file_name}")
                 sftp.chdir(session.workdir)
                 sftp.get(file, temp_file.name)
                 return HttpResponse(temp_file, content_type="image/png")
+
+            # if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
+            #     with tempfile.NamedTemporaryFile() as temp_file:
+            #         sftp.chdir(session.workdir)
+            #         sftp.get(file, temp_file.name)
+            #         with tempfile.NamedTemporaryFile() as tf:
+            #             sftp.chdir(session.workdir)
+            #             sftp.get(file, tf.name)
+            #             with open(tf.name, 'r') as file:
+            #                 lines = file.readlines()
+            #                 return HttpResponse(lines, content_type='text/plain')
 
             # if Path(thumbnail_path).exists():
             #     print(f"Using existing thumbnail: {thumbnail_path}")

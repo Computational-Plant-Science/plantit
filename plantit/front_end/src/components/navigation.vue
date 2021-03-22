@@ -948,7 +948,9 @@
             <b-navbar-nav
                 class="ml-auto"
                 v-if="
-                    openedCollection !== null && openedCollection !== undefined && openedCollection.opening
+                    openedCollection !== null &&
+                        openedCollection !== undefined &&
+                        openedCollection.opening
                 "
             >
                 <small>{{
@@ -957,9 +959,7 @@
             </b-navbar-nav>
             <b-navbar-nav class="ml-auto" v-if="!openedCollectionLoading">
                 <b-button
-                    :variant="
-                        profile.darkMode ? 'outline-light' : 'white'
-                    "
+                    :variant="profile.darkMode ? 'outline-light' : 'white'"
                     title="View collection"
                     class="mr-2"
                     :to="{
