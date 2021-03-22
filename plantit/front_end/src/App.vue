@@ -26,7 +26,7 @@ export default {
     components: {
         Navigation
     },
-    computed: mapGetters(['profile'])
+    computed: mapGetters('user', ['profile'])
 };
 </script>
 

@@ -3,16 +3,17 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export const workflows = {
+    namespaced: true,
     state: () => ({
         workflows: [],
         workflowsLoading: true,
         workflowsRecentlyRun: {}
     }),
     mutations: {
-        setWorkflows(state, workflows) {
+        setAll(state, workflows) {
             state.workflows = workflows;
         },
-        updateWorkflow(state, workflow) {
+        update(state, workflow) {
             let i = state.workflows.findIndex(
                 wf =>
                     wf.repo.owner.login === workflow.repo.owner.login &&
@@ -21,29 +22,29 @@ export const workflows = {
             if (i === -1) state.workflows.unshift(workflow);
             else Vue.set(state.workflows, i, workflow);
         },
-        setWorkflowsLoading(state, loading) {
+        setLoading(state, loading) {
             state.workflowsLoading = loading;
         },
-        setWorkflowRecentlyRun(state, { name, config }) {
+        setRecentlyRun(state, { name, config }) {
             state.workflowsRecentlyRun[name] = config;
         }
     },
     actions: {
-        async loadWorkflows({ commit }) {
-            commit('setWorkflowsLoading', true);
+        async loadAll({ commit }) {
+            commit('setLoading', true);
             await axios
                 .get('/apis/v1/workflows/list_all/')
                 .then(response => {
-                    commit('setWorkflows', response.data.workflows);
-                    commit('setWorkflowsLoading', false);
+                    commit('setAll', response.data.workflows);
+                    commit('setLoading', false);
                 })
                 .catch(error => {
-                    commit('setWorkflowsLoading', false);
+                    commit('setLoading', false);
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        async refreshWorkflow({ commit }, payload) {
+        async refresh({ commit }, payload) {
             await axios
                 .get(`/apis/v1/workflows/${payload.owner}/${payload.name}/`, {
                     headers: {
@@ -51,15 +52,15 @@ export const workflows = {
                     }
                 })
                 .then(response => {
-                    commit('updateWorkflow', response.data);
+                    commit('update', response.data);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        setWorkflowRecentlyRun({ commit }, payload) {
-            commit('setWorkflowRecentlyRun', payload);
+        setRecentlyRun({ commit }, payload) {
+            commit('setRecentlyRun', payload);
         }
     },
     getters: {

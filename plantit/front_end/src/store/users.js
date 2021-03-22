@@ -2,36 +2,37 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export const users = {
+    namespaced: true,
     state: () => ({
         users: [],
         usersLoading: true
     }),
     mutations: {
-        setUsers(state, users) {
+        set(state, users) {
             state.users = users;
         },
-        setUsersLoading(state, loading) {
+        setLoading(state, loading) {
             state.usersLoading = loading;
         }
     },
     actions: {
-        async loadUsers({ commit }) {
-            commit('setUsersLoading', true);
+        async loadAll({ commit }) {
+            commit('setLoading', true);
             await axios
                 .get('/apis/v1/users/get_all/')
                 .then(response => {
-                    commit('setUsers', response.data.users);
-                    commit('setUsersLoading', false);
+                    commit('set', response.data.users);
+                    commit('setLoading', false);
                 })
                 .catch(error => {
-                    commit('setUsersLoading', false);
+                    commit('setLoading', false);
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
         }
     },
     getters: {
-        users: state => state.users,
+        allUsers: state => state.users,
         usersLoading: state => state.usersLoading
         // TODO add 'developers' (users who've contributed workflows)
     }

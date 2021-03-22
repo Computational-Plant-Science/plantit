@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/browser';
 import jwtDecode from 'jwt-decode';
 
 export const user = {
+    namespaced: true,
     state: () => ({
         profile: {
             loggedIn: false,
@@ -45,6 +46,9 @@ export const user = {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
+        },
+        logIn({ commit }) {
+            commit('setLoggedIn', true);
         },
         async loadProfile({ commit }) {
             commit('setProfileLoading', true);

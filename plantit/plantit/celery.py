@@ -9,8 +9,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'plantit.settings')
 
 app = Celery(
     'plantit',
-    broker='amqp://rabbitmq',
-    backend=f"db+postgresql://{environ.get('SQL_USER')}:{environ.get('SQL_PASSWORD')}@{environ.get('SQL_HOST')}")
+    # broker='amqp://rabbitmq',
+    broker='redis://redis',
+    # backend=f"db+postgresql://{environ.get('SQL_USER')}:{environ.get('SQL_PASSWORD')}@{environ.get('SQL_HOST')}")
+    backend='redis://redis')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

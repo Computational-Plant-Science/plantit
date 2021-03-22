@@ -13,10 +13,10 @@ assert 'USERS_CACHE' in os.environ, f"{missing_variable}: USERS_CACHE"
 assert 'USERS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: USERS_REFRESH_MINUTES"
 assert 'WORKFLOWS_CACHE' in os.environ, f"{missing_variable}: WORKFLOWS_CACHE"
 assert 'WORKFLOWS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: WORKFLOWS_REFRESH_MINUTES"
+assert 'SESSIONS_LOGS' in os.environ, f"{missing_variable}: SESSION_LOGS"
 assert 'RUNS_TIMEOUT_MULTIPLIER' in os.environ, f"{missing_variable}: RUNS_TIMEOUT_MULTIPLIER"
 assert 'RUNS_REFRESH_SECONDS' in os.environ, f"{missing_variable}: RUNS_REFRESH_SECONDS"
 assert 'RUNS_CLEANUP_MINUTES' in os.environ, f"{missing_variable}: RUNS_CLEANUP_MINUTES"
-assert 'TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES' in os.environ, f"{missing_variable}: TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
 assert 'CYVERSE_CLIENT_ID' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_ID"
@@ -37,10 +37,10 @@ USERS_CACHE = os.environ.get('USERS_CACHE')
 USERS_REFRESH_MINUTES = os.environ.get('USERS_REFRESH_MINUTES')
 WORKFLOWS_CACHE = os.environ.get('WORKFLOWS_CACHE')
 WORKFLOWS_REFRESH_MINUTES = os.environ.get('WORKFLOWS_REFRESH_MINUTES')
+SESSIONS_LOGS = os.environ.get('SESSIONS_LOGS')
 RUNS_TIMEOUT_MULTIPLIER = os.environ.get('RUNS_TIMEOUT_MULTIPLIER')
 RUNS_REFRESH_SECONDS = os.environ.get('RUNS_REFRESH_SECONDS')
 RUNS_CLEANUP_MINUTES = os.environ.get('RUNS_CLEANUP_MINUTES')
-TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES = os.environ.get('TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')
@@ -93,7 +93,10 @@ MIDDLEWARE = [
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)]
+        }
     }
 }
 
@@ -109,7 +112,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'front_end', 'dist'),
-            os.path.join(BASE_DIR, 'templates') # This is temporary until cyverse login is implemented
+            os.path.join(BASE_DIR, 'templates')  # This is temporary until cyverse login is implemented
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -172,4 +175,3 @@ REST_FRAMEWORK = {
 }
 
 TAGGIT_CASE_INSENSITIVE = True
-

@@ -176,7 +176,7 @@
                     <br />
                     <b-spinner
                         v-if="internalLoaded && internalLoading"
-                        :variant="profile.darkMode ? 'warning' : 'dark'"
+                        variant="secondary"
                         type="grow"
                         label="Loading"
                     ></b-spinner>
@@ -195,6 +195,58 @@
                         class="ml-1 mr-1"
                         ><i class="fas fa-share-alt fa-fw"></i
                     ></b-button>
+                    <b-dropdown
+                        class="mr-1 ml-1"
+                        v-if="
+                            internalLoaded &&
+                                !internalLoading &&
+                                !openedCollectionLoading &&
+                                internalNode.path.split('/').length > 4
+                        "
+                        :disabled="openedCollection !== null"
+                        title="Open Collection"
+                        size="sm"
+                        dropleft
+                        :variant="
+                            profile.darkMode ? 'outline-light' : 'outline-dark'
+                        "
+                    >
+                        <template #button-content>
+                            <i class="fas fa-folder-open fa-fw"></i>
+                        </template>
+                        <b-dropdown-text>
+                            Select a cluster to open this collection.
+                        </b-dropdown-text>
+                        <b-dropdown-divider></b-dropdown-divider>
+                        <b-dropdown-text
+                            v-if="
+                                clusters !== undefined &&
+                                    clusters !== null &&
+                                    clusters.length === 0
+                            "
+                            ><b class="text-danger"
+                                >You have no cluster permissions.</b
+                            ><br />See
+                            <b-link
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                                to="/clusters"
+                                ><i class="fas fa-server fa-1x fa-fw"></i>
+                                Clusters</b-link
+                            >
+                            to request guest access to public computing
+                            resources.</b-dropdown-text
+                        >
+                        <b-dropdown-item
+                            @click="openCollection(cluster)"
+                            v-for="cluster in clusters"
+                            v-bind:key="cluster.name"
+                            >{{ cluster.name }}</b-dropdown-item
+                        >
+                    </b-dropdown>
                     <b-modal
                         v-if="!isShared"
                         :title-class="
@@ -217,7 +269,7 @@
                         :footer-border-variant="
                             profile.darkMode ? 'dark' : 'white'
                         "
-                        @ok="shareDirectory"
+                        @ok="shareCollection"
                         @close="hideShareDirectoryModal"
                         :id="
                             'shareDirectoryModal' +
@@ -553,7 +605,7 @@
                     <b-spinner
                         small
                         v-else-if="!internalLoaded && internalLoading"
-                        :variant="profile.darkMode ? 'warning' : 'dark'"
+                        variant="secondary"
                         type="grow"
                         label="Loading"
                     ></b-spinner
@@ -591,6 +643,21 @@
                     >
                 </b-col>
                 <b-col md="auto">
+                    <b-button
+                        id="popover-reactive-1"
+                        :disabled="
+                            !fileIsImage(child.label) &&
+                                !fileIsText(child.label)
+                        "
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        class="m-1"
+                        size="sm"
+                        v-b-tooltip.hover
+                        :title="'View ' + child.label"
+                        @click="viewFile(child)"
+                    >
+                        <i class="fas fa-eye fa-fw"></i>
+                    </b-button>
                     <b-button
                         v-if="!isShared"
                         class="m-1"
@@ -637,6 +704,7 @@
                 :select="select"
                 :upload="upload"
                 :download="download"
+                :clusters="clusters"
                 title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
                 @deleted="
@@ -649,12 +717,54 @@
                 :node="child"
             ></data-tree>
         </b-list-group-item>
+        <b-modal
+            ok-only
+            :body-bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :body-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            ok-variant="secondary"
+            ok-title="Close"
+            size="xl"
+            centered
+            :title="thumbnailTitle"
+            id="thumbnail"
+            class="overflow-hidden"
+            @close="onThumbnailHidden"
+        >
+            <b-spinner
+                v-if="loadingThumbnail"
+                type="grow"
+                label="Loading..."
+                variant="secondary"
+            ></b-spinner>
+            <b-img
+                v-if="fileIsImage(thumbnailName)"
+                center
+                :src="thumbnailUrl"
+                style="width: 68rem"
+                @load="thumbnailLoaded"
+                v-show="thumbnailDoneLoading"
+            >
+            </b-img>
+            <b-embed
+                @load="thumbnailLoaded"
+                v-else-if="fileIsText(thumbnailName)"
+                type="iframe"
+                :src="thumbnailUrl"
+            ></b-embed>
+        </b-modal>
     </b-list-group>
 </template>
 <script>
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
+import router from '@/router';
 export default {
     name: 'data-tree',
     props: {
@@ -673,6 +783,10 @@ export default {
         download: {
             required: false,
             type: Boolean
+        },
+        clusters: {
+            required: false,
+            type: Array
         }
     },
     data: function() {
@@ -693,11 +807,22 @@ export default {
             downloading: false,
             sharedUsers: [],
             sharedAlertMessage: '',
-            showSharedAlert: false
+            showSharedAlert: false,
+            // thumbnail view
+            loadingThumbnail: true,
+            thumbnailName: '',
+            thumbnailUrl: '',
+            thumbnailTitle: '',
+            thumbnailDoneLoading: false
         };
     },
     computed: {
-        ...mapGetters(['profile', 'users', 'usersLoading']),
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('users', ['allUsers', 'usersLoading']),
+        ...mapGetters('collections', [
+            'openedCollection',
+            'openedCollectionLoading'
+        ]),
         sharedBy: function() {
             if (this.isShared) {
                 let path = this.internalLoaded
@@ -724,7 +849,7 @@ export default {
         sharingUsers() {
             let username = this.profile.djangoProfile.username;
             return (
-                this.users
+                this.allUsers
                     // .map(function(user) {
                     //     return {
                     //         value: user.username,
@@ -757,6 +882,80 @@ export default {
         }
     },
     methods: {
+        openCollection(cluster) {
+            this.$store.dispatch('collections/open', {
+                cluster: cluster,
+                path: this.internalLoaded
+                    ? this.internalNode.path
+                    : this.node.path
+            });
+        },
+        fileIsImage(file) {
+            return (
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'png' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpg' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpeg'
+            );
+        },
+        fileIsText(file) {
+            return (
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'txt' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'csv' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'tsv' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'yml' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'yaml' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'log' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'out' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'err'
+            );
+        },
+        viewFile(file) {
+            router.push({
+                name: 'artifact',
+                params: {
+                    path: file.path
+                }
+            });
+        },
+        onThumbnailHidden() {
+            this.thumbnailUrl = '';
+            this.thumbnailTitle = '';
+            this.thumbnailDoneLoading = false;
+            this.loadingThumbnail = true;
+        },
         showCreateDirectoryModal() {
             this.$bvModal.show(
                 'createDirectoryModal' +
@@ -773,29 +972,15 @@ export default {
                         : this.node.label)
             );
         },
-        async shareDirectory() {
-            /** Terrain spec
-             *{
-             *  "sharing": [
-             *    {
-             *      "user": "string",
-             *      "paths: [
-             *        {
-             *          "path": "string",
-             *          "permission": "read",
-             *        }
-             *      ]
-             *    }
-             *  ]
-             *}
-             */
+        async shareCollection() {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
             await axios({
                 method: 'post',
-                url: `/apis/v1/stores/share_directory/`,
+                url: `/apis/v1/collections/share/`,
                 data: {
+                    // sharing
                     sharing: this.sharedUsers.map(function(user) {
                         return {
                             user: user,
@@ -912,12 +1097,12 @@ export default {
         async deletePath(path, token) {
             await this.$bvModal
                 .msgBoxConfirm(`Are you sure you want to delete '${path}'?`, {
-                    title: 'Confirm Deletion',
+                    title: `Delete ${path}?`,
                     size: 'sm',
                     okVariant: 'outline-danger',
-                    cancelVariant: 'outline-dark',
+                    cancelVariant: 'white',
                     okTitle: 'Yes',
-                    cancelTitle: 'Cancel',
+                    cancelTitle: 'No',
                     centered: true
                 })
                 .then(async value => {

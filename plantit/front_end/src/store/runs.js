@@ -3,27 +3,27 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
 export const runs = {
+    namespaced: true,
     state: () => ({
         runs: [],
         loading: true
     }),
     mutations: {
-        setRuns(state, runs) {
+        setAll(state, runs) {
             state.runs = runs;
         },
-        setRunsLoading(state, loading) {
+        setLoading(state, loading) {
             state.loading = loading;
         },
-        updateRun(state, run) {
+        update(state, run) {
             let i = state.runs.findIndex(r => r.id === run.id);
             if (i === -1) state.runs.unshift(run);
             else Vue.set(state.runs, i, run);
         }
     },
     actions: {
-        async loadRuns({ commit, rootState }) {
-            commit('setRunsLoading', true);
-
+        async loadAll({ commit, rootState }) {
+            commit('setLoading', true);
             await Promise.all([
                 axios
                     .get(
@@ -45,24 +45,23 @@ export const runs = {
                             return new Date(b.updated) - new Date(a.updated);
                         });
 
-                        commit('setRuns', runs);
+                        commit('setAll', runs);
                     })
                     .catch(error => {
                         Sentry.captureException(error);
                         throw error;
                     })
             ]);
-
-            commit('setRunsLoading', false);
+            commit('setLoading', false);
         },
-        updateRun({ commit }, run) {
-            commit('updateRun', run);
+        update({ commit }, run) {
+            commit('update', run);
         },
-        refreshRun({ commit }, id) {
+        refresh({ commit }, id) {
             axios
                 .get(`/apis/v1/runs/${id}/`)
                 .then(response => {
-                    commit('updateRun', response.data);
+                    commit('update', response.data);
                 })
                 .catch(error => {
                     Sentry.captureException(error);

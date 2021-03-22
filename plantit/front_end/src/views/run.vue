@@ -185,7 +185,7 @@
                                             >{{ getRun.state }}
                                         </b-badge>-->
                                         <small> on </small>
-                                        <b class="mr-0">{{ getRun.target }}</b>
+                                        <b class="mr-0">{{ getRun.cluster }}</b>
                                     </h5>
                                 </b-col>
                                 <b-col
@@ -1194,7 +1194,10 @@ export default {
     },
     methods: {
         refreshRun() {
-          this.$store.dispatch('refreshRun', this.$router.currentRoute.params.id);
+            this.$store.dispatch(
+                'refreshRun',
+                this.$router.currentRoute.params.id
+            );
         },
         onCancel() {
             axios
@@ -1266,8 +1269,6 @@ export default {
                             id: response.data.id
                         }
                     });
-                    location.reload();
-                    this.reloadRun();
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1477,18 +1478,16 @@ export default {
     },
     async mounted() {
         this.loadingRun = true;
-        await this.$store.dispatch('refreshRun', this.$router.currentRoute.params.id);
+        await this.$store.dispatch(
+            'runs/refresh',
+            this.$router.currentRoute.params.id
+        );
         this.loadingRun = false;
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'workflow',
-            'workflowsRecentlyRun',
-            'run',
-            'runs',
-            'runsLoading'
-        ]),
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
+        ...mapGetters('runs', ['run', 'runs', 'runsLoading']),
         workflowKey() {
             return `${this.getWorkflow.repo.owner.login}/${this.getWorkflow.repo.name}`;
         },
@@ -1512,12 +1511,15 @@ export default {
         containerLogFileName() {
             return `${
                 this.$router.currentRoute.params.id
-            }.${this.getRun.target.toLowerCase()}.log`;
+            }.${this.getRun.cluster.toLowerCase()}.log`;
         }
     },
     watch: {
         async $route() {
-            await this.$store.dispatch('refreshRun', this.getRun);
+            await this.$store.dispatch('runs/refresh', this.getRun);
+        },
+        '$route.params.id'() {
+            // need to watch for route change to prompt reload
         }
     }
 };

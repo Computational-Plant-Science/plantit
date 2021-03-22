@@ -10,7 +10,7 @@ django-enum-choices
 psycopg2-binary
 markdown
 paramiko
-Celery==4.4.7
+celery[redis]
 docutils
 humanize
 Sphinx
@@ -33,3 +33,4 @@ sphinx
 recommonmark
 httpx==0.16.1
 tenacity
+channels-redis

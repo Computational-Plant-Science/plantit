@@ -8,7 +8,7 @@ from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 from taggit.managers import TaggableManager
 
-from plantit.targets.models import Target
+from plantit.clusters.models import Cluster
 
 
 class Run(models.Model):
@@ -29,7 +29,7 @@ class Run(models.Model):
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     workflow_image_url = models.URLField(null=True, blank=True)
-    target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.SET_NULL)
+    cluster = models.ForeignKey(Cluster, null=True, blank=True, on_delete=models.SET_NULL)
     work_dir = models.CharField(max_length=100, null=True, blank=True)
     task = models.ForeignKey(PeriodicTask, null=True, blank=True, on_delete=models.CASCADE)
 
@@ -41,11 +41,10 @@ class Run(models.Model):
         for f in opts.many_to_many:
             data[f.name] = [i.id for i in f.value_from_object(self)]
         return json.dumps(data)
-        # return json.dumps(model_to_dict(self))
 
     @property
     def is_sandbox(self):
-        return self.target.name is not None and self.target.name == 'Sandbox'
+        return self.cluster.name is not None and self.cluster.name == 'Sandbox'
 
     @property
     def is_success(self):
@@ -70,7 +69,7 @@ class Run(models.Model):
 
 class DelayedRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-    target = models.ForeignKey(Target, on_delete=models.CASCADE)
+    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
@@ -78,19 +77,7 @@ class DelayedRunTask(PeriodicTask):
 
 class RepeatingRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-    target = models.ForeignKey(Target, on_delete=models.CASCADE)
+    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
-
-
-class Output(models.Model):
-    class Meta:
-        ordering = ['-created']
-
-    run = models.ForeignKey(Run, on_delete=models.CASCADE)
-    created = models.DateTimeField(default=timezone.now)
-    thumbnail = models.ImageField(upload_to='thumbnails/', null=True, blank=True, default='favicon-xyz.png')
-
-    def __str__(self):
-        return self.path
