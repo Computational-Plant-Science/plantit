@@ -9,7 +9,21 @@ RUN apt-get -y update && apt-get install -y \
     sshpass \
     curl \
     vim \
-    expect
+    expect \
+    zlib1g-dev \
+    libjpeg-dev \
+    python3-pythonmagick \
+    inkscape \
+    xvfb \
+    poppler-utils \
+    libfile-mimeinfo-perl \
+    qpdf \
+    libimage-exiftool-perl \
+    ufraw-batch \
+    ffmpeg \
+    scribus \
+    libreoffice \
+    python3-vtk7
 
 RUN mkdir /code
 WORKDIR /code

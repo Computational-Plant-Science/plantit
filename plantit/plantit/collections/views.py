@@ -4,7 +4,6 @@ import os
 import tempfile
 import uuid
 from os.path import join
-from pathlib import Path
 
 import httpx
 import requests
@@ -15,6 +14,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonResponse, HttpResponse
 from django.utils import timezone
 from rest_framework.decorators import api_view
+from preview_generator.manager import PreviewManager
 
 from plantit import settings
 from plantit.clusters.models import Cluster, ClusterAccessPolicy, ClusterRole
@@ -247,6 +247,43 @@ def close_session(request):
 
 @api_view(['GET'])
 @login_required
+def get_text_content(request):
+    user = request.user
+    try:
+        session = CollectionSession.objects.get(user=user)
+    except:
+        return HttpResponseNotFound()
+
+    path = request.GET.get('path')
+    file_name = path.rpartition('/')[2]
+    file = join(session.workdir, file_name)
+    client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            stdin, stdout, stderr = client.client.exec_command(f"test -e {join(session.workdir, file)} && echo exists")
+            errs = stderr.read()
+            if errs:
+                raise Exception(f"Failed to check existence of {file}: {errs}")
+
+            if file.endswith('txt') or \
+                    file.endswith('csv') or \
+                    file.endswith('yml') or \
+                    file.endswith('yaml') or \
+                    file.endswith('tsv') or \
+                    file.endswith('out') or \
+                    file.endswith('err') or \
+                    file.endswith('log'):
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    sftp.chdir(session.workdir)
+                    sftp.get(file, temp_file.name)
+                    with open(temp_file.name, 'r') as file:
+                        lines = file.readlines()
+                        return HttpResponse(lines, content_type='text/plain')
+
+
+@api_view(['GET'])
+@login_required
 def get_thumbnail(request):
     user = request.user
     try:
@@ -266,17 +303,28 @@ def get_thumbnail(request):
             if errs:
                 raise Exception(f"Failed to check existence of {file}: {errs}")
 
-            run_dir = join(settings.MEDIA_ROOT, session.guid)
-            thumbnail_path = f"{run_dir}/{file_name}"
+            manager = PreviewManager(join(settings.MEDIA_ROOT, session.guid), create_folder=True)
 
-            # make thumbnail directory for this run if it does not already exist
-            Path(run_dir).mkdir(exist_ok=True, parents=True)
-
-            with tempfile.NamedTemporaryFile() as temp_file:
-                print(f"Creating thumbnail for {file_name}")
-                sftp.chdir(session.workdir)
-                sftp.get(file, temp_file.name)
-                return HttpResponse(temp_file, content_type="image/png")
+            if file.endswith('txt') or \
+                    file.endswith('csv') or \
+                    file.endswith('yml') or \
+                    file.endswith('yaml') or \
+                    file.endswith('tsv') or \
+                    file.endswith('out') or \
+                    file.endswith('err') or \
+                    file.endswith('log'):
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    sftp.chdir(session.workdir)
+                    sftp.get(file, temp_file.name)
+                    preview_file = manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                    with open(preview_file, 'rb') as preview:
+                        return HttpResponse(preview, content_type="image/jpg")
+            else:
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    print(f"Creating thumbnail for {file_name}")
+                    sftp.chdir(session.workdir)
+                    sftp.get(file, temp_file.name)
+                    return HttpResponse(temp_file, content_type="image/png")
 
             # if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
             #     with tempfile.NamedTemporaryFile() as temp_file:

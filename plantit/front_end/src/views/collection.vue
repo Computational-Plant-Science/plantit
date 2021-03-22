@@ -9,7 +9,7 @@
     >
         <br />
         <br />
-        <b-container class="p-3 vl">
+        <b-container class="p-3 vl" fluid>
             <b-row>
                 <b-col>
                     <b-row align-h="center" v-if="openedCollectionLoading">
@@ -36,12 +36,8 @@
                             <small
                                 >Showing
                                 <b class="mr-1"
-                                    >{{
-                                        this.totalFileCount < this.filesPerPage
-                                            ? this.totalFileCount
-                                            : this.filesPerPage
-                                    }}
-                                    of {{ data.files.length }}</b
+                                    >{{ filesShown }} of
+                                    {{ data.files.length }}</b
                                 >file(s),
                                 <b class="mr-1">{{
                                     openedCollection.modified.length
@@ -95,121 +91,178 @@
                         ></b-pagination></b-row></b-col
             ></b-row>
             <br />
-            <b-row v-if="!dataLoading && data !== null && data !== undefined" align-h="center" class="m-1">
-                <b-col class="text-center">
-                    <span
-                        v-if="
-                            !dataLoading &&
-                                data !== null &&
-                                data.files.length === 0
-                        "
-                        >No files in this collection.</span
-                    >
-                    <b-card-group
-                        v-else-if="viewMode === 'Grid'"
-                        columns
-                        class="justify-content-center"
-                    >
-                        <b-card
-                            :img-src="
-                                `/apis/v1/collections/thumbnail/?path=${file.path}`
+            <b-row
+                v-if="!dataLoading && data !== null && data !== undefined"
+                align-h="center"
+                class="m-1"
+            >
+                <b-col>
+                    <b-overlay :show="openedCollection.opening" rounded="sm">
+                        <span
+                            v-if="
+                                !dataLoading &&
+                                    data !== null &&
+                                    data.files.length === 0
                             "
-                            v-for="file in currentPageFiles"
-                            v-bind:key="file.id"
-                            style="min-width: 20rem;max-width: 20rem;"
-                            class="overflow-hidden mb-4"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            border-variant="default"
-                            :header-border-variant="
-                                profile.darkMode ? 'secondary' : 'default'
-                            "
-                            :text-variant="profile.darkMode ? 'white' : 'dark'"
+                            >No files in this collection.</span
                         >
-                            <p
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
+                        <b-card-group v-else-if="viewMode === 'Grid'">
+                            <b-card
+                                :img-src="
+                                    openedCollection.opening
+                                        ? ''
+                                        : `/apis/v1/collections/thumbnail/?path=${file.path}`
+                                "
+                                v-for="file in currentPageFiles"
+                                v-bind:key="file.id"
+                                style="min-width: 20rem;max-width: 20rem;"
+                                class="overflow-hidden mb-4 mr-4 text-left"
+                                :bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :header-bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                border-variant="default"
+                                :header-border-variant="
+                                    profile.darkMode ? 'secondary' : 'default'
+                                "
+                                :text-variant="
+                                    profile.darkMode ? 'white' : 'dark'
                                 "
                             >
-                                <b>{{ file.label }}</b>
-                                <br />
-                                <small
-                                    >{{
-                                        `Last modified: ${prettifyShort(
-                                            file['date-modified']
-                                        )}`
-                                    }}
-                                </small>
-                            </p>
-                            <hr />
-                            <b-button
-                                :variant="
-                                    profile.darkMode ? 'outline-light' : 'white'
-                                "
-                                class="text-left m-0"
-                                @click="annotateFile(file)"
-                            >
-                                <i class="fas fa-pen-fancy fa-fw"></i>
-                                Annotate
-                            </b-button>
-                        </b-card>
-                    </b-card-group>
-                    <b-carousel v-else-if="viewMode === 'Carousel'" controls>
-                        <b-carousel-slide
-                            v-for="file in currentPageFiles"
-                            v-bind:key="file.id"
-                            :img-src="
-                                `/apis/v1/collections/thumbnail/?path=${file.path}`
-                            "
-                            ><template #default
-                                ><b-row
+                                <p
                                     :class="
                                         profile.darkMode
-                                            ? 'theme-container-dark p-3'
-                                            : 'theme-container-light p-3'
+                                            ? 'text-light'
+                                            : 'text-dark'
                                     "
-                                    style="opacity: 0.9;"
                                 >
-                                    <b-col class="text-left">
-                                        <h5
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            {{ file.label }}
-                                        </h5>
-                                        <small>{{
+                                    <b>{{ file.label }}</b>
+                                    <br />
+                                    <small
+                                        >{{
                                             `Last modified: ${prettifyShort(
                                                 file['date-modified']
                                             )}`
-                                        }}</small>
-                                    </b-col>
-                                    <b-col md="auto" align-self="end">
-                                        <b-button
-                                            :variant="
-                                                profile.darkMode
-                                                    ? 'outline-light'
-                                                    : 'white'
-                                            "
-                                            class="text-right m-0"
-                                            @click="annotateFile(file)"
-                                        >
-                                            <i
-                                                class="fas fa-pen-fancy fa-fw"
-                                            ></i>
-                                            Annotate
-                                        </b-button></b-col
-                                    >
-                                </b-row></template
-                            ></b-carousel-slide
+                                        }}
+                                    </small>
+                                </p>
+                                <hr />
+                                <b-button
+                                    :title="`Download ${file.label}`"
+                                    v-b-tooltip.hover
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    class="text-left m-0"
+                                    @click="downloadFile(file)"
+                                >
+                                    <i class="fas fa-download fa-fw"></i>
+                                </b-button>
+                                <b-button
+                                    :title="`Annotate ${file.label}`"
+                                    v-b-tooltip.hover
+                                    v-if="fileIsImage(file.label)"
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    class="text-left m-0"
+                                    @click="annotateFile(file)"
+                                >
+                                    <i class="fas fa-pen-fancy fa-fw"></i>
+                                </b-button>
+                            </b-card>
+                        </b-card-group>
+                        <b-carousel
+                            v-else-if="viewMode === 'Carousel'"
+                            controls
                         >
-                    </b-carousel>
+                            <b-carousel-slide
+                                v-for="file in currentPageFiles"
+                                v-bind:key="file.id"
+                                :img-src="
+                                    fileIsImage(file.label)
+                                        ? `/apis/v1/collections/thumbnail/?path=${file.path}`
+                                        : ''
+                                "
+                                ><template v-if="fileIsText(file.label)" #img
+                                    ><div
+                                        :class="
+                                            profile.darkMode
+                                                ? 'theme-container-dark'
+                                                : 'theme-container-light'
+                                        "
+                                        style="min-height: 50rem;white-space: pre-line;"
+                                    >
+                                        {{ file.textContent }}
+                                    </div></template
+                                ><template #default
+                                    ><b-row
+                                        :class="
+                                            profile.darkMode
+                                                ? 'theme-container-dark p-3'
+                                                : 'theme-container-light p-3'
+                                        "
+                                        style="opacity: 0.9;"
+                                    >
+                                        <b-col class="text-left">
+                                            <h5
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                {{ file.label }}
+                                            </h5>
+                                            <small>{{
+                                                `Last modified: ${prettifyShort(
+                                                    file['date-modified']
+                                                )}`
+                                            }}</small>
+                                        </b-col>
+                                        <b-col md="auto" align-self="end">
+                                            <b-button
+                                                :title="
+                                                    `Download ${file.label}`
+                                                "
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'outline-light'
+                                                        : 'white'
+                                                "
+                                                class="text-right m-0"
+                                                @click="downloadFile(file)"
+                                            >
+                                                <i
+                                                    class="fas fa-download fa-fw"
+                                                ></i>
+                                            </b-button>
+                                            <b-button
+                                                v-if="fileIsImage(file.label)"
+                                                :title="
+                                                    `Annotate ${file.label}`
+                                                "
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'outline-light'
+                                                        : 'white'
+                                                "
+                                                class="text-right m-0"
+                                                @click="annotateFile(file)"
+                                            >
+                                                <i
+                                                    class="fas fa-pen-fancy fa-fw"
+                                                ></i> </b-button
+                                        ></b-col> </b-row></template
+                            ></b-carousel-slide>
+                        </b-carousel>
+                    </b-overlay>
                 </b-col>
             </b-row>
         </b-container>
@@ -222,6 +275,7 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import moment from 'moment';
 import router from '@/router';
+import * as yaml from 'js-yaml';
 
 export default {
     name: 'collection',
@@ -244,6 +298,89 @@ export default {
                 : '';
     },
     methods: {
+        async downloadFile(file) {
+            this.downloading = true;
+            await axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/fileio/download?path=${file.path}`,
+                    {
+                        headers: {
+                            Authorization:
+                                'Bearer ' +
+                                this.profile.djangoProfile.cyverse_token
+                        },
+                        responseType: 'blob'
+                    }
+                )
+                .then(response => {
+                    let url = window.URL.createObjectURL(
+                        new Blob([response.data])
+                    );
+                    let link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', file.path);
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                    this.downloading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    alert(`Failed to download '${file.path}''`);
+                    throw error;
+                });
+        },
+        fileIsImage(file) {
+            return (
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'png' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpg' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpeg'
+            );
+        },
+        fileIsText(file) {
+            return (
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'txt' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'csv' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'tsv' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'yml' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'yaml' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'log' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'out' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'err'
+            );
+        },
         async closeCollection() {
             await this.$bvModal
                 .msgBoxConfirm(
@@ -293,17 +430,42 @@ export default {
                         }
                     }
                 )
-                .then(response => {
+                .then(async response => {
                     this.data = response.data;
                     this.dataLoading = false;
+                    await Promise.all([
+                        this.data.files
+                            .filter(f => this.fileIsText(f.label))
+                            .map(async f => await this.loadTextContent(f))
+                    ]);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     this.dataLoading = false;
                     throw error;
                 });
+        },
+        async loadTextContent(file) {
+            await axios
+                .get(`/apis/v1/collections/content/?path=${file.path}`)
+                .then(response => {
+                    this.data.files = this.data.files.map(f => {
+                        if (f.label === file.label) {
+                            if (
+                                f.label.endsWith('yml') ||
+                                f.label.endsWith('yaml')
+                            ) {
+                                f['textContent'] = yaml.dump(
+                                    yaml.load(response.data),
+                                );
+                            } else f['textContent'] = response.data;
+                        }
+                        return f;
+                    });
+                });
         }
     },
+    asyncComputed: {},
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
@@ -311,6 +473,22 @@ export default {
             'openedCollection',
             'openedCollectionLoading'
         ]),
+        filesShown() {
+            return `${(this.totalFileCount < this.filesPerPage
+                ? this.totalFileCount
+                : this.filesPerPage) *
+                this.currentPage -
+                this.filesPerPage +
+                1} - ${
+                this.currentPage * this.filesPerPage <= this.totalFileCount
+                    ? (this.totalFileCount < this.filesPerPage
+                          ? this.totalFileCount
+                          : this.filesPerPage) *
+                          (this.currentPage + 1) -
+                      this.filesPerPage
+                    : this.totalFileCount
+            }`;
+        },
         totalFileCount() {
             return this.dataLoading || this.data === null
                 ? 0
@@ -319,7 +497,10 @@ export default {
         currentPageFiles() {
             return this.dataLoading || this.data === null
                 ? []
-                : this.data.files.slice(this.currentPage - 1, this.filesPerPage);
+                : this.data.files.slice(
+                      this.currentPage - 1,
+                      this.filesPerPage
+                  );
         }
     }
 };

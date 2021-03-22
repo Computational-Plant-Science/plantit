@@ -10,5 +10,6 @@ urlpatterns = [
     path(r'opened/', views.opened_session),
     path(r'open/', views.open_session),
     path(r'close/', views.close_session),
-    path(f'thumbnail/', views.get_thumbnail)
+    path(r'thumbnail/', views.get_thumbnail),
+    path(r'content/', views.get_text_content)
 ]
