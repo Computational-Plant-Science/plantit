@@ -51,11 +51,12 @@ def __upload_run(flow, run: Run, ssh: SSH):
         template_name = template.split('/')[-1]
 
         # upload flow config file
-        with open('flow.yaml', 'w') as flow_file:
+        with sftp.open('flow.yaml', 'w') as flow_file:
             yaml.dump(new_flow, flow_file, default_flow_style=False)
 
         # compose and upload job script
-        with open(template, 'r') as template_script, open(template_name, 'w') as script:
+        with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
+            print(f"Uploading {template_name}")
             for line in template_script:
                 script.write(line)
 

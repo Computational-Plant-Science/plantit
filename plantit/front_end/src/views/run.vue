@@ -1269,8 +1269,6 @@ export default {
                             id: response.data.id
                         }
                     });
-                    location.reload();
-                    this.reloadRun();
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1519,6 +1517,9 @@ export default {
     watch: {
         async $route() {
             await this.$store.dispatch('runs/refresh', this.getRun);
+        },
+        '$route.params.id'() {
+            // need to watch for route change to prompt reload
         }
     }
 };

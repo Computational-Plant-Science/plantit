@@ -152,7 +152,9 @@
                                         >{{ run.cluster }}</b-badge
                                     ><small> {{ prettify(run.updated) }}</small>
                                     <br />
-                                    <small class="mr-1"
+                                    <small
+                                        v-if="run.workflow_name !== null"
+                                        class="mr-1"
                                         ><a
                                             :class="
                                                 profile.darkMode
@@ -1107,14 +1109,16 @@ export default {
         filteredRunningRuns() {
             return this.runningRuns.filter(
                 r =>
-                    r.workflow_name.includes(this.runSearchText) ||
+                    (r.workflow_name !== null &&
+                        r.workflow_name.includes(this.runSearchText)) ||
                     r.tags.some(t => t.includes(this.runSearchText))
             );
         },
         filteredCompletedRuns() {
             return this.completedRuns.filter(
                 r =>
-                    r.workflow_name.includes(this.runSearchText) ||
+                    (r.workflow_name !== null &&
+                        r.workflow_name.includes(this.runSearchText)) ||
                     r.tags.some(t => t.includes(this.runSearchText))
             );
         },
@@ -1131,6 +1135,8 @@ export default {
             this.$router.currentRoute.name === 'collection';
         let ws_protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
 
+        // TODO move websockets to vuex
+
         // subscribe to run channel
         this.runSocket = new WebSocket(
             `${ws_protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
@@ -1142,17 +1148,6 @@ export default {
             `${ws_protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
         );
         this.notificationSocket.onmessage = this.onNotification;
-
-        // subscribe to collection session channel
-        // if (
-        //     this.openedCollection !== null &&
-        //     this.openedCollection !== undefined
-        // ) {
-        //     this.interactiveSocket = new WebSocket(
-        //         `${ws_protocol}${window.location.host}/ws/sessions/${this.openedCollection.guid}/`
-        //     );
-        //     this.interactiveSocket.onmessage = this.onSessionEvent;
-        // }
 
         await Promise.all([
             this.$store.dispatch('runs/loadAll'),
@@ -1167,8 +1162,7 @@ export default {
                 this.$router.currentRoute.name === 'collection';
         },
         openedCollection() {
-            // need this noop watch so the bottom navbar will hide itself after collection is closed
-            // alert(this.openedCollection === null);
+            // need this so the bottom navbar will hide itself after collection is closed
         }
     },
     methods: {
