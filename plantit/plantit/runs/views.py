@@ -21,7 +21,7 @@ from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
 from plantit.runs.utils import update_status, map_run, submission_log_file_name, create_run, parse_eta, map_delayed_run_task, \
     map_repeating_run_task
-from plantit.targets.models import Target
+from plantit.clusters.models import Cluster
 from plantit.utils import get_repo_config
 
 
@@ -72,15 +72,15 @@ def list_outputs(request, id):
 
     included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
         'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
-    included_by_name.append(f"{run.guid}.{run.target.name.lower()}.log")
+    included_by_name.append(f"{run.guid}.{run.cluster.name.lower()}.log")
     if run.job_id is not None and run.job_id != '':
         included_by_name.append(f"plantit.{run.job_id}.out")
         included_by_name.append(f"plantit.{run.job_id}.err")
     included_by_pattern = (
         workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
 
-    client = SSH(run.target.hostname, run.target.port, run.target.username)
-    work_dir = join(run.target.workdir, run.work_dir)
+    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    work_dir = join(run.cluster.workdir, run.work_dir)
     outputs = []
     seen = []
 
@@ -121,8 +121,8 @@ def get_thumbnail(request, id, file):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(run.target.hostname, run.target.port, run.target.username)
-    work_dir = join(run.target.workdir, run.work_dir)
+    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    work_dir = join(run.cluster.workdir, run.work_dir)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -138,19 +138,10 @@ def get_thumbnail(request, id, file):
             # make thumbnail directory for this run if it does not already exist
             Path(run_dir).mkdir(exist_ok=True, parents=True)
 
-            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith(
-                    'out') or file.endswith('err') or file.endswith('log'):
+            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
                 with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
-                    # stdin, stdout, stderr = client.client.exec_command('test -e {0} && echo exists'.format(join(work_dir, log_file)))
-                    # errs = stderr.read()
-                    # if errs:
-                    #     raise Exception(f"Failed to check existence of {log_file}: {errs}")
-                    # if not stdout.read().decode().strip() == 'exists':
-                    #     return HttpResponseNotFound()
-
                     sftp.chdir(work_dir)
                     sftp.get(file, temp_file.name)
-
                     with tempfile.NamedTemporaryFile() as tf:
                         sftp.chdir(work_dir)
                         sftp.get(file, tf.name)
@@ -163,8 +154,6 @@ def get_thumbnail(request, id, file):
                 sftp.chdir(work_dir)
                 sftp.get(file, temp_file.name)
                 return HttpResponse(temp_file, content_type="image/png")
-                # thumbnail = Thumbnail(source=temp_file).generate()
-                # thumbnail_file.write(thumbnail.read())
 
             if Path(thumbnail_path).exists():
                 print(f"Using existing thumbnail: {thumbnail_path}")
@@ -194,8 +183,8 @@ def get_output_file(request, id, file):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(run.target.hostname, run.target.port, run.target.username)
-    work_dir = join(run.target.workdir, run.work_dir)
+    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    work_dir = join(run.cluster.workdir, run.work_dir)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -250,9 +239,9 @@ def get_container_logs(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(run.target.hostname, run.target.port, run.target.username)
-    work_dir = join(run.target.workdir, run.work_dir)
-    log_file = f"{run.guid}.{run.target.name.lower()}.log"
+    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    work_dir = join(run.cluster.workdir, run.work_dir)
+    log_file = f"{run.guid}.{run.cluster.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -363,9 +352,9 @@ def runs(request):
         runs = Run.objects.all()
         return JsonResponse([map_run(run) for run in runs], safe=False)
     elif request.method == 'POST':
-        target = Target.objects.get(name=workflow['config']['target']['name'])
+        cluster = Cluster.objects.get(name=workflow['config']['cluster']['name'])
         if request.data['type'] == 'Now':
-            run = create_run(user.username, target.name, workflow)
+            run = create_run(user.username, cluster.name, workflow)
             submit_run.delay(run.guid, workflow)
             return JsonResponse({'id': run.guid})
         elif request.data['type'] == 'After':
@@ -374,14 +363,14 @@ def runs(request):
             task, created = DelayedRunTask.objects.get_or_create(
                 user=user,
                 interval=schedule,
-                target=target,
+                cluster=cluster,
                 eta=eta,
                 one_off=True,
                 workflow_owner=workflow['repo']['owner']['login'],
                 workflow_name=workflow['repo']['name'],
-                name=f"User {user.username} workflow {workflow['repo']['name']} target {target.name} {schedule} once",
+                name=f"User {user.username} workflow {workflow['repo']['name']} cluster {cluster.name} {schedule} once",
                 task='plantit.runs.tasks.create_and_submit_run',
-                args=json.dumps([user.username, target.name, workflow]))
+                args=json.dumps([user.username, cluster.name, workflow]))
             return JsonResponse({
                 'created': created,
                 'task': map_delayed_run_task(task)
@@ -392,13 +381,13 @@ def runs(request):
             task, created = RepeatingRunTask.objects.get_or_create(
                 user=user,
                 interval=schedule,
-                target=target,
+                cluster=cluster,
                 eta=eta,
                 workflow_owner=workflow['repo']['owner']['login'],
                 workflow_name=workflow['repo']['name'],
-                name=f"User {user.username} workflow {workflow['repo']['name']} target {target.name} {schedule} repeating",
+                name=f"User {user.username} workflow {workflow['repo']['name']} cluster {cluster.name} {schedule} repeating",
                 task='plantit.runs.tasks.create_and_submit_run',
-                args=json.dumps([user.username, target.name, workflow]))
+                args=json.dumps([user.username, cluster.name, workflow]))
             return JsonResponse({
                 'created': created,
                 'task': map_repeating_run_task(task)
@@ -420,7 +409,7 @@ def run(request, id):
             'job_status': None,
             'job_walltime': None,
             'work_dir': None,
-            'target': None,
+            'cluster': None,
             'created': None,
             'updated': None,
             'completed': None,

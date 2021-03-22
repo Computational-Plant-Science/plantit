@@ -39,7 +39,7 @@
                     </b-badge>
                     on
                     <b-badge variant="secondary" class="text-white">{{
-                        run.target
+                        run.cluster
                     }}</b-badge>
                 </h4>
             </b-col>
@@ -97,7 +97,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters([
+        ...mapGetters('user', [
             'profile',
         ])
     }

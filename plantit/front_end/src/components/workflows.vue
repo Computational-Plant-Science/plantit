@@ -11,7 +11,7 @@
                     profile.darkMode ? 'secondary' : 'default'
                 "
                 :text-variant="profile.darkMode ? 'white' : 'dark'"
-                style="min-width: 30rem; max-width: 34rem;"
+                style="min-width: 30rem;"
                 class="overflow-hidden mb-4"
             >
                 <workflowblurb
@@ -61,7 +61,7 @@ export default {
             return 0;
         }
     },
-    computed: mapGetters(['profile'])
+    computed: mapGetters('user', ['profile'])
 };
 </script>
 <style scoped lang="sass">

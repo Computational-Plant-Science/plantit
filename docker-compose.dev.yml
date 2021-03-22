@@ -28,11 +28,11 @@ services:
       - USERS_REFRESH_MINUTES=${USERS_REFRESH_MINUTES}
       - WORKFLOWS_CACHE=${WORKFLOWS_CACHE}
       - WORKFLOWS_REFRESH_MINUTES=${WORKFLOWS_REFRESH_MINUTES}
+      - SESSIONS_LOGS=${SESSIONS_LOGS}
       - RUNS_TIMEOUT_MULTIPLIER=${RUNS_TIMEOUT_MULTIPLIER}
       - RUNS_LOGS=${RUNS_LOGS}
       - RUNS_REFRESH_SECONDS=${RUNS_REFRESH_SECONDS}
       - RUNS_CLEANUP_MINUTES=${RUNS_CLEANUP_MINUTES}
-      - TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES=${TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES}
       - SQL_ENGINE=${SQL_ENGINE}
       - SQL_HOST=${SQL_HOST}
       - SQL_PORT=${SQL_PORT}
@@ -78,26 +78,12 @@ services:
       timeout: 60s
       retries: 2
       start_period: 20s
-  # pgloader:
-  #   image: dimitri/pgloader
-  #   command: [ "pgloader", "/code/plantit/db.sqlite3", "postgresql://${SQL_HOST}/${SQL_NAME}?user=${SQL_USER}&password=${SQL_PASSWORD}" ]
-  #   depends_on:
-  #     - postgres
-  #   environment:
-  #     - POSTGRES_HOST=${SQL_HOST}
-  #     - POSTGRES_PORT=${SQL_PORT}
-  #     - POSTGRES_NAME=${SQL_NAME}
-  #     - POSTGRES_USER=${SQL_USER}
-  #     - POSTGRES_PASSWORD=${SQL_PASSWORD}
-  #   volumes:
-  #     - .:/code
-  rabbitmq:
-    image: rabbitmq:3.7.6-management
-    hostname: rabbitmq
+  redis:
+    image: redis:6
     ports:
-      - 15672:15672
+      - 6379:6379
     healthcheck:
-      test: python -c "import urllib2; print urllib2.urlopen('http://localhost:15672').getcode();" | grep "200"
+      test: redis-cli PING
       interval: 60s
       timeout: 60s
       retries: 2
@@ -110,7 +96,7 @@ services:
     working_dir: /code/plantit
     depends_on:
       - postgres
-      - rabbitmq
+      - redis
     environment:
       - CYVERSE_REDIRECT_URL=${CYVERSE_REDIRECT_URL}
       - CYVERSE_CLIENT_ID=${CYVERSE_CLIENT_ID}
@@ -132,11 +118,11 @@ services:
       - USERS_REFRESH_MINUTES=${USERS_REFRESH_MINUTES}
       - WORKFLOWS_CACHE=${WORKFLOWS_CACHE}
       - WORKFLOWS_REFRESH_MINUTES=${WORKFLOWS_REFRESH_MINUTES}
+      - SESSIONS_LOGS=${SESSIONS_LOGS}
       - RUNS_TIMEOUT_MULTIPLIER=${RUNS_TIMEOUT_MULTIPLIER}
       - RUNS_LOGS=${RUNS_LOGS}
       - RUNS_REFRESH_SECONDS=${RUNS_REFRESH_SECONDS}
       - RUNS_CLEANUP_MINUTES=${RUNS_CLEANUP_MINUTES}
-      - TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES=${TARGETS_SINGULARITY_CACHE_CLEAN_MINUTES}
       - SQL_ENGINE=${SQL_ENGINE}
       - SQL_HOST=${SQL_HOST}
       - SQL_PORT=${SQL_PORT}

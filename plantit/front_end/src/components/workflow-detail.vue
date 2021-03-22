@@ -362,7 +362,7 @@ export default {
         }
     },
     computed: {
-        ...mapGetters(['profile'])
+        ...mapGetters('user', ['profile'])
     },
     methods: {
         workflowSelected: function(workflow) {

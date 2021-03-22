@@ -149,10 +149,12 @@
                                     <b-badge
                                         class="ml-0 mr-0"
                                         variant="secondary"
-                                        >{{ run.target }}</b-badge
+                                        >{{ run.cluster }}</b-badge
                                     ><small> {{ prettify(run.updated) }}</small>
                                     <br />
-                                    <small class="mr-1"
+                                    <small
+                                        v-if="run.workflow_name !== null"
+                                        class="mr-1"
                                         ><a
                                             :class="
                                                 profile.darkMode
@@ -275,7 +277,7 @@
                                             <b-badge
                                                 class="ml-0 mr-0"
                                                 variant="secondary"
-                                                >{{ run.target }}</b-badge
+                                                >{{ run.cluster }}</b-badge
                                             ><small>
                                                 {{
                                                     prettify(run.updated)
@@ -749,8 +751,8 @@
                             Workflows
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="Servers"
-                            to="/servers"
+                            title="Clusters"
+                            to="/clusters"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -761,7 +763,7 @@
                             "
                         >
                             <i class="fas fa-server fa-1x fa-fw"></i>
-                            Servers
+                            Clusters
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Users"
@@ -902,6 +904,101 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
+        <b-navbar
+            v-if="
+                openedCollectionLoading ||
+                    (openedCollection !== undefined &&
+                        openedCollection !== null &&
+                        !viewingCollection)
+            "
+            toggleable="sm"
+            fixed="bottom"
+            style="border-top: 1px solid gray"
+            :variant="profile.darkMode ? 'dark' : 'white'"
+        >
+            <b-navbar-nav v-if="openedCollectionLoading">
+                <b-spinner
+                    :variant="profile.darkMode ? 'light' : 'dark'"
+                    small
+                    class="mr-2"
+                ></b-spinner>
+            </b-navbar-nav>
+            <b-navbar-nav
+                v-else-if="
+                    openedCollection !== null && openedCollection !== undefined
+                "
+            >
+                <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                    <span v-if="openedCollection.opening">
+                        <b-spinner
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            small
+                            class="mr-2"
+                        ></b-spinner
+                        >Opening <b>{{ openedCollection.path }}</b> on
+                        <b>{{ openedCollection.cluster }}</b>
+                    </span>
+                    <span v-else>
+                        <i class="far fa-folder-open fa-fw mr-2"></i>
+                        <b>{{ openedCollection.path }}</b> open on
+                        <b>{{ openedCollection.cluster }}</b
+                        >, {{ openedCollection.modified.length }} file(s)
+                        modified</span
+                    >
+                </b></b-navbar-nav
+            >
+            <b-navbar-nav
+                class="ml-auto"
+                v-if="
+                    openedCollection !== null &&
+                        openedCollection !== undefined &&
+                        openedCollection.opening
+                "
+            >
+                <small>{{
+                    openedCollection.output[openedCollection.output.length - 1]
+                }}</small>
+            </b-navbar-nav>
+            <b-navbar-nav class="ml-auto" v-if="!openedCollectionLoading">
+                <b-button
+                    :variant="profile.darkMode ? 'outline-light' : 'white'"
+                    title="View collection"
+                    class="mr-2"
+                    :to="{
+                        name: 'collection',
+                        params: { path: openedCollection.path }
+                    }"
+                >
+                    View
+                    <i class="fas fa-th fa-1x fa-fw"></i>
+                </b-button>
+                <b-dropdown
+                    v-if="openedCollection.modified.length !== 0"
+                    dropup
+                    :variant="profile.darkMode ? 'outline-light' : 'white'"
+                    class="mr-2"
+                >
+                    <template #button-content>
+                        Save
+                    </template>
+                    <b-dropdown-item @click="saveSession(false)"
+                        >All files</b-dropdown-item
+                    >
+                    <b-dropdown-item @click="saveSession(true)"
+                        >Only modified files</b-dropdown-item
+                    >
+                </b-dropdown>
+                <b-button
+                    variant="outline-danger"
+                    title="Close collection"
+                    class="text-left m-0"
+                    @click="closeCollection"
+                >
+                    Close
+                    <i class="far fa-folder fa-1x fa-fw"></i>
+                </b-button>
+            </b-navbar-nav>
+        </b-navbar>
         <b-toast
             auto-hide-delay="10000"
             v-if="$route.name !== 'run' && toastRun !== null"
@@ -914,7 +1011,7 @@
                 <b v-if="!toastRun.is_complete">Running</b>
                 <b class="ml-0 mr-0" v-else>{{ toastRun.job_status }}</b>
                 on
-                <b>{{ toastRun.target }}</b>
+                <b>{{ toastRun.cluster }}</b>
                 {{ prettifyShort(toastRun.updated) }}
                 <br />
                 {{
@@ -939,6 +1036,10 @@ export default {
     components: {},
     data() {
         return {
+            viewingCollection: false,
+            // cluster authentication
+            authenticationUsername: '',
+            authenticationPassword: '',
             // run status constants
             PENDING: 'PENDING',
             STARTED: 'STARTED',
@@ -948,6 +1049,7 @@ export default {
             // websockets
             runSocket: null,
             notificationSocket: null,
+            interactiveSocket: null,
             // user data
             djangoProfile: null,
             cyverseProfile: null,
@@ -985,16 +1087,18 @@ export default {
             ],
             // run search
             runSearchText: ''
-            // notification search
         };
     },
     computed: {
-        ...mapGetters([
-            'profile',
-            'runsLoading',
-            'runs',
+        ...mapGetters('user', ['profile']),
+        ...mapGetters('runs', ['runsLoading', 'runs']),
+        ...mapGetters('notifications', [
             'notificationsLoading',
             'notifications'
+        ]),
+        ...mapGetters('collections', [
+            'openedCollection',
+            'openedCollectionLoading'
         ]),
         runningRuns() {
             return this.runs.filter(r => !r.is_complete);
@@ -1005,14 +1109,16 @@ export default {
         filteredRunningRuns() {
             return this.runningRuns.filter(
                 r =>
-                    r.workflow_name.includes(this.runSearchText) ||
+                    (r.workflow_name !== null &&
+                        r.workflow_name.includes(this.runSearchText)) ||
                     r.tags.some(t => t.includes(this.runSearchText))
             );
         },
         filteredCompletedRuns() {
             return this.completedRuns.filter(
                 r =>
-                    r.workflow_name.includes(this.runSearchText) ||
+                    (r.workflow_name !== null &&
+                        r.workflow_name.includes(this.runSearchText)) ||
                     r.tags.some(t => t.includes(this.runSearchText))
             );
         },
@@ -1025,29 +1131,64 @@ export default {
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
-        await this.$store.dispatch('loadProfile');
-        await this.$store.dispatch('loadRuns');
-        await this.$store.dispatch('loadNotifications');
+        this.viewingCollection =
+            this.$router.currentRoute.name === 'collection';
+        let ws_protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+
+        // TODO move websockets to vuex
 
         // subscribe to run channel
-        let protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
         this.runSocket = new WebSocket(
-            `${protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
+            `${ws_protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
         );
         this.runSocket.onmessage = this.onRunUpdate;
 
         // subscribe to notification channel
         this.notificationSocket = new WebSocket(
-            `${protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
+            `${ws_protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
         );
         this.notificationSocket.onmessage = this.onNotification;
+
+        await Promise.all([
+            this.$store.dispatch('runs/loadAll'),
+            this.$store.dispatch('notifications/loadAll'),
+            this.$store.dispatch('collections/loadOpened')
+        ]);
     },
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
+            this.viewingCollection =
+                this.$router.currentRoute.name === 'collection';
+        },
+        openedCollection() {
+            // need this so the bottom navbar will hide itself after collection is closed
         }
     },
     methods: {
+        // async saveCollection(onlyModified) {},
+        async closeCollection() {
+            await this.$bvModal
+                .msgBoxConfirm(
+                    `Are you sure you want to close ${this.openedCollection.path} on ${this.openedCollection.cluster}?`,
+                    {
+                        title: 'Close Collection?',
+                        size: 'sm',
+                        okVariant: 'outline-danger',
+                        cancelVariant: 'white',
+                        okTitle: 'Yes',
+                        cancelTitle: 'No',
+                        centered: true
+                    }
+                )
+                .then(async value => {
+                    if (value)
+                        await this.$store.dispatch('collections/closeOpened');
+                })
+                .catch(err => {
+                    throw err;
+                });
+        },
         markAllRead() {},
         markRead(notification) {
             axios({
@@ -1069,15 +1210,26 @@ export default {
                     return error;
                 });
         },
+        // TODO move to VUEX
         async onRunUpdate(event) {
             let data = JSON.parse(event.data);
-            await this.$store.dispatch('updateRun', data.run);
+            await this.$store.dispatch('runs/update', data.run);
             this.toastRun = data.run;
             this.$bvToast.show('toast');
         },
         async onNotification(event) {
             let data = JSON.parse(event.data);
-            await this.$store.dispatch('updateNotification', data.notification);
+            await this.$store.dispatch(
+                'notifications/update',
+                data.notification
+            );
+        },
+        async onSessionEvent(event) {
+            let data = JSON.parse(event.data);
+            await this.$store.dispatch(
+                'collections/updateOpened',
+                data.session
+            );
         },
         onDelete(run) {
             axios
@@ -1086,7 +1238,7 @@ export default {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('loadRuns');
+                        this.$store.dispatch('runs/loadAll');
                         router.push({
                             name: 'user',
                             params: {
@@ -1121,7 +1273,7 @@ export default {
             return `${moment(date).fromNow()}`;
         },
         toggleDarkMode: function() {
-            this.$store.dispatch('toggleDarkMode');
+            this.$store.dispatch('user/toggleDarkMode');
         }
     }
 };

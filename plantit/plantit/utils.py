@@ -105,10 +105,8 @@ def validate_workflow_config(config, token):
     elif type(config['name']) is not str:
         errors.append('Attribute \'name\' must be a str')
 
-    # author (required)
-    if 'author' not in config:
-        errors.append('Missing attribute \'author\'')
-    elif type(config['author']) is not str:
+    # author (optional)
+    if 'author' in config and type(config['author']) is not str:
         errors.append('Attribute \'author\' must be a str')
 
     # public (required)

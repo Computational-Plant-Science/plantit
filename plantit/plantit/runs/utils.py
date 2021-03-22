@@ -21,8 +21,8 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
-from plantit.targets.models import Target, TargetPolicy, TargetRole
-from plantit.targets.utils import map_target
+from plantit.clusters.models import Cluster, ClusterAccessPolicy, ClusterRole
+from plantit.clusters.utils import map_cluster
 from plantit.utils import get_repo_config
 
 
@@ -78,11 +78,11 @@ def stat_logs(id: str):
     return datetime.fromtimestamp(log_path.stat().st_mtime) if log_path.is_file() else None
 
 
-def remove_logs(id: str, target: str):
+def remove_logs(id: str, cluster: str):
     local_log_path = join(environ.get('RUNS_LOGS'), f"{id}.plantit.log")
-    # target_log_path = join(environ.get('RUNS_LOGS'), f"{id}.{target.lower()}.log")
+    # cluster_log_path = join(environ.get('RUNS_LOGS'), f"{id}.{cluster.lower()}.log")
     os.remove(local_log_path)
-    # os.remove(target_log_path)
+    # os.remove(cluster_log_path)
 
 
 def format_workflows(response, token):
@@ -123,10 +123,10 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
         'image': old_config['config']['image'],
         'command': old_config['config']['commands'],
         'workdir': old_config['config']['workdir'],
-        'log_file': f"{run.guid}.{run.target.name.lower()}.log"
+        'log_file': f"{run.guid}.{run.cluster.name.lower()}.log"
     }
 
-    del old_config['config']['target']
+    del old_config['config']['cluster']
 
     if 'mount' in old_config['config']:
         new_config['bind_mounts'] = old_config['config']['mount']
@@ -162,18 +162,18 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
         new_config['input'] = dict()
         if input_kind == 'directory':
             new_config['input']['directory'] = dict()
-            new_config['input']['directory']['path'] = join(run.target.workdir, run.work_dir, 'input')
+            new_config['input']['directory']['path'] = join(run.cluster.workdir, run.work_dir, 'input')
             new_config['input']['directory']['patterns'] = old_config['config']['input']['patterns']
         elif input_kind == 'files':
             new_config['input']['files'] = dict()
-            new_config['input']['files']['path'] = join(run.target.workdir, run.work_dir, 'input')
+            new_config['input']['files']['path'] = join(run.cluster.workdir, run.work_dir, 'input')
             new_config['input']['files']['patterns'] = old_config['config']['input']['patterns']
         elif input_kind == 'file':
             new_config['input']['file'] = dict()
-            new_config['input']['file']['path'] = join(run.target.workdir, run.work_dir, 'input', old_config['config']['input']['from'].rpartition('/')[2])
+            new_config['input']['file']['path'] = join(run.cluster.workdir, run.work_dir, 'input', old_config['config']['input']['from'].rpartition('/')[2])
 
-    sandbox = run.target.name == 'Sandbox'
-    work_dir = join(run.target.workdir, run.work_dir)
+    sandbox = run.cluster.name == 'Sandbox'
+    work_dir = join(run.cluster.workdir, run.work_dir)
     if not sandbox:
         new_config['jobqueue'] = dict()
         new_config['jobqueue']['slurm'] = {
@@ -182,25 +182,25 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
             'walltime': resources['time'],
             'local_directory': work_dir,
             'log_directory': work_dir,
-            'env_extra': [run.target.pre_commands]
+            'env_extra': [run.cluster.pre_commands]
         }
 
         if 'mem' in resources:
             new_config['jobqueue']['slurm']['memory'] = resources['mem']
-        if run.target.queue is not None and run.target.queue != '':
-            new_config['jobqueue']['slurm']['queue'] = run.target.queue
-        if run.target.project is not None and run.target.project != '':
-            new_config['jobqueue']['slurm']['project'] = run.target.project
-        if run.target.header_skip is not None and run.target.header_skip != '':
-            new_config['jobqueue']['slurm']['header_skip'] = run.target.header_skip.split(',')
+        if run.cluster.queue is not None and run.cluster.queue != '':
+            new_config['jobqueue']['slurm']['queue'] = run.cluster.queue
+        if run.cluster.project is not None and run.cluster.project != '':
+            new_config['jobqueue']['slurm']['project'] = run.cluster.project
+        if run.cluster.header_skip is not None and run.cluster.header_skip != '':
+            new_config['jobqueue']['slurm']['header_skip'] = run.cluster.header_skip.split(',')
 
         if 'gpu' in old_config['config'] and old_config['config']['gpu']:
-            if run.target.gpu:
+            if run.cluster.gpu:
                 new_config['gpu'] = True
                 new_config['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:K40:1"]
-                new_config['jobqueue']['slurm']['queue'] = run.target.gpu_queue
+                new_config['jobqueue']['slurm']['queue'] = run.cluster.gpu_queue
             else:
-                print(f"No GPU support on {run.target.name}")
+                print(f"No GPU support on {run.cluster.name}")
 
     return new_config
 
@@ -235,8 +235,8 @@ def map_run_task(task):
 
 
 def map_run(run: Run, get_container_logs: bool = False):
-    work_dir = join(run.target.workdir, run.work_dir)
-    ssh_client = SSH(run.target.hostname, run.target.port, run.target.username)
+    work_dir = join(run.cluster.workdir, run.work_dir)
+    ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
     submission_log_file = submission_log_file_name(run)
     container_log_file = container_log_file_name(run)
 
@@ -266,7 +266,7 @@ def map_run(run: Run, get_container_logs: bool = False):
         container_logs = []
 
     try:
-        TargetPolicy.objects.get(user=run.user, target=run.target, role__in=[TargetRole.own, TargetRole.run])
+        ClusterAccessPolicy.objects.get(user=run.user, cluster=run.cluster, role__in=[ClusterRole.own, ClusterRole.run])
         can_restart = True
     except:
         can_restart = False
@@ -280,7 +280,7 @@ def map_run(run: Run, get_container_logs: bool = False):
         'work_dir': run.work_dir,
         'submission_logs': submission_logs,
         'container_logs': container_logs,
-        'target': run.target.name,
+        'cluster': run.cluster.name,
         'created': run.created.isoformat(),
         'updated': run.updated.isoformat(),
         'completed': run.completed.isoformat() if run.completed is not None else None,
@@ -301,13 +301,13 @@ def submission_log_file_name(run: Run):
 
 
 def container_log_file_name(run: Run):
-    return f"{run.guid}.{run.target.name.lower()}.log"
+    return f"{run.guid}.{run.cluster.name.lower()}.log"
 
 
-def create_run(username: str, target_name: str, workflow: dict) -> Run:
+def create_run(username: str, cluster_name: str, workflow: dict) -> Run:
     now = timezone.now()
     user = User.objects.get(username=username)
-    target = Target.objects.get(name=target_name)
+    cluster = Cluster.objects.get(name=cluster_name)
     workflow_owner = workflow['repo']['owner']['login']
     workflow_name = workflow['repo']['name']
     workflow_config = get_repo_config(workflow_name, workflow_owner, user.profile.github_token)
@@ -316,7 +316,7 @@ def create_run(username: str, target_name: str, workflow: dict) -> Run:
         user=user,
         workflow_owner=workflow_owner,
         workflow_name=workflow_name,
-        target=target,
+        cluster=cluster,
         job_status='CREATED',
         created=now,
         updated=now,
@@ -367,7 +367,7 @@ def parse_eta(data: dict) -> (datetime, int):
 
 def map_delayed_run_task(task: DelayedRunTask):
     return {
-        'target': map_target(task.target),
+        'cluster': map_cluster(task.cluster),
         'name': task.name,
         'eta': task.eta,
         'interval': {
@@ -380,7 +380,7 @@ def map_delayed_run_task(task: DelayedRunTask):
 
 def map_repeating_run_task(task: RepeatingRunTask):
     return {
-        'target': map_target(task.target),
+        'cluster': map_cluster(task.cluster),
         'name': task.name,
         'eta': task.eta,
         'interval': {

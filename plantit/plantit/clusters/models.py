@@ -11,7 +11,7 @@ from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
 
 
-class Target(models.Model):
+class Cluster(models.Model):
     name = models.CharField(max_length=20)
     description = models.TextField(blank=True)
     workdir = models.CharField(max_length=250)
@@ -47,39 +47,25 @@ class Target(models.Model):
         return self.name
 
 
-@receiver(post_save, sender=Target)
-def schedule_default_tasks(sender, instance, created, **kwargs):
-    if not created:
-        return
-
-    every_minute, _ = IntervalSchedule.objects.get_or_create(every=1, period=IntervalSchedule.MINUTES)
-    healthcheck_task = TargetTask.objects.create(
-        target=instance,
-        interval=every_minute,
-        name=f"{instance.name} healthcheck",
-        task='plantit.runs.tasks.run_command',
-        args=json.dumps([instance.name, 'pwd']))
-
-
-class TargetRole(Enum):
+class ClusterRole(Enum):
     own = 'OWN'
     run = 'USE'
     none = 'NONE'
 
 
-class TargetPolicy(models.Model):
+class ClusterAccessPolicy(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.CASCADE)
-    role = EnumChoiceField(TargetRole, default=TargetRole.run)
+    cluster = models.ForeignKey(Cluster, null=True, blank=True, on_delete=models.CASCADE)
+    role = EnumChoiceField(ClusterRole, default=ClusterRole.run)
 
 
-class TargetTask(PeriodicTask):
-    target = models.ForeignKey(Target, on_delete=models.CASCADE)
+class ClusterTask(PeriodicTask):
+    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE)
     command = models.CharField(max_length=250, null=False, blank=False)
 
 
-class TargetAccessRequest(models.Model):
+class ClusterAccessRequest(models.Model):
     created = models.DateTimeField(default=timezone.now)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    target = models.ForeignKey(Target, null=True, blank=True, on_delete=models.CASCADE)
+    cluster = models.ForeignKey(Cluster, null=True, blank=True, on_delete=models.CASCADE)
     granted: bool = models.BooleanField(default=False)

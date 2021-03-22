@@ -6,8 +6,9 @@ from rest_framework import routers
 from django.urls import path
 
 from .auth.views import login_view, logout_view
+from .collections.consumers import CollectionSessionConsumer
 from .miappe.views import *
-from .targets.views import TargetsViewSet
+from .clusters.views import ClustersViewSet
 from .users.views import UsersViewSet, IDPViewSet
 from .runs.consumers import RunConsumer
 from .notifications.consumers import NotificationConsumer
@@ -15,7 +16,7 @@ from .notifications.consumers import NotificationConsumer
 router = routers.DefaultRouter()
 router.register('users', UsersViewSet)
 router.register('idp', IDPViewSet, basename='idp')
-router.register('servers', TargetsViewSet)
+router.register('clusters', ClustersViewSet)
 router.register('miappe/investigations', InvestigationViewSet)
 router.register('miappe/studies', StudyViewSet)
 router.register('miappe/roles', RoleViewSet)
@@ -34,12 +35,13 @@ urlpatterns = [
     url('auth/logout/', logout_view),
     url('runs/', include("plantit.runs.urls")),
     url('workflows/', include("plantit.workflows.urls")),
-    url('stores/', include("plantit.stores.urls")),
+    url('collections/', include("plantit.collections.urls")),
     url('notifications/', include("plantit.notifications.urls")),
     url('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'))),
 ]
 
 websocket_urlpatterns = [
     path(r'ws/runs/<username>/', RunConsumer.as_asgi()),
-    path(r'ws/notifications/<username>/', NotificationConsumer.as_asgi())
+    path(r'ws/notifications/<username>/', NotificationConsumer.as_asgi()),
+    path(r'ws/sessions/<guid>/', CollectionSessionConsumer.as_asgi())
 ]
