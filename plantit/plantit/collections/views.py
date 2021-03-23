@@ -319,12 +319,25 @@ def get_thumbnail(request):
                     preview_file = manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                     with open(preview_file, 'rb') as preview:
                         return HttpResponse(preview, content_type="image/jpg")
-            else:
+            # elif file.endswith('ply'):
+            #     with tempfile.NamedTemporaryFile() as temp_file:
+            #         print(f"Creating preview for {file_name}")
+            #         sftp.chdir(session.workdir)
+            #         sftp.get(file, temp_file.name)
+            #         preview = manager.get_jpeg_preview(temp_file.name)
+            #         with open(preview, 'rb') as preview_file:
+            #             return HttpResponse(preview_file, content_type="image/jpg")
+            elif file.endswith('png') or file.endswith('jpg') or file.endswith('jpeg'):
                 with tempfile.NamedTemporaryFile() as temp_file:
                     print(f"Creating thumbnail for {file_name}")
                     sftp.chdir(session.workdir)
                     sftp.get(file, temp_file.name)
                     return HttpResponse(temp_file, content_type="image/png")
+            elif file.endswith('ply'):
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    sftp.chdir(session.workdir)
+                    sftp.get(file, temp_file.name)
+                    return HttpResponse(temp_file, content_type="applications/octet-stream")
 
             # if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
             #     with tempfile.NamedTemporaryFile() as temp_file:

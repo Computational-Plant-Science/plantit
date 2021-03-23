@@ -106,16 +106,18 @@
                             "
                             >No files in this collection.</span
                         >
-                        <b-card-group v-else-if="viewMode === 'Grid'">
+                        <b-card-group v-else-if="viewMode === 'Grid'" columns>
                             <b-card
                                 :img-src="
-                                    openedCollection.opening
-                                        ? ''
+                                    openedCollection.opening ||
+                                    fileIs3dModel(file.label)
+                                        ? null
                                         : `/apis/v1/collections/thumbnail/?path=${file.path}`
                                 "
                                 v-for="file in currentPageFiles"
                                 v-bind:key="file.id"
-                                style="min-width: 20rem;max-width: 20rem;"
+                                :id="file.id"
+                                style="min-width: 20rem;"
                                 class="overflow-hidden mb-4 mr-4 text-left"
                                 :bg-variant="
                                     profile.darkMode ? 'dark' : 'white'
@@ -201,7 +203,21 @@
                                     >
                                         {{ file.textContent }}
                                     </div></template
-                                ><template #default
+                                >
+                                <template
+                                    v-else-if="fileIs3dModel(file.label)"
+                                    #img
+                                    ><div
+                                        :class="
+                                            profile.darkMode
+                                                ? 'theme-container-dark'
+                                                : 'theme-container-light'
+                                        "
+                                        style="min-height: 50rem;white-space: pre-line;"
+                                        :id="`big-${file.id}`"
+                                    ></div
+                                ></template>
+                                <template #default
                                     ><b-row
                                         :class="
                                             profile.darkMode
@@ -276,6 +292,8 @@ import * as Sentry from '@sentry/browser';
 import moment from 'moment';
 import router from '@/router';
 import * as yaml from 'js-yaml';
+import * as THREE from 'three';
+import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
 
 export default {
     name: 'collection',
@@ -292,12 +310,296 @@ export default {
     },
     async mounted() {
         await this.loadCollection();
+        this.renderPreviews();
         this.currentFile =
             this.data !== null && this.data.files.length > 0
                 ? this.data.files[0]
                 : '';
     },
     methods: {
+        renderPreviews() {
+            this.data.files
+                .filter(f => this.fileIsText(f.label))
+                .map(async f => await this.loadTextContent(f));
+            this.data.files
+                .filter(f => this.fileIs3dModel(f.label))
+                .map(f => {
+                    var camera = new THREE.PerspectiveCamera(
+                        35,
+                        window.innerWidth / window.innerHeight,
+                        1,
+                        15
+                    );
+                    // camera.position.set(3, 0.15, 3);
+                    camera.position.z = 2;
+                    camera.zoom = 0.5;
+
+                    var cameraTarget = new THREE.Vector3(0, -0.1, 0);
+
+                    var scene = new THREE.Scene();
+                    // scene.background = new THREE.Color(0x72645b);
+                    scene.fog = new THREE.Fog(0x72645b, 2, 15);
+
+                    // Ground
+
+                    // const plane = new THREE.Mesh(
+                    //     new THREE.PlaneGeometry(40, 40),
+                    //     new THREE.MeshPhongMaterial({
+                    //         color: 0x999999,
+                    //         specular: 0x101010
+                    //     })
+                    // );
+                    // plane.rotation.x = -Math.PI / 2;
+                    // plane.position.y = -0.5;
+                    // scene.add(plane);
+
+                    // plane.receiveShadow = true;
+
+                    const loader = new PLYLoader();
+
+                    loader.load(
+                        `/apis/v1/collections/thumbnail/?path=${f.path}`,
+                        function(geometry) {
+                            geometry.computeVertexNormals();
+
+                            // const material = new THREE.MeshStandardMaterial({
+                            //     color: 0x0055ff,
+                            //     flatShading: true
+                            // });
+                            const material = new THREE.PointsMaterial({
+                                color: 0x0055ff,
+                                size: 0.005
+                            });
+                            const mesh = new THREE.Points(geometry, material);
+                            //const mesh = new THREE.Mesh(geometry, material);
+                            // const mesh = new THREE.Mesh(geometry);
+
+                            mesh.position.y = -0.5;
+                            // mesh.position.z = 0.3;
+                            // mesh.rotation.x = -Math.PI / 2;
+                            mesh.scale.multiplyScalar(0.8);
+
+                            mesh.castShadow = true;
+                            mesh.receiveShadow = true;
+
+                            scene.add(mesh);
+                        }
+                    );
+
+                    // Lights
+
+                    scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
+
+                    var addShadowedLight = function(x, y, z, color, intensity) {
+                        const directionalLight = new THREE.DirectionalLight(
+                            color,
+                            intensity
+                        );
+                        directionalLight.position.set(x, y, z);
+                        scene.add(directionalLight);
+
+                        directionalLight.castShadow = true;
+
+                        const d = 1;
+                        directionalLight.shadow.camera.left = -d;
+                        directionalLight.shadow.camera.right = d;
+                        directionalLight.shadow.camera.top = d;
+                        directionalLight.shadow.camera.bottom = -d;
+
+                        directionalLight.shadow.camera.near = 1;
+                        directionalLight.shadow.camera.far = 4;
+
+                        directionalLight.shadow.mapSize.width = 1024;
+                        directionalLight.shadow.mapSize.height = 1024;
+
+                        directionalLight.shadow.bias = -0.001;
+                    };
+
+                    var onWindowResize = function() {
+                        camera.aspect = window.innerWidth / window.innerHeight;
+                        camera.updateProjectionMatrix();
+
+                        renderer.setSize(
+                            window.innerWidth / 3,
+                            window.innerHeight / 3
+                        );
+                    };
+
+                    var animate = function() {
+                        requestAnimationFrame(animate);
+                        render();
+                    };
+
+                    var render = function() {
+                        // const timer = Date.now() * 0.0001;
+
+                        // camera.position.x = Math.sin(timer) * 2.5;
+                        // camera.position.z = Math.cos(timer) * 2.5;
+
+                        camera.lookAt(cameraTarget);
+
+                        renderer.render(scene, camera);
+                    };
+
+                    addShadowedLight(1, 1, 1, 0xffffff, 1.35);
+                    addShadowedLight(0.5, 1, -1, 0xffaa00, 1);
+
+                    // renderer
+
+                    var renderer = new THREE.WebGLRenderer({ antialias: true });
+                    renderer.setPixelRatio(window.devicePixelRatio);
+                    renderer.setSize(
+                        window.innerWidth / 3,
+                        window.innerHeight / 3
+                    );
+                    renderer.outputEncoding = THREE.sRGBEncoding;
+
+                    renderer.shadowMap.enabled = true;
+
+                    // resize
+
+                    window.addEventListener('resize', onWindowResize);
+                    document.getElementById(f.id).prepend(renderer.domElement);
+                    //.appendChild(renderer.domElement);
+
+                    animate();
+                });
+        },
+        loadBig3dModel(f) {
+            var camera = new THREE.PerspectiveCamera(
+                35,
+                window.innerWidth / window.innerHeight,
+                1,
+                15
+            );
+            // camera.position.set(3, 0.15, 3);
+            camera.position.z = 2;
+            camera.zoom = 0.5;
+
+            var cameraTarget = new THREE.Vector3(0, -0.1, 0);
+
+            var scene = new THREE.Scene();
+            // scene.background = new THREE.Color(0x72645b);
+            scene.fog = new THREE.Fog(0x72645b, 2, 15);
+
+            // Ground
+
+            // const plane = new THREE.Mesh(
+            //     new THREE.PlaneGeometry(40, 40),
+            //     new THREE.MeshPhongMaterial({
+            //         color: 0x999999,
+            //         specular: 0x101010
+            //     })
+            // );
+            // plane.rotation.x = -Math.PI / 2;
+            // plane.position.y = -0.5;
+            // scene.add(plane);
+
+            // plane.receiveShadow = true;
+
+            const loader = new PLYLoader();
+
+            loader.load(
+                `/apis/v1/collections/thumbnail/?path=${f.path}`,
+                function(geometry) {
+                    geometry.computeVertexNormals();
+
+                    // const material = new THREE.MeshStandardMaterial({
+                    //     color: 0x0055ff,
+                    //     flatShading: true
+                    // });
+                    const material = new THREE.PointsMaterial({
+                        color: 0x0055ff,
+                        size: 0.005
+                    });
+                    const mesh = new THREE.Points(geometry, material);
+                    //const mesh = new THREE.Mesh(geometry, material);
+                    // const mesh = new THREE.Mesh(geometry);
+
+                    mesh.position.y = -0.5;
+                    // mesh.position.z = 0.3;
+                    mesh.rotation.x = -Math.PI / 2;
+                    mesh.scale.multiplyScalar(0.8);
+
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+
+                    scene.add(mesh);
+                }
+            );
+
+            // Lights
+
+            scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
+
+            var addShadowedLight = function(x, y, z, color, intensity) {
+                const directionalLight = new THREE.DirectionalLight(
+                    color,
+                    intensity
+                );
+                directionalLight.position.set(x, y, z);
+                scene.add(directionalLight);
+
+                directionalLight.castShadow = true;
+
+                const d = 1;
+                directionalLight.shadow.camera.left = -d;
+                directionalLight.shadow.camera.right = d;
+                directionalLight.shadow.camera.top = d;
+                directionalLight.shadow.camera.bottom = -d;
+
+                directionalLight.shadow.camera.near = 1;
+                directionalLight.shadow.camera.far = 4;
+
+                directionalLight.shadow.mapSize.width = 1024;
+                directionalLight.shadow.mapSize.height = 1024;
+
+                directionalLight.shadow.bias = -0.001;
+            };
+
+            var onWindowResize = function() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth / 3, window.innerHeight / 3);
+            };
+
+            var animate = function() {
+                requestAnimationFrame(animate);
+                render();
+            };
+
+            var render = function() {
+                const timer = Date.now() * 0.0001;
+
+                camera.position.x = Math.sin(timer) * 2.5;
+                camera.position.z = Math.cos(timer) * 2.5;
+
+                camera.lookAt(cameraTarget);
+
+                renderer.render(scene, camera);
+            };
+
+            addShadowedLight(1, 1, 1, 0xffffff, 1.35);
+            addShadowedLight(0.5, 1, -1, 0xffaa00, 1);
+
+            // renderer
+
+            var renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth / 3, window.innerHeight / 3);
+            renderer.outputEncoding = THREE.sRGBEncoding;
+
+            renderer.shadowMap.enabled = true;
+
+            // resize
+
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById(`big-${f.id}`).prepend(renderer.domElement);
+            //.appendChild(renderer.domElement);
+
+            animate();
+        },
         async downloadFile(file) {
             this.downloading = true;
             await axios
@@ -381,6 +683,14 @@ export default {
                     .pop() === 'err'
             );
         },
+        fileIs3dModel(file) {
+            return (
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'ply'
+            );
+        },
         async closeCollection() {
             await this.$bvModal
                 .msgBoxConfirm(
@@ -433,11 +743,6 @@ export default {
                 .then(async response => {
                     this.data = response.data;
                     this.dataLoading = false;
-                    await Promise.all([
-                        this.data.files
-                            .filter(f => this.fileIsText(f.label))
-                            .map(async f => await this.loadTextContent(f))
-                    ]);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -456,7 +761,7 @@ export default {
                                 f.label.endsWith('yaml')
                             ) {
                                 f['textContent'] = yaml.dump(
-                                    yaml.load(response.data),
+                                    yaml.load(response.data)
                                 );
                             } else f['textContent'] = response.data;
                         }
@@ -474,20 +779,26 @@ export default {
             'openedCollectionLoading'
         ]),
         filesShown() {
-            return `${(this.totalFileCount < this.filesPerPage
+            return this.totalFileCount < this.filesPerPage
                 ? this.totalFileCount
-                : this.filesPerPage) *
-                this.currentPage -
-                this.filesPerPage +
-                1} - ${
-                this.currentPage * this.filesPerPage <= this.totalFileCount
-                    ? (this.totalFileCount < this.filesPerPage
+                : `${Math.max(
+                      (this.totalFileCount < this.filesPerPage
                           ? this.totalFileCount
                           : this.filesPerPage) *
-                          (this.currentPage + 1) -
-                      this.filesPerPage
-                    : this.totalFileCount
-            }`;
+                          this.currentPage -
+                          this.filesPerPage +
+                          1,
+                      this.totalFileCount
+                  )} - ${
+                      this.currentPage * this.filesPerPage <=
+                      this.totalFileCount
+                          ? (this.totalFileCount < this.filesPerPage
+                                ? this.totalFileCount
+                                : this.filesPerPage) *
+                                (this.currentPage + 1) -
+                            this.filesPerPage
+                          : this.totalFileCount
+                  }`;
         },
         totalFileCount() {
             return this.dataLoading || this.data === null
