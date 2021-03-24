@@ -325,7 +325,8 @@ export default {
                 material: null,
                 geometry: null,
                 renderer: null,
-                loader: null
+                loader: null,
+                id: null
             }
         };
     },
@@ -379,8 +380,9 @@ export default {
                     //     flatShading: true
                     // });
                     const material = new THREE.PointsMaterial({
-                        color: 0x0055ff,
-                        size: 0.005
+                        // color: 0x0055ff,
+                        size: 0.005,
+                      vertexColors: THREE.VertexColors
                     });
                     const mesh = new THREE.Points(geometry, material);
                     //const mesh = new THREE.Mesh(geometry, material);
@@ -444,7 +446,7 @@ export default {
             };
 
             var render = function() {
-                const timer = Date.now() * 0.0001;
+                const timer = Date.now() * 0.00005;
 
                 camera.position.x = Math.sin(timer) * 2.5;
                 camera.position.z = Math.cos(timer) * 2.5;
@@ -455,7 +457,7 @@ export default {
             };
 
             addShadowedLight(1, 1, 1, 0xffffff, 1.35);
-            addShadowedLight(0.5, 1, -1, 0xffaa00, 1);
+            // addShadowedLight(0.5, 1, -1, 0xffaa00, 1);
 
             // renderer
 
@@ -469,12 +471,14 @@ export default {
             // resize
 
             window.addEventListener('resize', onWindowResize);
+            document.getElementById(f.id).innerHTML = '';
             document.getElementById(f.id).prepend(renderer.domElement);
             //.appendChild(renderer.domElement);
 
             this.currentModel.scene = scene;
             this.currentModel.loader = loader;
             this.currentModel.renderer = renderer;
+            this.currentModel.id = f.id;
 
             animate();
         },
