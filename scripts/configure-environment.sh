@@ -118,4 +118,5 @@ GITHUB_SECRET=$github_secret
 GITHUB_CLIENT_ID=d15df2f5710e9597290f
 DOCKER_USERNAME=$docker_username
 DOCKER_PASSWORD=$docker_password
+NO_PREVIEW_THUMBNAIL=/code/plantit/front_end/src/assets/no_preview_thumbnail.png
 EOT

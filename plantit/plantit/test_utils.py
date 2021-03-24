@@ -61,15 +61,15 @@ class UtilsTest(TestCase):
         self.assertFalse(result[0])
         self.assertTrue('Missing attribute \'name\'' in result[1])
 
-    def test_validate_config_when_is_not_valid_missing_author(self):
-        result = validate_workflow_config({
-            'name': 'Test Flow',
-            'public': True,
-            'image': 'docker://alpine',
-            'commands': 'echo "Hello, world!"'
-        }, Token.get())
-        self.assertFalse(result[0])
-        self.assertTrue('Missing attribute \'author\'' in result[1])
+    # def test_validate_config_when_is_not_valid_missing_author(self):
+    #     result = validate_workflow_config({
+    #         'name': 'Test Flow',
+    #         'public': True,
+    #         'image': 'docker://alpine',
+    #         'commands': 'echo "Hello, world!"'
+    #     }, Token.get())
+    #     self.assertFalse(result[0])
+    #     self.assertTrue('Missing attribute \'author\'' in result[1])
 
     def test_validate_config_when_is_not_valid_missing_public(self):
         result = validate_workflow_config({

@@ -26,6 +26,7 @@ assert 'GITHUB_REDIRECT_URI' in os.environ, f"{missing_variable}: GITHUB_REDIREC
 assert 'GITHUB_KEY' in os.environ, f"{missing_variable}: GITHUB_KEY"
 assert 'GITHUB_USERNAME' in os.environ, f"{missing_variable}: GITHUB_USERNAME"
 assert 'GITHUB_SECRET' in os.environ, f"{missing_variable}: GITHUB_SECRET"
+assert 'NO_PREVIEW_THUMBNAIL' in os.environ, f"{missing_variable}: NO_PREVIEW_THUMBNAIL"
 
 API_URL = os.environ.get('DJANGO_API_URL')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
@@ -41,6 +42,7 @@ SESSIONS_LOGS = os.environ.get('SESSIONS_LOGS')
 RUNS_TIMEOUT_MULTIPLIER = os.environ.get('RUNS_TIMEOUT_MULTIPLIER')
 RUNS_REFRESH_SECONDS = os.environ.get('RUNS_REFRESH_SECONDS')
 RUNS_CLEANUP_MINUTES = os.environ.get('RUNS_CLEANUP_MINUTES')
+NO_PREVIEW_THUMBNAIL = os.environ.get('NO_PREVIEW_THUMBNAIL')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')

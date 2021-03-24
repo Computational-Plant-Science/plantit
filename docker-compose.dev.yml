@@ -36,7 +36,6 @@ services:
       - SQL_ENGINE=${SQL_ENGINE}
       - SQL_HOST=${SQL_HOST}
       - SQL_PORT=${SQL_PORT}
-      # - SQL_NAME=${SQL_NAME}
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
       - SQL_DB=${SQL_DB}
@@ -48,6 +47,7 @@ services:
       - GITHUB_SECRET=${GITHUB_SECRET}
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
+      - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
@@ -126,7 +126,6 @@ services:
       - SQL_ENGINE=${SQL_ENGINE}
       - SQL_HOST=${SQL_HOST}
       - SQL_PORT=${SQL_PORT}
-      # - SQL_NAME=${SQL_NAME}
       - SQL_USER=${SQL_USER}
       - SQL_PASSWORD=${SQL_PASSWORD}
       - SQL_DB=${SQL_DB}
@@ -138,6 +137,7 @@ services:
       - GITHUB_SECRET=${GITHUB_SECRET}
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
+      - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

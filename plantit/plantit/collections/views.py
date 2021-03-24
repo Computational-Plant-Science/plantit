@@ -353,6 +353,9 @@ def get_thumbnail(request):
                     # with open(preview, 'rb') as preview_file:
                     #     return HttpResponse(preview_file, content_type="image/jpg")
                     return HttpResponse(temp_file, content_type="applications/octet-stream")
+            else:
+                with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
+                    return HttpResponse(thumbnail, content_type="image/png")
 
             # if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
             #     with tempfile.NamedTemporaryFile() as temp_file:

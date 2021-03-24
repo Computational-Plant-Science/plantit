@@ -115,7 +115,7 @@
                                 :img-src="
                                     openedCollection.opening ||
                                     fileIs3dModel(file.label)
-                                        ? null
+                                        ? require('../assets/no_preview_thumbnail.png')
                                         : `/apis/v1/collections/thumbnail/?path=${file.path}`
                                 "
                                 v-for="file in currentPageFiles"
@@ -185,6 +185,7 @@
                         </b-card-group>
                         <b-carousel
                             v-show="viewMode === 'Carousel'"
+                            v-model="currentCarouselSlide"
                             controls
                             :interval="0"
                             @sliding-end="
@@ -320,6 +321,7 @@ export default {
             currentFile: '',
             currentPage: 1,
             filesPerPage: 10,
+            currentCarouselSlide: 0,
             currentModel: {
                 scene: null,
                 mesh: null,
@@ -346,6 +348,8 @@ export default {
     watch: {
         viewMode() {
             this.unrenderPreview();
+            if (this.viewMode === 'Carousel' && this.currentCarouselSlide === 0)
+                this.renderPreview(this.currentPageFiles[0]);
         },
         openedCollection() {
             if (!this.openedCollection.opening) this.renderPreviews();
