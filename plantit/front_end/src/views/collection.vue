@@ -332,9 +332,9 @@ export default {
         };
     },
     beforeDestroy() {
-      this.unrenderPreview();
+        this.unrenderPreview();
     },
-  async mounted() {
+    async mounted() {
         await this.loadCollection();
         this.renderPreviews(false);
         this.renderPreview(this.currentPageFiles[0]);
@@ -383,7 +383,7 @@ export default {
                     const material = new THREE.PointsMaterial({
                         // color: 0x0055ff,
                         size: 0.005,
-                      vertexColors: THREE.VertexColors
+                        vertexColors: THREE.VertexColors
                     });
                     const mesh = new THREE.Points(geometry, material);
                     //const mesh = new THREE.Mesh(geometry, material);
@@ -469,10 +469,10 @@ export default {
 
             renderer.shadowMap.enabled = true;
 
-            const controls = new OrbitControls( camera, renderer.domElement );
+            const controls = new OrbitControls(camera, renderer.domElement);
             controls.enableZoom = false;
-				controls.target.set( 0, 25, 0 );
-				controls.update();
+            controls.target.set(0, 25, 0);
+            controls.update();
 
             // resize
 

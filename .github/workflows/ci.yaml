@@ -43,6 +43,7 @@ jobs:
           GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
           CYVERSE_CLIENT_ID: ${{ secrets.CYVERSE_CLIENT_ID }}
           CYVERSE_CLIENT_SECRET: ${{ secrets.CYVERSE_CLIENT_SECRET }}
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
         run: |
           chmod +x scripts/bootstrap.sh
           bash scripts/bootstrap.sh -n
