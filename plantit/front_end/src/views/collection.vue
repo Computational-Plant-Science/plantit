@@ -307,6 +307,7 @@ import router from '@/router';
 import * as yaml from 'js-yaml';
 import * as THREE from 'three';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export default {
     name: 'collection',
@@ -446,10 +447,10 @@ export default {
             };
 
             var render = function() {
-                const timer = Date.now() * 0.00005;
+                // const timer = Date.now() * 0.00005;
 
-                camera.position.x = Math.sin(timer) * 2.5;
-                camera.position.z = Math.cos(timer) * 2.5;
+                // camera.position.x = Math.sin(timer) * 2.5;
+                // camera.position.z = Math.cos(timer) * 2.5;
 
                 camera.lookAt(cameraTarget);
 
@@ -467,6 +468,11 @@ export default {
             renderer.outputEncoding = THREE.sRGBEncoding;
 
             renderer.shadowMap.enabled = true;
+
+            const controls = new OrbitControls( camera, renderer.domElement );
+            controls.enableZoom = false;
+				controls.target.set( 0, 25, 0 );
+				controls.update();
 
             // resize
 
