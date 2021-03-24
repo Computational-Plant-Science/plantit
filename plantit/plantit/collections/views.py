@@ -15,6 +15,8 @@ from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonRespon
 from django.utils import timezone
 from rest_framework.decorators import api_view
 from preview_generator.manager import PreviewManager
+import czifile
+import cv2
 
 from plantit import settings
 from plantit.clusters.models import Cluster, ClusterAccessPolicy, ClusterRole
@@ -333,10 +335,23 @@ def get_thumbnail(request):
                     sftp.chdir(session.workdir)
                     sftp.get(file, temp_file.name)
                     return HttpResponse(temp_file, content_type="image/png")
+            elif file.endswith('czi'):
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    print(f"Creating thumbnail for {file_name}")
+                    sftp.chdir(session.workdir)
+                    sftp.get(file, temp_file.name)
+                    image = czifile.imread(temp_file.name)
+                    image.shape = (image.shape[2], image.shape[3], image.shape[4])
+                    success, buffer = cv2.imencode(".jpg", image)
+                    buffer.tofile(temp_file.name)
+                    return HttpResponse(temp_file, content_type="image/png")
             elif file.endswith('ply'):
                 with tempfile.NamedTemporaryFile() as temp_file:
                     sftp.chdir(session.workdir)
                     sftp.get(file, temp_file.name)
+                    # preview = manager.get_jpeg_preview(temp_file.name, width=200, height=200)
+                    # with open(preview, 'rb') as preview_file:
+                    #     return HttpResponse(preview_file, content_type="image/jpg")
                     return HttpResponse(temp_file, content_type="applications/octet-stream")
 
             # if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):

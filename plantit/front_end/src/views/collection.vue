@@ -97,7 +97,11 @@
                 class="m-1"
             >
                 <b-col>
-                    <b-overlay :show="openedCollection.opening" rounded="sm">
+                    <b-overlay
+                        :variant="profile.darkMode ? 'dark' : 'light'"
+                        :show="openedCollection.opening"
+                        rounded="sm"
+                    >
                         <span
                             v-if="
                                 !dataLoading &&
@@ -116,7 +120,6 @@
                                 "
                                 v-for="file in currentPageFiles"
                                 v-bind:key="file.id"
-                                :id="file.id"
                                 style="min-width: 20rem;"
                                 class="overflow-hidden mb-4 mr-4 text-left"
                                 :bg-variant="
@@ -181,8 +184,12 @@
                             </b-card>
                         </b-card-group>
                         <b-carousel
-                            v-else-if="viewMode === 'Carousel'"
+                            v-show="viewMode === 'Carousel'"
                             controls
+                            :interval="0"
+                            @sliding-end="
+                                slide => renderPreview(currentPageFiles[slide])
+                            "
                         >
                             <b-carousel-slide
                                 v-for="file in currentPageFiles"
@@ -192,8 +199,14 @@
                                         ? `/apis/v1/collections/thumbnail/?path=${file.path}`
                                         : ''
                                 "
-                                ><template v-if="fileIsText(file.label)" #img
+                                ><template
+                                    v-if="
+                                        fileIsText(file.label) ||
+                                            fileIs3dModel(file.label)
+                                    "
+                                    #img
                                     ><div
+                                        :id="file.id"
                                         :class="
                                             profile.darkMode
                                                 ? 'theme-container-dark'
@@ -214,7 +227,7 @@
                                                 : 'theme-container-light'
                                         "
                                         style="min-height: 50rem;white-space: pre-line;"
-                                        :id="`big-${file.id}`"
+                                        :id="file.id"
                                     ></div
                                 ></template>
                                 <template #default
@@ -305,167 +318,39 @@ export default {
             collectionNotFound: false,
             currentFile: '',
             currentPage: 1,
-            filesPerPage: 20
+            filesPerPage: 10,
+            currentModel: {
+                scene: null,
+                mesh: null,
+                material: null,
+                geometry: null,
+                renderer: null,
+                loader: null
+            }
         };
     },
-    async mounted() {
+    beforeDestroy() {
+      this.unrenderPreview();
+    },
+  async mounted() {
         await this.loadCollection();
-        this.renderPreviews();
+        this.renderPreviews(false);
+        this.renderPreview(this.currentPageFiles[0]);
         this.currentFile =
             this.data !== null && this.data.files.length > 0
                 ? this.data.files[0]
                 : '';
     },
-    methods: {
-        renderPreviews() {
-            this.data.files
-                .filter(f => this.fileIsText(f.label))
-                .map(async f => await this.loadTextContent(f));
-            this.data.files
-                .filter(f => this.fileIs3dModel(f.label))
-                .map(f => {
-                    var camera = new THREE.PerspectiveCamera(
-                        35,
-                        window.innerWidth / window.innerHeight,
-                        1,
-                        15
-                    );
-                    // camera.position.set(3, 0.15, 3);
-                    camera.position.z = 2;
-                    camera.zoom = 0.5;
-
-                    var cameraTarget = new THREE.Vector3(0, -0.1, 0);
-
-                    var scene = new THREE.Scene();
-                    // scene.background = new THREE.Color(0x72645b);
-                    scene.fog = new THREE.Fog(0x72645b, 2, 15);
-
-                    // Ground
-
-                    // const plane = new THREE.Mesh(
-                    //     new THREE.PlaneGeometry(40, 40),
-                    //     new THREE.MeshPhongMaterial({
-                    //         color: 0x999999,
-                    //         specular: 0x101010
-                    //     })
-                    // );
-                    // plane.rotation.x = -Math.PI / 2;
-                    // plane.position.y = -0.5;
-                    // scene.add(plane);
-
-                    // plane.receiveShadow = true;
-
-                    const loader = new PLYLoader();
-
-                    loader.load(
-                        `/apis/v1/collections/thumbnail/?path=${f.path}`,
-                        function(geometry) {
-                            geometry.computeVertexNormals();
-
-                            // const material = new THREE.MeshStandardMaterial({
-                            //     color: 0x0055ff,
-                            //     flatShading: true
-                            // });
-                            const material = new THREE.PointsMaterial({
-                                color: 0x0055ff,
-                                size: 0.005
-                            });
-                            const mesh = new THREE.Points(geometry, material);
-                            //const mesh = new THREE.Mesh(geometry, material);
-                            // const mesh = new THREE.Mesh(geometry);
-
-                            mesh.position.y = -0.5;
-                            // mesh.position.z = 0.3;
-                            // mesh.rotation.x = -Math.PI / 2;
-                            mesh.scale.multiplyScalar(0.8);
-
-                            mesh.castShadow = true;
-                            mesh.receiveShadow = true;
-
-                            scene.add(mesh);
-                        }
-                    );
-
-                    // Lights
-
-                    scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
-
-                    var addShadowedLight = function(x, y, z, color, intensity) {
-                        const directionalLight = new THREE.DirectionalLight(
-                            color,
-                            intensity
-                        );
-                        directionalLight.position.set(x, y, z);
-                        scene.add(directionalLight);
-
-                        directionalLight.castShadow = true;
-
-                        const d = 1;
-                        directionalLight.shadow.camera.left = -d;
-                        directionalLight.shadow.camera.right = d;
-                        directionalLight.shadow.camera.top = d;
-                        directionalLight.shadow.camera.bottom = -d;
-
-                        directionalLight.shadow.camera.near = 1;
-                        directionalLight.shadow.camera.far = 4;
-
-                        directionalLight.shadow.mapSize.width = 1024;
-                        directionalLight.shadow.mapSize.height = 1024;
-
-                        directionalLight.shadow.bias = -0.001;
-                    };
-
-                    var onWindowResize = function() {
-                        camera.aspect = window.innerWidth / window.innerHeight;
-                        camera.updateProjectionMatrix();
-
-                        renderer.setSize(
-                            window.innerWidth / 3,
-                            window.innerHeight / 3
-                        );
-                    };
-
-                    var animate = function() {
-                        requestAnimationFrame(animate);
-                        render();
-                    };
-
-                    var render = function() {
-                        // const timer = Date.now() * 0.0001;
-
-                        // camera.position.x = Math.sin(timer) * 2.5;
-                        // camera.position.z = Math.cos(timer) * 2.5;
-
-                        camera.lookAt(cameraTarget);
-
-                        renderer.render(scene, camera);
-                    };
-
-                    addShadowedLight(1, 1, 1, 0xffffff, 1.35);
-                    addShadowedLight(0.5, 1, -1, 0xffaa00, 1);
-
-                    // renderer
-
-                    var renderer = new THREE.WebGLRenderer({ antialias: true });
-                    renderer.setPixelRatio(window.devicePixelRatio);
-                    renderer.setSize(
-                        window.innerWidth / 3,
-                        window.innerHeight / 3
-                    );
-                    renderer.outputEncoding = THREE.sRGBEncoding;
-
-                    renderer.shadowMap.enabled = true;
-
-                    // resize
-
-                    window.addEventListener('resize', onWindowResize);
-                    document.getElementById(f.id).prepend(renderer.domElement);
-                    //.appendChild(renderer.domElement);
-
-                    animate();
-                });
+    watch: {
+        viewMode() {
+            this.unrenderPreview();
         },
-        loadBig3dModel(f) {
+        openedCollection() {
+            if (!this.openedCollection.opening) this.renderPreviews();
+        }
+    },
+    methods: {
+        renderPreview(f) {
             var camera = new THREE.PerspectiveCamera(
                 35,
                 window.innerWidth / window.innerHeight,
@@ -482,23 +367,8 @@ export default {
             // scene.background = new THREE.Color(0x72645b);
             scene.fog = new THREE.Fog(0x72645b, 2, 15);
 
-            // Ground
-
-            // const plane = new THREE.Mesh(
-            //     new THREE.PlaneGeometry(40, 40),
-            //     new THREE.MeshPhongMaterial({
-            //         color: 0x999999,
-            //         specular: 0x101010
-            //     })
-            // );
-            // plane.rotation.x = -Math.PI / 2;
-            // plane.position.y = -0.5;
-            // scene.add(plane);
-
-            // plane.receiveShadow = true;
-
             const loader = new PLYLoader();
-
+            var comp = this;
             loader.load(
                 `/apis/v1/collections/thumbnail/?path=${f.path}`,
                 function(geometry) {
@@ -516,13 +386,17 @@ export default {
                     //const mesh = new THREE.Mesh(geometry, material);
                     // const mesh = new THREE.Mesh(geometry);
 
-                    mesh.position.y = -0.5;
+                    mesh.position.y = -0.3;
                     // mesh.position.z = 0.3;
                     mesh.rotation.x = -Math.PI / 2;
-                    mesh.scale.multiplyScalar(0.8);
+                    mesh.scale.multiplyScalar(0.5);
 
                     mesh.castShadow = true;
                     mesh.receiveShadow = true;
+
+                    comp.currentModel.geometry = geometry;
+                    comp.currentModel.material = material;
+                    comp.currentModel.mesh = mesh;
 
                     scene.add(mesh);
                 }
@@ -561,7 +435,7 @@ export default {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
 
-                renderer.setSize(window.innerWidth / 3, window.innerHeight / 3);
+                renderer.setSize(window.innerWidth, window.innerHeight);
             };
 
             var animate = function() {
@@ -587,7 +461,7 @@ export default {
 
             var renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth / 3, window.innerHeight / 3);
+            renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.outputEncoding = THREE.sRGBEncoding;
 
             renderer.shadowMap.enabled = true;
@@ -595,10 +469,31 @@ export default {
             // resize
 
             window.addEventListener('resize', onWindowResize);
-            document.getElementById(`big-${f.id}`).prepend(renderer.domElement);
+            document.getElementById(f.id).prepend(renderer.domElement);
             //.appendChild(renderer.domElement);
 
+            this.currentModel.scene = scene;
+            this.currentModel.loader = loader;
+            this.currentModel.renderer = renderer;
+
             animate();
+        },
+        unrenderPreview() {
+            this.currentModel.scene.remove(this.currentModel.mesh);
+            this.currentModel.renderer.dispose();
+            this.currentModel.renderer.renderLists.dispose();
+            // this.currentModel.loader.dispose();
+            this.currentModel.geometry.dispose();
+            this.currentModel.material.dispose();
+        },
+        renderPreviews(plys = false) {
+            this.data.files
+                .filter(f => this.fileIsText(f.label))
+                .map(async f => await this.loadTextContent(f));
+            if (plys)
+                this.data.files
+                    .filter(f => this.fileIs3dModel(f.label))
+                    .map(f => this.renderPreview(f));
         },
         async downloadFile(file) {
             this.downloading = true;
@@ -644,7 +539,11 @@ export default {
                 file
                     .toLowerCase()
                     .split('.')
-                    .pop() === 'jpeg'
+                    .pop() === 'jpeg' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'czi'
             );
         },
         fileIsText(file) {
@@ -782,13 +681,10 @@ export default {
             return this.totalFileCount < this.filesPerPage
                 ? this.totalFileCount
                 : `${Math.max(
-                      (this.totalFileCount < this.filesPerPage
-                          ? this.totalFileCount
-                          : this.filesPerPage) *
-                          this.currentPage -
+                      this.filesPerPage * this.currentPage -
                           this.filesPerPage +
                           1,
-                      this.totalFileCount
+                      1
                   )} - ${
                       this.currentPage * this.filesPerPage <=
                       this.totalFileCount

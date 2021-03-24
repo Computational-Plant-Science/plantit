@@ -35,3 +35,5 @@ httpx==0.16.1
 tenacity
 channels-redis
 preview-generator
+czifile
+opencv-python
