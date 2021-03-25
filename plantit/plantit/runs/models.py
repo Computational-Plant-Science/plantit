@@ -69,7 +69,7 @@ class Run(models.Model):
 
 class DelayedRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE)
+    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
@@ -77,7 +77,7 @@ class DelayedRunTask(PeriodicTask):
 
 class RepeatingRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE)
+    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)

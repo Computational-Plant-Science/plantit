@@ -7,10 +7,7 @@
             {{ this.kind === 'files' ? 'directory' : this.kind }} from the Data
             Store.
         </b>
-      <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
+        <hr class="mt-2 mb-2" style="border-color: gray" />
         <b-tabs
             class="mt-2"
             vertical
