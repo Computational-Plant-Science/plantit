@@ -174,7 +174,7 @@
                         >
                         <b-col
                             ><b-button
-                                :disabled="!flowReady"
+                                :disabled="!flowReady || submitted"
                                 @click="onTryStart"
                                 variant="success"
                                 block
@@ -183,7 +183,14 @@
                                     submitType === 'Now'
                                         ? `Start ${getWorkflow.config.name}`
                                         : `Schedule ${getWorkflow.config.name} to run ${scheduledTime}`
-                                }}
+                                }}<b-spinner
+                                    small
+                                    v-if="submitted"
+                                    label="Loading..."
+                                    variant="dark"
+                                    class="ml-2 mb-1"
+                                ></b-spinner
+                                >
                             </b-button></b-col
                         ></b-row
                     >
@@ -1267,6 +1274,7 @@ export default {
     },
     data: function() {
         return {
+            submitted: false,
             authenticationUsername: '',
             authenticationPassword: '',
             currentClusterTab: 0,
@@ -1798,6 +1806,7 @@ export default {
                     password: this.authenticationPassword
                 };
 
+            this.submitted = true;
             if (this.submitType === 'Now')
                 // submit run immediately
                 await axios({

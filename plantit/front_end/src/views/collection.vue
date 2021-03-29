@@ -338,8 +338,10 @@ export default {
     },
     async mounted() {
         await this.loadCollection();
-        this.renderPreviews(false);
-        this.renderPreview(this.currentPageFiles[0]);
+        if (this.data.files.some(f => f.label.endsWith('ply'))) {
+            this.renderPreviews(false);
+            this.renderPreview(this.currentPageFiles[0]);
+        }
         this.currentFile =
             this.data !== null && this.data.files.length > 0
                 ? this.data.files[0]
@@ -347,12 +349,24 @@ export default {
     },
     watch: {
         viewMode() {
-            this.unrenderPreview();
-            if (this.viewMode === 'Carousel' && this.currentCarouselSlide === 0)
-                this.renderPreview(this.currentPageFiles[0]);
+            if (
+                this.data !== null &&
+                this.data.files.some(f => f.label.endsWith('ply'))
+            ) {
+                this.unrenderPreview();
+                if (
+                    this.viewMode === 'Carousel' &&
+                    this.currentCarouselSlide === 0
+                )
+                    this.renderPreview(this.currentPageFiles[0]);
+            }
         },
         openedCollection() {
-            if (!this.openedCollection.opening) this.renderPreviews();
+            if (
+                this.data !== null &&
+                this.data.files.some(f => f.label.endsWith('ply'))
+            )
+                this.renderPreviews();
         }
     },
     methods: {

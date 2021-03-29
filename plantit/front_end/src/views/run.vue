@@ -116,7 +116,7 @@
                                             class="mb-1 mr-1"
                                             small
                                             v-if="!getRun.is_complete"
-                                            variant="secondary"
+                                            :variant="profile.darkMode ? 'light' : 'dark'"
                                         >
                                         </b-spinner>
                                         <b class="ml-1 mr-0">{{ getRun.id }}</b>

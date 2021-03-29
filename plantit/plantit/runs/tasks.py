@@ -1,10 +1,14 @@
 import traceback
 from os import environ
 from os.path import join
+from typing import List
 
+import requests
 import yaml
 from celery.utils.log import get_task_logger
 from django.utils import timezone
+from requests import RequestException, Timeout, ReadTimeout, HTTPError
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from plantit import settings
 from plantit.celery import app
@@ -19,7 +23,7 @@ from plantit.clusters.models import Cluster
 logger = get_task_logger(__name__)
 
 
-def __upload_run(flow, run: Run, ssh: SSH):
+def __upload_run(flow, run: Run, ssh: SSH, file_count: int = None):
     # update flow config before uploading
     flow['config']['workdir'] = join(run.cluster.workdir, run.guid)
     flow['config']['log_file'] = f"{run.guid}.{run.cluster.name.lower()}.log"
@@ -62,7 +66,6 @@ def __upload_run(flow, run: Run, ssh: SSH):
 
             if not sandbox:
                 # we're on a SLURM cluster, so add resource requests
-                script.write("#SBATCH -N 1\n")
                 script.write("#SBATCH --ntasks=1\n")
 
                 if 'cores' in resources:
@@ -75,6 +78,10 @@ def __upload_run(flow, run: Run, ssh: SSH):
                     script.write(f"#SBATCH --partition={run.cluster.queue}\n")
                 if run.cluster.project is not None and run.cluster.project != '':
                     script.write(f"#SBATCH -A {run.cluster.project}\n")
+                if file_count is not None:
+                    script.write(f"#SBATCH -N {min(file_count, run.cluster.max_nodes)}\n")
+                else:
+                    script.write(f"#SBATCH -N 1\n")
 
                 script.write("#SBATCH --mail-type=END,FAIL\n")
                 script.write(f"#SBATCH --mail-user={run.user.email}\n")
@@ -97,7 +104,9 @@ def __upload_run(flow, run: Run, ssh: SSH):
                 script.write(pull_commands)
 
             # add run command
-            run_commands = f"plantit run flow.yaml --plantit_url '{callback_url}' --plantit_token '{run.token}'"
+            run_commands = f"plantit run flow.yaml --plantit_url '{callback_url}' --plantit_token '{run.token}' --pre_pull_image"
+            if run.cluster.no_nested and file_count is not None:
+                run_commands += f" --slurm_job_array"
             docker_username = environ.get('DOCKER_USERNAME', None)
             docker_password = environ.get('DOCKER_PASSWORD', None)
             if docker_username is not None and docker_password is not None:
@@ -125,7 +134,7 @@ def __upload_run(flow, run: Run, ssh: SSH):
                 # add push command if we have a destination
                 if 'to' in flow['output']:
                     push_commands = f"plantit terrain push {flow['output']['to']}" \
-                                    f" -p {join(run.workdir, flow['output']['from'])}" \
+                                    f" -p {join(run.work_dir, flow['output']['from'])}" \
                                     f" --plantit_url '{callback_url}'" \
                                     f" --plantit_token '{run.token}'" \
                                     f" --terrain_token {run.user.profile.cyverse_token}"
@@ -145,7 +154,26 @@ def __upload_run(flow, run: Run, ssh: SSH):
                     logger.info(f"Using push command: {push_commands}")
 
 
-def __submit_run(run: Run, ssh: SSH):
+@retry(
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        stop=stop_after_attempt(3),
+        retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+            RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+            Timeout) | retry_if_exception_type(HTTPError)))
+def __list_dir(path: str, token: str) -> List[str]:
+    with requests.get(
+            f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}",
+            headers={'Authorization': f"Bearer {token}"}) as response:
+        if response.status_code == 500 and response.json()['error_code'] == 'ERR_DOES_NOT_EXIST':
+            raise ValueError(f"Path {path} does not exist")
+
+        response.raise_for_status()
+        content = response.json()
+        files = content['files']
+        return [file['path'] for file in files]
+
+
+def __submit_run(flow, run: Run, ssh: SSH, file_count: int = None):
     # TODO refactor to allow multiple cluster schedulers
     sandbox = run.cluster.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
     template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
@@ -155,15 +183,21 @@ def __submit_run(run: Run, ssh: SSH):
         execute_command(
             ssh_client=ssh,
             pre_command='; '.join(str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
-            command=f"chmod +x {template_name} && ./{template_name}" if sandbox else f"chmod +x {template_name} && sbatch {template_name}",
+            command=f"chmod +x {template_name} && ./{template_name}",
             directory=join(run.cluster.workdir, run.work_dir),
             allow_stderr=True)
     else:
+        # command = f"chmod +x {template_name} && ./{template_name}" if run.cluster.no_nested else f"chmod +x {template_name} && sbatch {template_name}"
+        command = f"chmod +x {template_name} && sbatch {template_name}"
+
+        if file_count is not None and run.cluster.no_nested:
+            command += f" --array=0-{file_count - 1}"
+
         output_lines = execute_command(
             ssh_client=ssh,
             pre_command='; '.join(str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
             # if the cluster scheduler prohibits nested job submissions, we need to run the CLI from a login node
-            command=f"chmod +x {template_name} && ./{template_name}" if run.cluster.no_nested else f"chmod +x {template_name} && sbatch {template_name}",
+            command=command,
             directory=join(run.cluster.workdir, run.work_dir),
             allow_stderr=True)
         job_id = parse_job_id(output_lines[-1])
@@ -199,17 +233,25 @@ def submit_run(id: str, flow):
             ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
 
         with ssh_client:
-            msg = f"Creating working directory {join(run.cluster.workdir, run.guid)} and uploading files"
+            msg = f"Creating working directory {join(run.cluster.workdir, run.guid)} and uploading workflow configuration"
             update_status(run, msg)
             logger.info(msg)
 
-            __upload_run(flow, run, ssh_client)
+            if 'input' in flow['config'] and flow['config']['input']['kind'] == 'files':
+                file_count = len(__list_dir(flow['config']['input']['from'], run.user.profile.cyverse_token))
+                msg = f"Found {file_count} input files"
+                update_status(run, msg)
+                logger.info(msg)
+            else:
+                file_count = None
+
+            __upload_run(flow, run, ssh_client, file_count)
 
             msg = 'Running script' if run.is_sandbox else 'Submitting script to scheduler'
             update_status(run, msg)
             logger.info(msg)
 
-            __submit_run(run, ssh_client)
+            __submit_run(flow, run, ssh_client, file_count)
 
             if run.is_sandbox:
                 run.job_status = 'SUCCESS'

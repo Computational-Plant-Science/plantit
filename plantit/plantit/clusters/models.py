@@ -1,13 +1,10 @@
-import json
 from enum import Enum
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
+from django_celery_beat.models import PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
 
 
@@ -23,6 +20,7 @@ class Cluster(models.Model):
     max_mem = models.IntegerField(blank=True, null=True, default=5)
     max_cores = models.IntegerField(blank=True, null=True, default=1)
     max_processes = models.IntegerField(blank=True, null=True, default=1)
+    max_nodes = models.IntegerField(blank=True, null=True, default=1)
     queue = models.CharField(max_length=250, null=True, blank=True)
     project = models.CharField(max_length=250, null=True, blank=True)
     header_skip = models.CharField(max_length=1000, null=True, blank=True)

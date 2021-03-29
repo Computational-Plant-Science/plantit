@@ -6,13 +6,13 @@ from plantit.runs.utils import execute_command
 
 
 def get_job_walltime(run: Run) -> (str, str):
-    ssh = SSH(run.target.hostname, run.target.port, run.target.username)
+    ssh = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
     with ssh:
         lines = execute_command(
             ssh_client=ssh,
             pre_command=":",
-            command=f"squeue --user={run.target.username}",
-            directory=join(run.target.workdir, run.work_dir),
+            command=f"squeue --user={run.cluster.username}",
+            directory=join(run.cluster.workdir, run.work_dir),
             allow_stderr=True)
 
         try:
@@ -25,13 +25,13 @@ def get_job_walltime(run: Run) -> (str, str):
 
 
 def get_job_status(run: Run) -> str:
-    ssh = SSH(run.target.hostname, run.target.port, run.target.username)
+    ssh = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
     with ssh:
         lines = execute_command(
             ssh_client=ssh,
             pre_command=':',
             command=f"sacct -j {run.job_id}",
-            directory=join(run.target.workdir, run.work_dir),
+            directory=join(run.cluster.workdir, run.work_dir),
             allow_stderr=True)
 
         job_line = next(l for l in lines if run.job_id in l)
@@ -42,10 +42,10 @@ def get_job_status(run: Run) -> str:
 
 
 def cancel_job(run: Run):
-    ssh = SSH(run.target.hostname, run.target.port, run.target.username)
+    ssh = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
     with ssh:
         execute_command(
             ssh_client=ssh,
             pre_command=':',
             command=f"scancel {run.job_id}",
-            directory=join(run.target.workdir, run.work_dir))
+            directory=join(run.cluster.workdir, run.work_dir))
