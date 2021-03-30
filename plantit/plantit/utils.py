@@ -1,10 +1,13 @@
+from os.path import isdir
 from random import choice
+from typing import List
 
 import requests
 import yaml
 from requests.auth import HTTPBasicAuth
 
 from plantit import settings
+from plantit.options import BindMount, Parameter, RunOptions, DirectoryInput, FilesInput, FileInput
 
 
 def get_repo_config(name, owner, token):
@@ -217,6 +220,186 @@ def validate_workflow_config(config, token):
             errors.append('Attribute \'doi\' must be a str')
 
     return True if len(errors) == 0 else (False, errors)
+
+
+def parse_bind_mount(workdir: str, bind_mount: str):
+    split = bind_mount.rpartition(':')
+    return BindMount(host_path=split[0], container_path=split[2]) if len(split) > 0 else BindMount(host_path=workdir, container_path=bind_mount)
+
+
+def parse_run_options(raw: dict):
+    errors = []
+
+    image = None
+    if not isinstance(raw['image'], str):
+        errors.append('Attribute \'image\' must not be a str')
+    elif raw['image'] == '':
+        errors.append('Attribute \'image\' must not be empty')
+    else:
+        image = raw['image']
+        if 'docker' in image:
+            image_owner, image_name, image_tag = parse_docker_image_components(image)
+            if not docker_image_exists(image_name, image_owner, image_tag):
+                errors.append(f"Image '{image}' not found on Docker Hub")
+
+    work_dir = None
+    if not isinstance(raw['workdir'], str):
+        errors.append('Attribute \'workdir\' must not be a str')
+    elif raw['workdir'] == '':
+        errors.append('Attribute \'workdir\' must not be empty')
+    else:
+        work_dir = raw['workdir']
+
+    command = None
+    if not isinstance(raw['command'], str):
+        errors.append('Attribute \'command\' must not be a str')
+    elif raw['command'] == '':
+        errors.append('Attribute \'command\' must not be empty')
+    else:
+        command = raw['command']
+
+    parameters = None
+    if 'parameters' in raw:
+        if not all(['key' in param and
+                    param['key'] is not None and
+                    param['key'] != '' and
+                    'value' in param and
+                    param['value'] is not None and
+                    param['value'] != ''
+                    for param in raw['parameters']]):
+            errors.append('Every parameter must have a non-empty \'key\' and \'value\'')
+        else:
+            parameters = [Parameter(param['key'], param['value']) for param in raw['parameters']]
+
+    bind_mounts = None
+    if 'bind_mounts' in raw:
+        if not all (mount_point != '' for mount_point in raw['bind_mounts']):
+            errors.append('Every mount point must be non-empty')
+        else:
+            bind_mounts = [parse_bind_mount(work_dir, mount_point) for mount_point in raw['bind_mounts']]
+
+    input = None
+    if 'input' in raw:
+        if 'file' in raw['input']:
+            if 'path' not in raw['input']['file']:
+                errors.append('Section \'file\' must include attribute \'path\'')
+            input = FileInput(path=raw['input']['file']['path'])
+        elif 'files' in raw['input']:
+            if 'path' not in raw['input']['files']:
+                errors.append('Section \'files\' must include attribute \'path\'')
+            input = FilesInput(
+                path=raw['input']['files']['path'],
+                patterns=raw['input']['files']['patterns'] if 'patterns' in raw['input']['files'] else None)
+        elif 'directory' in raw['input']:
+            if 'path' not in raw['input']['directory']:
+                errors.append('Section \'directory\' must include attribute \'path\'')
+            input = DirectoryInput(path=raw['input']['directory']['path'])
+        else:
+            errors.append('Section \'input\' must include a \'file\', \'files\', or \'directory\' section')
+
+    log_file = None
+    if 'log_file' in raw:
+        log_file = raw['log_file']
+        if not isinstance(log_file, str):
+            errors.append('Attribute \'log_file\' must be a str')
+        elif log_file.rpartition('/')[0] != '' and not isdir(log_file.rpartition('/')[0]):
+            errors.append('Attribute \'log_file\' must be a valid file path')
+
+    no_cache = None
+    if 'no_cache' in raw:
+        no_cache = raw['no_cache']
+        if not isinstance(no_cache, bool):
+            errors.append('Attribute \'no_cache\' must be a bool')
+
+    gpu = None
+    if 'gpu' in raw:
+        gpu = raw['gpu']
+        if not isinstance(gpu, bool):
+            errors.append('Attribute \'gpu\' must be a bool')
+
+    jobqueue = None
+    if 'jobqueue' in raw:
+        jobqueue = raw['jobqueue']
+        if not ('slurm' in jobqueue or 'yarn' in jobqueue or 'pbs' in jobqueue or 'moab' in jobqueue or 'sge' in jobqueue or 'lsf' in jobqueue or 'oar' in jobqueue or 'kube' in jobqueue):
+            raise ValueError(f"Unsupported jobqueue configuration: {jobqueue}")
+
+        if 'queue' in jobqueue:
+            if not isinstance(jobqueue['queue'], str):
+                errors.append('Section \'jobqueue\'.\'queue\' must be a str')
+        if 'project' in jobqueue:
+            if not isinstance(jobqueue['project'], str):
+                errors.append('Section \'jobqueue\'.\'project\' must be a str')
+        if 'walltime' in jobqueue:
+            if not isinstance(jobqueue['walltime'], str):
+                errors.append('Section \'jobqueue\'.\'walltime\' must be a str')
+        if 'cores' in jobqueue:
+            if not isinstance(jobqueue['cores'], int):
+                errors.append('Section \'jobqueue\'.\'cores\' must be a int')
+        if 'processes' in jobqueue:
+            if not isinstance(jobqueue['processes'], int):
+                errors.append('Section \'jobqueue\'.\'processes\' must be a int')
+        if 'extra' in jobqueue and not all(extra is str for extra in jobqueue['extra']):
+            errors.append('Section \'jobqueue\'.\'extra\' must be a list of str')
+        if 'header_skip' in jobqueue and not all(extra is str for extra in jobqueue['header_skip']):
+            errors.append('Section \'jobqueue\'.\'header_skip\' must be a list of str')
+
+    return errors, RunOptions(
+        workdir=work_dir,
+        image=image,
+        command=command,
+        input=input,
+        parameters=parameters,
+        bind_mounts=bind_mounts,
+        # checksums=checksums,
+        log_file=log_file,
+        jobqueue=jobqueue,
+        no_cache=no_cache,
+        gpu=gpu)
+
+
+def format_bind_mount(workdir: str, bind_mount: BindMount):
+    return bind_mount.host_path + ':' + bind_mount.container_path if bind_mount.host_path != '' else workdir + ':' + bind_mount.container_path
+
+
+def prep_run_command(
+        work_dir: str,
+        image: str,
+        command: str,
+        bind_mounts: List[BindMount] = None,
+        parameters: List[Parameter] = None,
+        docker_username: str = None,
+        docker_password: str = None,
+        no_cache: bool = False,
+        gpu: bool = False):
+    cmd = f"singularity exec --home {work_dir}"
+
+    if bind_mounts is not None:
+        if len(bind_mounts) > 0:
+            cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
+        else:
+            raise ValueError(f"List expected for `bind_mounts`")
+
+    if parameters is None:
+        parameters = []
+    parameters.append(Parameter(key='WORKDIR', value=work_dir))
+    for parameter in parameters:
+        print(f"Replacing '{parameter.key.upper()}' with '{parameter.value}'")
+        command = command.replace(f"${parameter.key.upper()}", parameter.value)
+
+    if no_cache:
+        cmd += ' --disable-cache'
+
+    if gpu:
+        cmd += ' --nv'
+
+    cmd += f" {image} {command}"
+    print(f"Using command: '{cmd}'")
+
+    # we don't necessarily want to reveal Docker auth info to the end user, so print the command before adding Docker env variables
+    if docker_username is not None and docker_password is not None:
+        cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
+
+    return cmd
 
 
 def get_csrf_token(request):

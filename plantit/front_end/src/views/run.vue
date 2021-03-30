@@ -214,7 +214,7 @@
                                         size="sm"
                                         v-b-tooltip.hover
                                         :title="
-                                            'Restart ' + getWorkflow.config.name
+                                            'Restart this run'
                                         "
                                         @click="onRestart"
                                     >

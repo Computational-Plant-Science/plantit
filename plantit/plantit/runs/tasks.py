@@ -14,16 +14,18 @@ from plantit import settings
 from plantit.celery import app
 from plantit.collections.models import CollectionSession
 from plantit.collections.utils import update_collection_session
+from plantit.options import FilesInput, FileInput, Parameter
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import update_status, execute_command, map_old_workflow_config_to_new, remove_logs, parse_job_id, create_run
 from plantit.clusters.models import Cluster
+from plantit.utils import parse_run_options, prep_run_command
 
 logger = get_task_logger(__name__)
 
 
-def __upload_run(flow, run: Run, ssh: SSH, file_count: int = None):
+def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
     # update flow config before uploading
     flow['config']['workdir'] = join(run.cluster.workdir, run.guid)
     flow['config']['log_file'] = f"{run.guid}.{run.cluster.name.lower()}.log"
@@ -56,6 +58,8 @@ def __upload_run(flow, run: Run, ssh: SSH, file_count: int = None):
 
         # upload flow config file
         with sftp.open('flow.yaml', 'w') as flow_file:
+            if run.cluster.launcher:
+                del new_flow['jobqueue']
             yaml.dump(new_flow, flow_file, default_flow_style=False)
 
         # compose and upload job script
@@ -78,8 +82,12 @@ def __upload_run(flow, run: Run, ssh: SSH, file_count: int = None):
                     script.write(f"#SBATCH --partition={run.cluster.queue}\n")
                 if run.cluster.project is not None and run.cluster.project != '':
                     script.write(f"#SBATCH -A {run.cluster.project}\n")
-                if file_count is not None:
-                    script.write(f"#SBATCH -N {min(file_count, run.cluster.max_nodes)}\n")
+
+                input_count = len(input_files)
+                if input_files is not None and run.cluster.no_nested:
+                    script.write(f"#SBATCH --array=1-{input_count}\n")
+                if input_files is not None:
+                    script.write(f"#SBATCH -N {min(input_count, run.cluster.max_nodes)}\n")
                 else:
                     script.write(f"#SBATCH -N 1\n")
 
@@ -103,17 +111,46 @@ def __upload_run(flow, run: Run, ssh: SSH, file_count: int = None):
                 logger.info(f"Using pull command: {pull_commands}")
                 script.write(pull_commands)
 
-            # add run command
-            run_commands = f"plantit run flow.yaml --plantit_url '{callback_url}' --plantit_token '{run.token}' --pre_pull_image"
-            if run.cluster.no_nested and file_count is not None:
-                run_commands += f" --slurm_job_array"
             docker_username = environ.get('DOCKER_USERNAME', None)
             docker_password = environ.get('DOCKER_PASSWORD', None)
-            if docker_username is not None and docker_password is not None:
-                run_commands += f" --docker_username {docker_username} --docker_password {docker_password}"
-            run_commands += "\n"
-            logger.info(f"Using run command: {run_commands}")
-            script.write(run_commands)
+
+            # if this cluster uses TACC's launcher, create a parameter sweep launcher job script to invoke singularity directly
+            if run.cluster.launcher and input_files is not None:
+                with sftp.open('launch', 'w') as launcher_script:
+                    for file in input_files:
+                        parse_errors, run_options = parse_run_options(new_flow)
+                        if len(parse_errors) > 0:
+                            raise ValueError(f"Failed to parse run options: {' '.join(parse_errors)}")
+                        file_name = file.rpartition('/')[2]
+                        run_options.input = FileInput(file_name)
+                        command = prep_run_command(
+                            work_dir=run_options.workdir,
+                            image=run_options.image,
+                            command=run_options.command,
+                            parameters=(run_options.parameters if run_options.parameters is not None else []) + [
+                                Parameter(key='INPUT', value=join(run.cluster.workdir, run.work_dir, 'input', file_name))],
+                            bind_mounts=run_options.bind_mounts,
+                            docker_username=docker_username,
+                            docker_password=docker_password,
+                            no_cache=run_options.no_cache,
+                            gpu=run_options.gpu)
+                        launcher_script.write(f"{command}\n")
+
+                script.write(f"export LAUNCHER_WORKDIR={join(run.cluster.workdir, run.work_dir)}\n")
+                script.write(f"export LAUNCHER_JOB_FILE=launch\n")
+                script.write('$LAUNCHER_DIR/paramrun')
+            # otherwise use the CLI
+            else:
+                run_commands = f"plantit run flow.yaml --plantit_url '{callback_url}' --plantit_token '{run.token}' --pre_pull_image"
+                if run.cluster.no_nested and input_files is not None:
+                    run_commands += f" --slurm_job_array"
+
+                if docker_username is not None and docker_password is not None:
+                    run_commands += f" --docker_username {docker_username} --docker_password {docker_password}"
+
+                run_commands += "\n"
+                logger.info(f"Using run command: {run_commands}")
+                script.write(run_commands)
 
             # if we have outputs...
             if 'output' in flow:
@@ -155,11 +192,11 @@ def __upload_run(flow, run: Run, ssh: SSH, file_count: int = None):
 
 
 @retry(
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-        stop=stop_after_attempt(3),
-        retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
-            RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-            Timeout) | retry_if_exception_type(HTTPError)))
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
 def __list_dir(path: str, token: str) -> List[str]:
     with requests.get(
             f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}",
@@ -189,10 +226,6 @@ def __submit_run(flow, run: Run, ssh: SSH, file_count: int = None):
     else:
         # command = f"chmod +x {template_name} && ./{template_name}" if run.cluster.no_nested else f"chmod +x {template_name} && sbatch {template_name}"
         command = f"chmod +x {template_name} && sbatch {template_name}"
-
-        if file_count is not None and run.cluster.no_nested:
-            command += f" --array=0-{file_count - 1}"
-
         output_lines = execute_command(
             ssh_client=ssh,
             pre_command='; '.join(str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
@@ -238,20 +271,20 @@ def submit_run(id: str, flow):
             logger.info(msg)
 
             if 'input' in flow['config'] and flow['config']['input']['kind'] == 'files':
-                file_count = len(__list_dir(flow['config']['input']['from'], run.user.profile.cyverse_token))
-                msg = f"Found {file_count} input files"
+                input_files = __list_dir(flow['config']['input']['from'], run.user.profile.cyverse_token)
+                msg = f"Found {len(input_files)} input files"
                 update_status(run, msg)
                 logger.info(msg)
             else:
-                file_count = None
+                input_files = None
 
-            __upload_run(flow, run, ssh_client, file_count)
+            __upload_run(flow, run, ssh_client, input_files)
 
             msg = 'Running script' if run.is_sandbox else 'Submitting script to scheduler'
             update_status(run, msg)
             logger.info(msg)
 
-            __submit_run(flow, run, ssh_client, file_count)
+            __submit_run(flow, run, ssh_client, len(input_files) if input_files is not None else None)
 
             if run.is_sandbox:
                 run.job_status = 'SUCCESS'
@@ -309,7 +342,8 @@ def poll_run_status(id: str):
             run.completed = now
             run.save()
 
-            msg = f"Job {run.job_id} {job_status}" + (f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
+            msg = f"Job {run.job_id} {job_status}" + (
+                f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             update_status(run, msg)
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
         else:
