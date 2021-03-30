@@ -116,7 +116,11 @@
                                             class="mb-1 mr-1"
                                             small
                                             v-if="!getRun.is_complete"
-                                            :variant="profile.darkMode ? 'light' : 'dark'"
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'light'
+                                                    : 'dark'
+                                            "
                                         >
                                         </b-spinner>
                                         <b class="ml-1 mr-0">{{ getRun.id }}</b>
@@ -214,20 +218,17 @@
                                         "
                                         size="sm"
                                         v-b-tooltip.hover
-                                        :title="
-                                            'Restart this run'
-                                        "
+                                        :title="'Restart this run'"
                                         @click="onRestart"
                                     >
                                         <i class="fas fa-level-up-alt"></i>
                                         Restart<b-spinner
-                                    small
-                                    v-if="resubmitted"
-                                    label="Loading..."
-                                    variant="dark"
-                                    class="ml-2 mb-1"
-                                ></b-spinner
-                                >
+                                            small
+                                            v-if="resubmitted"
+                                            label="Loading..."
+                                            variant="dark"
+                                            class="ml-2 mb-1"
+                                        ></b-spinner>
                                     </b-button>
                                 </b-col>
                                 <b-col

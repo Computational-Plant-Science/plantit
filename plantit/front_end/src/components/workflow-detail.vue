@@ -87,10 +87,7 @@
                         >
                             Metadata
                         </b>
-                      <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
+                        <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-row>
                             <b-col>
                                 <b-row>
@@ -106,12 +103,22 @@
                                         <small>DOI</small>
                                     </b-col>
                                     <b-col cols="10">
-                                        <b-link :href="`https://doi.org/${workflow.config.doi}`">{{ workflow.config.doi }}</b-link>
+                                        <b-link
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                            :href="
+                                                `https://doi.org/${workflow.config.doi}`
+                                            "
+                                            >{{ workflow.config.doi }}</b-link
+                                        >
                                     </b-col>
                                 </b-row>
                             </b-col>
                         </b-row>
-                        <br/>
+                        <br />
                         <b
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -119,10 +126,7 @@
                         >
                             Configuration
                         </b>
-                      <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
+                        <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-row>
                             <b-col>
                                 <b-row>
@@ -294,10 +298,7 @@
                         >
                             Resource Requests
                         </b>
-                      <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
+                        <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-row align-v="right" align-h="right">
                             <b-col>
                                 <b
