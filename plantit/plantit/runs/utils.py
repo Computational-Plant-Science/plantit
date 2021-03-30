@@ -174,7 +174,7 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
 
     sandbox = run.cluster.name == 'Sandbox'
     work_dir = join(run.cluster.workdir, run.work_dir)
-    if not sandbox and not run.cluster.no_nested:
+    if not sandbox and not run.cluster.job_array:
         new_config['jobqueue'] = dict()
         new_config['jobqueue']['slurm'] = {
             'cores': resources['cores'],

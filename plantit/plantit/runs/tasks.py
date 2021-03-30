@@ -84,7 +84,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                     script.write(f"#SBATCH -A {run.cluster.project}\n")
 
                 input_count = len(input_files)
-                if input_files is not None and run.cluster.no_nested:
+                if input_files is not None and run.cluster.job_array:
                     script.write(f"#SBATCH --array=1-{input_count}\n")
                 if input_files is not None:
                     script.write(f"#SBATCH -N {min(input_count, run.cluster.max_nodes)}\n")
@@ -142,7 +142,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             # otherwise use the CLI
             else:
                 run_commands = f"plantit run flow.yaml --plantit_url '{callback_url}' --plantit_token '{run.token}' --pre_pull_image"
-                if run.cluster.no_nested and input_files is not None:
+                if run.cluster.job_array and input_files is not None:
                     run_commands += f" --slurm_job_array"
 
                 if docker_username is not None and docker_password is not None:
@@ -224,7 +224,6 @@ def __submit_run(flow, run: Run, ssh: SSH, file_count: int = None):
             directory=join(run.cluster.workdir, run.work_dir),
             allow_stderr=True)
     else:
-        # command = f"chmod +x {template_name} && ./{template_name}" if run.cluster.no_nested else f"chmod +x {template_name} && sbatch {template_name}"
         command = f"chmod +x {template_name} && sbatch {template_name}"
         output_lines = execute_command(
             ssh_client=ssh,

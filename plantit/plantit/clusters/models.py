@@ -29,7 +29,7 @@ class Cluster(models.Model):
     disabled: bool = models.BooleanField(default=False)
     public: bool = models.BooleanField(default=False)
     logo: str = models.URLField(null=True, blank=True)
-    no_nested = models.BooleanField(default=False)  # https://github.com/Computational-Plant-Science/plantit/issues/98
+    job_array = models.BooleanField(default=False)  # https://github.com/Computational-Plant-Science/plantit/issues/98
     launcher = models.BooleanField(default=False)   # https://github.com/TACC/launcher
 
     class Executor(models.TextChoices):
