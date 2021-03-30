@@ -189,11 +189,8 @@
                                     label="Loading..."
                                     variant="dark"
                                     class="ml-2 mb-1"
-                                ></b-spinner
-                                >
-                            </b-button></b-col
-                        ></b-row
-                    >
+                                ></b-spinner> </b-button></b-col
+                    ></b-row>
                     <br />
                     <!--<b-row v-if="submitType === 'Every'"
                         ><b-col

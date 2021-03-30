@@ -80,30 +80,68 @@
                             </b-col>
                         </b-row>
                         <br />
-                        <b
+                        <h5
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            Metadata
-                        </b>
-                        <hr class="mt-2 mb-2" style="border-color: gray" />
+                            Authors
+                        </h5>
                         <b-row>
                             <b-col>
-                                <b-row>
-                                    <b-col>
-                                        <small>Author</small>
-                                    </b-col>
-                                    <b-col cols="10">
-                                        <b>{{ workflow.config.author }}</b>
-                                    </b-col>
-                                </b-row>
                                 <b-row v-if="workflow.config.doi !== undefined">
                                     <b-col>
-                                        <small>DOI</small>
+                                        <span
+                                            v-if="
+                                                typeof workflow.config
+                                                    .author === 'string' ||
+                                                    (Array.isArray(
+                                                        workflow.config.author
+                                                    ) &&
+                                                        workflow.config.author
+                                                            .length === 1)
+                                            "
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                            >{{ workflow.config.author }}</span
+                                        >
+                                        <b-list-group v-else>
+                                            <b-list-group-item :variant="profile.darkMode ? 'dark' : 'light'"
+                                                v-for="author in workflow.config
+                                                    .author"
+                                                v-bind:key="author"
+                                                >{{ author }}</b-list-group-item
+                                            >
+                                        </b-list-group>
                                     </b-col>
-                                    <b-col cols="10">
+                                </b-row>
+                            </b-col>
+                        </b-row>
+                        <br />
+                        <h5
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            Publications/DOIs
+                        </h5>
+                        <b-row>
+                            <b-col>
+                                <b-row v-if="workflow.config.doi !== undefined">
+                                    <b-col>
                                         <b-link
+                                            v-if="
+                                                typeof workflow.config.doi ===
+                                                    'string' ||
+                                                    (Array.isArray(
+                                                        workflow.config.doi
+                                                    ) &&
+                                                        workflow.config.doi
+                                                            .length === 1)
+                                            "
                                             :class="
                                                 profile.darkMode
                                                     ? 'text-light'
@@ -114,19 +152,34 @@
                                             "
                                             >{{ workflow.config.doi }}</b-link
                                         >
+                                        <b-list-group v-else>
+                                            <b-list-group-item :variant="profile.darkMode ? 'dark' : 'light'"
+                                                v-for="doi in workflow.config
+                                                    .doi"
+                                                v-bind:key="doi"
+                                                ><b-link
+                                                    class="
+                                                        text-dark
+                                                    "
+                                                    :href="
+                                                        `https://doi.org/${doi}`
+                                                    "
+                                                    >{{ doi }}</b-link
+                                                ></b-list-group-item
+                                            >
+                                        </b-list-group>
                                     </b-col>
                                 </b-row>
                             </b-col>
                         </b-row>
                         <br />
-                        <b
+                        <h5
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
                             Configuration
-                        </b>
-                        <hr class="mt-2 mb-2" style="border-color: gray" />
+                        </h5>
                         <b-row>
                             <b-col>
                                 <b-row>
@@ -291,14 +344,13 @@
                         >
                     </b-col>
                     <b-col align-self="end" class="text-left" v-else>
-                        <b
+                        <h5
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
                             Resource Requests
-                        </b>
-                        <hr class="mt-2 mb-2" style="border-color: gray" />
+                        </h5>
                         <b-row align-v="right" align-h="right">
                             <b-col>
                                 <b

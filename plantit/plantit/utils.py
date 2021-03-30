@@ -109,8 +109,10 @@ def validate_workflow_config(config, token):
         errors.append('Attribute \'name\' must be a str')
 
     # author (optional)
-    if 'author' in config and type(config['author']) is not str:
-        errors.append('Attribute \'author\' must be a str')
+    if 'author' in config:
+        author = config['author']
+        if (type(author) is str and author == '') or (type(author) is list and not all(type(d) is str for d in author)):
+            errors.append('Attribute \'author\' must be a non-empty str or list of str')
 
     # public (required)
     if 'public' not in config:
@@ -216,8 +218,9 @@ def validate_workflow_config(config, token):
 
     # doi (optional)
     if 'doi' in config:
-        if type(config['doi']) is not str:
-            errors.append('Attribute \'doi\' must be a str')
+        doi = config['doi']
+        if (type(doi) is str and doi == '') or (type(doi) is list and not all(type(d) is str for d in doi)):
+            errors.append('Attribute \'doi\' must be a non-empty str or list of str')
 
     return True if len(errors) == 0 else (False, errors)
 

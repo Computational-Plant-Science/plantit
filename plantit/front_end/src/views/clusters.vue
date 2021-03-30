@@ -118,7 +118,7 @@
                                 v-if="cluster.logo"
                                 rounded
                                 class="card-img-right overflow-hidden"
-                                style="max-height: 5rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                                style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                 right
                                 :src="cluster.logo"
                             ></b-img>
