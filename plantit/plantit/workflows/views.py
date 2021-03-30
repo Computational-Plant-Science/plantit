@@ -10,7 +10,7 @@ from django.http import JsonResponse
 
 from plantit import settings
 from plantit.runs.utils import list_workflows_for_users
-from plantit.utils import get_repo_config, validate_workflow_config
+from plantit.utils import get_repo_config, validate_workflow_config, get_repo_readme
 
 
 @login_required
@@ -60,9 +60,12 @@ def get(request, username, name):
     with httpx.Client(headers=headers) as client:
         response = client.get(f"https://api.github.com/repos/{username}/{name}")
         repo = response.json()
+        repo_name = repo['name']
+        repo_owner = repo['owner']['login']
         return JsonResponse({
             'repo': repo,
-            'config': get_repo_config(repo['name'], repo['owner']['login'], request.user.profile.github_token)
+            'config': get_repo_config(repo_name, repo_owner, request.user.profile.github_token),
+            'readme': get_repo_readme(repo_name, repo_owner, request.user.profile.github_token)
         })
 
 

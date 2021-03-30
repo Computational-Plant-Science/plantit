@@ -4,10 +4,25 @@ from typing import List
 
 import requests
 import yaml
-from requests.auth import HTTPBasicAuth
 
-from plantit import settings
 from plantit.options import BindMount, Parameter, RunOptions, DirectoryInput, FilesInput, FileInput
+
+
+def get_repo_readme(name, owner, token):
+    print(f"Getting config for {owner}/{name}")
+    try:
+        url = f"https://api.github.com/repos/{owner}/{name}/contents/README.md"
+        request = requests.get(url) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
+        file = request.json()
+        return requests.get(file['download_url']).text
+    except:
+        try:
+            url = f"https://api.github.com/repos/{owner}/{name}/contents/README"
+            request = requests.get(url) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})
+            file = request.json()
+            return requests.get(file['download_url']).text
+        except:
+            return None
 
 
 def get_repo_config(name, owner, token):
@@ -24,14 +39,6 @@ def get_repo_config(name, owner, token):
     config['public'] = config['public'] if 'public' in config else True
 
     return config
-
-
-def get_repo_config_internal(name, owner):
-    request = requests.get(
-        f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml", auth=HTTPBasicAuth(settings.GITHUB_USERNAME, settings.GITHUB_KEY))
-    file = request.json()
-    content = requests.get(file['download_url']).text
-    return yaml.load(content)
 
 
 def docker_image_exists(name, owner=None, tag=None):
