@@ -206,6 +206,7 @@
                                     align-self="start"
                                 >
                                     <b-button
+                                        :disabled="resubmitted"
                                         :variant="
                                             profile.darkMode
                                                 ? 'outline-light'
