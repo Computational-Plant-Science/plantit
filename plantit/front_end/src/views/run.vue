@@ -219,7 +219,14 @@
                                         @click="onRestart"
                                     >
                                         <i class="fas fa-level-up-alt"></i>
-                                        Restart
+                                        Restart<b-spinner
+                                    small
+                                    v-if="resubmitted"
+                                    label="Loading..."
+                                    variant="dark"
+                                    class="ml-2 mb-1"
+                                ></b-spinner
+                                >
                                     </b-button>
                                 </b-col>
                                 <b-col
@@ -1160,6 +1167,7 @@ export default {
     },
     data() {
         return {
+            resubmitted: false,
             // run status constants
             PENDING: 'PENDING',
             STARTED: 'STARTED',
@@ -1246,8 +1254,8 @@ export default {
             this.$bvModal.show('delete');
         },
         onRestart() {
-            // retrieve config
-            let config = this.workflowsRecentlyRun[this.workflowKey];
+            this.resubmitted = true;
+            let config = this.workflowsRecentlyRun[this.workflowKey]; // retrieve workflow config
 
             // resubmit run
             axios({

@@ -138,7 +138,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
 
                 script.write(f"export LAUNCHER_WORKDIR={join(run.cluster.workdir, run.work_dir)}\n")
                 script.write(f"export LAUNCHER_JOB_FILE=launch\n")
-                script.write('$LAUNCHER_DIR/paramrun')
+                script.write("$LAUNCHER_DIR/paramrun\n")
             # otherwise use the CLI
             else:
                 run_commands = f"plantit run flow.yaml --plantit_url '{callback_url}' --plantit_token '{run.token}' --pre_pull_image"
