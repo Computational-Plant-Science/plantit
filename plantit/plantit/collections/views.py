@@ -225,7 +225,7 @@ def close_session(request):
     try:
         session = CollectionSession.objects.get(user=user)
     except:
-        return HttpResponseNotFound()
+        return HttpResponse()
 
     update_collection_session(session, [f"Closing collection session {session.guid}"])
 

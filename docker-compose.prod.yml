@@ -5,7 +5,6 @@ services:
     working_dir: /code/plantit
     depends_on:
       - celery
-      - postgres
       - sandbox
     volumes:
       - .:/code
@@ -52,7 +51,7 @@ services:
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
       - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
-    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "daphne", "-b", "0.0.0.0", "-p", "8000", "plantit.asgi:application"]
+    command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "plantit.asgi:application"]
     networks:
       - ngnix_network
       - default
@@ -65,13 +64,12 @@ services:
       start_period: 20s
   celery:
     image: computationalplantscience/plantit
-    command: ["/code/scripts/wait-for-postgres.sh", "postgres", "celery", "-A", "plantit", "worker", "-B", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=info", "-Ofair"]
+    command: ["celery", "-A", "plantit", "worker", "-B", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--loglevel=info", "-Ofair"]
     volumes:
       - .:/code
     working_dir: /code/plantit
     depends_on:
       - redis
-      - postgres
     environment:
       - CYVERSE_REDIRECT_URL=${CYVERSE_REDIRECT_URL}
       - CYVERSE_CLIENT_ID=${CYVERSE_CLIENT_ID}
@@ -120,24 +118,6 @@ services:
       retries: 2
       start_period: 20s
     restart: always
-  postgres:
-    image: postgres
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_HOST=${SQL_HOST}
-      - POSTGRES_PORT=${SQL_PORT}
-      - POSTGRES_NAME=${SQL_NAME}
-      - POSTGRES_USER=${SQL_USER}
-      - POSTGRES_PASSWORD=${SQL_PASSWORD}
-      - POSTGRES_DB=${SQL_DB}
-    healthcheck:
-      test: /usr/bin/pg_isready -U "postgres"
-      interval: 60s
-      timeout: 60s
-      retries: 2
-    volumes:
-      - pgdata:/var/lib/postgresql/data
   redis:
     image: redis:6
     ports:
@@ -177,5 +157,3 @@ services:
 networks:
   ngnix_network:
     driver: bridge
-volumes:
-  pgdata:
