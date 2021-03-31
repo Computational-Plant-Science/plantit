@@ -114,10 +114,11 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 pull_commands = f"plantit terrain pull {flow['config']['input']['from']}" \
                                 f" -p {join(run.cluster.workdir, run.work_dir, 'input')}" \
                                 f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
-                                f""f" --terrain_token {run.user.profile.cyverse_token}\n"
+                                f""f" --terrain_token {run.user.profile.cyverse_token}"
 
                 if run.cluster.callbacks:
                     pull_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
+                pull_commands += "\n"
 
                 logger.info(f"Using pull command: {pull_commands}")
                 script.write(pull_commands)
