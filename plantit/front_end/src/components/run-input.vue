@@ -71,6 +71,13 @@
                 <b-row v-if="sharedCollections.length > 0">
                     <b-col>
                         <datatree
+                            :select="kind"
+                            :upload="true"
+                            :download="true"
+                            @selectNode="selectNode"
+                            :node="sharedData"
+                        ></datatree>
+                        <!--<datatree
                             v-for="node in sharedCollections"
                             v-bind:key="node.path"
                             v-bind:node="node"
@@ -81,7 +88,7 @@
                             :class="
                                 profile.darkMode ? 'theme-dark' : 'theme-light'
                             "
-                        ></datatree></b-col></b-row
+                        ></datatree>--></b-col></b-row
                 ><b-row
                     v-if="
                         !sharedCollectionsLoading &&
@@ -161,6 +168,7 @@ export default {
             userDataLoading: true,
             publicData: null,
             userData: null,
+            sharedData: null,
             sharedCollections: [],
             sharedCollectionsLoading: true,
             path: '',
@@ -194,6 +202,26 @@ export default {
                 .catch(error => {
                     Sentry.captureException(error);
                     this.userDataLoading = false;
+                    throw error;
+                }),
+            axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/`,
+                    {
+                        headers: {
+                            Authorization:
+                                'Bearer ' +
+                                this.profile.djangoProfile.cyverse_token
+                        }
+                    }
+                )
+                .then(response => {
+                    this.sharedData = response.data;
+                    this.sharedDataLoading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.sharedDataLoading = false;
                     throw error;
                 }),
             axios
@@ -251,6 +279,9 @@ export default {
             this.$emit('inputSelected', node);
             this.$parent.$emit('inputSelected', node);
             this.$parent.$parent.$emit('inputSelected', node);
+            this.$parent.$parent.$parent.$emit('inputSelected', node);
+            this.$parent.$parent.$parent.$parent.$emit('inputSelected', node);
+            this.$parent.$parent.$parent.$parent.$parent.$emit('inputSelected', node);
         },
         tabLinkClass(idx) {
             if (this.currentTab === idx) {

@@ -1238,6 +1238,44 @@ export default {
         },
         selectNode: function(node, kind) {
             node['kind'] = kind;
+
+            // 15 layers should be deep enough for any conceivable use case, right??
+            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
+            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
+            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
+            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
+            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
+            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
+            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
+            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
+            this.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                'selectNode',
+                node
+            );
             this.$parent.$parent.$parent.$parent.$parent.$emit(
                 'selectNode',
                 node
