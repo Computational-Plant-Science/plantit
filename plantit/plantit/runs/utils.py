@@ -170,7 +170,8 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
             new_config['input']['files']['patterns'] = old_config['config']['input']['patterns']
         elif input_kind == 'file':
             new_config['input']['file'] = dict()
-            new_config['input']['file']['path'] = join(run.cluster.workdir, run.work_dir, 'input', old_config['config']['input']['from'].rpartition('/')[2])
+            new_config['input']['file']['path'] = join(run.cluster.workdir, run.work_dir, 'input',
+                                                       old_config['config']['input']['from'].rpartition('/')[2])
 
     sandbox = run.cluster.name == 'Sandbox'
     work_dir = join(run.cluster.workdir, run.work_dir)
@@ -261,7 +262,12 @@ def map_run(run: Run, get_container_logs: bool = False):
                         sftp.chdir(work_dir)
                         sftp.get(container_log_file, tf.name)
                         with open(tf.name, 'r') as file:
-                            container_logs = [line.strip() for line in file.readlines()[-int(1000000):]]
+                            docker_username = environ.get('DOCKER_USERNAME', None)
+                            docker_password = environ.get('DOCKER_PASSWORD', None)
+                            container_logs = [
+                                # obfuscate Docker auth info before returning logs to the user
+                                line.strip().replace(docker_username, '*' * 7, 1).replace(docker_password, '*' * 7)
+                                for line in file.readlines()[-int(1000000):]]
     else:
         container_logs = []
 

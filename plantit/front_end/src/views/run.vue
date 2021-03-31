@@ -327,9 +327,6 @@
                                     <b-row class="m-0 p-0 mt-3">
                                         <b-col class="m-0 p-0">
                                             <b-tabs
-                                                pills
-                                                card
-                                                vertical
                                                 nav-class="bg-transparent"
                                                 active-nav-item-class="bg-secondary text-dark"
                                                 fill
@@ -380,7 +377,6 @@
                                                                 </h5>
                                                             </b-col>
                                                             <b-col
-                                                                md="auto"
                                                                 align-self="end"
                                                                 class="mb-2"
                                                             >
@@ -436,14 +432,13 @@
                                                                     >
                                                                 </b-col>
                                                                 <b-col
-                                                                    md="auto"
                                                                     v-if="
                                                                         getRun
                                                                             .container_logs
                                                                             .length >
                                                                             0
                                                                     "
-                                                                    class="m-0 p-0 pl-3 pr-3 pt-1 text-right"
+                                                                    class="m-0 p-0 pl-3 pr-3 pt-1"
                                                                     style="white-space: pre-line;"
                                                                 >
                                                                     <span

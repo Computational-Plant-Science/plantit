@@ -44,8 +44,8 @@ echo "Bringing containers up..."
 $compose up -d --quiet-pull
 
 echo "Running migrations..."
-$compose exec -T plantit python manage.py makemigrations
-$compose exec -T plantit python manage.py migrate
+$compose exec -T plantit python manage.py makemigrations --noinput
+$compose exec -T plantit python manage.py migrate --noinput
 
 echo "Configuring deployment targets..."
 $compose exec -T plantit /bin/bash /code/scripts/configure-sandbox.sh

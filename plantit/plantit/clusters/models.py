@@ -26,9 +26,10 @@ class Cluster(models.Model):
     header_skip = models.CharField(max_length=1000, null=True, blank=True)
     gpu = models.BooleanField(null=False, default=False)
     gpu_queue = models.CharField(max_length=250, null=True, blank=True)
-    disabled: bool = models.BooleanField(default=False)
-    public: bool = models.BooleanField(default=False)
-    logo: str = models.URLField(null=True, blank=True)
+    disabled = models.BooleanField(default=False)
+    public = models.BooleanField(default=False)
+    logo = models.URLField(null=True, blank=True)
+    callbacks = models.BooleanField(default=True)
     job_array = models.BooleanField(default=False)  # https://github.com/Computational-Plant-Science/plantit/issues/98
     launcher = models.BooleanField(default=False)   # https://github.com/TACC/launcher
 
