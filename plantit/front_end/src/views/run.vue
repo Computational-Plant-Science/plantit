@@ -1526,7 +1526,10 @@ export default {
         },
         getRun() {
             let run = this.run(this.$router.currentRoute.params.id);
-            if (run !== undefined) return run;
+            if (run !== undefined) {
+                if (run.is_complete) this.reloadOutputFiles();
+                return run;
+            }
             return null;
         },
         runNotFound() {
@@ -1552,6 +1555,9 @@ export default {
             await this.$store.dispatch('runs/refresh', this.getRun);
             await this.reloadOutputFiles();
         },
+        // async run(oldRun, newRun) {
+        //     if (newRun.is_complete) await this.reloadOutputFiles();
+        // },
         '$route.params.id'() {
             // need to watch for route change to prompt reload
         }
