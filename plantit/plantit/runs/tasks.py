@@ -317,7 +317,7 @@ def submit_run(id: str, flow):
 def poll_run_status(id: str):
     run = Run.objects.get(guid=id)
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-    cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
+    cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES')) * 60
 
     logger.info(f"Checking {run.cluster.name} scheduler status for run {id} (SLURM job {run.job_id})")
 

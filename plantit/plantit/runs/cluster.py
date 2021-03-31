@@ -41,11 +41,20 @@ def get_job_status(run: Run) -> str:
     pass
 
 
-def cancel_job(run: Run):
+def cancel_run(run: Run):
     ssh = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
     with ssh:
+        if run.job_id is None or not any([run.job_id in r for r in execute_command(
+                ssh_client=ssh,
+                pre_command=':',
+                command=f"squeue -u {run.cluster.username}",
+                directory=join(run.cluster.workdir, run.work_dir))]):
+            # run doesn't exist, so no need to cancel
+            return
+
         execute_command(
             ssh_client=ssh,
             pre_command=':',
             command=f"scancel {run.job_id}",
             directory=join(run.cluster.workdir, run.work_dir))
+

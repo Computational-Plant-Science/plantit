@@ -14,7 +14,7 @@ from django_celery_beat.models import IntervalSchedule
 from rest_framework.decorators import api_view
 
 from plantit import settings
-from plantit.runs.cluster import cancel_job
+from plantit.runs.cluster import cancel_run
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
@@ -72,7 +72,8 @@ def list_outputs(request, id):
 
     included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
         'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
-    included_by_name.append(f"{run.guid}.{run.cluster.name.lower()}.log")
+    if not run.cluster.launcher:
+        included_by_name.append(f"{run.guid}.{run.cluster.name.lower()}.log")
     if run.job_id is not None and run.job_id != '':
         included_by_name.append(f"plantit.{run.job_id}.out")
         included_by_name.append(f"plantit.{run.job_id}.err")
@@ -90,8 +91,8 @@ def list_outputs(request, id):
                 file_path = join(work_dir, file)
                 stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
                 errs = stderr.read()
-                if errs:
-                    raise Exception(f"Failed to check existence of {file}: {errs}")
+                # if errs:
+                #     raise Exception(f"Failed to check existence of {file}: {errs}")
                 output = {
                     'name': file,
                     'exists': stdout.read().decode().strip() == 'exists'
@@ -128,8 +129,8 @@ def get_thumbnail(request, id, file):
         with client.client.open_sftp() as sftp:
             stdin, stdout, stderr = client.client.exec_command(f"test -e {join(work_dir, file)} && echo exists")
             errs = stderr.read()
-            if errs:
-                raise Exception(f"Failed to check existence of {file}: {errs}")
+            # if errs:
+            #     raise Exception(f"Failed to check existence of {file}: {errs}")
 
             run_dir = join(settings.MEDIA_ROOT, run.guid)
             thumbnail_path = join(run_dir, file)
@@ -241,7 +242,11 @@ def get_container_logs(request, id):
 
     client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
     work_dir = join(run.cluster.workdir, run.work_dir)
-    log_file = f"{run.guid}.{run.cluster.name.lower()}.log"
+
+    if run.cluster.launcher:
+        log_file = f"plantit.{run.job_id}.out"
+    else:
+        log_file = f"{run.guid}.{run.cluster.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -435,7 +440,7 @@ def cancel(request, id):
     if run.is_complete:
         return HttpResponse(f"Run {id} is no longer running")
 
-    message = f"Attempting to cancel run {id}"
+    message = f"Cancelled run {id}"
     if run.is_sandbox:
         # cancel the Celery task
         AsyncResult(run.submission_id).revoke()
@@ -449,7 +454,7 @@ def cancel(request, id):
         return HttpResponse(message)
     else:
         # cancel the cluster scheduler job
-        cancel_job(run)
+        cancel_run(run)
         now = timezone.now()
         run.job_status = 'CANCELLED'
         run.updated = now

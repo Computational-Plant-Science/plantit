@@ -238,6 +238,7 @@
                                     align-self="start"
                                 >
                                     <b-button
+                                        :disabled="cancelled"
                                         :variant="
                                             profile.darkMode
                                                 ? 'outline-light'
@@ -249,7 +250,13 @@
                                         @click="onCancel"
                                     >
                                         <i class="fas fa-times"></i>
-                                        Cancel
+                                        Cancel<b-spinner
+                                            small
+                                            v-if="cancelled"
+                                            label="Loading..."
+                                            :variant="profile.darkMode ? 'light' : 'dark'"
+                                            class="ml-2 mb-1"
+                                        ></b-spinner>
                                     </b-button>
                                 </b-col>
                                 <b-col
@@ -455,7 +462,7 @@
                                                     </div>
                                                 </b-tab>
                                                 <b-tab
-                                                    title="Outputs"
+                                                    title="Results"
                                                     class="m-0 p-3"
                                                     :title-link-class="
                                                         profile.darkMode
@@ -463,7 +470,7 @@
                                                             : 'text-dark'
                                                     "
                                                     ><template #title>
-                                                        Outputs
+                                                        Results
                                                         <span
                                                             v-if="
                                                                 !loadingOutputFiles
@@ -1170,6 +1177,7 @@ export default {
     data() {
         return {
             resubmitted: false,
+            cancelled: false,
             // run status constants
             PENDING: 'PENDING',
             STARTED: 'STARTED',
@@ -1210,11 +1218,13 @@ export default {
             );
         },
         onCancel() {
+            this.cancelled = true;
             axios
                 .get(
                     `/apis/v1/runs/${this.$router.currentRoute.params.id}/cancel/`
                 )
                 .then(response => {
+                  this.cancelled = false;
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
@@ -1223,6 +1233,7 @@ export default {
                     }
                 })
                 .catch(error => {
+                  this.cancelled = false;
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1466,9 +1477,9 @@ export default {
                     return error;
                 });
         },
-        reloadOutputFiles() {
+        async reloadOutputFiles() {
             this.loadingOutputFiles = true;
-            axios
+            await axios
                 .get(
                     `/apis/v1/runs/${this.$router.currentRoute.params.id}/outputs/`
                 )
@@ -1492,6 +1503,7 @@ export default {
             'runs/refresh',
             this.$router.currentRoute.params.id
         );
+        await this.reloadOutputFiles();
         this.loadingRun = false;
     },
     computed: {

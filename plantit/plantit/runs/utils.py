@@ -301,7 +301,10 @@ def submission_log_file_name(run: Run):
 
 
 def container_log_file_name(run: Run):
-    return f"{run.guid}.{run.cluster.name.lower()}.log"
+    if run.cluster.launcher:
+        return f"plantit.{run.job_id}.out"
+    else:
+        return f"{run.guid}.{run.cluster.name.lower()}.log"
 
 
 def create_run(username: str, cluster_name: str, workflow: dict) -> Run:
