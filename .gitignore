@@ -260,6 +260,7 @@ node_modules/
 flows.json
 workflows.json
 users.json
+more_users.json
 
 *.postgresql
 plantit/postgres

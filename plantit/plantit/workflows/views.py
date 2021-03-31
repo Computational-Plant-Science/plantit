@@ -15,31 +15,34 @@ from plantit.utils import get_repo_config, validate_workflow_config, get_repo_re
 
 @login_required
 def list_all(request):
+    more_users_file = settings.MORE_USERS
     workflows_file = settings.WORKFLOWS_CACHE
     workflows_path = Path(workflows_file)
     refresh_minutes = int(settings.WORKFLOWS_REFRESH_MINUTES)
 
-    users = User.objects.all()
-    usernames = [user.profile.github_username for user in users] + ['Computational-Plant-Science', 'van-der-knaap-lab', 'burke-lab']
+    with open(more_users_file, 'r') as file:
+        users = User.objects.all()
+        more_users = json.load(file)
+        usernames = [user.profile.github_username for user in users] + more_users
 
-    if not workflows_path.exists():
-        print(f"Creating workflow cache")
-        workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
-        with open(workflows_file, 'w') as file:
-            json.dump(workflows, file)
-    else:
-        now = datetime.now()
-        last_modified = datetime.fromtimestamp(workflows_path.stat().st_ctime)
-        elapsed_minutes = (now - last_modified).total_seconds() / 60.0
-
-        if elapsed_minutes < refresh_minutes:
-            with open(workflows_file, 'r') as file:
-                workflows = json.load(file)
-        else:
-            print(f"Workflow cache is stale, refreshing")
+        if not workflows_path.exists():
+            print(f"Creating workflow cache")
             workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
             with open(workflows_file, 'w') as file:
                 json.dump(workflows, file)
+        else:
+            now = datetime.now()
+            last_modified = datetime.fromtimestamp(workflows_path.stat().st_ctime)
+            elapsed_minutes = (now - last_modified).total_seconds() / 60.0
+
+            if elapsed_minutes < refresh_minutes:
+                with open(workflows_file, 'r') as file:
+                    workflows = json.load(file)
+            else:
+                print(f"Workflow cache is stale, refreshing")
+                workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
+                with open(workflows_file, 'w') as file:
+                    json.dump(workflows, file)
 
     return JsonResponse({'workflows': workflows})
 

@@ -254,7 +254,11 @@
                                             small
                                             v-if="cancelled"
                                             label="Loading..."
-                                            :variant="profile.darkMode ? 'light' : 'dark'"
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'light'
+                                                    : 'dark'
+                                            "
                                             class="ml-2 mb-1"
                                         ></b-spinner>
                                     </b-button>
@@ -283,6 +287,7 @@
                                     v-if="!getRun.is_complete"
                                 >
                                     <b-button
+                                        :disabled="loadingRun"
                                         :variant="
                                             profile.darkMode
                                                 ? 'outline-light'
@@ -295,6 +300,17 @@
                                     >
                                         <i class="fas fa-redo"></i>
                                         Refresh
+                                        <b-spinner
+                                            small
+                                            v-if="loadingRun"
+                                            label="Loading..."
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'light'
+                                                    : 'dark'
+                                            "
+                                            class="ml-2 mb-1"
+                                        ></b-spinner>
                                     </b-button>
                                 </b-col>
                             </b-row>
@@ -1219,7 +1235,7 @@ export default {
                     `/apis/v1/runs/${this.$router.currentRoute.params.id}/cancel/`
                 )
                 .then(response => {
-                  this.cancelled = false;
+                    this.cancelled = false;
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
@@ -1228,7 +1244,7 @@ export default {
                     }
                 })
                 .catch(error => {
-                  this.cancelled = false;
+                    this.cancelled = false;
                     Sentry.captureException(error);
                     return error;
                 });
@@ -1534,6 +1550,7 @@ export default {
     watch: {
         async $route() {
             await this.$store.dispatch('runs/refresh', this.getRun);
+            await this.reloadOutputFiles();
         },
         '$route.params.id'() {
             // need to watch for route change to prompt reload

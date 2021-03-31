@@ -112,7 +112,7 @@ export default {
         workflows
     },
     async mounted() {
-        await this.$store.dispatch('loadWorkflows');
+        await this.$store.dispatch('workflows/loadAll');
     },
     computed: {
         ...mapGetters('user', ['profile']),

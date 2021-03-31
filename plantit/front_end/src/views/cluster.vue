@@ -362,16 +362,27 @@
                                                     v-b-tooltip.hover
                                                     title="Check Connection Status"
                                                     :disabled="
-                                                        cluster.role === 'none'
+                                                        cluster.role ===
+                                                            'none' ||
+                                                            statusChecking
                                                     "
                                                     @click="checkStatus"
                                                 >
                                                     <i
                                                         class="fas fa-network-wired fa-fw"
                                                     ></i>
-                                                    Check Status
-                                                </b-button></b-col
-                                            >
+                                                    Check Status<b-spinner
+                                                        small
+                                                        v-if="statusChecking"
+                                                        label="Loading..."
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'light'
+                                                                : 'dark'
+                                                        "
+                                                        class="ml-2 mb-1"
+                                                    ></b-spinner> </b-button
+                                            ></b-col>
                                             <b-col
                                                 v-if="
                                                     cluster.role === 'none' &&
