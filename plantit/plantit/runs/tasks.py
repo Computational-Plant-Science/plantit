@@ -70,8 +70,6 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
 
             if not sandbox:
                 # we're on a SLURM cluster, so add resource requests
-                script.write("#SBATCH --ntasks=1\n")
-
                 if 'cores' in resources:
                     script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
                 if 'time' in resources:
@@ -87,9 +85,12 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 if input_files is not None and run.cluster.job_array:
                     script.write(f"#SBATCH --array=1-{input_count}\n")
                 if input_files is not None:
-                    script.write(f"#SBATCH -N {min(input_count, run.cluster.max_nodes)}\n")
+                    n = min(input_count, run.cluster.max_nodes)
+                    script.write(f"#SBATCH -N {n}\n")
+                    script.write(f"#SBATCH --ntasks={n}\n")
                 else:
                     script.write(f"#SBATCH -N 1\n")
+                    script.write("#SBATCH --ntasks=1\n")
 
                 script.write("#SBATCH --mail-type=END,FAIL\n")
                 script.write(f"#SBATCH --mail-user={run.user.email}\n")
@@ -102,9 +103,17 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             # if we have inputs, add pull command
             if 'input' in flow['config']:
                 sftp.mkdir(join(run.cluster.workdir, run.work_dir, 'input'))
+
+                # allow for both spellings of JPG
+                patterns = [pattern.lower() for pattern in flow['config']['input']['patterns']]
+                if 'jpg' in patterns and 'jpeg' not in patterns:
+                    patterns += 'jpeg'
+                elif 'jpeg' in patterns and 'jpg' not in patterns:
+                    patterns += 'jpg'
+
                 pull_commands = f"plantit terrain pull {flow['config']['input']['from']}" \
                                 f" -p {join(run.cluster.workdir, run.work_dir, 'input')}" \
-                                f" {' '.join(['--pattern ' + pattern for pattern in flow['config']['input']['patterns']])}" \
+                                f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
                                 f""f" --terrain_token {run.user.profile.cyverse_token}\n"
 
                 if run.cluster.callbacks:
