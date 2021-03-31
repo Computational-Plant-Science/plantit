@@ -304,7 +304,22 @@
                                             </h5></b-col
                                         ></b-row
                                     >
-                                    <b-row v-if="sharedCollections.length > 0">
+                                    <b-row>
+                                        <b-col>
+                                            <datatree
+                                                :node="sharedCollections"
+                                                select="directory"
+                                                :clusters="clusters"
+                                                :upload="true"
+                                                :download="true"
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'theme-dark'
+                                                        : 'theme-light'
+                                                "
+                                            ></datatree></b-col></b-row
+                                    >
+                                    <!--<b-row v-if="sharedCollections.length > 0">
                                         <b-col>
                                             <datatree
                                                 v-for="node in sharedCollections"
@@ -327,7 +342,7 @@
                                                 collections with you.</small
                                             ></b-col
                                         ></b-row
-                                    >
+                                    >-->
                                     <hr />
                                     <b-row
                                         ><b-col
@@ -810,15 +825,35 @@ export default {
                 });
         },
         async loadSharedCollections() {
-            await axios
-                .get(`/apis/v1/collections/shared/`)
+          await axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/`,
+                    {
+                        headers: {
+                            Authorization:
+                                'Bearer ' +
+                                this.profile.djangoProfile.cyverse_token
+                        }
+                    }
+                )
                 .then(response => {
                     this.sharedCollections = response.data;
+                    this.sharedDataLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    this.sharedDataLoading = false;
                     throw error;
                 });
+            // await axios
+            //     .get(`/apis/v1/collections/shared/`)
+            //     .then(response => {
+            //         this.sharedCollections = response.data;
+            //     })
+            //     .catch(error => {
+            //         Sentry.captureException(error);
+            //         throw error;
+            //     });
         },
         clusterSelected: function(cluster) {
             router.push({
