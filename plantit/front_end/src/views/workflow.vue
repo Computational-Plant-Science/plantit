@@ -1601,7 +1601,10 @@ export default {
                 return {
                     name: param.name,
                     type: param.type,
-                    value: param.default !== undefined ? param.default : 0
+                    value: param.default !== undefined ? param.default : 0,
+                    min: param.min,
+                    max: param.max,
+                    step: param.step
                 };
             else if (param.type === 'boolean')
                 return {
