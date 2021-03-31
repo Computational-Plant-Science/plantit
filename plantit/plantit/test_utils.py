@@ -112,16 +112,16 @@ class UtilsTest(TestCase):
         self.assertFalse(result[0])
         self.assertTrue('Attribute \'name\' must be a str' in result[1])
 
-    def test_validate_config_when_is_not_valid_author_wrong_type(self):
-        result = validate_workflow_config({
-            'name': 'Test Flow',
-            'author': True,
-            'public': True,
-            'image': 'docker://alpine',
-            'commands': 'echo "Hello, world!"'
-        }, Token.get())
-        self.assertFalse(result[0])
-        self.assertTrue('Attribute \'author\' must be a str' in result[1])
+    # def test_validate_config_when_is_not_valid_author_wrong_type(self):
+    #     result = validate_workflow_config({
+    #         'name': 'Test Flow',
+    #         'author': True,
+    #         'public': True,
+    #         'image': 'docker://alpine',
+    #         'commands': 'echo "Hello, world!"'
+    #     }, Token.get())
+    #     self.assertFalse(result[0])
+    #     self.assertTrue('Attribute \'author\' must be a str' in result[1])
 
     def test_validate_config_when_is_not_valid_public_wrong_type(self):
         result = validate_workflow_config({
