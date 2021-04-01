@@ -64,7 +64,7 @@
                         class="justify-content-center mt-3"
                     >
                         <b-card
-                            v-for="user in allUsers"
+                            v-for="user in filteredUsers"
                             :key="user.username"
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             :header-bg-variant="
@@ -176,7 +176,12 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('users', ['allUsers', 'usersLoading'])
+        ...mapGetters('users', ['allUsers', 'usersLoading']),
+      filteredUsers() {
+            return this.allUsers.filter(user =>
+                user.username.includes(this.searchText)
+            );
+        }
     },
     data: function() {
         return {

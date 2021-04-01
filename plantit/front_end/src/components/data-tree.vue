@@ -1239,51 +1239,156 @@ export default {
         selectNode: function(node, kind) {
             node['kind'] = kind;
 
-            // 15 layers should be deep enough for any conceivable use case, right??
-            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$parent.$emit(
-                'selectNode',
-                node
-            );
-            this.$parent.$parent.$parent.$parent.$emit('selectNode', node);
-            this.$parent.$parent.$parent.$emit('selectNode', node);
-            this.$parent.$parent.$emit('selectNode', node);
-            this.$parent.$emit('selectNode', node);
+            // 15 layers should be deep enough for any conceivable use case, right?
+            if (this.$parent !== undefined) {
+                this.$parent.$emit('selectNode', node);
+                if (this.$parent.$parent !== undefined) {
+                    this.$parent.$parent.$emit('selectNode', node);
+                    if (this.$parent.$parent.$parent !== undefined) {
+                        this.$parent.$parent.$parent.$emit('selectNode', node);
+                        if (
+                            this.$parent.$parent.$parent.$parent !== undefined
+                        ) {
+                            this.$parent.$parent.$parent.$parent.$emit(
+                                'selectNode',
+                                node
+                            );
+                            if (
+                                this.$parent.$parent.$parent.$parent.$parent !==
+                                undefined
+                            ) {
+                                this.$parent.$parent.$parent.$parent.$parent.$emit(
+                                    'selectNode',
+                                    node
+                                );
+                                if (
+                                    this.$parent.$parent.$parent.$parent.$parent
+                                        .$parent !== undefined
+                                ) {
+                                    this.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                                        'selectNode',
+                                        node
+                                    );
+                                    if (
+                                        this.$parent.$parent.$parent.$parent
+                                            .$parent.$parent.$parent !==
+                                        undefined
+                                    ) {
+                                        this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                                            'selectNode',
+                                            node
+                                        );
+                                        if (
+                                            this.$parent.$parent.$parent.$parent
+                                                .$parent.$parent.$parent
+                                                .$parent !== undefined
+                                        ) {
+                                            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                                                'selectNode',
+                                                node
+                                            );
+                                            if (
+                                                this.$parent.$parent.$parent
+                                                    .$parent.$parent.$parent
+                                                    .$parent.$parent.$parent !==
+                                                undefined
+                                            ) {
+                                                this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                                                    'selectNode',
+                                                    node
+                                                );
+                                                if (
+                                                    this.$parent.$parent.$parent
+                                                        .$parent.$parent.$parent
+                                                        .$parent.$parent.$parent
+                                                        .$parent !== undefined
+                                                ) {
+                                                    this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                                                        'selectNode',
+                                                        node
+                                                    );
+                                                    if (
+                                                        this.$parent.$parent
+                                                            .$parent.$parent
+                                                            .$parent.$parent
+                                                            .$parent.$parent
+                                                            .$parent.$parent
+                                                            .$parent !==
+                                                        undefined
+                                                    ) {
+                                                        this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                                                            'selectNode',
+                                                            node
+                                                        );
+                                                        if (
+                                                            this.$parent.$parent
+                                                                .$parent.$parent
+                                                                .$parent.$parent
+                                                                .$parent.$parent
+                                                                .$parent.$parent
+                                                                .$parent
+                                                                .$parent !==
+                                                            undefined
+                                                        ) {
+                                                            this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                                                                'selectNode',
+                                                                node
+                                                            );
+                                                            if (
+                                                                this.$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent
+                                                                    .$parent !==
+                                                                undefined
+                                                            ) {
+                                                                this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                                                                    'selectNode',
+                                                                    node
+                                                                );
+                                                                if (
+                                                                    this.$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent
+                                                                        .$parent !==
+                                                                    undefined
+                                                                ) {
+                                                                    this.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$parent.$emit(
+                                                                        'selectNode',
+                                                                        node
+                                                                    );
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             this.$emit('selectNode', node);
         }
     }
