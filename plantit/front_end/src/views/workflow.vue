@@ -275,10 +275,6 @@
                                             </b>
                                         </b-col>
                                     </b-row>
-                                    <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
                                     <b-row class="mt-1">
                                         <b-col>
                                             <multiselect
@@ -367,10 +363,6 @@
                                             </b>
                                         </b-col>
                                     </b-row>
-                                    <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
                                     <b-row
                                         ><b-col>
                                             <b-row
@@ -674,10 +666,6 @@
                                             Select a cluster to submit this run
                                             to.
                                         </b>
-                                        <hr
-                                            class="mt-2 mb-2"
-                                            style="border-color: gray"
-                                        />
                                         <b-tabs
                                             class="mt-2"
                                             vertical

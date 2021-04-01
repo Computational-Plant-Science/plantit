@@ -7,18 +7,15 @@
             {{ this.kind === 'files' ? 'directory' : this.kind }} from the Data
             Store.
         </b>
-        <hr class="mt-2 mb-2" style="border-color: gray" />
         <b-tabs
             class="mt-2"
-            vertical
-            pills
             nav-class="bg-transparent"
             active-nav-item-class="bg-secondary text-dark"
             v-model="currentTab"
         >
             <b-tab
                 :active="!this.path.startsWith('/iplant/home/shared')"
-                title="Your data"
+                title="Yours"
                 :title-link-class="
                     profile.darkMode ? 'text-white' : 'text-dark'
                 "
@@ -50,7 +47,7 @@
                     !this.path.startsWith('/iplant/home/shared') &&
                         isShared(this.path)
                 "
-                title="Shared with you"
+                title="Shared"
                 :title-link-class="
                     profile.darkMode ? 'text-white' : 'text-dark'
                 "
@@ -68,7 +65,7 @@
                             variant="secondary"
                         ></b-spinner></b-col
                 ></b-row>
-                <b-row v-if="sharedCollections.length > 0">
+                <b-row>
                     <b-col>
                         <datatree
                             :select="kind"
@@ -88,13 +85,8 @@
                             :class="
                                 profile.darkMode ? 'theme-dark' : 'theme-light'
                             "
-                        ></datatree>--></b-col></b-row
-                ><b-row
-                    v-if="
-                        !sharedCollectionsLoading &&
-                            sharedCollections.length === 0
-                    "
-                    ><b-col>No shared directories.</b-col></b-row
+                        ></datatree>--></b-col
+                    ></b-row
                 ></b-tab
             >
             <b-tab
@@ -102,7 +94,7 @@
                     this.path === '' ||
                         this.path.startsWith('/iplant/home/shared')
                 "
-                title="Public data"
+                title="Public"
                 :title-link-class="
                     profile.darkMode ? 'text-white' : 'text-dark'
                 "
@@ -281,7 +273,10 @@ export default {
             this.$parent.$parent.$emit('inputSelected', node);
             this.$parent.$parent.$parent.$emit('inputSelected', node);
             this.$parent.$parent.$parent.$parent.$emit('inputSelected', node);
-            this.$parent.$parent.$parent.$parent.$parent.$emit('inputSelected', node);
+            this.$parent.$parent.$parent.$parent.$parent.$emit(
+                'inputSelected',
+                node
+            );
         },
         tabLinkClass(idx) {
             if (this.currentTab === idx) {

@@ -1239,12 +1239,17 @@ export default {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
                         this.$store.dispatch('runs/loadAll');
-                        router.push({
-                            name: 'user',
-                            params: {
-                                username: this.profile.djangoProfile.username
-                            }
-                        });
+                        if (
+                            this.$router.currentRoute.name === 'run' &&
+                            run.id === this.$router.currentRoute.params.id
+                        )
+                            router.push({
+                                name: 'user',
+                                params: {
+                                    username: this.profile.djangoProfile
+                                        .username
+                                }
+                            });
                     } else {
                         this.showFailedToCancelAlert = true;
                     }
