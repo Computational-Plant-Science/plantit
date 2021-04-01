@@ -1005,8 +1005,17 @@
             id="toast"
             :variant="profile.darkMode ? 'dark text-light' : 'light text-dark'"
             solid
-            :title="`Run ${toastRun.id}`"
         >
+            <template #toast-title
+                ><b-link
+                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    :to="{
+                        name: 'run',
+                        params: { id: toastRun.id }
+                    }"
+                    >{{ `Run ${toastRun.id}` }}</b-link
+                ></template
+            >
             <small>
                 <b v-if="!toastRun.is_complete">Running</b>
                 <b class="ml-0 mr-0" v-else>{{ toastRun.job_status }}</b>

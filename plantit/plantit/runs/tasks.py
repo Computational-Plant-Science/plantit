@@ -236,7 +236,7 @@ def __submit_run(flow, run: Run, ssh: SSH, file_count: int = None):
             directory=join(run.cluster.workdir, run.work_dir),
             allow_stderr=True)
     else:
-        command = f"chmod +x {template_name} && sbatch {template_name}"
+        command = f"sbatch {template_name}"
         output_lines = execute_command(
             ssh_client=ssh,
             pre_command='; '.join(str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
