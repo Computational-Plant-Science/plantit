@@ -1262,6 +1262,37 @@ export default {
         ]);
     },
     methods: {
+        onDelete(run) {
+            axios
+                .get(`/apis/v1/runs/${run.id}/delete/`)
+                .then(response => {
+                    if (response.status === 200) {
+                        this.showCanceledAlert = true;
+                        this.canceledAlertMessage = response.data;
+                        this.$store.dispatch('runs/loadAll');
+                        if (
+                            this.$router.currentRoute.name === 'run' &&
+                            run.id === this.$router.currentRoute.params.id
+                        )
+                            router.push({
+                                name: 'user',
+                                params: {
+                                    username: this.profile.djangoProfile
+                                        .username
+                                }
+                            });
+                    } else {
+                        this.showFailedToCancelAlert = true;
+                    }
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
+        showDeletePrompt(run) {
+            this.$bvModal.show('delete ' + run.id);
+        },
         prettify: function(date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
