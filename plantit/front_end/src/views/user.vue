@@ -643,7 +643,6 @@
                             <b-tab
                                 v-if="userProfile.djangoProfile"
                                 title="Runs"
-                                active
                             >
                                 <template v-slot:title>
                                     <b
@@ -673,7 +672,7 @@
                                     "
                                 >
                                     <b-row
-                                        ><b-col
+                                        ><b-col md="auto"
                                             ><h5
                                                 :class="
                                                     profile.darkMode
@@ -683,11 +682,29 @@
                                             >
                                                 Your runs
                                             </h5></b-col
-                                        ></b-row
-                                    >
-                                    <b-row
-                                        class="m-3 mb-1 pl-0 pr-0 text-center"
-                                        align-v="center"
+                                        ><b-col align-self="center"
+                                            ><b-input-group size="sm" style="bottom: 4px"
+                                                ><template #prepend>
+                                                    <b-input-group-text
+                                                        ><i
+                                                            class="fas fa-search"
+                                                        ></i
+                                                    ></b-input-group-text> </template
+                                                ><b-form-input
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'theme-search-dark'
+                                                            : 'theme-search-light'
+                                                    "
+                                                    size="lg"
+                                                    type="search"
+                                                    v-model="runSearchText"
+                                                ></b-form-input>
+                                            </b-input-group> </b-col
+                                    ></b-row>
+                                  <hr/>
+                                  <b-row
+                                        class="m-3 mb-1 pl-0 pr-0"
                                     >
                                         <b-col><b>Running</b></b-col>
                                     </b-row>
@@ -836,11 +853,9 @@
                                             </p>
                                         </b-col></b-row
                                     >
-
                                     <hr />
                                     <b-row
-                                        class="m-3 mb-1 pl-0 pr-0 text-center"
-                                        align-v="center"
+                                        class="m-3 mb-1 pl-0 pr-0"
                                     >
                                         <b-col><b>Completed</b></b-col>
                                     </b-row>
@@ -1159,12 +1174,12 @@ export default {
             directoryPolicies: [],
             directoryPolicyNodes: [],
             data: {},
-            runs: [],
             loadingMoreRuns: false,
             clusters: [],
             clustersLoading: false,
             alertEnabled: false,
-            alertMessage: ''
+            alertMessage: '',
+            runSearchText: ''
         };
     },
     computed: {
@@ -1247,6 +1262,14 @@ export default {
         ]);
     },
     methods: {
+        prettify: function(date) {
+            return `${moment(date).fromNow()} (${moment(date).format(
+                'MMMM Do YYYY, h:mm a'
+            )})`;
+        },
+        prettifyShort: function(date) {
+            return `${moment(date).fromNow()}`;
+        },
         openCollection() {
             this.$store.dispatch('collections/updateLoading', true);
             let data = { cluster: this.cluster.name };

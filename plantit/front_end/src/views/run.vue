@@ -853,6 +853,7 @@
                                                                 ></i>
                                                             </b-col>
                                                             <b-col
+                                                                md="auto"
                                                                 align-self="end"
                                                                 class="text-left"
                                                                 style="position: relative; top: -5px; left: -40px"

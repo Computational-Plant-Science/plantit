@@ -149,9 +149,6 @@ def get_output_file(request, id, file):
             file_path = join(work_dir, file)
             stdin, stdout, stderr = client.client.exec_command(
                 'test -e {0} && echo exists'.format(file_path))
-            errs = stderr.read()
-            if errs:
-                raise Exception(f"Failed to check existence of {file}: {errs}")
             if not stdout.read().decode().strip() == 'exists':
                 return HttpResponseNotFound()
 
