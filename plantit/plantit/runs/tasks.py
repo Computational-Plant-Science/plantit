@@ -1,3 +1,4 @@
+import json
 import sys
 import fileinput
 import traceback
@@ -17,6 +18,7 @@ from plantit.celery import app
 from plantit.collections.models import CollectionSession
 from plantit.collections.utils import update_collection_session
 from plantit.options import FilesInput, FileInput, Parameter
+from plantit.redis import RedisClient
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
@@ -383,6 +385,7 @@ def poll_run_status(id: str):
         if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED' or job_status == 'TIMEOUT':
             run.completed = now
             run.save()
+            list_run_results.s(id).apply_async()
 
             msg = f"Job {run.job_id} {job_status}" + (
                 f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
@@ -540,3 +543,59 @@ def save_collection_session(id: str, only_modified: bool):
 @app.task()
 def close_collection_session(id: str):
     pass
+
+
+@app.task()
+def list_run_results(id: str):
+    try:
+        run = Run.objects.get(guid=id)
+    except:
+        logger.info(f"Could not find run {id} (might have been deleted?)")
+        return
+
+    redis = RedisClient.get()
+    workflow = redis.get(f"workflow/{run.workflow_owner}/{run.workflow_name}")
+    if workflow is None:
+        logger.info(f"Could not find workflow {run.workflow_owner}/{run.workflow_name}")
+        return
+    else:
+        workflow = json.loads(workflow)['config']
+
+    print(workflow)
+
+    included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
+        'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
+    if not run.cluster.launcher:
+        included_by_name.append(f"{run.guid}.{run.cluster.name.lower()}.log")
+    if run.job_id is not None and run.job_id != '':
+        included_by_name.append(f"plantit.{run.job_id}.out")
+        included_by_name.append(f"plantit.{run.job_id}.err")
+    included_by_pattern = (
+        workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
+
+    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    work_dir = join(run.cluster.workdir, run.work_dir)
+    outputs = []
+    seen = []
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            for file in included_by_name:
+                file_path = join(work_dir, file)
+                stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
+                output = {
+                    'name': file,
+                    'exists': stdout.read().decode().strip() == 'exists'
+                }
+                seen.append(output['name'])
+                outputs.append(output)
+
+            for f in sftp.listdir(work_dir):
+                if any(pattern in f for pattern in included_by_pattern):
+                    if not any(s == f for s in seen):
+                        outputs.append({
+                            'name': f,
+                            'exists': True
+                        })
+
+    redis.set(f"results/{run.guid}", json.dumps(outputs))

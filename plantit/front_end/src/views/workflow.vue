@@ -1410,7 +1410,7 @@ export default {
     async mounted() {
         await Promise.all([
             this.$store.dispatch('users/loadAll'),
-            this.$store.dispatch('workflows/refresh', {
+            this.$store.dispatch('workflows/load', {
                 owner: this.$router.currentRoute.params.username,
                 name: this.$router.currentRoute.params.name
             }),

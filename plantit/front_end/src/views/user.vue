@@ -317,8 +317,8 @@
                                                         ? 'theme-dark'
                                                         : 'theme-light'
                                                 "
-                                            ></datatree></b-col></b-row
-                                    >
+                                            ></datatree></b-col
+                                    ></b-row>
                                     <!--<b-row v-if="sharedCollections.length > 0">
                                         <b-col>
                                             <datatree
@@ -640,6 +640,494 @@
                                     </b-card-group>
                                 </div>
                             </b-tab>
+                            <b-tab
+                                v-if="userProfile.djangoProfile"
+                                title="Runs"
+                                active
+                            >
+                                <template v-slot:title>
+                                    <b
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        >Runs</b
+                                    >
+                                </template>
+                                <b-card
+                                    :sub-title-text-variant="
+                                        profile.darkMode ? 'white' : 'dark'
+                                    "
+                                    :header-bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
+                                    :border-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
+                                    :header-border-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
+                                >
+                                    <b-row
+                                        ><b-col
+                                            ><h5
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                Your runs
+                                            </h5></b-col
+                                        ></b-row
+                                    >
+                                    <b-row
+                                        class="m-3 mb-1 pl-0 pr-0 text-center"
+                                        align-v="center"
+                                    >
+                                        <b-col><b>Running</b></b-col>
+                                    </b-row>
+                                    <b-row
+                                        class="m-3 mb-1 pl-0 pr-0"
+                                        align-v="center"
+                                        ><b-col
+                                            class="m-0 pl-0 pr-0 text-center"
+                                        >
+                                            <b-list-group
+                                                v-if="runningRuns.length > 0"
+                                                class="text-left m-0 p-0"
+                                            >
+                                                <b-list-group-item
+                                                    variant="default"
+                                                    style="box-shadow: -2px 2px 2px #adb5bd"
+                                                    v-for="run in filteredRunningRuns"
+                                                    v-bind:key="run.id"
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
+                                                            : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                                                    "
+                                                    :to="{
+                                                        name: 'run',
+                                                        params: { id: run.id }
+                                                    }"
+                                                >
+                                                    <b-img
+                                                        v-if="
+                                                            run.workflow_image_url !==
+                                                                undefined &&
+                                                                run.workflow_image_url !==
+                                                                    null
+                                                        "
+                                                        rounded
+                                                        class="card-img-right"
+                                                        style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
+                                                        right
+                                                        :src="
+                                                            run.workflow_image_url
+                                                        "
+                                                    ></b-img>
+                                                    <b-link
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                        :to="{
+                                                            name: 'run',
+                                                            params: {
+                                                                id: run.id
+                                                            }
+                                                        }"
+                                                        replace
+                                                        >{{ run.id }}</b-link
+                                                    >
+                                                    <br />
+                                                    <div
+                                                        v-if="
+                                                            run.tags !==
+                                                                undefined &&
+                                                                run.tags
+                                                                    .length > 0
+                                                        "
+                                                    >
+                                                        <b-badge
+                                                            v-for="tag in run.tags"
+                                                            v-bind:key="tag"
+                                                            class="mr-1"
+                                                            variant="secondary"
+                                                            >{{ tag }}
+                                                        </b-badge>
+                                                        <br />
+                                                    </div>
+                                                    <small
+                                                        v-if="!run.is_complete"
+                                                        >Running</small
+                                                    >
+                                                    <b-badge
+                                                        :variant="
+                                                            run.is_failure ||
+                                                            run.is_timeout
+                                                                ? 'danger'
+                                                                : run.is_cancelled
+                                                                ? 'secondary'
+                                                                : 'success'
+                                                        "
+                                                        v-else
+                                                        >{{
+                                                            run.job_status
+                                                        }}</b-badge
+                                                    >
+                                                    <small> on </small>
+                                                    <b-badge
+                                                        class="ml-0 mr-0"
+                                                        variant="secondary"
+                                                        >{{
+                                                            run.cluster
+                                                        }}</b-badge
+                                                    ><small>
+                                                        {{
+                                                            prettify(
+                                                                run.updated
+                                                            )
+                                                        }}</small
+                                                    >
+                                                    <br />
+                                                    <small
+                                                        v-if="
+                                                            run.workflow_name !==
+                                                                null
+                                                        "
+                                                        class="mr-1"
+                                                        ><a
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'text-light'
+                                                                    : 'text-dark'
+                                                            "
+                                                            :href="
+                                                                `https://github.com/${run.workflow_owner}/${run.workflow_name}`
+                                                            "
+                                                            ><i
+                                                                class="fab fa-github fa-fw"
+                                                            ></i>
+                                                            {{
+                                                                run.workflow_owner
+                                                            }}/{{
+                                                                run.workflow_name
+                                                            }}</a
+                                                        >
+                                                    </small>
+                                                </b-list-group-item>
+                                            </b-list-group>
+                                            <p
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-center text-light pl-3 pr-3'
+                                                        : 'text-center text-dark pl-3 pr-3'
+                                                "
+                                                v-if="runningRuns.length === 0"
+                                            >
+                                                No workflows running.
+                                            </p>
+                                        </b-col></b-row
+                                    >
+
+                                    <hr />
+                                    <b-row
+                                        class="m-3 mb-1 pl-0 pr-0 text-center"
+                                        align-v="center"
+                                    >
+                                        <b-col><b>Completed</b></b-col>
+                                    </b-row>
+
+                                    <b-row
+                                        class="m-3 mb-1 pl-0 pr-0"
+                                        align-v="center"
+                                        ><b-col
+                                            v-if="
+                                                !runsLoading &&
+                                                    completedRuns.length > 0
+                                            "
+                                            class="m-0 pl-0 pr-0 text-center"
+                                        >
+                                            <b-list-group
+                                                class="text-left m-0 p-0"
+                                            >
+                                                <b-list-group-item
+                                                    variant="default"
+                                                    style="box-shadow: -2px 2px 2px #adb5bd"
+                                                    v-for="run in filteredCompletedRuns"
+                                                    v-bind:key="run.id"
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
+                                                            : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                                                    "
+                                                >
+                                                    <b-row
+                                                        ><b-col>
+                                                            <b-img
+                                                                v-if="
+                                                                    run.workflow_image_url !==
+                                                                        undefined &&
+                                                                        run.workflow_image_url !==
+                                                                            null
+                                                                "
+                                                                rounded
+                                                                class="card-img-right"
+                                                                style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
+                                                                right
+                                                                :src="
+                                                                    run.workflow_image_url
+                                                                "
+                                                            ></b-img>
+                                                            <b-link
+                                                                :class="
+                                                                    profile.darkMode
+                                                                        ? 'text-light'
+                                                                        : 'text-dark'
+                                                                "
+                                                                :to="{
+                                                                    name: 'run',
+                                                                    params: {
+                                                                        id:
+                                                                            run.id
+                                                                    }
+                                                                }"
+                                                                replace
+                                                                >{{
+                                                                    run.id
+                                                                }}</b-link
+                                                            >
+                                                        </b-col>
+                                                    </b-row>
+                                                    <b-row
+                                                        ><b-col>
+                                                            <div
+                                                                v-if="
+                                                                    run.tags !==
+                                                                        undefined &&
+                                                                        run.tags
+                                                                            .length >
+                                                                            0
+                                                                "
+                                                            >
+                                                                <b-badge
+                                                                    v-for="tag in run.tags"
+                                                                    v-bind:key="
+                                                                        tag
+                                                                    "
+                                                                    class="mr-1"
+                                                                    variant="secondary"
+                                                                    >{{ tag }}
+                                                                </b-badge>
+                                                                <br
+                                                                    v-if="
+                                                                        run.tags
+                                                                            .length >
+                                                                            0
+                                                                    "
+                                                                />
+                                                            </div>
+                                                            <small
+                                                                v-if="
+                                                                    !run.is_complete
+                                                                "
+                                                                >Running</small
+                                                            >
+                                                            <b-badge
+                                                                :variant="
+                                                                    run.is_failure ||
+                                                                    run.is_timeout
+                                                                        ? 'danger'
+                                                                        : run.is_cancelled
+                                                                        ? 'secondary'
+                                                                        : 'success'
+                                                                "
+                                                                v-else
+                                                                >{{
+                                                                    run.job_status
+                                                                }}</b-badge
+                                                            >
+                                                            <small> on </small>
+                                                            <b-badge
+                                                                class="ml-0 mr-0"
+                                                                variant="secondary"
+                                                                >{{
+                                                                    run.cluster
+                                                                }}</b-badge
+                                                            ><small>
+                                                                {{
+                                                                    prettify(
+                                                                        run.updated
+                                                                    )
+                                                                }}</small
+                                                            >
+                                                        </b-col>
+                                                    </b-row>
+                                                    <b-row
+                                                        ><b-col>
+                                                            <small class="mr-1"
+                                                                ><a
+                                                                    :class="
+                                                                        profile.darkMode
+                                                                            ? 'text-light'
+                                                                            : 'text-dark'
+                                                                    "
+                                                                    :href="
+                                                                        `https://github.com/${run.workflow_owner}/${run.workflow_name}`
+                                                                    "
+                                                                    ><i
+                                                                        class="fab fa-github fa-fw"
+                                                                    ></i>
+                                                                    {{
+                                                                        run.workflow_owner
+                                                                    }}/{{
+                                                                        run.workflow_name
+                                                                    }}</a
+                                                                >
+                                                            </small>
+                                                        </b-col>
+                                                        <b-col md="auto">
+                                                            <b-button
+                                                                v-if="
+                                                                    run.is_complete
+                                                                "
+                                                                variant="outline-danger"
+                                                                size="sm"
+                                                                v-b-tooltip.hover
+                                                                title="Delete Run"
+                                                                class="text-right"
+                                                                @click="
+                                                                    showDeletePrompt(
+                                                                        run
+                                                                    )
+                                                                "
+                                                            >
+                                                                <i
+                                                                    class="fas fa-trash"
+                                                                ></i>
+                                                                Delete
+                                                            </b-button>
+                                                        </b-col></b-row
+                                                    >
+                                                    <b-modal
+                                                        :id="'delete ' + run.id"
+                                                        :title-class="
+                                                            profile.darkMode
+                                                                ? 'text-white'
+                                                                : 'text-dark'
+                                                        "
+                                                        centered
+                                                        close
+                                                        :header-text-variant="
+                                                            profile.darkMode
+                                                                ? 'white'
+                                                                : 'dark'
+                                                        "
+                                                        :header-bg-variant="
+                                                            profile.darkMode
+                                                                ? 'dark'
+                                                                : 'white'
+                                                        "
+                                                        :footer-bg-variant="
+                                                            profile.darkMode
+                                                                ? 'dark'
+                                                                : 'white'
+                                                        "
+                                                        :body-bg-variant="
+                                                            profile.darkMode
+                                                                ? 'dark'
+                                                                : 'white'
+                                                        "
+                                                        :header-border-variant="
+                                                            profile.darkMode
+                                                                ? 'dark'
+                                                                : 'white'
+                                                        "
+                                                        :footer-border-variant="
+                                                            profile.darkMode
+                                                                ? 'dark'
+                                                                : 'white'
+                                                        "
+                                                        ok-variant="outline-danger"
+                                                        title="Delete this run?"
+                                                        @ok="onDelete(run)"
+                                                    >
+                                                        <p
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'text-light'
+                                                                    : 'text-dark'
+                                                            "
+                                                        >
+                                                            This cannot be
+                                                            undone.
+                                                        </p>
+                                                    </b-modal>
+                                                </b-list-group-item>
+                                            </b-list-group>
+                                        </b-col>
+                                        <b-col
+                                            v-if="
+                                                runsLoading || loadingMoreRuns
+                                            "
+                                            class="m-0 pl-0 pr-0 text-center"
+                                        >
+                                            <b-spinner
+                                                type="grow"
+                                                variant="secondary"
+                                            ></b-spinner
+                                        ></b-col>
+                                        <!--<b-col
+                            v-else-if="completedRuns.length > 0"
+                            class="m-0 pl-0 pr-0 text-center"
+                        >
+                            <b-nav vertical class="m-0 p-0">
+                                <b-nav-item class="m-0 p-0">
+                                    <b-button
+                                        :variant="
+                                            profile.darkMode ? 'dark' : 'light'
+                                        "
+                                        :disabled="runsLoading"
+                                        block
+                                        class="text-center m-0"
+                                        @click="loadRuns(currentRunPage + 1)"
+                                    >
+                                        <i
+                                            class="fas fa-chevron-down fa-fw"
+                                        ></i>
+                                        Load More
+                                    </b-button>
+                                </b-nav-item>
+                            </b-nav>
+                        </b-col>-->
+                                        <b-col
+                                            v-if="
+                                                !runsLoading &&
+                                                    completedRuns.length === 0
+                                            "
+                                            class="m-0 pl-0 pr-0 text-center"
+                                        >
+                                            <p
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-center text-light pl-3 pr-3'
+                                                        : 'text-center text-dark pl-3 pr-3'
+                                                "
+                                            >
+                                                You haven't run any workflows
+                                                yet.
+                                            </p>
+                                        </b-col>
+                                    </b-row>
+                                </b-card>
+                            </b-tab>
                         </b-tabs>
                     </b-col>
                 </b-row>
@@ -672,6 +1160,7 @@ export default {
             directoryPolicyNodes: [],
             data: {},
             runs: [],
+            loadingMoreRuns: false,
             clusters: [],
             clustersLoading: false,
             alertEnabled: false,
@@ -680,6 +1169,7 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
+        ...mapGetters('runs', ['runsLoading', 'runs']),
         ...mapGetters('workflows', ['workflows', 'workflowsLoading']),
         ...mapGetters('collections', [
             'openedCollection',
@@ -695,6 +1185,28 @@ export default {
             return this.workflows.filter(wf => {
                 return wf.repo.owner.login === this.profile.githubProfile.login;
             });
+        },
+        runningRuns() {
+            return this.runs.filter(r => !r.is_complete);
+        },
+        completedRuns() {
+            return this.runs.filter(r => r.is_complete);
+        },
+        filteredRunningRuns() {
+            return this.runningRuns.filter(
+                r =>
+                    (r.workflow_name !== null &&
+                        r.workflow_name.includes(this.runSearchText)) ||
+                    r.tags.some(t => t.includes(this.runSearchText))
+            );
+        },
+        filteredCompletedRuns() {
+            return this.completedRuns.filter(
+                r =>
+                    (r.workflow_name !== null &&
+                        r.workflow_name.includes(this.runSearchText)) ||
+                    r.tags.some(t => t.includes(this.runSearchText))
+            );
         }
     },
     asyncComputed: {
@@ -825,7 +1337,7 @@ export default {
                 });
         },
         async loadSharedCollections() {
-          await axios
+            await axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/`,
                     {

@@ -58,6 +58,24 @@ export const workflows = {
                     throw error;
                 });
         },
+        async load({ commit }, payload) {
+            commit('setLoading', true);
+            await axios
+                .get(`/apis/v1/workflows/${payload.owner}/${payload.name}/`, {
+                    headers: {
+                        Authorization: 'Bearer ' + this.githubToken
+                    }
+                })
+                .then(response => {
+                    commit('update', response.data);
+                    commit('setLoading', false);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    commit('setLoading', false);
+                    throw error;
+                });
+        },
         async refresh({ commit }, payload) {
             commit('setLoading', true);
             await axios

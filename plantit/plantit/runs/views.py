@@ -14,10 +14,11 @@ from django_celery_beat.models import IntervalSchedule
 from rest_framework.decorators import api_view
 
 from plantit import settings
+from plantit.redis import RedisClient
 from plantit.runs.cluster import cancel_run
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
-from plantit.runs.tasks import submit_run
+from plantit.runs.tasks import submit_run, list_run_results
 from plantit.runs.thumbnail import Thumbnail
 from plantit.runs.utils import update_status, map_run, submission_log_file_path, create_run, parse_eta, map_delayed_run_task, \
     map_repeating_run_task
@@ -64,54 +65,10 @@ def get_total_count(request):
 @api_view(['GET'])
 @login_required
 def list_outputs(request, id):
-    try:
-        run = Run.objects.get(guid=id)
-        workflow = get_repo_config(run.workflow_name, run.workflow_owner, run.user.profile.github_token)
-    except Run.DoesNotExist:
-        return HttpResponseNotFound()
+    redis = RedisClient.get()
+    result = redis.get(f"results/{id}")
+    return JsonResponse({'outputs': json.loads(result) if result is not None else []})
 
-    included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
-        'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
-    if not run.cluster.launcher:
-        included_by_name.append(f"{run.guid}.{run.cluster.name.lower()}.log")
-    if run.job_id is not None and run.job_id != '':
-        included_by_name.append(f"plantit.{run.job_id}.out")
-        included_by_name.append(f"plantit.{run.job_id}.err")
-    included_by_pattern = (
-        workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
-
-    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
-    work_dir = join(run.cluster.workdir, run.work_dir)
-    outputs = []
-    seen = []
-
-    with client:
-        with client.client.open_sftp() as sftp:
-            for file in included_by_name:
-                file_path = join(work_dir, file)
-                stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
-                errs = stderr.read()
-                # if errs:
-                #     raise Exception(f"Failed to check existence of {file}: {errs}")
-                output = {
-                    'name': file,
-                    'exists': stdout.read().decode().strip() == 'exists'
-                }
-                seen.append(output['name'])
-                outputs.append(output)
-
-            try:
-                for f in sftp.listdir(work_dir):
-                    if any(pattern in f for pattern in included_by_pattern):
-                        if not any(s == f for s in seen):
-                            outputs.append({
-                                'name': f,
-                                'exists': True
-                            })
-            except:
-                return JsonResponse({'outputs': []})
-
-    return JsonResponse({'outputs': outputs})
 
 
 @api_view(['GET'])

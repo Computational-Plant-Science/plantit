@@ -256,6 +256,7 @@
                             'Share ' +
                                 (internalLoaded ? internalNode.path : node.path)
                         "
+                        size="lg"
                         centered
                         :header-text-variant="
                             profile.darkMode ? 'white' : 'dark'
@@ -311,6 +312,7 @@
                                         >
                                             <b-form-checkbox-group
                                                 v-model="sharedUsers"
+                                                stacked
                                                 :aria-describedby="
                                                     ariaDescribedby
                                                 "

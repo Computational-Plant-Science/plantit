@@ -278,6 +278,7 @@
                                     v-if="!getRun.is_complete"
                                 >
                                     <b-button
+                                        v-if="getRun.is_complete"
                                         :disabled="loadingRun"
                                         :variant="
                                             profile.darkMode
@@ -509,22 +510,8 @@
                                                             class="mt-2 text-center"
                                                         >
                                                             <b-col>
-                                                                Output files
-                                                                expected:
-                                                            </b-col>
-                                                        </b-row>
-                                                        <b-row
-                                                            v-if="
-                                                                getWorkflow.config &&
-                                                                    getWorkflow
-                                                                        .config
-                                                                        .output
-                                                            "
-                                                            align-h="center"
-                                                            align-v="center"
-                                                            class="text-center"
-                                                        >
-                                                            <b-col>
+                                                                Expected:
+                                                                <br />
                                                                 <b
                                                                     ><code
                                                                         :class="
@@ -610,12 +597,16 @@
                                                             <br />
                                                         </b-row>
                                                         <b-row>
-                                                            <b-col>
+                                                            <b-col
+                                                                md="auto"
+                                                                align-self="end"
+                                                            >
                                                                 <b-pagination
                                                                     v-model="
                                                                         outputFilePage
                                                                     "
                                                                     pills
+                                                                    class="mt-3"
                                                                     size="md"
                                                                     :total-rows="
                                                                         outputFiles.length
@@ -647,11 +638,39 @@
                                                                 </b-pagination>
                                                             </b-col>
                                                             <b-col
+                                                                align-self="middle"
+                                                                ><b-input-group
+                                                                    class="mt-3"
+                                                                    style="top: 2px"
+                                                                    size="sm"
+                                                                    ><template
+                                                                        #prepend
+                                                                    >
+                                                                        <b-input-group-text
+                                                                            ><i
+                                                                                class="fas fa-search"
+                                                                            ></i
+                                                                        ></b-input-group-text> </template
+                                                                    ><b-form-input
+                                                                        :class="
+                                                                            profile.darkMode
+                                                                                ? 'theme-search-dark'
+                                                                                : 'theme-search-light'
+                                                                        "
+                                                                        size="lg"
+                                                                        type="search"
+                                                                        v-model="
+                                                                            resultSearchText
+                                                                        "
+                                                                    ></b-form-input>
+                                                                </b-input-group>
+                                                            </b-col>
+                                                            <b-col
                                                                 md="auto"
                                                                 align-self="middle"
                                                             >
                                                                 <b-dropdown
-                                                                    class="m-2"
+                                                                    class="m-3"
                                                                     :text="
                                                                         outputPageSize
                                                                     "
@@ -712,7 +731,7 @@
                                                         <b-row
                                                             v-else
                                                             id="outputList"
-                                                            v-for="file in listOutputFiles()"
+                                                            v-for="file in filteredResults"
                                                             v-bind:key="file"
                                                             class="p-1"
                                                             style="border-top: 1px solid rgba(211, 211, 211, .5);"
@@ -1192,6 +1211,7 @@ export default {
     },
     data() {
         return {
+            resultSearchText: '',
             resubmitted: false,
             cancelled: false,
             // run status constants
@@ -1228,10 +1248,7 @@ export default {
     },
     methods: {
         refreshRun() {
-            this.$store.dispatch(
-                'refreshRun',
-                this.$router.currentRoute.params.id
-            );
+            this.$store.dispatch('load', this.$router.currentRoute.params.id);
         },
         onCancel() {
             this.cancelled = true;
@@ -1392,12 +1409,6 @@ export default {
         parseSeconds(seconds) {
             return moment.utc(seconds * 1000);
         },
-        listOutputFiles() {
-            return this.outputFiles.slice(
-                (this.outputFilePage - 1) * this.outputPageSize,
-                this.outputFilePage * this.outputPageSize
-            );
-        },
         setOutputFilesPageSize(size) {
             this.outputPageSize = size;
         },
@@ -1519,13 +1530,20 @@ export default {
             'runs/refresh',
             this.$router.currentRoute.params.id
         );
-        await this.reloadOutputFiles();
         this.loadingRun = false;
     },
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
         ...mapGetters('runs', ['run', 'runs', 'runsLoading']),
+        filteredResults() {
+            return this.outputFiles
+                .slice(
+                    (this.outputFilePage - 1) * this.outputPageSize,
+                    this.outputFilePage * this.outputPageSize
+                )
+                .filter(f => f.name.includes(this.resultSearchText));
+        },
         workflowKey() {
             return `${this.getWorkflow.repo.owner.login}/${this.getWorkflow.repo.name}`;
         },

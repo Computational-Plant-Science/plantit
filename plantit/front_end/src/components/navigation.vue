@@ -1008,7 +1008,7 @@
         >
             <template #toast-title
                 ><b-link
-                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    class="text-dark"
                     :to="{
                         name: 'run',
                         params: { id: toastRun.id }
