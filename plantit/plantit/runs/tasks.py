@@ -86,11 +86,10 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 if run.cluster.project is not None and run.cluster.project != '':
                     script.write(f"#SBATCH -A {run.cluster.project}\n")
 
-                input_count = len(input_files)
                 if input_files is not None and run.cluster.job_array:
-                    script.write(f"#SBATCH --array=1-{input_count}\n")
+                    script.write(f"#SBATCH --array=1-{len(input_files)}\n")
                 if input_files is not None:
-                    n = min(input_count, run.cluster.max_nodes)
+                    n = min(len(input_files), run.cluster.max_nodes)
                     script.write(f"#SBATCH -N {n}\n")
                     script.write(f"#SBATCH --ntasks={n}\n")
                 else:
@@ -107,16 +106,17 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
 
             # if we have inputs, add pull command
             if 'input' in flow['config']:
+                input = flow['config']['input']
                 sftp.mkdir(join(run.cluster.workdir, run.work_dir, 'input'))
 
                 # allow for both spellings of JPG
-                patterns = [pattern.lower() for pattern in flow['config']['input']['patterns']]
+                patterns = [pattern.lower() for pattern in input['patterns']]
                 if 'jpg' in patterns and 'jpeg' not in patterns:
                     patterns += 'jpeg'
                 elif 'jpeg' in patterns and 'jpg' not in patterns:
                     patterns += 'jpg'
 
-                pull_commands = f"plantit terrain pull {flow['config']['input']['from']}" \
+                pull_commands = f"plantit terrain pull {input['from']}" \
                                 f" -p {join(run.cluster.workdir, run.work_dir, 'input')}" \
                                 f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
                                 f""f" --terrain_token {run.user.profile.cyverse_token}"
@@ -132,7 +132,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             docker_password = environ.get('DOCKER_PASSWORD', None)
 
             # if this cluster uses TACC's launcher, create a parameter sweep launcher job script to invoke singularity directly
-            if run.cluster.launcher and input_files is not None:
+            if run.cluster.launcher and input_files is not None and flow['config']['input']['kind'] == 'files':
                 with sftp.open('launch', 'w') as launcher_script:
                     for file in input_files:
                         parse_errors, run_options = parse_run_options(new_flow)
@@ -158,12 +158,15 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 script.write("$LAUNCHER_DIR/paramrun\n")
             # otherwise use the CLI
             else:
-                run_commands = f"plantit run flow.yaml --plantit_url '{callback_url}' --plantit_token '{run.token}' --pre_pull_image"
+                run_commands = f"plantit run flow.yaml --pre_pull_image"
                 if run.cluster.job_array and input_files is not None:
                     run_commands += f" --slurm_job_array"
 
                 if docker_username is not None and docker_password is not None:
                     run_commands += f" --docker_username {docker_username} --docker_password {docker_password}"
+
+                if run.cluster.callbacks:
+                    run_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
 
                 run_commands += "\n"
                 logger.info(f"Using run command: {run_commands}")
@@ -188,26 +191,29 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 logger.info(f"Using zip command: {zip_commands}")
 
                 # add push command if we have a destination
-                if 'to' in output and output['to'] is not None:
-                    push_commands = f"plantit terrain push {output['to']}" \
-                                    f" -p {join(run.work_dir, output['from'])}" \
-                                    f" --plantit_url '{callback_url}'" \
-                                    f" --plantit_token '{run.token}'" \
-                                    f" --terrain_token {run.user.profile.cyverse_token}"
-                    if 'include' in output:
-                        if 'patterns' in output['include']:
-                            push_commands = push_commands + ' '.join(
-                                ['--include_pattern ' + pattern for pattern in output['include']['patterns']])
-                        if 'names' in output['include']:
-                            push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
-                        if 'patterns' in output['exclude']:
-                            push_commands = push_commands + ' '.join(
-                                ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
-                        if 'names' in output['exclude']:
-                            push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
-                    push_commands += '\n'
-                    script.write(push_commands)
-                    logger.info(f"Using push command: {push_commands}")
+                # if 'to' in output and output['to'] is not None:
+                #     push_commands = f"plantit terrain push {output['to']}" \
+                #                     f" -p {join(run.work_dir, output['from'])}" \
+                #                     f" --plantit_url '{callback_url}'"
+
+                #     if 'include' in output:
+                #         if 'patterns' in output['include']:
+                #             push_commands = push_commands + ' '.join(
+                #                 ['--include_pattern ' + pattern for pattern in output['include']['patterns']])
+                #         if 'names' in output['include']:
+                #             push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
+                #         if 'patterns' in output['exclude']:
+                #             push_commands = push_commands + ' '.join(
+                #                 ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+                #         if 'names' in output['exclude']:
+                #             push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+
+                #     if run.cluster.callbacks:
+                #         push_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
+
+                #     push_commands += '\n'
+                #     script.write(push_commands)
+                #     logger.info(f"Using push command: {push_commands}")
 
 
 @retry(
