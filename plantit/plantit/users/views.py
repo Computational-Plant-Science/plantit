@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 from datetime import datetime
@@ -20,6 +19,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from plantit.clusters.utils import map_cluster
+from plantit.redis import RedisClient
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
 from plantit.utils import get_csrf_token
@@ -190,28 +190,14 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
-        users_file = settings.USERS_CACHE
-        users_path = Path(users_file)
-        refresh_minutes = int(settings.USERS_REFRESH_MINUTES)
+        redis = RedisClient.get()
+        users = self.list_users(request.user.profile.github_token)
+        cached_users = [json.loads(redis.get(key)) for key in redis.scan_iter(match='user/*')]
 
-        if not users_path.exists():
-            print(f"Creating user cache")
-            users = self.list_users(request.user.profile.github_token)
-            with open(users_file, 'w') as file:
-                json.dump(users, file)
-        else:
-            now = datetime.now()
-            last_modified = datetime.fromtimestamp(users_path.stat().st_ctime)
-            elapsed_minutes = (now - last_modified).total_seconds() / 60.0
-
-            if elapsed_minutes < refresh_minutes:
-                with open(users_file, 'r') as file:
-                    users = json.load(file)
-            else:
-                print(f"User cache is stale, refreshing")
-                users = self.list_users(request.user.profile.github_token)
-                with open(users_file, 'w') as file:
-                    json.dump(users, file)
+        if len(users) != len(cached_users):
+            print(f"Populating user cache")
+            for user in users:
+                redis.set(f"user/{user['username']}", json.dumps(user))
 
         return JsonResponse({'users': users})
 
