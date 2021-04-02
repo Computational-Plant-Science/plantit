@@ -188,23 +188,23 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 logger.info(f"Using zip command: {zip_commands}")
 
                 # add push command if we have a destination
-                if 'to' in flow['config']['output']:
-                    push_commands = f"plantit terrain push {flow['config']['output']['to']}" \
-                                    f" -p {join(run.work_dir, flow['config']['output']['from'])}" \
+                if 'to' in output and output['to'] is not None:
+                    push_commands = f"plantit terrain push {output['to']}" \
+                                    f" -p {join(run.work_dir, output['from'])}" \
                                     f" --plantit_url '{callback_url}'" \
                                     f" --plantit_token '{run.token}'" \
                                     f" --terrain_token {run.user.profile.cyverse_token}"
-                    if 'include' in flow['config']['output']:
-                        if 'patterns' in flow['config']['output']['include']:
+                    if 'include' in output:
+                        if 'patterns' in output['include']:
                             push_commands = push_commands + ' '.join(
-                                ['--include_pattern ' + pattern for pattern in flow['config']['output']['include']['patterns']])
-                        if 'names' in flow['config']['output']['include']:
-                            push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in flow['config']['output']['include']['names']])
-                        if 'patterns' in flow['config']['output']['exclude']:
+                                ['--include_pattern ' + pattern for pattern in output['include']['patterns']])
+                        if 'names' in output['include']:
+                            push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
+                        if 'patterns' in output['exclude']:
                             push_commands = push_commands + ' '.join(
-                                ['--exclude_pattern ' + pattern for pattern in flow['config']['output']['exclude']['patterns']])
-                        if 'names' in flow['config']['output']['exclude']:
-                            push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in flow['config']['output']['exclude']['names']])
+                                ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+                        if 'names' in output['exclude']:
+                            push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
                     push_commands += '\n'
                     script.write(push_commands)
                     logger.info(f"Using push command: {push_commands}")
