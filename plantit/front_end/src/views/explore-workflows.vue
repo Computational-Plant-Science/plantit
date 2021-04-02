@@ -50,7 +50,7 @@
             <b-row v-else
                 ><b-col
                     ><b-row
-                        ><b-col md="auto"
+                        ><b-col
                             ><h3
                                 :class="
                                     profile.darkMode
@@ -59,8 +59,29 @@
                                 "
                             >
                                 Public Workflows
-                            </h3>
-                        </b-col></b-row
+                            </h3> </b-col
+                        ><b-col md="auto" class="text-right"
+                            ><b-button
+                                :disabled="workflowsLoading"
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
+                                size="sm"
+                                v-b-tooltip.hover
+                                title="Refresh Workflows"
+                                @click="refreshWorkflows"
+                            >
+                                <i class="fas fa-redo"></i>
+                                Refresh
+                                <b-spinner
+                                    small
+                                    v-if="workflowsLoading"
+                                    label="Refreshing..."
+                                    :variant="
+                                        profile.darkMode ? 'light' : 'dark'
+                                    "
+                                    class="ml-2 mb-1"
+                                ></b-spinner> </b-button></b-col></b-row
                     ><b-row
                         ><b-col
                             ><b-input-group size="sm"
@@ -150,6 +171,9 @@ export default {
                     name: flow['repo']['name']
                 }
             });
+        },
+        refreshWorkflows() {
+            this.$store.dispatch('workflows/refreshAll');
         }
     }
 };

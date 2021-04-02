@@ -9,7 +9,7 @@ from plantit.options import BindMount, Parameter, RunOptions, DirectoryInput, Fi
 
 
 def get_repo_readme(name, owner, token):
-    print(f"Getting config for {owner}/{name}")
+    print(f"Getting README for {owner}/{name}")
     try:
         url = f"https://api.github.com/repos/{owner}/{name}/contents/README.md"
         request = requests.get(url) if token == '' else requests.get(url, headers={"Authorization": f"token {token}"})

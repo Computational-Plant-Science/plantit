@@ -33,6 +33,23 @@ def list_all(request):
 
 
 @login_required
+def refresh_all(request):
+    redis = RedisClient.get()
+    users = User.objects.all()
+
+    with open(settings.MORE_USERS, 'r') as file:
+        more_users = json.load(file)
+        usernames = [user.profile.github_username for user in users] + more_users
+
+        print(f"Refreshing workflow cache")
+        workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
+        for workflow in workflows:
+            redis.set(f"workflow/{workflow['repo']['owner']['login']}/{workflow['repo']['name']}", json.dumps(workflow))
+
+    return JsonResponse({'workflows': workflows})
+
+
+@login_required
 def list_by_user(request, username):
     workflows = asyncio.run(list_workflows_for_users([username], request.user.profile.github_token))
     return JsonResponse({'workflows': workflows})

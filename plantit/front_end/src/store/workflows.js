@@ -44,13 +44,30 @@ export const workflows = {
                     throw error;
                 });
         },
+        async refreshAll({ commit }) {
+            commit('setLoading', true);
+            await axios
+                .get('/apis/v1/workflows/refresh_all/')
+                .then(response => {
+                    commit('setAll', response.data.workflows);
+                    commit('setLoading', false);
+                })
+                .catch(error => {
+                    commit('setLoading', false);
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
         async refresh({ commit }, payload) {
             await axios
-                .get(`/apis/v1/workflows/${payload.owner}/${payload.name}/`, {
-                    headers: {
-                        Authorization: 'Bearer ' + this.githubToken
+                .get(
+                    `/apis/v1/workflows/${payload.owner}/${payload.name}/refresh/`,
+                    {
+                        headers: {
+                            Authorization: 'Bearer ' + this.githubToken
+                        }
                     }
-                })
+                )
                 .then(response => {
                     commit('update', response.data);
                 })
@@ -65,7 +82,10 @@ export const workflows = {
     },
     getters: {
         workflow: state => (owner, name) => {
-            let found = state.workflows.find(repo => owner === repo.repo.owner.login && name === repo.repo.name);
+            let found = state.workflows.find(
+                repo =>
+                    owner === repo.repo.owner.login && name === repo.repo.name
+            );
             if (found !== undefined) return found;
             return null;
         },
