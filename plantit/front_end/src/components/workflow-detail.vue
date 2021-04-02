@@ -81,206 +81,148 @@
                             </b-col>
                         </b-row>
                         <br />
+                        <div
+                            v-if="
+                                workflow.config.author !== undefined &&
+                                    workflow.config.author !== null
+                            "
+                        >
+                            <h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Authors
+                            </h5>
+                            <b-row>
+                                <b-col>
+                                    <b-row
+                                        v-if="
+                                            workflow.config.author !== undefined
+                                        "
+                                    >
+                                        <b-col>
+                                            <span
+                                                v-if="
+                                                    typeof workflow.config
+                                                        .author === 'string' ||
+                                                        (Array.isArray(
+                                                            workflow.config
+                                                                .author
+                                                        ) &&
+                                                            workflow.config
+                                                                .author
+                                                                .length === 1)
+                                                "
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                >{{
+                                                    workflow.config.author
+                                                }}</span
+                                            >
+                                            <b-list-group v-else>
+                                                <b-list-group-item
+                                                    :variant="
+                                                        profile.darkMode
+                                                            ? 'dark'
+                                                            : 'light'
+                                                    "
+                                                    v-for="author in workflow
+                                                        .config.author"
+                                                    v-bind:key="author"
+                                                    >{{
+                                                        author
+                                                    }}</b-list-group-item
+                                                >
+                                            </b-list-group>
+                                        </b-col>
+                                    </b-row>
+                                </b-col>
+                            </b-row>
+                        </div>
+                        <div
+                            v-if="
+                                workflow.config.doi !== undefined &&
+                                    workflow.config.doi !== null
+                            "
+                        >
+                            <br />
+                            <h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Publications/DOIs
+                            </h5>
+                            <b-row>
+                                <b-col>
+                                    <b-row
+                                        v-if="workflow.config.doi !== undefined"
+                                    >
+                                        <b-col>
+                                            <b-link
+                                                v-if="
+                                                    typeof workflow.config
+                                                        .doi === 'string' ||
+                                                        (Array.isArray(
+                                                            workflow.config.doi
+                                                        ) &&
+                                                            workflow.config.doi
+                                                                .length === 1)
+                                                "
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                :href="
+                                                    `https://doi.org/${workflow.config.doi}`
+                                                "
+                                                >{{
+                                                    workflow.config.doi
+                                                }}</b-link
+                                            >
+                                            <b-list-group v-else>
+                                                <b-list-group-item
+                                                    :variant="
+                                                        profile.darkMode
+                                                            ? 'dark'
+                                                            : 'light'
+                                                    "
+                                                    v-for="doi in workflow
+                                                        .config.doi"
+                                                    v-bind:key="doi"
+                                                    ><b-link
+                                                        class="
+                                                        text-dark
+                                                    "
+                                                        :href="
+                                                            `https://doi.org/${doi}`
+                                                        "
+                                                        >{{ doi }}</b-link
+                                                    ></b-list-group-item
+                                                >
+                                            </b-list-group>
+                                        </b-col>
+                                    </b-row>
+                                </b-col>
+                            </b-row>
+                        </div>
+                        <br />
                         <b-tabs
                             content-class="mt-3"
                             nav-class="bg-transparent"
                             active-nav-item-class="bg-secondary text-dark"
                         >
                             <b-tab
-                                title="About"
-                                :title-link-class="
-                                    profile.darkMode
-                                        ? 'text-white'
-                                        : 'text-dark'
-                                "
-                            >
-                                <div
-                                    v-if="
-                                        workflow.config.author !== undefined &&
-                                            workflow.config.author !== null
-                                    "
-                                >
-                                    <h5
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
-                                    >
-                                        Authors
-                                    </h5>
-                                    <b-row>
-                                        <b-col>
-                                            <b-row
-                                                v-if="
-                                                    workflow.config.author !==
-                                                        undefined
-                                                "
-                                            >
-                                                <b-col>
-                                                    <span
-                                                        v-if="
-                                                            typeof workflow
-                                                                .config
-                                                                .author ===
-                                                                'string' ||
-                                                                (Array.isArray(
-                                                                    workflow
-                                                                        .config
-                                                                        .author
-                                                                ) &&
-                                                                    workflow
-                                                                        .config
-                                                                        .author
-                                                                        .length ===
-                                                                        1)
-                                                        "
-                                                        :class="
-                                                            profile.darkMode
-                                                                ? 'text-light'
-                                                                : 'text-dark'
-                                                        "
-                                                        >{{
-                                                            workflow.config
-                                                                .author
-                                                        }}</span
-                                                    >
-                                                    <b-list-group v-else>
-                                                        <b-list-group-item
-                                                            :variant="
-                                                                profile.darkMode
-                                                                    ? 'dark'
-                                                                    : 'light'
-                                                            "
-                                                            v-for="author in workflow
-                                                                .config.author"
-                                                            v-bind:key="author"
-                                                            >{{
-                                                                author
-                                                            }}</b-list-group-item
-                                                        >
-                                                    </b-list-group>
-                                                </b-col>
-                                            </b-row>
-                                        </b-col>
-                                    </b-row>
-                                </div>
-                                <div
-                                    v-if="
-                                        workflow.config.doi !== undefined &&
-                                            workflow.config.doi !== null
-                                    "
-                                >
-                                    <br />
-                                    <h5
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
-                                    >
-                                        Publications/DOIs
-                                    </h5>
-                                    <b-row>
-                                        <b-col>
-                                            <b-row
-                                                v-if="
-                                                    workflow.config.doi !==
-                                                        undefined
-                                                "
-                                            >
-                                                <b-col>
-                                                    <b-link
-                                                        v-if="
-                                                            typeof workflow
-                                                                .config.doi ===
-                                                                'string' ||
-                                                                (Array.isArray(
-                                                                    workflow
-                                                                        .config
-                                                                        .doi
-                                                                ) &&
-                                                                    workflow
-                                                                        .config
-                                                                        .doi
-                                                                        .length ===
-                                                                        1)
-                                                        "
-                                                        :class="
-                                                            profile.darkMode
-                                                                ? 'text-light'
-                                                                : 'text-dark'
-                                                        "
-                                                        :href="
-                                                            `https://doi.org/${workflow.config.doi}`
-                                                        "
-                                                        >{{
-                                                            workflow.config.doi
-                                                        }}</b-link
-                                                    >
-                                                    <b-list-group v-else>
-                                                        <b-list-group-item
-                                                            :variant="
-                                                                profile.darkMode
-                                                                    ? 'dark'
-                                                                    : 'light'
-                                                            "
-                                                            v-for="doi in workflow
-                                                                .config.doi"
-                                                            v-bind:key="doi"
-                                                            ><b-link
-                                                                class="
-                                                        text-dark
-                                                    "
-                                                                :href="
-                                                                    `https://doi.org/${doi}`
-                                                                "
-                                                                >{{
-                                                                    doi
-                                                                }}</b-link
-                                                            ></b-list-group-item
-                                                        >
-                                                    </b-list-group>
-                                                </b-col>
-                                            </b-row>
-                                        </b-col>
-                                    </b-row>
-                                </div>
-                                <br />
-                                <div
-                                    v-if="
-                                        workflow.readme !== undefined &&
-                                            workflow.readme !== null
-                                    "
-                                >
-                                    <h5
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
-                                    >
-                                        Readme
-                                    </h5>
-                                    <div
-                                        :class="
-                                            profile.darkMode
-                                                ? 'theme-container-readme m-0 p-3'
-                                                : 'theme-container-light m-0 p-3'
-                                        "
-                                    >
-                                        <br />
-                                        <b-row>
-                                            <b-col
-                                                ><vue-markdown>{{
-                                                    workflow.readme
-                                                }}</vue-markdown></b-col
-                                            >
-                                        </b-row>
-                                    </div>
-                                </div>
-                            </b-tab>
-                            <b-tab
+                                active
                                 title="Configuration"
                                 :title-link-class="
                                     profile.darkMode
@@ -538,6 +480,38 @@
                                         </b-row>
                                     </b-col>
                                 </b-row>
+                            </b-tab>
+                            <b-tab
+                                title="README"
+                                :title-link-class="
+                                    profile.darkMode
+                                        ? 'text-white'
+                                        : 'text-dark'
+                                "
+                            >
+                                <div
+                                    v-if="
+                                        workflow.readme !== undefined &&
+                                            workflow.readme !== null
+                                    "
+                                >
+                                    <div
+                                        :class="
+                                            profile.darkMode
+                                                ? 'theme-container-readme m-0 p-3'
+                                                : 'theme-container-light m-0 p-3'
+                                        "
+                                    >
+                                        <br />
+                                        <b-row>
+                                            <b-col
+                                                ><vue-markdown>{{
+                                                    workflow.readme
+                                                }}</vue-markdown></b-col
+                                            >
+                                        </b-row>
+                                    </div>
+                                </div>
                             </b-tab>
                         </b-tabs>
                     </b-col>
