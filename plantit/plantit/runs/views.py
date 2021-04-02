@@ -19,7 +19,7 @@ from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run
 from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import update_status, map_run, submission_log_file_name, create_run, parse_eta, map_delayed_run_task, \
+from plantit.runs.utils import update_status, map_run, submission_log_file_path, create_run, parse_eta, map_delayed_run_task, \
     map_repeating_run_task
 from plantit.clusters.models import Cluster
 from plantit.utils import get_repo_config
@@ -212,7 +212,7 @@ def get_submission_logs_text(request, id, size):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = submission_log_file_name(run)
+    log_path = submission_log_file_path(run)
     if Path(log_path).is_file():
         with open(log_path, 'r') as log:
             lines = log.readlines()[-int(size):]
@@ -228,7 +228,7 @@ def get_submission_logs(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = submission_log_file_name(run)
+    log_path = submission_log_file_path(run)
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 

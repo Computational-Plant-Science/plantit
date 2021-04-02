@@ -23,7 +23,7 @@ from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
 from plantit.clusters.models import Cluster, ClusterAccessPolicy, ClusterRole
 from plantit.clusters.utils import map_cluster
-from plantit.utils import get_repo_config
+from plantit.utils import get_repo_config, get_repo_readme
 
 
 def clean_html(raw_html):
@@ -89,7 +89,8 @@ def format_workflows(response, token):
     response_json = response.json()
     workflows = [{
         'repo': item['repository'],
-        'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], token)
+        'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], token),
+        'readme': get_repo_readme(item['repository']['name'], item['repository']['owner']['login'], token)
     } for item in response_json['items']] if 'items' in response_json else []
     return workflows
 
@@ -238,8 +239,8 @@ def map_run_task(task):
 def map_run(run: Run, get_container_logs: bool = False):
     work_dir = join(run.cluster.workdir, run.work_dir)
     ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
-    submission_log_file = submission_log_file_name(run)
-    container_log_file = container_log_file_name(run)
+    submission_log_file = submission_log_file_path(run)
+    container_log_file = container_log_file_path(run)
 
     if Path(submission_log_file).is_file():
         with open(submission_log_file, 'r') as log:
@@ -247,27 +248,9 @@ def map_run(run: Run, get_container_logs: bool = False):
     else:
         submission_logs = []
 
-    if get_container_logs:
-        with ssh_client:
-            with ssh_client.client.open_sftp() as sftp:
-                cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
-                stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
-                # errs = stderr.read()
-                # if errs:
-                #     raise Exception(f"Failed to check existence of {container_log_file}: {errs}")
-                if not stdout.read().decode().strip() == 'exists':
-                    container_logs = []
-                else:
-                    with tempfile.NamedTemporaryFile() as tf:
-                        sftp.chdir(work_dir)
-                        sftp.get(container_log_file, tf.name)
-                        with open(tf.name, 'r') as file:
-                            docker_username = environ.get('DOCKER_USERNAME', None)
-                            docker_password = environ.get('DOCKER_PASSWORD', None)
-                            container_logs = [
-                                # obfuscate Docker auth info before returning logs to the user
-                                line.strip().replace(docker_username, '*' * 7, 1).replace(docker_password, '*' * 7)
-                                for line in file.readlines()[-int(1000000):]]
+    if Path(container_log_file).is_file():
+        with open(container_log_file, 'r') as log:
+            container_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
     else:
         container_logs = []
 
@@ -302,7 +285,7 @@ def map_run(run: Run, get_container_logs: bool = False):
     }
 
 
-def submission_log_file_name(run: Run):
+def submission_log_file_path(run: Run):
     return join(os.environ.get('RUNS_LOGS'), f"{run.guid}.plantit.log")
 
 
@@ -311,6 +294,10 @@ def container_log_file_name(run: Run):
         return f"plantit.{run.job_id}.out"
     else:
         return f"{run.guid}.{run.cluster.name.lower()}.log"
+
+
+def container_log_file_path(run: Run):
+    return join(os.environ.get('RUNS_LOGS'), container_log_file_name(run))
 
 
 def create_run(username: str, cluster_name: str, workflow: dict) -> Run:

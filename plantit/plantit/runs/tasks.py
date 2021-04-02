@@ -1,3 +1,5 @@
+import sys
+import fileinput
 import traceback
 from os import environ
 from os.path import join
@@ -18,7 +20,8 @@ from plantit.options import FilesInput, FileInput, Parameter
 from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
-from plantit.runs.utils import update_status, execute_command, map_old_workflow_config_to_new, remove_logs, parse_job_id, create_run
+from plantit.runs.utils import update_status, execute_command, map_old_workflow_config_to_new, remove_logs, parse_job_id, create_run, \
+    container_log_file_name, container_log_file_path
 from plantit.clusters.models import Cluster
 from plantit.utils import parse_run_options, prep_run_command
 
@@ -348,6 +351,34 @@ def poll_run_status(id: str):
         now = timezone.now()
         run.updated = now
         run.save()
+
+        # get container logs
+        work_dir = join(run.cluster.workdir, run.work_dir)
+        ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+        container_log_file = container_log_file_name(run)
+        container_log_path = container_log_file_path(run)
+
+        with ssh_client:
+            with ssh_client.client.open_sftp() as sftp:
+                cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
+                stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
+
+                if not stdout.read().decode().strip() == 'exists':
+                    container_logs = []
+                else:
+                    with open(container_log_file_path(run), 'a+') as log_file:
+                        sftp.chdir(work_dir)
+                        sftp.get(container_log_file, log_file.name)
+
+                    # obfuscate Docker auth info before returning logs to the user
+                    docker_username = environ.get('DOCKER_USERNAME', None)
+                    docker_password = environ.get('DOCKER_PASSWORD', None)
+                    for line in fileinput.input([container_log_path], inplace=True):
+                        if docker_username in line.strip():
+                            line = line.strip().replace(docker_username, '*' * 7, 1)
+                        if docker_password in line.strip():
+                            line = line.strip().replace(docker_password, '*' * 7)
+                        sys.stdout.write(line)
 
         if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED' or job_status == 'TIMEOUT':
             run.completed = now

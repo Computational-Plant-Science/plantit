@@ -1,7 +1,5 @@
 import asyncio
 import json
-from datetime import datetime
-from pathlib import Path
 
 import httpx
 from django.contrib.auth.decorators import login_required
@@ -9,40 +7,27 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 
 from plantit import settings
+from plantit.redis import RedisClient
 from plantit.runs.utils import list_workflows_for_users
 from plantit.utils import get_repo_config, validate_workflow_config, get_repo_readme
+from plantit.workflows.utils import refresh_workflow
 
 
 @login_required
 def list_all(request):
-    more_users_file = settings.MORE_USERS
-    workflows_file = settings.WORKFLOWS_CACHE
-    workflows_path = Path(workflows_file)
-    refresh_minutes = int(settings.WORKFLOWS_REFRESH_MINUTES)
+    redis = RedisClient.get()
+    users = User.objects.all()
 
-    with open(more_users_file, 'r') as file:
-        users = User.objects.all()
+    with open(settings.MORE_USERS, 'r') as file:
         more_users = json.load(file)
         usernames = [user.profile.github_username for user in users] + more_users
+        workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflow/*')]
 
-        if not workflows_path.exists():
-            print(f"Creating workflow cache")
+        if len(workflows) == 0:
+            print(f"Populating workflow cache")
             workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
-            with open(workflows_file, 'w') as file:
-                json.dump(workflows, file)
-        else:
-            now = datetime.now()
-            last_modified = datetime.fromtimestamp(workflows_path.stat().st_ctime)
-            elapsed_minutes = (now - last_modified).total_seconds() / 60.0
-
-            if elapsed_minutes < refresh_minutes:
-                with open(workflows_file, 'r') as file:
-                    workflows = json.load(file)
-            else:
-                print(f"Workflow cache is stale, refreshing")
-                workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
-                with open(workflows_file, 'w') as file:
-                    json.dump(workflows, file)
+            for workflow in workflows:
+                redis.set(f"workflow/{workflow['repo']['owner']['login']}/{workflow['repo']['name']}", json.dumps(workflow))
 
     return JsonResponse({'workflows': workflows})
 
@@ -55,21 +40,22 @@ def list_by_user(request, username):
 
 @login_required
 def get(request, username, name):
-    headers = {
-        "Authorization": f"token {request.user.profile.github_token}",
-        "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-    }
+    redis = RedisClient.get()
+    workflow = redis.get(f"workflow/{username}/{name}")
+    if workflow is not None:
+        return JsonResponse(json.loads(workflow))
+    else:
+        workflow = refresh_workflow(username, name, request.user.profile.github_token)
+        redis.set(f"workflow/{username}/{name}", json.dumps(workflow))
+        return JsonResponse(workflow)
 
-    with httpx.Client(headers=headers) as client:
-        response = client.get(f"https://api.github.com/repos/{username}/{name}")
-        repo = response.json()
-        repo_name = repo['name']
-        repo_owner = repo['owner']['login']
-        return JsonResponse({
-            'repo': repo,
-            'config': get_repo_config(repo_name, repo_owner, request.user.profile.github_token),
-            'readme': get_repo_readme(repo_name, repo_owner, request.user.profile.github_token)
-        })
+
+@login_required
+def refresh(request, username, name):
+    redis = RedisClient.get()
+    workflow = refresh_workflow(username, name, request.user.profile.github_token)
+    redis.set(f"workflow/{username}/{name}", json.dumps(workflow))
+    return JsonResponse(workflow)
 
 
 @login_required

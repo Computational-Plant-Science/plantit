@@ -81,19 +81,6 @@
                                 <b-col align-self="end" class="m-0 p-0">
                                     <h4>
                                         <b-badge
-                                            :variant="
-                                                getRun.is_failure ||
-                                                getRun.is_timeout ||
-                                                getRun.is_cancelled
-                                                    ? 'danger'
-                                                    : getRun.is_success
-                                                    ? 'success'
-                                                    : 'warning'
-                                            "
-                                            class="mr-2"
-                                            >{{ getRun.job_status }}</b-badge
-                                        >
-                                        <b-badge
                                             v-for="tag in getRun.tags"
                                             v-bind:key="tag"
                                             class="mr-2"
@@ -190,17 +177,21 @@
                                         </b-badge>-->
                                         <small> on </small>
                                         <b class="mr-0">{{ getRun.cluster }}</b>
+                                        <b-badge
+                                            :variant="
+                                                getRun.is_failure ||
+                                                getRun.is_timeout ||
+                                                getRun.is_cancelled
+                                                    ? 'danger'
+                                                    : getRun.is_success
+                                                    ? 'success'
+                                                    : 'warning'
+                                            "
+                                            class="ml-2 mr-2"
+                                            >{{ getRun.job_status }}</b-badge
+                                        >
                                     </h5>
                                 </b-col>
-                                <b-col
-                                    md="auto"
-                                    align-self="center"
-                                    class="mb-2"
-                                    ><small>
-                                        Last updated
-                                        {{ prettify(getRun.updated) }}
-                                    </small></b-col
-                                >
                                 <b-col
                                     v-if="
                                         getRun.is_complete && getRun.can_restart
@@ -340,6 +331,20 @@
                                             ></WorkflowBlurb>
                                         </b-card-body>
                                     </b-card>
+                                    <b-row class="m-0 p-0 mt-1">
+                                        <b-col class="m-0 p-0">
+                                            <small>
+                                                Created
+                                                {{ prettify(getRun.created) }}
+                                            </small>
+                                        </b-col>
+                                        <b-col class="m-0 p-0" md="auto">
+                                            <small>
+                                                Last updated
+                                                {{ prettify(getRun.updated) }}
+                                            </small>
+                                        </b-col>
+                                    </b-row>
                                     <b-row class="m-0 p-0 mt-3">
                                         <b-col class="m-0 p-0">
                                             <b-tabs

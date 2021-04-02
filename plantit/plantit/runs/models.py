@@ -4,6 +4,7 @@ from itertools import chain
 from django.conf import settings
 from django.db import models
 from django.forms import model_to_dict
+from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 from taggit.managers import TaggableManager
@@ -32,6 +33,7 @@ class Run(models.Model):
     cluster = models.ForeignKey(Cluster, null=True, blank=True, on_delete=models.SET_NULL)
     work_dir = models.CharField(max_length=100, null=True, blank=True)
     task = models.ForeignKey(PeriodicTask, null=True, blank=True, on_delete=models.CASCADE)
+    results = ArrayField(models.CharField(max_length=250), blank=True, null=True)
 
     def __str__(self):
         opts = self._meta

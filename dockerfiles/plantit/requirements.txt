@@ -37,3 +37,4 @@ channels-redis
 preview-generator
 czifile
 opencv-python
+redis
