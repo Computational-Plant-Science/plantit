@@ -89,6 +89,27 @@
                     </b-row>
                     <br />
                     <b-row
+                        ><b-col md="auto"
+                            ><b-button
+                                :disabled="workflowLoading"
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
+                                v-b-tooltip.hover
+                                title="Refresh Workflow"
+                                @click="refreshWorkflow"
+                            >
+                                <i class="fas fa-redo"></i>
+                                Refresh
+                                <b-spinner
+                                    small
+                                    v-if="workflowLoading"
+                                    label="Refreshing..."
+                                    :variant="
+                                        profile.darkMode ? 'light' : 'dark'
+                                    "
+                                    class="ml-2 mb-1"
+                                ></b-spinner> </b-button></b-col
                         ><b-col md="auto" class="mr-0" align-self="end">
                             <b-input-group>
                                 <template #prepend>
@@ -1403,6 +1424,14 @@ export default {
         this.populateComponents();
     },
     methods: {
+        async refreshWorkflow() {
+          this.workflowLoading = true;
+            await this.$store.dispatch('workflows/refresh', {
+                owner: this.$router.currentRoute.params.username,
+                name: this.$router.currentRoute.params.name
+            });
+            this.workflowLoading = false;
+        },
         deleteDelayed(task) {
             return axios
                 .get(
@@ -1875,7 +1904,7 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
+        ...mapGetters('workflows', ['workflow', 'workflowsLoading', 'workflowsRecentlyRun']),
         getWorkflow() {
             return this.workflow(
                 this.$router.currentRoute.params.username,
