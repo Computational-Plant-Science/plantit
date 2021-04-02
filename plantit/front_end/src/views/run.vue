@@ -349,9 +349,11 @@
                                     <b-row class="m-0 p-0 mt-3">
                                         <b-col class="m-0 p-0">
                                             <b-tabs
+                                                class="mt-2"
+                                                vertical
+                                                pills
                                                 nav-class="bg-transparent"
                                                 active-nav-item-class="bg-secondary text-dark"
-                                                fill
                                             >
                                                 <b-tab
                                                     title="Logs"
@@ -531,7 +533,7 @@
                                                                                   '/'
                                                                                 : ''
                                                                         }}{{
-                                                                            getWorkflow
+                                                                    (getWorkflow
                                                                                 .config
                                                                                 .output
                                                                                 .include
@@ -561,7 +563,7 @@
                                                                                             ', '
                                                                                         )
                                                                                       : [])
-                                                                                : ''
+                                                                                : '') + `, ${getRun.id}.zip`
                                                                         }}{{
                                                                             getWorkflow
                                                                                 .config

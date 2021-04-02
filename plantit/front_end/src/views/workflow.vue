@@ -568,13 +568,15 @@
                                 </b-card>
                                 <!--<b-card
                                     v-if="
-                                        flow &&
-                                            flow.config &&
-                                            flow.config.input !== undefined &&
-                                            flow.config.output.path !==
-                                                undefined
+                                        getWorkflow !== null &&
+                                            getWorkflow.config !== undefined &&
+                                            getWorkflow.config.input !==
+                                                undefined &&
+                                            getWorkflow.config.output !== undefined
                                     "
-                                    :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                                    :bg-variant="
+                                        profile.darkMode ? 'dark' : 'white'
+                                    "
                                     :header-bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
                                     "
@@ -582,8 +584,11 @@
                                     :header-border-variant="
                                         profile.darkMode ? 'dark' : 'white'
                                     "
-                                    :text-variant="profile.darkMode ? 'white' : 'dark'"
+                                    :text-variant="
+                                        profile.darkMode ? 'white' : 'dark'
+                                    "
                                     style="min-width: 50rem"
+                                    class="mb-4"
                                 >
                                     <b-row align-v="center">
                                         <b-col>
@@ -595,26 +600,26 @@
                                                 "
                                             >
                                                 <i
-                                                    v-if="outputDirectory"
+                                                    v-if="outputCollection"
                                                     class="fas fa-upload fa-fw text-warning"
                                                 ></i>
                                                 <i
                                                     v-else-if="
-                                                        !outputDirectory &&
+                                                        !outputCollection &&
                                                             profile.darkMode
                                                     "
                                                     class="fas fa-upload fa-fw text-white"
                                                 ></i>
                                                 <i
                                                     v-else-if="
-                                                        !outputDirectory &&
+                                                        !outputCollection &&
                                                             !profile.darkMode
                                                     "
                                                     class="fas fa-upload fa-fw text-dark"
                                                 ></i>
                                                 Output Sync
                                                 {{
-                                                    outputDirectory
+                                                    outputCollection
                                                         ? ''
                                                         : ' (off)'
                                                 }}
@@ -622,7 +627,7 @@
                                         </b-col>
                                         <b-col md="auto">
                                             <b-form-checkbox
-                                                v-model="outputDirectory"
+                                                v-model="outputSync"
                                                 switch
                                                 size="md"
                                             >
@@ -630,7 +635,7 @@
                                         </b-col>
                                     </b-row>
                                     <runoutput
-                                        v-if="outputDirectory"
+                                        v-if="outputCollection"
                                         :user="user"
                                         v-on:outputSelected="outputSelected"
                                     ></runoutput>
@@ -1306,6 +1311,7 @@ export default {
             },
             inputSelectedPatterns: [],
             outputCollection: false,
+            outputSync: false,
             outputSpecified: false,
             output: {
                 from: '',
@@ -1425,7 +1431,7 @@ export default {
     },
     methods: {
         async refreshWorkflow() {
-          this.workflowLoading = true;
+            this.workflowLoading = true;
             await this.$store.dispatch('workflows/refresh', {
                 owner: this.$router.currentRoute.params.username,
                 name: this.$router.currentRoute.params.name
@@ -1803,7 +1809,7 @@ export default {
             }
             if (this.output !== undefined) {
                 config.output = this.output;
-                if (!this.outputCollection) delete config.output['to'];
+                // if (!this.outputCollection) delete config.output['to'];
             }
 
             // save config
@@ -1904,7 +1910,11 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['workflow', 'workflowsLoading', 'workflowsRecentlyRun']),
+        ...mapGetters('workflows', [
+            'workflow',
+            'workflowsLoading',
+            'workflowsRecentlyRun'
+        ]),
         getWorkflow() {
             return this.workflow(
                 this.$router.currentRoute.params.username,

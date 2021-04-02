@@ -170,39 +170,41 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 script.write(run_commands)
 
             # if we have outputs...
-            if 'output' in flow:
+            if 'output' in flow['config']:
                 # add zip command
-                zip_commands = f"plantit zip {flow['output']['from']}"
-                if 'include' in flow['output']:
-                    if 'patterns' in flow['output']['include']:
-                        zip_commands = zip_commands + ' '.join(['--include_pattern ' + pattern for pattern in flow['output']['include']['patterns']])
-                    if 'names' in flow['output']['include']:
-                        zip_commands = zip_commands + ' '.join(['--include_name ' + pattern for pattern in flow['output']['include']['names']])
-                    if 'patterns' in flow['output']['exclude']:
-                        zip_commands = zip_commands + ' '.join(['--exclude_pattern ' + pattern for pattern in flow['output']['exclude']['patterns']])
-                    if 'names' in flow['output']['exclude']:
-                        zip_commands = zip_commands + ' '.join(['--exclude_name ' + pattern for pattern in flow['output']['exclude']['names']])
+                output = flow['config']['output']
+                zip_commands = f"plantit zip {flow['config']['output']['from']} -o . -n {run.guid}"
+                if 'include' in output:
+                    if 'patterns' in output['include']:
+                        zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"
+                    if 'names' in output['include']:
+                        zip_commands = f"{zip_commands} {' '.join(['--include_name ' + pattern for pattern in output['include']['names']])}"
+                    if 'patterns' in output['exclude']:
+                        zip_commands = f"{zip_commands} {' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])}"
+                    if 'names' in output['exclude']:
+                        zip_commands = f"{zip_commands} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
                 zip_commands += '\n'
+                script.write(zip_commands)
                 logger.info(f"Using zip command: {zip_commands}")
 
                 # add push command if we have a destination
-                if 'to' in flow['output']:
-                    push_commands = f"plantit terrain push {flow['output']['to']}" \
-                                    f" -p {join(run.work_dir, flow['output']['from'])}" \
+                if 'to' in flow['config']['output']:
+                    push_commands = f"plantit terrain push {flow['config']['output']['to']}" \
+                                    f" -p {join(run.work_dir, flow['config']['output']['from'])}" \
                                     f" --plantit_url '{callback_url}'" \
                                     f" --plantit_token '{run.token}'" \
                                     f" --terrain_token {run.user.profile.cyverse_token}"
-                    if 'include' in flow['output']:
-                        if 'patterns' in flow['output']['include']:
+                    if 'include' in flow['config']['output']:
+                        if 'patterns' in flow['config']['output']['include']:
                             push_commands = push_commands + ' '.join(
-                                ['--include_pattern ' + pattern for pattern in flow['output']['include']['patterns']])
-                        if 'names' in flow['output']['include']:
-                            push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in flow['output']['include']['names']])
-                        if 'patterns' in flow['output']['exclude']:
+                                ['--include_pattern ' + pattern for pattern in flow['config']['output']['include']['patterns']])
+                        if 'names' in flow['config']['output']['include']:
+                            push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in flow['config']['output']['include']['names']])
+                        if 'patterns' in flow['config']['output']['exclude']:
                             push_commands = push_commands + ' '.join(
-                                ['--exclude_pattern ' + pattern for pattern in flow['output']['exclude']['patterns']])
-                        if 'names' in flow['output']['exclude']:
-                            push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in flow['output']['exclude']['names']])
+                                ['--exclude_pattern ' + pattern for pattern in flow['config']['output']['exclude']['patterns']])
+                        if 'names' in flow['config']['output']['exclude']:
+                            push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in flow['config']['output']['exclude']['names']])
                     push_commands += '\n'
                     script.write(push_commands)
                     logger.info(f"Using push command: {push_commands}")
@@ -240,6 +242,34 @@ def __submit_run(flow, run: Run, ssh: SSH, file_count: int = None):
             command=f"chmod +x {template_name} && ./{template_name}",
             directory=join(run.cluster.workdir, run.work_dir),
             allow_stderr=True)
+
+        # get container logs
+        work_dir = join(run.cluster.workdir, run.work_dir)
+        ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+        container_log_file = container_log_file_name(run)
+        container_log_path = container_log_file_path(run)
+
+        with ssh_client:
+            with ssh_client.client.open_sftp() as sftp:
+                cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
+                stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
+
+                if not stdout.read().decode().strip() == 'exists':
+                    container_logs = []
+                else:
+                    with open(container_log_file_path(run), 'a+') as log_file:
+                        sftp.chdir(work_dir)
+                        sftp.get(container_log_file, log_file.name)
+
+                    # obfuscate Docker auth info before returning logs to the user
+                    docker_username = environ.get('DOCKER_USERNAME', None)
+                    docker_password = environ.get('DOCKER_PASSWORD', None)
+                    for line in fileinput.input([container_log_path], inplace=True):
+                        if docker_username in line.strip():
+                            line = line.strip().replace(docker_username, '*' * 7, 1)
+                        if docker_password in line.strip():
+                            line = line.strip().replace(docker_password, '*' * 7)
+                        sys.stdout.write(line)
     else:
         command = f"sbatch {template_name}"
         output_lines = execute_command(
@@ -308,6 +338,7 @@ def submit_run(id: str, flow):
                 run.updated = now
                 run.completed = now
                 run.save()
+                list_run_results.s(id).apply_async()
 
                 cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
                 msg = f"Completed run {run.guid}, cleaning up in {cleanup_delay}m"
@@ -565,6 +596,7 @@ def list_run_results(id: str):
 
     included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
         'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
+    included_by_name.append(f"{run.guid}.zip")  # zip file
     if not run.cluster.launcher:
         included_by_name.append(f"{run.guid}.{run.cluster.name.lower()}.log")
     if run.job_id is not None and run.job_id != '':
@@ -599,3 +631,4 @@ def list_run_results(id: str):
                         })
 
     redis.set(f"results/{run.guid}", json.dumps(outputs))
+    update_status(run, f"Found {len(outputs)} result files")

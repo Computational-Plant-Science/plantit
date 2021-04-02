@@ -237,8 +237,6 @@ def map_run_task(task):
 
 
 def map_run(run: Run, get_container_logs: bool = False):
-    work_dir = join(run.cluster.workdir, run.work_dir)
-    ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
     submission_log_file = submission_log_file_path(run)
     container_log_file = container_log_file_path(run)
 
