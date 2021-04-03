@@ -966,44 +966,6 @@
                                                                         align-self="end"
                                                                     >
                                                                         <b-button
-                                                                            id="popover-reactive-1"
-                                                                            :disabled="
-                                                                                !file.exists ||
-                                                                                    (!fileIsImage(
-                                                                                        file.name
-                                                                                    ) &&
-                                                                                        !fileIsText(
-                                                                                            file.name
-                                                                                        ))
-                                                                            "
-                                                                            :variant="
-                                                                                profile.darkMode
-                                                                                    ? 'outline-light'
-                                                                                    : 'white'
-                                                                            "
-                                                                            size="sm"
-                                                                            v-b-tooltip.hover
-                                                                            :title="
-                                                                                'View ' +
-                                                                                    file.name
-                                                                            "
-                                                                            @click="
-                                                                                viewFile(
-                                                                                    file.name
-                                                                                )
-                                                                            "
-                                                                        >
-                                                                            <i
-                                                                                class="fas fa-eye fa-fw"
-                                                                            ></i>
-                                                                            View
-                                                                        </b-button>
-                                                                    </b-col>
-                                                                    <b-col
-                                                                        md="auto"
-                                                                        align-self="end"
-                                                                    >
-                                                                        <b-button
                                                                             :disabled="
                                                                                 !file.exists
                                                                             "
