@@ -11,7 +11,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonResponse, HttpResponse
+from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonResponse, HttpResponse, StreamingHttpResponse
 from django.utils import timezone
 from rest_framework.decorators import api_view
 from preview_generator.manager import PreviewManager
@@ -301,10 +301,6 @@ def get_thumbnail(request):
     with client:
         with client.client.open_sftp() as sftp:
             stdin, stdout, stderr = client.client.exec_command(f"test -e {join(session.workdir, file)} && echo exists")
-            errs = stderr.read()
-            if errs:
-                raise Exception(f"Failed to check existence of {file}: {errs}")
-
             manager = PreviewManager(join(settings.MEDIA_ROOT, session.guid), create_folder=True)
 
             if file.endswith('txt') or \
@@ -321,20 +317,14 @@ def get_thumbnail(request):
                     preview_file = manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                     with open(preview_file, 'rb') as preview:
                         return HttpResponse(preview, content_type="image/jpg")
-            # elif file.endswith('ply'):
-            #     with tempfile.NamedTemporaryFile() as temp_file:
-            #         print(f"Creating preview for {file_name}")
-            #         sftp.chdir(session.workdir)
-            #         sftp.get(file, temp_file.name)
-            #         preview = manager.get_jpeg_preview(temp_file.name)
-            #         with open(preview, 'rb') as preview_file:
-            #             return HttpResponse(preview_file, content_type="image/jpg")
-            elif file.endswith('png') or file.endswith('jpg') or file.endswith('jpeg'):
-                with tempfile.NamedTemporaryFile() as temp_file:
-                    print(f"Creating thumbnail for {file_name}")
-                    sftp.chdir(session.workdir)
-                    sftp.get(file, temp_file.name)
-                    return HttpResponse(temp_file, content_type="image/png")
+            elif file.endswith('png'):
+                sftp.chdir(session.workdir)
+                with sftp.open(file, 'rb') as image_file:
+                    return HttpResponse(image_file, content_type="image/png")
+            elif file.endswith('jpg') or file.endswith('jpeg'):
+                sftp.chdir(session.workdir)
+                with sftp.open(file, 'rb') as image_file:
+                    return HttpResponse(image_file, content_type="image/jpeg")
             elif file.endswith('czi'):
                 with tempfile.NamedTemporaryFile() as temp_file:
                     print(f"Creating thumbnail for {file_name}")
@@ -349,43 +339,10 @@ def get_thumbnail(request):
                 with tempfile.NamedTemporaryFile() as temp_file:
                     sftp.chdir(session.workdir)
                     sftp.get(file, temp_file.name)
-                    # preview = manager.get_jpeg_preview(temp_file.name, width=200, height=200)
-                    # with open(preview, 'rb') as preview_file:
-                    #     return HttpResponse(preview_file, content_type="image/jpg")
                     return HttpResponse(temp_file, content_type="applications/octet-stream")
             else:
                 with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
                     return HttpResponse(thumbnail, content_type="image/png")
-
-            # if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
-            #     with tempfile.NamedTemporaryFile() as temp_file:
-            #         sftp.chdir(session.workdir)
-            #         sftp.get(file, temp_file.name)
-            #         with tempfile.NamedTemporaryFile() as tf:
-            #             sftp.chdir(session.workdir)
-            #             sftp.get(file, tf.name)
-            #             with open(tf.name, 'r') as file:
-            #                 lines = file.readlines()
-            #                 return HttpResponse(lines, content_type='text/plain')
-
-            # if Path(thumbnail_path).exists():
-            #     print(f"Using existing thumbnail: {thumbnail_path}")
-            #     return redirect(thumbnail_path)
-            #     # thumbnail = open(thumbnail_path, 'rb')
-            # else:
-            #     with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
-            #         print(f"Creating new thumbnail: {thumbnail_path}")
-            #         sftp.chdir(session.workdir)
-            #         sftp.get(file, temp_file.name)
-            #         thumbnail = Thumbnail(source=temp_file).generate()
-            #         thumbnail_file.write(thumbnail.read())
-
-            # if thumbnail_name_lower.endswith('png'):
-            #     return HttpResponse(thumbnail, content_type="image/png")
-            # elif thumbnail_name_lower.endswith('jpg') or thumbnail_name_lower.endswith('jpeg'):
-            #     return HttpResponse(thumbnail, content_type="image/jpg")
-            # else:
-            #     return HttpResponseNotFound()
 
 
 @api_view(['POST'])

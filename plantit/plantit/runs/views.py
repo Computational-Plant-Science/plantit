@@ -4,6 +4,8 @@ from os.path import join
 from pathlib import Path
 
 from celery.result import AsyncResult
+from cv2 import cv2
+from czifile import czifile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
@@ -11,6 +13,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django_celery_beat.models import IntervalSchedule
+from preview_generator.manager import PreviewManager
 from rest_framework.decorators import api_view
 
 from plantit import settings
@@ -70,67 +73,65 @@ def list_outputs(request, id):
     return JsonResponse({'outputs': json.loads(result) if result is not None else []})
 
 
-
 @api_view(['GET'])
 @login_required
-def get_thumbnail(request, id, file):
+def get_thumbnail(request, id):
+    user = request.user
+    path = request.GET.get('path')
+    file = path.rpartition('/')[2]
     try:
         run = Run.objects.get(guid=id)
-    except Run.DoesNotExist:
+    except:
         return HttpResponseNotFound()
 
-    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
     work_dir = join(run.cluster.workdir, run.work_dir)
+    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
 
     with client:
         with client.client.open_sftp() as sftp:
             stdin, stdout, stderr = client.client.exec_command(f"test -e {join(work_dir, file)} && echo exists")
-            errs = stderr.read()
-            # if errs:
-            #     raise Exception(f"Failed to check existence of {file}: {errs}")
+            manager = PreviewManager(join(settings.MEDIA_ROOT, run.guid), create_folder=True)
 
-            run_dir = join(settings.MEDIA_ROOT, run.guid)
-            thumbnail_path = join(run_dir, file)
-            thumbnail_name_lower = file.lower()
-
-            # make thumbnail directory for this run if it does not already exist
-            Path(run_dir).mkdir(exist_ok=True, parents=True)
-
-            if file.endswith('txt') or file.endswith('csv') or file.endswith('yml') or file.endswith('yaml') or file.endswith('tsv') or file.endswith('out') or file.endswith('err') or file.endswith('log'):
-                with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
+            if file.endswith('txt') or \
+                    file.endswith('csv') or \
+                    file.endswith('yml') or \
+                    file.endswith('yaml') or \
+                    file.endswith('tsv') or \
+                    file.endswith('out') or \
+                    file.endswith('err') or \
+                    file.endswith('log'):
+                with tempfile.NamedTemporaryFile() as temp_file:
                     sftp.chdir(work_dir)
                     sftp.get(file, temp_file.name)
-                    with tempfile.NamedTemporaryFile() as tf:
-                        sftp.chdir(work_dir)
-                        sftp.get(file, tf.name)
-                        with open(tf.name, 'r') as file:
-                            lines = file.readlines()
-                            return HttpResponse(lines, content_type='text/plain')
-
-            with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
-                print(f"Creating new thumbnail: {thumbnail_path}")
+                    preview_file = manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                    with open(preview_file, 'rb') as preview:
+                        return HttpResponse(preview, content_type="image/jpg")
+            elif file.endswith('png'):
                 sftp.chdir(work_dir)
-                sftp.get(file, temp_file.name)
-                return HttpResponse(temp_file, content_type="image/png")
-
-            if Path(thumbnail_path).exists():
-                print(f"Using existing thumbnail: {thumbnail_path}")
-                return redirect(thumbnail_path)
-                # thumbnail = open(thumbnail_path, 'rb')
-            else:
-                with tempfile.NamedTemporaryFile() as temp_file, open(thumbnail_path, 'wb') as thumbnail_file:
-                    print(f"Creating new thumbnail: {thumbnail_path}")
+                with sftp.open(file, 'rb') as image_file:
+                    return HttpResponse(image_file, content_type="image/png")
+            elif file.endswith('jpg') or file.endswith('jpeg'):
+                sftp.chdir(work_dir)
+                with sftp.open(file, 'rb') as image_file:
+                    return HttpResponse(image_file, content_type="image/jpeg")
+            elif file.endswith('czi'):
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    print(f"Creating thumbnail for {file}")
                     sftp.chdir(work_dir)
                     sftp.get(file, temp_file.name)
-                    thumbnail = Thumbnail(source=temp_file).generate()
-                    thumbnail_file.write(thumbnail.read())
-
-            if thumbnail_name_lower.endswith('png'):
-                return HttpResponse(thumbnail, content_type="image/png")
-            elif thumbnail_name_lower.endswith('jpg') or thumbnail_name_lower.endswith('jpeg'):
-                return HttpResponse(thumbnail, content_type="image/jpg")
+                    image = czifile.imread(temp_file.name)
+                    image.shape = (image.shape[2], image.shape[3], image.shape[4])
+                    success, buffer = cv2.imencode(".jpg", image)
+                    buffer.tofile(temp_file.name)
+                    return HttpResponse(temp_file, content_type="image/png")
+            elif file.endswith('ply'):
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    sftp.chdir(work_dir)
+                    sftp.get(file, temp_file.name)
+                    return HttpResponse(temp_file, content_type="applications/octet-stream")
             else:
-                return HttpResponseNotFound()
+                with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
+                    return HttpResponse(thumbnail, content_type="image/png")
 
 
 @api_view(['GET'])

@@ -1031,60 +1031,6 @@
                                                             </b-button>
                                                         </b-col></b-row
                                                     >
-                                                    <b-modal
-                                                        :id="'delete ' + run.id"
-                                                        :title-class="
-                                                            profile.darkMode
-                                                                ? 'text-white'
-                                                                : 'text-dark'
-                                                        "
-                                                        centered
-                                                        close
-                                                        :header-text-variant="
-                                                            profile.darkMode
-                                                                ? 'white'
-                                                                : 'dark'
-                                                        "
-                                                        :header-bg-variant="
-                                                            profile.darkMode
-                                                                ? 'dark'
-                                                                : 'white'
-                                                        "
-                                                        :footer-bg-variant="
-                                                            profile.darkMode
-                                                                ? 'dark'
-                                                                : 'white'
-                                                        "
-                                                        :body-bg-variant="
-                                                            profile.darkMode
-                                                                ? 'dark'
-                                                                : 'white'
-                                                        "
-                                                        :header-border-variant="
-                                                            profile.darkMode
-                                                                ? 'dark'
-                                                                : 'white'
-                                                        "
-                                                        :footer-border-variant="
-                                                            profile.darkMode
-                                                                ? 'dark'
-                                                                : 'white'
-                                                        "
-                                                        ok-variant="outline-danger"
-                                                        title="Delete this run?"
-                                                        @ok="onDelete(run)"
-                                                    >
-                                                        <p
-                                                            :class="
-                                                                profile.darkMode
-                                                                    ? 'text-light'
-                                                                    : 'text-dark'
-                                                            "
-                                                        >
-                                                            This cannot be
-                                                            undone.
-                                                        </p>
-                                                    </b-modal>
                                                 </b-list-group-item>
                                             </b-list-group>
                                         </b-col>
@@ -1099,29 +1045,6 @@
                                                 variant="secondary"
                                             ></b-spinner
                                         ></b-col>
-                                        <!--<b-col
-                            v-else-if="completedRuns.length > 0"
-                            class="m-0 pl-0 pr-0 text-center"
-                        >
-                            <b-nav vertical class="m-0 p-0">
-                                <b-nav-item class="m-0 p-0">
-                                    <b-button
-                                        :variant="
-                                            profile.darkMode ? 'dark' : 'light'
-                                        "
-                                        :disabled="runsLoading"
-                                        block
-                                        class="text-center m-0"
-                                        @click="loadRuns(currentRunPage + 1)"
-                                    >
-                                        <i
-                                            class="fas fa-chevron-down fa-fw"
-                                        ></i>
-                                        Load More
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                        </b-col>-->
                                         <b-col
                                             v-if="
                                                 !runsLoading &&

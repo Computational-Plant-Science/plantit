@@ -509,9 +509,11 @@
                                                             "
                                                             align-h="center"
                                                             align-v="center"
-                                                            class="mt-2 text-center"
+                                                            class="mt-2"
                                                         >
-                                                            <b-col>
+                                                            <b-col
+                                                                class="text-left"
+                                                            >
                                                                 Expected:
                                                                 <br />
                                                                 <b
@@ -533,7 +535,7 @@
                                                                                   '/'
                                                                                 : ''
                                                                         }}{{
-                                                                    (getWorkflow
+                                                                            (getWorkflow
                                                                                 .config
                                                                                 .output
                                                                                 .include
@@ -563,7 +565,8 @@
                                                                                             ', '
                                                                                         )
                                                                                       : [])
-                                                                                : '') + `, ${getRun.id}.zip`
+                                                                                : '') +
+                                                                                `, ${getRun.id}.zip`
                                                                         }}{{
                                                                             getWorkflow
                                                                                 .config
@@ -595,6 +598,117 @@
                                                                     </code></b
                                                                 >
                                                             </b-col>
+                                                            <b-col
+                                                                md="auto"
+                                                                align-self="end"
+                                                            >
+                                                                <b-dropdown
+                                                                    :disabled="
+                                                                        outputFiles !==
+                                                                            null &&
+                                                                            outputFiles.length ===
+                                                                                0
+                                                                    "
+                                                                    class="text-right"
+                                                                    :text="
+                                                                        outputPageSize
+                                                                    "
+                                                                    dropleft
+                                                                    :title="
+                                                                        'Showing ' +
+                                                                            outputPageSize +
+                                                                            ' files per page'
+                                                                    "
+                                                                    v-b-tooltip.hover
+                                                                    :variant="
+                                                                        profile.darkMode
+                                                                            ? 'outline-light'
+                                                                            : 'white'
+                                                                    "
+                                                                >
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            setOutputFilesPageSize(
+                                                                                10
+                                                                            )
+                                                                        "
+                                                                        >10</b-dropdown-item
+                                                                    >
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            setOutputFilesPageSize(
+                                                                                20
+                                                                            )
+                                                                        "
+                                                                        >20</b-dropdown-item
+                                                                    >
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            setOutputFilesPageSize(
+                                                                                50
+                                                                            )
+                                                                        "
+                                                                        >50</b-dropdown-item
+                                                                    >
+                                                                </b-dropdown>
+                                                            </b-col>
+                                                            <b-col
+                                                                md="auto"
+                                                                align-self="end"
+                                                                ><b-dropdown
+                                                                    :disabled="
+                                                                        outputFiles !==
+                                                                            null &&
+                                                                            outputFiles.length ===
+                                                                                0
+                                                                    "
+                                                                    v-b-tooltip.hover
+                                                                    :title="
+                                                                        'Using ' +
+                                                                            viewMode +
+                                                                            ' view'
+                                                                    "
+                                                                    dropleft
+                                                                    :variant="
+                                                                        profile.darkMode
+                                                                            ? 'outline-light'
+                                                                            : 'white'
+                                                                    "
+                                                                    class="text-right"
+                                                                >
+                                                                    <template
+                                                                        #button-content
+                                                                    >
+                                                                        {{
+                                                                            viewMode
+                                                                        }}
+                                                                    </template>
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            setViewMode(
+                                                                                'List'
+                                                                            )
+                                                                        "
+                                                                        >List</b-dropdown-item
+                                                                    >
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            setViewMode(
+                                                                                'Grid'
+                                                                            )
+                                                                        "
+                                                                        >Grid</b-dropdown-item
+                                                                    >
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            setViewMode(
+                                                                                'Carousel'
+                                                                            )
+                                                                        "
+                                                                        >Carousel</b-dropdown-item
+                                                                    >
+                                                                </b-dropdown></b-col
+                                                            >
                                                             <br />
                                                             <br />
                                                         </b-row>
@@ -667,55 +781,6 @@
                                                                     ></b-form-input>
                                                                 </b-input-group>
                                                             </b-col>
-                                                            <b-col
-                                                                md="auto"
-                                                                align-self="middle"
-                                                            >
-                                                                <b-dropdown
-                                                                    class="m-3"
-                                                                    :text="
-                                                                        outputPageSize
-                                                                    "
-                                                                    dropleft
-                                                                    :title="
-                                                                        'Showing ' +
-                                                                            outputPageSize +
-                                                                            ' files per page'
-                                                                    "
-                                                                    v-b-tooltip.hover
-                                                                    :variant="
-                                                                        profile.darkMode
-                                                                            ? 'outline-light'
-                                                                            : 'white'
-                                                                    "
-                                                                    size="sm"
-                                                                >
-                                                                    <b-dropdown-item
-                                                                        @click="
-                                                                            setOutputFilesPageSize(
-                                                                                10
-                                                                            )
-                                                                        "
-                                                                        >10</b-dropdown-item
-                                                                    >
-                                                                    <b-dropdown-item
-                                                                        @click="
-                                                                            setOutputFilesPageSize(
-                                                                                20
-                                                                            )
-                                                                        "
-                                                                        >20</b-dropdown-item
-                                                                    >
-                                                                    <b-dropdown-item
-                                                                        @click="
-                                                                            setOutputFilesPageSize(
-                                                                                50
-                                                                            )
-                                                                        "
-                                                                        >50</b-dropdown-item
-                                                                    >
-                                                                </b-dropdown>
-                                                            </b-col>
                                                         </b-row>
                                                         <b-row
                                                             class="pl-1 pr-1 pb-1"
@@ -730,232 +795,447 @@
                                                                 variant="secondary"
                                                             ></b-spinner>
                                                         </b-row>
-                                                        <b-row
-                                                            v-else
-                                                            id="outputList"
-                                                            v-for="file in filteredResults"
-                                                            v-bind:key="file"
-                                                            class="p-1"
-                                                            style="border-top: 1px solid rgba(211, 211, 211, .5);"
-                                                        >
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
+                                                        <div v-else>
+                                                            <div
                                                                 v-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'txt'
-                                                                        ) ||
+                                                                    viewMode ===
+                                                                        'List'
+                                                                "
+                                                            >
+                                                                <b-row
+                                                                    id="outputList"
+                                                                    v-for="file in filteredResults"
+                                                                    v-bind:key="
                                                                         file.name
-                                                                            .toLowerCase()
-                                                                            .endsWith(
-                                                                                'log'
-                                                                            )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-alt fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'csv'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-csv fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'zip'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-archive fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'xlsx'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-excel fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .endsWith(
-                                                                            'pdf'
-                                                                        )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file-pdf fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else-if="
-                                                                    file.name
-                                                                        .toLowerCase()
-                                                                        .includes(
-                                                                            'png'
-                                                                        ) ||
-                                                                        file.name
-                                                                            .toLowerCase()
-                                                                            .includes(
-                                                                                'jpg'
-                                                                            ) ||
-                                                                        file.name
-                                                                            .toLowerCase()
-                                                                            .includes(
-                                                                                'jpeg'
-                                                                            )
-                                                                "
-                                                            >
-                                                                <i
-                                                                    class="far fa-file-image fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                md="auto"
-                                                                v-else
-                                                            >
-                                                                <i
-                                                                    class="fas fa-file fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                md="auto"
-                                                                align-self="end"
-                                                                class="text-left"
-                                                                style="position: relative; top: -5px; left: -40px"
-                                                            >
-                                                                <b-spinner
-                                                                    class="m-0 p-0"
-                                                                    v-if="
-                                                                        !file.exists &&
-                                                                            !getRun.is_complete
                                                                     "
-                                                                    type="grow"
-                                                                    small
-                                                                    variant="warning"
-                                                                ></b-spinner>
-                                                                <i
-                                                                    v-else-if="
-                                                                        !file.exists &&
-                                                                            getRun.is_complete
-                                                                    "
-                                                                    class="far fa-times-circle text-danger fa-fw"
-                                                                ></i>
-                                                                <i
-                                                                    v-else
-                                                                    class="fas fa-check text-success fa-fw"
-                                                                ></i>
-                                                            </b-col>
-                                                            <b-col
-                                                                align-self="end"
-                                                                class="text-left"
-                                                            >
-                                                                {{ file.name }}
-                                                            </b-col>
-                                                            <b-col
-                                                                md="auto"
-                                                                align-self="end"
-                                                            >
-                                                                <b-button
-                                                                    id="popover-reactive-1"
-                                                                    :disabled="
-                                                                        !file.exists ||
-                                                                            (!fileIsImage(
+                                                                    class="p-1"
+                                                                    style="border-top: 1px solid rgba(211, 211, 211, .5);"
+                                                                >
+                                                                    <b-col
+                                                                        align-self="end"
+                                                                        md="auto"
+                                                                        v-if="
+                                                                            file.name
+                                                                                .toLowerCase()
+                                                                                .endsWith(
+                                                                                    'txt'
+                                                                                ) ||
                                                                                 file.name
-                                                                            ) &&
-                                                                                !fileIsText(
+                                                                                    .toLowerCase()
+                                                                                    .endsWith(
+                                                                                        'log'
+                                                                                    )
+                                                                        "
+                                                                    >
+                                                                        <i
+                                                                            class="fas fa-file-alt fa-fw"
+                                                                        ></i>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        align-self="end"
+                                                                        md="auto"
+                                                                        v-else-if="
+                                                                            file.name
+                                                                                .toLowerCase()
+                                                                                .endsWith(
+                                                                                    'csv'
+                                                                                )
+                                                                        "
+                                                                    >
+                                                                        <i
+                                                                            class="fas fa-file-csv fa-fw"
+                                                                        ></i>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        align-self="end"
+                                                                        md="auto"
+                                                                        v-else-if="
+                                                                            file.name
+                                                                                .toLowerCase()
+                                                                                .endsWith(
+                                                                                    'zip'
+                                                                                )
+                                                                        "
+                                                                    >
+                                                                        <i
+                                                                            class="fas fa-file-archive fa-fw"
+                                                                        ></i>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        align-self="end"
+                                                                        md="auto"
+                                                                        v-else-if="
+                                                                            file.name
+                                                                                .toLowerCase()
+                                                                                .endsWith(
+                                                                                    'xlsx'
+                                                                                )
+                                                                        "
+                                                                    >
+                                                                        <i
+                                                                            class="fas fa-file-excel fa-fw"
+                                                                        ></i>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        align-self="end"
+                                                                        md="auto"
+                                                                        v-else-if="
+                                                                            file.name
+                                                                                .toLowerCase()
+                                                                                .endsWith(
+                                                                                    'pdf'
+                                                                                )
+                                                                        "
+                                                                    >
+                                                                        <i
+                                                                            class="fas fa-file-pdf fa-fw"
+                                                                        ></i>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        align-self="end"
+                                                                        md="auto"
+                                                                        v-else-if="
+                                                                            file.name
+                                                                                .toLowerCase()
+                                                                                .includes(
+                                                                                    'png'
+                                                                                ) ||
+                                                                                file.name
+                                                                                    .toLowerCase()
+                                                                                    .includes(
+                                                                                        'jpg'
+                                                                                    ) ||
+                                                                                file.name
+                                                                                    .toLowerCase()
+                                                                                    .includes(
+                                                                                        'jpeg'
+                                                                                    )
+                                                                        "
+                                                                    >
+                                                                        <i
+                                                                            class="far fa-file-image fa-fw"
+                                                                        ></i>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        align-self="end"
+                                                                        md="auto"
+                                                                        v-else
+                                                                    >
+                                                                        <i
+                                                                            class="fas fa-file fa-fw"
+                                                                        ></i>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        align-self="end"
+                                                                        class="text-left"
+                                                                        style="position: relative; top: -5px; left: -40px"
+                                                                    >
+                                                                        <b-spinner
+                                                                            class="m-0 p-0"
+                                                                            v-if="
+                                                                                !file.exists &&
+                                                                                    !getRun.is_complete
+                                                                            "
+                                                                            type="grow"
+                                                                            small
+                                                                            variant="warning"
+                                                                        ></b-spinner>
+                                                                        <i
+                                                                            v-else-if="
+                                                                                !file.exists &&
+                                                                                    getRun.is_complete
+                                                                            "
+                                                                            class="far fa-times-circle text-danger fa-fw"
+                                                                        ></i>
+                                                                        <i
+                                                                            v-else
+                                                                            class="fas fa-check text-success fa-fw"
+                                                                        ></i>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        align-self="end"
+                                                                        class="text-left"
+                                                                    >
+                                                                        {{
+                                                                            file.name
+                                                                        }}
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        align-self="end"
+                                                                    >
+                                                                        <b-button
+                                                                            id="popover-reactive-1"
+                                                                            :disabled="
+                                                                                !file.exists ||
+                                                                                    (!fileIsImage(
+                                                                                        file.name
+                                                                                    ) &&
+                                                                                        !fileIsText(
+                                                                                            file.name
+                                                                                        ))
+                                                                            "
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'outline-light'
+                                                                                    : 'white'
+                                                                            "
+                                                                            size="sm"
+                                                                            v-b-tooltip.hover
+                                                                            :title="
+                                                                                'View ' +
                                                                                     file.name
-                                                                                ))
-                                                                    "
-                                                                    :variant="
-                                                                        profile.darkMode
-                                                                            ? 'outline-light'
-                                                                            : 'white'
-                                                                    "
-                                                                    size="sm"
-                                                                    v-b-tooltip.hover
-                                                                    :title="
-                                                                        'View ' +
-                                                                            file.name
-                                                                    "
-                                                                    @click="
-                                                                        viewFile(
-                                                                            file.name
-                                                                        )
-                                                                    "
-                                                                >
-                                                                    <i
-                                                                        class="fas fa-eye fa-fw"
-                                                                    ></i>
-                                                                    View
-                                                                </b-button>
-                                                            </b-col>
-                                                            <b-col
-                                                                md="auto"
-                                                                align-self="end"
+                                                                            "
+                                                                            @click="
+                                                                                viewFile(
+                                                                                    file.name
+                                                                                )
+                                                                            "
+                                                                        >
+                                                                            <i
+                                                                                class="fas fa-eye fa-fw"
+                                                                            ></i>
+                                                                            View
+                                                                        </b-button>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        align-self="end"
+                                                                    >
+                                                                        <b-button
+                                                                            :disabled="
+                                                                                !file.exists
+                                                                            "
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'outline-light'
+                                                                                    : 'white'
+                                                                            "
+                                                                            size="sm"
+                                                                            v-b-tooltip.hover
+                                                                            :title="
+                                                                                'Download ' +
+                                                                                    file.name
+                                                                            "
+                                                                            @click="
+                                                                                downloadFile(
+                                                                                    file.name
+                                                                                )
+                                                                            "
+                                                                        >
+                                                                            <i
+                                                                                class="fas fa-download fa-fw"
+                                                                            ></i>
+                                                                            Download
+                                                                        </b-button>
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </div>
+                                                            <b-card-group
+                                                                v-else-if="
+                                                                    viewMode ===
+                                                                        'Grid'
+                                                                "
+                                                                columns
                                                             >
-                                                                <b-button
-                                                                    :disabled="
-                                                                        !file.exists
-                                                                    "
-                                                                    :variant="
-                                                                        profile.darkMode
-                                                                            ? 'outline-light'
-                                                                            : 'white'
-                                                                    "
-                                                                    size="sm"
-                                                                    v-b-tooltip.hover
-                                                                    :title="
-                                                                        'Download ' +
-                                                                            file.name
-                                                                    "
-                                                                    @click="
-                                                                        downloadFile(
+                                                                <b-card
+                                                                    :img-src="
+                                                                        fileIs3dModel(
                                                                             file.name
                                                                         )
+                                                                            ? require('../assets/no_preview_thumbnail.png')
+                                                                            : `/apis/v1/runs/${$router.currentRoute.params.id}/thumbnail/?path=${file.path}`
+                                                                    "
+                                                                    v-for="file in outputFiles"
+                                                                    v-bind:key="
+                                                                        file.name
+                                                                    "
+                                                                    style="min-width: 20rem;"
+                                                                    class="overflow-hidden mb-4 mr-4 text-left"
+                                                                    :bg-variant="
+                                                                        profile.darkMode
+                                                                            ? 'dark'
+                                                                            : 'white'
+                                                                    "
+                                                                    :header-bg-variant="
+                                                                        profile.darkMode
+                                                                            ? 'dark'
+                                                                            : 'white'
+                                                                    "
+                                                                    border-variant="default"
+                                                                    :header-border-variant="
+                                                                        profile.darkMode
+                                                                            ? 'secondary'
+                                                                            : 'default'
+                                                                    "
+                                                                    :text-variant="
+                                                                        profile.darkMode
+                                                                            ? 'white'
+                                                                            : 'dark'
                                                                     "
                                                                 >
-                                                                    <i
-                                                                        class="fas fa-download fa-fw"
-                                                                    ></i>
-                                                                    Download
-                                                                </b-button>
-                                                            </b-col>
-                                                        </b-row>
+                                                                    <p
+                                                                        :class="
+                                                                            profile.darkMode
+                                                                                ? 'text-light'
+                                                                                : 'text-dark'
+                                                                        "
+                                                                    >
+                                                                        <b>{{
+                                                                            file.name
+                                                                        }}</b>
+                                                                        <br />
+                                                                    </p>
+                                                                    <hr />
+                                                                    <b-button
+                                                                        :title="
+                                                                            `Download ${file.name}`
+                                                                        "
+                                                                        v-b-tooltip.hover
+                                                                        :variant="
+                                                                            profile.darkMode
+                                                                                ? 'outline-light'
+                                                                                : 'white'
+                                                                        "
+                                                                        class="text-left m-0"
+                                                                        @click="
+                                                                            downloadFile(
+                                                                                file
+                                                                            )
+                                                                        "
+                                                                    >
+                                                                        <i
+                                                                            class="fas fa-download fa-fw"
+                                                                        ></i>
+                                                                    </b-button>
+                                                                </b-card>
+                                                            </b-card-group>
+                                                            <b-carousel
+                                                                v-show="
+                                                                    viewMode ===
+                                                                        'Carousel'
+                                                                "
+                                                                v-model="
+                                                                    currentCarouselSlide
+                                                                "
+                                                                controls
+                                                                :interval="0"
+                                                                @sliding-end="
+                                                                    slide =>
+                                                                        renderPreview(
+                                                                            outputFiles[
+                                                                                slide
+                                                                            ]
+                                                                        )
+                                                                "
+                                                            >
+                                                                <b-carousel-slide
+                                                                    v-for="file in outputFiles"
+                                                                    v-bind:key="
+                                                                        file.name
+                                                                    "
+                                                                    :img-src="
+                                                                        fileIsImage(
+                                                                            file.name
+                                                                        )
+                                                                            ? `/apis/v1/runs/${$router.currentRoute.params.id}/thumbnail/?path=${file.path}`
+                                                                            : ''
+                                                                    "
+                                                                    ><template
+                                                                        v-if="
+                                                                                fileIs3dModel(
+                                                                                    file.name
+                                                                                )
+                                                                        "
+                                                                        #img
+                                                                        ><div
+                                                                            :id="
+                                                                                file.name
+                                                                            "
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'theme-container-dark'
+                                                                                    : 'theme-container-light'
+                                                                            "
+                                                                            style="min-height: 50rem;white-space: pre-line;"
+                                                                        >
+                                                                            {{
+                                                                                file.textContent
+                                                                            }}
+                                                                        </div></template
+                                                                    >
+                                                                    <template
+                                                                        v-else-if="
+                                                                            !fileIsImage(
+                                                                                file.name
+                                                                            )
+                                                                        "
+                                                                        #img
+                                                                        ><div
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'theme-container-dark'
+                                                                                    : 'theme-container-light'
+                                                                            "
+                                                                            style="min-height: 50rem;white-space: pre-line;"
+                                                                        >
+                                                                        <b-img :src="require('../assets/no_preview_thumbnail.png')"></b-img>
+                                                                            </div
+                                                                    ></template>
+                                                                    <template
+                                                                        #default
+                                                                        ><b-row
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'theme-container-dark p-3'
+                                                                                    : 'theme-container-light p-3'
+                                                                            "
+                                                                            style="opacity: 0.9;"
+                                                                        >
+                                                                            <b-col
+                                                                                class="text-left"
+                                                                            >
+                                                                                <h5
+                                                                                    :class="
+                                                                                        profile.darkMode
+                                                                                            ? 'text-light'
+                                                                                            : 'text-dark'
+                                                                                    "
+                                                                                >
+                                                                                    {{
+                                                                                        file.name
+                                                                                    }}
+                                                                                </h5>
+                                                                            </b-col>
+                                                                            <b-col
+                                                                                md="auto"
+                                                                                align-self="end"
+                                                                            >
+                                                                                <b-button
+                                                                                    :title="
+                                                                                        `Download ${file.name}`
+                                                                                    "
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'outline-light'
+                                                                                            : 'white'
+                                                                                    "
+                                                                                    class="text-right m-0"
+                                                                                    @click="
+                                                                                        downloadFile(
+                                                                                            file
+                                                                                        )
+                                                                                    "
+                                                                                >
+                                                                                    <i
+                                                                                        class="fas fa-download fa-fw"
+                                                                                    ></i>
+                                                                                </b-button>
+                                                                            </b-col> </b-row></template
+                                                                ></b-carousel-slide>
+                                                            </b-carousel>
+                                                        </div>
                                                         <!--<b-row class="pl-1 pr-1 pb-1">
                                         <b-col
                                             class="text-right"
@@ -1206,6 +1486,9 @@ import moment from 'moment';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
+import * as THREE from 'three';
+import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export default {
     name: 'run',
@@ -1214,6 +1497,8 @@ export default {
     },
     data() {
         return {
+            currentCarouselSlide: 0,
+            viewMode: 'List',
             resultSearchText: '',
             resubmitted: false,
             cancelled: false,
@@ -1250,6 +1535,220 @@ export default {
         };
     },
     methods: {
+        prettifyShort: function(date) {
+            return `${moment(date).fromNow()}`;
+        },
+        fileIsImage(file) {
+            return (
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'png' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpg' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'jpeg' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'czi'
+            );
+        },
+        fileIsText(file) {
+            return (
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'txt' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'csv' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'tsv' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'yml' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'yaml' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'log' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'out' ||
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'err'
+            );
+        },
+        fileIs3dModel(file) {
+            return (
+                file
+                    .toLowerCase()
+                    .split('.')
+                    .pop() === 'ply'
+            );
+        },
+        renderPreview(f) {
+            var camera = new THREE.PerspectiveCamera(
+                35,
+                window.innerWidth / window.innerHeight,
+                1,
+                15
+            );
+            // camera.position.set(3, 0.15, 3);
+            camera.position.z = 2;
+            camera.zoom = 0.5;
+
+            var cameraTarget = new THREE.Vector3(0, -0.1, 0);
+
+            var scene = new THREE.Scene();
+            // scene.background = new THREE.Color(0x72645b);
+            scene.fog = new THREE.Fog(0x72645b, 2, 15);
+
+            const loader = new PLYLoader();
+            var comp = this;
+            loader.load(
+                `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/?path=${f.name}`,
+                function(geometry) {
+                    geometry.computeVertexNormals();
+
+                    // const material = new THREE.MeshStandardMaterial({
+                    //     color: 0x0055ff,
+                    //     flatShading: true
+                    // });
+                    const material = new THREE.PointsMaterial({
+                        // color: 0x0055ff,
+                        size: 0.005,
+                        vertexColors: THREE.VertexColors
+                    });
+                    const mesh = new THREE.Points(geometry, material);
+                    //const mesh = new THREE.Mesh(geometry, material);
+                    // const mesh = new THREE.Mesh(geometry);
+
+                    mesh.position.y = -0.3;
+                    // mesh.position.z = 0.3;
+                    mesh.rotation.x = -Math.PI / 2;
+                    mesh.scale.multiplyScalar(0.5);
+
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+
+                    comp.currentModel.geometry = geometry;
+                    comp.currentModel.material = material;
+                    comp.currentModel.mesh = mesh;
+
+                    scene.add(mesh);
+                }
+            );
+
+            // Lights
+
+            scene.add(new THREE.HemisphereLight(0x443333, 0x111122));
+
+            var addShadowedLight = function(x, y, z, color, intensity) {
+                const directionalLight = new THREE.DirectionalLight(
+                    color,
+                    intensity
+                );
+                directionalLight.position.set(x, y, z);
+                scene.add(directionalLight);
+
+                directionalLight.castShadow = true;
+
+                const d = 1;
+                directionalLight.shadow.camera.left = -d;
+                directionalLight.shadow.camera.right = d;
+                directionalLight.shadow.camera.top = d;
+                directionalLight.shadow.camera.bottom = -d;
+
+                directionalLight.shadow.camera.near = 1;
+                directionalLight.shadow.camera.far = 4;
+
+                directionalLight.shadow.mapSize.width = 1024;
+                directionalLight.shadow.mapSize.height = 1024;
+
+                directionalLight.shadow.bias = -0.001;
+            };
+
+            var onWindowResize = function() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            };
+
+            var animate = function() {
+                requestAnimationFrame(animate);
+                render();
+            };
+
+            var render = function() {
+                // const timer = Date.now() * 0.00005;
+
+                // camera.position.x = Math.sin(timer) * 2.5;
+                // camera.position.z = Math.cos(timer) * 2.5;
+
+                camera.lookAt(cameraTarget);
+
+                renderer.render(scene, camera);
+            };
+
+            addShadowedLight(1, 1, 1, 0xffffff, 1.35);
+            // addShadowedLight(0.5, 1, -1, 0xffaa00, 1);
+
+            // renderer
+
+            var renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.outputEncoding = THREE.sRGBEncoding;
+
+            renderer.shadowMap.enabled = true;
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableZoom = false;
+            controls.target.set(0, 25, 0);
+            controls.update();
+
+            // resize
+
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById(f.id).innerHTML = '';
+            document.getElementById(f.id).prepend(renderer.domElement);
+            //.appendChild(renderer.domElement);
+
+            this.currentModel.scene = scene;
+            this.currentModel.loader = loader;
+            this.currentModel.renderer = renderer;
+            this.currentModel.id = f.id;
+
+            animate();
+        },
+        unrenderPreview() {
+            this.currentModel.scene.remove(this.currentModel.mesh);
+            this.currentModel.renderer.dispose();
+            this.currentModel.renderer.renderLists.dispose();
+            // this.currentModel.loader.dispose();
+            this.currentModel.geometry.dispose();
+            this.currentModel.material.dispose();
+        },
+        setViewMode(mode) {
+            this.viewMode = mode;
+        },
         refreshRun() {
             this.$store.dispatch('load', this.$router.currentRoute.params.id);
         },
@@ -1337,78 +1836,6 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        fileIsImage(file) {
-            return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'png' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpg' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpeg'
-            );
-        },
-        fileIsText(file) {
-            return (
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'txt' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'csv' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'tsv' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'yml' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'yaml' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'log' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'out' ||
-                file
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'err'
-            );
-        },
-        fileIsViewable(file) {
-            return (
-                file.name
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'png' ||
-                file.name
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpg' ||
-                file.name
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'jpeg' ||
-                file.name
-                    .toLowerCase()
-                    .split('.')
-                    .pop() === 'txt'
-            );
-        },
         parseSeconds(seconds) {
             return moment.utc(seconds * 1000);
         },
@@ -1427,7 +1854,7 @@ export default {
         },
         viewFile(file) {
             this.thumbnailName = file;
-            this.thumbnailUrl = `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/${file}/`;
+            this.thumbnailUrl = `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/?path=${file}`;
             this.thumbnailTitle = file;
             this.$bvModal.show('thumbnail');
         },
@@ -1586,6 +2013,19 @@ export default {
         // },
         '$route.params.id'() {
             // need to watch for route change to prompt reload
+        },
+        viewMode() {
+            if (
+                this.data !== null &&
+                this.outputFiles.some(f => f.name.endsWith('ply'))
+            ) {
+                this.unrenderPreview();
+                if (
+                    this.viewMode === 'Carousel' &&
+                    this.currentCarouselSlide === 0
+                )
+                    this.renderPreview(this.outputFiles[0]);
+            }
         }
     }
 };

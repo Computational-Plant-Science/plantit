@@ -623,6 +623,7 @@ def list_run_results(id: str):
                 stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
                 output = {
                     'name': file,
+                    'path': join(work_dir, file),
                     'exists': stdout.read().decode().strip() == 'exists'
                 }
                 seen.append(output['name'])
@@ -633,6 +634,7 @@ def list_run_results(id: str):
                     if not any(s == f for s in seen):
                         outputs.append({
                             'name': f,
+                            'path': join(work_dir, f),
                             'exists': True
                         })
 
