@@ -904,7 +904,7 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
-        <b-navbar
+        <!--<b-navbar
             v-if="
                 openedCollectionLoading ||
                     (openedCollection !== undefined &&
@@ -998,7 +998,7 @@
                     <i class="far fa-folder fa-1x fa-fw"></i>
                 </b-button>
             </b-navbar-nav>
-        </b-navbar>
+        </b-navbar>-->
         <b-toast
             auto-hide-delay="10000"
             v-if="$route.name !== 'run' && toastRun !== null"

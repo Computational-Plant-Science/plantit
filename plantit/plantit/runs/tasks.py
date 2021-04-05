@@ -353,7 +353,6 @@ def submit_run(id: str, flow):
                 cleanup_run.s(id).apply_async(countdown=cleanup_delay * 60)
             else:
                 delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-                update_status(run, f"Polling for job status in {delay}s")
                 poll_run_status.s(run.guid).apply_async(countdown=delay)
     except Exception:
         run.job_status = 'FAILURE'

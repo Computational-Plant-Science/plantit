@@ -111,70 +111,6 @@
                                         >
                                         </b-spinner>
                                         <b class="ml-1 mr-0">{{ getRun.id }}</b>
-                                        <!--<small
-                                                        v-if="
-                                                            walltimeRemaining !==
-                                                                null &&
-                                                                walltimeRemaining >
-                                                                    0 &&
-                                                                run
-                                                        "
-                                                        :class="
-                                                            walltimeRemaining.minutes() >
-                                                            5
-                                                                ? 'text-secondary'
-                                                                : 'text-danger'
-                                                        "
-                                                        >{{
-                                                            walltimeRemaining.hours()
-                                                        }}
-                                                        hours,
-                                                        {{
-                                                            walltimeRemaining.minutes()
-                                                        }}
-                                                        minutes,
-                                                        {{
-                                                            walltimeRemaining.seconds()
-                                                        }}
-                                                        seconds remaining before
-                                                        timeout</small
-                                                    >
-                                                    <small
-                                                        v-else-if="
-                                                            walltimeRemaining !==
-                                                                null
-                                                        "
-                                                        class="text-danger"
-                                                        >Exceeded time
-                                                        allocation ({{
-                                                            parseSeconds(
-                                                                getRun.timeout
-                                                            ).hours()
-                                                        }}
-                                                        hours,
-                                                        {{
-                                                            parseSeconds(
-                                                                getRun.timeout
-                                                            ).minutes()
-                                                        }}
-                                                        minutes,
-                                                        {{
-                                                            parseSeconds(
-                                                                getRun.timeout
-                                                            ).seconds()
-                                                        }}
-                                                        seconds)</small
-                                                    >-->
-                                        <!--<b-badge
-                                            :variant="
-                                                getRun.state === FAILURE
-                                                    ? 'danger'
-                                                    : getRun.state === SUCCESS
-                                                    ? 'success'
-                                                    : 'warning'
-                                            "
-                                            >{{ getRun.state }}
-                                        </b-badge>-->
                                         <small> on </small>
                                         <b class="mr-0">{{ getRun.cluster }}</b>
                                         <b-badge
@@ -378,7 +314,7 @@
                                                             style="white-space: pre-line;"
                                                         >
                                                             <span
-                                                                v-for="log in getRun.submission_logs"
+                                                                v-for="log in submissionLogs"
                                                                 v-bind:key="log"
                                                                 >{{
                                                                     log + '\n'
@@ -393,11 +329,6 @@
                                                 v-if="getRun.is_complete"
                                             >
                                                 <b-row
-                                                    v-if="
-                                                        getWorkflow.config &&
-                                                            getWorkflow.config
-                                                                .output
-                                                    "
                                                     align-h="center"
                                                     align-v="center"
                                                     class="mt-2"
@@ -414,6 +345,11 @@
                                                         result(s)
                                                         <br />
                                                         <b
+                                                            v-if="
+                                                                getWorkflow
+                                                                    .config
+                                                                    .output
+                                                            "
                                                             ><code
                                                                 :class="
                                                                     profile.darkMode
@@ -1829,6 +1765,23 @@ export default {
                 return run;
             }
             return null;
+        },
+        submissionLogs() {
+            let all = this.getRun.submission_logs.slice();
+            var firstI = all.findIndex(l => l.includes('PENDING'));
+            if (firstI === -1)
+                firstI = all.findIndex(l => l.includes('RUNNING'));
+            if (firstI === -1) return all;
+            all.reverse();
+            let lastI =
+                all.length - all.findIndex(l => l.includes('RUNNING')) - 1;
+            all.reverse();
+            if (lastI === -1) return all;
+            if (lastI === all.length - 1) return all;
+            else if (this.getRun.is_complete)
+                all.splice(firstI, lastI - firstI + 1);
+            else all.splice(firstI, lastI - firstI + 1, all[lastI]);
+            return all;
         },
         runNotFound() {
             return this.getRun === null && !this.loadingRun;
