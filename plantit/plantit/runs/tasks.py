@@ -2,6 +2,8 @@ import json
 import sys
 import fileinput
 import traceback
+from datetime import timedelta
+from math import ceil
 from os import environ
 from os.path import join
 from typing import List
@@ -75,11 +77,29 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
 
             if not sandbox:
                 # we're on a SLURM cluster, so add resource requests
+                nodes = min(len(input_files), run.cluster.max_nodes) if input_files is not None and not run.cluster.job_array else 1
+
                 if 'cores' in resources:
-                    script.write(f"#SBATCH --cpus-per-task={resources['cores']}\n")
+                    cores = int(resources['cores'])
+                    script.write(f"#SBATCH --cpus-per-task={cores}\n")
                 if 'time' in resources:
-                    script.write(f"#SBATCH --time={resources['time']}\n")
+                    split_time = resources['time'].split(':')
+                    hours = int(split_time[0])
+                    minutes = int(split_time[1])
+                    seconds = int(split_time[2])
+                    time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+                    adjusted_time = time * (len(input_files) / nodes)
+                    adjusted_time_str = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.cluster.max_nodes)}:00:00"
+
+                    run.requested_walltime = adjusted_time_str
+                    run.save()
+                    msg = f"Using adjusted walltime {adjusted_time_str} (calculated [requested walltime * input files / nodes])"
+                    update_status(run, msg)
+                    logger.info(msg)
+
+                    script.write(f"#SBATCH --time={adjusted_time_str}\n")
                 if 'mem' in resources and (run.cluster.header_skip is None or '--mem' not in str(run.cluster.header_skip)):
+                    mem = resources['mem']
                     script.write(f"#SBATCH --mem={resources['mem']}\n")
                 if run.cluster.queue is not None and run.cluster.queue != '':
                     script.write(f"#SBATCH --partition={run.cluster.queue}\n")
@@ -89,9 +109,8 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 if input_files is not None and run.cluster.job_array:
                     script.write(f"#SBATCH --array=1-{len(input_files)}\n")
                 if input_files is not None:
-                    n = min(len(input_files), run.cluster.max_nodes)
-                    script.write(f"#SBATCH -N {n}\n")
-                    script.write(f"#SBATCH --ntasks={n}\n")
+                    script.write(f"#SBATCH -N {nodes}\n")
+                    script.write(f"#SBATCH --ntasks={nodes}\n")
                 else:
                     script.write(f"#SBATCH -N 1\n")
                     script.write("#SBATCH --ntasks=1\n")
@@ -177,6 +196,10 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 # add zip command
                 output = flow['config']['output']
                 zip_commands = f"plantit zip {flow['config']['output']['from']} -o . -n {run.guid}"
+                log_files = [f"{run.guid}.{run.cluster.name.lower()}.log"]
+                if not run.is_sandbox:
+                    log_files.extend([f"plantit.{run.job_id}.err", f"plantit.{run.job_id}.out"])
+                zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
                 if 'include' in output:
                     if 'patterns' in output['include']:
                         zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"

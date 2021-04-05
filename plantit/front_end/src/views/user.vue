@@ -324,7 +324,7 @@
                                         }}</small></b-col
                                     ><b-col md="auto" class="mt-1">
                                         <small
-                                            >Collections shared with
+                                            >Shared with
                                             {{ directory.guest }}</small
                                         ></b-col
                                     ><b-col md="auto">

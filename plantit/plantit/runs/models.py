@@ -26,6 +26,7 @@ class Run(models.Model):
     submission_id = models.CharField(max_length=50, null=True, blank=True)
     job_id = models.CharField(max_length=7, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
+    requested_walltime = models.CharField(max_length=8, null=True, blank=True)
     job_walltime = models.CharField(max_length=8, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
