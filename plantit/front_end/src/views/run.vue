@@ -154,7 +154,8 @@
                                             v-if="resubmitted"
                                             label="Loading..."
                                             variant="dark"
-                                            class="ml-2 mb-1"
+                                            :class="profile.darkMode ? 'light' : 'dark'"
+                                            style="width: 0.7rem;height: 0.7rem"
                                         ></b-spinner>
                                     </b-button>
                                 </b-col>

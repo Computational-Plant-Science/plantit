@@ -88,12 +88,16 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                     minutes = int(split_time[1])
                     seconds = int(split_time[2])
                     time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+                    # calculated [requested walltime * input files / nodes]
                     adjusted_time = time * (len(input_files) / nodes)
-                    adjusted_time_str = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.cluster.max_nodes)}:00:00"
+                    hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.cluster.max_nodes)}"
+                    if len(hours) == 1:
+                        hours = f"0{hours}"
+                    adjusted_time_str = f"{hours}:00:00"
 
                     run.requested_walltime = adjusted_time_str
                     run.save()
-                    msg = f"Using adjusted walltime {adjusted_time_str} (calculated [requested walltime * input files / nodes])"
+                    msg = f"Using adjusted walltime {adjusted_time_str}"
                     update_status(run, msg)
                     logger.info(msg)
 
