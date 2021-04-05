@@ -107,13 +107,15 @@ def get_thumbnail(request, id):
                     with open(preview_file, 'rb') as preview:
                         return HttpResponse(preview, content_type="image/jpg")
             elif file.endswith('png'):
-                sftp.chdir(work_dir)
-                with sftp.open(file, 'rb') as image_file:
-                    return HttpResponse(image_file, content_type="image/png")
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    sftp.chdir(work_dir)
+                    sftp.get(file, temp_file.name)
+                    return HttpResponse(temp_file, content_type="image/png")
             elif file.endswith('jpg') or file.endswith('jpeg'):
-                sftp.chdir(work_dir)
-                with sftp.open(file, 'rb') as image_file:
-                    return HttpResponse(image_file, content_type="image/jpeg")
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    sftp.chdir(work_dir)
+                    sftp.get(file, temp_file.name)
+                    return HttpResponse(temp_file, content_type="image/jpeg")
             elif file.endswith('czi'):
                 with tempfile.NamedTemporaryFile() as temp_file:
                     print(f"Creating thumbnail for {file}")
@@ -148,6 +150,8 @@ def get_output_file(request, id, file):
     with client:
         with client.client.open_sftp() as sftp:
             file_path = join(work_dir, file)
+            print(f"Downloading {file_path}")
+
             stdin, stdout, stderr = client.client.exec_command(
                 'test -e {0} && echo exists'.format(file_path))
             if not stdout.read().decode().strip() == 'exists':
