@@ -144,9 +144,9 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 # allow for both spellings of JPG
                 patterns = [pattern.lower() for pattern in input['patterns']]
                 if 'jpg' in patterns and 'jpeg' not in patterns:
-                    patterns += 'jpeg'
+                    patterns.append("jpeg")
                 elif 'jpeg' in patterns and 'jpg' not in patterns:
-                    patterns += 'jpg'
+                    patterns.append("jpg")
 
                 pull_commands = f"plantit terrain pull {input['from']}" \
                                 f" -p {join(run.cluster.workdir, run.work_dir, 'input')}" \

@@ -921,6 +921,7 @@
                                                             "
                                                             controls
                                                             :interval="0"
+                                                            @sliding-start="slide => getTextFile(outputFiles[slide])"
                                                             @sliding-end="
                                                                 slide =>
                                                                     renderPreview(
@@ -944,6 +945,17 @@
                                                                 "
                                                                 ><template
                                                                     v-if="
+                                                                        fileIsText(
+                                                                            file.name
+                                                                        )
+                                                                    "
+                                                                >
+                                                                    {{
+                                                                        file.textContent
+                                                                    }}
+                                                                </template>
+                                                                <template
+                                                                    v-else-if="
                                                                         fileIs3dModel(
                                                                             file.name
                                                                         )
@@ -1593,7 +1605,7 @@ export default {
                             }
                         });
                     } else {
-                        this.showFailedToCancelAlert = true;
+                        this.showFailedToDeleteAlert = true;
                     }
                 })
                 .catch(error => {
@@ -1757,6 +1769,25 @@ export default {
                     this.loadingOutputFiles = false;
                     return error;
                 });
+        },
+        getTextFile(path) {
+            if (!this.fileIsText(path)) return;
+            axios
+                .get(
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/file_text/${path}/`
+                )
+                .then(response => {
+                    if (response.status === 200) {
+                        let i = this.outputFiles.indexOf(f => f.path === path);
+                        var file = this.outputFiles[i];
+                        file['textContent'] = response.data.text;
+                        this.outputFiles.splice(i, 1, file);
+                    }
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
         }
     },
     async mounted() {
@@ -1842,11 +1873,9 @@ export default {
                 this.outputFiles.some(f => f.name.endsWith('ply'))
             ) {
                 this.unrenderPreview();
-                if (
-                    this.viewMode === 'Carousel' &&
-                    this.currentCarouselSlide === 0
-                )
-                    this.renderPreview(this.outputFiles[0]);
+                if (this.viewMode === 'Carousel')
+                    if (this.currentCarouselSlide === 0)
+                        this.renderPreview(this.outputFiles[0]);
             }
         }
     }

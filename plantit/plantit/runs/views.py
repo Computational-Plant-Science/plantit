@@ -225,6 +225,32 @@ def get_container_logs(request, id):
 
 @api_view(['GET'])
 @login_required
+def get_file_text(request, id, file):
+    try:
+        run = Run.objects.get(guid=id)
+    except Run.DoesNotExist:
+        return HttpResponseNotFound()
+
+    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    work_dir = join(run.cluster.workdir, run.work_dir)
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            path = join(work_dir, file)
+            stdin, stdout, stderr = client.client.exec_command(
+                'test -e {0} && echo exists'.format(path))
+            errs = stderr.read()
+            if errs:
+                raise Exception(f"Failed to check existence of {file}: {errs}")
+            if not stdout.read().decode().strip() == 'exists':
+                return HttpResponseNotFound()
+
+            stdin, stdout, stderr = client.client.exec_command(f"cat {path}")
+            return JsonResponse({'text': stdout.readlines()})
+
+
+@api_view(['GET'])
+@login_required
 def get_runs_by_user_and_workflow(request, username, workflow, page):
     try:
         user = User.objects.get(username=username)
@@ -432,12 +458,11 @@ def delete(request, id):
     except:
         return HttpResponseNotFound()
 
-    if not run.is_complete:
-        print(f"Run is not complete")
+    try:
+        run.delete()
+        return HttpResponse({'deleted': True})
+    except:
         return HttpResponse({'deleted': False})
-
-    run.delete()
-    return HttpResponse({'deleted': True})
 
 
 @api_view(['POST'])

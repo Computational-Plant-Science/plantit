@@ -15,6 +15,7 @@ urlpatterns = [
     path(r'<id>/', views.run),
     path(r'<id>/outputs/', views.list_outputs),
     path(r'<id>/output/<file>/', views.get_output_file),
+    path(r'<id>/file_text/<file>/', views.get_file_text),
     path(r'<id>/thumbnail/', views.get_thumbnail),
     path(r'<id>/submission_logs/', views.get_submission_logs),
     path(r'<id>/container_logs/', views.get_container_logs),
