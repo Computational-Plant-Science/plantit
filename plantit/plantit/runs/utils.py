@@ -198,8 +198,9 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
 
         if 'gpu' in old_config['config'] and old_config['config']['gpu']:
             if run.cluster.gpu:
+                print(f"Using GPU on {run.cluster.name} queue '{run.cluster.gpu_queue}'")
                 new_config['gpu'] = True
-                new_config['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:K40:1"]
+                new_config['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:1"]
                 new_config['jobqueue']['slurm']['queue'] = run.cluster.gpu_queue
             else:
                 print(f"No GPU support on {run.cluster.name}")

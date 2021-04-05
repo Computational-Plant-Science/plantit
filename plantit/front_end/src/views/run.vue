@@ -1582,7 +1582,7 @@ export default {
                     `/apis/v1/runs/${this.$router.currentRoute.params.id}/delete/`
                 )
                 .then(response => {
-                    if (response.status === 200) {
+                    if (response.status === 200 && response.data.deleted) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
                         this.$store.dispatch('loadRuns');

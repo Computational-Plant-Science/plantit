@@ -78,6 +78,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             if not sandbox:
                 # we're on a SLURM cluster, so add resource requests
                 nodes = min(len(input_files), run.cluster.max_nodes) if input_files is not None and not run.cluster.job_array else 1
+                gpu = run.cluster.gpu and ('gpu' in flow['config'] and flow['config']['gpu'])
 
                 if 'cores' in resources:
                     cores = int(resources['cores'])
@@ -89,7 +90,10 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                     seconds = int(split_time[2])
                     time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
                     # calculated [requested walltime * input files / nodes]
-                    adjusted_time = time * (len(input_files) / nodes)
+                    if input_files is not None:
+                        adjusted_time = time * (len(input_files) / nodes)
+                    else:
+                        adjusted_time = time
                     hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.cluster.max_nodes)}"
                     if len(hours) == 1:
                         hours = f"0{hours}"
@@ -106,9 +110,12 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                     mem = resources['mem']
                     script.write(f"#SBATCH --mem={resources['mem']}\n")
                 if run.cluster.queue is not None and run.cluster.queue != '':
-                    script.write(f"#SBATCH --partition={run.cluster.queue}\n")
+                    queue = run.cluster.gpu_queue if gpu else run.cluster.queue
+                    script.write(f"#SBATCH --partition={queue}\n")
                 if run.cluster.project is not None and run.cluster.project != '':
                     script.write(f"#SBATCH -A {run.cluster.project}\n")
+                if gpu:
+                    script.write(f"#SBATCH --gres=gpu:1")
 
                 if input_files is not None and run.cluster.job_array:
                     script.write(f"#SBATCH --array=1-{len(input_files)}\n")
@@ -118,6 +125,8 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 else:
                     script.write(f"#SBATCH -N 1\n")
                     script.write("#SBATCH --ntasks=1\n")
+
+
 
                 script.write("#SBATCH --mail-type=END,FAIL\n")
                 script.write(f"#SBATCH --mail-user={run.user.email}\n")

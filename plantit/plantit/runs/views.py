@@ -433,10 +433,11 @@ def delete(request, id):
         return HttpResponseNotFound()
 
     if not run.is_complete:
-        raise ValueError(f"Run is not complete")
+        print(f"Run is not complete")
+        return HttpResponse({'deleted': False})
 
     run.delete()
-    return HttpResponse()
+    return HttpResponse({'deleted': True})
 
 
 @api_view(['POST'])
