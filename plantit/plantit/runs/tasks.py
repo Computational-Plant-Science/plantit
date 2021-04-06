@@ -51,6 +51,10 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
     work_dir = join(run.cluster.workdir, run.work_dir)
     new_flow = map_old_workflow_config_to_new(flow, run, resources)  # TODO update flow UI page
 
+    parse_errors, run_options = parse_run_options(new_flow)
+    if len(parse_errors) > 0:
+        raise ValueError(f"Failed to parse run options: {' '.join(parse_errors)}")
+
     # create working directory
     execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.cluster.workdir, allow_stderr=True)
 
@@ -115,7 +119,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 if run.cluster.project is not None and run.cluster.project != '':
                     script.write(f"#SBATCH -A {run.cluster.project}\n")
                 if gpu:
-                    script.write(f"#SBATCH --gres=gpu:1")
+                    script.write(f"#SBATCH --gres=gpu:1\n")
 
                 if input_files is not None and run.cluster.job_array:
                     script.write(f"#SBATCH --array=1-{len(input_files)}\n")
@@ -126,8 +130,6 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                     script.write(f"#SBATCH -N 1\n")
                     script.write("#SBATCH --ntasks=1\n")
 
-
-
                 script.write("#SBATCH --mail-type=END,FAIL\n")
                 script.write(f"#SBATCH --mail-user={run.user.email}\n")
                 script.write("#SBATCH --output=plantit.%j.out\n")
@@ -135,6 +137,9 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
 
             # add precommands
             script.write(run.cluster.pre_commands + '\n')
+
+            # pull singularity container in advance
+            script.write(f"singularity pull {run_options.image}")
 
             # if we have inputs, add pull command
             if 'input' in flow['config']:
@@ -167,9 +172,6 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             if run.cluster.launcher and input_files is not None and flow['config']['input']['kind'] == 'files':
                 with sftp.open('launch', 'w') as launcher_script:
                     for file in input_files:
-                        parse_errors, run_options = parse_run_options(new_flow)
-                        if len(parse_errors) > 0:
-                            raise ValueError(f"Failed to parse run options: {' '.join(parse_errors)}")
                         file_name = file.rpartition('/')[2]
                         run_options.input = FileInput(file_name)
                         command = prep_run_command(
@@ -190,7 +192,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 script.write("$LAUNCHER_DIR/paramrun\n")
             # otherwise use the CLI
             else:
-                run_commands = f"plantit run flow.yaml --pre_pull_image"
+                run_commands = f"plantit run flow.yaml"
                 if run.cluster.job_array and input_files is not None:
                     run_commands += f" --slurm_job_array"
 
@@ -210,8 +212,6 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 output = flow['config']['output']
                 zip_commands = f"plantit zip {flow['config']['output']['from']} -o . -n {run.guid}"
                 log_files = [f"{run.guid}.{run.cluster.name.lower()}.log"]
-                if not run.is_sandbox:
-                    log_files.extend([f"plantit.{run.job_id}.err", f"plantit.{run.job_id}.out"])
                 zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
                 if 'include' in output:
                     if 'patterns' in output['include']:

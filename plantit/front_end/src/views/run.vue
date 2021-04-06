@@ -630,6 +630,7 @@
                                                 </b-row>
                                                 <b-overlay
                                                     :show="downloading"
+                                                    :variant="profile.darkMode ? 'dark' : 'light'"
                                                     rounded="sm"
                                                 >
                                                     <div>
