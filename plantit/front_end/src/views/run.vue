@@ -1811,6 +1811,7 @@ export default {
         },
         getTextFile(file) {
             if (!this.fileIsText(file.name)) return;
+            this.textContent = [];
             axios
                 .get(
                     `/apis/v1/runs/${this.$router.currentRoute.params.id}/file_text/?path=${file.path}`

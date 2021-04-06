@@ -139,7 +139,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             script.write(run.cluster.pre_commands + '\n')
 
             # pull singularity container in advance
-            script.write(f"singularity pull {run_options.image}\n")
+            # script.write(f"singularity pull {run_options.image}\n")
 
             # if we have inputs, add pull command
             if 'input' in flow['config']:
