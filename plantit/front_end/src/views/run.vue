@@ -215,7 +215,6 @@
                                     md="auto"
                                     class="m-0 mb-2"
                                     align-self="start"
-                                    v-if="!getRun.is_complete"
                                 >
                                     <b-button
                                         v-if="getRun.is_complete"
@@ -843,13 +842,6 @@
                                                             columns
                                                         >
                                                             <b-card
-                                                                :img-src="
-                                                                    fileIs3dModel(
-                                                                        file.name
-                                                                    )
-                                                                        ? require('../assets/no_preview_thumbnail.png')
-                                                                        : `/apis/v1/runs/${$router.currentRoute.params.id}/thumbnail/?path=${file.path}`
-                                                                "
                                                                 v-for="file in filteredResults"
                                                                 v-bind:key="
                                                                     file.name
@@ -878,6 +870,20 @@
                                                                         : 'dark'
                                                                 "
                                                             >
+                                                                <template
+                                                                    #header
+                                                                    ><b-img-lazy
+                                                                    fluid-grow
+                                                                    style="min-width: 20rem;"
+                                                                        :src="
+                                                                            fileIs3dModel(
+                                                                                file.name
+                                                                            ) || (!fileIsText(file.name) && !fileIsImage(file.name))
+                                                                                ? require('../assets/no_preview_thumbnail.png')
+                                                                                : `/apis/v1/runs/${$router.currentRoute.params.id}/thumbnail/?path=${file.path}`
+                                                                        "
+                                                                    ></b-img-lazy
+                                                                ></template>
                                                                 <p
                                                                     :class="
                                                                         profile.darkMode
@@ -974,8 +980,7 @@
                                                                         >
                                                                             <b-col
                                                                                 v-if="
-                                                                                    textContent
-                                                                                        .length >
+                                                                                    textContent.length >
                                                                                         0
                                                                                 "
                                                                                 class="m-0 p-0 pl-3 pr-3 pt-1"
