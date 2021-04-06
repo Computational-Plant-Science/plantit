@@ -1,6 +1,5 @@
 <template>
     <div
-        v-if="render"
         class="w-100 h-100 p-2"
         :style="
             profile.darkMode
@@ -154,13 +153,12 @@
                                             small
                                             v-if="resubmitted"
                                             label="Loading..."
-                                            variant="dark"
-                                            :class="
+                                            :variant="
                                                 profile.darkMode
                                                     ? 'light'
                                                     : 'dark'
                                             "
-                                            style="width: 0.8rem;height: 0.8rem"
+                                            style="width: 0.7rem; height: 0.7rem;"
                                         ></b-spinner>
                                     </b-button>
                                 </b-col>
@@ -630,7 +628,11 @@
                                                 </b-row>
                                                 <b-overlay
                                                     :show="downloading"
-                                                    :variant="profile.darkMode ? 'dark' : 'light'"
+                                                    :variant="
+                                                        profile.darkMode
+                                                            ? 'dark'
+                                                            : 'light'
+                                                    "
                                                     rounded="sm"
                                                 >
                                                     <div>
@@ -922,7 +924,14 @@
                                                             "
                                                             controls
                                                             :interval="0"
-                                                            @sliding-start="slide => getTextFile(outputFiles[slide])"
+                                                            @sliding-start="
+                                                                slide =>
+                                                                    getTextFile(
+                                                                        outputFiles[
+                                                                            slide
+                                                                        ]
+                                                                    )
+                                                            "
                                                             @sliding-end="
                                                                 slide =>
                                                                     renderPreview(
@@ -945,15 +954,46 @@
                                                                         : ''
                                                                 "
                                                                 ><template
+                                                                    #img
                                                                     v-if="
                                                                         fileIsText(
                                                                             file.name
                                                                         )
                                                                     "
                                                                 >
-                                                                    {{
-                                                                        file.textContent
-                                                                    }}
+                                                                    <div
+                                                                        :class="
+                                                                            profile.darkMode
+                                                                                ? 'theme-container-dark'
+                                                                                : 'theme-container-light'
+                                                                        "
+                                                                        style="min-height: 50rem;white-space: pre-line;"
+                                                                    >
+                                                                        <b-row
+                                                                            class="m-0"
+                                                                        >
+                                                                            <b-col
+                                                                                v-if="
+                                                                                    textContent
+                                                                                        .length >
+                                                                                        0
+                                                                                "
+                                                                                class="m-0 p-0 pl-3 pr-3 pt-1"
+                                                                                style="white-space: pre-line;"
+                                                                            >
+                                                                                <span
+                                                                                    v-for="line in textContent"
+                                                                                    v-bind:key="
+                                                                                        line
+                                                                                    "
+                                                                                    >{{
+                                                                                        line +
+                                                                                            '\n'
+                                                                                    }}</span
+                                                                                >
+                                                                            </b-col>
+                                                                        </b-row>
+                                                                    </div>
                                                                 </template>
                                                                 <template
                                                                     v-else-if="
@@ -972,12 +1012,8 @@
                                                                                 : 'theme-container-light'
                                                                         "
                                                                         style="min-height: 50rem;white-space: pre-line;"
-                                                                    >
-                                                                        {{
-                                                                            file.textContent
-                                                                        }}
-                                                                    </div></template
-                                                                >
+                                                                    ></div
+                                                                ></template>
                                                                 <template
                                                                     v-else-if="
                                                                         !fileIsImage(
@@ -1312,6 +1348,7 @@ export default {
     },
     data() {
         return {
+            textContent: [],
             currentCarouselSlide: 0,
             viewMode: 'List',
             resultSearchText: '',
@@ -1419,6 +1456,7 @@ export default {
             );
         },
         renderPreview(f) {
+            if (!f.name.endsWith('ply')) return;
             var camera = new THREE.PerspectiveCamera(
                 35,
                 window.innerWidth / window.innerHeight,
@@ -1771,18 +1809,15 @@ export default {
                     return error;
                 });
         },
-        getTextFile(path) {
-            if (!this.fileIsText(path)) return;
+        getTextFile(file) {
+            if (!this.fileIsText(file.name)) return;
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/file_text/${path}/`
+                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/file_text/?path=${file.path}`
                 )
                 .then(response => {
                     if (response.status === 200) {
-                        let i = this.outputFiles.indexOf(f => f.path === path);
-                        var file = this.outputFiles[i];
-                        file['textContent'] = response.data.text;
-                        this.outputFiles.splice(i, 1, file);
+                        this.textContent = response.data.text;
                     }
                 })
                 .catch(error => {
@@ -1878,6 +1913,13 @@ export default {
                     if (this.currentCarouselSlide === 0)
                         this.renderPreview(this.outputFiles[0]);
             }
+
+            if (
+                this.viewMode === 'Carousel' &&
+                this.textContent.length === 0 &&
+                this.outputFiles.length > 0
+            )
+                this.getTextFile(this.outputFiles[0]);
         }
     }
 };

@@ -1839,13 +1839,17 @@ export default {
                     headers: { 'Content-Type': 'application/json' }
                 })
                     .then(response => {
-                        router.push({
-                            name: 'run',
-                            params: {
-                                username: this.profile.djangoProfile.username,
-                                id: response.data.id
-                            }
-                        });
+                        setTimeout(
+                            router.push({
+                                name: 'run',
+                                params: {
+                                    username: this.profile.djangoProfile
+                                        .username,
+                                    id: response.data.id
+                                }
+                            }),
+                            2000
+                        );
                     })
                     .catch(error => {
                         Sentry.captureException(error);

@@ -225,7 +225,8 @@ def get_container_logs(request, id):
 
 @api_view(['GET'])
 @login_required
-def get_file_text(request, id, file):
+def get_file_text(request, id):
+    file = request.GET.get('path')
     try:
         run = Run.objects.get(guid=id)
     except Run.DoesNotExist:
