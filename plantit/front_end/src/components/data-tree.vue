@@ -17,7 +17,7 @@
             </b-col>
         </b-row>
         <b-row
-            v-if="isDir && internalLoaded"
+            v-if="isDir && internalLoaded && node !== null"
             class="mt-1 mb-1 ml-2 mr-0 p-0 text-left"
         >
             <b-col

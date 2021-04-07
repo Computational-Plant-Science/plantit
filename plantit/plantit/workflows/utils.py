@@ -17,5 +17,5 @@ def refresh_workflow(username, name, token):
         return {
             'repo': repo,
             'config': get_repo_config(name, owner, token),
-            'readme': get_repo_readme(name, owner, token)
+            # 'readme': get_repo_readme(name, owner, token)
         }

@@ -1161,7 +1161,7 @@ export default {
         await Promise.all([
             this.$store.dispatch('runs/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
-            this.$store.dispatch('collections/loadOpened')
+            // this.$store.dispatch('collections/loadOpened')
         ]);
     },
     watch: {

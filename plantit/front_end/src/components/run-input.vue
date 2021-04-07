@@ -65,7 +65,7 @@
                             variant="secondary"
                         ></b-spinner></b-col
                 ></b-row>
-                <b-row>
+                <b-row v-if="sharedData !== null">
                     <b-col>
                         <datatree
                             :select="kind"
@@ -112,7 +112,7 @@
                             variant="success"
                         ></b-spinner>
                         <datatree
-                            v-else
+                            v-else-if="publicData !== null"
                             :select="kind"
                             :upload="true"
                             :download="true"

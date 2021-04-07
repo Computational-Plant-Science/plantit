@@ -90,7 +90,7 @@ def format_workflows(response, token):
     workflows = [{
         'repo': item['repository'],
         'config': get_repo_config(item['repository']['name'], item['repository']['owner']['login'], token),
-        'readme': get_repo_readme(item['repository']['name'], item['repository']['owner']['login'], token)
+        # 'readme': get_repo_readme(item['repository']['name'], item['repository']['owner']['login'], token)
     } for item in response_json['items']] if 'items' in response_json else []
     return workflows
 

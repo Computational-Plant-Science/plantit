@@ -342,7 +342,7 @@
                                     style="min-width: 40rem"
                                     class="mb-4"
                                 >
-                                    <b-row align-v="center">
+                                    <b-row>
                                         <b-col>
                                             <h4
                                                 :class="
@@ -463,7 +463,7 @@
                                             getWorkflow.config.input !==
                                                 undefined &&
                                             getWorkflow.config.input.path !==
-                                                undefined
+                                                undefined && input.kind !== undefined && input.kind !== null && input.kind.length > 0
                                     "
                                     :bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
@@ -481,7 +481,7 @@
                                     style="min-width: 50rem"
                                     class="mb-4"
                                 >
-                                    <b-row align-v="center">
+                                    <b-row>
                                         <b-col>
                                             <h4
                                                 :class="
@@ -512,7 +512,6 @@
                                         :default-path="
                                             getWorkflow.config.input.path
                                         "
-                                        :user="user"
                                         :kind="input.kind"
                                         v-on:inputSelected="inputSelected"
                                     ></runinput>
@@ -657,7 +656,7 @@
                                     style="min-width: 40rem"
                                     class="mb-4"
                                 >
-                                    <b-row align-v="center">
+                                    <b-row>
                                         <b-col>
                                             <h4
                                                 :class="
