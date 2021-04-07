@@ -873,14 +873,21 @@
                                                                 <template
                                                                     #header
                                                                     ><b-img-lazy
-                                                                    fluid-grow
-                                                                    style="min-width: 20rem;"
+                                                                    v-if="viewMode === 'Grid'"
+                                                                        fluid-grow
+                                                                        style="min-width: 20rem;"
                                                                         :src="
                                                                             fileIs3dModel(
                                                                                 file.name
-                                                                            ) || (!fileIsText(file.name) && !fileIsImage(file.name))
+                                                                            ) ||
+                                                                            (!fileIsText(
+                                                                                file.name
+                                                                            ) &&
+                                                                                !fileIsImage(
+                                                                                    file.name
+                                                                                ))
                                                                                 ? require('../assets/no_preview_thumbnail.png')
-                                                                                : `/apis/v1/runs/${$router.currentRoute.params.id}/thumbnail/?path=${file.path}`
+                                                                                : thumbnailFor(file.name)
                                                                         "
                                                                     ></b-img-lazy
                                                                 ></template>
@@ -921,7 +928,7 @@
                                                             </b-card>
                                                         </b-card-group>
                                                         <b-carousel
-                                                            v-show="
+                                                            v-if="
                                                                 viewMode ===
                                                                     'Carousel'
                                                             "
@@ -956,7 +963,7 @@
                                                                     fileIsImage(
                                                                         file.name
                                                                     )
-                                                                        ? `/apis/v1/runs/${$router.currentRoute.params.id}/thumbnail/?path=${file.path}`
+                                                                        ? thumbnailFor(file.path)
                                                                         : ''
                                                                 "
                                                                 ><template
@@ -1393,6 +1400,12 @@ export default {
         };
     },
     methods: {
+      thumbnailFor(path) {
+        let i = this.outputFiles.findIndex(f => f.path === path)
+        if (this.viewMode === 'Grid' && i >= (this.outputFilePage - 1) * this.outputPageSize && i <= this.outputFilePage * this.outputPageSize)
+          return `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/?path=${path}`
+        else return null;
+      },
         prettifyShort: function(date) {
             return `${moment(date).fromNow()}`;
         },
