@@ -81,7 +81,6 @@
                             <b-row align-v="center">
                                 <b-col
                                     style="color: white; cursor: pointer"
-                                    @click="userSelected(user)"
                                 >
                                     <h5
                                         :class="

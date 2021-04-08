@@ -115,11 +115,10 @@
                                         <b-badge
                                             :variant="
                                                 getRun.is_failure ||
-                                                getRun.is_timeout ||
-                                                getRun.is_cancelled
+                                                getRun.is_timeout
                                                     ? 'danger'
                                                     : getRun.is_success
-                                                    ? 'success'
+                                                    ? 'success' : getRun.is_cancelled ? 'secondary'
                                                     : 'warning'
                                             "
                                             class="ml-2 mr-2"
