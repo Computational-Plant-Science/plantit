@@ -481,7 +481,7 @@
                                     </b-col>
                                 </b-row>
                             </b-tab>
-                            <!--<b-tab
+                            <b-tab
                                 title="README"
                                 :title-link-class="
                                     profile.darkMode
@@ -512,7 +512,7 @@
                                         </b-row>
                                     </div>
                                 </div>
-                            </b-tab>-->
+                            </b-tab>
                         </b-tabs>
                     </b-col>
                 </b-row>

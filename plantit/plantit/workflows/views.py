@@ -68,6 +68,12 @@ def get(request, username, name):
 
 
 @login_required
+def get_readme(request, username, name):
+    readme = get_repo_readme(name, username, request.user.profile.github_token)
+    return JsonResponse({'readme': readme})
+
+
+@login_required
 def refresh(request, username, name):
     redis = RedisClient.get()
     workflow = refresh_workflow(username, name, request.user.profile.github_token)

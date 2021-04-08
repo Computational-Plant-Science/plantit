@@ -1222,16 +1222,17 @@ export default {
         // TODO move to VUEX
         async onRunUpdate(event) {
             let data = JSON.parse(event.data);
-            await this.$store.dispatch('runs/update', data.run);
-            this.toastRun = data.run;
+            var run = data.run;
+            this.toastRun = run;
             this.$bvToast.show('toast');
+            delete run['submission_logs'];
+            delete run['container_logs'];
+            await this.$store.dispatch('runs/update', run);
         },
         async onNotification(event) {
             let data = JSON.parse(event.data);
-            await this.$store.dispatch(
-                'notifications/update',
-                data.notification
-            );
+            let notification = data.notification;
+            await this.$store.dispatch('notifications/update', notification);
         },
         async onSessionEvent(event) {
             let data = JSON.parse(event.data);

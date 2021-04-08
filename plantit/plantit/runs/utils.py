@@ -326,6 +326,7 @@ def create_run(username: str, cluster_name: str, workflow: dict) -> Run:
 
     # guid for working directory name
     run.work_dir = f"{run.guid}/"
+    run.save()
     return run
 
 

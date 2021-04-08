@@ -36,8 +36,9 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
     # update flow config before uploading
     flow['config']['workdir'] = join(run.cluster.workdir, run.guid)
     flow['config']['log_file'] = f"{run.guid}.{run.cluster.name.lower()}.log"
-    if 'output' in flow['config']:
-        flow['config']['output']['from'] = join(run.cluster.workdir, run.work_dir, flow['config']['output']['from'])
+    if 'output' in flow['config'] and 'from' in flow['config']['output']:
+        if flow['config']['output']['from'] is not None and flow['config']['output']['from'] != '':
+            flow['config']['output']['from'] = join(run.cluster.workdir, run.work_dir, flow['config']['output']['from'])
 
     # if flow has outputs, make sure we don't push configuration or job scripts
     if 'output' in flow['config']:
@@ -206,50 +207,48 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 logger.info(f"Using run command: {run_commands}")
                 script.write(run_commands)
 
-            # if we have outputs...
-            if 'output' in flow['config']:
-                # add zip command
-                output = flow['config']['output']
-                zip_commands = f"plantit zip {flow['config']['output']['from']} -o . -n {run.guid}"
-                log_files = [f"{run.guid}.{run.cluster.name.lower()}.log"]
-                zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
-                if 'include' in output:
-                    if 'patterns' in output['include']:
-                        zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"
-                    if 'names' in output['include']:
-                        zip_commands = f"{zip_commands} {' '.join(['--include_name ' + pattern for pattern in output['include']['names']])}"
-                    if 'patterns' in output['exclude']:
-                        zip_commands = f"{zip_commands} {' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])}"
-                    if 'names' in output['exclude']:
-                        zip_commands = f"{zip_commands} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
-                zip_commands += '\n'
-                script.write(zip_commands)
-                logger.info(f"Using zip command: {zip_commands}")
+            # add zip command
+            output = flow['config']['output']
+            zip_commands = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {run.guid}"
+            log_files = [f"{run.guid}.{run.cluster.name.lower()}.log"]
+            zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
+            if 'include' in output:
+                if 'patterns' in output['include']:
+                    zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"
+                if 'names' in output['include']:
+                    zip_commands = f"{zip_commands} {' '.join(['--include_name ' + pattern for pattern in output['include']['names']])}"
+                if 'patterns' in output['exclude']:
+                    zip_commands = f"{zip_commands} {' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])}"
+                if 'names' in output['exclude']:
+                    zip_commands = f"{zip_commands} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
+            zip_commands += '\n'
+            script.write(zip_commands)
+            logger.info(f"Using zip command: {zip_commands}")
 
-                # add push command if we have a destination
-                # if 'to' in output and output['to'] is not None:
-                #     push_commands = f"plantit terrain push {output['to']}" \
-                #                     f" -p {join(run.work_dir, output['from'])}" \
-                #                     f" --plantit_url '{callback_url}'"
+            # add push command if we have a destination
+            # if 'to' in output and output['to'] is not None:
+            #     push_commands = f"plantit terrain push {output['to']}" \
+            #                     f" -p {join(run.work_dir, output['from'])}" \
+            #                     f" --plantit_url '{callback_url}'"
 
-                #     if 'include' in output:
-                #         if 'patterns' in output['include']:
-                #             push_commands = push_commands + ' '.join(
-                #                 ['--include_pattern ' + pattern for pattern in output['include']['patterns']])
-                #         if 'names' in output['include']:
-                #             push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
-                #         if 'patterns' in output['exclude']:
-                #             push_commands = push_commands + ' '.join(
-                #                 ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
-                #         if 'names' in output['exclude']:
-                #             push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+            #     if 'include' in output:
+            #         if 'patterns' in output['include']:
+            #             push_commands = push_commands + ' '.join(
+            #                 ['--include_pattern ' + pattern for pattern in output['include']['patterns']])
+            #         if 'names' in output['include']:
+            #             push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
+            #         if 'patterns' in output['exclude']:
+            #             push_commands = push_commands + ' '.join(
+            #                 ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+            #         if 'names' in output['exclude']:
+            #             push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
 
-                #     if run.cluster.callbacks:
-                #         push_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
+            #     if run.cluster.callbacks:
+            #         push_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
 
-                #     push_commands += '\n'
-                #     script.write(push_commands)
-                #     logger.info(f"Using push command: {push_commands}")
+            #     push_commands += '\n'
+            #     script.write(push_commands)
+            #     logger.info(f"Using push command: {push_commands}")
 
 
 @retry(

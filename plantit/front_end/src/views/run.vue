@@ -195,23 +195,6 @@
                                     </b-button>
                                 </b-col>
                                 <b-col
-                                    v-if="getRun.is_complete"
-                                    md="auto"
-                                    class="m-0 mb-2"
-                                    align-self="start"
-                                >
-                                    <b-button
-                                        variant="outline-danger"
-                                        size="sm"
-                                        v-b-tooltip.hover
-                                        title="Delete Run"
-                                        @click="showDeletePrompt"
-                                    >
-                                        <i class="fas fa-trash"></i>
-                                        Delete
-                                    </b-button>
-                                </b-col>
-                                <b-col
                                     md="auto"
                                     class="m-0 mb-2"
                                     align-self="start"
@@ -242,6 +225,23 @@
                                             "
                                             class="ml-2 mb-1"
                                         ></b-spinner>
+                                    </b-button>
+                                </b-col>
+                                <b-col
+                                    v-if="getRun.is_complete"
+                                    md="auto"
+                                    class="m-0 mb-2"
+                                    align-self="start"
+                                >
+                                    <b-button
+                                        variant="outline-danger"
+                                        size="sm"
+                                        v-b-tooltip.hover
+                                        title="Delete Run"
+                                        @click="showDeletePrompt"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                        Delete
                                     </b-button>
                                 </b-col>
                             </b-row>
@@ -873,7 +873,10 @@
                                                                 <template
                                                                     #header
                                                                     ><b-img-lazy
-                                                                    v-if="viewMode === 'Grid'"
+                                                                        v-if="
+                                                                            viewMode ===
+                                                                                'Grid'
+                                                                        "
                                                                         fluid-grow
                                                                         style="min-width: 20rem;"
                                                                         :src="
@@ -887,7 +890,9 @@
                                                                                     file.name
                                                                                 ))
                                                                                 ? require('../assets/no_preview_thumbnail.png')
-                                                                                : thumbnailFor(file.name)
+                                                                                : thumbnailFor(
+                                                                                      file.path
+                                                                                  )
                                                                         "
                                                                     ></b-img-lazy
                                                                 ></template>
@@ -963,7 +968,9 @@
                                                                     fileIsImage(
                                                                         file.name
                                                                     )
-                                                                        ? thumbnailFor(file.path)
+                                                                        ? thumbnailFor(
+                                                                              file.path
+                                                                          )
                                                                         : ''
                                                                 "
                                                                 ><template
@@ -1400,12 +1407,16 @@ export default {
         };
     },
     methods: {
-      thumbnailFor(path) {
-        let i = this.outputFiles.findIndex(f => f.path === path)
-        if (this.viewMode === 'Grid' && i >= (this.outputFilePage - 1) * this.outputPageSize && i <= this.outputFilePage * this.outputPageSize)
-          return `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/?path=${path}`
-        else return null;
-      },
+        thumbnailFor(path) {
+            let i = this.outputFiles.findIndex(f => f.path === path);
+            if (
+                this.viewMode === 'Grid' &&
+                i >= (this.outputFilePage - 1) * this.outputPageSize &&
+                i <= this.outputFilePage * this.outputPageSize
+            )
+                return `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/?path=${path}`;
+            else return null;
+        },
         prettifyShort: function(date) {
             return `${moment(date).fromNow()}`;
         },
@@ -1690,6 +1701,7 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(response => {
+                    this.resubmitted = false;
                     router.push({
                         name: 'run',
                         params: {
@@ -1700,6 +1712,7 @@ export default {
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    this.resubmitted = false;
                     throw error;
                 });
         },

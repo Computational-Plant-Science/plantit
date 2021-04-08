@@ -88,160 +88,6 @@
                         </b-col>
                     </b-row>
                     <br />
-                    <b-row
-                        ><b-col md="auto"
-                            ><b-button
-                                :disabled="workflowLoading"
-                                :variant="
-                                    profile.darkMode ? 'outline-light' : 'white'
-                                "
-                                v-b-tooltip.hover
-                                title="Refresh Workflow"
-                                @click="refreshWorkflow"
-                            >
-                                <i class="fas fa-redo"></i>
-                                Refresh
-                                <b-spinner
-                                    small
-                                    v-if="workflowLoading"
-                                    label="Refreshing..."
-                                    :variant="
-                                        profile.darkMode ? 'light' : 'dark'
-                                    "
-                                    class="ml-2 mb-1"
-                                ></b-spinner> </b-button></b-col
-                        ><b-col md="auto" class="mr-0" align-self="end">
-                            <b-input-group>
-                                <template #prepend>
-                                    <b-input-group-text
-                                        >Run
-                                        {{
-                                            getWorkflow.config.name
-                                        }}</b-input-group-text
-                                    >
-                                </template>
-                                <template #append>
-                                    <b-dropdown
-                                        variant="secondary"
-                                        :text="submitType"
-                                        v-model="submitType"
-                                        block
-                                    >
-                                        <template #button-content>
-                                            {{ submitType }}
-                                            <i
-                                                class="fas fa-caret-down fa-fw"
-                                            ></i>
-                                        </template>
-                                        <b-dropdown-item
-                                            @click="submitType = 'Now'"
-                                            >Now</b-dropdown-item
-                                        >
-                                        <!--<b-dropdown-item
-                                            @click="submitType = 'After'"
-                                            >After</b-dropdown-item
-                                        >-->
-                                        <b-dropdown-item
-                                            @click="submitType = 'Every'"
-                                            >Every</b-dropdown-item
-                                        >
-                                    </b-dropdown>
-                                </template>
-                            </b-input-group>
-                        </b-col>
-                        <b-col
-                            md="auto"
-                            v-if="
-                                submitType === 'After' || submitType === 'Every'
-                            "
-                            ><b-input-group>
-                                <b-form-spinbutton
-                                    v-model="delayValue"
-                                    min="1"
-                                    max="100"
-                                ></b-form-spinbutton
-                                ><template #append>
-                                    <b-dropdown
-                                        variant="secondary"
-                                        :text="submitType"
-                                        v-model="submitType"
-                                        block
-                                    >
-                                        <template #button-content>
-                                            {{ delayUnits }}
-                                            <i
-                                                class="fas fa-caret-down fa-fw"
-                                            ></i>
-                                        </template>
-                                        <b-dropdown-item
-                                            @click="delayUnits = 'Seconds'"
-                                            >Seconds</b-dropdown-item
-                                        >
-                                        <b-dropdown-item
-                                            @click="delayUnits = 'Minutes'"
-                                            >Minutes</b-dropdown-item
-                                        >
-                                        <b-dropdown-item
-                                            @click="delayUnits = 'Hours'"
-                                            >Hours</b-dropdown-item
-                                        >
-                                        <b-dropdown-item
-                                            @click="delayUnits = 'Days'"
-                                            >Days</b-dropdown-item
-                                        >
-                                    </b-dropdown>
-                                </template></b-input-group
-                            ></b-col
-                        >
-                        <b-col
-                            ><b-button
-                                :disabled="!flowReady || submitted"
-                                @click="onTryStart"
-                                variant="success"
-                                block
-                            >
-                                {{
-                                    submitType === 'Now'
-                                        ? `Start ${getWorkflow.config.name}`
-                                        : `Schedule ${getWorkflow.config.name} to run ${scheduledTime}`
-                                }}<b-spinner
-                                    small
-                                    v-if="submitted"
-                                    label="Loading..."
-                                    variant="dark"
-                                    class="ml-2 mb-1"
-                                ></b-spinner> </b-button></b-col
-                    ></b-row>
-                    <br />
-                    <!--<b-row v-if="submitType === 'Every'"
-                        ><b-col
-                            ><b-card
-                                :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                                border-variant="default"
-                                :header-border-variant="
-                                    profile.darkMode ? 'dark' : 'white'
-                                "
-                                :text-variant="profile.darkMode ? 'white' : 'dark'"
-                                ><b-form-group
-                                    :class="
-                                        profile.darkMode ? 'theme-dark' : 'theme-light'
-                                    "
-                                    id="input-group-4"
-                                    label-for="input-4"
-                                    description="Configure when this flow should run."
-                                >
-                                    <VueCronEditorBuefy
-                                        :class="
-                                            profile.darkMode
-                                                ? 'theme-dark'
-                                                : 'theme-light'
-                                        "
-                                        v-model="crontime"
-                                    ></VueCronEditorBuefy>
-                                </b-form-group> </b-card
-                            ><br /></b-col
-                    ></b-row>-->
                     <b-row>
                         <b-col>
                             <b-card-group deck columns>
@@ -259,7 +105,7 @@
                                     :text-variant="
                                         profile.darkMode ? 'white' : 'dark'
                                     "
-                                    style="min-width: 40rem"
+                                    style="min-width: 60rem"
                                     class="mb-4"
                                 >
                                     <b-row>
@@ -463,7 +309,10 @@
                                             getWorkflow.config.input !==
                                                 undefined &&
                                             getWorkflow.config.input.path !==
-                                                undefined && input.kind !== undefined && input.kind !== null && input.kind.length > 0
+                                                undefined &&
+                                            input.kind !== undefined &&
+                                            input.kind !== null &&
+                                            input.kind.length > 0
                                     "
                                     :bg-variant="
                                         profile.darkMode ? 'dark' : 'white'
@@ -970,6 +819,131 @@
                             </b-card-group>
                         </b-col>
                     </b-row>
+                    <b-row
+                        ><b-col md="auto"
+                            ><b-button
+                                :disabled="workflowLoading"
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
+                                v-b-tooltip.hover
+                                title="Refresh Workflow"
+                                @click="refreshWorkflow"
+                            >
+                                <i class="fas fa-redo"></i>
+                                Refresh
+                                <b-spinner
+                                    small
+                                    v-if="workflowLoading"
+                                    label="Refreshing..."
+                                    :variant="
+                                        profile.darkMode ? 'light' : 'dark'
+                                    "
+                                    class="ml-2 mb-1"
+                                ></b-spinner> </b-button></b-col
+                        ><b-col md="auto" class="mr-0" align-self="end">
+                            <b-input-group>
+                                <template #prepend>
+                                    <b-input-group-text
+                                        >Run
+                                        {{
+                                            getWorkflow.config.name
+                                        }}</b-input-group-text
+                                    >
+                                </template>
+                                <template #append>
+                                    <b-dropdown
+                                        variant="secondary"
+                                        :text="submitType"
+                                        v-model="submitType"
+                                        block
+                                    >
+                                        <template #button-content>
+                                            {{ submitType }}
+                                            <i
+                                                class="fas fa-caret-down fa-fw"
+                                            ></i>
+                                        </template>
+                                        <b-dropdown-item
+                                            @click="submitType = 'Now'"
+                                            >Now</b-dropdown-item
+                                        >
+                                        <!--<b-dropdown-item
+                                            @click="submitType = 'After'"
+                                            >After</b-dropdown-item
+                                        >-->
+                                        <b-dropdown-item
+                                            @click="submitType = 'Every'"
+                                            >Every</b-dropdown-item
+                                        >
+                                    </b-dropdown>
+                                </template>
+                            </b-input-group>
+                        </b-col>
+                        <b-col
+                            md="auto"
+                            v-if="
+                                submitType === 'After' || submitType === 'Every'
+                            "
+                            ><b-input-group>
+                                <b-form-spinbutton
+                                    v-model="delayValue"
+                                    min="1"
+                                    max="100"
+                                ></b-form-spinbutton
+                                ><template #append>
+                                    <b-dropdown
+                                        variant="secondary"
+                                        :text="submitType"
+                                        v-model="submitType"
+                                        block
+                                    >
+                                        <template #button-content>
+                                            {{ delayUnits }}
+                                            <i
+                                                class="fas fa-caret-down fa-fw"
+                                            ></i>
+                                        </template>
+                                        <b-dropdown-item
+                                            @click="delayUnits = 'Seconds'"
+                                            >Seconds</b-dropdown-item
+                                        >
+                                        <b-dropdown-item
+                                            @click="delayUnits = 'Minutes'"
+                                            >Minutes</b-dropdown-item
+                                        >
+                                        <b-dropdown-item
+                                            @click="delayUnits = 'Hours'"
+                                            >Hours</b-dropdown-item
+                                        >
+                                        <b-dropdown-item
+                                            @click="delayUnits = 'Days'"
+                                            >Days</b-dropdown-item
+                                        >
+                                    </b-dropdown>
+                                </template></b-input-group
+                            ></b-col
+                        >
+                        <b-col
+                            ><b-button
+                                :disabled="!flowReady || submitted"
+                                @click="onTryStart"
+                                variant="success"
+                                block
+                            >
+                                {{
+                                    submitType === 'Now'
+                                        ? `Start ${getWorkflow.config.name}`
+                                        : `Schedule ${getWorkflow.config.name} to run ${scheduledTime}`
+                                }}<b-spinner
+                                    small
+                                    v-if="submitted"
+                                    label="Loading..."
+                                    variant="dark"
+                                    class="ml-2 mb-1"
+                                ></b-spinner> </b-button></b-col
+                    ></b-row>
+                    <br />
                 </b-col>
                 <b-col md="auto">
                     <!--<b-row
@@ -1436,6 +1410,19 @@ export default {
                 name: this.$router.currentRoute.params.name
             });
             this.workflowLoading = false;
+        },
+        async getWorkflowReadme() {
+            return axios
+                .get(
+                    `/apis/v1/workflows/${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}/readme/`
+                )
+                .then(response => {
+                    return response.data.readme;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
         },
         deleteDelayed(task) {
             return axios
@@ -1911,6 +1898,16 @@ export default {
                     });
         }
     },
+    asyncComputed: {
+        async getWorkflow() {
+            var workflow = this.workflow(
+                this.$router.currentRoute.params.username,
+                this.$router.currentRoute.params.name
+            );
+            workflow['readme'] = await this.getWorkflowReadme();
+            return workflow;
+        }
+    },
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', [
@@ -1918,12 +1915,6 @@ export default {
             'workflowsLoading',
             'workflowsRecentlyRun'
         ]),
-        getWorkflow() {
-            return this.workflow(
-                this.$router.currentRoute.params.username,
-                this.$router.currentRoute.params.name
-            );
-        },
         mustAuthenticate() {
             return !this.selectedCluster.policies.some(
                 p =>
