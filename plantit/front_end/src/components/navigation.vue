@@ -1225,8 +1225,6 @@ export default {
             var run = data.run;
             this.toastRun = run;
             this.$bvToast.show('toast');
-            delete run['submission_logs'];
-            delete run['container_logs'];
             await this.$store.dispatch('runs/update', run);
         },
         async onNotification(event) {

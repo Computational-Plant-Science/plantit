@@ -392,7 +392,7 @@ def runs(request):
 def run(request, id):
     try:
         run = Run.objects.get(guid=id)
-        return JsonResponse(map_run(run, True))
+        return JsonResponse(map_run(run))
     except Run.DoesNotExist:
         return JsonResponse({
             'id': id,

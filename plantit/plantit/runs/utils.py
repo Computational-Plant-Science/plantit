@@ -69,7 +69,7 @@ def update_status(run: Run, description: str):
 
     async_to_sync(get_channel_layer().group_send)(f"runs-{run.user.username}", {
         'type': 'update_status',
-        'run': map_run(run, True),
+        'run': map_run(run),
     })
 
 
@@ -237,21 +237,14 @@ def map_run_task(task):
     }
 
 
-def map_run(run: Run, get_container_logs: bool = False):
+def map_run(run: Run):
     submission_log_file = submission_log_file_path(run)
-    container_log_file = container_log_file_path(run)
 
     if Path(submission_log_file).is_file():
         with open(submission_log_file, 'r') as log:
             submission_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
     else:
         submission_logs = []
-
-    if Path(container_log_file).is_file():
-        with open(container_log_file, 'r') as log:
-            container_logs = [line.strip() for line in log.readlines()[-int(1000000):]]
-    else:
-        container_logs = []
 
     try:
         ClusterAccessPolicy.objects.get(user=run.user, cluster=run.cluster, role__in=[ClusterRole.own, ClusterRole.run])
@@ -267,7 +260,6 @@ def map_run(run: Run, get_container_logs: bool = False):
         'job_walltime': run.job_walltime,
         'work_dir': run.work_dir,
         'submission_logs': submission_logs,
-        'container_logs': container_logs,
         'cluster': run.cluster.name,
         'created': run.created.isoformat(),
         'updated': run.updated.isoformat(),
