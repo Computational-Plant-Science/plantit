@@ -154,8 +154,8 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 elif 'jpeg' in patterns and 'jpg' not in patterns:
                     patterns.append("jpg")
 
-                pull_commands = f"plantit terrain pull {input['from']}" \
-                                f" -p {join(run.cluster.workdir, run.work_dir, 'input')}" \
+                pull_commands = f"plantit terrain pull \"{input['from']}\"" \
+                                f" -p \"{join(run.cluster.workdir, run.work_dir, 'input')}\"" \
                                 f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
                                 f""f" --terrain_token {run.user.profile.cyverse_token}"
 

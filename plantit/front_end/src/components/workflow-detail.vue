@@ -483,9 +483,9 @@
                             </b-tab>
                             <b-tab
                                 v-if="
-                                        workflow.readme !== undefined &&
-                                            workflow.readme !== null
-                                    "
+                                    workflow.readme !== undefined &&
+                                        workflow.readme !== null
+                                "
                                 title="README"
                                 :title-link-class="
                                     profile.darkMode
