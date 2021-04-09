@@ -560,7 +560,7 @@ def open_collection_session(id: str):
             update_collection_session(session, [msg])
             logger.info(msg)
 
-            command = f"plantit terrain pull {session.path} --terrain_token {session.user.profile.cyverse_token}\n"
+            command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_token}\n"
             lines = execute_command(
                 ssh_client=ssh_client,
                 pre_command=session.cluster.pre_commands,

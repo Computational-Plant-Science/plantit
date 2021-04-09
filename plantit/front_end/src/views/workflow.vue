@@ -1898,16 +1898,6 @@ export default {
                     });
         }
     },
-    asyncComputed: {
-        async getWorkflow() {
-            var workflow = this.workflow(
-                this.$router.currentRoute.params.username,
-                this.$router.currentRoute.params.name
-            );
-            workflow['readme'] = await this.getWorkflowReadme();
-            return workflow;
-        }
-    },
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', [
@@ -1922,6 +1912,13 @@ export default {
                     (p.role.toLowerCase() === 'use' ||
                         p.role.toLowerCase() === 'own')
             );
+        },
+        getWorkflow() {
+            var workflow = this.workflow(
+                this.$router.currentRoute.params.username,
+                this.$router.currentRoute.params.name
+            );
+            return workflow;
         },
         scheduledTime: function() {
             return `${this.submitType === 'After' ? 'in' : 'every'} ${
