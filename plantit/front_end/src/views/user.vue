@@ -208,12 +208,15 @@
                                         >Settings</b
                                     >
                                 </template>
-                                <b-row>
-                                    <b-col md="auto" align-self="center"
-                                        >Push Notifications:
+                                <b-row class="m-1">
+                                    <b-col align-self="center"
+                                        ><i
+                                            class="fas fa-envelope fa-1x fa-fw"
+                                        ></i>
+                                        Push Notifications:
                                         {{ profile.pushNotifications }}
                                     </b-col>
-                                  <b-col align-self="center">
+                                    <b-col align-self="center">
                                         <b-button
                                             size="sm"
                                             v-if="
@@ -239,6 +242,42 @@
                                             ></b-spinner></b-button
                                     ></b-col>
                                 </b-row>
+                                <b-row class="m-1"
+                                    ><b-col align-self="center">
+                                        <i
+                                            v-if="profile.darkMode"
+                                            class="fas fa-sun fa-1x fa-fw"
+                                        ></i>
+                                        <i
+                                            v-else
+                                            class="fas fa-moon fa-1x fa-fw"
+                                        ></i>
+                                        Dark Mode:
+                                        {{
+                                            profile.darkMode
+                                                ? 'enabled'
+                                                : 'disabled'
+                                        }} </b-col
+                                    ><b-col align-self="center">
+                                        <b-button
+                                            size="sm"
+                                            @click="toggleDarkMode"
+                                            >{{
+                                                profile.darkMode
+                                                    ? 'Disable'
+                                                    : 'Enable'
+                                            }}<b-spinner
+                                                small
+                                                v-if="togglingDarkMode"
+                                                label="Loading..."
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'light'
+                                                        : 'dark'
+                                                "
+                                                class="ml-2 mb-1"
+                                            ></b-spinner></b-button></b-col
+                                ></b-row>
                             </b-tab>
                             <b-tab
                                 v-if="
@@ -1143,6 +1182,7 @@ export default {
     data: function() {
         return {
             togglingPushNotifications: false,
+            togglingDarkMode: false,
             currentTab: 0,
             sharedCollections: [],
             sharingCollections: [],
@@ -1248,6 +1288,13 @@ export default {
             await this.$store.dispatch('user/togglePushNotifications');
             this.togglingPushNotifications = false;
             this.alertMessage = `Push notifications ${this.profile.pushNotifications}`;
+            this.alertEnabled = true;
+        },
+        async toggleDarkMode() {
+            this.togglingDarkMode = true;
+            this.$store.dispatch('user/toggleDarkMode');
+            this.togglingDarkMode = false;
+            this.alertMessage = `Dark mode ${this.profile.pushNotifications}`;
             this.alertEnabled = true;
         },
         onDelete(run) {

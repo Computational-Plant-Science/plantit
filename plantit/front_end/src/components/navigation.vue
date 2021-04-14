@@ -867,31 +867,6 @@
                             User Profile
                         </b-dropdown-item>
                         <b-dropdown-item
-                            :title="
-                                `${
-                                    profile.darkMode
-                                        ? 'Light Mode'
-                                        : 'Dark Mode'
-                                }`
-                            "
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            @click="toggleDarkMode"
-                        >
-                            <i
-                                v-if="profile.darkMode"
-                                class="fas fa-sun fa-1x fa-fw"
-                            ></i>
-                            <i v-else class="fas fa-moon fa-1x fa-fw"></i>
-                            {{ profile.darkMode ? 'Light Mode' : 'Dark Mode' }}
-                        </b-dropdown-item>
-                        <b-dropdown-item
                             title="Log Out"
                             @click="logOut"
                             class="text-danger"
@@ -1285,9 +1260,6 @@ export default {
         prettifyShort: function(date) {
             return `${moment(date).fromNow()}`;
         },
-        toggleDarkMode: function() {
-            this.$store.dispatch('user/toggleDarkMode');
-        }
     }
 };
 </script>
