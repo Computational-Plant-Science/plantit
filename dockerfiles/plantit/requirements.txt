@@ -38,3 +38,4 @@ preview-generator
 czifile
 opencv-python
 redis
+boto3

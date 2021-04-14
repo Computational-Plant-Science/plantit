@@ -195,14 +195,66 @@
                                 </b-row>
                             </b-tab>
                             <b-tab
+                                v-if="userProfile.djangoProfile"
+                                title="Settings"
+                            >
+                                <template v-slot:title>
+                                    <b
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        >Settings</b
+                                    >
+                                </template>
+                                <b-row>
+                                    <b-col md="auto" align-self="center"
+                                        >Push Notifications:
+                                        {{ profile.pushNotifications }}
+                                    </b-col>
+                                  <b-col align-self="center">
+                                        <b-button
+                                            size="sm"
+                                            v-if="
+                                                profile.pushNotifications !==
+                                                    'pending'
+                                            "
+                                            @click="togglePushNotifications"
+                                            >{{
+                                                profile.pushNotifications ===
+                                                'enabled'
+                                                    ? 'Disable'
+                                                    : 'Enable'
+                                            }}<b-spinner
+                                                small
+                                                v-if="togglingPushNotifications"
+                                                label="Loading..."
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'light'
+                                                        : 'dark'
+                                                "
+                                                class="ml-2 mb-1"
+                                            ></b-spinner></b-button
+                                    ></b-col>
+                                </b-row>
+                            </b-tab>
+                            <b-tab
                                 v-if="
                                     profile.djangoProfile.username ===
                                         $router.currentRoute.params.username
                                 "
-                                :title-link-class="tabLinkClass(1)"
                             >
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(1)">Collections</b>
+                                    <b
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        >Collections</b
+                                    >
                                 </template>
                                 <b-row class="mb-2"
                                     ><b-col>
@@ -357,9 +409,16 @@
                                     ></b-row
                                 ></b-tab
                             >
-                            <b-tab :title-link-class="tabLinkClass(2)">
+                            <b-tab>
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(2)">Workflows</b>
+                                    <b
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        >Workflows</b
+                                    >
                                 </template>
                                 <b-row
                                     v-if="profile.githubProfile === null"
@@ -423,10 +482,16 @@
                                     profile.djangoProfile.username ===
                                         $router.currentRoute.params.username
                                 "
-                                :title-link-class="tabLinkClass(3)"
                             >
                                 <template v-slot:title>
-                                    <b :class="tabLinkClass(3)">Clusters</b>
+                                    <b
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        >Clusters</b
+                                    >
                                 </template>
                                 <div>
                                     <b-row v-if="clustersLoading">
@@ -1077,6 +1142,7 @@ export default {
     },
     data: function() {
         return {
+            togglingPushNotifications: false,
             currentTab: 0,
             sharedCollections: [],
             sharingCollections: [],
@@ -1124,7 +1190,8 @@ export default {
             return this.runningRuns.filter(
                 r =>
                     (r.workflow_name !== null &&
-                        r.workflow_name.includes(this.runSearchText)) || (r.guid !== null && r.id.includes(this.runSearchText)) ||
+                        r.workflow_name.includes(this.runSearchText)) ||
+                    (r.guid !== null && r.id.includes(this.runSearchText)) ||
                     r.tags.some(t => t.includes(this.runSearchText))
             );
         },
@@ -1132,7 +1199,8 @@ export default {
             return this.completedRuns.filter(
                 r =>
                     (r.workflow_name !== null &&
-                        r.workflow_name.includes(this.runSearchText)) || (r.guid !== null && r.id.includes(this.runSearchText)) ||
+                        r.workflow_name.includes(this.runSearchText)) ||
+                    (r.guid !== null && r.id.includes(this.runSearchText)) ||
                     r.tags.some(t => t.includes(this.runSearchText))
             );
         }
@@ -1175,6 +1243,13 @@ export default {
         ]);
     },
     methods: {
+        async togglePushNotifications() {
+            this.togglingPushNotifications = true;
+            await this.$store.dispatch('user/togglePushNotifications');
+            this.togglingPushNotifications = false;
+            this.alertMessage = `Push notifications ${this.profile.pushNotifications}`;
+            this.alertEnabled = true;
+        },
         onDelete(run) {
             axios
                 .get(`/apis/v1/runs/${run.id}/delete/`)

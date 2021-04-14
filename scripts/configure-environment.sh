@@ -75,6 +75,27 @@ else
   docker_password="${DOCKER_PASSWORD}"
 fi
 
+if [[ -z "${AWS_ACCESS_KEY}" ]]; then
+  aws_access_key="some_aws_access_key"
+  echo "Warning: AWS_ACCESS_KEY environment variable missing"
+else
+  aws_access_key="${AWS_ACCESS_KEY}"
+fi
+
+if [[ -z "${AWS_SECRET_KEY}" ]]; then
+  aws_secret_key="some_aws_secret_key"
+  echo "Warning: AWS_SECRET_KEY environment variable missing"
+else
+  aws_secret_key="${AWS_SECRET_KEY}"
+fi
+
+if [[ -z "${AWS_REGION}" ]]; then
+  aws_region="some_aws_region"
+  echo "Warning: AWS_REGION environment variable missing"
+else
+  aws_region="${AWS_REGION}"
+fi
+
 cat <<EOT >>".env"
 VUE_APP_TITLE=plantit
 CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
@@ -120,4 +141,7 @@ GITHUB_CLIENT_ID=d15df2f5710e9597290f
 DOCKER_USERNAME=$docker_username
 DOCKER_PASSWORD=$docker_password
 NO_PREVIEW_THUMBNAIL=/code/plantit/front_end/src/assets/no_preview_thumbnail.png
+AWS_ACCESS_KEY=$aws_access_key
+AWS_SECRET_KEY=$aws_secret_key
+AWS_REGION=$aws_region
 EOT

@@ -27,6 +27,7 @@ from plantit.runs.ssh import SSH
 from plantit.runs.utils import update_status, execute_command, map_old_workflow_config_to_new, remove_logs, parse_job_id, create_run, \
     container_log_file_name, container_log_file_path
 from plantit.clusters.models import Cluster
+from plantit.sns import SnsClient
 from plantit.utils import parse_run_options, prep_run_command
 
 logger = get_task_logger(__name__)
@@ -386,6 +387,9 @@ def submit_run(id: str, flow):
                 update_status(run, msg)
                 logger.info(msg)
                 cleanup_run.s(id).apply_async(countdown=cleanup_delay * 60)
+
+                if run.user.profile.push_notification_status == 'enabled':
+                    SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
             else:
                 delay = int(environ.get('RUNS_REFRESH_SECONDS'))
                 poll_run_status.s(run.guid).apply_async(countdown=delay)
@@ -411,8 +415,12 @@ def poll_run_status(id: str):
 
     # if the job already failed, schedule cleanup
     if run.job_status == 'FAILURE':
-        update_status(run, f"Job {run.job_id} already failed, cleaning up in {cleanup_delay}m")
+        msg = f"Job {run.job_id} failed, cleaning up in {cleanup_delay}m"
+        update_status(run, msg)
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+
+        if run.user.profile.push_notification_status == 'enabled':
+            SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
 
     # otherwise poll the scheduler for its status
     try:
@@ -462,6 +470,9 @@ def poll_run_status(id: str):
                 f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             update_status(run, msg)
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+
+            if run.user.profile.push_notification_status == 'enabled':
+                SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
         else:
             msg = f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"
             update_status(run, msg)
@@ -477,8 +488,12 @@ def poll_run_status(id: str):
             msg = f"Job {run.job_id} not found, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             update_status(run, msg)
         else:
-            update_status(run, f"Job {run.job_id} already succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m")
+            msg = f"Job {run.job_id} succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
+            update_status(run, msg)
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+
+            if run.user.profile.push_notification_status == 'enabled':
+                SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
     except:
         run.job_status = 'FAILURE'
         now = timezone.now()
@@ -489,6 +504,9 @@ def poll_run_status(id: str):
         msg = f"Job {run.job_id} encountered unexpected error (cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
         update_status(run, msg)
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+
+        if run.user.profile.push_notification_status == 'enabled':
+            SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
 
 
 @app.task()

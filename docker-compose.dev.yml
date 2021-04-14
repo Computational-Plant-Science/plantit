@@ -49,6 +49,9 @@ services:
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
       - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_REGION=${AWS_REGION}
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
@@ -141,6 +144,9 @@ services:
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
       - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_REGION=${AWS_REGION}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

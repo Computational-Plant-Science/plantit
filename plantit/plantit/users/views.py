@@ -5,12 +5,13 @@ from pathlib import Path
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
+import botocore
 import jwt
 import requests
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
-from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
+from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse, HttpResponseNotFound
 from django.shortcuts import redirect
 from github import Github
 from requests.auth import HTTPBasicAuth
@@ -20,6 +21,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from plantit.clusters.utils import map_cluster
 from plantit.redis import RedisClient
+from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
 from plantit.utils import get_csrf_token
@@ -150,6 +152,41 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         return self.request.user
 
     @action(detail=False, methods=['get'])
+    def toggle_push_notifications(self, request):
+        user = request.user
+        sns = SnsClient.get()
+        topic_name = f"plantit-push-notifications-{user.username}"
+
+        if user.profile.push_notification_status == 'disabled':
+            topic = sns.create_topic(topic_name)
+            subscription = sns.subscribe(topic['TopicArn'], 'email', user.email)
+            user.profile.push_notification_topic_arn = topic['TopicArn']
+            user.profile.push_notification_sub_arn = subscription['SubscriptionArn']
+            user.profile.push_notification_status = 'pending'
+            user.profile.save()
+            user.save()
+
+            return JsonResponse({'push_notifications': user.profile.push_notification_status})
+        else:
+            sub_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
+            if sub_status == 'pending':
+                user.profile.push_notification_status = 'pending'
+                user.profile.save()
+                user.save()
+                return JsonResponse({'push_notifications': sub_status})
+            else:
+                sns.delete_subscription(user.profile.push_notification_sub_arn)
+                sns.delete_topic(user.profile.push_notification_topic_arn)
+                user.profile.push_notification_topic_arn = None
+                user.profile.push_notification_sub_arn = None
+                user.profile.push_notification_status = 'disabled'
+                user.profile.save()
+                user.save()
+                return JsonResponse({'push_notifications': user.profile.push_notification_status})
+
+
+
+    @action(detail=False, methods=['get'])
     def toggle_dark_mode(self, request):
         user = request.user
         user.profile.dark_mode = not user.profile.dark_mode
@@ -204,6 +241,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'])
     def get_current(self, request):
         user = request.user
+
+        if user.profile.push_notification_status == 'pending':
+            user.profile.push_notification_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
+            user.profile.save()
+            user.save()
+
         response = {
             'django_profile': {
                 'username': user.username,
@@ -211,7 +254,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'dark_mode': user.profile.dark_mode,
-                'interactive_mode': map_cluster(user.profile.interactive_mode) if user.profile.interactive_mode is not None else None,
+                'push_notifications': user.profile.push_notification_status,
                 'github_token': user.profile.github_token,
                 'cyverse_token': user.profile.cyverse_token
             }

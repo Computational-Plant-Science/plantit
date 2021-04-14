@@ -1,9 +1,12 @@
 import os
+import logging
 
 from django.core.asgi import get_asgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "plantit.settings")
 asgi_app = get_asgi_application()
+
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 from plantit.urls import websocket_urlpatterns
 

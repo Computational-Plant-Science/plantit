@@ -9,6 +9,7 @@ export const user = {
             loggedIn: false,
             keycloak: null,
             darkMode: false,
+            pushNotifications: 'disabled',
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null
@@ -21,6 +22,9 @@ export const user = {
         },
         setDarkMode(state, mode) {
             state.profile.darkMode = mode;
+        },
+        setPushNotifications(state, mode) {
+            state.profile.pushNotifications = mode;
         },
         setDjangoProfile(state, profile) {
             state.profile.djangoProfile = profile;
@@ -47,6 +51,17 @@ export const user = {
                     if (error.response.status === 500) throw error;
                 });
         },
+        async togglePushNotifications({ commit }) {
+            await axios
+                .get('/apis/v1/users/toggle_push_notifications/')
+                .then(response => {
+                    commit('setPushNotifications', response.data['push_notifications']);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
         logIn({ commit }) {
             commit('setLoggedIn', true);
         },
@@ -66,6 +81,12 @@ export const user = {
                     commit(
                         'setDarkMode',
                         response.data.django_profile.dark_mode
+                    );
+
+                    // set push notifications
+                    commit(
+                        'setPushNotifications',
+                        response.data.django_profile.push_notifications
                     );
 
                     // determine whether user is logged in

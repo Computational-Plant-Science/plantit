@@ -1,7 +1,5 @@
 import redis
 
-client = None
-
 
 class RedisClient:
     __client = None

@@ -51,6 +51,9 @@ services:
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
       - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_REGION=${AWS_REGION}
     command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "plantit.asgi:application"]
     networks:
       - ngnix_network
@@ -111,6 +114,9 @@ services:
       - DOCKER_USERNAME=${DOCKER_USERNAME}
       - DOCKER_PASSWORD=${DOCKER_PASSWORD}
       - NO_PREVIEW_THUMBNAIL=${NO_PREVIEW_THUMBNAIL}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_REGION=${AWS_REGION}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s
