@@ -128,6 +128,8 @@ services:
     image: redis:6
     ports:
       - 6379:6379
+    volumes:
+      - redisdata:/data
     restart: always
     command: ["redis-server", "--appendonly", "yes"]
   sandbox:
@@ -164,3 +166,5 @@ services:
 networks:
   ngnix_network:
     driver: bridge
+volumes:
+  redisdata:
