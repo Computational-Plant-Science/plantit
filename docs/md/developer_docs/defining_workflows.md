@@ -29,15 +29,9 @@ image: docker://alpine        # the Docker or Singularity image your workflow's 
 commands: echo "I am Groot!"  # the commands to run inside your container(s)
 ```
 
-Note that no resource requirements are specified. PlantIT supports 3 deployment targets:
- 
- - **Sandbox**: a light-weight container environment, good for test runs on very small datasets.
- - **Sapelo2**: the Georgia Advanced Computing Research Center's Sapelo2 cluster.
- - **Stampede2**: the Texas Advanced Computing Center's Stampede2 cluster.
- 
-In the **Sandbox** your code will run in a very resource-constrained environment. Please keep your runs small (<1GB memory and disk space), and be aware that they will fail if the environment cannot service them.
+### Deployment target resources
 
-To deploy your **Workflow** on one of the clusters, add a `resources` section to your `plantit.yaml` file. For example, to request 1 processor on 1 node and 1GB of memory for 1 hour:
+To make sure your **Workflow** can take full advantage of the resources made available by cluster or supercomputer schedulers, add a `resources` section to your `plantit.yaml` file. For example, to indicate that an instance of your workflow should request 1 process and 1 core on 1 node with 1GB of memory for 1 hour:
 
 ```yaml
 resources:
@@ -47,9 +41,15 @@ resources:
   cores: 1
 ```
 
-Note that the **Stampede2** cluster is equipped with virtual memory (up to ?? GB), and will ignore `mem` values specified.
+Note that some deployment targets may be equipped with virtual memory and ignore specified `mem` values.
 
-Note also that your runs will fail if they do not complete within the requested `time`, or if they exceed their memory allotment on **Sapelo2**.
+##### GPU mode
+
+To indicate that your workflow can take advantage of GPUs (only available on select deployment targets) add a `gpu: True` line to your configuration file. The environment variable `GPU_MODE` will be set to `true` in your workflow's runtime environment if the workflow is deployed to a cluster with GPU support; otherwise `GPU_MODE` will be `false`.
+
+#### Timeouts and other errors
+
+Workflows may fail if they do not complete within the requested `time`, if they exceed their memory allotment, or for a variety of reasons. Errors may be difficult to debug from the PlantIT web interface. Be sure to test workflows manually on any intended deployment target prior to deploying with PlantIT.
 
 ### Parameters
 
@@ -179,11 +179,11 @@ If only an `include` section is provided, only the file patterns and names speci
 
 #### A super simple example
 
-The following workflow prints the content of an input file and then writes it to an output file:
+The following workflow prints the content of an input file and then writes it to an output file (located in the same working directory):
 
 ```yaml
 name: Hello File
-author: Groot
+author: 
 image: docker://alpine
 public: True
 clone: False
@@ -198,4 +198,4 @@ output:
       - cowsaid.txt
 ```
 
-PlantIT will prompt users of your workflow to select input and output locations in the CyVerse Data Store.
+PlantIT will prompt users of your workflow to select an input file from the CyVerse Data Store, providing the given shared file as a default.

@@ -1022,7 +1022,7 @@
                                                                     #img
                                                                     ><div
                                                                         :id="
-                                                                            file.name
+                                                                            file.id
                                                                         "
                                                                         :class="
                                                                             profile.darkMode
