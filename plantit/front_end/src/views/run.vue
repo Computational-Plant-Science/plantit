@@ -1367,6 +1367,7 @@ export default {
     data() {
         return {
             textContent: [],
+            currentModel: null,
             currentCarouselSlide: 0,
             viewMode: 'List',
             resultSearchText: '',
