@@ -1,5 +1,6 @@
 import json
 import tempfile
+import base64
 from os.path import join
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django_celery_beat.models import IntervalSchedule
+from preview_generator.exception import UnsupportedMimeType
 from preview_generator.manager import PreviewManager
 from rest_framework.decorators import api_view
 
@@ -24,9 +26,10 @@ from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run, list_run_results
 from plantit.runs.thumbnail import Thumbnail
 from plantit.runs.utils import update_status, map_run, submission_log_file_path, create_run, parse_eta, map_delayed_run_task, \
-    map_repeating_run_task
+    map_repeating_run_task, get_run_results
 from plantit.clusters.models import Cluster
 from plantit.utils import get_repo_config
+from plantit.workflows.utils import refresh_workflow
 
 
 @api_view(['GET'])
@@ -69,71 +72,75 @@ def get_total_count(request):
 @login_required
 def list_outputs(request, id):
     redis = RedisClient.get()
-    result = redis.get(f"results/{id}")
-    return JsonResponse({'outputs': json.loads(result) if result is not None else []})
+    results = redis.get(f"results/{id}")
 
-
-@api_view(['GET'])
-@login_required
-def get_thumbnail(request, id):
-    user = request.user
-    path = request.GET.get('path')
-    file = path.rpartition('/')[2]
     try:
         run = Run.objects.get(guid=id)
     except:
         return HttpResponseNotFound()
 
-    work_dir = join(run.cluster.workdir, run.work_dir)
-    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    workflow = redis.get(f"workflow/{run.workflow_owner}/{run.workflow_name}")
+    if workflow is None:
+        workflow = refresh_workflow(run.workflow_owner, run.workflow_name, request.user.profile.github_token)['config']
 
-    with client:
-        with client.client.open_sftp() as sftp:
-            stdin, stdout, stderr = client.client.exec_command(f"test -e {join(work_dir, file)} && echo exists")
-            manager = PreviewManager(join(settings.MEDIA_ROOT, run.guid), create_folder=True)
+    if results is None:
+        results = get_run_results(run, workflow)
+        redis.set(f"results/{id}", json.dumps(results))
+        return JsonResponse({'outputs': results})
+    else:
+        return JsonResponse({'outputs': json.loads(results)})
 
-            if file.endswith('txt') or \
-                    file.endswith('csv') or \
-                    file.endswith('yml') or \
-                    file.endswith('yaml') or \
-                    file.endswith('tsv') or \
-                    file.endswith('out') or \
-                    file.endswith('err') or \
-                    file.endswith('log'):
-                with tempfile.NamedTemporaryFile() as temp_file:
-                    sftp.chdir(work_dir)
-                    sftp.get(file, temp_file.name)
-                    preview_file = manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
-                    with open(preview_file, 'rb') as preview:
-                        return HttpResponse(preview, content_type="image/jpg")
-            elif file.endswith('png'):
-                with tempfile.NamedTemporaryFile() as temp_file:
-                    sftp.chdir(work_dir)
-                    sftp.get(file, temp_file.name)
-                    return HttpResponse(temp_file, content_type="image/png")
-            elif file.endswith('jpg') or file.endswith('jpeg'):
-                with tempfile.NamedTemporaryFile() as temp_file:
-                    sftp.chdir(work_dir)
-                    sftp.get(file, temp_file.name)
-                    return HttpResponse(temp_file, content_type="image/jpeg")
-            elif file.endswith('czi'):
-                with tempfile.NamedTemporaryFile() as temp_file:
-                    print(f"Creating thumbnail for {file}")
-                    sftp.chdir(work_dir)
-                    sftp.get(file, temp_file.name)
-                    image = czifile.imread(temp_file.name)
-                    image.shape = (image.shape[2], image.shape[3], image.shape[4])
-                    success, buffer = cv2.imencode(".jpg", image)
-                    buffer.tofile(temp_file.name)
-                    return HttpResponse(temp_file, content_type="image/png")
-            elif file.endswith('ply'):
-                with tempfile.NamedTemporaryFile() as temp_file:
-                    sftp.chdir(work_dir)
-                    sftp.get(file, temp_file.name)
-                    return HttpResponse(temp_file, content_type="applications/octet-stream")
-            else:
-                with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
-                    return HttpResponse(thumbnail, content_type="image/png")
+
+@api_view(['GET'])
+@login_required
+def get_thumbnail(request, id):
+    path = request.GET.get('path')
+    file = path.rpartition('/')[2]
+
+    try:
+        run = Run.objects.get(guid=id)
+    except:
+        return HttpResponseNotFound()
+
+    redis = RedisClient.get()
+    preview = redis.get(f"preview/{run.guid}/{file}")
+
+    if preview is None or preview == b'EMPTY':
+        with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
+            return HttpResponse(thumbnail, content_type="image/png")
+    elif file.endswith('txt') or \
+            file.endswith('csv') or \
+            file.endswith('yml') or \
+            file.endswith('yaml') or \
+            file.endswith('tsv') or \
+            file.endswith('out') or \
+            file.endswith('err') or \
+            file.endswith('log'):
+        decoded = base64.b64decode(preview)
+        print(f"Retrieved text file preview from cache: {file}")
+        return HttpResponse(decoded, content_type="image/jpg")
+    elif file.endswith('png'):
+        decoded = base64.b64decode(preview)
+        print(f"Retrieved PNG file preview from cache: {file}")
+        return HttpResponse(decoded, content_type="image/png")
+    elif file.endswith('jpg') or file.endswith('jpeg'):
+        decoded = base64.b64decode(preview)
+        print(f"Retrieved JPG file preview from cache: {file}")
+        return HttpResponse(decoded, content_type="image/jpg")
+    elif file.endswith('czi'):
+        decoded = base64.b64decode(preview)
+        print(f"Retrieved CZI file preview from cache: {file}")
+        return HttpResponse(decoded, content_type="image/jpg")
+    # elif file.endswith('ply'):
+    #   with tempfile.NamedTemporaryFile() as temp_file:
+    #       with client:
+    #           with client.client.open_sftp() as sftp:
+    #               sftp.chdir(work_dir)
+    #               sftp.get(file, temp_file.name)
+    #       return HttpResponse(temp_file, content_type="applications/octet-stream")
+    else:
+        with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
+            return HttpResponse(thumbnail, content_type="image/png")
 
 
 @api_view(['GET'])
@@ -161,22 +168,6 @@ def get_output_file(request, id, file):
                 sftp.chdir(work_dir)
                 sftp.get(file, tf.name)
                 return FileResponse(open(tf.name, 'rb'))
-
-
-@api_view(['GET'])
-@login_required
-def get_submission_logs_text(request, id, size):
-    try:
-        run = Run.objects.get(guid=id)
-    except Run.DoesNotExist:
-        return HttpResponseNotFound()
-
-    log_path = submission_log_file_path(run)
-    if Path(log_path).is_file():
-        with open(log_path, 'r') as log:
-            lines = log.readlines()[-int(size):]
-    else:
-        return []
 
 
 @api_view(['GET'])

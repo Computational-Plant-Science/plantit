@@ -1,6 +1,8 @@
+import base64
 import json
 import sys
 import fileinput
+import tempfile
 import traceback
 from datetime import timedelta
 from math import ceil
@@ -8,10 +10,14 @@ from os import environ
 from os.path import join
 from typing import List
 
+import cv2
 import requests
 import yaml
 from celery.utils.log import get_task_logger
+from czifile import czifile
 from django.utils import timezone
+from preview_generator.exception import UnsupportedMimeType
+from preview_generator.manager import PreviewManager
 from requests import RequestException, Timeout, ReadTimeout, HTTPError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
@@ -25,10 +31,11 @@ from plantit.runs.cluster import get_job_status, get_job_walltime
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import update_status, execute_command, map_old_workflow_config_to_new, remove_logs, parse_job_id, create_run, \
-    container_log_file_name, container_log_file_path
+    container_log_file_name, container_log_file_path, get_run_results
 from plantit.clusters.models import Cluster
 from plantit.sns import SnsClient
 from plantit.utils import parse_run_options, prep_run_command
+from plantit.workflows.utils import refresh_workflow
 
 logger = get_task_logger(__name__)
 
@@ -643,52 +650,123 @@ def list_run_results(id: str):
         return
 
     redis = RedisClient.get()
+    ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    preview_manager = PreviewManager(join(settings.MEDIA_ROOT, run.guid), create_folder=True)
     workflow = redis.get(f"workflow/{run.workflow_owner}/{run.workflow_name}")
+
     if workflow is None:
-        logger.info(f"Could not find workflow {run.workflow_owner}/{run.workflow_name}")
-        return
+        workflow = refresh_workflow(run.workflow_owner, run.workflow_name, run.user.profile.github_token)['config']
     else:
         workflow = json.loads(workflow)['config']
 
-    print(workflow)
-
-    included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
-        'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
-    included_by_name.append(f"{run.guid}.zip")  # zip file
-    if not run.cluster.launcher:
-        included_by_name.append(f"{run.guid}.{run.cluster.name.lower()}.log")
-    if run.job_id is not None and run.job_id != '':
-        included_by_name.append(f"plantit.{run.job_id}.out")
-        included_by_name.append(f"plantit.{run.job_id}.err")
-    included_by_pattern = (
-        workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
-
-    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    results = get_run_results(run, workflow)
     work_dir = join(run.cluster.workdir, run.work_dir)
-    outputs = []
-    seen = []
+    redis.set(f"results/{run.guid}", json.dumps(results))
+    update_status(run, f"Found {len(results)} result files")
+    print(f"Found {len(results)} result files")
 
-    with client:
-        with client.client.open_sftp() as sftp:
-            for file in included_by_name:
-                file_path = join(work_dir, file)
-                stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
-                output = {
-                    'name': file,
-                    'path': join(work_dir, file),
-                    'exists': stdout.read().decode().strip() == 'exists'
-                }
-                seen.append(output['name'])
-                outputs.append(output)
+    for result in results:
+        name = result['name']
+        path = result['path']
+        if name.endswith('txt') or \
+                name.endswith('csv') or \
+                name.endswith('yml') or \
+                name.endswith('yaml') or \
+                name.endswith('tsv') or \
+                name.endswith('out') or \
+                name.endswith('err') or \
+                name.endswith('log'):
+            print(f"Creating preview for text file: {name}")
+            with tempfile.NamedTemporaryFile() as temp_file:
+                with ssh_client:
+                    with ssh_client.client.open_sftp() as sftp:
+                        sftp.chdir(work_dir)
+                        sftp.get(name, temp_file.name)
 
-            for f in sftp.listdir(work_dir):
-                if any(pattern in f for pattern in included_by_pattern):
-                    if not any(s == f for s in seen):
-                        outputs.append({
-                            'name': f,
-                            'path': join(work_dir, f),
-                            'exists': True
-                        })
+                try:
+                    preview_file = preview_manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                except UnsupportedMimeType:
+                    redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
+                    print(f"Saved empty file preview to cache: {name}")
+                    continue
 
-    redis.set(f"results/{run.guid}", json.dumps(outputs))
-    update_status(run, f"Found {len(outputs)} result files")
+                with open(preview_file, 'rb') as pf:
+                    content = pf.read()
+                    encoded = base64.b64encode(content)
+                    redis.set(f"preview/{run.guid}/{path}", encoded)
+                    print(f"Saved file preview to cache: {name}")
+        elif path.endswith('png'):
+            print(f"Creating preview for PNG file: {name}")
+            with tempfile.NamedTemporaryFile() as temp_file:
+                with ssh_client:
+                    with ssh_client.client.open_sftp() as sftp:
+                        sftp.chdir(work_dir)
+                        sftp.get(result['name'], temp_file.name)
+
+                try:
+                    preview_file = preview_manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                except UnsupportedMimeType:
+                    redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
+                    print(f"Saved empty preview for PNG file to cache: {name}")
+                    continue
+
+                with open(preview_file, 'rb') as pf:
+                    content = pf.read()
+                    encoded = base64.b64encode(content)
+                    redis.set(f"preview/{run.guid}/{name}", encoded)
+                    print(f"Saved file preview to cache: {name}")
+        elif path.endswith('jpg') or path.endswith('jpeg'):
+            print(f"Creating preview for JPG file: {name}")
+            with tempfile.NamedTemporaryFile() as temp_file:
+                with ssh_client:
+                    with ssh_client.client.open_sftp() as sftp:
+                        sftp.chdir(work_dir)
+                        sftp.get(result['name'], temp_file.name)
+
+                try:
+                    preview_file = preview_manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                except UnsupportedMimeType:
+                    redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
+                    print(f"Saved empty preview for JPG file to cache: {name}")
+                    continue
+
+                with open(preview_file, 'rb') as pf:
+                    content = pf.read()
+                    encoded = base64.b64encode(content)
+                    redis.set(f"preview/{run.guid}/{name}", encoded)
+                    print(f"Saved JPG file preview to cache: {name}")
+        elif path.endswith('czi'):
+            print(f"Creating preview for CZI file: {name}")
+            with tempfile.NamedTemporaryFile() as temp_file:
+
+                with ssh_client:
+                    with ssh_client.client.open_sftp() as sftp:
+                        sftp.chdir(work_dir)
+                        sftp.get(result['name'], temp_file.name)
+
+                image = czifile.imread(temp_file.name)
+                image.shape = (image.shape[2], image.shape[3], image.shape[4])
+                success, buffer = cv2.imencode(".jpg", image)
+                buffer.tofile(temp_file.name)
+
+                try:
+                    preview_file = preview_manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                except UnsupportedMimeType:
+                    redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
+                    print(f"Saved empty preview for CZI file to cache: {name}")
+                    continue
+
+                with open(preview_file, 'rb') as pf:
+                    content = pf.read()
+                    encoded = base64.b64encode(content)
+                    redis.set(f"preview/{run.guid}/{name}", encoded)
+                    print(f"Saved file preview to cache: {name}")
+        elif path.endswith('ply'):
+            print(f"Creating preview for PLY file: {name}")
+            with tempfile.NamedTemporaryFile() as temp_file:
+                with ssh_client:
+                    with ssh_client.client.open_sftp() as sftp:
+                        sftp.chdir(work_dir)
+                        sftp.get(result['name'], temp_file.name)
+
+    update_status(run, f"Created file previews")

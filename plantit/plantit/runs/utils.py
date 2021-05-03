@@ -374,3 +374,45 @@ def map_repeating_run_task(task: RepeatingRunTask):
         'enabled': task.enabled,
         'last_run': task.last_run_at
     }
+
+
+def get_run_results(run: Run, workflow: dict):
+    included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
+        'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
+    included_by_name.append(f"{run.guid}.zip")  # zip file
+    if not run.cluster.launcher:
+        included_by_name.append(f"{run.guid}.{run.cluster.name.lower()}.log")
+    if run.job_id is not None and run.job_id != '':
+        included_by_name.append(f"plantit.{run.job_id}.out")
+        included_by_name.append(f"plantit.{run.job_id}.err")
+    included_by_pattern = (
+        workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
+
+    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    work_dir = join(run.cluster.workdir, run.work_dir)
+    outputs = []
+    seen = []
+
+    with client:
+        with client.client.open_sftp() as sftp:
+            for file in included_by_name:
+                file_path = join(work_dir, file)
+                stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
+                output = {
+                    'name': file,
+                    'path': join(work_dir, file),
+                    'exists': stdout.read().decode().strip() == 'exists'
+                }
+                seen.append(output['name'])
+                outputs.append(output)
+
+            for f in sftp.listdir(work_dir):
+                if any(pattern in f for pattern in included_by_pattern):
+                    if not any(s == f for s in seen):
+                        outputs.append({
+                            'name': f,
+                            'path': join(work_dir, f),
+                            'exists': True
+                        })
+
+    return outputs
