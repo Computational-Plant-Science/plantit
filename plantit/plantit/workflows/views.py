@@ -63,6 +63,10 @@ def get(request, username, name):
         return JsonResponse(json.loads(workflow))
     else:
         workflow = refresh_workflow(username, name, request.user.profile.github_token)
+        result = validate_workflow_config(workflow['config'], request.user.profile.cyverse_token)
+        if not isinstance(result, bool):
+            workflow['validation_errors'] = result[1]
+
         redis.set(f"workflow/{username}/{name}", json.dumps(workflow))
         return JsonResponse(workflow)
 

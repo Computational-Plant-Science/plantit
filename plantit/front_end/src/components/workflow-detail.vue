@@ -3,24 +3,33 @@
         v-if="workflow && workflow.config"
         :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
     >
-        <b-img
-            v-if="workflow.config.logo"
-            rounded
-            class="card-img-right"
-            style="max-width: 12rem;position: absolute;right: 20px;top: 20px;z-index:1"
-            right
-            :src="
-                `https://raw.githubusercontent.com/${workflow.repo.owner.login}/${workflow.repo.name}/master/${workflow.config.logo}`
-            "
-        ></b-img>
-        <b-img
-            v-else
-            class="card-img-left"
-            style="max-width: 7rem"
-            right
-            :src="require('../assets/logo.png')"
-        ></b-img>
-        <b-row no-gutters>
+        <b-row align-v="center" align-h="center" v-if="workflowLoading">
+            <b-col align-self="end" class="text-center">
+                <b-spinner
+                    type="grow"
+                    label="Loading..."
+                    variant="secondary"
+                ></b-spinner>
+            </b-col>
+        </b-row>
+        <b-row no-gutters v-else>
+            <b-img
+                v-if="workflow.config.logo"
+                rounded
+                class="card-img-right"
+                style="max-width: 12rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                right
+                :src="
+                    `https://raw.githubusercontent.com/${workflow.repo.owner.login}/${workflow.repo.name}/master/${workflow.config.logo}`
+                "
+            ></b-img>
+            <b-img
+                v-else
+                class="card-img-left"
+                style="max-width: 7rem"
+                right
+                :src="require('../assets/logo.png')"
+            ></b-img>
             <b-col>
                 <b-row>
                     <b-col md="auto" class="mr-0">
@@ -230,6 +239,33 @@
                                         : 'text-dark'
                                 "
                             >
+                                <template #title
+                                    >Configuration
+                                    <b-button
+                                        size="sm"
+                                        :disabled="workflowLoading"
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
+                                        "
+                                        v-b-tooltip.hover
+                                        title="Refresh"
+                                        @click="refreshWorkflow"
+                                    >
+                                        <i class="fas fa-redo"></i>
+                                        <b-spinner
+                                            small
+                                            v-if="workflowLoading"
+                                            label="Refreshing..."
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'light'
+                                                    : 'dark'
+                                            "
+                                            class="ml-2 mb-1"
+                                        ></b-spinner> </b-button
+                                ></template>
                                 <b-row>
                                     <b-col>
                                         <b-row>
@@ -544,12 +580,25 @@ export default {
             required: true
         }
     },
+    data: function() {
+        return {
+            workflowLoading: false
+        };
+    },
     computed: {
         ...mapGetters('user', ['profile'])
     },
     methods: {
         workflowSelected: function(workflow) {
             this.$emit('workflowSelected', workflow);
+        },
+        async refreshWorkflow() {
+            this.workflowLoading = true;
+            await this.$store.dispatch('workflows/refresh', {
+                owner: this.$router.currentRoute.params.username,
+                name: this.$router.currentRoute.params.name
+            });
+            this.workflowLoading = false;
         }
     }
 };

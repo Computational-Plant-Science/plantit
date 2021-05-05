@@ -26,14 +26,14 @@
                     </b-alert>
                 </b-col>
             </b-row>
-            <b-row align-h="center" v-if="workflowLoading">
+            <b-row align-h="center" v-show="false">
                 <b-spinner
                     type="grow"
                     label="Loading..."
                     variant="secondary"
                 ></b-spinner>
             </b-row>
-            <b-row v-else>
+            <b-row>
                 <b-col>
                     <b-row>
                         <b-col>
@@ -55,10 +55,8 @@
                             >
                                 <b-alert
                                     id="flowInvalid"
-                                    :show="
-                                        !this.workflowLoading &&
-                                            !this.workflowValid
-                                    "
+                                    v-if="this.getWorkflow.validation_errors !== undefined"
+                                    :show="this.getWorkflow.validation_errors !== undefined"
                                     variant="danger"
                                     >This flow's configuration is invalid. It
                                     cannot be run in this state.
@@ -77,7 +75,7 @@
                                     ><br />
                                     Errors:
                                     {{
-                                        this.workflowValidationErrors.join(', ')
+                                        this.getWorkflow.validation_errors.join(', ')
                                     }}
                                 </b-alert>
                                 <workflowdetail
@@ -820,27 +818,6 @@
                         </b-col>
                     </b-row>
                     <b-row
-                        ><b-col md="auto"
-                            ><b-button
-                                :disabled="workflowLoading"
-                                :variant="
-                                    profile.darkMode ? 'outline-light' : 'white'
-                                "
-                                v-b-tooltip.hover
-                                title="Refresh Workflow"
-                                @click="refreshWorkflow"
-                            >
-                                <i class="fas fa-redo"></i>
-                                Refresh
-                                <b-spinner
-                                    small
-                                    v-if="workflowLoading"
-                                    label="Refreshing..."
-                                    :variant="
-                                        profile.darkMode ? 'light' : 'dark'
-                                    "
-                                    class="ml-2 mb-1"
-                                ></b-spinner> </b-button></b-col
                         ><b-col md="auto" class="mr-0" align-self="end">
                             <b-input-group>
                                 <template #prepend>
@@ -1271,9 +1248,6 @@ export default {
             runs: [],
             delayedRuns: [],
             repeatingRuns: [],
-            workflowLoading: true,
-            workflowValid: false,
-            workflowValidationErrors: [],
             tags: [],
             tagOptions: [],
             params: [],
@@ -1393,7 +1367,6 @@ export default {
                 owner: this.$router.currentRoute.params.username,
                 name: this.$router.currentRoute.params.name
             }),
-            this.validate(),
             this.loadClusters(),
             this.loadPublicClusters(),
             this.loadRuns(),
@@ -1403,14 +1376,6 @@ export default {
         this.populateComponents();
     },
     methods: {
-        async refreshWorkflow() {
-            this.workflowLoading = true;
-            await this.$store.dispatch('workflows/refresh', {
-                owner: this.$router.currentRoute.params.username,
-                name: this.$router.currentRoute.params.name
-            });
-            this.workflowLoading = false;
-        },
         async getWorkflowReadme() {
             return axios
                 .get(
@@ -1502,30 +1467,6 @@ export default {
         addTag(tag) {
             this.tags.push(tag);
             this.tagOptions.push(tag);
-        },
-        async validate() {
-            await axios
-                .get(
-                    `/apis/v1/workflows/${this.username}/${this.name}/validate/`,
-                    {
-                        headers: {
-                            Authorization: 'Bearer ' + this.githubToken
-                        }
-                    }
-                )
-                .then(response => {
-                    this.workflowValid = response.data.result;
-                    if (!this.workflowValid)
-                        this.workflowValidationErrors = response.data.errors;
-                    this.workflowLoading = false;
-                })
-                .catch(error => {
-                    if (error.status_code === 401) {
-                        this.login = true;
-                    } else {
-                        throw error;
-                    }
-                });
         },
         async loadRuns() {
             await axios
@@ -1972,8 +1913,6 @@ export default {
         },
         flowReady: function() {
             return (
-                !this.workflowLoading &&
-                this.workflowValid &&
                 this.paramsReady &&
                 this.inputReady &&
                 this.outputReady &&
