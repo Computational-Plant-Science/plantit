@@ -244,11 +244,6 @@
                                     <b-button
                                         size="sm"
                                         :disabled="workflowLoading"
-                                        :variant="
-                                            profile.darkMode
-                                                ? 'outline-light'
-                                                : 'white'
-                                        "
                                         v-b-tooltip.hover
                                         title="Refresh"
                                         @click="refreshWorkflow"

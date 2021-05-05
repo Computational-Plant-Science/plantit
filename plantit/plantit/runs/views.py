@@ -385,25 +385,7 @@ def run(request, id):
         run = Run.objects.get(guid=id)
         return JsonResponse(map_run(run))
     except Run.DoesNotExist:
-        return JsonResponse({
-            'id': id,
-            'job_id': None,
-            'job_status': None,
-            'job_walltime': None,
-            'work_dir': None,
-            'cluster': None,
-            'created': None,
-            'updated': None,
-            'completed': None,
-            'workflow_owner': None,
-            'workflow_name': None,
-            'tags': [],
-            'is_complete': False,
-            'is_success': False,
-            'is_failure': False,
-            'is_cancelled': False,
-            'is_timeout': False,
-        })
+        return HttpResponseNotFound()
 
 
 @api_view(['GET'])

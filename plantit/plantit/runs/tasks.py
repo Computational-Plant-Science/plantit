@@ -535,7 +535,12 @@ def cleanup_run(id: str):
             command=f"rm -r {join(run.cluster.workdir, run.work_dir)}",
             directory=run.cluster.workdir,
             allow_stderr=True)
-    run.delete()
+
+    run.cleaned_up = True
+    run.save()
+
+    msg = f"Cleaned up {run.guid}"
+    update_status(run, msg)
 
 
 @app.task()
@@ -768,5 +773,8 @@ def list_run_results(id: str):
                     with ssh_client.client.open_sftp() as sftp:
                         sftp.chdir(work_dir)
                         sftp.get(result['name'], temp_file.name)
+
+    run.result_previews_loaded = True
+    run.save()
 
     update_status(run, f"Created file previews")

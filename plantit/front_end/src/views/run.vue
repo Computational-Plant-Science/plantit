@@ -26,8 +26,26 @@
                             <br />
                             <br />
                             This run does not exist.
+                        </p>
+                    </b-col>
+                </b-row>
+            </div>
+          <div v-else-if="getRun.cleaned_up">
+                <b-row align-content="center">
+                    <b-col>
+                        <p
+                            :class="
+                                profile.darkMode
+                                    ? 'text-center text-white'
+                                    : 'text-center text-dark'
+                            "
+                        >
+                            <i
+                                class="fas fa-broom fa-3x fa-fw"
+                            ></i>
                             <br />
-                            It may have been cleaned up.
+                            <br />
+                            This run has been cleaned up.
                         </p>
                     </b-col>
                 </b-row>
@@ -118,7 +136,9 @@
                                                 getRun.is_timeout
                                                     ? 'danger'
                                                     : getRun.is_success
-                                                    ? 'success' : getRun.is_cancelled ? 'secondary'
+                                                    ? 'success'
+                                                    : getRun.is_cancelled
+                                                    ? 'secondary'
                                                     : 'warning'
                                             "
                                             class="ml-2 mr-2"
@@ -872,26 +892,17 @@
                                                                 <template
                                                                     #header
                                                                     ><b-img-lazy
+                                                                        center
                                                                         v-if="
                                                                             viewMode ===
                                                                                 'Grid'
                                                                         "
                                                                         fluid-grow
-                                                                        style="min-width: 20rem;"
+                                                                        :style="(getRun.result_previews_loaded || noPreview(file)) ? 'min-width: 20rem;': 'max-width: 4rem;'"
                                                                         :src="
-                                                                            fileIs3dModel(
-                                                                                file.name
-                                                                            ) ||
-                                                                            (!fileIsText(
-                                                                                file.name
-                                                                            ) &&
-                                                                                !fileIsImage(
-                                                                                    file.name
-                                                                                ))
-                                                                                ? require('../assets/no_preview_thumbnail.png')
-                                                                                : thumbnailFor(
-                                                                                      file.path
-                                                                                  )
+                                                                            thumbnailPath(
+                                                                                file
+                                                                            )
                                                                         "
                                                                     ></b-img-lazy
                                                                 ></template>
@@ -1407,6 +1418,19 @@ export default {
         };
     },
     methods: {
+        noPreview(file) {
+            return (
+                this.fileIs3dModel(file.name) ||
+                (!this.fileIsText(file.name) && !this.fileIsImage(file.name))
+            );
+        },
+        thumbnailPath(file) {
+            if (this.noPreview(file))
+                return require('../assets/no_preview_thumbnail.png');
+            else if (!this.getRun.result_previews_loaded)
+                return require('../assets/PlantITLoading.gif');
+            else return this.thumbnailFor(file.path);
+        },
         thumbnailFor(path) {
             let i = this.outputFiles.findIndex(f => f.path === path);
             if (
@@ -1883,7 +1907,7 @@ export default {
         },
         getRun() {
             let run = this.run(this.$router.currentRoute.params.id);
-            if (run !== undefined) {
+            if (run !== undefined && run !== null) {
                 if (run.is_complete) this.reloadOutputFiles();
                 return run;
             }
@@ -1960,6 +1984,7 @@ export default {
 <style scoped lang="sass">
 @import "../scss/_colors.sass"
 @import "../scss/main.sass"
+
 
 .green
     color: $color-button

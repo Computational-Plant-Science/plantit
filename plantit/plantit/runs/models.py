@@ -35,6 +35,8 @@ class Run(models.Model):
     work_dir = models.CharField(max_length=100, null=True, blank=True)
     task = models.ForeignKey(PeriodicTask, null=True, blank=True, on_delete=models.CASCADE)
     results = ArrayField(models.CharField(max_length=250), blank=True, null=True)
+    result_previews_loaded = models.BooleanField(default=False)
+    cleaned_up = models.BooleanField(default=False)
 
     def __str__(self):
         opts = self._meta

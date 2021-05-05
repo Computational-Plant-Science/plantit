@@ -272,7 +272,9 @@ def map_run(run: Run):
         'is_failure': run.is_failure,
         'is_cancelled': run.is_cancelled,
         'is_timeout': run.is_timeout,
-        'workflow_image_url': run.workflow_image_url
+        'workflow_image_url': run.workflow_image_url,
+        'result_previews_loaded': run.result_previews_loaded,
+        'cleaned_up': run.cleaned_up
     }
 
 
