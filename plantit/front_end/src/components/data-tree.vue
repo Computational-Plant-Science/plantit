@@ -65,7 +65,7 @@
             </b-col>
             <b-col md="auto">
                 <b-input-group size="sm">
-                    <b-form-file
+                    <!--<b-form-file
                         v-if="upload && !isShared"
                         style="min-width: 15rem"
                         :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
@@ -160,7 +160,7 @@
                                 :placeholder="'Enter a directory name'"
                             ></b-form-input>
                         </b-form-group>
-                    </b-modal>
+                    </b-modal>-->
                     <b-button
                         v-if="internalLoaded && !internalLoading"
                         class="ml-1 mr-1"
@@ -466,7 +466,7 @@
                             </b-row>
                             <b-row v-else><b-col></b-col></b-row> </b-container
                     ></b-modal>
-                    <b-button
+                    <!--<b-button
                         v-if="
                             internalLoaded &&
                                 (internalLoaded
@@ -486,7 +486,7 @@
                         "
                         variant="outline-danger"
                         ><i class="fas fa-trash fa-fw"></i
-                    ></b-button>
+                    ></b-button>-->
                     <b-button
                         class="ml-1 mr-1"
                         title="Expand Directory"

@@ -348,7 +348,7 @@
                                             </div>
                                             <div
                                                 class="m-3"
-                                                v-if="getRun.is_complete"
+                                                v-if="getRun.is_complete && getRun.output_files !== undefined"
                                             >
                                                 <b-row
                                                     align-h="center"
@@ -358,10 +358,10 @@
                                                     <b-col class="text-left">
                                                         <span
                                                             v-if="
-                                                                !loadingOutputFiles
+                                                                !loadingOutputFiles && getRun.output_files !== undefined
                                                             "
                                                             >{{
-                                                                outputFiles.length
+                                                                getRun.output_files.length
                                                             }}</span
                                                         >
                                                         result(s)
@@ -459,9 +459,10 @@
                                                     >
                                                         <b-dropdown
                                                             :disabled="
-                                                                outputFiles !==
+                                                            getRun.output_files !== undefined &&
+                                                                getRun.output_files !==
                                                                     null &&
-                                                                    outputFiles.length ===
+                                                                    getRun.output_files.length ===
                                                                         0
                                                             "
                                                             class="text-right"
@@ -512,9 +513,10 @@
                                                         align-self="end"
                                                         ><b-dropdown
                                                             :disabled="
-                                                                outputFiles !==
+                                                            getRun.output_files !== undefined &&
+                                                                getRun.output_files !==
                                                                     null &&
-                                                                    outputFiles.length ===
+                                                                    getRun.output_files.length ===
                                                                         0
                                                             "
                                                             v-b-tooltip.hover
@@ -582,7 +584,7 @@
                                                             class="mt-3"
                                                             size="md"
                                                             :total-rows="
-                                                                outputFiles.length
+                                                                getRun.output_files.length
                                                             "
                                                             :per-page="
                                                                 outputPageSize
@@ -955,7 +957,7 @@
                                                             @sliding-start="
                                                                 slide =>
                                                                     getTextFile(
-                                                                        outputFiles[
+                                                                        getRun.output_files[
                                                                             slide
                                                                         ]
                                                                     )
@@ -963,14 +965,14 @@
                                                             @sliding-end="
                                                                 slide =>
                                                                     renderPreview(
-                                                                        outputFiles[
+                                                                        getRun.output_files[
                                                                             slide
                                                                         ]
                                                                     )
                                                             "
                                                         >
                                                             <b-carousel-slide
-                                                                v-for="file in outputFiles"
+                                                                v-for="file in getRun.output_files"
                                                                 v-bind:key="
                                                                     file.name
                                                                 "
@@ -1033,7 +1035,7 @@
                                                                     #img
                                                                     ><div
                                                                         :id="
-                                                                            file.id
+                                                                            file.name
                                                                         "
                                                                         :class="
                                                                             profile.darkMode
@@ -1378,7 +1380,7 @@ export default {
     data() {
         return {
             textContent: [],
-            currentModel: null,
+            currentModel: {},
             currentCarouselSlide: 0,
             viewMode: 'List',
             resultSearchText: '',
@@ -1400,7 +1402,6 @@ export default {
             runtimeUpdateInterval: null,
             // output files
             loadingOutputFiles: false,
-            outputFiles: [],
             outputFilePage: 1,
             outputPageSize: 10,
             // thumbnail view
@@ -1432,7 +1433,7 @@ export default {
             else return this.thumbnailFor(file.path);
         },
         thumbnailFor(path) {
-            let i = this.outputFiles.findIndex(f => f.path === path);
+            let i = this.getRun.output_files.findIndex(f => f.path === path);
             if (
                 this.viewMode === 'Grid' &&
                 i >= (this.outputFilePage - 1) * this.outputPageSize &&
@@ -1527,7 +1528,7 @@ export default {
             scene.fog = new THREE.Fog(0x72645b, 2, 15);
 
             const loader = new PLYLoader();
-            var comp = this;
+            var comp = {};
             loader.load(
                 `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/?path=${f.name}`,
                 function(geometry) {
@@ -1554,13 +1555,17 @@ export default {
                     mesh.castShadow = true;
                     mesh.receiveShadow = true;
 
-                    comp.currentModel.geometry = geometry;
-                    comp.currentModel.material = material;
-                    comp.currentModel.mesh = mesh;
+                    comp.geometry = geometry;
+                    comp.material = material;
+                    comp.mesh = mesh;
 
                     scene.add(mesh);
                 }
             );
+
+            this.currentModel.geometry = comp.geometry;
+            this.currentModel.material = comp.material;
+            this.currentModel.mesh = comp.mesh;
 
             // Lights
 
@@ -1634,14 +1639,14 @@ export default {
             // resize
 
             window.addEventListener('resize', onWindowResize);
-            document.getElementById(f.id).innerHTML = '';
-            document.getElementById(f.id).prepend(renderer.domElement);
+            document.getElementById(f.name).innerHTML = '';
+            document.getElementById(f.name).prepend(renderer.domElement);
             //.appendChild(renderer.domElement);
 
             this.currentModel.scene = scene;
             this.currentModel.loader = loader;
             this.currentModel.renderer = renderer;
-            this.currentModel.id = f.id;
+            this.currentModel.id = f.name;
 
             animate();
         },
@@ -1845,25 +1850,6 @@ export default {
                     return error;
                 });
         },
-        async reloadOutputFiles() {
-            this.loadingOutputFiles = true;
-            await axios
-                .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.id}/outputs/`
-                )
-                .then(response => {
-                    if (response && response.status === 404) {
-                        return;
-                    }
-                    this.outputFiles = response.data.outputs;
-                    this.loadingOutputFiles = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.loadingOutputFiles = false;
-                    return error;
-                });
-        },
         getTextFile(file) {
             if (!this.fileIsText(file.name)) return;
             this.textContent = [];
@@ -1895,7 +1881,7 @@ export default {
         ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
         ...mapGetters('runs', ['run', 'runs', 'runsLoading']),
         filteredResults() {
-            return this.outputFiles
+            return this.getRun.output_files
                 .slice(
                     (this.outputFilePage - 1) * this.outputPageSize,
                     this.outputFilePage * this.outputPageSize
@@ -1907,10 +1893,7 @@ export default {
         },
         getRun() {
             let run = this.run(this.$router.currentRoute.params.id);
-            if (run !== undefined && run !== null) {
-                if (run.is_complete) this.reloadOutputFiles();
-                return run;
-            }
+            if (run !== undefined && run !== null) return run;
             return null;
         },
         submissionLogs() {
@@ -1951,31 +1934,29 @@ export default {
     watch: {
         async $route() {
             await this.$store.dispatch('runs/refresh', this.getRun);
-            await this.reloadOutputFiles();
+            window.location.reload(false);
+            // this.$forceUpdate();
         },
-        // async run(oldRun, newRun) {
-        //     if (newRun.is_complete) await this.reloadOutputFiles();
-        // },
         '$route.params.id'() {
             // need to watch for route change to prompt reload
         },
         viewMode() {
             if (
                 this.data !== null &&
-                this.outputFiles.some(f => f.name.endsWith('ply'))
+                this.getRun.output_files.some(f => f.name.endsWith('ply'))
             ) {
                 this.unrenderPreview();
                 if (this.viewMode === 'Carousel')
                     if (this.currentCarouselSlide === 0)
-                        this.renderPreview(this.outputFiles[0]);
+                        this.renderPreview(this.getRun.output_files[0]);
             }
 
             if (
                 this.viewMode === 'Carousel' &&
                 this.textContent.length === 0 &&
-                this.outputFiles.length > 0
+                this.getRun.output_files.length > 0
             )
-                this.getTextFile(this.outputFiles[0]);
+                this.getTextFile(this.getRun.output_files[0]);
         }
     }
 };

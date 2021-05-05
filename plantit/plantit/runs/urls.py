@@ -13,7 +13,6 @@ urlpatterns = [
     path(r'<username>/remove_repeating/<workflow>/', views.remove_repeating),
     path(r'<username>/toggle_repeating/<workflow>/', views.toggle_repeating),
     path(r'<id>/', views.run),
-    path(r'<id>/outputs/', views.list_outputs),
     path(r'<id>/output/<file>/', views.get_output_file),
     path(r'<id>/file_text/', views.get_file_text),
     path(r'<id>/thumbnail/', views.get_thumbnail),

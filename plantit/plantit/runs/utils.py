@@ -1,5 +1,6 @@
 import asyncio
 import binascii
+import json
 import os
 import re
 import tempfile
@@ -19,6 +20,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
+from plantit.redis import RedisClient
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
 from plantit.clusters.models import Cluster, ClusterAccessPolicy, ClusterRole
@@ -252,6 +254,8 @@ def map_run(run: Run):
     except:
         can_restart = False
 
+    results = RedisClient.get().get(f"results/{run.guid}")
+
     return {
         'can_restart': can_restart,
         'id': run.guid,
@@ -274,7 +278,8 @@ def map_run(run: Run):
         'is_timeout': run.is_timeout,
         'workflow_image_url': run.workflow_image_url,
         'result_previews_loaded': run.result_previews_loaded,
-        'cleaned_up': run.cleaned_up
+        'cleaned_up': run.cleaned_up,
+        'output_files': json.loads(results) if results is not None else None
     }
 
 

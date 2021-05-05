@@ -25,12 +25,12 @@
                         : 'theme-light m-0 p-3'
                 "
             >
-                <b-row
-                    ><b-col>
+              <b-row align-v="center" align-h="center">
+                <b-col align-self="end">
                         <b-spinner
                             v-if="userDataLoading"
                             type="grow"
-                            variant="success"
+                            variant="secondary"
                         ></b-spinner>
                         <datatree
                             v-else
@@ -57,9 +57,8 @@
                         : 'theme-light m-0 p-3'
                 "
             >
-                <b-row
-                    ><b-col class="text-center"
-                        ><b-spinner
+                        <b-row align-v="center" align-h="center">
+                <b-col align-self="end" ><b-spinner
                             v-if="sharedCollectionsLoading"
                             type="grow"
                             variant="secondary"
@@ -104,12 +103,12 @@
                         : 'theme-light m-0 p-3'
                 "
             >
-                <b-row
-                    ><b-col>
+              <b-row align-v="center" align-h="center">
+                <b-col align-self="end" >
                         <b-spinner
                             v-if="publicDataLoading"
                             type="grow"
-                            variant="success"
+                            variant="secondary"
                         ></b-spinner>
                         <datatree
                             v-else-if="publicData !== null"

@@ -70,29 +70,6 @@ def get_total_count(request):
 
 @api_view(['GET'])
 @login_required
-def list_outputs(request, id):
-    redis = RedisClient.get()
-    results = redis.get(f"results/{id}")
-
-    try:
-        run = Run.objects.get(guid=id)
-    except:
-        return HttpResponseNotFound()
-
-    workflow = redis.get(f"workflow/{run.workflow_owner}/{run.workflow_name}")
-    if workflow is None:
-        workflow = refresh_workflow(run.workflow_owner, run.workflow_name, request.user.profile.github_token)['config']
-
-    if results is None:
-        results = get_run_results(run, workflow)
-        redis.set(f"results/{id}", json.dumps(results))
-        return JsonResponse({'outputs': results})
-    else:
-        return JsonResponse({'outputs': json.loads(results)})
-
-
-@api_view(['GET'])
-@login_required
 def get_thumbnail(request, id):
     path = request.GET.get('path')
     file = path.rpartition('/')[2]
