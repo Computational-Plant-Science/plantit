@@ -811,7 +811,7 @@
                             <i class="fab fa-github fa-1x fa-fw"></i>
                             Github
                         </b-dropdown-item>
-                        <b-dropdown-item
+                        <!--<b-dropdown-item
                             href="#"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -825,7 +825,7 @@
                         >
                             <i class="fab fa-slack fa-1x fa-fw"></i>
                             Slack
-                        </b-dropdown-item>
+                        </b-dropdown-item>-->
                         <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-dropdown-item
                             :title="
