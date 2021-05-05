@@ -1,31 +1,29 @@
 <template>
     <div>
         <b-card
-            class="rounded-0 text-center m-0"
-            bg-variant="white"
+            class="rounded-0 text-center m-0 overflow-hidden"
+            bg-variant="secondary"
             border-variant="light"
             text-variant="dark"
             header-bg-variant="dark"
             header-border-variant="dark"
         >
+            <b-img
+                rounded
+                style="min-height: 45rem;opacity: 0.5;position: absolute;left:-300px;bottom:-150px"
+                center
+                :src="require('../../assets/PlantITLoading.gif')"
+            ></b-img>
             <br />
             <br />
             <br />
             <b-container class="text-center">
                 <b-row align-v="center" class="justify-content-md-center">
-                    <b-col>
-                        <b-img
-                            style="max-width: 3rem;transform: translate(0px, 20px);"
-                            :src="require('../../assets/logo.png')"
-                            right
-                            class="m-0 p-0"
-                        ></b-img>
-                    </b-col>
                     <b-col
                         ><b-img
-                            style="width: 5rem;transform: translate(0px, 20px);"
-                            :src="require('../../assets//cps.png')"
-                            left
+                            center
+                            style="max-width: 20rem;transform: translate(0px, 20px);"
+                            :src="require('../../assets//cps2.png')"
                             class="m-0 p-0"
                         ></b-img
                     ></b-col>
@@ -33,28 +31,24 @@
                 <br />
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
-                        <h5 class="text-dark">
-                            Built with <i class="far fa-heart"></i> by
-                            the
+                        <b class="text-dark">
+                            Built by the
                             <b-link
-                                :class="
-                                            darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
+                                :class="darkMode ? 'text-light' : 'text-dark'"
                                 style="text-decoration: underline;text-underline: lightgray"
                                 href="https://www.computational-plant-science.org/joomla30/"
                                 >Computational Plant Science Lab</b-link
-                            >
-                        </h5>
+                            > at the University of Georgia
+                        </b>
                     </b-col>
                 </b-row>
                 <br />
-                <br/>
+                <br />
                 <b-row class="justify-content-md-center mb-4">
                     <b-col>
                         <b-tabs
                             justified
+                            pills
                             active-nav-item-class="text-dark"
                             nav-class=""
                         >
@@ -157,9 +151,7 @@
                             </b-tab>
                             <b-tab title="Former">
                                 <template v-slot:title class="m-0 p-0">
-                                    <b class="text-dark"
-                                        >Former Contributors</b
-                                    >
+                                    <b class="text-dark">Former Contributors</b>
                                 </template>
                                 <br />
                                 <b-card-group columns>

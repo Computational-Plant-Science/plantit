@@ -66,7 +66,7 @@
                                     Github
                                 </b-button>
                             </b-nav-item>
-                            <b-nav-item class="m-0 p-0" title="Slack">
+                            <!--<b-nav-item class="m-0 p-0" title="Slack">
                                 <b-button
                                     :variant="
                                         profile.darkMode
@@ -79,7 +79,7 @@
                                     <br />
                                     Slack
                                 </b-button>
-                            </b-nav-item>
+                            </b-nav-item>-->
                             <b-nav-item
                                 v-if="profile.loggedIn"
                                 title="Enter PlantIT"

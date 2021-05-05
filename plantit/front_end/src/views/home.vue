@@ -4,8 +4,8 @@
             <b-col>
                 <splash></splash>
                 <about></about>
+                <sponsors></sponsors>
                 <people></people>
-              <sponsors></sponsors>
             </b-col>
         </b-row>
     </b-container>

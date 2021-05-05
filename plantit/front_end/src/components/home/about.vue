@@ -24,17 +24,18 @@
                             plant<small class="mb-3 text-success">IT</small>
                         </h2>
                         <h5 class="text-white mt-4">
-                            Plant phenomics in the browser
+                            plant science workflow automation in the browser
                         </h5>
                     </b-col>
                 </b-row>
                 <br />
                 <b-row>
                     <b-col align-self="end" class="text-right mr-0"
-                        ><h2 class="text-success">{{ runs }}</h2></b-col
+                        ><h1 class="text-success">{{ runs }}</h1></b-col
                     >
                     <b-col align-self="middle" class="text-left ml-0 pl-0"
-                        >jobs (and counting!)</b-col
+                        ><h5 class="text-white">jobs</h5>
+                        (and counting!)</b-col
                     >
                 </b-row>
             </template>
@@ -77,10 +78,27 @@
                             </b-card-text>
                         </b-card>
                     </b-col>
+                    <b-col md="auto"
+                        ><b-col md="auto"
+                            ><b-img
+                                rounded
+                                style="max-height: 5rem;"
+                                center
+                                :src="require('../../assets/logos/cyverse.png')"
+                            ></b-img></b-col
+                    ></b-col>
                 </b-row>
                 <br />
                 <br />
                 <b-row>
+                    <b-col md="auto"
+                        ><b-img
+                            rounded
+                            style="max-height: 6rem;"
+                            center
+                            :src="require('../../assets/logos/github.png')"
+                        ></b-img
+                    ></b-col>
                     <b-col>
                         <b-card
                             sub-title-text-variant="success"
@@ -128,7 +146,7 @@
                 <br />
                 <br />
                 <b-row>
-                    <b-col md="auto">
+                    <b-col>
                         <b-card
                             sub-title-text-variant="success"
                             class="text-left text-white rounded-0 overflow-hidden"
@@ -152,6 +170,21 @@
                             </b-card-text>
                         </b-card>
                     </b-col>
+                  <b-col md="auto"
+                        ><b-img
+                            rounded
+                            style="max-height: 6rem;"
+                            center
+                            :src="require('../../assets/logos/docker.png')"
+                        ></b-img
+                  ></b-col><b-col md="auto"
+                        ><b-img
+                            rounded
+                            style="max-height: 6rem;"
+                            center
+                            :src="require('../../assets/logos/singularity.png')"
+                        ></b-img
+                    ></b-col>
                 </b-row>
                 <br />
                 <br />
