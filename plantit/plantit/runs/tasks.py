@@ -698,7 +698,7 @@ def list_run_results(id: str):
                 with open(preview_file, 'rb') as pf:
                     content = pf.read()
                     encoded = base64.b64encode(content)
-                    redis.set(f"preview/{run.guid}/{path}", encoded)
+                    redis.set(f"preview/{run.guid}/{name}", encoded)
                     print(f"Saved file preview to cache: {name}")
         elif path.endswith('png'):
             print(f"Creating preview for PNG file: {name}")
