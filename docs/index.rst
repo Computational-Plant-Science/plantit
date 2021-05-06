@@ -11,6 +11,7 @@ Welcome to PlantIT's documentation!
    :caption: About
 
    md/about.md
+   md/architecture.md
 
 .. toctree::
    :maxdepth: 3

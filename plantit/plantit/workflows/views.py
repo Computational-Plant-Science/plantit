@@ -16,7 +16,7 @@ from plantit.workflows.utils import refresh_workflow
 @login_required
 def list_all(request):
     redis = RedisClient.get()
-    users = User.objects.all()
+    users = User.objects.exclude(profile__isnull=True).all()
 
     with open(settings.MORE_USERS, 'r') as file:
         more_users = json.load(file)
