@@ -4,7 +4,11 @@
 
 - [Defining Workflows](#defining-workflows)
   - [The `plantit.yaml` file](#the-plantityaml-file)
+    - [Deployment target resources](#deployment-target-resources)
+        - [GPU mode](#gpu-mode)
+      - [Timeouts and other errors](#timeouts-and-other-errors)
     - [Parameters](#parameters)
+      - [Default values](#default-values)
     - [Workflow input/output](#workflow-inputoutput)
       - [Workflow input](#workflow-input)
         - [Input types (`file`, `files`, and `directory`)](#input-types-file-files-and-directory)
