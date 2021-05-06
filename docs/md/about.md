@@ -1,6 +1,7 @@
+# About PlantIT
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [This website...](#this-website)
 - [Why does it exist?](#why-does-it-exist)
@@ -12,41 +13,18 @@
 
 ---
 
-- is a science gateway for plant phenomics and morphology
-- was preceded by &mdash; grew out of, as it were &mdash; [DIRT](http://dirt.cyverse.org/?q=welcome) (**D**igital **I**maging of **R**oot **T**raits), which measures traits of monocot and dicot roots from digital images, automates the extraction of root traits, and makes high-throughput grid computing environments available to end-users without technical training
-- is software-as-a-service allowing plant scientists and professionals to store, publish, and access data with CyVerse, and run simulations and analyses on clusters from a web browser
-- is a platform-as-a-service for programmers and research software developers, integrated tightly with GitHub: just add a `plantit.yaml` file to your repository to deploy a workflow developed with your tools of choice
+- is a workflow automation tool for computational plant science 
+- was preceded by &mdash; grew out of, as it were &mdash; [DIRT](http://dirt.cyverse.org/?q=welcome) (**D**igital **I**maging of **R**oot **T**raits), which measures traits of monocot and dicot roots from user-uploaded images, making high-throughput grid computing environments available via web portal
+- is software-as-a-service: store, publish, and access data with CyVerse, and run simulations and analyses on clusters from a browser
+- is a platform-as-a-service, integrated with GitHub and Docker: just add a `plantit.yaml` file to your repository to deploy a container to a cluster or supercomputer
 
 <br/>
 
-### Why does it exist? 
+### So, a bioinformatics gateway?
 
 ---
 
-When
-
-- a field biologist collects a dataset, associates it with metadata, preprocesses it, acquires a DOI, and publishes it to the community
-- a breeder deploys an automated imaging mechanism and generates thousands of 3D reconstructions, each described by hundreds of images
-- a researcher develops a growth model and runs embarrassingly parallel simulations to explore the corresponding phenotype space
-- a computer scientist shares an algorithm with biologists who may be unfamiliar with the command line and may use a variety of operating systems
-
-...it can involve
-
-- hard drives
-- shell scripting
-- emailing strangers
-- juggling job submission scripts
-- answering support requests at 2am
-- sticking notes to computer monitors
-- remembering which directory yesterday's data is in
-
-Can't the computer do some of the painful bits?
-
-### Is it a bioinformatics gateway?
-
----
-
-It's flexible enough to run nearly any container-friendly workload, but if you want to do genomics, a tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit.
+PlantIT is flexible enough to run most container-friendly workloads, but if you want to do genomics, an established tool like [CoGe](https://genomevolution.org/CoGe/) or [easyGWAS](https://easygwas.ethz.ch/) may be a better fit. Feel free to [get in touch](https://github.com/Computational-Plant-Science/plantit/discussions) with questions about your use case.
 
 <br/>
  
@@ -54,11 +32,11 @@ It's flexible enough to run nearly any container-friendly workload, but if you w
 
 ---
 
-- pipeline framework (e.g., [Snakemake](https://snakemake.readthedocs.io/en/stable/), [Nextflow](https://www.nextflow.io/), [Luigi](https://luigi.readthedocs.io/en/stable/), [Airflow](https://airflow.apache.org/), [Metaflow](https://metaflow.org/))?
+- pipeline orchestrator (e.g., [Snakemake](https://snakemake.readthedocs.io/en/stable/), [Nextflow](https://www.nextflow.io/), [Luigi](https://luigi.readthedocs.io/en/stable/), [Airflow](https://airflow.apache.org/), [Metaflow](https://metaflow.org/))?
 - distributed queue or task scheduler (e.g., [Celery](https://docs.celeryproject.org/en/stable/index.html) or [Dask](https://dask.org/))?
 - batch processing, streaming, or analytics platform (e.g., map-reduce or [Spark](https://spark.apache.org/))?
-- container orchestrator (e.g., [Kubernetes](https://kubernetes.io/))?
-- cluster resource manager (e.g., [Torque/Moab](https://adaptivecomputing.com/cherry-services/torque-resource-manager/), [Slurm](https://slurm.schedmd.com/overview.html))?
+- container automation system (e.g., [Kubernetes](https://kubernetes.io/))?
+- cluster scheduler (e.g., [Torque/Moab](https://adaptivecomputing.com/cherry-services/torque-resource-manager/), [Slurm](https://slurm.schedmd.com/overview.html))?
 
-No. It just tries to glue these things together in useful ways.
+Sort of, but not really. PlantIT just tries to glue these things together in helpful ways.
 
