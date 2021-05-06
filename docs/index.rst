@@ -10,7 +10,7 @@ Welcome to PlantIT's documentation!
    :maxdepth: 3
    :caption: About
 
-   md/about/md
+   md/about.md
 
 .. toctree::
    :maxdepth: 3
