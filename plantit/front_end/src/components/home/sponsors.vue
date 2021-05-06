@@ -116,7 +116,6 @@
                 </b-card>
             </b-card-group>
         </b-card>
-      <br/>
     </div>
 </template>
 

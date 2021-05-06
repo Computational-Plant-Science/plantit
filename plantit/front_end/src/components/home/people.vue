@@ -2,15 +2,15 @@
     <div>
         <b-card
             class="rounded-0 text-center m-0 overflow-hidden"
-            bg-variant="secondary"
-            border-variant="light"
+            bg-variant="info"
+            border-variant="info"
             text-variant="dark"
             header-bg-variant="dark"
             header-border-variant="dark"
         >
             <b-img
                 rounded
-                style="min-height: 45rem;opacity: 0.5;position: absolute;left:-300px;bottom:-150px"
+                style="min-height: 30rem;position: absolute;left:-180px;bottom:-150px"
                 center
                 :src="require('../../assets/PlantITLoading.gif')"
             ></b-img>
@@ -22,7 +22,7 @@
                     <b-col
                         ><b-img
                             center
-                            style="max-width: 20rem;transform: translate(0px, 20px);"
+                            style="max-width: 15rem;transform: translate(0px, 20px);"
                             :src="require('../../assets//cps2.png')"
                             class="m-0 p-0"
                         ></b-img
@@ -31,10 +31,10 @@
                 <br />
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
-                        <b class="text-dark">
+                        <b class="text-white">
                             Built by the
                             <b-link
-                                :class="darkMode ? 'text-light' : 'text-dark'"
+                                class="text-dark"
                                 style="text-decoration: underline;text-underline: lightgray"
                                 href="https://www.computational-plant-science.org/joomla30/"
                                 >Computational Plant Science Lab</b-link
@@ -49,7 +49,7 @@
                         <b-tabs
                             justified
                             pills
-                            active-nav-item-class="text-dark"
+                            active-nav-item-class="text-dark bg-white"
                             nav-class=""
                         >
                             <br />

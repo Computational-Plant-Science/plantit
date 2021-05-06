@@ -209,14 +209,14 @@
                                     >
                                 </template>
                                 <b-row class="m-1">
-                                    <b-col align-self="center"
+                                    <b-col align-self="center" cols="3"
                                         ><i
                                             class="fas fa-envelope fa-1x fa-fw"
                                         ></i>
                                         Push Notifications:
                                         {{ profile.pushNotifications }}
                                     </b-col>
-                                    <b-col align-self="center">
+                                    <b-col align-self="center" cols="8">
                                         <b-button
                                             size="sm"
                                             v-if="
@@ -243,7 +243,7 @@
                                     ></b-col>
                                 </b-row>
                                 <b-row class="m-1"
-                                    ><b-col align-self="center">
+                                    ><b-col align-self="center" cols="3">
                                         <i
                                             v-if="profile.darkMode"
                                             class="fas fa-sun fa-1x fa-fw"
@@ -258,7 +258,7 @@
                                                 ? 'enabled'
                                                 : 'disabled'
                                         }} </b-col
-                                    ><b-col align-self="center">
+                                    ><b-col align-self="center" cols="8">
                                         <b-button
                                             size="sm"
                                             @click="toggleDarkMode"
