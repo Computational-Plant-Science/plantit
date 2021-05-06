@@ -198,7 +198,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     def list_users(self, github_token):
         users = []
-        for user in list(self.queryset):
+        for user in list(self.queryset.exclude(profile__isnull=True)):
             if user.profile.github_username:
                 github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
                                               headers={'Authorization': f"Bearer {github_token}"}).json()
