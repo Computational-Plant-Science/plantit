@@ -6,10 +6,10 @@
                 class="p-3 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
-                :border-variant="profile.darkMode ? 'secondary' : 'default'"
+                :border-variant="profile.darkMode ? 'default' : 'default'"
                 :text-variant="profile.darkMode ? 'dark' : 'white'"
                 :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 1.0"
+                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.8"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>

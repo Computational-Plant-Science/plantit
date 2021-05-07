@@ -38,7 +38,7 @@
                                     <b-img
                                         class="avatar"
                                         rounded
-                                        style="max-height: 6rem; max-width: 6rem; position: relative; top: 20px; box-shadow: -2px 2px 2px #adb5bd"
+                                        style="max-height: 6rem; max-width: 6rem; position: relative; top: 20px; box-shadow: -2px 2px 2px #adb5bd;opacity:0.8"
                                         :src="
                                             userProfile.githubProfile
                                                 ? userProfile.githubProfile
