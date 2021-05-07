@@ -211,6 +211,19 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                             no_cache=run_options.no_cache,
                             gpu=run_options.gpu)
                         launcher_script.write(f"{command}\n")
+                    elif flow['config']['input']['kind'] == 'file':
+                        command = prep_run_command(
+                            work_dir=run_options.workdir,
+                            image=run_options.image,
+                            command=run_options.command,
+                            parameters=(run_options.parameters if run_options.parameters is not None else []) + [
+                                Parameter(key='INPUT', value=new_flow['input']['file']['path'])],
+                            bind_mounts=run_options.bind_mounts,
+                            docker_username=docker_username,
+                            docker_password=docker_password,
+                            no_cache=run_options.no_cache,
+                            gpu=run_options.gpu)
+                        launcher_script.write(f"{command}\n")
 
                 script.write(f"export LAUNCHER_WORKDIR={join(run.cluster.workdir, run.work_dir)}\n")
                 script.write(f"export LAUNCHER_JOB_FILE=launch\n")
