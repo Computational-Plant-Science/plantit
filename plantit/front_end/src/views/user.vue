@@ -503,17 +503,47 @@
                                                 .github_token !== undefined
                                     "
                                 >
-                                    <workflows
-                                        class="m-1"
-                                        :github-user="
-                                            profile.githubProfile.login
-                                        "
-                                        :github-token="
-                                            profile.djangoProfile.github_token
-                                        "
-                                        :workflows="userWorkflows"
-                                    >
-                                    </workflows>
+                                    <b-col md="auto"
+                                        ><b-button
+                                            :disabled="workflowsLoading"
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'white'
+                                            "
+                                            size="sm"
+                                            v-b-tooltip.hover
+                                            title="Refresh Workflows"
+                                            @click="refreshWorkflows"
+                                        >
+                                            <i class="fas fa-redo"></i>
+                                            Refresh Workflows
+                                            <b-spinner
+                                                small
+                                                v-if="workflowsLoading"
+                                                label="Refreshing..."
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'light'
+                                                        : 'dark'
+                                                "
+                                                class="ml-2 mb-1"
+                                            ></b-spinner> </b-button
+                                    ></b-col>
+                                    <b-col
+                                        ><workflows
+                                            class="m-1"
+                                            :github-user="
+                                                profile.githubProfile.login
+                                            "
+                                            :github-token="
+                                                profile.djangoProfile
+                                                    .github_token
+                                            "
+                                            :workflows="userWorkflows"
+                                        >
+                                        </workflows>
+                                    </b-col>
                                 </b-row>
                             </b-tab>
                             <b-tab
@@ -1283,6 +1313,9 @@ export default {
         ]);
     },
     methods: {
+        refreshWorkflows() {
+            this.$store.dispatch('workflows/refreshAll');
+        },
         async togglePushNotifications() {
             this.togglingPushNotifications = true;
             await this.$store.dispatch('user/togglePushNotifications');
