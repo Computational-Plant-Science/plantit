@@ -338,6 +338,7 @@
                                                             <span
                                                                 v-for="log in submissionLogs"
                                                                 v-bind:key="log"
+                                                                v-show="log !== undefined && log !== null"
                                                                 >{{
                                                                     log + '\n'
                                                                 }}</span

@@ -59,6 +59,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
     callback_url = settings.API_URL + 'runs/' + run.guid + '/status/'  # PlantIT status update callback URL
     work_dir = join(run.cluster.workdir, run.work_dir)
     new_flow = map_old_workflow_config_to_new(flow, run, resources)  # TODO update flow UI page
+    launcher = run.cluster.launcher  # whether to use TACC launcher
 
     parse_errors, run_options = parse_run_options(new_flow)
     if len(parse_errors) > 0:
@@ -78,7 +79,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
 
         # upload flow config file
         with sftp.open('flow.yaml', 'w') as flow_file:
-            if run.cluster.launcher:
+            if launcher:
                 del new_flow['jobqueue']
             yaml.dump(new_flow, flow_file, default_flow_style=False)
 
@@ -178,17 +179,32 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             docker_password = environ.get('DOCKER_PASSWORD', None)
 
             # if this cluster uses TACC's launcher, create a parameter sweep launcher job script to invoke singularity directly
-            if run.cluster.launcher and input_files is not None and flow['config']['input']['kind'] == 'files':
+            if launcher:
+                logger.info(f"Using TACC launcher")
                 with sftp.open('launch', 'w') as launcher_script:
-                    for file in input_files:
-                        file_name = file.rpartition('/')[2]
-                        run_options.input = FileInput(file_name)
+                    if flow['config']['input']['kind'] == 'files' and input_files is not None:
+                        for file in input_files:
+                            file_name = file.rpartition('/')[2]
+                            run_options.input = FileInput(file_name)
+                            command = prep_run_command(
+                                work_dir=run_options.workdir,
+                                image=run_options.image,
+                                command=run_options.command,
+                                parameters=(run_options.parameters if run_options.parameters is not None else []) + [
+                                    Parameter(key='INPUT', value=join(run.cluster.workdir, run.work_dir, 'input', file_name))],
+                                bind_mounts=run_options.bind_mounts,
+                                docker_username=docker_username,
+                                docker_password=docker_password,
+                                no_cache=run_options.no_cache,
+                                gpu=run_options.gpu)
+                            launcher_script.write(f"{command}\n")
+                    elif flow['config']['input']['kind'] == 'directory':
                         command = prep_run_command(
                             work_dir=run_options.workdir,
                             image=run_options.image,
                             command=run_options.command,
                             parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                Parameter(key='INPUT', value=join(run.cluster.workdir, run.work_dir, 'input', file_name))],
+                                Parameter(key='INPUT', value=join(run.cluster.workdir, run.work_dir, 'input'))],
                             bind_mounts=run_options.bind_mounts,
                             docker_username=docker_username,
                             docker_password=docker_password,
@@ -212,7 +228,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                     run_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
 
                 run_commands += "\n"
-                logger.info(f"Using run command: {run_commands}")
+                logger.info(f"Using CLI run command: {run_commands}")
                 script.write(run_commands)
 
             # add zip command
