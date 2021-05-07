@@ -1517,20 +1517,20 @@ export default {
                 1,
                 15
             );
-            // camera.position.set(3, 0.15, 3);
+            camera.position.set(3, 0.15, 3);
             camera.position.z = 2;
             camera.zoom = 0.5;
 
             var cameraTarget = new THREE.Vector3(0, -0.1, 0);
 
             var scene = new THREE.Scene();
-            // scene.background = new THREE.Color(0x72645b);
+            scene.background = new THREE.Color(0x343a40);
             scene.fog = new THREE.Fog(0x72645b, 2, 15);
 
             const loader = new PLYLoader();
             var comp = {};
             loader.load(
-                `/apis/v1/runs/${this.$router.currentRoute.params.id}/thumbnail/?path=${f.name}`,
+                `/apis/v1/runs/${this.$router.currentRoute.params.id}/3d_model/?path=${f.name}`,
                 function(geometry) {
                     geometry.computeVertexNormals();
 
@@ -1540,7 +1540,7 @@ export default {
                     // });
                     const material = new THREE.PointsMaterial({
                         // color: 0x0055ff,
-                        size: 0.005,
+                        size: 0.02,
                         vertexColors: THREE.VertexColors
                     });
                     const mesh = new THREE.Points(geometry, material);
@@ -1548,7 +1548,7 @@ export default {
                     // const mesh = new THREE.Mesh(geometry);
 
                     mesh.position.y = -0.3;
-                    // mesh.position.z = 0.3;
+                    mesh.position.z = 0.3;
                     mesh.rotation.x = -Math.PI / 2;
                     mesh.scale.multiplyScalar(0.5);
 
@@ -1609,10 +1609,10 @@ export default {
             };
 
             var render = function() {
-                // const timer = Date.now() * 0.00005;
+                const timer = Date.now() * 0.00005;
 
-                // camera.position.x = Math.sin(timer) * 2.5;
-                // camera.position.z = Math.cos(timer) * 2.5;
+                camera.position.x = Math.sin(timer) * 2.5;
+                camera.position.z = Math.cos(timer) * 2.5;
 
                 camera.lookAt(cameraTarget);
 
@@ -1651,6 +1651,7 @@ export default {
             animate();
         },
         unrenderPreview() {
+            if (this.currentModel.scene === undefined || this.currentModel.scene === null) return;
             this.currentModel.scene.remove(this.currentModel.mesh);
             this.currentModel.renderer.dispose();
             this.currentModel.renderer.renderLists.dispose();

@@ -108,16 +108,29 @@ def get_thumbnail(request, id):
         decoded = base64.b64decode(preview)
         print(f"Retrieved CZI file preview from cache: {file}")
         return HttpResponse(decoded, content_type="image/jpg")
-    # elif file.endswith('ply'):
-    #   with tempfile.NamedTemporaryFile() as temp_file:
-    #       with client:
-    #           with client.client.open_sftp() as sftp:
-    #               sftp.chdir(work_dir)
-    #               sftp.get(file, temp_file.name)
-    #       return HttpResponse(temp_file, content_type="applications/octet-stream")
     else:
         with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
             return HttpResponse(thumbnail, content_type="image/png")
+
+
+def get_3d_model(request, id):
+    path = request.GET.get('path')
+    file = path.rpartition('/')[2]
+
+    try:
+        run = Run.objects.get(guid=id)
+    except:
+        return HttpResponseNotFound()
+
+    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    work_dir = join(run.cluster.workdir, run.work_dir)
+
+    with tempfile.NamedTemporaryFile() as temp_file:
+        with client:
+            with client.client.open_sftp() as sftp:
+                sftp.chdir(work_dir)
+                sftp.get(file, temp_file.name)
+        return HttpResponse(temp_file, content_type="applications/octet-stream")
 
 
 @api_view(['GET'])
