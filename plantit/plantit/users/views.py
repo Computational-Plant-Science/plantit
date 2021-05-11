@@ -91,14 +91,8 @@ class IDPViewSet(viewsets.ViewSet):
         user.email = decoded['email']
         user.save()
 
-        if created:
-            profile = Profile.objects.create(user=user, cyverse_token=token)
-        else:
-            try:
-                profile = Profile.objects.get(user=user)
-            except:
-                profile = Profile.objects.create(user=user, cyverse_token=token)
-            profile.cyverse_token = token
+        profile = Profile.objects.get_or_create(user=user)
+        profile.cyverse_token = token
 
         profile.save()
         user.save()
