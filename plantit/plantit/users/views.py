@@ -84,14 +84,14 @@ class IDPViewSet(viewsets.ViewSet):
             'verify_iss': False
         })
 
-        user, created = User.objects.get_or_create(username=decoded['preferred_username'])
+        user, _ = User.objects.get_or_create(username=decoded['preferred_username'])
 
         user.first_name = decoded['given_name']
         user.last_name = decoded['family_name']
         user.email = decoded['email']
         user.save()
 
-        profile = Profile.objects.get_or_create(user=user)
+        profile, _ = Profile.objects.get_or_create(user=user)
         profile.cyverse_token = token
 
         profile.save()
