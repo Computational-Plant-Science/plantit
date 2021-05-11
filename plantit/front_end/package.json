@@ -29,7 +29,7 @@
     "js-cookie": "^2.2.0",
     "jwt-decode": "^3.1.2",
     "keycloak-js": "^11.0.3",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "mocha": "^8.3.0",
     "moment": "^2.29.1",
     "sinon": "^9.2.4",
