@@ -100,7 +100,6 @@ class IDPViewSet(viewsets.ViewSet):
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
         return redirect(f"/user/{user.username}/")
-        # return redirect("/")
 
     @action(methods=['get'], detail=False)
     def github_request_identity(self, request):
