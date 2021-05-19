@@ -84,18 +84,15 @@ class IDPViewSet(viewsets.ViewSet):
             'verify_iss': False
         })
 
-        user, created = User.objects.get_or_create(username=decoded['preferred_username'])
+        user, _ = User.objects.get_or_create(username=decoded['preferred_username'])
 
         user.first_name = decoded['given_name']
         user.last_name = decoded['family_name']
         user.email = decoded['email']
         user.save()
 
-        if created:
-            profile = Profile.objects.create(user=user, cyverse_token=token)
-        else:
-            profile = Profile.objects.get(user=user)
-            profile.cyverse_token = token
+        profile, _ = Profile.objects.get_or_create(user=user)
+        profile.cyverse_token = token
 
         profile.save()
         user.save()
@@ -103,7 +100,6 @@ class IDPViewSet(viewsets.ViewSet):
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
         return redirect(f"/user/{user.username}/")
-        # return redirect("/")
 
     @action(methods=['get'], detail=False)
     def github_request_identity(self, request):
