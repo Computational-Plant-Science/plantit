@@ -14,3 +14,8 @@ class Profile(models.Model):
     push_notification_status = models.CharField(max_length=10, null=False, blank=False, default='disabled')
     push_notification_topic_arn = models.CharField(max_length=255, null=True, blank=True)
     push_notification_sub_arn = models.CharField(max_length=255, null=True, blank=True)
+
+
+class Statistics(models.Model):
+    most_used_resource: models.ForeignKey(Resource, null=True, blank=True, on_delete=models.PROTECT)
+    most_frequent_collaborator:

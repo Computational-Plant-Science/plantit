@@ -12,7 +12,8 @@ export const user = {
             pushNotifications: 'disabled',
             djangoProfile: null,
             cyverseProfile: null,
-            githubProfile: null
+            githubProfile: null,
+            stats: null
         },
         profileLoading: true
     }),
@@ -34,6 +35,9 @@ export const user = {
         },
         setGithubProfile(state, profile) {
             state.profile.githubProfile = profile;
+        },
+        setStats(state, stats) {
+            state.profile.stats = stats  ;
         },
         setProfileLoading(state, loading) {
             state.profileLoading = loading;
@@ -88,6 +92,9 @@ export const user = {
                         'setPushNotifications',
                         response.data.django_profile.push_notifications
                     );
+
+                    // set usage statistics
+                    commit('setStats', response.data.stats);
 
                     // determine whether user is logged in
                     let decoded = jwtDecode(

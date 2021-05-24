@@ -1,17 +1,14 @@
 import json
 import os
-from datetime import datetime
-from pathlib import Path
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
-import botocore
 import jwt
 import requests
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
-from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse, HttpResponseNotFound
+from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from github import Github
 from requests.auth import HTTPBasicAuth
@@ -19,11 +16,11 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from plantit.resources.utils import map_resource
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
+from plantit.users.utils import list_users, get_user_stats
 from plantit.utils import get_csrf_token
 
 
@@ -180,8 +177,6 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 user.save()
                 return JsonResponse({'push_notifications': user.profile.push_notification_status})
 
-
-
     @action(detail=False, methods=['get'])
     def toggle_dark_mode(self, request):
         user = request.user
@@ -192,39 +187,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             'dark_mode': user.profile.dark_mode
         })
 
-    def list_users(self, github_token):
-        users = []
-        for user in list(self.queryset.exclude(profile__isnull=True)):
-            if user.profile.github_username:
-                github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
-                                              headers={'Authorization': f"Bearer {github_token}"}).json()
-                if 'login' in github_profile:
-                    users.append({
-                        'username': user.username,
-                        'first_name': user.first_name,
-                        'last_name': user.last_name,
-                        'github_username': user.profile.github_username,
-                        'github_profile': github_profile
-                    })
-                else:
-                    users.append({
-                        'username': user.username,
-                        'first_name': user.first_name,
-                        'last_name': user.last_name,
-                    })
-            else:
-                users.append({
-                    'username': user.username,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                })
-
-        return users
-
     @action(detail=False, methods=['get'])
     def get_all(self, request):
         redis = RedisClient.get()
-        users = self.list_users(request.user.profile.github_token)
+        users = list_users(self.queryset, request.user.profile.github_token)
         cached_users = [json.loads(redis.get(key)) for key in redis.scan_iter(match='user/*')]
 
         if len(users) != len(cached_users):
@@ -237,6 +203,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'])
     def get_current(self, request):
         user = request.user
+        stats = get_user_stats(request.user.username)
 
         if user.profile.push_notification_status == 'pending':
             user.profile.push_notification_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
@@ -253,7 +220,8 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'push_notifications': user.profile.push_notification_status,
                 'github_token': user.profile.github_token,
                 'cyverse_token': user.profile.cyverse_token
-            }
+            },
+            'stats': stats
         }
 
         if request.user.profile.cyverse_token != '':

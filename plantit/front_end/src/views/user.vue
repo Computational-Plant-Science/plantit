@@ -47,7 +47,11 @@
                                 profile.darkMode ? 'bg-dark' : 'bg-secondary'
                             "
                         >
-                            <b-tab title="Dashboard" v-if="userProfile.djangoProfile" active><template v-slot:title>
+                            <b-tab
+                                title="Dashboard"
+                                v-if="userProfile.djangoProfile"
+                                active
+                                ><template v-slot:title>
                                     <b
                                         :class="
                                             profile.darkMode
@@ -55,8 +59,8 @@
                                                 : 'text-dark'
                                         "
                                         >Dashboard</b
-                                    >
-                                </template><b-row
+                                    > </template
+                                ><b-row
                                     ><b-col
                                         ><h2
                                             :class="
@@ -65,14 +69,148 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Dashboard
+                                            Your Dashboard
                                         </h2></b-col
                                     ></b-row
-                                ><b-row align-v="start" class="mb-2">
+                                >
+                                <br />
+                                <b-row align-v="start" class="mb-2">
                                     <b-col md="auto">
-                                      <div>
-
-                                      </div></b-col></b-row></b-tab>
+                                        <h5>Right now</h5>
+                                        <b>{{ runningRuns.length }}</b>
+                                        workflows running
+                                        <br />
+                                        <b>{{ unreadNotifications.length }}</b>
+                                        unread notifications
+                                        <hr />
+                                        <h5>Usage overview</h5>
+                                        <div v-if="stats !== null">
+                                            Most used cluster:
+                                            <b>{{ stats.most_used_cluster }}</b>
+                                            <br />
+                                            Most used dataset:
+                                            <b>{{ stats.most_used_dataset }}</b>
+                                            <br />
+                                            Most frequent collaborator:
+                                            <b>{{
+                                                stats.most_frequent_collaborator
+                                            }}</b>
+                                            <hr />
+                                            <h5>
+                                                Usage over the past<b-dropdown
+                                                    class="ml-2 p-0"
+                                                    size="sm"
+                                                    dropright
+                                                    v-model="statsScope"
+                                                >
+                                                    <template #button-content>
+                                                        {{ statsScope }}
+                                                    </template>
+                                                    <b-dropdown-item
+                                                        title="Hour"
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                        :link-class="
+                                                            profile.darkMode
+                                                                ? 'text-secondary'
+                                                                : 'text-dark'
+                                                        "
+                                                        @click="
+                                                            statsScope = 'Hour'
+                                                        "
+                                                    >
+                                                        Hour </b-dropdown-item
+                                                    ><b-dropdown-item
+                                                        title="Day"
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                        :link-class="
+                                                            profile.darkMode
+                                                                ? 'text-secondary'
+                                                                : 'text-dark'
+                                                        "
+                                                        @click="
+                                                            statsScope = 'Day'
+                                                        "
+                                                    >
+                                                        Day </b-dropdown-item
+                                                    ><b-dropdown-item
+                                                        title="Week"
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                        :link-class="
+                                                            profile.darkMode
+                                                                ? 'text-secondary'
+                                                                : 'text-dark'
+                                                        "
+                                                        @click="
+                                                            statsScope = 'Week'
+                                                        "
+                                                    >
+                                                        Week
+                                                    </b-dropdown-item>
+                                                    <b-dropdown-item
+                                                        title="Month"
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                        :link-class="
+                                                            profile.darkMode
+                                                                ? 'text-secondary'
+                                                                : 'text-dark'
+                                                        "
+                                                        @click="
+                                                            statsScope = 'Month'
+                                                        "
+                                                    >
+                                                        Month </b-dropdown-item
+                                                    ><b-dropdown-item
+                                                        title="Year"
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
+                                                        "
+                                                        :link-class="
+                                                            profile.darkMode
+                                                                ? 'text-secondary'
+                                                                : 'text-dark'
+                                                        "
+                                                        @click="
+                                                            statsScope = 'Year'
+                                                        "
+                                                    >
+                                                        Year
+                                                    </b-dropdown-item></b-dropdown
+                                                >
+                                            </h5>
+                                            <div v-if="statsScope === 'Hour'">
+                                                TODO: hour data
+                                            </div>
+                                            <div
+                                                v-if="statsScope === 'Day'"
+                                            ></div>
+                                            <div
+                                                v-if="statsScope === 'Week'"
+                                            ></div>
+                                            <div
+                                                v-if="statsScope === 'Month'"
+                                            ></div>
+                                            <div
+                                                v-if="statsScope === 'Year'"
+                                            ></div></div></b-col></b-row
+                            ></b-tab>
                             <b-tab
                                 v-if="
                                     profile.djangoProfile.username ===
@@ -98,13 +236,14 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Datasets
+                                            Your Datasets
                                         </h2></b-col
                                     ></b-row
                                 >
                                 <b-tabs
                                     nav-class="bg-transparent"
                                     active-nav-item-class="bg-secondary text-dark"
+                                    pills
                                 >
                                     <b-tab
                                         :title-link-class="
@@ -347,7 +486,7 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Workflows
+                                            Your Workflows
                                         </h2></b-col
                                     ><b-col md="auto"
                                         ><b-button
@@ -461,7 +600,7 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Resources
+                                            Your Resources
                                         </h2></b-col
                                     ></b-row
                                 >
@@ -650,13 +789,14 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Runs
+                                            Your Runs
                                         </h2></b-col
                                     ></b-row
                                 >
                                 <b-tabs
                                     nav-class="bg-transparent"
                                     active-nav-item-class="bg-secondary text-dark"
+                                    pills
                                 >
                                     <b-tab
                                         :title-link-class="
@@ -1118,9 +1258,9 @@
                                         </b-row> </b-tab
                                 ></b-tabs>
                             </b-tab>
-                        <b-tab
+                            <b-tab
                                 v-if="userProfile.djangoProfile"
-                                title="Profile"
+                                title="User Profile"
                             >
                                 <template v-slot:title>
                                     <b
@@ -1141,7 +1281,7 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Profile
+                                            Your Profile
                                         </h2></b-col
                                     ></b-row
                                 >
@@ -1341,7 +1481,7 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Settings
+                                            Your Settings
                                         </h2></b-col
                                     ></b-row
                                 >
@@ -1552,6 +1692,8 @@ export default {
     },
     data: function() {
         return {
+            stats: null,
+            statsScope: 'Hour',
             newResourceName: '',
             newResourceHost: '',
             newResourceDescription: '',
@@ -1599,8 +1741,12 @@ export default {
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('runs', ['runsLoading', 'runs']),
+        ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', ['workflows', 'workflowsLoading']),
         ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
+        unreadNotifications() {
+            return this.notifications.filter(n => !n.read);
+        },
         userWorkflows() {
             if (
                 this.workflowsLoading ||
@@ -1689,10 +1835,22 @@ export default {
             ),
             this.loadResources(),
             this.loadSharedDatasets(),
-            this.loadSharingDatasets()
+            this.loadSharingDatasets(),
+            this.loadStats()
         ]);
     },
     methods: {
+        async loadStats() {
+            await axios
+                .get(`/apis/v1/users/get_stats/`)
+                .then(response => {
+                    this.stats = response.data;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
         isJobQueue(executor) {
             return executor !== 'Local';
         },
