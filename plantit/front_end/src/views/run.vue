@@ -129,7 +129,7 @@
                                         </b-spinner>
                                         <b class="ml-1 mr-0">{{ getRun.id }}</b>
                                         <small> on </small>
-                                        <b class="mr-0">{{ getRun.cluster }}</b>
+                                        <b class="mr-0">{{ getRun.resource }}</b>
                                         <b-badge
                                             :variant="
                                                 getRun.is_failure ||
@@ -1930,7 +1930,7 @@ export default {
         containerLogFileName() {
             return `${
                 this.$router.currentRoute.params.id
-            }.${this.getRun.cluster.toLowerCase()}.log`;
+            }.${this.getRun.resource.toLowerCase()}.log`;
         }
     },
     watch: {

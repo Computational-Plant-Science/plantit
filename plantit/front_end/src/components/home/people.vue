@@ -29,19 +29,6 @@
                     ></b-col>
                 </b-row>
                 <br />
-                <b-row align-v="center" class="justify-content-md-center">
-                    <b-col>
-                        <b class="text-white">
-                            Built by the
-                            <b-link
-                                class="text-dark"
-                                style="text-decoration: underline;text-underline: lightgray"
-                                href="https://www.computational-plant-science.org/joomla30/"
-                                >Computational Plant Science Lab</b-link
-                            > at the University of Georgia
-                        </b>
-                    </b-col>
-                </b-row>
                 <br />
                 <br />
                 <b-row class="justify-content-md-center mb-4">

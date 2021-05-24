@@ -25,99 +25,17 @@
                     )
                 "
             >
-                <b-row align-v="start" class="mb-2">
-                    <b-col md="auto">
-                        <div>
-                            <b-row
-                                ><b-col
-                                    v-if="userProfile.githubProfile"
-                                    md="auto"
-                                    class="ml-0 mr-0"
-                                    align-self="end"
-                                >
-                                    <b-img
-                                        class="avatar"
-                                        rounded
-                                        style="max-height: 6rem; max-width: 6rem; position: relative; top: 20px; box-shadow: -2px 2px 2px #adb5bd;opacity:0.8"
-                                        :src="
-                                            userProfile.githubProfile
-                                                ? userProfile.githubProfile
-                                                      .avatar_url
-                                                : ''
-                                        "
-                                        v-if="userProfile.githubProfile"
-                                    ></b-img>
-                                    <i
-                                        v-else
-                                        class="far fa-user fa-fw fa-3x"
-                                    ></i>
-                                </b-col>
-                            </b-row>
-                            <br />
-                        </div>
-                    </b-col>
-                    <b-col
-                        style="color: white; right: 12px"
-                        align-self="end"
-                        class="ml-0 mr-0"
-                    >
-                        <b-row
+                <b-row
+                    ><b-col
+                        ><h1
                             :class="
-                                profile.darkMode
-                                    ? 'text-light'
-                                    : 'text-secondary'
+                                profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            <b-col class="ml-0 mr-0" align-self="end">
-                                <h3
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    {{
-                                        userProfile.cyverseProfile
-                                            ? `${userProfile.cyverseProfile.first_name} ${userProfile.cyverseProfile.last_name} `
-                                            : userProfile.githubProfile
-                                            ? userProfile.githubProfile.login
-                                            : ''
-                                    }}<small
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-warning'
-                                                : 'text-dark'
-                                        "
-                                        v-if="
-                                            userProfile.djangoProfile !== null
-                                        "
-                                        >({{
-                                            userProfile.djangoProfile.username
-                                        }})</small
-                                    >
-                                </h3>
-                                <a
-                                    v-if="userProfile.githubProfile"
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                    :href="
-                                        'https://github.com/' +
-                                            userProfile.githubProfile.login
-                                    "
-                                >
-                                    <i class="fab fa-github fa-1x fa-fw"></i>
-                                    {{
-                                        'https://github.com/' +
-                                            userProfile.githubProfile.login
-                                    }}
-                                </a>
-                            </b-col>
-                        </b-row>
-                    </b-col>
-                </b-row>
+                            Welcome, {{ userProfile.cyverseProfile.first_name }}
+                        </h1></b-col
+                    ></b-row
+                >
                 <b-row align-v="center" class="mt-3"
                     ><b-col>
                         <b-tabs
@@ -129,156 +47,32 @@
                                 profile.darkMode ? 'bg-dark' : 'bg-secondary'
                             "
                         >
-                            <b-tab
-                                v-if="userProfile.djangoProfile"
-                                title="Profile"
-                                active
-                            >
-                                <template v-slot:title>
+                            <b-tab title="Dashboard" v-if="userProfile.djangoProfile" active><template v-slot:title>
                                     <b
                                         :class="
                                             profile.darkMode
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
-                                        >Profile</b
+                                        >Dashboard</b
                                     >
-                                </template>
-                                <b-row>
-                                    <b-col md="auto">
-                                        <p>
-                                            <small>Email</small>
-                                            <br />
-                                            {{
-                                                userProfile.cyverseProfile.email
-                                            }}
-                                            <br />
-                                            {{
-                                                userProfile.githubProfile
-                                                    ? userProfile.githubProfile
-                                                          .email
-                                                    : ''
-                                            }}
-                                        </p>
-                                        <p>
-                                            <small>Affiliation</small>
-                                            <br />
-                                            {{
-                                                userProfile.cyverseProfile ===
-                                                undefined
-                                                    ? ''
-                                                    : userProfile.cyverseProfile
-                                                          .institution
-                                            }}
-                                        </p>
-                                        <p>
-                                            <small>Bio</small>
-                                            <br />
-                                            {{
-                                                userProfile.githubProfile
-                                                    ? userProfile.githubProfile
-                                                          .bio
-                                                    : 'None'
-                                            }}
-                                        </p>
-                                        <p>
-                                            <small>Location</small>
-                                            <br />
-                                            {{
-                                                userProfile.githubProfile
-                                                    ? userProfile.githubProfile
-                                                          .location
-                                                    : 'None'
-                                            }}
-                                        </p>
-                                    </b-col>
-                                </b-row>
-                            </b-tab>
-                            <b-tab
-                                v-if="userProfile.djangoProfile"
-                                title="Settings"
-                            >
-                                <template v-slot:title>
-                                    <b
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-white'
-                                                : 'text-dark'
-                                        "
-                                        >Settings</b
-                                    >
-                                </template>
-                                <b-row class="m-1">
-                                    <b-col align-self="center" cols="3"
-                                        ><i
-                                            class="fas fa-envelope fa-1x fa-fw"
-                                        ></i>
-                                        Push Notifications:
-                                        {{ profile.pushNotifications }}
-                                    </b-col>
-                                    <b-col align-self="center" cols="8">
-                                        <b-button
-                                            size="sm"
-                                            v-if="
-                                                profile.pushNotifications !==
-                                                    'pending'
-                                            "
-                                            @click="togglePushNotifications"
-                                            >{{
-                                                profile.pushNotifications ===
-                                                'enabled'
-                                                    ? 'Disable'
-                                                    : 'Enable'
-                                            }}<b-spinner
-                                                small
-                                                v-if="togglingPushNotifications"
-                                                label="Loading..."
-                                                :variant="
-                                                    profile.darkMode
-                                                        ? 'light'
-                                                        : 'dark'
-                                                "
-                                                class="ml-2 mb-1"
-                                            ></b-spinner></b-button
-                                    ></b-col>
-                                </b-row>
-                                <b-row class="m-1"
-                                    ><b-col align-self="center" cols="3">
-                                        <i
-                                            v-if="profile.darkMode"
-                                            class="fas fa-sun fa-1x fa-fw"
-                                        ></i>
-                                        <i
-                                            v-else
-                                            class="fas fa-moon fa-1x fa-fw"
-                                        ></i>
-                                        Dark Mode:
-                                        {{
-                                            profile.darkMode
-                                                ? 'enabled'
-                                                : 'disabled'
-                                        }} </b-col
-                                    ><b-col align-self="center" cols="8">
-                                        <b-button
-                                            size="sm"
-                                            @click="toggleDarkMode"
-                                            >{{
+                                </template><b-row
+                                    ><b-col
+                                        ><h2
+                                            :class="
                                                 profile.darkMode
-                                                    ? 'Disable'
-                                                    : 'Enable'
-                                            }}<b-spinner
-                                                small
-                                                v-if="togglingDarkMode"
-                                                label="Loading..."
-                                                :variant="
-                                                    profile.darkMode
-                                                        ? 'light'
-                                                        : 'dark'
-                                                "
-                                                class="ml-2 mb-1"
-                                            ></b-spinner></b-button></b-col
-                                ></b-row>
-                            </b-tab>
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Dashboard
+                                        </h2></b-col
+                                    ></b-row
+                                ><b-row align-v="start" class="mb-2">
+                                    <b-col md="auto">
+                                      <div>
+
+                                      </div></b-col></b-row></b-tab>
                             <b-tab
                                 v-if="
                                     profile.djangoProfile.username ===
@@ -292,162 +86,247 @@
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
-                                        >Collections</b
+                                        >Datasets</b
                                     >
                                 </template>
-                                <b-row class="mb-2"
-                                    ><b-col>
-                                        <b-input-group>
-                                            <template #prepend>
-                                                <b-input-group-text>
-                                                    Your collections
-                                                </b-input-group-text></template
-                                            ><b-form-input
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-search-dark'
-                                                        : 'theme-search-light'
-                                                "
-                                                size="lg"
-                                                type="search"
-                                                v-model="
-                                                    yourCollectionsSearchText
-                                                "
-                                            ></b-form-input></b-input-group></b-col
-                                ></b-row>
-                                <b-row>
-                                    <b-col>
-                                        <datatree
-                                            :node="data"
-                                            select="directory"
-                                            :upload="true"
-                                            :download="true"
-                                            :clusters="clusters"
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'theme-dark'
-                                                    : 'theme-light'
-                                            "
-                                        ></datatree></b-col
-                                ></b-row>
-                                <hr />
-                                <b-row class="mb-2"
-                                    ><b-col>
-                                        <b-input-group>
-                                            <template #prepend>
-                                                <b-input-group-text>
-                                                    Shared with you
-                                                </b-input-group-text></template
-                                            ><b-form-input
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-search-dark'
-                                                        : 'theme-search-light'
-                                                "
-                                                size="lg"
-                                                type="search"
-                                                v-model="
-                                                    sharedCollectionsSearchText
-                                                "
-                                            ></b-form-input></b-input-group></b-col
-                                ></b-row>
-                                <b-row>
-                                    <b-col>
-                                        <datatree
-                                            :node="sharedCollections"
-                                            select="directory"
-                                            :clusters="clusters"
-                                            :upload="true"
-                                            :download="true"
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'theme-dark'
-                                                    : 'theme-light'
-                                            "
-                                        ></datatree></b-col
-                                ></b-row>
-                                <hr />
-                                <b-row class="mb-2"
-                                    ><b-col>
-                                        <b-input-group>
-                                            <template #prepend>
-                                                <b-input-group-text>
-                                                    Collections you've shared
-                                                </b-input-group-text></template
-                                            ><b-form-input
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-search-dark'
-                                                        : 'theme-search-light'
-                                                "
-                                                size="lg"
-                                                type="search"
-                                                v-model="
-                                                    sharingCollectionsSearchText
-                                                "
-                                            ></b-form-input></b-input-group></b-col
-                                ></b-row>
-                                <b-row v-if="alertEnabled">
-                                    <b-col class="m-0 p-0">
-                                        <b-alert
-                                            :show="alertEnabled"
-                                            :variant="
-                                                alertMessage.startsWith(
-                                                    'Failed'
-                                                )
-                                                    ? 'danger'
-                                                    : 'success'
-                                            "
-                                            dismissible
-                                            @dismissed="alertEnabled = false"
-                                        >
-                                            {{ alertMessage }}
-                                        </b-alert>
-                                    </b-col>
-                                </b-row>
                                 <b-row
-                                    v-for="directory in sharingCollections"
-                                    v-bind:key="directory.path"
-                                >
-                                    <b-col
-                                        ><small>{{
-                                            directory.path
-                                        }}</small></b-col
-                                    ><b-col md="auto" class="mt-1">
-                                        <small
-                                            >Shared with
-                                            {{ directory.guest }}</small
-                                        ></b-col
-                                    ><b-col md="auto">
-                                        <b-button
-                                            class="mb-2"
-                                            size="sm"
-                                            :variant="
-                                                profile.darkMode
-                                                    ? 'outline-light'
-                                                    : 'outline-dark'
-                                            "
-                                            @click="
-                                                unshareCollection(directory)
-                                            "
-                                            ><i
-                                                class="fas fa-user-lock fa-fw"
-                                            ></i>
-                                            Unshare</b-button
-                                        ></b-col
-                                    ></b-row
-                                >
-                                <b-row v-if="sharingCollections.length === 0"
                                     ><b-col
-                                        ><p>
-                                            <small
-                                                >You haven't shared any
-                                                collections with anyone.</small
-                                            >
-                                        </p></b-col
+                                        ><h2
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Datasets
+                                        </h2></b-col
                                     ></b-row
-                                ></b-tab
-                            >
+                                >
+                                <b-tabs
+                                    nav-class="bg-transparent"
+                                    active-nav-item-class="bg-secondary text-dark"
+                                >
+                                    <b-tab
+                                        :title-link-class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        :class="
+                                            profile.darkMode
+                                                ? 'theme-dark m-0 p-3'
+                                                : 'theme-light m-0 p-3'
+                                        "
+                                    >
+                                        <template #title>
+                                            <b>Yours</b>
+                                        </template>
+                                        <b-row class="mt-2"
+                                            ><b-col
+                                                >Your own datasets.</b-col
+                                            ></b-row
+                                        >
+                                        <!--<b-row class="mb-2"
+                                            ><b-col>
+                                                <b-input-group size="sm">
+                                                    <template #prepend>
+                                                        <b-input-group-text>
+                                                            Search
+                                                        </b-input-group-text></template
+                                                    ><b-form-input
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'theme-search-dark'
+                                                                : 'theme-search-light'
+                                                        "
+                                                        size="lg"
+                                                        type="search"
+                                                        v-model="
+                                                            yourDatasetsSearchText
+                                                        "
+                                                    ></b-form-input></b-input-group></b-col
+                                        ></b-row>-->
+                                        <b-row>
+                                            <b-col>
+                                                <datatree
+                                                    :node="data"
+                                                    select="directory"
+                                                    :upload="true"
+                                                    :download="true"
+                                                    :resources="resources"
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'theme-dark'
+                                                            : 'theme-light'
+                                                    "
+                                                ></datatree></b-col></b-row
+                                    ></b-tab>
+                                    <b-tab
+                                        :title-link-class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        :class="
+                                            profile.darkMode
+                                                ? 'theme-dark m-0 p-3'
+                                                : 'theme-light m-0 p-3'
+                                        "
+                                    >
+                                        <template #title>
+                                            <b>Shared</b>
+                                        </template>
+                                        <b-row class="mt-2"
+                                            ><b-col
+                                                >Datasets shared with
+                                                you.</b-col
+                                            ></b-row
+                                        >
+                                        <!--<b-row class="mb-2"
+                                            ><b-col>
+                                                <b-input-group>
+                                                    <template #prepend>
+                                                        <b-input-group-text>
+                                                            Search
+                                                        </b-input-group-text></template
+                                                    ><b-form-input
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'theme-search-dark'
+                                                                : 'theme-search-light'
+                                                        "
+                                                        size="lg"
+                                                        type="search"
+                                                        v-model="
+                                                            sharedDatasetsSearchText
+                                                        "
+                                                    ></b-form-input></b-input-group></b-col
+                                        ></b-row>-->
+                                        <b-row>
+                                            <b-col>
+                                                <datatree
+                                                    :node="sharedDatasets"
+                                                    select="directory"
+                                                    :resources="resources"
+                                                    :upload="true"
+                                                    :download="true"
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'theme-dark'
+                                                            : 'theme-light'
+                                                    "
+                                                ></datatree></b-col></b-row
+                                    ></b-tab>
+                                    <b-tab
+                                        :title-link-class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        :class="
+                                            profile.darkMode
+                                                ? 'theme-dark m-0 p-3'
+                                                : 'theme-light m-0 p-3'
+                                        "
+                                    >
+                                        <template #title>
+                                            <b>Sharing</b>
+                                        </template>
+                                        <b-row class="mt-2"
+                                            ><b-col
+                                                >Datasets you're sharing with
+                                                others.</b-col
+                                            ></b-row
+                                        >
+                                        <!--<b-row class="mb-2"
+                                            ><b-col>
+                                                <b-input-group>
+                                                    <template #prepend>
+                                                        <b-input-group-text>
+                                                            Search
+                                                        </b-input-group-text></template
+                                                    ><b-form-input
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'theme-search-dark'
+                                                                : 'theme-search-light'
+                                                        "
+                                                        size="lg"
+                                                        type="search"
+                                                        v-model="
+                                                            sharingDatasetsSearchText
+                                                        "
+                                                    ></b-form-input></b-input-group></b-col
+                                        ></b-row>-->
+                                        <b-row v-if="alertEnabled">
+                                            <b-col class="m-0 p-0">
+                                                <b-alert
+                                                    :show="alertEnabled"
+                                                    :variant="
+                                                        alertMessage.startsWith(
+                                                            'Failed'
+                                                        )
+                                                            ? 'danger'
+                                                            : 'success'
+                                                    "
+                                                    dismissible
+                                                    @dismissed="
+                                                        alertEnabled = false
+                                                    "
+                                                >
+                                                    {{ alertMessage }}
+                                                </b-alert>
+                                            </b-col>
+                                        </b-row>
+                                        <b-row
+                                            v-for="directory in sharingDatasets"
+                                            v-bind:key="directory.path"
+                                        >
+                                            <b-col
+                                                ><small>{{
+                                                    directory.path
+                                                }}</small></b-col
+                                            ><b-col md="auto" class="mt-1">
+                                                <small
+                                                    >Shared with
+                                                    {{ directory.guest }}</small
+                                                ></b-col
+                                            ><b-col md="auto">
+                                                <b-button
+                                                    class="mb-2"
+                                                    size="sm"
+                                                    :variant="
+                                                        profile.darkMode
+                                                            ? 'outline-light'
+                                                            : 'outline-dark'
+                                                    "
+                                                    @click="
+                                                        unshareDataset(
+                                                            directory
+                                                        )
+                                                    "
+                                                    ><i
+                                                        class="fas fa-user-lock fa-fw"
+                                                    ></i>
+                                                    Unshare</b-button
+                                                ></b-col
+                                            ></b-row
+                                        >
+                                        <b-row
+                                            v-if="sharingDatasets.length === 0"
+                                            ><b-col
+                                                ><p>
+                                                    <small class="text-danger"
+                                                        >You haven't shared any
+                                                        datasets with
+                                                        anyone.</small
+                                                    >
+                                                </p></b-col
+                                            ></b-row
+                                        >
+                                    </b-tab>
+                                </b-tabs>
+                            </b-tab>
                             <b-tab>
                                 <template v-slot:title>
                                     <b
@@ -459,6 +338,44 @@
                                         >Workflows</b
                                     >
                                 </template>
+                                <b-row
+                                    ><b-col
+                                        ><h2
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Workflows
+                                        </h2></b-col
+                                    ><b-col md="auto"
+                                        ><b-button
+                                            :disabled="workflowsLoading"
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'white'
+                                            "
+                                            size="sm"
+                                            v-b-tooltip.hover
+                                            title="Refresh"
+                                            @click="refreshWorkflows"
+                                        >
+                                            <i class="fas fa-redo"></i>
+                                            Refresh
+                                            <b-spinner
+                                                small
+                                                v-if="workflowsLoading"
+                                                label="Refreshing..."
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'light'
+                                                        : 'dark'
+                                                "
+                                                class="ml-2 mb-1"
+                                            ></b-spinner> </b-button></b-col
+                                ></b-row>
                                 <b-row
                                     v-if="profile.githubProfile === null"
                                     align-v="center"
@@ -503,33 +420,6 @@
                                                 .github_token !== undefined
                                     "
                                 >
-                                    <b-col md="auto"
-                                        ><b-button
-                                            :disabled="workflowsLoading"
-                                            :variant="
-                                                profile.darkMode
-                                                    ? 'outline-light'
-                                                    : 'white'
-                                            "
-                                            size="sm"
-                                            v-b-tooltip.hover
-                                            title="Refresh Workflows"
-                                            @click="refreshWorkflows"
-                                        >
-                                            <i class="fas fa-redo"></i>
-                                            Refresh Workflows
-                                            <b-spinner
-                                                small
-                                                v-if="workflowsLoading"
-                                                label="Refreshing..."
-                                                :variant="
-                                                    profile.darkMode
-                                                        ? 'light'
-                                                        : 'dark'
-                                                "
-                                                class="ml-2 mb-1"
-                                            ></b-spinner> </b-button
-                                    ></b-col>
                                     <b-col
                                         ><workflows
                                             class="m-1"
@@ -559,54 +449,84 @@
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
-                                        >Clusters</b
+                                        >Resources</b
                                     >
                                 </template>
+                                <b-row
+                                    ><b-col
+                                        ><h2
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Resources
+                                        </h2></b-col
+                                    ></b-row
+                                >
                                 <div>
-                                    <b-row v-if="clustersLoading">
+                                    <b-row v-if="resourcesLoading">
                                         <b-spinner
                                             type="grow"
                                             label="Loading..."
                                             variant="secondary"
                                         ></b-spinner>
                                     </b-row>
-                                    <b-row
-                                        class="text-left"
-                                        v-if="
-                                            !clustersLoading &&
-                                                clusters.length === 0
-                                        "
-                                    >
+                                    <b-row class="text-left">
                                         <b-col>
-                                            <b class="text-danger"
-                                                >You have no cluster
-                                                permissions.</b
-                                            ><br />See
+                                            See
                                             <b-link
                                                 :class="
                                                     profile.darkMode
                                                         ? 'text-light'
                                                         : 'text-dark'
                                                 "
-                                                to="/clusters"
+                                                to="/resources"
                                                 ><i
                                                     class="fas fa-server fa-1x fa-fw"
                                                 ></i>
-                                                Clusters</b-link
+                                                Resources</b-link
                                             >
                                             to request guest access to public
-                                            computing resources.
+                                            servers, clusters, or
+                                            supercomputers, or
+                                            <b-link
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                @click="showAddResourceModal"
+                                                ><i
+                                                    class="fas fa-plus fa-1x fa-fw"
+                                                ></i>
+                                                connect a new resource</b-link
+                                            >.
+                                            <br />
+                                            <b
+                                                class="text-danger"
+                                                v-if="
+                                                    !resourcesLoading &&
+                                                        resources.length === 0
+                                                "
+                                                >You don't have access to any
+                                                computing resources yet.</b
+                                            >
                                         </b-col>
                                     </b-row>
                                     <b-card-group
-                                        v-else
+                                        v-if="
+                                            !resourcesLoading &&
+                                                resources.length !== 0
+                                        "
                                         deck
                                         columns
                                         class="justify-content-center mt-3"
                                     >
                                         <b-card
-                                            v-for="cluster in clusters"
-                                            v-bind:key="cluster.name"
+                                            v-for="resource in resources"
+                                            v-bind:key="resource.name"
                                             :bg-variant="
                                                 profile.darkMode
                                                     ? 'dark'
@@ -643,18 +563,18 @@
                                                             variant="outline-dark"
                                                             v-b-tooltip.hover
                                                             @click="
-                                                                clusterSelected(
-                                                                    cluster
+                                                                resourceSelected(
+                                                                    resource
                                                                 )
                                                             "
                                                         >
-                                                            {{ cluster.name }}
+                                                            {{ resource.name }}
                                                         </b-link>
                                                     </h2>
                                                     <b-badge
-                                                        v-if="!cluster.public"
+                                                        v-if="!resource.public"
                                                         class="mr-1"
-                                                        variant="warning"
+                                                        variant="info"
                                                         ><i
                                                             class="fas fa-lock fa-fw"
                                                         ></i>
@@ -670,23 +590,19 @@
                                                         Public</b-badge
                                                     >
                                                     <b-badge
-                                                        v-if="
-                                                            cluster.role !==
-                                                                'own'
-                                                        "
                                                         variant="warning"
-                                                        >Guest</b-badge
-                                                    >
-                                                    <b-badge
-                                                        v-else
-                                                        variant="success"
-                                                        >Owner</b-badge
+                                                        >{{
+                                                            resource.role ===
+                                                            'own'
+                                                                ? 'Owner'
+                                                                : 'Guest'
+                                                        }}</b-badge
                                                     >
 
                                                     <br />
                                                     <small>
                                                         {{
-                                                            cluster.description
+                                                            resource.description
                                                         }}
                                                     </small>
                                                     <br />
@@ -694,12 +610,12 @@
                                                 <b-col cols="1"></b-col>
                                             </b-row>
                                             <b-img
-                                                v-if="cluster.logo"
+                                                v-if="resource.logo"
                                                 rounded
                                                 class="card-img-right overflow-hidden"
-                                                style="max-height: 5rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                                                style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                                 right
-                                                :src="cluster.logo"
+                                                :src="resource.logo"
                                             ></b-img>
                                             <i
                                                 v-else
@@ -725,6 +641,19 @@
                                         >Runs</b
                                     >
                                 </template>
+                                <b-row
+                                    ><b-col
+                                        ><h2
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Runs
+                                        </h2></b-col
+                                    ></b-row
+                                >
                                 <b-tabs
                                     nav-class="bg-transparent"
                                     active-nav-item-class="bg-secondary text-dark"
@@ -744,26 +673,6 @@
                                         <template #title>
                                             <b>Running</b>
                                         </template>
-                                        <b-input-group
-                                            size="sm"
-                                            style="bottom: 4px"
-                                            ><template #prepend>
-                                                <b-input-group-text
-                                                    ><i
-                                                        class="fas fa-search"
-                                                    ></i
-                                                ></b-input-group-text> </template
-                                            ><b-form-input
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-search-dark'
-                                                        : 'theme-search-light'
-                                                "
-                                                size="lg"
-                                                type="search"
-                                                v-model="runSearchText"
-                                            ></b-form-input>
-                                        </b-input-group>
                                         <b-row
                                             class="m-3 mb-1 pl-0 pr-0"
                                             align-v="center"
@@ -882,7 +791,7 @@
                                                             class="ml-0 mr-0"
                                                             variant="secondary"
                                                             >{{
-                                                                run.cluster
+                                                                run.resource
                                                             }}</b-badge
                                                         ><small>
                                                             {{
@@ -929,10 +838,31 @@
                                                         runningRuns.length === 0
                                                     "
                                                 >
-                                                    No workflows running.
+                                                    No workflows are running
+                                                    right now.
                                                 </p>
-                                            </b-col></b-row
-                                        >
+                                                <b-input-group
+                                                    v-else
+                                                    size="sm"
+                                                    style="bottom: 4px"
+                                                    ><template #prepend>
+                                                        <b-input-group-text
+                                                            ><i
+                                                                class="fas fa-search"
+                                                            ></i
+                                                        ></b-input-group-text> </template
+                                                    ><b-form-input
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'theme-search-dark'
+                                                                : 'theme-search-light'
+                                                        "
+                                                        size="lg"
+                                                        type="search"
+                                                        v-model="runSearchText"
+                                                    ></b-form-input>
+                                                </b-input-group> </b-col
+                                        ></b-row>
                                     </b-tab>
                                     <b-tab
                                         :title-link-class="
@@ -949,26 +879,6 @@
                                         <template #title>
                                             <b>Completed</b>
                                         </template>
-                                        <b-input-group
-                                            size="sm"
-                                            style="bottom: 4px"
-                                            ><template #prepend>
-                                                <b-input-group-text
-                                                    ><i
-                                                        class="fas fa-search"
-                                                    ></i
-                                                ></b-input-group-text> </template
-                                            ><b-form-input
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-search-dark'
-                                                        : 'theme-search-light'
-                                                "
-                                                size="lg"
-                                                type="search"
-                                                v-model="runSearchText"
-                                            ></b-form-input>
-                                        </b-input-group>
                                         <b-row
                                             class="m-3 mb-1 pl-0 pr-0"
                                             align-v="center"
@@ -1090,7 +1000,7 @@
                                                                     class="ml-0 mr-0"
                                                                     variant="secondary"
                                                                     >{{
-                                                                        run.cluster
+                                                                        run.resource
                                                                     }}</b-badge
                                                                 ><small>
                                                                     {{
@@ -1182,14 +1092,445 @@
                                                     workflows yet.
                                                 </p>
                                             </b-col>
-                                        </b-row>
-                                    </b-tab></b-tabs
+                                            <b-col
+                                                v-else
+                                                class="m-0 pl-0 pr-0 text-center"
+                                                ><b-input-group
+                                                    size="sm"
+                                                    style="bottom: 4px"
+                                                    ><template #prepend>
+                                                        <b-input-group-text
+                                                            ><i
+                                                                class="fas fa-search"
+                                                            ></i
+                                                        ></b-input-group-text> </template
+                                                    ><b-form-input
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'theme-search-dark'
+                                                                : 'theme-search-light'
+                                                        "
+                                                        size="lg"
+                                                        type="search"
+                                                        v-model="runSearchText"
+                                                    ></b-form-input> </b-input-group
+                                            ></b-col>
+                                        </b-row> </b-tab
+                                ></b-tabs>
+                            </b-tab>
+                        <b-tab
+                                v-if="userProfile.djangoProfile"
+                                title="Profile"
+                            >
+                                <template v-slot:title>
+                                    <b
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        >Profile</b
+                                    >
+                                </template>
+                                <b-row
+                                    ><b-col
+                                        ><h2
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Profile
+                                        </h2></b-col
+                                    ></b-row
                                 >
+                                <b-row align-v="start" class="mb-2">
+                                    <b-col md="auto">
+                                        <div>
+                                            <b-row
+                                                ><b-col
+                                                    v-if="
+                                                        userProfile.githubProfile
+                                                    "
+                                                    md="auto"
+                                                    class="ml-0 mr-0"
+                                                    align-self="end"
+                                                >
+                                                    <b-img
+                                                        class="avatar"
+                                                        rounded="circle"
+                                                        style="max-height: 5rem; max-width: 5rem; position: relative; top: 20px; box-shadow: -2px 2px 2px #adb5bd;opacity:0.9"
+                                                        :src="
+                                                            userProfile.githubProfile
+                                                                ? userProfile
+                                                                      .githubProfile
+                                                                      .avatar_url
+                                                                : ''
+                                                        "
+                                                        v-if="
+                                                            userProfile.githubProfile
+                                                        "
+                                                    ></b-img>
+                                                    <i
+                                                        v-else
+                                                        class="far fa-user fa-fw fa-3x"
+                                                    ></i>
+                                                </b-col>
+                                            </b-row>
+                                            <br />
+                                        </div>
+                                    </b-col>
+                                    <b-col
+                                        style="color: white; right: 12px"
+                                        align-self="end"
+                                        class="ml-0 mr-0"
+                                    >
+                                        <b-row
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-secondary'
+                                            "
+                                        >
+                                            <b-col
+                                                class="ml-0 mr-0"
+                                                align-self="end"
+                                            >
+                                                <b-img
+                                                    rounded
+                                                    style="max-height: 2rem;"
+                                                    class="ml-1 mr-1 mb-3"
+                                                    :src="
+                                                        require('@/assets/logos/cyverse_logo.png')
+                                                    "
+                                                ></b-img>
+                                                <b
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                    v-if="
+                                                        userProfile.djangoProfile !==
+                                                            null
+                                                    "
+                                                >
+                                                    {{
+                                                        userProfile
+                                                            .djangoProfile
+                                                            .username
+                                                    }}
+                                                </b>
+                                                <br />
+                                                <a
+                                                    v-if="
+                                                        userProfile.githubProfile
+                                                    "
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                    :href="
+                                                        'https://github.com/' +
+                                                            userProfile
+                                                                .githubProfile
+                                                                .login
+                                                    "
+                                                >
+                                                    <i
+                                                        class="fab fa-github fa-2x fa-fw"
+                                                    ></i>
+                                                    {{
+                                                        'https://github.com/' +
+                                                            userProfile
+                                                                .githubProfile
+                                                                .login
+                                                    }}
+                                                </a>
+                                            </b-col>
+                                        </b-row>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col md="auto">
+                                        <p>
+                                            <small>Name</small>
+                                            <br />
+                                            {{
+                                                userProfile.cyverseProfile
+                                                    ? `${userProfile.cyverseProfile.first_name} ${userProfile.cyverseProfile.last_name} `
+                                                    : userProfile.githubProfile
+                                                    ? userProfile.githubProfile
+                                                          .login
+                                                    : ''
+                                            }}
+                                            <br />
+                                        </p>
+                                        <p>
+                                            <small>Email Address</small>
+                                            <br />
+                                            {{
+                                                userProfile.cyverseProfile.email
+                                            }}
+                                            (CyVerse)
+                                            <br />
+                                            {{
+                                                userProfile.githubProfile
+                                                    ? userProfile.githubProfile
+                                                          .email
+                                                    : ''
+                                            }}
+                                            (GitHub)
+                                        </p>
+                                        <p>
+                                            <small>Affiliation</small>
+                                            <br />
+                                            {{
+                                                userProfile.cyverseProfile ===
+                                                undefined
+                                                    ? ''
+                                                    : userProfile.cyverseProfile
+                                                          .institution
+                                            }}
+                                        </p>
+                                        <p>
+                                            <small>Bio</small>
+                                            <br />
+                                            {{
+                                                userProfile.githubProfile
+                                                    ? userProfile.githubProfile
+                                                          .bio
+                                                    : 'None'
+                                            }}
+                                        </p>
+                                        <p>
+                                            <small>Location</small>
+                                            <br />
+                                            {{
+                                                userProfile.githubProfile
+                                                    ? userProfile.githubProfile
+                                                          .location
+                                                    : 'None'
+                                            }}
+                                        </p>
+                                    </b-col>
+                                </b-row>
+                            </b-tab>
+                            <b-tab
+                                v-if="userProfile.djangoProfile"
+                                title="Settings"
+                            >
+                                <template v-slot:title>
+                                    <b
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        >Settings</b
+                                    >
+                                </template>
+                                <b-row
+                                    ><b-col
+                                        ><h2
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Settings
+                                        </h2></b-col
+                                    ></b-row
+                                >
+                                <b-row class="m-1">
+                                    <b-col align-self="center" cols="3"
+                                        ><i
+                                            class="fas fa-envelope fa-1x fa-fw"
+                                        ></i>
+                                        Push Notifications:
+                                        {{ profile.pushNotifications }}
+                                    </b-col>
+                                    <b-col align-self="center" cols="8">
+                                        <b-button
+                                            size="sm"
+                                            v-if="
+                                                profile.pushNotifications !==
+                                                    'pending'
+                                            "
+                                            @click="togglePushNotifications"
+                                            >{{
+                                                profile.pushNotifications ===
+                                                'enabled'
+                                                    ? 'Disable'
+                                                    : 'Enable'
+                                            }}<b-spinner
+                                                small
+                                                v-if="togglingPushNotifications"
+                                                label="Loading..."
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'light'
+                                                        : 'dark'
+                                                "
+                                                class="ml-2 mb-1"
+                                            ></b-spinner></b-button
+                                    ></b-col>
+                                </b-row>
+                                <b-row class="m-1"
+                                    ><b-col align-self="center" cols="3">
+                                        <i
+                                            v-if="profile.darkMode"
+                                            class="fas fa-sun fa-1x fa-fw"
+                                        ></i>
+                                        <i
+                                            v-else
+                                            class="fas fa-moon fa-1x fa-fw"
+                                        ></i>
+                                        Dark Mode:
+                                        {{
+                                            profile.darkMode
+                                                ? 'enabled'
+                                                : 'disabled'
+                                        }} </b-col
+                                    ><b-col align-self="center" cols="8">
+                                        <b-button
+                                            size="sm"
+                                            @click="toggleDarkMode"
+                                            >{{
+                                                profile.darkMode
+                                                    ? 'Disable'
+                                                    : 'Enable'
+                                            }}<b-spinner
+                                                small
+                                                v-if="togglingDarkMode"
+                                                label="Loading..."
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'light'
+                                                        : 'dark'
+                                                "
+                                                class="ml-2 mb-1"
+                                            ></b-spinner></b-button></b-col
+                                ></b-row>
                             </b-tab>
                         </b-tabs>
                     </b-col>
                 </b-row>
             </div>
+            <b-modal
+                id="newResource"
+                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+                centered
+                close
+                size="lg"
+                :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+                title="Connect a new computing resource"
+                @ok="addResource"
+                :ok-disabled="newResourceInvalid"
+                ok-title="Connect"
+            >
+                <b-form-group
+                    label="Name"
+                    description="A name for this resource."
+                >
+                    <b-form-input
+                        :state="newResourceName !== ''"
+                        v-model="newResourceName"
+                        type="text"
+                        placeholder="Enter a name"
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group
+                    label="Host"
+                    description="This resource's FQDN or IP address."
+                >
+                    <b-form-input
+                        :state="newResourceHost !== ''"
+                        v-model="newResourceHost"
+                        type="text"
+                        placeholder="Enter a host or IP address"
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group
+                    label="Description"
+                    description="A plain-text description of this resource."
+                >
+                    <b-form-textarea
+                        :state="newResourceDescription !== ''"
+                        v-model="newResourceDescription"
+                        placeholder="Enter a description"
+                        required
+                    ></b-form-textarea>
+                </b-form-group>
+                <b-form-group
+                    label="Working directory"
+                    description="Working directory within which to run user workflows."
+                >
+                    <b-form-input
+                        :state="newResourceWorkdir !== ''"
+                        v-model="newResourceWorkdir"
+                        type="text"
+                        placeholder="Enter a directory path"
+                        required
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group
+                    label="Pre-commands"
+                    description="Commands to run before user commands (e.g., loading modules, setting environment variables). Frequently useful but not required."
+                >
+                    <b-form-textarea
+                        v-model="newResourcePrecommands"
+                        type="text"
+                        rows="3"
+                        placeholder="Enter commands"
+                        required
+                    ></b-form-textarea>
+                </b-form-group>
+                <b-form-group
+                    label="Max time"
+                    description="Maximum runtime permitted before the workflow is aborted."
+                    ><b-form-spinbutton
+                        v-model="newResourceMaxTime"
+                        min="1"
+                        max="1440"
+                    ></b-form-spinbutton
+                ></b-form-group>
+                <b-form-group
+                    label="Executor"
+                    description="Select an executor to orchestrate workflows."
+                >
+                    <b-form-select
+                        v-model="newResourceExecutor"
+                        :options="newResourceExecutorOptions"
+                        type="text"
+                        placeholder="Select an executor"
+                        required
+                    ></b-form-select>
+                    <b-form-checkbox
+                        v-if="isJobQueue(newResourceExecutor)"
+                        v-model="newResourceJobArray"
+                    >
+                        Enable job arrays
+                    </b-form-checkbox>
+                    <b-form-checkbox
+                        v-if="isSLURM(newResourceExecutor)"
+                        v-model="newResourceLauncher"
+                    >
+                        Enable TACC launcher parameter sweep utility (for
+                        Dask-incompatible hosts)
+                    </b-form-checkbox>
+                </b-form-group>
+            </b-modal>
         </b-container>
     </div>
 </template>
@@ -1211,34 +1552,55 @@ export default {
     },
     data: function() {
         return {
+            newResourceName: '',
+            newResourceHost: '',
+            newResourceDescription: '',
+            newResourceWorkdir: '',
+            newResourcePrecommands: '',
+            newResourceMaxTime: 0,
+            newResourceExecutor: 'Local',
+            newResourceExecutorOptions: [
+                { value: 'Local', text: 'Local' },
+                { value: 'SLURM', text: 'SLURM' },
+                { value: 'PBS', text: 'PBS' }
+            ],
+            newResourceQueue: '',
+            newResourceProject: '',
+            newResourceMaxWalltime: 0,
+            newResourceMaxMem: 0,
+            newResourceMaxCores: 0,
+            newResourceMaxProcesses: 0,
+            newResourceMaxNodes: 0,
+            newResourceHeaderSkip: '',
+            newResourceLauncher: false,
+            newResourceJobArray: false,
+            newResourcePublic: false,
+            newResourceLogo: '',
             togglingPushNotifications: false,
             togglingDarkMode: false,
             currentTab: 0,
-            sharedCollections: [],
-            sharingCollections: [],
+            sharedDatasets: [],
+            sharingDatasets: [],
             directoryPolicies: [],
             directoryPolicyNodes: [],
             data: {},
             loadingMoreRuns: false,
-            clusters: [],
-            clustersLoading: false,
+            resources: [],
+            resourcesLoading: false,
             alertEnabled: false,
             alertMessage: '',
             runSearchText: '',
-            pinnedCollectionsSearchText: '',
-            yourCollectionsSearchText: '',
-            sharedCollectionsSearchText: '',
-            sharingCollectionsSearchText: ''
+            pinnedDatasetsSearchText: '',
+            yourDatasetsSearchText: '',
+            sharedDatasetsSearchText: '',
+            sharingDatasetsSearchText: ''
         };
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('runs', ['runsLoading', 'runs']),
         ...mapGetters('workflows', ['workflows', 'workflowsLoading']),
-        ...mapGetters('collections', [
-            'openedCollection',
-            'openedCollectionLoading'
-        ]),
+        ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
         userWorkflows() {
             if (
                 this.workflowsLoading ||
@@ -1273,6 +1635,24 @@ export default {
                     (r.guid !== null && r.id.includes(this.runSearchText)) ||
                     r.tags.some(t => t.includes(this.runSearchText))
             );
+        },
+        newResourceInvalid() {
+            return (
+                this.newResourceName === '' ||
+                this.newResourceDescription === '' ||
+                this.newResourceHost === '' ||
+                this.newResourceWorkdir === '' ||
+                this.newResourcePrecommands === '' ||
+                this.newResourceExecutor === '' ||
+                (this.newResourceExecutor !== 'Local' &&
+                    (this.newResourceQueue === '' ||
+                        this.newResourceProject === '' ||
+                        this.newResourceMaxWalltime <= 0 ||
+                        this.newResourceMaxProcesses <= 0 ||
+                        this.newResourceMaxCores <= 0 ||
+                        this.newResourceMaxNodes <= 0 ||
+                        this.newResourceMaxMem <= 0))
+            );
         }
     },
     asyncComputed: {
@@ -1303,16 +1683,22 @@ export default {
         await Promise.all([
             this.$store.dispatch('workflows/loadAll'),
             this.$store.dispatch('users/loadAll'),
-            this.loadCollection(
+            this.loadDataset(
                 `/iplant/home/${this.profile.djangoProfile.username}/`,
                 this.profile.djangoProfile.cyverse_token
             ),
-            this.loadClusters(),
-            this.loadSharedCollections(),
-            this.loadSharingCollections()
+            this.loadResources(),
+            this.loadSharedDatasets(),
+            this.loadSharingDatasets()
         ]);
     },
     methods: {
+        isJobQueue(executor) {
+            return executor !== 'Local';
+        },
+        isSLURM(executor) {
+            return executor === 'SLURM';
+        },
         refreshWorkflows() {
             this.$store.dispatch('workflows/refreshAll');
         },
@@ -1358,6 +1744,44 @@ export default {
                     return error;
                 });
         },
+        showAddResourceModal() {
+            this.$bvModal.show('newResource');
+        },
+        async addResource() {
+            let data = {
+                auth: {
+                    username: this.authenticationUsername,
+                    password: this.authenticationPassword
+                },
+                config: {
+                    name: this.newResourceName,
+                    description: this.newResourceDescription,
+                    workdir: this.newResourceWorkdir,
+                    username: this.profile.djangoProfile.username,
+                    hostname: this.newResourceHost,
+                    pre_commands: this.newResourcePrecommands,
+                    max_time: this.newResourceMaxTime,
+                    public: this.newResourcePublic,
+                    logo: this.newResourceLogo,
+                    executor: this.newResourceExecutor
+                }
+            };
+
+            await axios({
+                method: 'post',
+                url: `/apis/v1/resources/new/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    alert(response.data.created);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    // TODO probably an auth error: display info and allow user to edit info and retry connection
+                    throw error;
+                });
+        },
         showDeletePrompt(run) {
             this.$bvModal.show('delete ' + run.id);
         },
@@ -1369,9 +1793,9 @@ export default {
         prettifyShort: function(date) {
             return `${moment(date).fromNow()}`;
         },
-        openCollection() {
-            this.$store.dispatch('collections/updateLoading', true);
-            let data = { cluster: this.cluster.name };
+        openDataset() {
+            this.$store.dispatch('datasets/updateLoading', true);
+            let data = { resource: this.resource.name };
             // if (this.mustAuthenticate)
             //     data['auth'] = {
             //         username: this.authenticationUsername,
@@ -1380,13 +1804,13 @@ export default {
 
             axios({
                 method: 'post',
-                url: `/apis/v1/collections/open/`,
+                url: `/apis/v1/datasets/open/`,
                 data: data,
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(async response => {
                     await this.$store.dispatch(
-                        'collections/updateOpened',
+                        'datasets/updateOpened',
                         response.data.session
                     );
                 })
@@ -1403,7 +1827,7 @@ export default {
         //     )
         //         if (node.kind === 'directory')
         //             router.push({
-        //                 name: 'collection',
+        //                 name: 'dataset',
         //                 params: {
         //                     path: node.path
         //                 }
@@ -1416,10 +1840,10 @@ export default {
         //                 }
         //             });
         // },
-        async unshareCollection(directory) {
+        async unshareDataset(directory) {
             await axios({
                 method: 'post',
-                url: `/apis/v1/collections/unshare/`,
+                url: `/apis/v1/datasets/unshare/`,
                 data: {
                     user: directory.guest,
                     path: directory.path,
@@ -1428,8 +1852,8 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(() => {
-                    this.loadSharingCollections();
-                    this.alertMessage = `Unshared collection ${
+                    this.loadSharingDatasets();
+                    this.alertMessage = `Unshared dataset ${
                         this.internalLoaded
                             ? this.internalNode.path
                             : this.node.path
@@ -1438,7 +1862,7 @@ export default {
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to unshare collection ${
+                    this.alertMessage = `Failed to unshare dataset ${
                         this.internalLoaded
                             ? this.internalNode.path
                             : this.node.path
@@ -1447,18 +1871,18 @@ export default {
                     throw error;
                 });
         },
-        async loadSharingCollections() {
+        async loadSharingDatasets() {
             await axios
-                .get(`/apis/v1/collections/sharing/`)
+                .get(`/apis/v1/datasets/sharing/`)
                 .then(response => {
-                    this.sharingCollections = response.data;
+                    this.sharingDatasets = response.data;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        async loadSharedCollections() {
+        async loadSharedDatasets() {
             await axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/`,
@@ -1471,7 +1895,7 @@ export default {
                     }
                 )
                 .then(response => {
-                    this.sharedCollections = response.data;
+                    this.sharedDatasets = response.data;
                     this.sharedDataLoading = false;
                 })
                 .catch(error => {
@@ -1480,20 +1904,20 @@ export default {
                     throw error;
                 });
             // await axios
-            //     .get(`/apis/v1/collections/shared/`)
+            //     .get(`/apis/v1/datasets/shared/`)
             //     .then(response => {
-            //         this.sharedCollections = response.data;
+            //         this.sharedDatasets = response.data;
             //     })
             //     .catch(error => {
             //         Sentry.captureException(error);
             //         throw error;
             //     });
         },
-        clusterSelected: function(cluster) {
+        resourceSelected: function(resource) {
             router.push({
-                name: 'cluster',
+                name: 'resource',
                 params: {
-                    name: cluster.name
+                    name: resource.name
                 }
             });
         },
@@ -1520,17 +1944,17 @@ export default {
                 }
             });
         },
-        async loadClusters() {
-            this.clustersLoading = true;
+        async loadResources() {
+            this.resourcesLoading = true;
             return axios
-                .get(`/apis/v1/clusters/get_by_username/`)
+                .get(`/apis/v1/resources/get_by_username/`)
                 .then(response => {
-                    this.clustersLoading = false;
-                    this.clusters = response.data.clusters;
+                    this.resourcesLoading = false;
+                    this.resources = response.data.resources;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.clustersLoading = false;
+                    this.resourcesLoading = false;
                     if (error.response.status === 500) throw error;
                 });
         },
@@ -1556,14 +1980,14 @@ export default {
                     }
                 )
                 .then(response => {
-                    this.sharedCollections.push(response.data);
+                    this.sharedDatasets.push(response.data);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        async loadCollection(path, token) {
+        async loadDataset(path, token) {
             return axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,

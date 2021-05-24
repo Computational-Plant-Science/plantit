@@ -9,7 +9,7 @@ from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 from taggit.managers import TaggableManager
 
-from plantit.clusters.models import Cluster
+from plantit.resources.models import Resource
 
 
 class Run(models.Model):
@@ -17,26 +17,26 @@ class Run(models.Model):
         ordering = ['-created']
 
     guid = models.CharField(max_length=50, null=False, blank=False)
-    tags = TaggableManager()
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(default=timezone.now)
-    completed = models.DateTimeField(null=True, blank=True)
-    token = models.CharField(max_length=40)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    resource = models.ForeignKey(Resource, null=True, blank=True, on_delete=models.SET_NULL)
+    workdir = models.CharField(max_length=100, null=True, blank=True)
+    token = models.CharField(max_length=40)
+    tags = TaggableManager()
     submission_id = models.CharField(max_length=50, null=True, blank=True)
     job_id = models.CharField(max_length=7, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
-    requested_walltime = models.CharField(max_length=8, null=True, blank=True)
-    job_walltime = models.CharField(max_length=8, null=True, blank=True)
+    job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
+    job_elapsed_walltime = models.CharField(max_length=8, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     workflow_image_url = models.URLField(null=True, blank=True)
-    cluster = models.ForeignKey(Cluster, null=True, blank=True, on_delete=models.SET_NULL)
-    work_dir = models.CharField(max_length=100, null=True, blank=True)
     task = models.ForeignKey(PeriodicTask, null=True, blank=True, on_delete=models.CASCADE)
     results = ArrayField(models.CharField(max_length=250), blank=True, null=True)
-    result_previews_loaded = models.BooleanField(default=False)
+    previews_loaded = models.BooleanField(default=False)
     cleaned_up = models.BooleanField(default=False)
+    created = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(default=timezone.now)
+    completed = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         opts = self._meta
@@ -49,7 +49,7 @@ class Run(models.Model):
 
     @property
     def is_sandbox(self):
-        return self.cluster.name is not None and self.cluster.name == 'Sandbox'
+        return self.resource.name is not None and self.resource.name == 'Sandbox'
 
     @property
     def is_success(self):
@@ -74,7 +74,7 @@ class Run(models.Model):
 
 class DelayedRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE, null=True, blank=True)
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
@@ -82,7 +82,7 @@ class DelayedRunTask(PeriodicTask):
 
 class RepeatingRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE, null=True, blank=True)
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)

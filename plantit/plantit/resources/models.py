@@ -1,4 +1,5 @@
 from enum import Enum
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
@@ -8,7 +9,7 @@ from django_celery_beat.models import PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
 
 
-class Cluster(models.Model):
+class Resource(models.Model):
     name = models.CharField(max_length=20)
     description = models.TextField(blank=True)
     workdir = models.CharField(max_length=250)
@@ -16,6 +17,7 @@ class Cluster(models.Model):
     port = models.PositiveIntegerField(default=22)
     hostname = models.CharField(max_length=250)
     pre_commands = models.TextField(blank=True, null=True, default=None)
+    max_time = models.DurationField(blank=False, null=False, default=timedelta(hours=1))
     max_walltime = models.PositiveIntegerField(blank=True, null=True, default=10)
     max_mem = models.IntegerField(blank=True, null=True, default=5)
     max_cores = models.IntegerField(blank=True, null=True, default=1)
@@ -47,25 +49,25 @@ class Cluster(models.Model):
         return self.name
 
 
-class ClusterRole(Enum):
+class ResourceRole(Enum):
     own = 'OWN'
     run = 'USE'
     none = 'NONE'
 
 
-class ClusterAccessPolicy(models.Model):
+class ResourceAccessPolicy(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    cluster = models.ForeignKey(Cluster, null=True, blank=True, on_delete=models.CASCADE)
-    role = EnumChoiceField(ClusterRole, default=ClusterRole.run)
+    resource = models.ForeignKey(Resource, null=True, blank=True, on_delete=models.CASCADE)
+    role = EnumChoiceField(ResourceRole, default=ResourceRole.run)
 
 
-class ClusterTask(PeriodicTask):
-    cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE)
+class ResourceTask(PeriodicTask):
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
     command = models.CharField(max_length=250, null=False, blank=False)
 
 
-class ClusterAccessRequest(models.Model):
-    created = models.DateTimeField(default=timezone.now)
+class ResourceAccessRequest(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    cluster = models.ForeignKey(Cluster, null=True, blank=True, on_delete=models.CASCADE)
+    resource = models.ForeignKey(Resource, null=True, blank=True, on_delete=models.CASCADE)
+    created = models.DateTimeField(default=timezone.now)
     granted: bool = models.BooleanField(default=False)

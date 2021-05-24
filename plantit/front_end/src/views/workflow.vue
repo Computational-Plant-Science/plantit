@@ -446,26 +446,26 @@
                                                 "
                                             >
                                                 <i
-                                                    v-if="outputCollection"
+                                                    v-if="outputDataset"
                                                     class="fas fa-upload fa-fw text-warning"
                                                 ></i>
                                                 <i
                                                     v-else-if="
-                                                        !outputCollection &&
+                                                        !outputDataset &&
                                                             profile.darkMode
                                                     "
                                                     class="fas fa-upload fa-fw text-white"
                                                 ></i>
                                                 <i
                                                     v-else-if="
-                                                        !outputCollection &&
+                                                        !outputDataset &&
                                                             !profile.darkMode
                                                     "
                                                     class="fas fa-upload fa-fw text-dark"
                                                 ></i>
                                                 Output Sync
                                                 {{
-                                                    outputCollection
+                                                    outputDataset
                                                         ? ''
                                                         : ' (off)'
                                                 }}
@@ -481,7 +481,7 @@
                                         </b-col>
                                     </b-row>
                                     <runoutput
-                                        v-if="outputCollection"
+                                        v-if="outputDataset"
                                         :user="user"
                                         v-on:outputSelected="outputSelected"
                                     ></runoutput>
@@ -514,7 +514,7 @@
                                             >
                                                 <i
                                                     v-if="
-                                                        selectedCluster.name !==
+                                                        selectedResource.name !==
                                                             ''
                                                     "
                                                     class="fas fa-server fa-fw text-warning"
@@ -523,7 +523,7 @@
                                                     v-else
                                                     class="fas fa-server fa-fw"
                                                 ></i>
-                                                Cluster
+                                                Resource
                                             </h4>
                                         </b-col>
                                     </b-row>
@@ -535,7 +535,7 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Select a cluster to submit this run
+                                            Select a resource to submit this run
                                             to.
                                         </b>
                                         <b-tabs
@@ -546,7 +546,7 @@
                                             active-nav-item-class="bg-secondary text-dark"
                                         >
                                             <b-tab
-                                                title="Your clusters"
+                                                title="Your resources"
                                                 :title-link-class="
                                                     profile.darkMode
                                                         ? 'text-white'
@@ -560,16 +560,16 @@
                                             >
                                                 <b-row
                                                     class="text-right"
-                                                    v-for="cluster in clusters"
-                                                    v-bind:key="cluster.name"
+                                                    v-for="resource in resources"
+                                                    v-bind:key="resource.name"
                                                 >
                                                     <b-col md="auto"
                                                         ><b-button
                                                             size="md"
                                                             class="text-left pt-2"
                                                             @click="
-                                                                clusterSelected(
-                                                                    cluster
+                                                                resourceSelected(
+                                                                    resource
                                                                 )
                                                             "
                                                             :variant="
@@ -578,30 +578,30 @@
                                                                     : 'white'
                                                             "
                                                             :disabled="
-                                                                clusterUnsupported(
-                                                                    cluster
+                                                                resourceUnsupported(
+                                                                    resource
                                                                 ) ||
-                                                                    cluster.disabled
+                                                                    resource.disabled
                                                             "
                                                             >{{
-                                                                cluster.name
+                                                                resource.name
                                                             }}</b-button
                                                         ></b-col
                                                     >
                                                     <b-col align-self="end">
                                                         <small
                                                             >{{
-                                                                cluster.max_cores
+                                                                resource.max_cores
                                                             }}
                                                             cores,
                                                             {{
-                                                                cluster.max_processes
+                                                                resource.max_processes
                                                             }}
                                                             processes, </small
                                                         ><span
                                                             v-if="
                                                                 parseInt(
-                                                                    cluster.max_mem
+                                                                    resource.max_mem
                                                                 ) >=
                                                                     parseInt(
                                                                         getWorkflow
@@ -610,36 +610,36 @@
                                                                             .mem
                                                                     ) &&
                                                                     parseInt(
-                                                                        cluster.max_mem
+                                                                        resource.max_mem
                                                                     ) > 0
                                                             "
                                                             >{{
-                                                                cluster.max_mem
+                                                                resource.max_mem
                                                             }}
                                                             GB memory</span
                                                         >
                                                         <span
                                                             v-else-if="
                                                                 parseInt(
-                                                                    cluster.max_mem
+                                                                    resource.max_mem
                                                                 ) > 0
                                                             "
                                                             class="text-danger"
                                                             >{{
-                                                                cluster.max_mem
+                                                                resource.max_mem
                                                             }}
                                                             GB memory</span
                                                         >
                                                         <span
                                                             v-else-if="
                                                                 parseInt(
-                                                                    cluster.max_mem
+                                                                    resource.max_mem
                                                                 ) === -1
                                                             "
                                                             >virtual
                                                             memory</span
                                                         ><span
-                                                            v-if="cluster.gpu"
+                                                            v-if="resource.gpu"
                                                         >
                                                             , GPU
                                                         </span>
@@ -652,8 +652,8 @@
                                                     align-h="center"
                                                     class="text-center"
                                                     v-if="
-                                                        !publicClustersLoading &&
-                                                            clusters.length ===
+                                                        !publicResourcesLoading &&
+                                                            resources.length ===
                                                                 0
                                                     "
                                                 >
@@ -663,7 +663,7 @@
                                                 </b-row>
                                             </b-tab>
                                             <b-tab
-                                                title="Public clusters"
+                                                title="Public resources"
                                                 :title-link-class="
                                                     profile.darkMode
                                                         ? 'text-white'
@@ -677,7 +677,7 @@
                                             >
                                                 <b-row
                                                     class="text-right"
-                                                    v-for="tgt in publicClusters"
+                                                    v-for="tgt in publicResources"
                                                     v-bind:key="tgt.name"
                                                 >
                                                     <b-col md="auto"
@@ -685,7 +685,7 @@
                                                             size="md"
                                                             class="text-left pt-2"
                                                             @click="
-                                                                clusterSelected(
+                                                                resourceSelected(
                                                                     tgt
                                                                 )
                                                             "
@@ -695,7 +695,7 @@
                                                                     : 'white'
                                                             "
                                                             :disabled="
-                                                                clusterUnsupported(
+                                                                resourceUnsupported(
                                                                     tgt
                                                                 ) ||
                                                                     tgt.disabled
@@ -765,8 +765,8 @@
                                                     align-h="center"
                                                     class="text-center"
                                                     v-if="
-                                                        !clustersLoading &&
-                                                            publicClusters.length ===
+                                                        !resourcesLoading &&
+                                                            publicResources.length ===
                                                                 0
                                                     "
                                                 >
@@ -778,7 +778,7 @@
                                         </b-tabs>
                                         <b-row
                                             align-h="center"
-                                            v-if="clustersLoading"
+                                            v-if="resourcesLoading"
                                         >
                                             <b-spinner
                                                 type="grow"
@@ -790,20 +790,20 @@
                                             v-else
                                             class="mt-1"
                                             :variant="
-                                                selectedCluster.name !== ''
+                                                selectedResource.name !== ''
                                                     ? 'success'
                                                     : 'danger'
                                             "
                                             :show="true"
                                             >Selected:
                                             {{
-                                                selectedCluster.name !== ''
-                                                    ? selectedCluster.name
+                                                selectedResource.name !== ''
+                                                    ? selectedResource.name
                                                     : 'None'
                                             }}
                                             <i
                                                 v-if="
-                                                    selectedCluster.name !== ''
+                                                    selectedResource.name !== ''
                                                 "
                                                 class="fas fa-check text-success"
                                             ></i>
@@ -953,7 +953,7 @@
                             <b-row class="pt-1">
                                 <b-col align-self="end"
                                     >{{
-                                        `After ${task.interval.every} ${task.interval.period} on ${task.cluster.name}`
+                                        `After ${task.interval.every} ${task.interval.period} on ${task.resource.name}`
                                     }}<br /><b-row
                                         ><b-col
                                             md="auto"
@@ -1015,7 +1015,7 @@
                             <b-row class="pt-1">
                                 <b-col
                                     >{{
-                                        `Every ${task.interval.every} ${task.interval.period} on ${task.cluster.name}`
+                                        `Every ${task.interval.every} ${task.interval.period} on ${task.resource.name}`
                                     }}<br /><b-row
                                         ><b-col
                                             md="auto"
@@ -1073,7 +1073,7 @@
                                 size="sm"
                                 v-b-tooltip.hover
                                 title="Create Periodic Task"
-                                :disabled="cluster.role !== 'own'"
+                                :disabled="resource.role !== 'own'"
                                 v-b-modal.createTask
                             >
                                 <i class="fas fa-plus fa-fw"></i>
@@ -1145,7 +1145,7 @@
                             >
                             <small> on </small>
                             <b-badge class="ml-0 mr-0" variant="secondary">{{
-                                run.cluster
+                                run.resource
                             }}</b-badge
                             ><small
                                 v-if="run.job_status === 'Scheduled'"
@@ -1183,7 +1183,7 @@
                 :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
                 :header-border-variant="profile.darkMode ? 'dark' : 'white'"
                 :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :title="'Authenticate with ' + this.selectedCluster.name"
+                :title="'Authenticate with ' + this.selectedResource.name"
                 @ok="onStart"
             >
                 <b-form-input
@@ -1238,7 +1238,7 @@ export default {
             submitted: false,
             authenticationUsername: '',
             authenticationPassword: '',
-            currentClusterTab: 0,
+            currentResourceTab: 0,
             showStatusAlert: false,
             statusAlertMessage: '',
             submitType: 'Now',
@@ -1257,7 +1257,7 @@ export default {
                 filetypes: []
             },
             inputSelectedPatterns: [],
-            outputCollection: false,
+            outputDataset: false,
             outputSync: false,
             outputSpecified: false,
             output: {
@@ -1316,13 +1316,13 @@ export default {
                     label: 'Actions'
                 }
             ],
-            selectedCluster: {
+            selectedResource: {
                 name: ''
             },
-            clusters: [],
-            publicClusters: [],
-            clustersLoading: false,
-            clusterFields: [
+            resources: [],
+            publicResources: [],
+            resourcesLoading: false,
+            resourceFields: [
                 {
                     key: 'name',
                     label: ''
@@ -1367,8 +1367,8 @@ export default {
                 owner: this.$router.currentRoute.params.username,
                 name: this.$router.currentRoute.params.name
             }),
-            this.loadClusters(),
-            this.loadPublicClusters(),
+            this.loadResources(),
+            this.loadPublicResources(),
             this.loadRuns(),
             this.loadDelayedRuns(),
             this.loadRepeatingRuns()
@@ -1434,7 +1434,7 @@ export default {
                     } periodic run (every ${
                         response.data.interval.every
                     } ${response.data.interval.period.toLowerCase()} on ${
-                        response.data.cluster.name
+                        response.data.resource.name
                     })`;
                     this.showStatusAlert = true;
                 })
@@ -1641,7 +1641,7 @@ export default {
                         : this.params;
                 this.input = flowConfig.input;
                 this.output = flowConfig.output;
-                this.selectedCluster = flowConfig.cluster;
+                this.selectedResource = flowConfig.resource;
             }
         },
         inputSelected(node) {
@@ -1650,41 +1650,41 @@ export default {
         outputSelected(node) {
             this.output.to = node.path;
         },
-        clusterSelected(cluster) {
-            this.selectedCluster = cluster;
+        resourceSelected(resource) {
+            this.selectedResource = resource;
         },
-        clusterUnsupported(cluster) {
+        resourceUnsupported(resource) {
             return (
-                (parseInt(cluster.max_mem) !== -1 &&
-                    parseInt(cluster.max_mem) <
+                (parseInt(resource.max_mem) !== -1 &&
+                    parseInt(resource.max_mem) <
                         parseInt(this.getWorkflow.config.resources.mem)) ||
-                parseInt(cluster.max_cores) <
+                parseInt(resource.max_cores) <
                     parseInt(this.getWorkflow.config.resources.cores) ||
-                parseInt(cluster.max_processes) <
+                parseInt(resource.max_processes) <
                     parseInt(this.getWorkflow.config.resources.processes)
             );
             // TODO walltime
         },
-        async loadClusters() {
-            this.clustersLoading = true;
+        async loadResources() {
+            this.resourcesLoading = true;
             return await axios
-                .get(`/apis/v1/clusters/get_by_username/`)
+                .get(`/apis/v1/resources/get_by_username/`)
                 .then(response => {
-                    this.clusters = response.data.clusters;
-                    this.clustersLoading = false;
+                    this.resources = response.data.resources;
+                    this.resourcesLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     throw error;
                 });
         },
-        async loadPublicClusters() {
-            this.publicClustersLoading = true;
+        async loadPublicResources() {
+            this.publicResourcesLoading = true;
             return await axios
-                .get(`/apis/v1/clusters/get_all/`)
+                .get(`/apis/v1/resources/get_all/`)
                 .then(response => {
-                    this.publicClusters = response.data.clusters;
-                    this.publicClustersLoading = false;
+                    this.publicResources = response.data.resources;
+                    this.publicResourcesLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1701,7 +1701,7 @@ export default {
         async onStart() {
             if (
                 !this.getWorkflow.config.resources &&
-                this.selectedCluster.name !== 'Sandbox'
+                this.selectedResource.name !== 'Sandbox'
             ) {
                 alert('This flow can only run in the Sandbox.');
                 return;
@@ -1710,14 +1710,14 @@ export default {
             // prepare run definition
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
-            let cluster = this.selectedCluster;
+            let resource = this.selectedResource;
             if (this.getWorkflow.config.resources)
-                cluster['resources'] = this.getWorkflow.config.resources;
+                resource['resources'] = this.getWorkflow.config.resources;
             let config = {
                 name: this.getWorkflow.config.name,
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
-                cluster: cluster,
+                resource: resource,
                 commands: this.getWorkflow.config.commands,
                 tags: this.tags
             };
@@ -1736,7 +1736,7 @@ export default {
             }
             if (this.output !== undefined) {
                 config.output = this.output;
-                // if (!this.outputCollection) delete config.output['to'];
+                // if (!this.outputDataset) delete config.output['to'];
             }
 
             // save config
@@ -1799,13 +1799,13 @@ export default {
                     .then(response => {
                         this.statusAlertMessage =
                             response.status === 200 && response.data.created
-                                ? `Scheduled run ${this.$router.currentRoute.params.name} on ${config.cluster.name}`
-                                : `Failed to schedule run ${this.$router.currentRoute.params.name} on ${config.cluster.name}`;
+                                ? `Scheduled run ${this.$router.currentRoute.params.name} on ${config.resource.name}`
+                                : `Failed to schedule run ${this.$router.currentRoute.params.name} on ${config.resource.name}`;
                         this.showStatusAlert = true;
                     })
                     .catch(error => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedCluster.name}`;
+                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedResource.name}`;
                         this.showStatusAlert = true;
                         throw error;
                     });
@@ -1827,13 +1827,13 @@ export default {
                         this.loadRepeatingRuns();
                         this.statusAlertMessage =
                             response.status === 200 && response.data.created
-                                ? `Scheduled repeating run ${this.$router.currentRoute.params.name} on ${config.cluster.name}`
-                                : `Failed to schedule repeating run ${this.$router.currentRoute.params.name} on ${config.cluster.name}`;
+                                ? `Scheduled repeating run ${this.$router.currentRoute.params.name} on ${config.resource.name}`
+                                : `Failed to schedule repeating run ${this.$router.currentRoute.params.name} on ${config.resource.name}`;
                         this.showStatusAlert = true;
                     })
                     .catch(error => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedCluster.name}`;
+                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedResource.name}`;
                         this.showStatusAlert = true;
                         throw error;
                     });
@@ -1847,7 +1847,7 @@ export default {
             'workflowsRecentlyRun'
         ]),
         mustAuthenticate() {
-            return !this.selectedCluster.policies.some(
+            return !this.selectedResource.policies.some(
                 p =>
                     p.user === this.profile.djangoProfile.username &&
                     (p.role.toLowerCase() === 'use' ||
@@ -1902,7 +1902,7 @@ export default {
         },
         outputReady: function() {
             if (
-                this.outputCollection &&
+                this.outputDataset &&
                 this.getWorkflow &&
                 this.getWorkflow.config &&
                 this.getWorkflow.config.input !== undefined &&
@@ -1916,7 +1916,7 @@ export default {
                 this.paramsReady &&
                 this.inputReady &&
                 this.outputReady &&
-                this.selectedCluster.name !== ''
+                this.selectedResource.name !== ''
             );
         }
     }

@@ -19,26 +19,26 @@ import czifile
 import cv2
 
 from plantit import settings
-from plantit.clusters.models import Cluster, ClusterAccessPolicy, ClusterRole
+from plantit.resources.models import Resource, ResourceAccessPolicy, ResourceRole
 from plantit.notifications.models import DirectoryPolicyNotification
-from plantit.collections.models import CollectionAccessPolicy, CollectionRole, CollectionSession
-from plantit.collections.utils import map_collection_policy, map_collection_session, update_collection_session
+from plantit.datasets.models import DatasetAccessPolicy, DatasetRole, DatasetSession
+from plantit.datasets.utils import map_dataset_policy, map_dataset_session, update_dataset_session
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import execute_command
-from plantit.runs.tasks import open_collection_session
+from plantit.runs.tasks import open_dataset_session
 
 
 @login_required
 def sharing(request):  # directories the current user is sharing
     owner = request.user
-    policies = CollectionAccessPolicy.objects.filter(owner=owner)
-    return JsonResponse([map_collection_policy(policy) for policy in policies], safe=False)
+    policies = DatasetAccessPolicy.objects.filter(owner=owner)
+    return JsonResponse([map_dataset_policy(policy) for policy in policies], safe=False)
 
 
 @login_required
 def shared(request):  # directories shared with the current user
     guest = request.user
-    policies = CollectionAccessPolicy.objects.filter(guest=guest)
+    policies = DatasetAccessPolicy.objects.filter(guest=guest)
 
     urls = [f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={policy.path}" for policy in policies]
     headers = {
@@ -64,11 +64,11 @@ def share(request):
             return HttpResponseNotFound()
 
         path = guest['paths'][0]['path']
-        role = CollectionRole.read if guest['paths'][0]['permission'].lower() == 'read' else CollectionRole.write
-        policy, created = CollectionAccessPolicy.objects.get_or_create(owner=owner, guest=user, role=role, path=path)
+        role = DatasetRole.read if guest['paths'][0]['permission'].lower() == 'read' else DatasetRole.write
+        policy, created = DatasetAccessPolicy.objects.get_or_create(owner=owner, guest=user, role=role, path=path)
         policies.append({
             'created': created,
-            'policy': map_collection_policy(policy)
+            'policy': map_dataset_policy(policy)
         })
 
         notification = DirectoryPolicyNotification.objects.create(
@@ -85,7 +85,7 @@ def share(request):
                 'created': notification.created.isoformat(),
                 'message': notification.message,
                 'read': notification.read,
-                'policy': map_collection_policy(notification.policy)
+                'policy': map_dataset_policy(notification.policy)
             }
         })
 
@@ -108,7 +108,7 @@ def unshare(request):
     if role_str.lower() != 'read' and role_str.lower() != 'write':
         return HttpResponseBadRequest(f"Unsupported role {role_str} (allowed: read, write)")
     else:
-        role = CollectionRole.read if role_str.lower() == 'read' else CollectionRole.write
+        role = DatasetRole.read if role_str.lower() == 'read' else DatasetRole.write
 
     try:
         guest = User.objects.get(username=guest_username)
@@ -116,7 +116,7 @@ def unshare(request):
         return HttpResponseNotFound()
 
     try:
-        policy = CollectionAccessPolicy.objects.get(owner=owner, guest=guest, role=role, path=path)
+        policy = DatasetAccessPolicy.objects.get(owner=owner, guest=guest, role=role, path=path)
     except:
         return HttpResponseNotFound()
 
@@ -134,7 +134,7 @@ def unshare(request):
             'created': notification.created.isoformat(),
             'message': notification.message,
             'read': notification.read,
-            'policy': map_collection_policy(notification.policy)
+            'policy': map_dataset_policy(notification.policy)
         }
     })
 
@@ -157,10 +157,10 @@ def unshare(request):
 def opened_session(request):
     user = request.user
     try:
-        session = CollectionSession.objects.get(user=user)
+        session = DatasetSession.objects.get(user=user)
     except:
         return HttpResponseNotFound()
-    return JsonResponse({'session': map_collection_session(session)})
+    return JsonResponse({'session': map_dataset_session(session)})
 
 
 @api_view(['POST'])
@@ -168,20 +168,20 @@ def opened_session(request):
 def open_session(request):
     user = request.user
     try:
-        CollectionSession.objects.get(user=user)
-        return HttpResponseBadRequest(f"Collection session already running")
+        DatasetSession.objects.get(user=user)
+        return HttpResponseBadRequest(f"Dataset session already running")
     except:
         pass
 
     try:
-        cluster_name = request.data['cluster']
-        cluster = Cluster.objects.get(name=cluster_name)
+        resource_name = request.data['resource']
+        resource = Resource.objects.get(name=resource_name)
     except:
         return HttpResponseNotFound()
 
-    policies = ClusterAccessPolicy.objects.filter(user=user, role__in=[ClusterRole.own, ClusterRole.run])
+    policies = ResourceAccessPolicy.objects.filter(user=user, role__in=[ResourceRole.own, ResourceRole.run])
     if len(policies) > 0:  # user already has guest or admin permissions
-        ssh_client = SSH(cluster.hostname, cluster.port, cluster.username)
+        ssh_client = SSH(resource.hostname, resource.port, resource.username)
     else:  # authenticating manually
         if 'auth' not in request.data:
             return HttpResponseBadRequest(f"User not authorized; you must provide authentication information")
@@ -190,17 +190,17 @@ def open_session(request):
 
     guid = str(uuid.uuid4())
     path = request.data['path']
-    session = CollectionSession.objects.create(
+    session = DatasetSession.objects.create(
         guid=guid,
         user=user,
         path=path,
-        cluster=cluster,
+        resource=resource,
         token=binascii.hexlify(os.urandom(20)).decode(),
-        workdir=join(cluster.workdir, f"{guid}"))
+        workdir=join(resource.workdir, f"{guid}"))
 
-    open_collection_session.s(session.guid).apply_async(countdown=5)
-    update_collection_session(session, [f"Opening collection {session.path} on {cluster.name} in working directory {join(session.cluster.workdir, session.workdir)}"])
-    return JsonResponse({'session': map_collection_session(session)})
+    open_dataset_session.s(session.guid).apply_async(countdown=5)
+    update_dataset_session(session, [f"Opening collection {session.path} on {resource.name} in working directory {join(session.resource.workdir, session.workdir)}"])
+    return JsonResponse({'session': map_dataset_session(session)})
 
 
 @api_view(['GET'])
@@ -208,7 +208,7 @@ def open_session(request):
 def save_session(request):
     user = request.user
     try:
-        session = CollectionSession.objects.get(user=user)
+        session = DatasetSession.objects.get(user=user)
     except:
         return HttpResponseNotFound()
 
@@ -223,25 +223,25 @@ def save_session(request):
 def close_session(request):
     user = request.user
     try:
-        session = CollectionSession.objects.get(user=user)
+        session = DatasetSession.objects.get(user=user)
     except:
         return HttpResponse()
 
-    update_collection_session(session, [f"Closing collection session {session.guid}"])
+    update_dataset_session(session, [f"Closing collection session {session.guid}"])
 
-    ssh_client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+    ssh_client = SSH(session.resource.hostname, session.resource.port, session.resource.username)
     with ssh_client:
         with ssh_client.client.open_sftp() as sftp:
             try:
-                sftp.stat(join(session.cluster.workdir, session.guid))
+                sftp.stat(join(session.resource.workdir, session.guid))
                 execute_command(
                     ssh_client=ssh_client,
                     pre_command=':',
                     command=f"rm -r {session.guid}/",
-                    directory=session.cluster.workdir)
-                update_collection_session(session, [f"Removed collection session {session.guid} working directory {session.workdir}"])
+                    directory=session.resource.workdir)
+                update_dataset_session(session, [f"Removed collection session {session.guid} working directory {session.workdir}"])
             except:
-                update_collection_session(session, [f"Directory {session.guid} does not exist, skipping"])
+                update_dataset_session(session, [f"Directory {session.guid} does not exist, skipping"])
 
     session.delete()
     return HttpResponse()
@@ -252,14 +252,14 @@ def close_session(request):
 def get_text_content(request):
     user = request.user
     try:
-        session = CollectionSession.objects.get(user=user)
+        session = DatasetSession.objects.get(user=user)
     except:
         return HttpResponseNotFound()
 
     path = request.GET.get('path')
     file_name = path.rpartition('/')[2]
     file = join(session.workdir, file_name)
-    client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+    client = SSH(session.resource.hostname, session.resource.port, session.resource.username)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -289,14 +289,14 @@ def get_text_content(request):
 def get_thumbnail(request):
     user = request.user
     try:
-        session = CollectionSession.objects.get(user=user)
+        session = DatasetSession.objects.get(user=user)
     except:
         return HttpResponseNotFound()
 
     path = request.GET.get('path')
     file_name = path.rpartition('/')[2]
     file = join(session.workdir, file_name)
-    client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+    client = SSH(session.resource.hostname, session.resource.port, session.resource.username)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -351,23 +351,23 @@ def duplicate_file(request):
     user = request.user
     file = request.data['file']
     try:
-        session = CollectionSession.objects.get(user=user)
+        session = DatasetSession.objects.get(user=user)
     except:
         return HttpResponseNotFound()
 
-    update_collection_session(session, [f"Duplicating file {file}"])
+    update_dataset_session(session, [f"Duplicating file {file}"])
 
     if file not in session.modified:
         session.modified.append(file)
         session.save()
 
-    ssh_client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+    ssh_client = SSH(session.resource.hostname, session.resource.port, session.resource.username)
     with ssh_client:
         output = execute_command(
             ssh_client=ssh_client,
             pre_command=':',
             command=f"cp {file} {timezone.now()}.{file}",
-            directory=session.cluster.workdir)
-        update_collection_session(session, output)
+            directory=session.resource.workdir)
+        update_dataset_session(session, output)
 
     return HttpResponse()

@@ -1,24 +1,24 @@
 from django.contrib import admin
 
-from plantit.clusters.models import Cluster, ClusterAccessPolicy
-from plantit.collections.models import CollectionAccessPolicy, CollectionSession
+from plantit.resources.models import Resource, ResourceAccessPolicy
+from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
 
 
-@admin.register(Cluster)
-class ClusterAdmin(admin.ModelAdmin):
+@admin.register(Resource)
+class ResourceAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(ClusterAccessPolicy)
-class ClusterAccessPolicyAdmin(admin.ModelAdmin):
+@admin.register(ResourceAccessPolicy)
+class ResourceAccessPolicyAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(CollectionAccessPolicy)
-class CollectionAccessPolicyAdmin(admin.ModelAdmin):
+@admin.register(DatasetAccessPolicy)
+class DatasetAccessPolicyAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(CollectionSession)
+@admin.register(DatasetSession)
 class SessionAdmin(admin.ModelAdmin):
     pass

@@ -3,12 +3,12 @@ import Router from 'vue-router';
 import home from './views/home.vue';
 import workflows from './views/explore-workflows.vue';
 import workflow from './views/workflow.vue';
-import cluster from './views/cluster.vue';
-import clusters from './views/clusters.vue';
+import resource from './views/resource.vue';
+import resources from './views/resources.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
 import run from './views/run.vue';
-import collection from './views/collection.vue';
+import dataset from './views/dataset.vue';
 import annotate from './views/annotate.vue';
 import store from './store/store.js';
 
@@ -59,15 +59,15 @@ let router = new Router({
             }
         },
         {
-            path: '/clusters',
-            name: 'clusters',
-            component: clusters,
+            path: '/resources',
+            name: 'resources',
+            component: resources,
             meta: {
-                title: 'Clusters',
+                title: 'Resources',
                 crumb: [
                     {
-                        text: 'Clusters',
-                        href: '/clusters'
+                        text: 'Resources',
+                        href: '/resources'
                     }
                 ],
                 requiresAuth: true
@@ -96,10 +96,10 @@ let router = new Router({
             }
         },
         {
-            path: '/cluster/:name',
-            name: 'cluster',
+            path: '/resource/:name',
+            name: 'resource',
             props: true,
-            component: cluster,
+            component: resource,
             meta: {
                 title: 'Server',
                 crumb: [],
@@ -118,12 +118,12 @@ let router = new Router({
             }
         },
         {
-            path: '/collection/:path',
-            name: 'collection',
+            path: '/dataset/:path',
+            name: 'dataset',
             props: true,
-            component: collection,
+            component: dataset,
             meta: {
-                title: 'Collection',
+                title: 'Dataset',
                 crumb: [],
                 requiresAuth: true
             }
@@ -158,12 +158,24 @@ let router = new Router({
 });
 
 router.beforeEach(async (to, from, next) => {
+    await store.dispatch('user/loadProfile');
     if (to.name === 'workflow') to.meta.title = `Workflow: ${to.params.name}`;
     if (to.name === 'run') to.meta.title = `Run: ${to.params.id}`;
-    if (to.name === 'cluster') to.meta.title = `Cluster: ${to.params.name}`;
-    if (to.name === 'user') to.meta.title = `User: ${to.params.username}`;
-    if (to.name === 'collection')
-        to.meta.title = `Collection: ${to.params.path}`;
+    if (to.name === 'resource') to.meta.title = `Resource: ${to.params.name}`;
+    if (to.name === 'user') {
+        // if (
+        //     store.getters['user/profile'].cyverseProfile.username ===
+        //     to.params.username
+        // )
+        //    to.meta.title = 'Dashboard';
+        // else to.meta.title = `User: ${to.params.username}`;
+        to.meta.title = 'PlantIT';
+        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
+        to.meta.crumb.push({
+            text: 'Dashboard'
+        });
+    }
+    if (to.name === 'dataset') to.meta.title = `Dataset: ${to.params.path}`;
     if (to.name === 'artifact') to.meta.title = `Artifact: ${to.params.path}`;
     if (to.meta.name !== null) document.title = to.meta.title;
     if (to.matched.some(record => record.name === 'workflow')) {
@@ -180,25 +192,26 @@ router.beforeEach(async (to, from, next) => {
             href: `/run/${to.params.id}`
         });
     }
-    if (to.matched.some(record => record.name === 'cluster')) {
+    if (to.matched.some(record => record.name === 'resource')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `Cluster: ${to.params.name}`,
-            href: `/cluster/${to.params.name}`
+            text: `Resource: ${to.params.name}`,
+            href: `/resource/${to.params.name}`
         });
     }
     if (to.matched.some(record => record.name === 'user')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        to.meta.crumb.push({
-            text: `User: ${to.params.username}`,
-            href: `/user/${to.params.username}`
-        });
+        to.meta.crumb.push({text: 'Your Dashboard'});
+        // to.meta.crumb.push({
+        //     text: `User: ${to.params.username}`,
+        //     href: `/user/${to.params.username}`
+        // });
     }
-    if (to.matched.some(record => record.name === 'collection')) {
+    if (to.matched.some(record => record.name === 'dataset')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `Collection: ${to.params.path}`,
-            href: `/collection/${to.params.path}`
+            text: `Dataset: ${to.params.path}`,
+            href: `/dataset/${to.params.path}`
         });
     }
     if (to.matched.some(record => record.name === 'artifact')) {
@@ -208,8 +221,6 @@ router.beforeEach(async (to, from, next) => {
             href: `/artifact/${to.params.path}`
         });
     }
-
-    await store.dispatch('user/loadProfile');
     if (to.meta.requiresAuth && !store.getters['user/profile'].loggedIn) {
         window.location.replace(
             process.env.VUE_APP_URL + '/apis/v1/idp/cyverse_login/'

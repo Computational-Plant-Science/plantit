@@ -66,9 +66,9 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
-        ...mapGetters('collections', [
-            'openedCollection',
-            'openedCollectionLoading'
+        ...mapGetters('datasets', [
+            'openedDataset',
+            'openedDatasetLoading'
         ])
     }
 };

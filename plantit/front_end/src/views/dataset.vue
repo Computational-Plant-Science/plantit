@@ -12,7 +12,7 @@
         <b-container class="p-3 vl" fluid>
             <b-row>
                 <b-col>
-                    <b-row align-h="center" v-if="openedCollectionLoading">
+                    <b-row align-h="center" v-if="openedDatasetLoading">
                         <b-spinner
                             type="grow"
                             label="Loading..."
@@ -27,11 +27,11 @@
                                         : 'text-dark'
                                 "
                             >
-                                {{ openedCollection.path }}
+                                {{ openedDataset.path }}
                             </h4>
                             <small
                                 >Open on
-                                <b>{{ openedCollection.cluster }}</b></small
+                                <b>{{ openedDataset.resource }}</b></small
                             ><br />
                             <small
                                 >Showing
@@ -40,7 +40,7 @@
                                     {{ data.files.length }}</b
                                 >file(s),
                                 <b class="mr-1">{{
-                                    openedCollection.modified.length
+                                    openedDataset.modified.length
                                 }}</b
                                 >modified</small
                             >
@@ -72,12 +72,12 @@
                             >
                         </b-dropdown>
                         <b-button
-                            title="Close collection"
+                            title="Close dataset"
                             variant="outline-danger"
                             class="ml-1 mb-2 text-right"
-                            @click="closeCollection"
+                            @click="closeDataset"
                         >
-                            Close Collection
+                            Close Dataset
                             <i class="far fa-folder fa-1x fa-fw"></i>
                         </b-button>
                     </b-row>
@@ -99,7 +99,7 @@
                 <b-col>
                     <b-overlay
                         :variant="profile.darkMode ? 'dark' : 'light'"
-                        :show="openedCollection.opening"
+                        :show="openedDataset.opening"
                         rounded="sm"
                     >
                         <span
@@ -108,15 +108,15 @@
                                     data !== null &&
                                     data.files.length === 0
                             "
-                            >No files in this collection.</span
+                            >No files in this dataset.</span
                         >
                         <b-card-group v-else-if="viewMode === 'Grid'" columns>
                             <b-card
                                 :img-src="
-                                    openedCollection.opening ||
+                                    openedDataset.opening ||
                                     fileIs3dModel(file.label)
                                         ? require('../assets/no_preview_thumbnail.png')
-                                        : `/apis/v1/collections/thumbnail/?path=${file.path}`
+                                        : `/apis/v1/datasets/thumbnail/?path=${file.path}`
                                 "
                                 v-for="file in currentPageFiles"
                                 v-bind:key="file.id"
@@ -197,7 +197,7 @@
                                 v-bind:key="file.id"
                                 :img-src="
                                     fileIsImage(file.label)
-                                        ? `/apis/v1/collections/thumbnail/?path=${file.path}`
+                                        ? `/apis/v1/datasets/thumbnail/?path=${file.path}`
                                         : ''
                                 "
                                 ><template
@@ -311,13 +311,13 @@ import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export default {
-    name: 'collection',
+    name: 'dataset',
     data: function() {
         return {
             data: null,
             dataLoading: false,
             viewMode: 'Grid',
-            collectionNotFound: false,
+            notFound: false,
             currentFile: '',
             currentPage: 1,
             filesPerPage: 10,
@@ -337,7 +337,7 @@ export default {
         this.unrenderPreview();
     },
     async mounted() {
-        await this.loadCollection();
+        await this.loadDataset();
         if (this.data.files.some(f => f.label.endsWith('ply'))) {
             this.renderPreviews(false);
             this.renderPreview(this.currentPageFiles[0]);
@@ -361,7 +361,7 @@ export default {
                     this.renderPreview(this.currentPageFiles[0]);
             }
         },
-        openedCollection() {
+        openedDataset() {
             if (
                 this.data !== null &&
                 this.data.files.some(f => f.label.endsWith('ply'))
@@ -390,7 +390,7 @@ export default {
             const loader = new PLYLoader();
             var comp = this;
             loader.load(
-                `/apis/v1/collections/thumbnail/?path=${f.path}`,
+                `/apis/v1/datasets/thumbnail/?path=${f.path}`,
                 function(geometry) {
                     geometry.computeVertexNormals();
 
@@ -618,12 +618,12 @@ export default {
                     .pop() === 'ply'
             );
         },
-        async closeCollection() {
+        async closeDataset() {
             await this.$bvModal
                 .msgBoxConfirm(
-                    `Are you sure you want to close ${this.openedCollection.path} on ${this.openedCollection.cluster}?`,
+                    `Are you sure you want to close ${this.openedDataset.path} on ${this.openedDataset.resource}?`,
                     {
-                        title: 'Close Collection?',
+                        title: 'Close Dataset?',
                         size: 'sm',
                         okVariant: 'outline-danger',
                         cancelVariant: 'white',
@@ -634,7 +634,7 @@ export default {
                 )
                 .then(async value => {
                     if (value) {
-                        await this.$store.dispatch('collections/closeOpened');
+                        await this.$store.dispatch('datasets/closeOpened');
                         await router.push({
                             name: 'user',
                             params: {
@@ -654,7 +654,7 @@ export default {
         setViewMode(mode) {
             this.viewMode = mode;
         },
-        async loadCollection() {
+        async loadDataset() {
             this.dataLoading = true;
             return await axios
                 .get(
@@ -679,7 +679,7 @@ export default {
         },
         async loadTextContent(file) {
             await axios
-                .get(`/apis/v1/collections/content/?path=${file.path}`)
+                .get(`/apis/v1/datasets/content/?path=${file.path}`)
                 .then(response => {
                     this.data.files = this.data.files.map(f => {
                         if (f.label === file.label) {
@@ -701,9 +701,9 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
-        ...mapGetters('collections', [
-            'openedCollection',
-            'openedCollectionLoading'
+        ...mapGetters('datasets', [
+            'openedDataset',
+            'openedDatasetLoading'
         ]),
         filesShown() {
             return this.totalFileCount < this.filesPerPage

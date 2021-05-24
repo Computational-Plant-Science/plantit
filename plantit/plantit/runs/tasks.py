@@ -1,7 +1,7 @@
 import base64
+import fileinput
 import json
 import sys
-import fileinput
 import tempfile
 import traceback
 from datetime import timedelta
@@ -23,16 +23,15 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 
 from plantit import settings
 from plantit.celery import app
-from plantit.collections.models import CollectionSession
-from plantit.collections.utils import update_collection_session
-from plantit.options import FilesInput, FileInput, Parameter
+from plantit.datasets.models import DatasetSession
+from plantit.datasets.utils import update_dataset_session
+from plantit.options import FileInput, Parameter
 from plantit.redis import RedisClient
-from plantit.runs.cluster import get_job_status, get_job_walltime
+from plantit.resources.models import Resource
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import update_status, execute_command, map_old_workflow_config_to_new, remove_logs, parse_job_id, create_run, \
-    container_log_file_name, container_log_file_path, get_run_results
-from plantit.clusters.models import Cluster
+    container_log_file_name, container_log_file_path, get_run_results, get_job_walltime, get_job_status
 from plantit.sns import SnsClient
 from plantit.utils import parse_run_options, prep_run_command
 from plantit.workflows.utils import refresh_workflow
@@ -42,11 +41,11 @@ logger = get_task_logger(__name__)
 
 def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
     # update flow config before uploading
-    flow['config']['workdir'] = join(run.cluster.workdir, run.guid)
-    flow['config']['log_file'] = f"{run.guid}.{run.cluster.name.lower()}.log"
+    flow['config']['workdir'] = join(run.resource.workdir, run.guid)
+    flow['config']['log_file'] = f"{run.guid}.{run.resource.name.lower()}.log"
     if 'output' in flow['config'] and 'from' in flow['config']['output']:
         if flow['config']['output']['from'] is not None and flow['config']['output']['from'] != '':
-            flow['config']['output']['from'] = join(run.cluster.workdir, run.work_dir, flow['config']['output']['from'])
+            flow['config']['output']['from'] = join(run.resource.workdir, run.workdir, flow['config']['output']['from'])
 
     # if flow has outputs, make sure we don't push configuration or job scripts
     if 'output' in flow['config']:
@@ -55,25 +54,25 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             "template_local_run.sh",
             "template_slurm_run.sh"]
 
-    resources = None if 'resources' not in flow['config']['cluster'] else flow['config']['cluster']['resources']  # cluster resource requests, if any
-    callback_url = settings.API_URL + 'runs/' + run.guid + '/status/'  # PlantIT status update callback URL
-    work_dir = join(run.cluster.workdir, run.work_dir)
+    resources = None if 'resources' not in flow['config']['resource'] else flow['config']['resource']['resources']
+    callback_url = settings.API_URL + 'runs/' + run.guid + '/status/'
+    work_dir = join(run.resource.workdir, run.workdir)
     new_flow = map_old_workflow_config_to_new(flow, run, resources)  # TODO update flow UI page
-    launcher = run.cluster.launcher  # whether to use TACC launcher
+    launcher = run.resource.launcher  # whether to use TACC launcher
 
     parse_errors, run_options = parse_run_options(new_flow)
     if len(parse_errors) > 0:
         raise ValueError(f"Failed to parse run options: {' '.join(parse_errors)}")
 
     # create working directory
-    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.cluster.workdir, allow_stderr=True)
+    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.resource.workdir, allow_stderr=True)
 
     # upload flow config and job script
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
 
-        # TODO refactor to allow multiple cluster schedulers
-        sandbox = run.cluster.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
+        # TODO refactor to allow multiple schedulers
+        sandbox = run.resource.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
         template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
         template_name = template.split('/')[-1]
 
@@ -91,8 +90,8 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
 
             if not sandbox:
                 # we're on a SLURM cluster, so add resource requests
-                nodes = min(len(input_files), run.cluster.max_nodes) if input_files is not None and not run.cluster.job_array else 1
-                gpu = run.cluster.gpu and ('gpu' in flow['config'] and flow['config']['gpu'])
+                nodes = min(len(input_files), run.resource.max_nodes) if input_files is not None and not run.resource.job_array else 1
+                gpu = run.resource.gpu and ('gpu' in flow['config'] and flow['config']['gpu'])
 
                 if 'cores' in resources:
                     cores = int(resources['cores'])
@@ -108,30 +107,30 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                         adjusted_time = time * (len(input_files) / nodes)
                     else:
                         adjusted_time = time
-                    hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.cluster.max_nodes)}"
+                    hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.resource.max_nodes)}"
                     if len(hours) == 1:
                         hours = f"0{hours}"
                     adjusted_time_str = f"{hours}:00:00"
 
-                    run.requested_walltime = adjusted_time_str
+                    run.job_requested_walltime = adjusted_time_str
                     run.save()
                     msg = f"Using adjusted walltime {adjusted_time_str}"
                     update_status(run, msg)
                     logger.info(msg)
 
                     script.write(f"#SBATCH --time={adjusted_time_str}\n")
-                if 'mem' in resources and (run.cluster.header_skip is None or '--mem' not in str(run.cluster.header_skip)):
+                if 'mem' in resources and (run.resource.header_skip is None or '--mem' not in str(run.resource.header_skip)):
                     mem = resources['mem']
                     script.write(f"#SBATCH --mem={resources['mem']}\n")
-                if run.cluster.queue is not None and run.cluster.queue != '':
-                    queue = run.cluster.gpu_queue if gpu else run.cluster.queue
+                if run.resource.queue is not None and run.resource.queue != '':
+                    queue = run.resource.gpu_queue if gpu else run.resource.queue
                     script.write(f"#SBATCH --partition={queue}\n")
-                if run.cluster.project is not None and run.cluster.project != '':
-                    script.write(f"#SBATCH -A {run.cluster.project}\n")
+                if run.resource.project is not None and run.resource.project != '':
+                    script.write(f"#SBATCH -A {run.resource.project}\n")
                 if gpu:
                     script.write(f"#SBATCH --gres=gpu:1\n")
 
-                if input_files is not None and run.cluster.job_array:
+                if input_files is not None and run.resource.job_array:
                     script.write(f"#SBATCH --array=1-{len(input_files)}\n")
                 if input_files is not None:
                     script.write(f"#SBATCH -N {nodes}\n")
@@ -146,7 +145,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 script.write("#SBATCH --error=plantit.%j.err\n")
 
             # add precommands
-            script.write(run.cluster.pre_commands + '\n')
+            script.write(run.resource.pre_commands + '\n')
 
             # pull singularity container in advance
             # script.write(f"singularity pull {run_options.image}\n")
@@ -154,7 +153,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             # if we have inputs, add pull command
             if 'input' in flow['config']:
                 input = flow['config']['input']
-                sftp.mkdir(join(run.cluster.workdir, run.work_dir, 'input'))
+                sftp.mkdir(join(run.resource.workdir, run.workdir, 'input'))
 
                 # allow for both spellings of JPG
                 patterns = [pattern.lower() for pattern in input['patterns']]
@@ -164,11 +163,11 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                     patterns.append("jpg")
 
                 pull_commands = f"plantit terrain pull \"{input['from']}\"" \
-                                f" -p \"{join(run.cluster.workdir, run.work_dir, 'input')}\"" \
+                                f" -p \"{join(run.resource.workdir, run.workdir, 'input')}\"" \
                                 f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
                                 f""f" --terrain_token {run.user.profile.cyverse_token}"
 
-                if run.cluster.callbacks:
+                if run.resource.callbacks:
                     pull_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
                 pull_commands += "\n"
 
@@ -178,7 +177,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             docker_username = environ.get('DOCKER_USERNAME', None)
             docker_password = environ.get('DOCKER_PASSWORD', None)
 
-            # if this cluster uses TACC's launcher, create a parameter sweep launcher job script to invoke singularity directly
+            # if this resource uses TACC's launcher, create a parameter sweep script to invoke Singularity
             if launcher:
                 logger.info(f"Using TACC launcher")
                 with sftp.open('launch', 'w') as launcher_script:
@@ -191,7 +190,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                                 image=run_options.image,
                                 command=run_options.command,
                                 parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                    Parameter(key='INPUT', value=join(run.cluster.workdir, run.work_dir, 'input', file_name))],
+                                    Parameter(key='INPUT', value=join(run.resource.workdir, run.workdir, 'input', file_name))],
                                 bind_mounts=run_options.bind_mounts,
                                 docker_username=docker_username,
                                 docker_password=docker_password,
@@ -204,7 +203,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                             image=run_options.image,
                             command=run_options.command,
                             parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                Parameter(key='INPUT', value=join(run.cluster.workdir, run.work_dir, 'input'))],
+                                Parameter(key='INPUT', value=join(run.resource.workdir, run.workdir, 'input'))],
                             bind_mounts=run_options.bind_mounts,
                             docker_username=docker_username,
                             docker_password=docker_password,
@@ -225,19 +224,19 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                             gpu=run_options.gpu)
                         launcher_script.write(f"{command}\n")
 
-                script.write(f"export LAUNCHER_WORKDIR={join(run.cluster.workdir, run.work_dir)}\n")
+                script.write(f"export LAUNCHER_WORKDIR={join(run.resource.workdir, run.workdir)}\n")
                 script.write(f"export LAUNCHER_JOB_FILE=launch\n")
                 script.write("$LAUNCHER_DIR/paramrun\n")
             # otherwise use the CLI
             else:
                 run_commands = f"plantit run flow.yaml"
-                if run.cluster.job_array and input_files is not None:
+                if run.resource.job_array and input_files is not None:
                     run_commands += f" --slurm_job_array"
 
                 if docker_username is not None and docker_password is not None:
                     run_commands += f" --docker_username {docker_username} --docker_password {docker_password}"
 
-                if run.cluster.callbacks:
+                if run.resource.callbacks:
                     run_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
 
                 run_commands += "\n"
@@ -247,7 +246,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             # add zip command
             output = flow['config']['output']
             zip_commands = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {run.guid}"
-            log_files = [f"{run.guid}.{run.cluster.name.lower()}.log"]
+            log_files = [f"{run.guid}.{run.resource.name.lower()}.log"]
             zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
             if 'include' in output:
                 if 'patterns' in output['include']:
@@ -280,7 +279,7 @@ def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             #         if 'names' in output['exclude']:
             #             push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
 
-            #     if run.cluster.callbacks:
+            #     if run.resource.callbacks:
             #         push_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
 
             #     push_commands += '\n'
@@ -308,22 +307,22 @@ def __list_dir(path: str, token: str) -> List[str]:
 
 
 def __submit_run(flow, run: Run, ssh: SSH, file_count: int = None):
-    # TODO refactor to allow multiple cluster schedulers
-    sandbox = run.cluster.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
+    # TODO refactor to allow multiple schedulers
+    sandbox = run.resource.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
     template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
     template_name = template.split('/')[-1]
 
     if run.is_sandbox:
         execute_command(
             ssh_client=ssh,
-            pre_command='; '.join(str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
+            pre_command='; '.join(str(run.resource.pre_commands).splitlines()) if run.resource.pre_commands else ':',
             command=f"chmod +x {template_name} && ./{template_name}",
-            directory=join(run.cluster.workdir, run.work_dir),
+            directory=join(run.resource.workdir, run.workdir),
             allow_stderr=True)
 
         # get container logs
-        work_dir = join(run.cluster.workdir, run.work_dir)
-        ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+        work_dir = join(run.resource.workdir, run.workdir)
+        ssh_client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
         container_log_file = container_log_file_name(run)
         container_log_path = container_log_file_path(run)
 
@@ -352,10 +351,10 @@ def __submit_run(flow, run: Run, ssh: SSH, file_count: int = None):
         command = f"sbatch {template_name}"
         output_lines = execute_command(
             ssh_client=ssh,
-            pre_command='; '.join(str(run.cluster.pre_commands).splitlines()) if run.cluster.pre_commands else ':',
-            # if the cluster scheduler prohibits nested job submissions, we need to run the CLI from a login node
+            pre_command='; '.join(str(run.resource.pre_commands).splitlines()) if run.resource.pre_commands else ':',
+            # if the scheduler prohibits nested job submissions, we need to run the CLI from a login node
             command=command,
-            directory=join(run.cluster.workdir, run.work_dir),
+            directory=join(run.resource.workdir, run.workdir),
             allow_stderr=True)
         job_id = parse_job_id(output_lines[-1])
         run.job_id = job_id
@@ -364,8 +363,8 @@ def __submit_run(flow, run: Run, ssh: SSH, file_count: int = None):
 
 
 @app.task(track_started=True)
-def create_and_submit_run(username: str, cluster_name: str, flow: dict):
-    run = create_run(username, cluster_name, flow)
+def create_and_submit_run(username: str, resource_name: str, flow: dict):
+    run = create_run(username, resource_name, flow)
     submit_run.s(run.guid, flow).apply_async()
 
 
@@ -376,7 +375,7 @@ def submit_run(id: str, flow):
     run.submission_id = submit_run.request.id  # set this task's ID on the run so user can cancel it
     run.save()
 
-    msg = f"Deploying run {run.guid} to {run.cluster.name}"
+    msg = f"Deploying run {run.guid} to {run.resource.name}"
     update_status(run, msg)
     logger.info(msg)
 
@@ -385,12 +384,12 @@ def submit_run(id: str, flow):
             msg = f"Authenticating with username {flow['auth']['username']}"
             update_status(run, msg)
             logger.info(msg)
-            ssh_client = SSH(run.cluster.hostname, run.cluster.port, flow['auth']['username'], flow['auth']['password'])
+            ssh_client = SSH(run.resource.hostname, run.resource.port, flow['auth']['username'], flow['auth']['password'])
         else:
-            ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+            ssh_client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
 
         with ssh_client:
-            msg = f"Creating working directory {join(run.cluster.workdir, run.guid)} and uploading workflow configuration"
+            msg = f"Creating working directory {join(run.resource.workdir, run.guid)} and uploading workflow configuration"
             update_status(run, msg)
             logger.info(msg)
 
@@ -447,7 +446,7 @@ def poll_run_status(id: str):
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
     cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES')) * 60
 
-    logger.info(f"Checking {run.cluster.name} scheduler status for run {id} (SLURM job {run.job_id})")
+    logger.info(f"Checking {run.resource.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
     # if the job already failed, schedule cleanup
     if run.job_status == 'FAILURE':
@@ -463,15 +462,15 @@ def poll_run_status(id: str):
         job_status = get_job_status(run)
         job_walltime = get_job_walltime(run)
         run.job_status = job_status
-        run.job_walltime = job_walltime
+        run.job_elapsed_walltime = job_walltime
 
         now = timezone.now()
         run.updated = now
         run.save()
 
         # get container logs
-        work_dir = join(run.cluster.workdir, run.work_dir)
-        ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+        work_dir = join(run.resource.workdir, run.workdir)
+        ssh_client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
         container_log_file = container_log_file_name(run)
         container_log_path = container_log_file_path(run)
 
@@ -553,16 +552,16 @@ def cleanup_run(id: str):
         logger.info(f"Could not find run {id} (might have been deleted?)")
         return
 
-    logger.info(f"Cleaning up run {id} local working directory {run.cluster.workdir}")
-    remove_logs(run.guid, run.cluster.name)
-    logger.info(f"Cleaning up run {id} cluster working directory {run.cluster.workdir}")
-    ssh = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
+    logger.info(f"Cleaning up run {id} local working directory {run.resource.workdir}")
+    remove_logs(run.guid, run.resource.name)
+    logger.info(f"Cleaning up run {id} remote working directory {run.resource.workdir}")
+    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
     with ssh:
         execute_command(
             ssh_client=ssh,
-            pre_command=run.cluster.pre_commands,
-            command=f"rm -r {join(run.cluster.workdir, run.work_dir)}",
-            directory=run.cluster.workdir,
+            pre_command=run.resource.pre_commands,
+            command=f"rm -r {join(run.resource.workdir, run.workdir)}",
+            directory=run.resource.workdir,
             allow_stderr=True)
 
     run.cleaned_up = True
@@ -573,65 +572,65 @@ def cleanup_run(id: str):
 
 
 @app.task()
-def clean_singularity_cache(cluster_name: str):
-    cluster_name = Cluster.objects.get(name=cluster_name)
-    ssh = SSH(cluster_name.hostname, cluster_name.port, cluster_name.username)
+def clean_singularity_cache(resource_name: str):
+    resource = Resource.objects.get(name=resource_name)
+    ssh = SSH(resource.hostname, resource.port, resource.username)
     with ssh:
         execute_command(
             ssh_client=ssh,
-            pre_command=cluster_name.pre_commands,
+            pre_command=resource.pre_commands,
             command="singularity cache clean",
-            directory=cluster_name.workdir,
+            directory=resource.workdir,
             allow_stderr=True)
 
 
 @app.task()
-def run_command(cluster_name: str, command: str, pre_command: str = None):
-    cluster = Cluster.objects.get(name=cluster_name)
-    ssh = SSH(cluster.hostname, cluster.port, cluster.username)
+def run_command(resource_name: str, command: str, pre_command: str = None):
+    resource = Resource.objects.get(name=resource_name)
+    ssh = SSH(resource.hostname, resource.port, resource.username)
     with ssh:
         lines = execute_command(
             ssh_client=ssh,
-            pre_command=cluster.pre_commands + '' if pre_command is None else f"&& {pre_command}",
+            pre_command=resource.pre_commands + '' if pre_command is None else f"&& {pre_command}",
             command=command,
-            directory=cluster.workdir,
+            directory=resource.workdir,
             allow_stderr=True)
 
 
 @app.task()
-def open_collection_session(id: str):
+def open_dataset_session(id: str):
     try:
-        session = CollectionSession.objects.get(guid=id)
-        ssh_client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+        session = DatasetSession.objects.get(guid=id)
+        ssh = SSH(session.resource.hostname, session.resource.port, session.resource.username)
 
-        with ssh_client:
+        with ssh:
             msg = f"Creating working directory {session.workdir}"
-            update_collection_session(session, [f"Creating working directory {session.workdir}"])
+            update_dataset_session(session, [f"Creating working directory {session.workdir}"])
             logger.info(msg)
 
             execute_command(
-                ssh_client=ssh_client,
+                ssh_client=ssh,
                 pre_command=':',
                 command=f"mkdir {session.guid}/",
-                directory=session.cluster.workdir)
+                directory=session.resource.workdir)
 
-            msg = f"Transferring files from {session.path} to {session.cluster.name}"
-            update_collection_session(session, [msg])
+            msg = f"Transferring files from {session.path} to {session.resource.name}"
+            update_dataset_session(session, [msg])
             logger.info(msg)
 
             command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_token}\n"
             lines = execute_command(
-                ssh_client=ssh_client,
-                pre_command=session.cluster.pre_commands,
+                ssh_client=ssh,
+                pre_command=session.resource.pre_commands,
                 command=command,
                 directory=session.workdir,
                 allow_stderr=True)
-            update_collection_session(session, lines)
+            update_dataset_session(session, lines)
 
             session.opening = False
             session.save()
-            msg = f"Succesfully opened collection"
-            update_collection_session(session, [msg])
+            msg = f"Succesfully opened dataset"
+            update_dataset_session(session, [msg])
             logger.info(msg)
     except:
         msg = f"Failed to open session: {traceback.format_exc()}."
@@ -639,19 +638,19 @@ def open_collection_session(id: str):
 
 
 @app.task()
-def save_collection_session(id: str, only_modified: bool):
+def save_dataset_session(id: str, only_modified: bool):
     try:
-        session = CollectionSession.objects.get(guid=id)
+        session = DatasetSession.objects.get(guid=id)
 
-        msg = f"Saving collection session {session.guid} on {session.cluster.name}"
-        update_collection_session(session, [msg])
+        msg = f"Saving dataset session {session.guid} on {session.resource.name}"
+        update_dataset_session(session, [msg])
         logger.info(msg)
 
-        ssh_client = SSH(session.cluster.hostname, session.cluster.port, session.cluster.username)
+        ssh = SSH(session.resource.hostname, session.resource.port, session.resource.username)
 
-        with ssh_client:
-            msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.cluster.name} to {session.path}"
-            update_collection_session(session, [msg])
+        with ssh:
+            msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.resource.name} to {session.path}"
+            update_dataset_session(session, [msg])
             logger.info(msg)
 
             command = f"plantit terrain push {session.path} --terrain_token {session.user.profile.cyverse_token}"
@@ -659,19 +658,19 @@ def save_collection_session(id: str, only_modified: bool):
                 command += f" --include_name {file}"
 
             lines = execute_command(
-                ssh_client=ssh_client,
-                pre_command=session.cluster.pre_commands,
+                ssh_client=ssh,
+                pre_command=session.resource.pre_commands,
                 command=command,
                 directory=session.workdir,
                 allow_stderr=True)
-            update_collection_session(session, lines)
+            update_dataset_session(session, lines)
     except:
         msg = f"Failed to open session: {traceback.format_exc()}."
         logger.error(msg)
 
 
 @app.task()
-def close_collection_session(id: str):
+def close_dataset_session(id: str):
     pass
 
 
@@ -684,8 +683,8 @@ def list_run_results(id: str):
         return
 
     redis = RedisClient.get()
-    ssh_client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
-    preview_manager = PreviewManager(join(settings.MEDIA_ROOT, run.guid), create_folder=True)
+    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    previews = PreviewManager(join(settings.MEDIA_ROOT, run.guid), create_folder=True)
     workflow = redis.get(f"workflow/{run.workflow_owner}/{run.workflow_name}")
 
     if workflow is None:
@@ -694,14 +693,14 @@ def list_run_results(id: str):
         workflow = json.loads(workflow)['config']
 
     results = get_run_results(run, workflow)
-    work_dir = join(run.cluster.workdir, run.work_dir)
+    workdir = join(run.resource.workdir, run.workdir)
     redis.set(f"results/{run.guid}", json.dumps(results))
     update_status(run, f"Found {len(results)} result files")
     print(f"Found {len(results)} result files")
 
-    for result in results:
-        name = result['name']
-        path = result['path']
+    for res in results:
+        name = res['name']
+        path = res['path']
         if name.endswith('txt') or \
                 name.endswith('csv') or \
                 name.endswith('yml') or \
@@ -712,19 +711,19 @@ def list_run_results(id: str):
                 name.endswith('log'):
             print(f"Creating preview for text file: {name}")
             with tempfile.NamedTemporaryFile() as temp_file:
-                with ssh_client:
-                    with ssh_client.client.open_sftp() as sftp:
-                        sftp.chdir(work_dir)
+                with ssh:
+                    with ssh.client.open_sftp() as sftp:
+                        sftp.chdir(workdir)
                         sftp.get(name, temp_file.name)
 
                 try:
-                    preview_file = preview_manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                    preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                 except UnsupportedMimeType:
                     redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
                     print(f"Saved empty file preview to cache: {name}")
                     continue
 
-                with open(preview_file, 'rb') as pf:
+                with open(preview, 'rb') as pf:
                     content = pf.read()
                     encoded = base64.b64encode(content)
                     redis.set(f"preview/{run.guid}/{name}", encoded)
@@ -732,19 +731,19 @@ def list_run_results(id: str):
         elif path.endswith('png'):
             print(f"Creating preview for PNG file: {name}")
             with tempfile.NamedTemporaryFile() as temp_file:
-                with ssh_client:
-                    with ssh_client.client.open_sftp() as sftp:
-                        sftp.chdir(work_dir)
-                        sftp.get(result['name'], temp_file.name)
+                with ssh:
+                    with ssh.client.open_sftp() as sftp:
+                        sftp.chdir(workdir)
+                        sftp.get(res['name'], temp_file.name)
 
                 try:
-                    preview_file = preview_manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                    preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                 except UnsupportedMimeType:
                     redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
                     print(f"Saved empty preview for PNG file to cache: {name}")
                     continue
 
-                with open(preview_file, 'rb') as pf:
+                with open(preview, 'rb') as pf:
                     content = pf.read()
                     encoded = base64.b64encode(content)
                     redis.set(f"preview/{run.guid}/{name}", encoded)
@@ -752,19 +751,19 @@ def list_run_results(id: str):
         elif path.endswith('jpg') or path.endswith('jpeg'):
             print(f"Creating preview for JPG file: {name}")
             with tempfile.NamedTemporaryFile() as temp_file:
-                with ssh_client:
-                    with ssh_client.client.open_sftp() as sftp:
-                        sftp.chdir(work_dir)
-                        sftp.get(result['name'], temp_file.name)
+                with ssh:
+                    with ssh.client.open_sftp() as sftp:
+                        sftp.chdir(workdir)
+                        sftp.get(res['name'], temp_file.name)
 
                 try:
-                    preview_file = preview_manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                    preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                 except UnsupportedMimeType:
                     redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
                     print(f"Saved empty preview for JPG file to cache: {name}")
                     continue
 
-                with open(preview_file, 'rb') as pf:
+                with open(preview, 'rb') as pf:
                     content = pf.read()
                     encoded = base64.b64encode(content)
                     redis.set(f"preview/{run.guid}/{name}", encoded)
@@ -773,10 +772,10 @@ def list_run_results(id: str):
             print(f"Creating preview for CZI file: {name}")
             with tempfile.NamedTemporaryFile() as temp_file:
 
-                with ssh_client:
-                    with ssh_client.client.open_sftp() as sftp:
-                        sftp.chdir(work_dir)
-                        sftp.get(result['name'], temp_file.name)
+                with ssh:
+                    with ssh.client.open_sftp() as sftp:
+                        sftp.chdir(workdir)
+                        sftp.get(res['name'], temp_file.name)
 
                 image = czifile.imread(temp_file.name)
                 image.shape = (image.shape[2], image.shape[3], image.shape[4])
@@ -784,13 +783,13 @@ def list_run_results(id: str):
                 buffer.tofile(temp_file.name)
 
                 try:
-                    preview_file = preview_manager.get_jpeg_preview(temp_file.name, width=1024, height=1024)
+                    preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                 except UnsupportedMimeType:
                     redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
                     print(f"Saved empty preview for CZI file to cache: {name}")
                     continue
 
-                with open(preview_file, 'rb') as pf:
+                with open(preview, 'rb') as pf:
                     content = pf.read()
                     encoded = base64.b64encode(content)
                     redis.set(f"preview/{run.guid}/{name}", encoded)
@@ -798,12 +797,12 @@ def list_run_results(id: str):
         elif path.endswith('ply'):
             print(f"Creating preview for PLY file: {name}")
             with tempfile.NamedTemporaryFile() as temp_file:
-                with ssh_client:
-                    with ssh_client.client.open_sftp() as sftp:
-                        sftp.chdir(work_dir)
-                        sftp.get(result['name'], temp_file.name)
+                with ssh:
+                    with ssh.client.open_sftp() as sftp:
+                        sftp.chdir(workdir)
+                        sftp.get(res['name'], temp_file.name)
 
-    run.result_previews_loaded = True
+    run.previews_loaded = True
     run.save()
 
     update_status(run, f"Created file previews")

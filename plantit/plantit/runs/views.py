@@ -20,14 +20,13 @@ from rest_framework.decorators import api_view
 
 from plantit import settings
 from plantit.redis import RedisClient
-from plantit.runs.cluster import cancel_run
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
 from plantit.runs.tasks import submit_run, list_run_results
 from plantit.runs.thumbnail import Thumbnail
 from plantit.runs.utils import update_status, map_run, submission_log_file_path, create_run, parse_eta, map_delayed_run_task, \
-    map_repeating_run_task, get_run_results
-from plantit.clusters.models import Cluster
+    map_repeating_run_task, get_run_results, cancel_run
+from plantit.resources.models import Resource
 from plantit.utils import get_repo_config
 from plantit.workflows.utils import refresh_workflow
 
@@ -122,8 +121,8 @@ def get_3d_model(request, id):
     except:
         return HttpResponseNotFound()
 
-    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
-    work_dir = join(run.cluster.workdir, run.work_dir)
+    client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    work_dir = join(run.resource.workdir, run.workdir)
 
     with tempfile.NamedTemporaryFile() as temp_file:
         with client:
@@ -141,8 +140,8 @@ def get_output_file(request, id, file):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
-    work_dir = join(run.cluster.workdir, run.work_dir)
+    client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    work_dir = join(run.resource.workdir, run.workdir)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -180,13 +179,13 @@ def get_container_logs(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
-    work_dir = join(run.cluster.workdir, run.work_dir)
+    client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    work_dir = join(run.resource.workdir, run.workdir)
 
-    if run.cluster.launcher:
+    if run.resource.launcher:
         log_file = f"plantit.{run.job_id}.out"
     else:
-        log_file = f"{run.guid}.{run.cluster.name.lower()}.log"
+        log_file = f"{run.guid}.{run.resource.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -213,8 +212,8 @@ def get_file_text(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
-    work_dir = join(run.cluster.workdir, run.work_dir)
+    client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    work_dir = join(run.resource.workdir, run.workdir)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -324,9 +323,9 @@ def runs(request):
         runs = Run.objects.all()
         return JsonResponse([map_run(run) for run in runs], safe=False)
     elif request.method == 'POST':
-        cluster = Cluster.objects.get(name=workflow['config']['cluster']['name'])
+        resource = Resource.objects.get(name=workflow['config']['resource']['name'])
         if request.data['type'] == 'Now':
-            run = create_run(user.username, cluster.name, workflow)
+            run = create_run(user.username, resource.name, workflow)
             submit_run.delay(run.guid, workflow)
             return JsonResponse({'id': run.guid})
         elif request.data['type'] == 'After':
@@ -335,14 +334,14 @@ def runs(request):
             task, created = DelayedRunTask.objects.get_or_create(
                 user=user,
                 interval=schedule,
-                cluster=cluster,
+                resource=resource,
                 eta=eta,
                 one_off=True,
                 workflow_owner=workflow['repo']['owner']['login'],
                 workflow_name=workflow['repo']['name'],
-                name=f"User {user.username} workflow {workflow['repo']['name']} cluster {cluster.name} {schedule} once",
+                name=f"User {user.username} workflow {workflow['repo']['name']} resource {resource.name} {schedule} once",
                 task='plantit.runs.tasks.create_and_submit_run',
-                args=json.dumps([user.username, cluster.name, workflow]))
+                args=json.dumps([user.username, resource.name, workflow]))
             return JsonResponse({
                 'created': created,
                 'task': map_delayed_run_task(task)
@@ -353,13 +352,13 @@ def runs(request):
             task, created = RepeatingRunTask.objects.get_or_create(
                 user=user,
                 interval=schedule,
-                cluster=cluster,
+                resource=resource,
                 eta=eta,
                 workflow_owner=workflow['repo']['owner']['login'],
                 workflow_name=workflow['repo']['name'],
-                name=f"User {user.username} workflow {workflow['repo']['name']} cluster {cluster.name} {schedule} repeating",
+                name=f"User {user.username} workflow {workflow['repo']['name']} resource {resource.name} {schedule} repeating",
                 task='plantit.runs.tasks.create_and_submit_run',
-                args=json.dumps([user.username, cluster.name, workflow]))
+                args=json.dumps([user.username, resource.name, workflow]))
             return JsonResponse({
                 'created': created,
                 'task': map_repeating_run_task(task)
@@ -402,7 +401,7 @@ def cancel(request, id):
         update_status(run, message)
         return HttpResponse(message)
     else:
-        # cancel the cluster scheduler job
+        # cancel the resource scheduler job
         cancel_run(run)
         now = timezone.now()
         run.job_status = 'CANCELLED'

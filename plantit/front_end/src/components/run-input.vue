@@ -25,8 +25,8 @@
                         : 'theme-light m-0 p-3'
                 "
             >
-              <b-row align-v="center" align-h="center">
-                <b-col align-self="end">
+                <b-row align-v="center" align-h="center">
+                    <b-col align-self="end">
                         <b-spinner
                             v-if="userDataLoading"
                             type="grow"
@@ -57,9 +57,10 @@
                         : 'theme-light m-0 p-3'
                 "
             >
-                        <b-row align-v="center" align-h="center">
-                <b-col align-self="end" ><b-spinner
-                            v-if="sharedCollectionsLoading"
+                <b-row align-v="center" align-h="center">
+                    <b-col align-self="end"
+                        ><b-spinner
+                            v-if="sharedDatasetsLoading"
                             type="grow"
                             variant="secondary"
                         ></b-spinner></b-col
@@ -74,7 +75,7 @@
                             :node="sharedData"
                         ></datatree>
                         <!--<datatree
-                            v-for="node in sharedCollections"
+                            v-for="node in sharedDatasets"
                             v-bind:key="node.path"
                             v-bind:node="node"
                             :select="kind"
@@ -103,8 +104,8 @@
                         : 'theme-light m-0 p-3'
                 "
             >
-              <b-row align-v="center" align-h="center">
-                <b-col align-self="end" >
+                <b-row align-v="center" align-h="center">
+                    <b-col align-self="end">
                         <b-spinner
                             v-if="publicDataLoading"
                             type="grow"
@@ -160,8 +161,8 @@ export default {
             publicData: null,
             userData: null,
             sharedData: null,
-            sharedCollections: [],
-            sharedCollectionsLoading: true,
+            sharedDatasets: [],
+            sharedDatasetsLoading: true,
             path: '',
             currentTab: 0
         };
@@ -243,7 +244,7 @@ export default {
             this.path = this.defaultPath;
         }
         this.publicDataLoading = false;
-        await this.loadSharedCollections();
+        await this.loadSharedDatasets();
     },
     methods: {
         isShared(path) {
@@ -251,17 +252,17 @@ export default {
             let user = split[3];
             return user !== this.profile.djangoProfile.username;
         },
-        async loadSharedCollections() {
-            this.sharedCollectionsLoading = true;
+        async loadSharedDatasets() {
+            this.sharedDatasetsLoading = true;
             await axios
-                .get(`/apis/v1/collections/shared/`)
+                .get(`/apis/v1/datasets/shared/`)
                 .then(response => {
-                    this.sharedCollections = response.data;
-                    this.sharedCollectionsLoading = false;
+                    this.sharedDatasets = response.data;
+                    this.sharedDatasetsLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.sharedCollectionsLoading = false;
+                    this.sharedDatasetsLoading = false;
                     throw error;
                 });
         },

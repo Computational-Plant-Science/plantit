@@ -3,7 +3,7 @@
         <b-sidebar
             id="runs"
             shadow="lg"
-            :bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :bg-variant="profile.darkMode ? 'dark' : 'white'"
             :text-variant="profile.darkMode ? 'light' : 'dark'"
             no-header-close
             width="550px"
@@ -19,14 +19,15 @@
                             align-self="center"
                             md="auto"
                         >
-                            <b-button
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                class="text-left m-0"
-                                @click="hide"
+                            <h4
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light mt-1'
+                                        : 'text-dark mt-1'
+                                "
                             >
-                                <i class="fas fa-arrow-left fa-1x fa-fw"></i>
-                                Hide
-                            </b-button>
+                                Runs
+                            </h4>
                         </b-col>
                         <b-col align-self="center"
                             ><b-input-group size="sm"
@@ -51,18 +52,17 @@
                             align-self="center"
                             md="auto"
                         >
-                            <h4
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light mt-1'
-                                        : 'text-dark mt-1'
-                                "
+                            <b-button
+                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                class="text-left m-0"
+                                @click="hide"
                             >
-                                Runs
-                            </h4>
+                                <i class="fas fa-arrow-left fa-1x fa-fw"></i>
+                                Hide
+                            </b-button>
                         </b-col>
                     </b-row>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <br/>
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -149,7 +149,7 @@
                                     <b-badge
                                         class="ml-0 mr-0"
                                         variant="secondary"
-                                        >{{ run.cluster }}</b-badge
+                                        >{{ run.resource }}</b-badge
                                     ><small> {{ prettify(run.updated) }}</small>
                                     <br />
                                     <small
@@ -180,11 +180,11 @@
                                 "
                                 v-if="runningRuns.length === 0"
                             >
-                                No workflows running.
+                                No workflows are running right now.
                             </p>
                         </b-col></b-row
                     >
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                  <br/>
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -277,7 +277,7 @@
                                             <b-badge
                                                 class="ml-0 mr-0"
                                                 variant="secondary"
-                                                >{{ run.cluster }}</b-badge
+                                                >{{ run.resource }}</b-badge
                                             ><small>
                                                 {{
                                                     prettify(run.updated)
@@ -419,7 +419,7 @@
             right
             id="notifications"
             shadow="lg"
-            :bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :bg-variant="profile.darkMode ? 'dark' : 'white'"
             :text-variant="profile.darkMode ? 'light' : 'dark'"
             width="550px"
             no-header-close
@@ -467,7 +467,7 @@
                             </b-button>
                         </b-col>
                     </b-row>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                  <br/>
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -539,7 +539,7 @@
                             </p>
                         </b-col>
                     </b-row>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                  <br/>
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -591,6 +591,7 @@
             class="logo p-0"
             style="min-height: 44px; max-height: 46px; z-index: 1000"
             fixed="top"
+            :type="profile.darkMode ? 'dark' : 'secondary'"
             :variant="profile.darkMode ? 'dark' : 'white'"
         >
             <b-collapse class="m-0 p-0" is-nav>
@@ -615,28 +616,105 @@
                 </b-navbar-nav>
                 <transition name="component-fade" mode="out-in">
                     <b-breadcrumb
-                        class="m-o p-0 mt-2"
+                        class="m-o p-0 mt-3"
                         style="background-color: transparent;"
                         v-if="titleContent === 'sidebar'"
                     >
                         <b-breadcrumb-item
                             disabled
-                            class="ml-3"
+                            class="ml-4"
                             :class="
                                 profile.darkMode ? 'crumb-dark' : 'crumb-light'
                             "
                         >
-                            <h5
+                            <h3
                                 :class="
                                     profile.darkMode
                                         ? 'crumb-dark'
                                         : 'crumb-light'
                                 "
                             >
-                                Your Runs
-                            </h5>
+                                Your Runs ({{ runningRuns.length }}
+                                in progress)
+                            </h3>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
+                    <b-navbar-nav class="m-0 p-0"
+                        ><b-nav-item class="mt-1" href="/"
+                            ><h3
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-white'
+                                        : 'text-dark'
+                                "
+                                style="text-decoration: underline;"
+                            >
+                                plant<small
+                                    class="mb-3 text-success"
+                                    style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                    >IT</small
+                                >
+                            </h3></b-nav-item
+                        ><b-nav-item
+                            title="Docs"
+                            href="https://plantit.readthedocs.io/en/latest"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-book fa-1x fa-fw"></i
+                                >Docs</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
+                            href="https://github.com/Computational-Plant-Science/plantit"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="GitHub"
+                        >
+                            <span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fab fa-github fa-1x fa-fw"></i>
+                                Github</span
+                            >
+                        </b-nav-item>
+                        <b-nav-item
+                            href="#"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="Slack"
+                        >
+                            <span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fab fa-slack fa-1x fa-fw"></i>
+                                Slack</span
+                            >
+                        </b-nav-item>
+                    </b-navbar-nav>
                     <b-breadcrumb
                         class="m-o p-0 mt-2 text-warning"
                         style="background-color: transparent"
@@ -661,7 +739,7 @@
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                 </transition>
-                <b-navbar-nav class="ml-auto m-0 p-0">
+                <b-navbar-nav class="ml-auto p-0 mt-1">
                     <b-nav-item
                         v-if="
                             profile.loggedIn
@@ -735,39 +813,10 @@
                                 <i class="fas fa-caret-down fa-fw"></i>
                             </b-button>
                         </template>
+                        <b-dropdown-text>Resources</b-dropdown-text>
                         <b-dropdown-item
-                            title="Workflows"
-                            to="/workflows"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                        >
-                            <i class="fas fa-stream fa-1x fa-fw"></i>
-                            Workflows
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                            title="Clusters"
-                            to="/clusters"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                        >
-                            <i class="fas fa-server fa-1x fa-fw"></i>
-                            Clusters
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                            title="Users"
-                            to="/users"
+                            title="Resources"
+                            to="/resources"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -778,26 +827,10 @@
                             "
                         >
                             <i class="fas fa-users fa-1x fa-fw"></i>
-                            Users
-                        </b-dropdown-item>
-                        <hr class="mt-2 mb-2" style="border-color: gray" />
-                        <b-dropdown-item
-                            title="Docs"
-                            href="https://plantit.readthedocs.io/en/latest"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                        >
-                            <i class="fas fa-book fa-1x fa-fw"></i>
-                            Docs
+                            Public
                         </b-dropdown-item>
                         <b-dropdown-item
-                            href="https://github.com/Computational-Plant-Science/plantit"
+                            title="Profile"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -806,27 +839,15 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            title="GitHub"
+                            :to="
+                                '/user/' + profile.djangoProfile.username + '/'
+                            "
                         >
-                            <i class="fab fa-github fa-1x fa-fw"></i>
-                            Github
+                            <i class="fas fa-user fa-1x fa-fw"></i>
+                            Yours
                         </b-dropdown-item>
-                        <!--<b-dropdown-item
-                            href="#"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            title="Slack"
-                        >
-                            <i class="fab fa-slack fa-1x fa-fw"></i>
-                            Slack
-                        </b-dropdown-item>-->
                         <hr class="mt-2 mb-2" style="border-color: gray" />
+                        <b-dropdown-text>Your Account</b-dropdown-text>
                         <b-dropdown-item
                             :title="
                                 'Notifications (' +
@@ -850,23 +871,6 @@
                             >
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="Profile"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            :to="
-                                '/user/' + profile.djangoProfile.username + '/'
-                            "
-                        >
-                            <i class="fas fa-user fa-1x fa-fw"></i>
-                            User Profile
-                        </b-dropdown-item>
-                        <b-dropdown-item
                             title="Log Out"
                             @click="logOut"
                             class="text-danger"
@@ -881,17 +885,17 @@
         </b-navbar>
         <!--<b-navbar
             v-if="
-                openedCollectionLoading ||
-                    (openedCollection !== undefined &&
-                        openedCollection !== null &&
-                        !viewingCollection)
+                openedDatasetLoading ||
+                    (openedDataset !== undefined &&
+                        openedDataset !== null &&
+                        !viewingDataset)
             "
             toggleable="sm"
             fixed="bottom"
             style="border-top: 1px solid gray"
             :variant="profile.darkMode ? 'dark' : 'white'"
         >
-            <b-navbar-nav v-if="openedCollectionLoading">
+            <b-navbar-nav v-if="openedDatasetLoading">
                 <b-spinner
                     :variant="profile.darkMode ? 'light' : 'dark'"
                     small
@@ -900,24 +904,24 @@
             </b-navbar-nav>
             <b-navbar-nav
                 v-else-if="
-                    openedCollection !== null && openedCollection !== undefined
+                    openedDataset !== null && openedDataset !== undefined
                 "
             >
                 <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
-                    <span v-if="openedCollection.opening">
+                    <span v-if="openedDataset.opening">
                         <b-spinner
                             :variant="profile.darkMode ? 'light' : 'dark'"
                             small
                             class="mr-2"
                         ></b-spinner
-                        >Opening <b>{{ openedCollection.path }}</b> on
-                        <b>{{ openedCollection.cluster }}</b>
+                        >Opening <b>{{ openedDataset.path }}</b> on
+                        <b>{{ openedDataset.resource }}</b>
                     </span>
                     <span v-else>
                         <i class="far fa-folder-open fa-fw mr-2"></i>
-                        <b>{{ openedCollection.path }}</b> open on
-                        <b>{{ openedCollection.cluster }}</b
-                        >, {{ openedCollection.modified.length }} file(s)
+                        <b>{{ openedDataset.path }}</b> open on
+                        <b>{{ openedDataset.resource }}</b
+                        >, {{ openedDataset.modified.length }} file(s)
                         modified</span
                     >
                 </b></b-navbar-nav
@@ -925,30 +929,30 @@
             <b-navbar-nav
                 class="ml-auto"
                 v-if="
-                    openedCollection !== null &&
-                        openedCollection !== undefined &&
-                        openedCollection.opening
+                    openedDataset !== null &&
+                        openedDataset !== undefined &&
+                        openedDataset.opening
                 "
             >
                 <small>{{
-                    openedCollection.output[openedCollection.output.length - 1]
+                    openedDataset.output[openedDataset.output.length - 1]
                 }}</small>
             </b-navbar-nav>
-            <b-navbar-nav class="ml-auto" v-if="!openedCollectionLoading">
+            <b-navbar-nav class="ml-auto" v-if="!openedDatasetLoading">
                 <b-button
                     :variant="profile.darkMode ? 'outline-light' : 'white'"
                     title="View collection"
                     class="mr-2"
                     :to="{
                         name: 'collection',
-                        params: { path: openedCollection.path }
+                        params: { path: openedDataset.path }
                     }"
                 >
                     View
                     <i class="fas fa-th fa-1x fa-fw"></i>
                 </b-button>
                 <b-dropdown
-                    v-if="openedCollection.modified.length !== 0"
+                    v-if="openedDataset.modified.length !== 0"
                     dropup
                     :variant="profile.darkMode ? 'outline-light' : 'white'"
                     class="mr-2"
@@ -967,7 +971,7 @@
                     variant="outline-danger"
                     title="Close collection"
                     class="text-left m-0"
-                    @click="closeCollection"
+                    @click="closeDataset"
                 >
                     Close
                     <i class="far fa-folder fa-1x fa-fw"></i>
@@ -995,7 +999,7 @@
                 <b v-if="!toastRun.is_complete">Running</b>
                 <b class="ml-0 mr-0" v-else>{{ toastRun.job_status }}</b>
                 on
-                <b>{{ toastRun.cluster }}</b>
+                <b>{{ toastRun.resource }}</b>
                 {{ prettifyShort(toastRun.updated) }}
                 <br />
                 {{
@@ -1020,8 +1024,8 @@ export default {
     components: {},
     data() {
         return {
-            viewingCollection: false,
-            // cluster authentication
+            viewingDataset: false,
+            // deployment target authentication
             authenticationUsername: '',
             authenticationPassword: '',
             // run status constants
@@ -1080,10 +1084,7 @@ export default {
             'notificationsLoading',
             'notifications'
         ]),
-        ...mapGetters('collections', [
-            'openedCollection',
-            'openedCollectionLoading'
-        ]),
+        ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
         runningRuns() {
             return this.runs.filter(r => !r.is_complete);
         },
@@ -1115,8 +1116,7 @@ export default {
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
-        this.viewingCollection =
-            this.$router.currentRoute.name === 'collection';
+        this.viewingDataset = this.$router.currentRoute.name === 'dataset';
         let ws_protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
 
         // TODO move websockets to vuex
@@ -1135,28 +1135,26 @@ export default {
 
         await Promise.all([
             this.$store.dispatch('runs/loadAll'),
-            this.$store.dispatch('notifications/loadAll'),
-            // this.$store.dispatch('collections/loadOpened')
+            this.$store.dispatch('notifications/loadAll')
+            // this.$store.dispatch('datasets/loadOpened')
         ]);
     },
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
-            this.viewingCollection =
-                this.$router.currentRoute.name === 'collection';
+            this.viewingDataset = this.$router.currentRoute.name === 'dataset';
         },
-        openedCollection() {
-            // need this so the bottom navbar will hide itself after collection is closed
+        openedDataset() {
+            // need this so the bottom navbar will hide itself after dataset is closed
         }
     },
     methods: {
-        // async saveCollection(onlyModified) {},
-        async closeCollection() {
+        async closeDataset() {
             await this.$bvModal
                 .msgBoxConfirm(
-                    `Are you sure you want to close ${this.openedCollection.path} on ${this.openedCollection.cluster}?`,
+                    `Are you sure you want to close ${this.openedDataset.path} on ${this.openedDataset.resource}?`,
                     {
-                        title: 'Close Collection?',
+                        title: 'Close Dataset?',
                         size: 'sm',
                         okVariant: 'outline-danger',
                         cancelVariant: 'white',
@@ -1167,7 +1165,7 @@ export default {
                 )
                 .then(async value => {
                     if (value)
-                        await this.$store.dispatch('collections/closeOpened');
+                        await this.$store.dispatch('datasets/closeOpened');
                 })
                 .catch(err => {
                     throw err;
@@ -1209,10 +1207,7 @@ export default {
         },
         async onSessionEvent(event) {
             let data = JSON.parse(event.data);
-            await this.$store.dispatch(
-                'collections/updateOpened',
-                data.session
-            );
+            await this.$store.dispatch('datasets/updateOpened', data.session);
         },
         onDelete(run) {
             axios
@@ -1259,7 +1254,7 @@ export default {
         },
         prettifyShort: function(date) {
             return `${moment(date).fromNow()}`;
-        },
+        }
     }
 };
 </script>
@@ -1308,14 +1303,14 @@ export default {
     content: " /"
 
 .component-fade-enter-active, .component-fade-leave-active
-    transition: opacity .3s ease
+    transition: opacity .1s ease
 
 .component-fade-enter, .component-fade-leave-to
     opacity: 0
 
 .brand-img
     -webkit-transition: -webkit-transform .1s ease-in-out
-        transition: transform .2s ease-in-out
+        transition: transform .1s ease-in-out
 
 .brand-img:hover
     border: none

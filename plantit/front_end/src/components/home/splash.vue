@@ -9,7 +9,7 @@
                 :border-variant="profile.darkMode ? 'default' : 'default'"
                 :text-variant="profile.darkMode ? 'dark' : 'white'"
                 :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.8"
+                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.9"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -19,7 +19,12 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h2 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                        <h2
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            style="text-decoration: underline;"
+                        >
                             plant<small
                                 class="mb-3 text-success"
                                 style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
@@ -66,6 +71,20 @@
                                     Github
                                 </b-button>
                             </b-nav-item>
+                            <b-nav-item href="#" class="m-0 p-0" title="Slack">
+                                <b-button
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'outline-dark'
+                                    "
+                                    title="GitHub"
+                                >
+                                    <i class="fab fa-slack fa-2x"></i>
+                                    <br />
+                                    Slack
+                                </b-button>
+                            </b-nav-item>
                             <!--<b-nav-item class="m-0 p-0" title="Slack">
                                 <b-button
                                     :variant="
@@ -92,7 +111,9 @@
                             >
                                 <b-button
                                     :variant="
-                                        profile.darkMode ? 'outline-light' : 'white'
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
                                     "
                                 >
                                     <b-img
@@ -102,7 +123,8 @@
                                         center
                                         :src="
                                             profile.githubProfile
-                                                ? profile.githubProfile.avatar_url
+                                                ? profile.githubProfile
+                                                      .avatar_url
                                                 : ''
                                         "
                                     ></b-img>
@@ -119,7 +141,9 @@
                 <b-row class="m-0 p-0" v-if="!profile.loggedIn">
                     <b-col class="m-0 p-0">
                         <b-button
-                            :variant="profile.darkMode ? 'outline-light' : 'white'"
+                            :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
                             block
                             class="text-center"
                             href="/apis/v1/idp/cyverse_login/"
@@ -152,9 +176,7 @@ import { mapGetters } from 'vuex';
 
 export default {
     name: 'home-splash',
-    computed: mapGetters('user', [
-        'profile',
-    ]),
+    computed: mapGetters('user', ['profile']),
     created: function() {
         this.crumbs = this.$route.meta.crumb;
         this.$store.dispatch('user/loadProfile');

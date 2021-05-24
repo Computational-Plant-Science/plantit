@@ -23,8 +23,8 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 from plantit.redis import RedisClient
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
-from plantit.clusters.models import Cluster, ClusterAccessPolicy, ClusterRole
-from plantit.clusters.utils import map_cluster
+from plantit.resources.models import Resource, ResourceAccessPolicy, ResourceRole
+from plantit.resources.utils import map_resource
 from plantit.utils import get_repo_config, get_repo_readme
 
 
@@ -126,7 +126,7 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
         'image': old_config['config']['image'],
         'command': old_config['config']['commands'],
         'workdir': old_config['config']['workdir'],
-        'log_file': f"{run.guid}.{run.cluster.name.lower()}.log"
+        'log_file': f"{run.guid}.{run.resource.name.lower()}.log"
     }
 
     del old_config['config']['cluster']
@@ -165,20 +165,20 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
         new_config['input'] = dict()
         if input_kind == 'directory':
             new_config['input']['directory'] = dict()
-            new_config['input']['directory']['path'] = join(run.cluster.workdir, run.work_dir, 'input')
+            new_config['input']['directory']['path'] = join(run.resource.workdir, run.workdir, 'input')
             new_config['input']['directory']['patterns'] = old_config['config']['input']['patterns']
         elif input_kind == 'files':
             new_config['input']['files'] = dict()
-            new_config['input']['files']['path'] = join(run.cluster.workdir, run.work_dir, 'input')
+            new_config['input']['files']['path'] = join(run.resource.workdir, run.workdir, 'input')
             new_config['input']['files']['patterns'] = old_config['config']['input']['patterns']
         elif input_kind == 'file':
             new_config['input']['file'] = dict()
-            new_config['input']['file']['path'] = join(run.cluster.workdir, run.work_dir, 'input',
+            new_config['input']['file']['path'] = join(run.resource.workdir, run.workdir, 'input',
                                                        old_config['config']['input']['from'].rpartition('/')[2])
 
-    sandbox = run.cluster.name == 'Sandbox'
-    work_dir = join(run.cluster.workdir, run.work_dir)
-    if not sandbox and not run.cluster.job_array:
+    sandbox = run.resource.name == 'Sandbox'
+    work_dir = join(run.resource.workdir, run.workdir)
+    if not sandbox and not run.resource.job_array:
         new_config['jobqueue'] = dict()
         new_config['jobqueue']['slurm'] = {
             'cores': resources['cores'],
@@ -186,26 +186,26 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
             'walltime': resources['time'],
             'local_directory': work_dir,
             'log_directory': work_dir,
-            'env_extra': [run.cluster.pre_commands]
+            'env_extra': [run.resource.pre_commands]
         }
 
         if 'mem' in resources:
             new_config['jobqueue']['slurm']['memory'] = resources['mem']
-        if run.cluster.queue is not None and run.cluster.queue != '':
-            new_config['jobqueue']['slurm']['queue'] = run.cluster.queue
-        if run.cluster.project is not None and run.cluster.project != '':
-            new_config['jobqueue']['slurm']['project'] = run.cluster.project
-        if run.cluster.header_skip is not None and run.cluster.header_skip != '':
-            new_config['jobqueue']['slurm']['header_skip'] = run.cluster.header_skip.split(',')
+        if run.resource.queue is not None and run.resource.queue != '':
+            new_config['jobqueue']['slurm']['queue'] = run.resource.queue
+        if run.resource.project is not None and run.resource.project != '':
+            new_config['jobqueue']['slurm']['project'] = run.resource.project
+        if run.resource.header_skip is not None and run.resource.header_skip != '':
+            new_config['jobqueue']['slurm']['header_skip'] = run.resource.header_skip.split(',')
 
         if 'gpu' in old_config['config'] and old_config['config']['gpu']:
-            if run.cluster.gpu:
-                print(f"Using GPU on {run.cluster.name} queue '{run.cluster.gpu_queue}'")
+            if run.resource.gpu:
+                print(f"Using GPU on {run.resource.name} queue '{run.resource.gpu_queue}'")
                 new_config['gpu'] = True
                 new_config['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:1"]
-                new_config['jobqueue']['slurm']['queue'] = run.cluster.gpu_queue
+                new_config['jobqueue']['slurm']['queue'] = run.resource.gpu_queue
             else:
-                print(f"No GPU support on {run.cluster.name}")
+                print(f"No GPU support on {run.resource.name}")
 
     return new_config
 
@@ -249,7 +249,7 @@ def map_run(run: Run):
         submission_logs = []
 
     try:
-        ClusterAccessPolicy.objects.get(user=run.user, cluster=run.cluster, role__in=[ClusterRole.own, ClusterRole.run])
+        ResourceAccessPolicy.objects.get(user=run.user, cluster=run.resource, role__in=[ResourceRole.own, ResourceRole.run])
         can_restart = True
     except:
         can_restart = False
@@ -261,10 +261,10 @@ def map_run(run: Run):
         'id': run.guid,
         'job_id': run.job_id,
         'job_status': run.job_status,
-        'job_walltime': run.job_walltime,
-        'work_dir': run.work_dir,
+        'job_walltime': run.job_elapsed_walltime,
+        'work_dir': run.workdir,
         'submission_logs': submission_logs,
-        'cluster': run.cluster.name,
+        'cluster': run.resource.name,
         'created': run.created.isoformat(),
         'updated': run.updated.isoformat(),
         'completed': run.completed.isoformat() if run.completed is not None else None,
@@ -277,7 +277,7 @@ def map_run(run: Run):
         'is_cancelled': run.is_cancelled,
         'is_timeout': run.is_timeout,
         'workflow_image_url': run.workflow_image_url,
-        'result_previews_loaded': run.result_previews_loaded,
+        'result_previews_loaded': run.previews_loaded,
         'cleaned_up': run.cleaned_up,
         'output_files': json.loads(results) if results is not None else None
     }
@@ -288,10 +288,10 @@ def submission_log_file_path(run: Run):
 
 
 def container_log_file_name(run: Run):
-    if run.cluster.launcher:
+    if run.resource.launcher:
         return f"plantit.{run.job_id}.out"
     else:
-        return f"{run.guid}.{run.cluster.name.lower()}.log"
+        return f"{run.guid}.{run.resource.name.lower()}.log"
 
 
 def container_log_file_path(run: Run):
@@ -301,7 +301,7 @@ def container_log_file_path(run: Run):
 def create_run(username: str, cluster_name: str, workflow: dict) -> Run:
     now = timezone.now()
     user = User.objects.get(username=username)
-    cluster = Cluster.objects.get(name=cluster_name)
+    cluster = Resource.objects.get(name=cluster_name)
     workflow_owner = workflow['repo']['owner']['login']
     workflow_name = workflow['repo']['name']
     workflow_config = get_repo_config(workflow_name, workflow_owner, user.profile.github_token)
@@ -324,7 +324,7 @@ def create_run(username: str, cluster_name: str, workflow: dict) -> Run:
         run.tags.add(tag)
 
     # guid for working directory name
-    run.work_dir = f"{run.guid}/"
+    run.workdir = f"{run.guid}/"
     run.save()
     return run
 
@@ -358,7 +358,7 @@ def parse_eta(data: dict) -> (datetime, int):
 
 def map_delayed_run_task(task: DelayedRunTask):
     return {
-        'cluster': map_cluster(task.cluster),
+        'cluster': map_resource(task.resource),
         'name': task.name,
         'eta': task.eta,
         'interval': {
@@ -371,7 +371,7 @@ def map_delayed_run_task(task: DelayedRunTask):
 
 def map_repeating_run_task(task: RepeatingRunTask):
     return {
-        'cluster': map_cluster(task.cluster),
+        'cluster': map_resource(task.resource),
         'name': task.name,
         'eta': task.eta,
         'interval': {
@@ -387,16 +387,16 @@ def get_run_results(run: Run, workflow: dict):
     included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
         'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
     included_by_name.append(f"{run.guid}.zip")  # zip file
-    if not run.cluster.launcher:
-        included_by_name.append(f"{run.guid}.{run.cluster.name.lower()}.log")
+    if not run.resource.launcher:
+        included_by_name.append(f"{run.guid}.{run.resource.name.lower()}.log")
     if run.job_id is not None and run.job_id != '':
         included_by_name.append(f"plantit.{run.job_id}.out")
         included_by_name.append(f"plantit.{run.job_id}.err")
     included_by_pattern = (
         workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
 
-    client = SSH(run.cluster.hostname, run.cluster.port, run.cluster.username)
-    work_dir = join(run.cluster.workdir, run.work_dir)
+    client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    work_dir = join(run.resource.workdir, run.workdir)
     outputs = []
     seen = []
 
@@ -423,3 +423,57 @@ def get_run_results(run: Run, workflow: dict):
                         })
 
     return outputs
+
+
+def get_job_walltime(run: Run) -> (str, str):
+    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    with ssh:
+        lines = execute_command(
+            ssh_client=ssh,
+            pre_command=":",
+            command=f"squeue --user={run.resource.username}",
+            directory=join(run.resource.workdir, run.workdir),
+            allow_stderr=True)
+
+        try:
+            job_line = next(l for l in lines if run.job_id in l)
+            job_split = job_line.split()
+            job_walltime = job_split[-3]
+            return job_walltime
+        except StopIteration:
+            return None
+
+
+def get_job_status(run: Run) -> str:
+    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    with ssh:
+        lines = execute_command(
+            ssh_client=ssh,
+            pre_command=':',
+            command=f"sacct -j {run.job_id}",
+            directory=join(run.resource.workdir, run.workdir),
+            allow_stderr=True)
+
+        job_line = next(l for l in lines if run.job_id in l)
+        job_split = job_line.split()
+        job_status = job_split[5].replace('+', '')
+        return job_status
+    pass
+
+
+def cancel_run(run: Run):
+    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    with ssh:
+        if run.job_id is None or not any([run.job_id in r for r in execute_command(
+                ssh_client=ssh,
+                pre_command=':',
+                command=f"squeue -u {run.resource.username}",
+                directory=join(run.resource.workdir, run.workdir))]):
+            # run doesn't exist, so no need to cancel
+            return
+
+        execute_command(
+            ssh_client=ssh,
+            pre_command=':',
+            command=f"scancel {run.job_id}",
+            directory=join(run.resource.workdir, run.workdir))

@@ -10,7 +10,7 @@
         <br />
         <br />
         <b-container class="pl-3 pt-3">
-            <b-row align-v="center" align-h="center" v-if="clustersLoading">
+            <b-row align-v="center" align-h="center" v-if="resourcesLoading">
                 <b-col align-self="end" class="text-center">
                     <b-spinner
                         type="grow"
@@ -20,7 +20,7 @@
                 </b-col>
             </b-row>
             <b-row
-                v-else-if="clusters.length > 0"
+                v-else-if="resources.length > 0"
                 align-v="center"
                 align-h="center"
             >
@@ -34,7 +34,7 @@
                                         : 'text-dark'
                                 "
                             >
-                                Public Clusters
+                                Public Resources
                             </h3> </b-col
                     ></b-row><b-row><b-col
                             ><b-input-group size="sm"
@@ -71,8 +71,8 @@
                         class="justify-content-center mt-3"
                     >
                         <b-card
-                            v-for="cluster in filteredClusters"
-                            v-bind:key="cluster.name"
+                            v-for="resource in filteredResources"
+                            v-bind:key="resource.name"
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             :header-bg-variant="
                                 profile.darkMode ? 'dark' : 'white'
@@ -96,31 +96,31 @@
                                             "
                                             variant="outline-dark"
                                             v-b-tooltip.hover
-                                            @click="clusterSelected(cluster)"
+                                            @click="resourceSelected(resource)"
                                         >
-                                            {{ cluster.name }}
+                                            {{ resource.name }}
                                         </b-link>
                                     </h2>
                                     <b-badge
-                                        v-if="!cluster.public"
+                                        v-if="!resource.public"
                                         variant="warning"
                                         >Private</b-badge
                                     >
                                     <br />
                                     <small>
-                                        {{ cluster.description }}
+                                        {{ resource.description }}
                                     </small>
                                     <br />
                                 </b-col>
                                 <b-col cols="1"></b-col>
                             </b-row>
                             <b-img
-                                v-if="cluster.logo"
+                                v-if="resource.logo"
                                 rounded
                                 class="card-img-right overflow-hidden"
                                 style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                 right
-                                :src="cluster.logo"
+                                :src="resource.logo"
                             ></b-img>
                             <i
                                 v-else
@@ -133,9 +133,9 @@
                     <b-row
                         class="text-center"
                         v-if="
-                            filteredClusters.length === 0 && clusters.length !== 0
+                            filteredResources.length === 0 && resources.length !== 0
                         "
-                        ><b-col>No clusters matched your search.</b-col></b-row
+                        ><b-col>No resources matched your search.</b-col></b-row
                     >
                 </b-col>
             </b-row>
@@ -155,44 +155,44 @@ import router from '@/router';
 import { mapGetters } from 'vuex';
 
 export default {
-    name: 'clusters',
+    name: 'resources',
     data: function() {
         return {
-            clusters: [],
-            clustersLoading: false,
+            resources: [],
+            resourcesLoading: false,
             searchText: '',
             includeTags: false
         };
     },
     mounted() {
-        this.loadClusters();
+        this.loadResources();
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        filteredClusters() {
-            return this.clusters.filter(cluster => cluster.name.includes(this.searchText));
+        filteredResources() {
+            return this.resources.filter(resource => resource.name.includes(this.searchText));
         }
     },
     methods: {
-        loadClusters() {
-            this.clustersLoading = true;
+        loadResources() {
+            this.resourcesLoading = true;
             axios
-                .get('/apis/v1/clusters/get_all/')
+                .get('/apis/v1/resources/get_all/')
                 .then(response => {
-                    this.clusters = response.data.clusters;
-                    this.clustersLoading = false;
+                    this.resources = response.data.resources;
+                    this.resourcesLoading = false;
                 })
                 .catch(error => {
-                    this.clustersLoading = false;
+                    this.resourcesLoading = false;
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
         },
-        clusterSelected(cluster) {
+        resourceSelected(resource) {
             router.push({
-                name: 'cluster',
+                name: 'resource',
                 params: {
-                    name: cluster.name
+                    name: resource.name
                 }
             });
         }

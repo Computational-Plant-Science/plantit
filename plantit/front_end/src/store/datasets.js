@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
-export const collections = {
+export const datasets = {
     namespaced: true,
     state: () => ({
         opened: null,
@@ -35,7 +35,7 @@ export const collections = {
         async loadOpened({ commit }) {
             commit('setLoading', true);
             await axios
-                .get(`/apis/v1/collections/opened/`)
+                .get(`/apis/v1/datasets/opened/`)
                 .then(response => {
                     commit('setOpened', response.data.session);
                     if (response.data.session !== null)
@@ -59,13 +59,13 @@ export const collections = {
         async open({ commit }, payload) {
             commit('setLoading', true);
             let data = {
-                cluster: payload.cluster.name,
+                resource: payload.resource.name,
                 path: payload.path
             };
 
             axios({
                 method: 'post',
-                url: `/apis/v1/collections/open/`,
+                url: `/apis/v1/datasets/open/`,
                 data: data,
                 headers: { 'Content-Type': 'application/json' }
             })
@@ -83,7 +83,7 @@ export const collections = {
         async closeOpened({ commit }) {
             commit('setLoading', true);
             await axios
-                .get(`/apis/v1/collections/close/`)
+                .get(`/apis/v1/datasets/close/`)
                 .then(() => {
                     commit('setOpened', null);
                     commit('closeSocket');
@@ -97,7 +97,7 @@ export const collections = {
         }
     },
     getters: {
-        openedCollection: state => state.opened,
-        openedCollectionLoading: state => state.loading
+        openedDataset: state => state.opened,
+        openedDatasetLoading: state => state.loading
     }
 };

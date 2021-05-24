@@ -1,5 +1,5 @@
 from plantit.notifications.models import DirectoryPolicyNotification, TargetPolicyNotification, Notification
-from plantit.collections.utils import map_collection_policy
+from plantit.datasets.utils import map_dataset_policy
 
 
 def map_directory_policy_notification(notification: DirectoryPolicyNotification):
@@ -9,7 +9,7 @@ def map_directory_policy_notification(notification: DirectoryPolicyNotification)
         'created': notification.created.isoformat(),
         'message': notification.message,
         'read': notification.read,
-        'policy': map_collection_policy(notification.policy)
+        'policy': map_dataset_policy(notification.policy)
     }
 
 

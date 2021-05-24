@@ -23,21 +23,39 @@
                         <h2 class="text-white">
                             plant<small class="mb-3 text-success">IT</small>
                         </h2>
-                        <h5 class="text-white mt-4">
-                            plant science workflow automation in the browser
-                        </h5>
+                        <b class="text-white mt-4">
+                            phenotyping automation in the browser
+                        </b>
                     </b-col>
                 </b-row>
                 <br />
-                <b-row>
-                    <b-col align-self="end" class="text-right mr-0"
-                        ><h1 class="text-success">{{ runs }}</h1></b-col
-                    >
-                    <b-col align-self="middle" class="text-left ml-0 pl-0"
-                        ><h5 class="text-white">jobs</h5>
-                        (and counting!)</b-col
-                    >
-                </b-row>
+                <br />
+                <b-container>
+                    <b-row>
+                        <b-col align-self="end" class="text-right mr-0"
+                            ><h1 class="text-success">
+                                {{ users.length }}
+                            </h1></b-col
+                        >
+                        <b-col align-self="middle" class="text-left ml-0 pl-0"
+                            ><h5 class="text-white">users</h5>
+                        </b-col>
+                        <b-col align-self="end" class="text-right mr-0"
+                            ><h1 class="text-success">
+                                {{ workflows }}
+                            </h1></b-col
+                        >
+                        <b-col align-self="middle" class="text-left ml-0 pl-0"
+                            ><h5 class="text-white">workflows</h5>
+                        </b-col>
+                        <b-col align-self="end" class="text-right mr-0"
+                            ><h1 class="text-success">{{ runs }}</h1></b-col
+                        >
+                        <b-col align-self="middle" class="text-left ml-0 pl-0"
+                            ><h5 class="text-white">jobs</h5>
+                        </b-col>
+                    </b-row>
+                </b-container>
             </template>
             <b-container>
                 <br />
@@ -61,8 +79,7 @@
                                 <h4 class="text-white">
                                     Plug in your data
                                 </h4>
-                                Share collections and collaborate with team
-                                members
+                                Share datasets and collaborate with team members
                                 <br />
                                 Upload, annotate, and publish datasets with
                                 <b-link
@@ -170,14 +187,14 @@
                             </b-card-text>
                         </b-card>
                     </b-col>
-                  <b-col md="auto"
+                    <b-col md="auto"
                         ><b-img
                             rounded
                             style="max-height: 6rem;"
                             center
                             :src="require('../../assets/logos/docker.png')"
-                        ></b-img
-                  ></b-col><b-col md="auto"
+                        ></b-img></b-col
+                    ><b-col md="auto"
                         ><b-img
                             rounded
                             style="max-height: 6rem;"
@@ -206,7 +223,8 @@ export default {
     data: function() {
         return {
             users: [],
-            runs: 0
+            runs: 0,
+            workflows: 0
         };
     },
     methods: {

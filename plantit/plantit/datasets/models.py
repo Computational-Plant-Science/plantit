@@ -7,29 +7,29 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django_enum_choices.fields import EnumChoiceField
 
-from plantit.clusters.models import Cluster
+from plantit.resources.models import Resource
 
 
-class CollectionRole(Enum):
+class DatasetRole(Enum):
     read = 'READ'
     write = 'WRITE'
 
 
-class CollectionAccessPolicy(models.Model):
+class DatasetAccessPolicy(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owner", on_delete=models.CASCADE)
     guest = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="guest", on_delete=models.CASCADE)
-    role = EnumChoiceField(CollectionRole, default=CollectionRole.read)
+    role = EnumChoiceField(DatasetRole, default=DatasetRole.read)
     path = models.CharField(max_length=250)
 
 
 # TODO periodic task to test that access is still shared, section in data tab for data shared with you
 
 
-class CollectionSession(models.Model):
+class DatasetSession(models.Model):
     guid = models.CharField(max_length=50, null=False, blank=False, primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     path = models.CharField(max_length=250)
-    cluster = models.ForeignKey(Cluster, null=True, blank=True, on_delete=models.SET_NULL)
+    resource = models.ForeignKey(Resource, null=True, blank=True, on_delete=models.SET_NULL)
     workdir = models.CharField(max_length=100, null=True, blank=True)
     token = models.CharField(max_length=40)
     modified = ArrayField(models.CharField(max_length=250), blank=True, null=True)
@@ -48,4 +48,4 @@ class CollectionSession(models.Model):
 
     @property
     def is_sandbox(self):
-        return self.cluster.name is not None and self.cluster.name == 'Sandbox'
+        return self.resource.name is not None and self.resource.name == 'Sandbox'

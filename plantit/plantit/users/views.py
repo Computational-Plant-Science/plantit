@@ -19,7 +19,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from plantit.clusters.utils import map_cluster
+from plantit.resources.utils import map_resource
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile

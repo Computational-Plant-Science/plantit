@@ -200,11 +200,11 @@
                         v-if="
                             internalLoaded &&
                                 !internalLoading &&
-                                !openedCollectionLoading &&
+                                !openedDatasetLoading &&
                                 internalNode.path.split('/').length > 4
                         "
-                        :disabled="openedCollection !== null"
-                        title="Open Collection"
+                        :disabled="openedDataset !== null"
+                        title="Open Dataset"
                         size="sm"
                         dropleft
                         :variant="
@@ -215,17 +215,17 @@
                             <i class="fas fa-folder-open fa-fw"></i>
                         </template>
                         <b-dropdown-text>
-                            Select a cluster to open this collection.
+                            Select a resource to open this dataset.
                         </b-dropdown-text>
                         <b-dropdown-divider></b-dropdown-divider>
                         <b-dropdown-text
                             v-if="
-                                clusters !== undefined &&
-                                    clusters !== null &&
-                                    clusters.length === 0
+                                resources !== undefined &&
+                                    resources !== null &&
+                                    resources.length === 0
                             "
                             ><b class="text-danger"
-                                >You have no cluster permissions.</b
+                                >You have no resource permissions.</b
                             ><br />See
                             <b-link
                                 :class="
@@ -233,18 +233,18 @@
                                         ? 'text-light'
                                         : 'text-dark'
                                 "
-                                to="/clusters"
+                                to="/resources"
                                 ><i class="fas fa-server fa-1x fa-fw"></i>
-                                Clusters</b-link
+                                Resources</b-link
                             >
                             to request guest access to public computing
                             resources.</b-dropdown-text
                         >
                         <b-dropdown-item
-                            @click="openCollection(cluster)"
-                            v-for="cluster in clusters"
-                            v-bind:key="cluster.name"
-                            >{{ cluster.name }}</b-dropdown-item
+                            @click="openDataset(resource)"
+                            v-for="resource in resources"
+                            v-bind:key="resource.name"
+                            >{{ resource.name }}</b-dropdown-item
                         >
                     </b-dropdown>
                     <b-modal
@@ -270,7 +270,7 @@
                         :footer-border-variant="
                             profile.darkMode ? 'dark' : 'white'
                         "
-                        @ok="shareCollection"
+                        @ok="shareDataset"
                         @close="hideShareDirectoryModal"
                         :id="
                             'shareDirectoryModal' +
@@ -706,7 +706,7 @@
                 :select="select"
                 :upload="upload"
                 :download="download"
-                :clusters="clusters"
+                :resources="resources"
                 title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
                 @deleted="
@@ -786,7 +786,7 @@ export default {
             required: false,
             type: Boolean
         },
-        clusters: {
+        resources: {
             required: false,
             type: Array
         }
@@ -821,9 +821,9 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('users', ['allUsers', 'usersLoading']),
-        ...mapGetters('collections', [
-            'openedCollection',
-            'openedCollectionLoading'
+        ...mapGetters('datasets', [
+            'openedDataset',
+            'openedDatasetLoading'
         ]),
         sharedBy: function() {
             if (this.isShared) {
@@ -884,9 +884,9 @@ export default {
         }
     },
     methods: {
-        openCollection(cluster) {
-            this.$store.dispatch('collections/open', {
-                cluster: cluster,
+        openDataset(resource) {
+            this.$store.dispatch('datasets/open', {
+                resource: resource,
                 path: this.internalLoaded
                     ? this.internalNode.path
                     : this.node.path
@@ -974,13 +974,13 @@ export default {
                         : this.node.label)
             );
         },
-        async shareCollection() {
+        async shareDataset() {
             let path = this.internalLoaded
                 ? this.internalNode.path
                 : this.node.path;
             await axios({
                 method: 'post',
-                url: `/apis/v1/collections/share/`,
+                url: `/apis/v1/datasets/share/`,
                 data: {
                     // sharing
                     sharing: this.sharedUsers.map(function(user) {

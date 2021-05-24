@@ -13,9 +13,9 @@
             <b-row
                 no-gutters
                 v-if="
-                    cluster.role !== 'own' &&
-                        cluster.role !== 'run' &&
-                        !cluster.public
+                    resource.role !== 'own' &&
+                        resource.role !== 'run' &&
+                        !resource.public
                 "
                 ><b-col class="text-center"
                     ><p
@@ -38,7 +38,7 @@
                             "
                             size="md"
                             v-b-tooltip.hover
-                            :title="'Request guest access for ' + cluster.name"
+                            :title="'Request guest access for ' + resource.name"
                             @click="requestAccess"
                         >
                             <i class="fas fa-key fa-fw"></i>
@@ -83,7 +83,7 @@
                     align-h="center"
                     align-v="center"
                     align-content="center"
-                    v-if="clusterLoading"
+                    v-if="resourceLoading"
                     class="text-center"
                 >
                     <b-col
@@ -116,12 +116,12 @@
                                 "
                             >
                                 <b-img
-                                    v-if="cluster.logo"
+                                    v-if="resource.logo"
                                     rounded
                                     class="card-img-right overflow-hidden"
                                     style="max-height: 5rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                     right
-                                    :src="cluster.logo"
+                                    :src="resource.logo"
                                 ></b-img>
                                 <i
                                     v-else
@@ -140,25 +140,25 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    {{ cluster.name }}
+                                                    {{ resource.name }}
                                                 </h2>
                                                 <b-badge
                                                     v-if="
-                                                        cluster.role === 'use'
+                                                        resource.role === 'use'
                                                     "
                                                     variant="warning"
                                                     >Guest</b-badge
                                                 >
                                                 <b-badge
                                                     v-else-if="
-                                                        cluster.role === 'own'
+                                                        resource.role === 'own'
                                                     "
                                                     variant="success"
                                                     >Owner</b-badge
                                                 >
                                                 <br />
                                                 <small>{{
-                                                    cluster.description
+                                                    resource.description
                                                 }}</small>
                                             </b-col>
                                         </b-row>
@@ -181,7 +181,7 @@
                                                     <b-col cols="9">
                                                         <b class="ml-3">
                                                             {{
-                                                                cluster.executor
+                                                                resource.executor
                                                             }}
                                                         </b>
                                                     </b-col>
@@ -196,7 +196,7 @@
                                                     <b-col cols="9">
                                                         <b class="ml-3">
                                                             {{
-                                                                cluster.workdir
+                                                                resource.workdir
                                                             }}
                                                         </b>
                                                     </b-col>
@@ -210,7 +210,7 @@
                                                     <b-col cols="9"
                                                         ><b class="ml-3"
                                                             ><code>{{
-                                                                cluster.pre_commands
+                                                                resource.pre_commands
                                                             }}</code></b
                                                         ></b-col
                                                     >
@@ -227,18 +227,18 @@
                                                     Resources Available
                                                     <small>per container</small>
                                                 </h5>
-                                                <b>{{ cluster.max_cores }}</b>
+                                                <b>{{ resource.max_cores }}</b>
                                                 <small> cores</small>
                                                 <br />
                                                 <b>{{
-                                                    cluster.max_processes
+                                                    resource.max_processes
                                                 }}</b>
                                                 <small> processes</small>
                                                 <br />
                                                 <span
                                                     v-if="
                                                         parseInt(
-                                                            cluster.max_mem
+                                                            resource.max_mem
                                                         ) < 0
                                                     "
                                                 >
@@ -249,10 +249,10 @@
                                                 <span
                                                     v-else-if="
                                                         parseInt(
-                                                            cluster.max_mem
+                                                            resource.max_mem
                                                         ) > 0
                                                     "
-                                                    >{{ cluster.max_mem
+                                                    >{{ resource.max_mem
                                                     }}<small>
                                                         GB memory</small
                                                     ></span
@@ -260,7 +260,7 @@
                                                 <span
                                                     v-else-if="
                                                         parseInt(
-                                                            cluster.max_mem
+                                                            resource.max_mem
                                                         ) === -1
                                                     "
                                                     ><small
@@ -268,10 +268,10 @@
                                                     ></span
                                                 >
                                                 <br />
-                                                <span v-if="cluster.gpu">
+                                                <span v-if="resource.gpu">
                                                     <i
                                                         :class="
-                                                            cluster.gpu
+                                                            resource.gpu
                                                                 ? 'text-warning'
                                                                 : ''
                                                         "
@@ -289,12 +289,12 @@
                                         <hr />
                                         <b-row>
                                             <b-col
-                                                v-if="cluster.role === 'own'"
+                                                v-if="resource.role === 'own'"
                                                 class="mr-0"
                                                 md="auto"
                                                 align-self="end"
                                                 ><b-form-checkbox
-                                                    v-model="cluster.public"
+                                                    v-model="resource.public"
                                                     button
                                                     class="mr-0"
                                                     size="sm"
@@ -302,7 +302,7 @@
                                                     @change="togglePublic"
                                                 >
                                                     <i
-                                                        v-if="cluster.public"
+                                                        v-if="resource.public"
                                                         class="fas fa-lock-open fa-fw"
                                                     ></i>
                                                     <i
@@ -310,7 +310,7 @@
                                                         class="fas fa-lock fa-fw"
                                                     ></i>
                                                     {{
-                                                        cluster.public
+                                                        resource.public
                                                             ? 'Public'
                                                             : 'Private'
                                                     }}
@@ -318,7 +318,7 @@
                                             </b-col>
                                             <b-col
                                                 v-else-if="
-                                                    cluster.role === 'none' &&
+                                                    resource.role === 'none' &&
                                                         !accessRequested
                                                 "
                                                 class="ml-0"
@@ -335,7 +335,7 @@
                                                     v-b-tooltip.hover
                                                     :title="
                                                         'Request access to ' +
-                                                            cluster.name
+                                                            resource.name
                                                     "
                                                     @click="requestAccess"
                                                 >
@@ -347,7 +347,7 @@
                                             >
                                             <b-col></b-col>
                                             <b-col
-                                                v-if="cluster.role !== 'none'"
+                                                v-if="resource.role !== 'none'"
                                                 class="ml-0"
                                                 md="auto"
                                                 align-self="end"
@@ -362,7 +362,7 @@
                                                     v-b-tooltip.hover
                                                     title="Check Connection Status"
                                                     :disabled="
-                                                        cluster.role ===
+                                                        resource.role ===
                                                             'none' ||
                                                             statusChecking
                                                     "
@@ -385,7 +385,7 @@
                                             ></b-col>
                                             <b-col
                                                 v-if="
-                                                    cluster.role === 'none' &&
+                                                    resource.role === 'none' &&
                                                         accessRequested
                                                 "
                                                 class="ml-0"
@@ -430,9 +430,9 @@
                                                     "
                                                     size="sm"
                                                     v-b-tooltip.hover
-                                                    title="Start interactive collections"
+                                                    title="Start interactive datasets"
                                                     @click="
-                                                        tryOpenCollection
+                                                        tryOpenDataset
                                                     "
                                                 >
                                                     <i
@@ -447,7 +447,7 @@
                             </div>
                         </b-card>
                         <br />
-                        <div v-if="cluster.policies && cluster.role === 'own'">
+                        <div v-if="resource.policies && resource.role === 'own'">
                             <b-row no-gutters>
                                 <b-col align-self="end"
                                     ><h5
@@ -465,8 +465,8 @@
                                 ><b-col align-self="end">
                                     <b-row
                                         v-if="
-                                            !clusterLoading &&
-                                                cluster.policies.length === 1
+                                            !resourceLoading &&
+                                                resource.policies.length === 1
                                         "
                                         ><b-col
                                             ><small
@@ -477,7 +477,7 @@
                                     >
                                     <b-row
                                         v-else
-                                        v-for="policy in cluster.policies.filter(
+                                        v-for="policy in resource.policies.filter(
                                             p =>
                                                 p.user !==
                                                 profile.djangoProfile.username
@@ -489,7 +489,7 @@
                                             }}<small>
                                                 can
                                                 {{ policy.role.toLowerCase() }}
-                                                this cluster.</small
+                                                this resource.</small
                                             ></b-col
                                         ><b-col
                                             class="ml-0"
@@ -523,7 +523,7 @@
                             >
                             <hr />
                         </div>
-                        <div v-if="cluster.role === 'own'">
+                        <div v-if="resource.role === 'own'">
                             <b-row no-gutters>
                                 <b-col align-self="end"
                                     ><h5
@@ -537,7 +537,7 @@
                                     </h5></b-col
                                 >
                             </b-row>
-                            <b-row v-if="cluster.access_requests.length === 0"
+                            <b-row v-if="resource.access_requests.length === 0"
                                 ><b-col
                                     ><small
                                         >No pending access requests.</small
@@ -547,7 +547,7 @@
                             <b-row v-else
                                 ><b-col align-self="end">
                                     <b-row
-                                        v-for="request in cluster.access_requests"
+                                        v-for="request in resource.access_requests"
                                         v-bind:key="request.user"
                                     >
                                         <b-col md="auto">{{
@@ -614,7 +614,7 @@
                                     size="sm"
                                     v-b-tooltip.hover
                                     title="Create Periodic Task"
-                                    :disabled="cluster.role !== 'own'"
+                                    :disabled="resource.role !== 'own'"
                                     v-b-modal.createTask
                                 >
                                     <i class="fas fa-plus fa-fw"></i>
@@ -623,14 +623,14 @@
                             ></b-row
                         >
                         <div
-                            v-for="task in cluster.tasks"
+                            v-for="task in resource.tasks"
                             v-bind:key="task.name"
                             class="pb-2"
                         >
                             <b-row class="pt-1">
                                 <b-col
                                     md="auto"
-                                    v-if="cluster.role === 'own'"
+                                    v-if="resource.role === 'own'"
                                     align-self="end"
                                     :class="
                                         profile.darkMode
@@ -652,7 +652,7 @@
                                 <b-col
                                     md="auto"
                                     align-self="end"
-                                    v-if="cluster.role === 'own'"
+                                    v-if="resource.role === 'own'"
                                     ><b-button
                                         size="sm"
                                         variant="outline-danger"
@@ -738,8 +738,8 @@
             :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="'Authenticate with ' + this.cluster.name"
-            @ok="openCollection"
+            :title="'Authenticate with ' + this.resource.name"
+            @ok="openDataset"
         >
             <b-form-input
                 v-model="authenticationUsername"
@@ -766,7 +766,7 @@ import VueCronEditorBuefy from 'vue-cron-editor-buefy';
 import parser from 'cron-parser';
 
 export default {
-    name: 'cluster',
+    name: 'resource',
     components: {
         VueCronEditorBuefy
     },
@@ -774,8 +774,8 @@ export default {
         return {
             authenticationUsername: '',
             authenticationPassword: '',
-            cluster: null,
-            clusterLoading: false,
+            resource: null,
+            resourceLoading: false,
             statusChecking: false,
             alertEnabled: false,
             alertMessage: '',
@@ -795,15 +795,15 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflowsRecentlyRun']),
-        ...mapGetters('collections', [
-            'openedCollectionLoading',
-            'openedCollection'
+        ...mapGetters('datasets', [
+            'openedDatasetLoading',
+            'openedDataset'
         ]),
         mustAuthenticate() {
             return (
-                this.cluster.policies.length === 0 ||
-                (this.cluster.policies.length > 0 &&
-                    !this.cluster.policies.some(
+                this.resource.policies.length === 0 ||
+                (this.resource.policies.length > 0 &&
+                    !this.resource.policies.some(
                         p =>
                             p.user === this.profile.djangoProfile.username &&
                             (p.role.toLowerCase() === 'use' ||
@@ -812,27 +812,27 @@ export default {
             );
         },
         accessRequested: function() {
-            return this.cluster.access_requests.some(
+            return this.resource.access_requests.some(
                 r => r.user === this.profile.djangoProfile.username
             );
         },
         accessRequest: function() {
-            return this.cluster.access_requests.find(
+            return this.resource.access_requests.find(
                 r => r.user === this.profile.djangoProfile.username
             );
         }
     },
     methods: {
-        tryOpenCollection() {
+        tryOpenDataset() {
             if (this.mustAuthenticate) this.showAuthenticateModal();
-            else this.openCollection();
+            else this.openDataset();
         },
         showAuthenticateModal() {
             this.$bvModal.show('authenticate');
         },
-        // openCollection() {
+        // openDataset() {
         //     this.$store.dispatch('updateSessionLoading', true);
-        //     let data = { cluster: this.cluster.name };
+        //     let data = { resource: this.resource.name };
         //     if (this.mustAuthenticate)
         //         data['auth'] = {
         //             username: this.authenticationUsername,
@@ -841,13 +841,13 @@ export default {
 
         //     axios({
         //         method: 'post',
-        //         url: `/apis/v1/collections/open/`,
+        //         url: `/apis/v1/datasets/open/`,
         //         data: data,
         //         headers: { 'Content-Type': 'application/json' }
         //     })
         //         .then(async response => {
         //             await this.$store.dispatch(
-        //                 'updateCollectionSession',
+        //                 'updateDatasetSession',
         //                 response.data.session
         //             );
         //         })
@@ -859,7 +859,7 @@ export default {
         revokeAccess(user) {
             axios
                 .get(
-                    `/apis/v1/clusters/revoke_access/?name=${this.$route.params.name}&user=${user}`
+                    `/apis/v1/resources/revoke_access/?name=${this.$route.params.name}&user=${user}`
                 )
                 .then(() => {
                     this.loadTarget();
@@ -878,7 +878,7 @@ export default {
         grantAccess(user) {
             axios
                 .get(
-                    `/apis/v1/clusters/grant_access/?name=${this.$route.params.name}&user=${user}`
+                    `/apis/v1/resources/grant_access/?name=${this.$route.params.name}&user=${user}`
                 )
                 .then(response => {
                     this.loadTarget();
@@ -900,7 +900,7 @@ export default {
         requestAccess() {
             axios
                 .get(
-                    `/apis/v1/clusters/request_access/?name=${this.$route.params.name}`
+                    `/apis/v1/resources/request_access/?name=${this.$route.params.name}`
                 )
                 .then(response => {
                     this.loadTarget();
@@ -922,12 +922,12 @@ export default {
         togglePublic() {
             axios
                 .get(
-                    `/apis/v1/clusters/toggle_public/?name=${this.$route.params.name}`
+                    `/apis/v1/resources/toggle_public/?name=${this.$route.params.name}`
                 )
                 .then(response => {
-                    this.cluster.public = response.data.public;
+                    this.resource.public = response.data.public;
                     this.alertMessage = `${this.$route.params.name} is now ${
-                        this.cluster.public ? 'public' : 'private'
+                        this.resource.public ? 'public' : 'private'
                     }`;
                     this.alertEnabled = true;
                 })
@@ -956,16 +956,16 @@ export default {
         },
         deleteTask(task) {
             return axios
-                .get(`/apis/v1/clusters/remove_task/?name=${task.name}`)
+                .get(`/apis/v1/resources/remove_task/?name=${task.name}`)
                 .then(() => {
                     this.loadTarget();
-                    this.alertMessage = `Deleted task ${task.name} on ${this.cluster.name}`;
+                    this.alertMessage = `Deleted task ${task.name} on ${this.resource.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to delete ${task.name} on ${this.cluster.name}`;
+                    this.alertMessage = `Failed to delete ${task.name} on ${this.resource.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                     throw error;
@@ -975,10 +975,10 @@ export default {
             event.preventDefault();
             axios({
                 method: 'post',
-                url: `/apis/v1/clusters/create_task/`,
+                url: `/apis/v1/resources/create_task/`,
                 data: {
                     name: this.createTaskForm.name,
-                    cluster: this.cluster.name,
+                    resource: this.resource.name,
                     description: this.createTaskForm.description,
                     command: this.createTaskForm.command,
                     delay: this.createTaskForm.time
@@ -994,10 +994,10 @@ export default {
                 .then(response => {
                     this.alertMessage =
                         response.status === 200 && response.data.created
-                            ? `Created task ${this.createTaskForm.name} on ${this.cluster.name}`
+                            ? `Created task ${this.createTaskForm.name} on ${this.resource.name}`
                             : response.status === 200 && !response.data.created
-                            ? `Task ${this.createTaskForm.name} already exists on ${this.cluster.name}`
-                            : `Failed to create task ${this.createTaskForm.name} on ${this.cluster.name}`;
+                            ? `Task ${this.createTaskForm.name} already exists on ${this.resource.name}`
+                            : `Failed to create task ${this.createTaskForm.name} on ${this.resource.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                     this.$bvModal.hide('createTask');
@@ -1005,7 +1005,7 @@ export default {
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to create task ${this.createTaskForm.name} on ${this.cluster.name}`;
+                    this.alertMessage = `Failed to create task ${this.createTaskForm.name} on ${this.resource.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                     this.$bvModal.hide('createTask');
@@ -1030,16 +1030,16 @@ export default {
             return moment.duration(dur, 'seconds').humanize(true);
         },
         loadTarget: function() {
-            this.clusterLoading = true;
+            this.resourceLoading = true;
             return axios
                 .get(
-                    `/apis/v1/clusters/get_by_name/?name=${this.$route.params.name}`
+                    `/apis/v1/resources/get_by_name/?name=${this.$route.params.name}`
                 )
                 .then(response => {
-                    this.cluster = response.data;
+                    this.resource = response.data;
                     this.singularityCacheCleaning =
                         response.data.singularity_cache_clean_enabled;
-                    this.clusterLoading = false;
+                    this.resourceLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1050,18 +1050,18 @@ export default {
             this.statusChecking = true;
             return axios
                 .get(
-                    `/apis/v1/clusters/status/?name=${this.$route.params.name}`
+                    `/apis/v1/resources/status/?name=${this.$route.params.name}`
                 )
                 .then(response => {
                     this.alertMessage = response.data.healthy
-                        ? `Connection to ${this.cluster.name} succeeded`
-                        : `Failed to connect to ${this.cluster.name}`;
+                        ? `Connection to ${this.resource.name} succeeded`
+                        : `Failed to connect to ${this.resource.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to connect to ${this.cluster.name}`;
+                    this.alertMessage = `Failed to connect to ${this.resource.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                     throw error;
@@ -1069,18 +1069,18 @@ export default {
         },
         toggleTask: function(task) {
             axios
-                .get(`/apis/v1/clusters/toggle_task/?name=${task.name}`)
+                .get(`/apis/v1/resources/toggle_task/?name=${task.name}`)
                 .then(response => {
                     this.loadTarget();
                     this.alertMessage = `${
                         response.data.enabled ? 'Enabled' : 'Disabled'
-                    } task ${task.name} on ${this.cluster.name}`;
+                    } task ${task.name} on ${this.resource.name}`;
                     this.alertEnabled = true;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) {
-                        this.alertMessage = `Failed to disable task ${task.name} on ${this.cluster.name}`;
+                        this.alertMessage = `Failed to disable task ${task.name} on ${this.resource.name}`;
                         this.alertEnabled = true;
                         throw error;
                     }

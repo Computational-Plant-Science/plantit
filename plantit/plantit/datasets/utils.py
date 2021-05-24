@@ -6,10 +6,10 @@ from typing import List
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-from plantit.collections.models import CollectionAccessPolicy, CollectionSession
+from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
 
 
-def map_collection_policy(policy: CollectionAccessPolicy):
+def map_dataset_policy(policy: DatasetAccessPolicy):
     return {
         'owner': policy.owner.username,
         'guest': policy.guest.username,
@@ -18,7 +18,7 @@ def map_collection_policy(policy: CollectionAccessPolicy):
     }
 
 
-def map_collection_session(session: CollectionSession):
+def map_dataset_session(session: DatasetSession):
     log_path = join(environ.get('SESSIONS_LOGS'), f"{session.guid}.session.log")
     if Path(log_path).exists():
         with open(log_path, 'r') as file:
@@ -30,14 +30,14 @@ def map_collection_session(session: CollectionSession):
         'guid': session.guid,
         'path': session.path,
         'workdir': session.workdir,
-        'cluster': session.cluster.name,
+        'resource': session.resource.name,
         'modified': session.modified if session.modified is not None else [],
         'output': lines,
         'opening': session.opening
     }
 
 
-def update_collection_session(session: CollectionSession, output: List[str]):
+def update_dataset_session(session: DatasetSession, output: List[str]):
     log_path = join(environ.get('SESSIONS_LOGS'), f"{session.guid}.session.log")
     with open(log_path, 'a') as log:
         for line in output:
@@ -47,5 +47,5 @@ def update_collection_session(session: CollectionSession, output: List[str]):
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.send)(session.channel_name, {
             'type': 'update.session',
-            'session': map_collection_session(session),
+            'session': map_dataset_session(session),
         })

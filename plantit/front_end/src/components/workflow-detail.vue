@@ -451,8 +451,9 @@
                                     >
                                         <b-alert show variant="warning"
                                             >This workflow does not specify
-                                            cluster resources and can only be
-                                            run in the <b>Sandbox</b>.</b-alert
+                                            resource requests and can only be
+                                            run on resources configured for the
+                                            <b>Local</b> executor.</b-alert
                                         >
                                     </b-col>
                                     <b-col
