@@ -11,6 +11,7 @@ assert 'DJANGO_SESSION_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANG
 assert 'DJANGO_CSRF_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_CSRF_COOKIE_SECURE"
 assert 'USERS_CACHE' in os.environ, f"{missing_variable}: USERS_CACHE"
 assert 'USERS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: USERS_REFRESH_MINUTES"
+assert 'USERS_STATS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: USERS_STATS_REFRESH_MINUTES"
 assert 'MORE_USERS' in os.environ, f"{missing_variable}: MORE_USERS"
 assert 'WORKFLOWS_CACHE' in os.environ, f"{missing_variable}: WORKFLOWS_CACHE"
 assert 'WORKFLOWS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: WORKFLOWS_REFRESH_MINUTES"
@@ -37,6 +38,7 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(',')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 USERS_CACHE = os.environ.get('USERS_CACHE')
 USERS_REFRESH_MINUTES = os.environ.get('USERS_REFRESH_MINUTES')
+USERS_STATS_REFRESH_MINUTES = os.environ.get('USERS_STATS_REFRESH_MINUTES')
 MORE_USERS = os.environ.get('MORE_USERS')
 WORKFLOWS_CACHE = os.environ.get('WORKFLOWS_CACHE')
 WORKFLOWS_REFRESH_MINUTES = os.environ.get('WORKFLOWS_REFRESH_MINUTES')

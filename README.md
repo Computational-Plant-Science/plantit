@@ -157,6 +157,7 @@ CELERY_TEMPLATE_LOCAL_RUN_SCRIPT=/code/scripts/template_local_run.sh
 CELERY_TEMPLATE_SLURM_RUN_SCRIPT=/code/scripts/template_slurm_run.sh
 USERS_CACHE=/code/users.json
 USERS_REFRESH_MINUTES=60
+USERS_STATS_REFRESH_MINUTES=10
 MORE_USERS=/code/more_users.json
 WORKFLOWS_CACHE=/code/workflows.json
 WORKFLOWS_REFRESH_MINUTES=60

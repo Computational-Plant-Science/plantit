@@ -78,26 +78,35 @@
                                     <b-col md="auto">
                                         <h5>Right now</h5>
                                         <b>{{ runningRuns.length }}</b>
-                                        workflows running
+                                        running workflows
                                         <br />
                                         <b>{{ unreadNotifications.length }}</b>
                                         unread notifications
-                                        <hr />
-                                        <h5>Usage overview</h5>
-                                        <div v-if="stats !== null">
-                                            Most used cluster:
+                                        <div v-if="profile.stats !== null">
+                                            <hr />
+                                            <h5>Cumulative use</h5>
+                                            <b>{{ profile.stats.total_runs }}</b>
+                                            workflows run
+                                            <br />
+                                            <b>{{ profile.stats.total_time }}</b>
+                                            working minutes
+                                            <br />
+                                            <b>{{ profile.stats.total_results }}</b>
+                                            results produced
+                                            <!--<hr />
+                                            <h5>Most used</h5>
+                                            Agent:
                                             <b>{{ stats.most_used_cluster }}</b>
                                             <br />
-                                            Most used dataset:
+                                            Workflow:
                                             <b>{{ stats.most_used_dataset }}</b>
-                                            <br />
-                                            Most frequent collaborator:
+                                            <br />Most frequent collaborator:
                                             <b>{{
                                                 stats.most_frequent_collaborator
-                                            }}</b>
+                                            }}</b>-->
                                             <hr />
                                             <h5>
-                                                Usage over the past<b-dropdown
+                                                Usage in the past<b-dropdown
                                                     class="ml-2 p-0"
                                                     size="sm"
                                                     dropright
@@ -1692,7 +1701,6 @@ export default {
     },
     data: function() {
         return {
-            stats: null,
             statsScope: 'Hour',
             newResourceName: '',
             newResourceHost: '',
@@ -1836,21 +1844,9 @@ export default {
             this.loadResources(),
             this.loadSharedDatasets(),
             this.loadSharingDatasets(),
-            this.loadStats()
         ]);
     },
     methods: {
-        async loadStats() {
-            await axios
-                .get(`/apis/v1/users/get_stats/`)
-                .then(response => {
-                    this.stats = response.data;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
         isJobQueue(executor) {
             return executor !== 'Local';
         },

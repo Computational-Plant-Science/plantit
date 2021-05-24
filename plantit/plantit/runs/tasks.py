@@ -4,362 +4,31 @@ import json
 import sys
 import tempfile
 import traceback
-from datetime import timedelta
-from math import ceil
 from os import environ
 from os.path import join
-from typing import List
 
 import cv2
-import requests
-import yaml
 from celery.utils.log import get_task_logger
 from czifile import czifile
+from django.contrib.auth.models import User
 from django.utils import timezone
 from preview_generator.exception import UnsupportedMimeType
 from preview_generator.manager import PreviewManager
-from requests import RequestException, Timeout, ReadTimeout, HTTPError
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from plantit import settings
 from plantit.celery import app
 from plantit.datasets.models import DatasetSession
 from plantit.datasets.utils import update_dataset_session
-from plantit.options import FileInput, Parameter
 from plantit.redis import RedisClient
 from plantit.resources.models import Resource
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
-from plantit.runs.utils import update_status, execute_command, map_old_workflow_config_to_new, remove_logs, parse_job_id, create_run, \
-    container_log_file_name, container_log_file_path, get_run_results, get_job_walltime, get_job_status
+from plantit.runs.utils import update_status, execute_command, remove_logs, create_run, \
+    container_log_file_name, container_log_file_path, get_run_results, get_job_walltime, get_job_status, submit_run_via_ssh, list_dir, upload_run
 from plantit.sns import SnsClient
-from plantit.utils import parse_run_options, prep_run_command
 from plantit.workflows.utils import refresh_workflow
 
 logger = get_task_logger(__name__)
-
-
-def __upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
-    # update flow config before uploading
-    flow['config']['workdir'] = join(run.resource.workdir, run.guid)
-    flow['config']['log_file'] = f"{run.guid}.{run.resource.name.lower()}.log"
-    if 'output' in flow['config'] and 'from' in flow['config']['output']:
-        if flow['config']['output']['from'] is not None and flow['config']['output']['from'] != '':
-            flow['config']['output']['from'] = join(run.resource.workdir, run.workdir, flow['config']['output']['from'])
-
-    # if flow has outputs, make sure we don't push configuration or job scripts
-    if 'output' in flow['config']:
-        flow['config']['output']['exclude']['names'] = [
-            "flow.yaml",
-            "template_local_run.sh",
-            "template_slurm_run.sh"]
-
-    resources = None if 'resources' not in flow['config']['resource'] else flow['config']['resource']['resources']
-    callback_url = settings.API_URL + 'runs/' + run.guid + '/status/'
-    work_dir = join(run.resource.workdir, run.workdir)
-    new_flow = map_old_workflow_config_to_new(flow, run, resources)  # TODO update flow UI page
-    launcher = run.resource.launcher  # whether to use TACC launcher
-
-    parse_errors, run_options = parse_run_options(new_flow)
-    if len(parse_errors) > 0:
-        raise ValueError(f"Failed to parse run options: {' '.join(parse_errors)}")
-
-    # create working directory
-    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.resource.workdir, allow_stderr=True)
-
-    # upload flow config and job script
-    with ssh.client.open_sftp() as sftp:
-        sftp.chdir(work_dir)
-
-        # TODO refactor to allow multiple schedulers
-        sandbox = run.resource.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
-        template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
-        template_name = template.split('/')[-1]
-
-        # upload flow config file
-        with sftp.open('flow.yaml', 'w') as flow_file:
-            if launcher:
-                del new_flow['jobqueue']
-            yaml.dump(new_flow, flow_file, default_flow_style=False)
-
-        # compose and upload job script
-        with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
-            print(f"Uploading {template_name}")
-            for line in template_script:
-                script.write(line)
-
-            if not sandbox:
-                # we're on a SLURM cluster, so add resource requests
-                nodes = min(len(input_files), run.resource.max_nodes) if input_files is not None and not run.resource.job_array else 1
-                gpu = run.resource.gpu and ('gpu' in flow['config'] and flow['config']['gpu'])
-
-                if 'cores' in resources:
-                    cores = int(resources['cores'])
-                    script.write(f"#SBATCH --cpus-per-task={cores}\n")
-                if 'time' in resources:
-                    split_time = resources['time'].split(':')
-                    hours = int(split_time[0])
-                    minutes = int(split_time[1])
-                    seconds = int(split_time[2])
-                    time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-                    # calculated [requested walltime * input files / nodes]
-                    if input_files is not None:
-                        adjusted_time = time * (len(input_files) / nodes)
-                    else:
-                        adjusted_time = time
-                    hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.resource.max_nodes)}"
-                    if len(hours) == 1:
-                        hours = f"0{hours}"
-                    adjusted_time_str = f"{hours}:00:00"
-
-                    run.job_requested_walltime = adjusted_time_str
-                    run.save()
-                    msg = f"Using adjusted walltime {adjusted_time_str}"
-                    update_status(run, msg)
-                    logger.info(msg)
-
-                    script.write(f"#SBATCH --time={adjusted_time_str}\n")
-                if 'mem' in resources and (run.resource.header_skip is None or '--mem' not in str(run.resource.header_skip)):
-                    mem = resources['mem']
-                    script.write(f"#SBATCH --mem={resources['mem']}\n")
-                if run.resource.queue is not None and run.resource.queue != '':
-                    queue = run.resource.gpu_queue if gpu else run.resource.queue
-                    script.write(f"#SBATCH --partition={queue}\n")
-                if run.resource.project is not None and run.resource.project != '':
-                    script.write(f"#SBATCH -A {run.resource.project}\n")
-                if gpu:
-                    script.write(f"#SBATCH --gres=gpu:1\n")
-
-                if input_files is not None and run.resource.job_array:
-                    script.write(f"#SBATCH --array=1-{len(input_files)}\n")
-                if input_files is not None:
-                    script.write(f"#SBATCH -N {nodes}\n")
-                    script.write(f"#SBATCH --ntasks={nodes}\n")
-                else:
-                    script.write(f"#SBATCH -N 1\n")
-                    script.write("#SBATCH --ntasks=1\n")
-
-                script.write("#SBATCH --mail-type=END,FAIL\n")
-                script.write(f"#SBATCH --mail-user={run.user.email}\n")
-                script.write("#SBATCH --output=plantit.%j.out\n")
-                script.write("#SBATCH --error=plantit.%j.err\n")
-
-            # add precommands
-            script.write(run.resource.pre_commands + '\n')
-
-            # pull singularity container in advance
-            # script.write(f"singularity pull {run_options.image}\n")
-
-            # if we have inputs, add pull command
-            if 'input' in flow['config']:
-                input = flow['config']['input']
-                sftp.mkdir(join(run.resource.workdir, run.workdir, 'input'))
-
-                # allow for both spellings of JPG
-                patterns = [pattern.lower() for pattern in input['patterns']]
-                if 'jpg' in patterns and 'jpeg' not in patterns:
-                    patterns.append("jpeg")
-                elif 'jpeg' in patterns and 'jpg' not in patterns:
-                    patterns.append("jpg")
-
-                pull_commands = f"plantit terrain pull \"{input['from']}\"" \
-                                f" -p \"{join(run.resource.workdir, run.workdir, 'input')}\"" \
-                                f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
-                                f""f" --terrain_token {run.user.profile.cyverse_token}"
-
-                if run.resource.callbacks:
-                    pull_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
-                pull_commands += "\n"
-
-                logger.info(f"Using pull command: {pull_commands}")
-                script.write(pull_commands)
-
-            docker_username = environ.get('DOCKER_USERNAME', None)
-            docker_password = environ.get('DOCKER_PASSWORD', None)
-
-            # if this resource uses TACC's launcher, create a parameter sweep script to invoke Singularity
-            if launcher:
-                logger.info(f"Using TACC launcher")
-                with sftp.open('launch', 'w') as launcher_script:
-                    if flow['config']['input']['kind'] == 'files' and input_files is not None:
-                        for file in input_files:
-                            file_name = file.rpartition('/')[2]
-                            run_options.input = FileInput(file_name)
-                            command = prep_run_command(
-                                work_dir=run_options.workdir,
-                                image=run_options.image,
-                                command=run_options.command,
-                                parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                    Parameter(key='INPUT', value=join(run.resource.workdir, run.workdir, 'input', file_name))],
-                                bind_mounts=run_options.bind_mounts,
-                                docker_username=docker_username,
-                                docker_password=docker_password,
-                                no_cache=run_options.no_cache,
-                                gpu=run_options.gpu)
-                            launcher_script.write(f"{command}\n")
-                    elif flow['config']['input']['kind'] == 'directory':
-                        command = prep_run_command(
-                            work_dir=run_options.workdir,
-                            image=run_options.image,
-                            command=run_options.command,
-                            parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                Parameter(key='INPUT', value=join(run.resource.workdir, run.workdir, 'input'))],
-                            bind_mounts=run_options.bind_mounts,
-                            docker_username=docker_username,
-                            docker_password=docker_password,
-                            no_cache=run_options.no_cache,
-                            gpu=run_options.gpu)
-                        launcher_script.write(f"{command}\n")
-                    elif flow['config']['input']['kind'] == 'file':
-                        command = prep_run_command(
-                            work_dir=run_options.workdir,
-                            image=run_options.image,
-                            command=run_options.command,
-                            parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                Parameter(key='INPUT', value=new_flow['input']['file']['path'])],
-                            bind_mounts=run_options.bind_mounts,
-                            docker_username=docker_username,
-                            docker_password=docker_password,
-                            no_cache=run_options.no_cache,
-                            gpu=run_options.gpu)
-                        launcher_script.write(f"{command}\n")
-
-                script.write(f"export LAUNCHER_WORKDIR={join(run.resource.workdir, run.workdir)}\n")
-                script.write(f"export LAUNCHER_JOB_FILE=launch\n")
-                script.write("$LAUNCHER_DIR/paramrun\n")
-            # otherwise use the CLI
-            else:
-                run_commands = f"plantit run flow.yaml"
-                if run.resource.job_array and input_files is not None:
-                    run_commands += f" --slurm_job_array"
-
-                if docker_username is not None and docker_password is not None:
-                    run_commands += f" --docker_username {docker_username} --docker_password {docker_password}"
-
-                if run.resource.callbacks:
-                    run_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
-
-                run_commands += "\n"
-                logger.info(f"Using CLI run command: {run_commands}")
-                script.write(run_commands)
-
-            # add zip command
-            output = flow['config']['output']
-            zip_commands = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {run.guid}"
-            log_files = [f"{run.guid}.{run.resource.name.lower()}.log"]
-            zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
-            if 'include' in output:
-                if 'patterns' in output['include']:
-                    zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"
-                if 'names' in output['include']:
-                    zip_commands = f"{zip_commands} {' '.join(['--include_name ' + pattern for pattern in output['include']['names']])}"
-                if 'patterns' in output['exclude']:
-                    zip_commands = f"{zip_commands} {' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])}"
-                if 'names' in output['exclude']:
-                    zip_commands = f"{zip_commands} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
-            zip_commands += '\n'
-            script.write(zip_commands)
-            logger.info(f"Using zip command: {zip_commands}")
-
-            # add push command if we have a destination
-            # if 'to' in output and output['to'] is not None:
-            #     push_commands = f"plantit terrain push {output['to']}" \
-            #                     f" -p {join(run.work_dir, output['from'])}" \
-            #                     f" --plantit_url '{callback_url}'"
-
-            #     if 'include' in output:
-            #         if 'patterns' in output['include']:
-            #             push_commands = push_commands + ' '.join(
-            #                 ['--include_pattern ' + pattern for pattern in output['include']['patterns']])
-            #         if 'names' in output['include']:
-            #             push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
-            #         if 'patterns' in output['exclude']:
-            #             push_commands = push_commands + ' '.join(
-            #                 ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
-            #         if 'names' in output['exclude']:
-            #             push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
-
-            #     if run.resource.callbacks:
-            #         push_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
-
-            #     push_commands += '\n'
-            #     script.write(push_commands)
-            #     logger.info(f"Using push command: {push_commands}")
-
-
-@retry(
-    wait=wait_exponential(multiplier=1, min=4, max=10),
-    stop=stop_after_attempt(3),
-    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
-        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
-def __list_dir(path: str, token: str) -> List[str]:
-    with requests.get(
-            f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={path}",
-            headers={'Authorization': f"Bearer {token}"}) as response:
-        if response.status_code == 500 and response.json()['error_code'] == 'ERR_DOES_NOT_EXIST':
-            raise ValueError(f"Path {path} does not exist")
-
-        response.raise_for_status()
-        content = response.json()
-        files = content['files']
-        return [file['path'] for file in files]
-
-
-def __submit_run(flow, run: Run, ssh: SSH, file_count: int = None):
-    # TODO refactor to allow multiple schedulers
-    sandbox = run.resource.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
-    template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
-    template_name = template.split('/')[-1]
-
-    if run.is_sandbox:
-        execute_command(
-            ssh_client=ssh,
-            pre_command='; '.join(str(run.resource.pre_commands).splitlines()) if run.resource.pre_commands else ':',
-            command=f"chmod +x {template_name} && ./{template_name}",
-            directory=join(run.resource.workdir, run.workdir),
-            allow_stderr=True)
-
-        # get container logs
-        work_dir = join(run.resource.workdir, run.workdir)
-        ssh_client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
-        container_log_file = container_log_file_name(run)
-        container_log_path = container_log_file_path(run)
-
-        with ssh_client:
-            with ssh_client.client.open_sftp() as sftp:
-                cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
-                stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
-
-                if not stdout.read().decode().strip() == 'exists':
-                    container_logs = []
-                else:
-                    with open(container_log_file_path(run), 'a+') as log_file:
-                        sftp.chdir(work_dir)
-                        sftp.get(container_log_file, log_file.name)
-
-                    # obfuscate Docker auth info before returning logs to the user
-                    docker_username = environ.get('DOCKER_USERNAME', None)
-                    docker_password = environ.get('DOCKER_PASSWORD', None)
-                    for line in fileinput.input([container_log_path], inplace=True):
-                        if docker_username in line.strip():
-                            line = line.strip().replace(docker_username, '*' * 7, 1)
-                        if docker_password in line.strip():
-                            line = line.strip().replace(docker_password, '*' * 7)
-                        sys.stdout.write(line)
-    else:
-        command = f"sbatch {template_name}"
-        output_lines = execute_command(
-            ssh_client=ssh,
-            pre_command='; '.join(str(run.resource.pre_commands).splitlines()) if run.resource.pre_commands else ':',
-            # if the scheduler prohibits nested job submissions, we need to run the CLI from a login node
-            command=command,
-            directory=join(run.resource.workdir, run.workdir),
-            allow_stderr=True)
-        job_id = parse_job_id(output_lines[-1])
-        run.job_id = job_id
-        run.updated = timezone.now()
-        run.save()
 
 
 @app.task(track_started=True)
@@ -394,20 +63,20 @@ def submit_run(id: str, flow):
             logger.info(msg)
 
             if 'input' in flow['config'] and flow['config']['input']['kind'] == 'files':
-                input_files = __list_dir(flow['config']['input']['from'], run.user.profile.cyverse_token)
+                input_files = list_dir(flow['config']['input']['from'], run.user.profile.cyverse_token)
                 msg = f"Found {len(input_files)} input files"
                 update_status(run, msg)
                 logger.info(msg)
             else:
                 input_files = None
 
-            __upload_run(flow, run, ssh_client, input_files)
+            upload_run(flow, run, ssh_client, input_files)
 
             msg = 'Running script' if run.is_sandbox else 'Submitting script to scheduler'
             update_status(run, msg)
             logger.info(msg)
 
-            __submit_run(flow, run, ssh_client, len(input_files) if input_files is not None else None)
+            submit_run_via_ssh(flow, run, ssh_client, len(input_files) if input_files is not None else None)
 
             if run.is_sandbox:
                 run.job_status = 'SUCCESS'
@@ -806,3 +475,28 @@ def list_run_results(id: str):
     run.save()
 
     update_status(run, f"Created file previews")
+
+
+@app.task()
+def aggregate_usage_statistics(username: str):
+    try:
+        user = User.objects.get(username=username)
+    except:
+        logger.info(f"Could not find user {username}")
+        return
+
+    redis = RedisClient.get()
+    logger.info(f"Aggregating usage statistics for {username}")
+
+    completed_runs = list(Run.objects.filter(user__exact=user, completed__isnull=False))
+    total_runs = Run.objects.filter(user__exact=user).count()
+    total_time = sum([(run.completed - run.created) for run in completed_runs])
+    total_results = sum([len(run.results) for run in completed_runs])
+    redis.set(f"stats/{username}", json.dumps({
+        'total_runs': total_runs,
+        'total_time': total_time,
+        'total_results': total_results
+    }))
+
+    user.profile.stats_last_aggregated = timezone.now()
+    user.profile.save()
