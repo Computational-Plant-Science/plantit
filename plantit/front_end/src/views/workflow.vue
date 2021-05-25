@@ -535,7 +535,7 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Select a resource to submit this run
+                                            Select an agent to submit this run
                                             to.
                                         </b>
                                         <b-tabs
@@ -546,7 +546,7 @@
                                             active-nav-item-class="bg-secondary text-dark"
                                         >
                                             <b-tab
-                                                title="Your resources"
+                                                title="Your agents"
                                                 :title-link-class="
                                                     profile.darkMode
                                                         ? 'text-white'
@@ -560,16 +560,16 @@
                                             >
                                                 <b-row
                                                     class="text-right"
-                                                    v-for="resource in resources"
-                                                    v-bind:key="resource.name"
+                                                    v-for="agent in agents"
+                                                    v-bind:key="agent.name"
                                                 >
                                                     <b-col md="auto"
                                                         ><b-button
                                                             size="md"
                                                             class="text-left pt-2"
                                                             @click="
-                                                                resourceSelected(
-                                                                    resource
+                                                                agentSelected(
+                                                                    agent
                                                                 )
                                                             "
                                                             :variant="
@@ -578,68 +578,68 @@
                                                                     : 'white'
                                                             "
                                                             :disabled="
-                                                                resourceUnsupported(
-                                                                    resource
+                                                                agentUnsupported(
+                                                                    agent
                                                                 ) ||
-                                                                    resource.disabled
+                                                                    agent.disabled
                                                             "
                                                             >{{
-                                                                resource.name
+                                                                agent.name
                                                             }}</b-button
                                                         ></b-col
                                                     >
                                                     <b-col align-self="end">
                                                         <small
                                                             >{{
-                                                                resource.max_cores
+                                                                agent.max_cores
                                                             }}
                                                             cores,
                                                             {{
-                                                                resource.max_processes
+                                                                agent.max_processes
                                                             }}
                                                             processes, </small
                                                         ><span
                                                             v-if="
                                                                 parseInt(
-                                                                    resource.max_mem
+                                                                    agent.max_mem
                                                                 ) >=
                                                                     parseInt(
                                                                         getWorkflow
                                                                             .config
-                                                                            .resources
+                                                                            .agents
                                                                             .mem
                                                                     ) &&
                                                                     parseInt(
-                                                                        resource.max_mem
+                                                                        agent.max_mem
                                                                     ) > 0
                                                             "
                                                             >{{
-                                                                resource.max_mem
+                                                                agent.max_mem
                                                             }}
                                                             GB memory</span
                                                         >
                                                         <span
                                                             v-else-if="
                                                                 parseInt(
-                                                                    resource.max_mem
+                                                                    agent.max_mem
                                                                 ) > 0
                                                             "
                                                             class="text-danger"
                                                             >{{
-                                                                resource.max_mem
+                                                                agent.max_mem
                                                             }}
                                                             GB memory</span
                                                         >
                                                         <span
                                                             v-else-if="
                                                                 parseInt(
-                                                                    resource.max_mem
+                                                                    agent.max_mem
                                                                 ) === -1
                                                             "
                                                             >virtual
                                                             memory</span
                                                         ><span
-                                                            v-if="resource.gpu"
+                                                            v-if="agent.gpu"
                                                         >
                                                             , GPU
                                                         </span>
@@ -653,7 +653,7 @@
                                                     class="text-center"
                                                     v-if="
                                                         !publicResourcesLoading &&
-                                                            resources.length ===
+                                                            agents.length ===
                                                                 0
                                                     "
                                                 >
@@ -663,7 +663,7 @@
                                                 </b-row>
                                             </b-tab>
                                             <b-tab
-                                                title="Public resources"
+                                                title="Public agents"
                                                 :title-link-class="
                                                     profile.darkMode
                                                         ? 'text-white'
@@ -685,7 +685,7 @@
                                                             size="md"
                                                             class="text-left pt-2"
                                                             @click="
-                                                                resourceSelected(
+                                                                agentSelected(
                                                                     tgt
                                                                 )
                                                             "
@@ -695,7 +695,7 @@
                                                                     : 'white'
                                                             "
                                                             :disabled="
-                                                                resourceUnsupported(
+                                                                agentUnsupported(
                                                                     tgt
                                                                 ) ||
                                                                     tgt.disabled
@@ -765,7 +765,7 @@
                                                     align-h="center"
                                                     class="text-center"
                                                     v-if="
-                                                        !resourcesLoading &&
+                                                        !agentsLoading &&
                                                             publicResources.length ===
                                                                 0
                                                     "
@@ -778,7 +778,7 @@
                                         </b-tabs>
                                         <b-row
                                             align-h="center"
-                                            v-if="resourcesLoading"
+                                            v-if="agentsLoading"
                                         >
                                             <b-spinner
                                                 type="grow"
@@ -953,7 +953,7 @@
                             <b-row class="pt-1">
                                 <b-col align-self="end"
                                     >{{
-                                        `After ${task.interval.every} ${task.interval.period} on ${task.resource.name}`
+                                        `After ${task.interval.every} ${task.interval.period} on ${task.agent.name}`
                                     }}<br /><b-row
                                         ><b-col
                                             md="auto"
@@ -1015,7 +1015,7 @@
                             <b-row class="pt-1">
                                 <b-col
                                     >{{
-                                        `Every ${task.interval.every} ${task.interval.period} on ${task.resource.name}`
+                                        `Every ${task.interval.every} ${task.interval.period} on ${task.agent.name}`
                                     }}<br /><b-row
                                         ><b-col
                                             md="auto"
@@ -1073,7 +1073,7 @@
                                 size="sm"
                                 v-b-tooltip.hover
                                 title="Create Periodic Task"
-                                :disabled="resource.role !== 'own'"
+                                :disabled="agent.role !== 'own'"
                                 v-b-modal.createTask
                             >
                                 <i class="fas fa-plus fa-fw"></i>
@@ -1145,7 +1145,7 @@
                             >
                             <small> on </small>
                             <b-badge class="ml-0 mr-0" variant="secondary">{{
-                                run.resource
+                                run.agent
                             }}</b-badge
                             ><small
                                 v-if="run.job_status === 'Scheduled'"
@@ -1319,10 +1319,10 @@ export default {
             selectedResource: {
                 name: ''
             },
-            resources: [],
+            agents: [],
             publicResources: [],
-            resourcesLoading: false,
-            resourceFields: [
+            agentsLoading: false,
+            agentFields: [
                 {
                     key: 'name',
                     label: ''
@@ -1434,7 +1434,7 @@ export default {
                     } periodic run (every ${
                         response.data.interval.every
                     } ${response.data.interval.period.toLowerCase()} on ${
-                        response.data.resource.name
+                        response.data.agent.name
                     })`;
                     this.showStatusAlert = true;
                 })
@@ -1641,7 +1641,7 @@ export default {
                         : this.params;
                 this.input = flowConfig.input;
                 this.output = flowConfig.output;
-                this.selectedResource = flowConfig.resource;
+                this.selectedResource = flowConfig.agent;
             }
         },
         inputSelected(node) {
@@ -1650,28 +1650,28 @@ export default {
         outputSelected(node) {
             this.output.to = node.path;
         },
-        resourceSelected(resource) {
-            this.selectedResource = resource;
+        agentSelected(agent) {
+            this.selectedResource = agent;
         },
-        resourceUnsupported(resource) {
+        agentUnsupported(agent) {
             return (
-                (parseInt(resource.max_mem) !== -1 &&
-                    parseInt(resource.max_mem) <
+                (parseInt(agent.max_mem) !== -1 &&
+                    parseInt(agent.max_mem) <
                         parseInt(this.getWorkflow.config.resources.mem)) ||
-                parseInt(resource.max_cores) <
+                parseInt(agent.max_cores) <
                     parseInt(this.getWorkflow.config.resources.cores) ||
-                parseInt(resource.max_processes) <
+                parseInt(agent.max_processes) <
                     parseInt(this.getWorkflow.config.resources.processes)
             );
             // TODO walltime
         },
         async loadResources() {
-            this.resourcesLoading = true;
+            this.agentsLoading = true;
             return await axios
-                .get(`/apis/v1/resources/get_by_username/`)
+                .get(`/apis/v1/agents/get_by_username/`)
                 .then(response => {
-                    this.resources = response.data.resources;
-                    this.resourcesLoading = false;
+                    this.agents = response.data.agents;
+                    this.agentsLoading = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -1681,9 +1681,9 @@ export default {
         async loadPublicResources() {
             this.publicResourcesLoading = true;
             return await axios
-                .get(`/apis/v1/resources/get_all/`)
+                .get(`/apis/v1/agents/get_all/`)
                 .then(response => {
-                    this.publicResources = response.data.resources;
+                    this.publicResources = response.data.agents;
                     this.publicResourcesLoading = false;
                 })
                 .catch(error => {
@@ -1710,14 +1710,14 @@ export default {
             // prepare run definition
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
-            let resource = this.selectedResource;
+            let agent = this.selectedResource;
             if (this.getWorkflow.config.resources)
-                resource['resources'] = this.getWorkflow.config.resources;
+                agent['resources'] = this.getWorkflow.config.resources;
             let config = {
                 name: this.getWorkflow.config.name,
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
-                resource: resource,
+                agent: agent,
                 commands: this.getWorkflow.config.commands,
                 tags: this.tags
             };
@@ -1799,8 +1799,8 @@ export default {
                     .then(response => {
                         this.statusAlertMessage =
                             response.status === 200 && response.data.created
-                                ? `Scheduled run ${this.$router.currentRoute.params.name} on ${config.resource.name}`
-                                : `Failed to schedule run ${this.$router.currentRoute.params.name} on ${config.resource.name}`;
+                                ? `Scheduled run ${this.$router.currentRoute.params.name} on ${config.agent.name}`
+                                : `Failed to schedule run ${this.$router.currentRoute.params.name} on ${config.agent.name}`;
                         this.showStatusAlert = true;
                     })
                     .catch(error => {
@@ -1827,8 +1827,8 @@ export default {
                         this.loadRepeatingRuns();
                         this.statusAlertMessage =
                             response.status === 200 && response.data.created
-                                ? `Scheduled repeating run ${this.$router.currentRoute.params.name} on ${config.resource.name}`
-                                : `Failed to schedule repeating run ${this.$router.currentRoute.params.name} on ${config.resource.name}`;
+                                ? `Scheduled repeating run ${this.$router.currentRoute.params.name} on ${config.agent.name}`
+                                : `Failed to schedule repeating run ${this.$router.currentRoute.params.name} on ${config.agent.name}`;
                         this.showStatusAlert = true;
                     })
                     .catch(error => {

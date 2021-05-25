@@ -8,7 +8,7 @@ from django.urls import path
 from .auth.views import login_view, logout_view
 from .datasets.consumers import DatasetSessionConsumer
 from .miappe.views import *
-from .resources.views import ResourcesViewSet
+from .agents.views import AgentsViewSet
 from .users.views import UsersViewSet, IDPViewSet
 from .runs.consumers import RunConsumer
 from .notifications.consumers import NotificationConsumer
@@ -16,7 +16,7 @@ from .notifications.consumers import NotificationConsumer
 router = routers.DefaultRouter()
 router.register('users', UsersViewSet)
 router.register('idp', IDPViewSet, basename='idp')
-router.register('resources', ResourcesViewSet)
+router.register('agents', AgentsViewSet)
 router.register('miappe/investigations', InvestigationViewSet)
 router.register('miappe/studies', StudyViewSet)
 router.register('miappe/roles', RoleViewSet)

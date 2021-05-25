@@ -1,4 +1,9 @@
+import logging
+
 import requests
+from django.contrib.auth.models import User
+
+logger = logging.getLogger(__name__)
 
 
 def list_users(queryset, github_token):
@@ -31,9 +36,31 @@ def list_users(queryset, github_token):
     return users
 
 
-def get_user_stats(username: str):
-    return {
-        'most_used_cluster': 'Sapelo2',
-        'most_used_dataset': 'phenome_force_spg',
-        'most_frequent_collaborator': 'Suxing Liu'
-    }
+def get_cyverse_profile(user: User):
+    response = requests.get(
+        f"https://de.cyverse.org/terrain/secured/user-info?username={user.username}",
+        headers={'Authorization': f"Bearer {user.profile.cyverse_token}"})
+    if response.status_code == 401:
+        return 'expired token'
+    else:
+        content = response.json()
+        if user.username in content:
+            profile = response.json()[user.username]
+            user.first_name = profile['first_name']
+            user.last_name = profile['last_name']
+            user.save()
+            return profile
+        else:
+            logger.warning(f"User {user.username} has no CyVerse profile")
+            return None
+
+
+def get_github_profile(user: User):
+    response = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
+                                   headers={'Authorization':
+                                                f"Bearer {user.profile.github_token}"})
+    if response.status_code == 200:
+        return response.json()
+    else:
+        logger.warning(f"Bad response from GitHub for user {user.profile.github_username}: {response.status_code}")
+        return None

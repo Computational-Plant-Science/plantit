@@ -9,7 +9,7 @@ from django_celery_beat.models import PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
 
 
-class Resource(models.Model):
+class Agent(models.Model):
     name = models.CharField(max_length=20)
     description = models.TextField(blank=True)
     workdir = models.CharField(max_length=250)
@@ -49,25 +49,25 @@ class Resource(models.Model):
         return self.name
 
 
-class ResourceRole(Enum):
+class AgentRole(Enum):
     own = 'OWN'
     run = 'USE'
     none = 'NONE'
 
 
-class ResourceAccessPolicy(models.Model):
+class AgentAccessPolicy(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    resource = models.ForeignKey(Resource, null=True, blank=True, on_delete=models.CASCADE)
-    role = EnumChoiceField(ResourceRole, default=ResourceRole.run)
+    agent = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.CASCADE)
+    role = EnumChoiceField(AgentRole, default=AgentRole.run)
 
 
-class ResourceTask(PeriodicTask):
-    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
-    command = models.CharField(max_length=250, null=False, blank=False)
-
-
-class ResourceAccessRequest(models.Model):
+class AgentAccessRequest(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    resource = models.ForeignKey(Resource, null=True, blank=True, on_delete=models.CASCADE)
+    agent = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.CASCADE)
     created = models.DateTimeField(default=timezone.now)
     granted: bool = models.BooleanField(default=False)
+
+
+class AgentTask(PeriodicTask):
+    agent = models.ForeignKey(Agent, on_delete=models.CASCADE)
+    command = models.CharField(max_length=250, null=False, blank=False)

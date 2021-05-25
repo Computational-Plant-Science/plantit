@@ -9,7 +9,7 @@ from django.utils import timezone
 from django_celery_beat.models import PeriodicTask
 from taggit.managers import TaggableManager
 
-from plantit.resources.models import Resource
+from plantit.agents.models import Agent
 
 
 class Run(models.Model):
@@ -18,7 +18,7 @@ class Run(models.Model):
 
     guid = models.CharField(max_length=50, null=False, blank=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    resource = models.ForeignKey(Resource, null=True, blank=True, on_delete=models.SET_NULL)
+    agent = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.SET_NULL)
     workdir = models.CharField(max_length=100, null=True, blank=True)
     token = models.CharField(max_length=40)
     tags = TaggableManager()
@@ -49,7 +49,7 @@ class Run(models.Model):
 
     @property
     def is_sandbox(self):
-        return self.resource.name is not None and self.resource.name == 'Sandbox'
+        return self.agent.name is not None and self.agent.name == 'Sandbox'
 
     @property
     def is_success(self):
@@ -74,7 +74,7 @@ class Run(models.Model):
 
 class DelayedRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, null=True, blank=True)
+    resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)
@@ -82,7 +82,7 @@ class DelayedRunTask(PeriodicTask):
 
 class RepeatingRunTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, null=True, blank=True)
+    resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     eta = models.DateTimeField(null=False, blank=False)

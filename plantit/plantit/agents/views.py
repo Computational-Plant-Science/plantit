@@ -15,20 +15,20 @@ from rest_framework.permissions import IsAuthenticated
 from plantit.notifications.models import TargetPolicyNotification
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import execute_command
-from plantit.resources.models import Resource, ResourceAccessPolicy, ResourceTask, ResourceRole, ResourceAccessRequest
-from plantit.resources.serializers import ResourceSerializer
-from plantit.resources.utils import map_resource, map_resource_task
+from plantit.agents.models import Agent, AgentAccessPolicy, AgentTask, AgentRole, AgentAccessRequest
+from plantit.agents.serializers import AgentSerializer
+from plantit.agents.utils import map_agent, map_agent_task
 
 
-class ResourcesViewSet(viewsets.ModelViewSet):
-    queryset = Resource.objects.all()
-    serializer_class = ResourceSerializer
+class AgentsViewSet(viewsets.ModelViewSet):
+    queryset = Agent.objects.all()
+    serializer_class = AgentSerializer
     permission_classes = (IsAuthenticated,)
 
     @action(methods=['get'], detail=False)
     def get_all(self, request):
-        resources = list(Resource.objects.filter(public=True))
-        return JsonResponse({'resources': [map_resource(resource) for resource in resources]})
+        agents = list(Agent.objects.filter(public=True))
+        return JsonResponse({'agents': [map_agent(agent) for agent in agents]})
 
     @action(methods=['post'], detail=False)
     def new(self, request):
@@ -47,7 +47,7 @@ class ResourcesViewSet(viewsets.ModelViewSet):
                 allow_stderr=False)
 
         executor = str(request.data['config']['executor']).lower()
-        resource, created = Resource.objects.get_or_create(
+        agent, created = Agent.objects.get_or_create(
             name=request.data['config']['name'],
             description=request.data['config']['description'],
             workdir=request.data['config']['workdir'],
@@ -63,37 +63,37 @@ class ResourcesViewSet(viewsets.ModelViewSet):
             executor=executor)
 
         if created and executor != 'local':
-            resource.max_walltime = int(request.data['config']['max_walltime'])
-            resource.max_mem = int(request.data['config']['max_mem'])
-            resource.max_cores = int(request.data['config']['max_cores'])
-            resource.max_nodes = int(request.data['config']['max_nodes'])
-            resource.queue = request.data['config']['queue']
-            resource.project = request.data['config']['project']
-            resource.header_skip = request.data['config']['header_skip']
-            resource.gpu = bool(request.data['config']['gpu'])
-            resource.gpu_queue = request.data['config']['gpu_queue']
-            resource.job_array = bool(request.data['config']['job_array'])
-            resource.launcher = bool(request.data['config']['launcher'])
-            resource.save()
+            agent.max_walltime = int(request.data['config']['max_walltime'])
+            agent.max_mem = int(request.data['config']['max_mem'])
+            agent.max_cores = int(request.data['config']['max_cores'])
+            agent.max_nodes = int(request.data['config']['max_nodes'])
+            agent.queue = request.data['config']['queue']
+            agent.project = request.data['config']['project']
+            agent.header_skip = request.data['config']['header_skip']
+            agent.gpu = bool(request.data['config']['gpu'])
+            agent.gpu_queue = request.data['config']['gpu_queue']
+            agent.job_array = bool(request.data['config']['job_array'])
+            agent.launcher = bool(request.data['config']['launcher'])
+            agent.save()
 
-        return JsonResponse({'created': created, 'resource': map_resource(resource)})
+        return JsonResponse({'created': created, 'agent': map_agent(agent)})
 
     @action(methods=['get'], detail=False)
     def grant_access(self, request):
-        resource_name = request.GET.get('name', None)
+        agent_name = request.GET.get('name', None)
         user_name = request.GET.get('user', None)
 
-        if resource_name is None or user_name is None:
+        if agent_name is None or user_name is None:
             return HttpResponseNotFound()
 
         try:
-            resource = Resource.objects.get(name=resource_name)
+            agent = Agent.objects.get(name=agent_name)
             user = User.objects.get(username=user_name)
         except:
             return HttpResponseNotFound()
 
-        policy, created = ResourceAccessPolicy.objects.get_or_create(user=user, resource=resource, role=ResourceRole.run)
-        access_request = ResourceAccessRequest.objects.get(user=user, resource=resource)
+        policy, created = AgentAccessPolicy.objects.get_or_create(user=user, agent=agent, role=AgentRole.run)
+        access_request = AgentAccessRequest.objects.get(user=user, agent=agent)
         access_request.delete()
 
         notification = TargetPolicyNotification.objects.create(
@@ -101,7 +101,7 @@ class ResourcesViewSet(viewsets.ModelViewSet):
             user=user,
             created=timezone.now(),
             policy=policy,
-            message=f"You were granted access to {policy.resource.name}")
+            message=f"You were granted access to {policy.agent.name}")
         async_to_sync(get_channel_layer().group_send)(f"notifications-{user.username}", {
             'type': 'push_notification',
             'notification': {
@@ -121,16 +121,16 @@ class ResourcesViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def revoke_access(self, request):
-        resource_name = request.GET.get('name', None)
+        agent = request.GET.get('name', None)
         user_name = request.GET.get('user', None)
 
-        if resource_name is None or user_name is None:
+        if agent is None or user_name is None:
             return HttpResponseNotFound()
 
         try:
-            resource = Resource.objects.get(name=resource_name)
+            agent = Agent.objects.get(name=agent)
             user = User.objects.get(username=user_name)
-            policy = ResourceAccessPolicy.objects.get(user=user, resource=resource)
+            policy = AgentAccessPolicy.objects.get(user=user, agent=agent)
         except:
             return HttpResponseNotFound()
 
@@ -139,7 +139,7 @@ class ResourcesViewSet(viewsets.ModelViewSet):
             user=user,
             created=timezone.now(),
             policy=policy,
-            message=f"Your access to {policy.resource.name} was revoked")
+            message=f"Your access to {policy.agent.name} was revoked")
         async_to_sync(get_channel_layer().group_send)(f"notifications-{user.username}", {
             'type': 'push_notification',
             'notification': {
@@ -160,79 +160,79 @@ class ResourcesViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def request_access(self, request):
-        resource_name = request.GET.get('name', None)
-        if resource_name is None:
+        agent_name = request.GET.get('name', None)
+        if agent_name is None:
             return HttpResponseNotFound()
 
         try:
-            resource = Resource.objects.get(name=resource_name)
+            agent = Agent.objects.get(name=agent_name)
         except:
             return HttpResponseNotFound()
 
-        _, created = ResourceAccessRequest.objects.get_or_create(user=request.user, resource=resource)
+        _, created = AgentAccessRequest.objects.get_or_create(user=request.user, agent=agent)
         return JsonResponse({
             'created': created
         })
 
     @action(methods=['get'], detail=False)
     def toggle_public(self, request):
-        resource_name = request.GET.get('name', None)
-        if resource_name is None:
+        agent_name = request.GET.get('name', None)
+        if agent_name is None:
             return HttpResponseNotFound()
 
         try:
-            resource = Resource.objects.get(name=resource_name)
+            agent = Agent.objects.get(name=agent_name)
         except:
             return HttpResponseNotFound()
 
-        resource.public = not resource.public
-        resource.save()
+        agent.public = not agent.public
+        agent.save()
 
-        return JsonResponse({'public': resource.public})
+        return JsonResponse({'public': agent.public})
 
     @action(methods=['get'], detail=False)
     def get_by_name(self, request):
-        resource_name = request.GET.get('name')
+        agent_name = request.GET.get('name')
 
         try:
-            resource = Resource.objects.get(name=resource_name)
+            agent = Agent.objects.get(name=agent_name)
         except:
             return HttpResponseNotFound()
 
         user = request.user
-        policies = ResourceAccessPolicy.objects.filter(resource=resource)
+        policies = AgentAccessPolicy.objects.filter(agent=agent)
 
         try:
-            access_requests = ResourceAccessRequest.objects.filter(resource=resource)
+            access_requests = AgentAccessRequest.objects.filter(agent=agent)
         except:
             access_requests = None
 
-        if resource not in [policy.resource for policy in policies]:
-            return JsonResponse(map_resource(resource, ResourceRole.none, None, access_requests))
+        if agent not in [policy.agent for policy in policies]:
+            return JsonResponse(map_agent(agent, AgentRole.none, None, access_requests))
 
         try:
-            role = ResourceAccessPolicy.objects.get(user=user, resource=resource).role
+            role = AgentAccessPolicy.objects.get(user=user, agent=agent).role
         except:
-            role = ResourceRole.none
-        return JsonResponse(map_resource(resource, role, list(policies), access_requests))
+            role = AgentRole.none
+        return JsonResponse(map_agent(agent, role, list(policies), access_requests))
 
     @action(methods=['get'], detail=False)
     def status(self, request):
-        name = request.GET.get('name')
+        agent_name = request.GET.get('name')
 
         try:
-            resource = Resource.objects.get(name=name)
+            agent = Agent.objects.get(name=agent_name)
         except:
             return HttpResponseNotFound()
 
         try:
-            ssh = SSH(resource.hostname, resource.port, resource.username)
+            ssh = SSH(agent.hostname, agent.port, agent.username)
             with ssh:
                 lines = execute_command(
                     ssh_client=ssh,
                     pre_command=':',
                     command=f"pwd",
-                    directory=resource.workdir)
+                    directory=agent.workdir)
                 print(lines)
                 return JsonResponse({'healthy': True})
         except:
@@ -240,29 +240,29 @@ class ResourcesViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def get_users(self, request):
-        name = request.GET.get('name')
+        agent_name = request.GET.get('name')
 
         try:
-            resource = Resource.objects.get(name=name)
+            agent = Agent.objects.get(name=agent_name)
         except:
             return HttpResponseNotFound()
 
-        policies = ResourceAccessPolicy.objects.filter(resource=resource)
+        policies = AgentAccessPolicy.objects.filter(agent=agent)
         JsonResponse({'policies': list(policies)})
 
     @action(methods=['get'], detail=False)
     def get_by_username(self, request):
         user = request.user
-        policies = ResourceAccessPolicy.objects.filter(user=user, role__in=[ResourceRole.own, ResourceRole.run])
-        resources = [map_resource(resource, policy.role, list(policies)) for resource, policy in
-                     zip([policy.resource for policy in policies], policies) if policy.role != ResourceRole.none]
-        return JsonResponse({'resources': resources})
+        policies = AgentAccessPolicy.objects.filter(user=user, role__in=[AgentRole.own, AgentRole.run])
+        agents = [map_agent(agent, policy.role, list(policies)) for agent, policy in
+                     zip([policy.agent for policy in policies], policies) if policy.role != AgentRole.none]
+        return JsonResponse({'agents': agents})
 
     @action(methods=['post'], detail=False)
     def create_task(self, request):
         try:
-            resource_name = request.data['resource']
-            resource = Resource.objects.get(name=resource_name)
+            agent_name = request.data['agent']
+            agent = Agent.objects.get(name=agent_name)
         except:
             return HttpResponseNotFound()
 
@@ -277,17 +277,17 @@ class ResourcesViewSet(viewsets.ModelViewSet):
             day_of_week=task_delay[2],
             day_of_month=task_delay[3],
             month_of_year=task_delay[4])
-        task, created = ResourceTask.objects.get_or_create(
+        task, created = AgentTask.objects.get_or_create(
             crontab=schedule,
-            resource=resource,
+            agent=agent,
             name=task_name,
             command=task_command,
             description=task_description,
             task='plantit.runs.tasks.run_command',
-            args=json.dumps([resource.name, task_command]))
+            args=json.dumps([agent.name, task_command]))
 
         return JsonResponse({
-            'task': map_resource_task(task),
+            'task': map_agent_task(task),
             'created': created
         })
 

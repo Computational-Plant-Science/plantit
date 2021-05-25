@@ -1,15 +1,15 @@
 from django.contrib import admin
 
-from plantit.resources.models import Resource, ResourceAccessPolicy
+from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
 
 
-@admin.register(Resource)
+@admin.register(Agent)
 class ResourceAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(ResourceAccessPolicy)
+@admin.register(AgentAccessPolicy)
 class ResourceAccessPolicyAdmin(admin.ModelAdmin):
     pass
 

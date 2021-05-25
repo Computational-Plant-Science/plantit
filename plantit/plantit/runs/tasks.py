@@ -20,7 +20,7 @@ from plantit.celery import app
 from plantit.datasets.models import DatasetSession
 from plantit.datasets.utils import update_dataset_session
 from plantit.redis import RedisClient
-from plantit.resources.models import Resource
+from plantit.agents.models import Agent
 from plantit.runs.models import Run
 from plantit.runs.ssh import SSH
 from plantit.runs.utils import update_status, execute_command, remove_logs, create_run, \
@@ -32,8 +32,8 @@ logger = get_task_logger(__name__)
 
 
 @app.task(track_started=True)
-def create_and_submit_run(username: str, resource_name: str, flow: dict):
-    run = create_run(username, resource_name, flow)
+def create_and_submit_run(username: str, agent: str, flow: dict):
+    run = create_run(username, agent, flow)
     submit_run.s(run.guid, flow).apply_async()
 
 
@@ -44,7 +44,7 @@ def submit_run(id: str, flow):
     run.submission_id = submit_run.request.id  # set this task's ID on the run so user can cancel it
     run.save()
 
-    msg = f"Deploying run {run.guid} to {run.resource.name}"
+    msg = f"Deploying run {run.guid} to {run.agent.name}"
     update_status(run, msg)
     logger.info(msg)
 
@@ -53,12 +53,12 @@ def submit_run(id: str, flow):
             msg = f"Authenticating with username {flow['auth']['username']}"
             update_status(run, msg)
             logger.info(msg)
-            ssh_client = SSH(run.resource.hostname, run.resource.port, flow['auth']['username'], flow['auth']['password'])
+            ssh_client = SSH(run.agent.hostname, run.agent.port, flow['auth']['username'], flow['auth']['password'])
         else:
-            ssh_client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+            ssh_client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
 
         with ssh_client:
-            msg = f"Creating working directory {join(run.resource.workdir, run.guid)} and uploading workflow configuration"
+            msg = f"Creating working directory {join(run.agent.workdir, run.guid)} and uploading workflow configuration"
             update_status(run, msg)
             logger.info(msg)
 
@@ -115,7 +115,7 @@ def poll_run_status(id: str):
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
     cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES')) * 60
 
-    logger.info(f"Checking {run.resource.name} scheduler status for run {id} (SLURM job {run.job_id})")
+    logger.info(f"Checking {run.agent.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
     # if the job already failed, schedule cleanup
     if run.job_status == 'FAILURE':
@@ -138,8 +138,8 @@ def poll_run_status(id: str):
         run.save()
 
         # get container logs
-        work_dir = join(run.resource.workdir, run.workdir)
-        ssh_client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+        work_dir = join(run.agent.workdir, run.workdir)
+        ssh_client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
         container_log_file = container_log_file_name(run)
         container_log_path = container_log_file_path(run)
 
@@ -221,16 +221,16 @@ def cleanup_run(id: str):
         logger.info(f"Could not find run {id} (might have been deleted?)")
         return
 
-    logger.info(f"Cleaning up run {id} local working directory {run.resource.workdir}")
-    remove_logs(run.guid, run.resource.name)
-    logger.info(f"Cleaning up run {id} remote working directory {run.resource.workdir}")
-    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    logger.info(f"Cleaning up run {id} local working directory {run.agent.workdir}")
+    remove_logs(run.guid, run.agent.name)
+    logger.info(f"Cleaning up run {id} remote working directory {run.agent.workdir}")
+    ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
     with ssh:
         execute_command(
             ssh_client=ssh,
-            pre_command=run.resource.pre_commands,
-            command=f"rm -r {join(run.resource.workdir, run.workdir)}",
-            directory=run.resource.workdir,
+            pre_command=run.agent.pre_commands,
+            command=f"rm -r {join(run.agent.workdir, run.workdir)}",
+            directory=run.agent.workdir,
             allow_stderr=True)
 
     run.cleaned_up = True
@@ -241,28 +241,28 @@ def cleanup_run(id: str):
 
 
 @app.task()
-def clean_singularity_cache(resource_name: str):
-    resource = Resource.objects.get(name=resource_name)
-    ssh = SSH(resource.hostname, resource.port, resource.username)
+def clean_singularity_cache(agent_name: str):
+    agent = Agent.objects.get(name=agent_name)
+    ssh = SSH(agent.hostname, agent.port, agent.username)
     with ssh:
         execute_command(
             ssh_client=ssh,
-            pre_command=resource.pre_commands,
+            pre_command=agent.pre_commands,
             command="singularity cache clean",
-            directory=resource.workdir,
+            directory=agent.workdir,
             allow_stderr=True)
 
 
 @app.task()
-def run_command(resource_name: str, command: str, pre_command: str = None):
-    resource = Resource.objects.get(name=resource_name)
-    ssh = SSH(resource.hostname, resource.port, resource.username)
+def run_command(agent_name: str, command: str, pre_command: str = None):
+    agent = Agent.objects.get(name=agent_name)
+    ssh = SSH(agent.hostname, agent.port, agent.username)
     with ssh:
         lines = execute_command(
             ssh_client=ssh,
-            pre_command=resource.pre_commands + '' if pre_command is None else f"&& {pre_command}",
+            pre_command=agent.pre_commands + '' if pre_command is None else f"&& {pre_command}",
             command=command,
-            directory=resource.workdir,
+            directory=agent.workdir,
             allow_stderr=True)
 
 
@@ -270,7 +270,7 @@ def run_command(resource_name: str, command: str, pre_command: str = None):
 def open_dataset_session(id: str):
     try:
         session = DatasetSession.objects.get(guid=id)
-        ssh = SSH(session.resource.hostname, session.resource.port, session.resource.username)
+        ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
 
         with ssh:
             msg = f"Creating working directory {session.workdir}"
@@ -281,16 +281,16 @@ def open_dataset_session(id: str):
                 ssh_client=ssh,
                 pre_command=':',
                 command=f"mkdir {session.guid}/",
-                directory=session.resource.workdir)
+                directory=session.agent.workdir)
 
-            msg = f"Transferring files from {session.path} to {session.resource.name}"
+            msg = f"Transferring files from {session.path} to {session.agent.name}"
             update_dataset_session(session, [msg])
             logger.info(msg)
 
             command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_token}\n"
             lines = execute_command(
                 ssh_client=ssh,
-                pre_command=session.resource.pre_commands,
+                pre_command=session.agent.pre_commands,
                 command=command,
                 directory=session.workdir,
                 allow_stderr=True)
@@ -311,14 +311,14 @@ def save_dataset_session(id: str, only_modified: bool):
     try:
         session = DatasetSession.objects.get(guid=id)
 
-        msg = f"Saving dataset session {session.guid} on {session.resource.name}"
+        msg = f"Saving dataset session {session.guid} on {session.agent.name}"
         update_dataset_session(session, [msg])
         logger.info(msg)
 
-        ssh = SSH(session.resource.hostname, session.resource.port, session.resource.username)
+        ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
 
         with ssh:
-            msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.resource.name} to {session.path}"
+            msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.agent.name} to {session.path}"
             update_dataset_session(session, [msg])
             logger.info(msg)
 
@@ -328,7 +328,7 @@ def save_dataset_session(id: str, only_modified: bool):
 
             lines = execute_command(
                 ssh_client=ssh,
-                pre_command=session.resource.pre_commands,
+                pre_command=session.agent.pre_commands,
                 command=command,
                 directory=session.workdir,
                 allow_stderr=True)
@@ -352,7 +352,7 @@ def list_run_results(id: str):
         return
 
     redis = RedisClient.get()
-    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
     previews = PreviewManager(join(settings.MEDIA_ROOT, run.guid), create_folder=True)
     workflow = redis.get(f"workflow/{run.workflow_owner}/{run.workflow_name}")
 
@@ -362,7 +362,7 @@ def list_run_results(id: str):
         workflow = json.loads(workflow)['config']
 
     results = get_run_results(run, workflow)
-    workdir = join(run.resource.workdir, run.workdir)
+    workdir = join(run.agent.workdir, run.workdir)
     redis.set(f"results/{run.guid}", json.dumps(results))
     update_status(run, f"Found {len(results)} result files")
     print(f"Found {len(results)} result files")
@@ -500,3 +500,8 @@ def aggregate_usage_statistics(username: str):
 
     user.profile.stats_last_aggregated = timezone.now()
     user.profile.save()
+
+    async_to_sync(get_channel_layer().group_send)(f"users-{user.username}", {
+        'type': 'update_status',
+        'run': map_user(user),
+    })

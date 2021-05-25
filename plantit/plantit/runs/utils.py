@@ -28,8 +28,8 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 from plantit import settings
 from plantit.options import FileInput, Parameter
 from plantit.redis import RedisClient
-from plantit.resources.models import Resource, ResourceAccessPolicy, ResourceRole
-from plantit.resources.utils import map_resource
+from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole
+from plantit.agents.utils import map_agent
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
 from plantit.runs.ssh import SSH
 from plantit.utils import get_repo_config, parse_run_options, prep_run_command
@@ -89,11 +89,11 @@ def stat_logs(id: str):
     return datetime.fromtimestamp(log_path.stat().st_mtime) if log_path.is_file() else None
 
 
-def remove_logs(id: str, cluster: str):
+def remove_logs(id: str, agent: str):
     local_log_path = join(environ.get('RUNS_LOGS'), f"{id}.plantit.log")
-    # cluster_log_path = join(environ.get('RUNS_LOGS'), f"{id}.{cluster.lower()}.log")
+    # agent_log_path = join(environ.get('RUNS_LOGS'), f"{id}.{agent.lower()}.log")
     os.remove(local_log_path)
-    # os.remove(cluster_log_path)
+    # os.remove(agent_log_path)
 
 
 def format_workflows(response, token):
@@ -135,10 +135,10 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
         'image': old_config['config']['image'],
         'command': old_config['config']['commands'],
         'workdir': old_config['config']['workdir'],
-        'log_file': f"{run.guid}.{run.resource.name.lower()}.log"
+        'log_file': f"{run.guid}.{run.agent.name.lower()}.log"
     }
 
-    del old_config['config']['cluster']
+    del old_config['config']['agent']
 
     if 'mount' in old_config['config']:
         new_config['bind_mounts'] = old_config['config']['mount']
@@ -174,20 +174,20 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
         new_config['input'] = dict()
         if input_kind == 'directory':
             new_config['input']['directory'] = dict()
-            new_config['input']['directory']['path'] = join(run.resource.workdir, run.workdir, 'input')
+            new_config['input']['directory']['path'] = join(run.agent.workdir, run.workdir, 'input')
             new_config['input']['directory']['patterns'] = old_config['config']['input']['patterns']
         elif input_kind == 'files':
             new_config['input']['files'] = dict()
-            new_config['input']['files']['path'] = join(run.resource.workdir, run.workdir, 'input')
+            new_config['input']['files']['path'] = join(run.agent.workdir, run.workdir, 'input')
             new_config['input']['files']['patterns'] = old_config['config']['input']['patterns']
         elif input_kind == 'file':
             new_config['input']['file'] = dict()
-            new_config['input']['file']['path'] = join(run.resource.workdir, run.workdir, 'input',
+            new_config['input']['file']['path'] = join(run.agent.workdir, run.workdir, 'input',
                                                        old_config['config']['input']['from'].rpartition('/')[2])
 
-    sandbox = run.resource.name == 'Sandbox'
-    work_dir = join(run.resource.workdir, run.workdir)
-    if not sandbox and not run.resource.job_array:
+    sandbox = run.agent.name == 'Sandbox'
+    work_dir = join(run.agent.workdir, run.workdir)
+    if not sandbox and not run.agent.job_array:
         new_config['jobqueue'] = dict()
         new_config['jobqueue']['slurm'] = {
             'cores': resources['cores'],
@@ -195,26 +195,26 @@ def map_old_workflow_config_to_new(old_config: dict, run: Run, resources: dict):
             'walltime': resources['time'],
             'local_directory': work_dir,
             'log_directory': work_dir,
-            'env_extra': [run.resource.pre_commands]
+            'env_extra': [run.agent.pre_commands]
         }
 
         if 'mem' in resources:
             new_config['jobqueue']['slurm']['memory'] = resources['mem']
-        if run.resource.queue is not None and run.resource.queue != '':
-            new_config['jobqueue']['slurm']['queue'] = run.resource.queue
-        if run.resource.project is not None and run.resource.project != '':
-            new_config['jobqueue']['slurm']['project'] = run.resource.project
-        if run.resource.header_skip is not None and run.resource.header_skip != '':
-            new_config['jobqueue']['slurm']['header_skip'] = run.resource.header_skip.split(',')
+        if run.agent.queue is not None and run.agent.queue != '':
+            new_config['jobqueue']['slurm']['queue'] = run.agent.queue
+        if run.agent.project is not None and run.agent.project != '':
+            new_config['jobqueue']['slurm']['project'] = run.agent.project
+        if run.agent.header_skip is not None and run.agent.header_skip != '':
+            new_config['jobqueue']['slurm']['header_skip'] = run.agent.header_skip.split(',')
 
         if 'gpu' in old_config['config'] and old_config['config']['gpu']:
-            if run.resource.gpu:
-                print(f"Using GPU on {run.resource.name} queue '{run.resource.gpu_queue}'")
+            if run.agent.gpu:
+                print(f"Using GPU on {run.agent.name} queue '{run.agent.gpu_queue}'")
                 new_config['gpu'] = True
                 new_config['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:1"]
-                new_config['jobqueue']['slurm']['queue'] = run.resource.gpu_queue
+                new_config['jobqueue']['slurm']['queue'] = run.agent.gpu_queue
             else:
-                print(f"No GPU support on {run.resource.name}")
+                print(f"No GPU support on {run.agent.name}")
 
     return new_config
 
@@ -258,7 +258,7 @@ def map_run(run: Run):
         submission_logs = []
 
     try:
-        ResourceAccessPolicy.objects.get(user=run.user, cluster=run.resource, role__in=[ResourceRole.own, ResourceRole.run])
+        AgentAccessPolicy.objects.get(user=run.user, agent=run.agent, role__in=[AgentRole.own, AgentRole.run])
         can_restart = True
     except:
         can_restart = False
@@ -273,7 +273,7 @@ def map_run(run: Run):
         'job_walltime': run.job_elapsed_walltime,
         'work_dir': run.workdir,
         'submission_logs': submission_logs,
-        'cluster': run.resource.name,
+        'agent': run.agent.name,
         'created': run.created.isoformat(),
         'updated': run.updated.isoformat(),
         'completed': run.completed.isoformat() if run.completed is not None else None,
@@ -297,20 +297,20 @@ def submission_log_file_path(run: Run):
 
 
 def container_log_file_name(run: Run):
-    if run.resource.launcher:
+    if run.agent.launcher:
         return f"plantit.{run.job_id}.out"
     else:
-        return f"{run.guid}.{run.resource.name.lower()}.log"
+        return f"{run.guid}.{run.agent.name.lower()}.log"
 
 
 def container_log_file_path(run: Run):
     return join(os.environ.get('RUNS_LOGS'), container_log_file_name(run))
 
 
-def create_run(username: str, cluster_name: str, workflow: dict) -> Run:
+def create_run(username: str, agent_name: str, workflow: dict) -> Run:
     now = timezone.now()
     user = User.objects.get(username=username)
-    cluster = Resource.objects.get(name=cluster_name)
+    agent = Agent.objects.get(name=agent_name)
     workflow_owner = workflow['repo']['owner']['login']
     workflow_name = workflow['repo']['name']
     workflow_config = get_repo_config(workflow_name, workflow_owner, user.profile.github_token)
@@ -319,7 +319,7 @@ def create_run(username: str, cluster_name: str, workflow: dict) -> Run:
         user=user,
         workflow_owner=workflow_owner,
         workflow_name=workflow_name,
-        cluster=cluster,
+        agent=agent,
         job_status='CREATED',
         created=now,
         updated=now,
@@ -367,7 +367,7 @@ def parse_eta(data: dict) -> (datetime, int):
 
 def map_delayed_run_task(task: DelayedRunTask):
     return {
-        'cluster': map_resource(task.resource),
+        'agent': map_agent(task.agent),
         'name': task.name,
         'eta': task.eta,
         'interval': {
@@ -380,7 +380,7 @@ def map_delayed_run_task(task: DelayedRunTask):
 
 def map_repeating_run_task(task: RepeatingRunTask):
     return {
-        'cluster': map_resource(task.resource),
+        'agent': map_agent(task.agent),
         'name': task.name,
         'eta': task.eta,
         'interval': {
@@ -396,16 +396,16 @@ def get_run_results(run: Run, workflow: dict):
     included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
         'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
     included_by_name.append(f"{run.guid}.zip")  # zip file
-    if not run.resource.launcher:
-        included_by_name.append(f"{run.guid}.{run.resource.name.lower()}.log")
+    if not run.agent.launcher:
+        included_by_name.append(f"{run.guid}.{run.agent.name.lower()}.log")
     if run.job_id is not None and run.job_id != '':
         included_by_name.append(f"plantit.{run.job_id}.out")
         included_by_name.append(f"plantit.{run.job_id}.err")
     included_by_pattern = (
         workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
 
-    client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
-    work_dir = join(run.resource.workdir, run.workdir)
+    client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
+    work_dir = join(run.agent.workdir, run.workdir)
     outputs = []
     seen = []
 
@@ -435,13 +435,13 @@ def get_run_results(run: Run, workflow: dict):
 
 
 def get_job_walltime(run: Run) -> (str, str):
-    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
     with ssh:
         lines = execute_command(
             ssh_client=ssh,
             pre_command=":",
-            command=f"squeue --user={run.resource.username}",
-            directory=join(run.resource.workdir, run.workdir),
+            command=f"squeue --user={run.agent.username}",
+            directory=join(run.agent.workdir, run.workdir),
             allow_stderr=True)
 
         try:
@@ -454,13 +454,13 @@ def get_job_walltime(run: Run) -> (str, str):
 
 
 def get_job_status(run: Run) -> str:
-    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
     with ssh:
         lines = execute_command(
             ssh_client=ssh,
             pre_command=':',
             command=f"sacct -j {run.job_id}",
-            directory=join(run.resource.workdir, run.workdir),
+            directory=join(run.agent.workdir, run.workdir),
             allow_stderr=True)
 
         job_line = next(l for l in lines if run.job_id in l)
@@ -471,13 +471,13 @@ def get_job_status(run: Run) -> str:
 
 
 def cancel_run(run: Run):
-    ssh = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+    ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
     with ssh:
         if run.job_id is None or not any([run.job_id in r for r in execute_command(
                 ssh_client=ssh,
                 pre_command=':',
-                command=f"squeue -u {run.resource.username}",
-                directory=join(run.resource.workdir, run.workdir))]):
+                command=f"squeue -u {run.agent.username}",
+                directory=join(run.agent.workdir, run.workdir))]):
             # run doesn't exist, so no need to cancel
             return
 
@@ -485,26 +485,26 @@ def cancel_run(run: Run):
             ssh_client=ssh,
             pre_command=':',
             command=f"scancel {run.job_id}",
-            directory=join(run.resource.workdir, run.workdir))
+            directory=join(run.agent.workdir, run.workdir))
 
 
 def submit_run_via_ssh(flow, run: Run, ssh: SSH, file_count: int = None):
     # TODO refactor to allow multiple schedulers
-    sandbox = run.resource.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
+    sandbox = run.agent.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
     template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
     template_name = template.split('/')[-1]
 
     if run.is_sandbox:
         execute_command(
             ssh_client=ssh,
-            pre_command='; '.join(str(run.resource.pre_commands).splitlines()) if run.resource.pre_commands else ':',
+            pre_command='; '.join(str(run.agent.pre_commands).splitlines()) if run.agent.pre_commands else ':',
             command=f"chmod +x {template_name} && ./{template_name}",
-            directory=join(run.resource.workdir, run.workdir),
+            directory=join(run.agent.workdir, run.workdir),
             allow_stderr=True)
 
         # get container logs
-        work_dir = join(run.resource.workdir, run.workdir)
-        ssh_client = SSH(run.resource.hostname, run.resource.port, run.resource.username)
+        work_dir = join(run.agent.workdir, run.workdir)
+        ssh_client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
         container_log_file = container_log_file_name(run)
         container_log_path = container_log_file_path(run)
 
@@ -533,10 +533,10 @@ def submit_run_via_ssh(flow, run: Run, ssh: SSH, file_count: int = None):
         command = f"sbatch {template_name}"
         output_lines = execute_command(
             ssh_client=ssh,
-            pre_command='; '.join(str(run.resource.pre_commands).splitlines()) if run.resource.pre_commands else ':',
+            pre_command='; '.join(str(run.agent.pre_commands).splitlines()) if run.agent.pre_commands else ':',
             # if the scheduler prohibits nested job submissions, we need to run the CLI from a login node
             command=command,
-            directory=join(run.resource.workdir, run.workdir),
+            directory=join(run.agent.workdir, run.workdir),
             allow_stderr=True)
         job_id = parse_job_id(output_lines[-1])
         run.job_id = job_id
@@ -563,40 +563,40 @@ def list_dir(path: str, token: str) -> List[str]:
         return [file['path'] for file in files]
 
 
-def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
+def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None):
     # update flow config before uploading
-    flow['config']['workdir'] = join(run.resource.workdir, run.guid)
-    flow['config']['log_file'] = f"{run.guid}.{run.resource.name.lower()}.log"
-    if 'output' in flow['config'] and 'from' in flow['config']['output']:
-        if flow['config']['output']['from'] is not None and flow['config']['output']['from'] != '':
-            flow['config']['output']['from'] = join(run.resource.workdir, run.workdir, flow['config']['output']['from'])
+    workflow['config']['workdir'] = join(run.agent.workdir, run.guid)
+    workflow['config']['log_file'] = f"{run.guid}.{run.agent.name.lower()}.log"
+    if 'output' in workflow['config'] and 'from' in workflow['config']['output']:
+        if workflow['config']['output']['from'] is not None and workflow['config']['output']['from'] != '':
+            workflow['config']['output']['from'] = join(run.agent.workdir, run.workdir, workflow['config']['output']['from'])
 
     # if flow has outputs, make sure we don't push configuration or job scripts
-    if 'output' in flow['config']:
-        flow['config']['output']['exclude']['names'] = [
+    if 'output' in workflow['config']:
+        workflow['config']['output']['exclude']['names'] = [
             "flow.yaml",
             "template_local_run.sh",
             "template_slurm_run.sh"]
 
-    resources = None if 'resources' not in flow['config']['resource'] else flow['config']['resource']['resources']
+    resources = None if 'resources' not in workflow['config']['agent'] else workflow['config']['agent']['resources']
     callback_url = settings.API_URL + 'runs/' + run.guid + '/status/'
-    work_dir = join(run.resource.workdir, run.workdir)
-    new_flow = map_old_workflow_config_to_new(flow, run, resources)  # TODO update flow UI page
-    launcher = run.resource.launcher  # whether to use TACC launcher
+    work_dir = join(run.agent.workdir, run.workdir)
+    new_flow = map_old_workflow_config_to_new(workflow, run, resources)  # TODO update flow UI page
+    launcher = run.agent.launcher  # whether to use TACC launcher
 
     parse_errors, run_options = parse_run_options(new_flow)
     if len(parse_errors) > 0:
         raise ValueError(f"Failed to parse run options: {' '.join(parse_errors)}")
 
     # create working directory
-    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.resource.workdir, allow_stderr=True)
+    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.agent.workdir, allow_stderr=True)
 
     # upload flow config and job script
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
 
         # TODO refactor to allow multiple schedulers
-        sandbox = run.resource.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
+        sandbox = run.agent.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
         template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
         template_name = template.split('/')[-1]
 
@@ -614,8 +614,8 @@ def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
 
             if not sandbox:
                 # we're on a SLURM cluster, so add resource requests
-                nodes = min(len(input_files), run.resource.max_nodes) if input_files is not None and not run.resource.job_array else 1
-                gpu = run.resource.gpu and ('gpu' in flow['config'] and flow['config']['gpu'])
+                nodes = min(len(input_files), run.agent.max_nodes) if input_files is not None and not run.agent.job_array else 1
+                gpu = run.agent.gpu and ('gpu' in workflow['config'] and workflow['config']['gpu'])
 
                 if 'cores' in resources:
                     cores = int(resources['cores'])
@@ -631,7 +631,7 @@ def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                         adjusted_time = time * (len(input_files) / nodes)
                     else:
                         adjusted_time = time
-                    hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.resource.max_nodes)}"
+                    hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.agent.max_nodes)}"
                     if len(hours) == 1:
                         hours = f"0{hours}"
                     adjusted_time_str = f"{hours}:00:00"
@@ -643,18 +643,18 @@ def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                     logger.info(msg)
 
                     script.write(f"#SBATCH --time={adjusted_time_str}\n")
-                if 'mem' in resources and (run.resource.header_skip is None or '--mem' not in str(run.resource.header_skip)):
+                if 'mem' in resources and (run.agent.header_skip is None or '--mem' not in str(run.agent.header_skip)):
                     mem = resources['mem']
                     script.write(f"#SBATCH --mem={resources['mem']}\n")
-                if run.resource.queue is not None and run.resource.queue != '':
-                    queue = run.resource.gpu_queue if gpu else run.resource.queue
+                if run.agent.queue is not None and run.agent.queue != '':
+                    queue = run.agent.gpu_queue if gpu else run.agent.queue
                     script.write(f"#SBATCH --partition={queue}\n")
-                if run.resource.project is not None and run.resource.project != '':
-                    script.write(f"#SBATCH -A {run.resource.project}\n")
+                if run.agent.project is not None and run.agent.project != '':
+                    script.write(f"#SBATCH -A {run.agent.project}\n")
                 if gpu:
                     script.write(f"#SBATCH --gres=gpu:1\n")
 
-                if input_files is not None and run.resource.job_array:
+                if input_files is not None and run.agent.job_array:
                     script.write(f"#SBATCH --array=1-{len(input_files)}\n")
                 if input_files is not None:
                     script.write(f"#SBATCH -N {nodes}\n")
@@ -669,15 +669,15 @@ def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 script.write("#SBATCH --error=plantit.%j.err\n")
 
             # add precommands
-            script.write(run.resource.pre_commands + '\n')
+            script.write(run.agent.pre_commands + '\n')
 
             # pull singularity container in advance
             # script.write(f"singularity pull {run_options.image}\n")
 
             # if we have inputs, add pull command
-            if 'input' in flow['config']:
-                input = flow['config']['input']
-                sftp.mkdir(join(run.resource.workdir, run.workdir, 'input'))
+            if 'input' in workflow['config']:
+                input = workflow['config']['input']
+                sftp.mkdir(join(run.agent.workdir, run.workdir, 'input'))
 
                 # allow for both spellings of JPG
                 patterns = [pattern.lower() for pattern in input['patterns']]
@@ -687,11 +687,11 @@ def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                     patterns.append("jpg")
 
                 pull_commands = f"plantit terrain pull \"{input['from']}\"" \
-                                f" -p \"{join(run.resource.workdir, run.workdir, 'input')}\"" \
+                                f" -p \"{join(run.agent.workdir, run.workdir, 'input')}\"" \
                                 f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
                                 f""f" --terrain_token {run.user.profile.cyverse_token}"
 
-                if run.resource.callbacks:
+                if run.agent.callbacks:
                     pull_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
                 pull_commands += "\n"
 
@@ -705,7 +705,7 @@ def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
             if launcher:
                 logger.info(f"Using TACC launcher")
                 with sftp.open('launch', 'w') as launcher_script:
-                    if flow['config']['input']['kind'] == 'files' and input_files is not None:
+                    if workflow['config']['input']['kind'] == 'files' and input_files is not None:
                         for file in input_files:
                             file_name = file.rpartition('/')[2]
                             run_options.input = FileInput(file_name)
@@ -714,27 +714,27 @@ def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                                 image=run_options.image,
                                 command=run_options.command,
                                 parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                    Parameter(key='INPUT', value=join(run.resource.workdir, run.workdir, 'input', file_name))],
+                                    Parameter(key='INPUT', value=join(run.agent.workdir, run.workdir, 'input', file_name))],
                                 bind_mounts=run_options.bind_mounts,
                                 docker_username=docker_username,
                                 docker_password=docker_password,
                                 no_cache=run_options.no_cache,
                                 gpu=run_options.gpu)
                             launcher_script.write(f"{command}\n")
-                    elif flow['config']['input']['kind'] == 'directory':
+                    elif workflow['config']['input']['kind'] == 'directory':
                         command = prep_run_command(
                             work_dir=run_options.workdir,
                             image=run_options.image,
                             command=run_options.command,
                             parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                Parameter(key='INPUT', value=join(run.resource.workdir, run.workdir, 'input'))],
+                                Parameter(key='INPUT', value=join(run.agent.workdir, run.workdir, 'input'))],
                             bind_mounts=run_options.bind_mounts,
                             docker_username=docker_username,
                             docker_password=docker_password,
                             no_cache=run_options.no_cache,
                             gpu=run_options.gpu)
                         launcher_script.write(f"{command}\n")
-                    elif flow['config']['input']['kind'] == 'file':
+                    elif workflow['config']['input']['kind'] == 'file':
                         command = prep_run_command(
                             work_dir=run_options.workdir,
                             image=run_options.image,
@@ -748,19 +748,19 @@ def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                             gpu=run_options.gpu)
                         launcher_script.write(f"{command}\n")
 
-                script.write(f"export LAUNCHER_WORKDIR={join(run.resource.workdir, run.workdir)}\n")
+                script.write(f"export LAUNCHER_WORKDIR={join(run.agent.workdir, run.workdir)}\n")
                 script.write(f"export LAUNCHER_JOB_FILE=launch\n")
                 script.write("$LAUNCHER_DIR/paramrun\n")
             # otherwise use the CLI
             else:
                 run_commands = f"plantit run flow.yaml"
-                if run.resource.job_array and input_files is not None:
+                if run.agent.job_array and input_files is not None:
                     run_commands += f" --slurm_job_array"
 
                 if docker_username is not None and docker_password is not None:
                     run_commands += f" --docker_username {docker_username} --docker_password {docker_password}"
 
-                if run.resource.callbacks:
+                if run.agent.callbacks:
                     run_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
 
                 run_commands += "\n"
@@ -768,9 +768,9 @@ def upload_run(flow, run: Run, ssh: SSH, input_files: List[str] = None):
                 script.write(run_commands)
 
             # add zip command
-            output = flow['config']['output']
+            output = workflow['config']['output']
             zip_commands = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {run.guid}"
-            log_files = [f"{run.guid}.{run.resource.name.lower()}.log"]
+            log_files = [f"{run.guid}.{run.agent.name.lower()}.log"]
             zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
             if 'include' in output:
                 if 'patterns' in output['include']:

@@ -36,6 +36,7 @@
                         </h1></b-col
                     ></b-row
                 >
+                <hr class="mt-2 mb-2" style="border-color: gray" />
                 <b-row align-v="center" class="mt-3"
                     ><b-col>
                         <b-tabs
@@ -73,25 +74,52 @@
                                         </h2></b-col
                                     ></b-row
                                 >
-                                <br />
+                                <hr
+                                    class="mt-2 mb-2"
+                                    style="border-color: gray"/>
                                 <b-row align-v="start" class="mb-2">
                                     <b-col md="auto">
-                                        <h5>Right now</h5>
+                                        <h5
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Usage right now
+                                        </h5>
                                         <b>{{ runningRuns.length }}</b>
                                         running workflows
                                         <br />
                                         <b>{{ unreadNotifications.length }}</b>
                                         unread notifications
                                         <div v-if="profile.stats !== null">
-                                            <hr />
-                                            <h5>Cumulative use</h5>
-                                            <b>{{ profile.stats.total_runs }}</b>
+                                            <hr
+                                                class="mt-2 mb-2"
+                                                style="border-color: gray"
+                                            />
+                                            <h5
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                            >
+                                                Cumulative usage
+                                            </h5>
+                                            <b>{{
+                                                profile.stats.total_runs
+                                            }}</b>
                                             workflows run
                                             <br />
-                                            <b>{{ profile.stats.total_time }}</b>
+                                            <b>{{
+                                                profile.stats.total_time
+                                            }}</b>
                                             working minutes
                                             <br />
-                                            <b>{{ profile.stats.total_results }}</b>
+                                            <b>{{
+                                                profile.stats.total_results
+                                            }}</b>
                                             results produced
                                             <!--<hr />
                                             <h5>Most used</h5>
@@ -104,8 +132,17 @@
                                             <b>{{
                                                 stats.most_frequent_collaborator
                                             }}</b>-->
-                                            <hr />
-                                            <h5>
+                                            <hr
+                                                class="mt-2 mb-2"
+                                                style="border-color: gray"
+                                            />
+                                            <h5
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                            >
                                                 Usage in the past<b-dropdown
                                                     class="ml-2 p-0"
                                                     size="sm"
@@ -249,6 +286,10 @@
                                         </h2></b-col
                                     ></b-row
                                 >
+                                <hr
+                                    class="mt-2 mb-2"
+                                    style="border-color: gray"
+                                />
                                 <b-tabs
                                     nav-class="bg-transparent"
                                     active-nav-item-class="bg-secondary text-dark"
@@ -301,7 +342,7 @@
                                                     select="directory"
                                                     :upload="true"
                                                     :download="true"
-                                                    :resources="resources"
+                                                    :agents="agents"
                                                     :class="
                                                         profile.darkMode
                                                             ? 'theme-dark'
@@ -355,7 +396,7 @@
                                                 <datatree
                                                     :node="sharedDatasets"
                                                     select="directory"
-                                                    :resources="resources"
+                                                    :agents="agents"
                                                     :upload="true"
                                                     :download="true"
                                                     :class="
@@ -487,7 +528,7 @@
                                     >
                                 </template>
                                 <b-row
-                                    ><b-col
+                                    ><b-col md="auto"
                                         ><h2
                                             :class="
                                                 profile.darkMode
@@ -497,7 +538,7 @@
                                         >
                                             Your Workflows
                                         </h2></b-col
-                                    ><b-col md="auto"
+                                    ><b-col class="ml-0" align-self="middle"
                                         ><b-button
                                             :disabled="workflowsLoading"
                                             :variant="
@@ -505,13 +546,12 @@
                                                     ? 'outline-light'
                                                     : 'white'
                                             "
-                                            size="sm"
+                                            size="md"
                                             v-b-tooltip.hover
                                             title="Refresh"
                                             @click="refreshWorkflows"
+                                            class="ml-0 mt-0"
                                         >
-                                            <i class="fas fa-redo"></i>
-                                            Refresh
                                             <b-spinner
                                                 small
                                                 v-if="workflowsLoading"
@@ -521,9 +561,20 @@
                                                         ? 'light'
                                                         : 'dark'
                                                 "
-                                                class="ml-2 mb-1"
-                                            ></b-spinner> </b-button></b-col
-                                ></b-row>
+                                                class="mr-1"
+                                            ></b-spinner
+                                            ><i
+                                                v-else
+                                                class="fas fa-redo mr-1"
+                                            ></i
+                                            >Refresh</b-button
+                                        ></b-col
+                                    ></b-row
+                                >
+                                <hr
+                                    class="mt-2 mb-2"
+                                    style="border-color: gray"
+                                />
                                 <b-row
                                     v-if="profile.githubProfile === null"
                                     align-v="center"
@@ -546,8 +597,6 @@
                                     </b-col>
                                 </b-row>
                                 <b-row
-                                    align-v="center"
-                                    align-h="center"
                                     v-if="
                                         userWorkflows.length === 0 &&
                                             !workflowsLoading
@@ -597,7 +646,7 @@
                                                 ? 'text-white'
                                                 : 'text-dark'
                                         "
-                                        >Resources</b
+                                        >Agents</b
                                     >
                                 </template>
                                 <b-row
@@ -609,12 +658,16 @@
                                                     : 'text-dark'
                                             "
                                         >
-                                            Your Resources
+                                            Your Agents
                                         </h2></b-col
                                     ></b-row
                                 >
+                                <hr
+                                    class="mt-2 mb-2"
+                                    style="border-color: gray"
+                                />
                                 <div>
-                                    <b-row v-if="resourcesLoading">
+                                    <b-row v-if="agentsLoading">
                                         <b-spinner
                                             type="grow"
                                             label="Loading..."
@@ -630,11 +683,11 @@
                                                         ? 'text-light'
                                                         : 'text-dark'
                                                 "
-                                                to="/resources"
+                                                to="/agents"
                                                 ><i
                                                     class="fas fa-server fa-1x fa-fw"
                                                 ></i>
-                                                Resources</b-link
+                                                Agents</b-link
                                             >
                                             to request guest access to public
                                             servers, clusters, or
@@ -645,36 +698,35 @@
                                                         ? 'text-light'
                                                         : 'text-dark'
                                                 "
-                                                @click="showAddResourceModal"
+                                                @click="showConnectAgentModal"
                                                 ><i
                                                     class="fas fa-plus fa-1x fa-fw"
                                                 ></i>
-                                                connect a new resource</b-link
+                                                connect a new agent</b-link
                                             >.
                                             <br />
                                             <b
                                                 class="text-danger"
                                                 v-if="
-                                                    !resourcesLoading &&
-                                                        resources.length === 0
+                                                    !agentsLoading &&
+                                                        agents.length === 0
                                                 "
-                                                >You don't have access to any
-                                                computing resources yet.</b
+                                                >You don't have access to any agents yet.</b
                                             >
                                         </b-col>
                                     </b-row>
                                     <b-card-group
                                         v-if="
-                                            !resourcesLoading &&
-                                                resources.length !== 0
+                                            !agentsLoading &&
+                                                agents.length !== 0
                                         "
                                         deck
                                         columns
                                         class="justify-content-center mt-3"
                                     >
                                         <b-card
-                                            v-for="resource in resources"
-                                            v-bind:key="resource.name"
+                                            v-for="agent in agents"
+                                            v-bind:key="agent.name"
                                             :bg-variant="
                                                 profile.darkMode
                                                     ? 'dark'
@@ -711,16 +763,16 @@
                                                             variant="outline-dark"
                                                             v-b-tooltip.hover
                                                             @click="
-                                                                resourceSelected(
-                                                                    resource
+                                                                agentSelected(
+                                                                    agent
                                                                 )
                                                             "
                                                         >
-                                                            {{ resource.name }}
+                                                            {{ agent.name }}
                                                         </b-link>
                                                     </h2>
                                                     <b-badge
-                                                        v-if="!resource.public"
+                                                        v-if="!agent.public"
                                                         class="mr-1"
                                                         variant="info"
                                                         ><i
@@ -740,7 +792,7 @@
                                                     <b-badge
                                                         variant="warning"
                                                         >{{
-                                                            resource.role ===
+                                                            agent.role ===
                                                             'own'
                                                                 ? 'Owner'
                                                                 : 'Guest'
@@ -750,7 +802,7 @@
                                                     <br />
                                                     <small>
                                                         {{
-                                                            resource.description
+                                                            agent.description
                                                         }}
                                                     </small>
                                                     <br />
@@ -758,12 +810,12 @@
                                                 <b-col cols="1"></b-col>
                                             </b-row>
                                             <b-img
-                                                v-if="resource.logo"
+                                                v-if="agent.logo"
                                                 rounded
                                                 class="card-img-right overflow-hidden"
                                                 style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                                 right
-                                                :src="resource.logo"
+                                                :src="agent.logo"
                                             ></b-img>
                                             <i
                                                 v-else
@@ -802,6 +854,10 @@
                                         </h2></b-col
                                     ></b-row
                                 >
+                                <hr
+                                    class="mt-2 mb-2"
+                                    style="border-color: gray"
+                                />
                                 <b-tabs
                                     nav-class="bg-transparent"
                                     active-nav-item-class="bg-secondary text-dark"
@@ -822,12 +878,8 @@
                                         <template #title>
                                             <b>Running</b>
                                         </template>
-                                        <b-row
-                                            class="m-3 mb-1 pl-0 pr-0"
-                                            align-v="center"
-                                            ><b-col
-                                                class="m-0 pl-0 pr-0 text-center"
-                                            >
+                                        <b-row class="m-3 mb-1 pl-0 pr-0"
+                                            ><b-col class="m-0 pl-0 pr-0">
                                                 <b-list-group
                                                     v-if="
                                                         runningRuns.length > 0
@@ -940,7 +992,7 @@
                                                             class="ml-0 mr-0"
                                                             variant="secondary"
                                                             >{{
-                                                                run.resource
+                                                                run.agent
                                                             }}</b-badge
                                                         ><small>
                                                             {{
@@ -980,8 +1032,8 @@
                                                 <p
                                                     :class="
                                                         profile.darkMode
-                                                            ? 'text-center text-light pl-3 pr-3'
-                                                            : 'text-center text-dark pl-3 pr-3'
+                                                            ? 'text-light'
+                                                            : 'text-dark'
                                                     "
                                                     v-if="
                                                         runningRuns.length === 0
@@ -1149,7 +1201,7 @@
                                                                     class="ml-0 mr-0"
                                                                     variant="secondary"
                                                                     >{{
-                                                                        run.resource
+                                                                        run.agent
                                                                     }}</b-badge
                                                                 ><small>
                                                                     {{
@@ -1228,13 +1280,13 @@
                                                         completedRuns.length ===
                                                             0
                                                 "
-                                                class="m-0 pl-0 pr-0 text-center"
+                                                class="m-0 pl-0 pr-0"
                                             >
                                                 <p
                                                     :class="
                                                         profile.darkMode
-                                                            ? 'text-center text-light pl-3 pr-3'
-                                                            : 'text-center text-dark pl-3 pr-3'
+                                                            ? 'text-light'
+                                                            : 'text-dark'
                                                     "
                                                 >
                                                     You haven't run any
@@ -1294,6 +1346,10 @@
                                         </h2></b-col
                                     ></b-row
                                 >
+                                <hr
+                                    class="mt-2 mb-2"
+                                    style="border-color: gray"
+                                />
                                 <b-row align-v="start" class="mb-2">
                                     <b-col md="auto">
                                         <div>
@@ -1494,6 +1550,10 @@
                                         </h2></b-col
                                     ></b-row
                                 >
+                                <hr
+                                    class="mt-2 mb-2"
+                                    style="border-color: gray"
+                                />
                                 <b-row class="m-1">
                                     <b-col align-self="center" cols="3"
                                         ><i
@@ -1570,7 +1630,7 @@
                 </b-row>
             </div>
             <b-modal
-                id="newResource"
+                id="newAgent"
                 :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
                 centered
                 close
@@ -1581,18 +1641,18 @@
                 :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
                 :header-border-variant="profile.darkMode ? 'dark' : 'white'"
                 :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                title="Connect a new computing resource"
-                @ok="addResource"
-                :ok-disabled="newResourceInvalid"
+                title="Connect a new agent"
+                @ok="connectAgent"
+                :ok-disabled="agentInvalid"
                 ok-title="Connect"
             >
                 <b-form-group
                     label="Name"
-                    description="A name for this resource."
+                    description="A name for this agent."
                 >
                     <b-form-input
-                        :state="newResourceName !== ''"
-                        v-model="newResourceName"
+                        :state="agentName !== ''"
+                        v-model="agentName"
                         type="text"
                         placeholder="Enter a name"
                         required
@@ -1600,11 +1660,11 @@
                 </b-form-group>
                 <b-form-group
                     label="Host"
-                    description="This resource's FQDN or IP address."
+                    description="This agent's FQDN or IP address."
                 >
                     <b-form-input
-                        :state="newResourceHost !== ''"
-                        v-model="newResourceHost"
+                        :state="agentHost !== ''"
+                        v-model="agentHost"
                         type="text"
                         placeholder="Enter a host or IP address"
                         required
@@ -1612,11 +1672,11 @@
                 </b-form-group>
                 <b-form-group
                     label="Description"
-                    description="A plain-text description of this resource."
+                    description="A plain-text description of this agent."
                 >
                     <b-form-textarea
-                        :state="newResourceDescription !== ''"
-                        v-model="newResourceDescription"
+                        :state="agentDescription !== ''"
+                        v-model="agentDescription"
                         placeholder="Enter a description"
                         required
                     ></b-form-textarea>
@@ -1626,8 +1686,8 @@
                     description="Working directory within which to run user workflows."
                 >
                     <b-form-input
-                        :state="newResourceWorkdir !== ''"
-                        v-model="newResourceWorkdir"
+                        :state="agentWorkdir !== ''"
+                        v-model="agentWorkdir"
                         type="text"
                         placeholder="Enter a directory path"
                         required
@@ -1638,7 +1698,7 @@
                     description="Commands to run before user commands (e.g., loading modules, setting environment variables). Frequently useful but not required."
                 >
                     <b-form-textarea
-                        v-model="newResourcePrecommands"
+                        v-model="agentPrecommands"
                         type="text"
                         rows="3"
                         placeholder="Enter commands"
@@ -1649,7 +1709,7 @@
                     label="Max time"
                     description="Maximum runtime permitted before the workflow is aborted."
                     ><b-form-spinbutton
-                        v-model="newResourceMaxTime"
+                        v-model="agentMaxTime"
                         min="1"
                         max="1440"
                     ></b-form-spinbutton
@@ -1659,21 +1719,21 @@
                     description="Select an executor to orchestrate workflows."
                 >
                     <b-form-select
-                        v-model="newResourceExecutor"
-                        :options="newResourceExecutorOptions"
+                        v-model="agentExecutor"
+                        :options="agentExecutorOptions"
                         type="text"
                         placeholder="Select an executor"
                         required
                     ></b-form-select>
                     <b-form-checkbox
-                        v-if="isJobQueue(newResourceExecutor)"
-                        v-model="newResourceJobArray"
+                        v-if="isJobQueue(agentExecutor)"
+                        v-model="agentJobArray"
                     >
                         Enable job arrays
                     </b-form-checkbox>
                     <b-form-checkbox
-                        v-if="isSLURM(newResourceExecutor)"
-                        v-model="newResourceLauncher"
+                        v-if="isSLURM(agentExecutor)"
+                        v-model="agentLauncher"
                     >
                         Enable TACC launcher parameter sweep utility (for
                         Dask-incompatible hosts)
@@ -1702,30 +1762,30 @@ export default {
     data: function() {
         return {
             statsScope: 'Hour',
-            newResourceName: '',
-            newResourceHost: '',
-            newResourceDescription: '',
-            newResourceWorkdir: '',
-            newResourcePrecommands: '',
-            newResourceMaxTime: 0,
-            newResourceExecutor: 'Local',
-            newResourceExecutorOptions: [
+            agentName: '',
+            agentHost: '',
+            agentDescription: '',
+            agentWorkdir: '',
+            agentPrecommands: '',
+            agentMaxTime: 0,
+            agentExecutor: 'Local',
+            agentExecutorOptions: [
                 { value: 'Local', text: 'Local' },
                 { value: 'SLURM', text: 'SLURM' },
                 { value: 'PBS', text: 'PBS' }
             ],
-            newResourceQueue: '',
-            newResourceProject: '',
-            newResourceMaxWalltime: 0,
-            newResourceMaxMem: 0,
-            newResourceMaxCores: 0,
-            newResourceMaxProcesses: 0,
-            newResourceMaxNodes: 0,
-            newResourceHeaderSkip: '',
-            newResourceLauncher: false,
-            newResourceJobArray: false,
-            newResourcePublic: false,
-            newResourceLogo: '',
+            agentQueue: '',
+            agentProject: '',
+            agentMaxWalltime: 0,
+            agentMaxMem: 0,
+            agentMaxCores: 0,
+            agentMaxProcesses: 0,
+            agentMaxNodes: 0,
+            agentHeaderSkip: '',
+            agentLauncher: false,
+            agentJobArray: false,
+            agentPublic: false,
+            agentLogo: '',
             togglingPushNotifications: false,
             togglingDarkMode: false,
             currentTab: 0,
@@ -1735,8 +1795,8 @@ export default {
             directoryPolicyNodes: [],
             data: {},
             loadingMoreRuns: false,
-            resources: [],
-            resourcesLoading: false,
+            agents: [],
+            agentsLoading: false,
             alertEnabled: false,
             alertMessage: '',
             runSearchText: '',
@@ -1790,22 +1850,22 @@ export default {
                     r.tags.some(t => t.includes(this.runSearchText))
             );
         },
-        newResourceInvalid() {
+        agentInvalid() {
             return (
-                this.newResourceName === '' ||
-                this.newResourceDescription === '' ||
-                this.newResourceHost === '' ||
-                this.newResourceWorkdir === '' ||
-                this.newResourcePrecommands === '' ||
-                this.newResourceExecutor === '' ||
-                (this.newResourceExecutor !== 'Local' &&
-                    (this.newResourceQueue === '' ||
-                        this.newResourceProject === '' ||
-                        this.newResourceMaxWalltime <= 0 ||
-                        this.newResourceMaxProcesses <= 0 ||
-                        this.newResourceMaxCores <= 0 ||
-                        this.newResourceMaxNodes <= 0 ||
-                        this.newResourceMaxMem <= 0))
+                this.agentName === '' ||
+                this.agentDescription === '' ||
+                this.agentHost === '' ||
+                this.agentWorkdir === '' ||
+                this.agentPrecommands === '' ||
+                this.agentExecutor === '' ||
+                (this.agentExecutor !== 'Local' &&
+                    (this.agentQueue === '' ||
+                        this.agentProject === '' ||
+                        this.agentMaxWalltime <= 0 ||
+                        this.agentMaxProcesses <= 0 ||
+                        this.agentMaxCores <= 0 ||
+                        this.agentMaxNodes <= 0 ||
+                        this.agentMaxMem <= 0))
             );
         }
     },
@@ -1841,9 +1901,9 @@ export default {
                 `/iplant/home/${this.profile.djangoProfile.username}/`,
                 this.profile.djangoProfile.cyverse_token
             ),
-            this.loadResources(),
+            this.loadAgents(),
             this.loadSharedDatasets(),
-            this.loadSharingDatasets(),
+            this.loadSharingDatasets()
         ]);
     },
     methods: {
@@ -1898,32 +1958,32 @@ export default {
                     return error;
                 });
         },
-        showAddResourceModal() {
-            this.$bvModal.show('newResource');
+        showConnectAgentModal() {
+            this.$bvModal.show('newAgent');
         },
-        async addResource() {
+        async connectAgent() {
             let data = {
                 auth: {
                     username: this.authenticationUsername,
                     password: this.authenticationPassword
                 },
                 config: {
-                    name: this.newResourceName,
-                    description: this.newResourceDescription,
-                    workdir: this.newResourceWorkdir,
+                    name: this.agentName,
+                    description: this.agentDescription,
+                    workdir: this.agentWorkdir,
                     username: this.profile.djangoProfile.username,
-                    hostname: this.newResourceHost,
-                    pre_commands: this.newResourcePrecommands,
-                    max_time: this.newResourceMaxTime,
-                    public: this.newResourcePublic,
-                    logo: this.newResourceLogo,
-                    executor: this.newResourceExecutor
+                    hostname: this.agentHost,
+                    pre_commands: this.agentPrecommands,
+                    max_time: this.agentMaxTime,
+                    public: this.agentPublic,
+                    logo: this.agentLogo,
+                    executor: this.agentExecutor
                 }
             };
 
             await axios({
                 method: 'post',
-                url: `/apis/v1/resources/new/`,
+                url: `/apis/v1/agents/new/`,
                 data: data,
                 headers: { 'Content-Type': 'application/json' }
             })
@@ -1949,7 +2009,7 @@ export default {
         },
         openDataset() {
             this.$store.dispatch('datasets/updateLoading', true);
-            let data = { resource: this.resource.name };
+            let data = { agent: this.agent.name };
             // if (this.mustAuthenticate)
             //     data['auth'] = {
             //         username: this.authenticationUsername,
@@ -2067,11 +2127,11 @@ export default {
             //         throw error;
             //     });
         },
-        resourceSelected: function(resource) {
+        agentSelected: function(agent) {
             router.push({
-                name: 'resource',
+                name: 'agent',
                 params: {
-                    name: resource.name
+                    name: agent.name
                 }
             });
         },
@@ -2098,17 +2158,17 @@ export default {
                 }
             });
         },
-        async loadResources() {
-            this.resourcesLoading = true;
+        async loadAgents() {
+            this.agentsLoading = true;
             return axios
-                .get(`/apis/v1/resources/get_by_username/`)
+                .get(`/apis/v1/agents/get_by_username/`)
                 .then(response => {
-                    this.resourcesLoading = false;
-                    this.resources = response.data.resources;
+                    this.agentsLoading = false;
+                    this.agents = response.data.agents;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.resourcesLoading = false;
+                    this.agentsLoading = false;
                     if (error.response.status === 500) throw error;
                 });
         },

@@ -9,7 +9,7 @@
                 :border-variant="profile.darkMode ? 'default' : 'default'"
                 :text-variant="profile.darkMode ? 'dark' : 'white'"
                 :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.9"
+                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.95"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -19,7 +19,7 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h2
+                        <h1
                             :class="
                                 profile.darkMode ? 'text-white' : 'text-dark'
                             "
@@ -27,10 +27,10 @@
                         >
                             plant<small
                                 class="mb-3 text-success"
-                                style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
                                 >IT</small
                             >
-                        </h2>
+                        </h1>
                     </b-col>
                 </b-row>
                 <b-navbar toggleable="sm" class="m-0 p-0">

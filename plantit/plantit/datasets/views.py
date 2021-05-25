@@ -19,7 +19,7 @@ import czifile
 import cv2
 
 from plantit import settings
-from plantit.resources.models import Resource, ResourceAccessPolicy, ResourceRole
+from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole
 from plantit.notifications.models import DirectoryPolicyNotification
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole, DatasetSession
 from plantit.datasets.utils import map_dataset_policy, map_dataset_session, update_dataset_session
@@ -174,14 +174,14 @@ def open_session(request):
         pass
 
     try:
-        resource_name = request.data['resource']
-        resource = Resource.objects.get(name=resource_name)
+        agent_name = request.data['agent']
+        agent = Agent.objects.get(name=agent_name)
     except:
         return HttpResponseNotFound()
 
-    policies = ResourceAccessPolicy.objects.filter(user=user, role__in=[ResourceRole.own, ResourceRole.run])
+    policies = AgentAccessPolicy.objects.filter(user=user, role__in=[AgentRole.own, AgentRole.run])
     if len(policies) > 0:  # user already has guest or admin permissions
-        ssh_client = SSH(resource.hostname, resource.port, resource.username)
+        ssh_client = SSH(agent.hostname, agent.port, agent.username)
     else:  # authenticating manually
         if 'auth' not in request.data:
             return HttpResponseBadRequest(f"User not authorized; you must provide authentication information")
@@ -194,12 +194,12 @@ def open_session(request):
         guid=guid,
         user=user,
         path=path,
-        resource=resource,
+        agent=agent,
         token=binascii.hexlify(os.urandom(20)).decode(),
-        workdir=join(resource.workdir, f"{guid}"))
+        workdir=join(agent.workdir, f"{guid}"))
 
     open_dataset_session.s(session.guid).apply_async(countdown=5)
-    update_dataset_session(session, [f"Opening collection {session.path} on {resource.name} in working directory {join(session.resource.workdir, session.workdir)}"])
+    update_dataset_session(session, [f"Opening collection {session.path} on {agent.name} in working directory {join(session.agent.workdir, session.workdir)}"])
     return JsonResponse({'session': map_dataset_session(session)})
 
 
@@ -229,16 +229,16 @@ def close_session(request):
 
     update_dataset_session(session, [f"Closing collection session {session.guid}"])
 
-    ssh_client = SSH(session.resource.hostname, session.resource.port, session.resource.username)
+    ssh_client = SSH(session.agent.hostname, session.agent.port, session.agent.username)
     with ssh_client:
         with ssh_client.client.open_sftp() as sftp:
             try:
-                sftp.stat(join(session.resource.workdir, session.guid))
+                sftp.stat(join(session.agent.workdir, session.guid))
                 execute_command(
                     ssh_client=ssh_client,
                     pre_command=':',
                     command=f"rm -r {session.guid}/",
-                    directory=session.resource.workdir)
+                    directory=session.agent.workdir)
                 update_dataset_session(session, [f"Removed collection session {session.guid} working directory {session.workdir}"])
             except:
                 update_dataset_session(session, [f"Directory {session.guid} does not exist, skipping"])
@@ -259,7 +259,7 @@ def get_text_content(request):
     path = request.GET.get('path')
     file_name = path.rpartition('/')[2]
     file = join(session.workdir, file_name)
-    client = SSH(session.resource.hostname, session.resource.port, session.resource.username)
+    client = SSH(session.agent.hostname, session.agent.port, session.agent.username)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -296,7 +296,7 @@ def get_thumbnail(request):
     path = request.GET.get('path')
     file_name = path.rpartition('/')[2]
     file = join(session.workdir, file_name)
-    client = SSH(session.resource.hostname, session.resource.port, session.resource.username)
+    client = SSH(session.agent.hostname, session.agent.port, session.agent.username)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -361,13 +361,13 @@ def duplicate_file(request):
         session.modified.append(file)
         session.save()
 
-    ssh_client = SSH(session.resource.hostname, session.resource.port, session.resource.username)
+    ssh_client = SSH(session.agent.hostname, session.agent.port, session.agent.username)
     with ssh_client:
         output = execute_command(
             ssh_client=ssh_client,
             pre_command=':',
             command=f"cp {file} {timezone.now()}.{file}",
-            directory=session.resource.workdir)
+            directory=session.agent.workdir)
         update_dataset_session(session, output)
 
     return HttpResponse()

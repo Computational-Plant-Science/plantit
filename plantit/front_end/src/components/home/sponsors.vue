@@ -36,11 +36,11 @@
                     border-variant="white"
                     style="border: none; box-shadow: none"
                 >
-                    <b-link href="http://arpa-e.energy.gov/">
+                    <b-link href="http://www.cyverse.org/">
                         <b-img
-                            :src="require('@/assets/sponsors/arpa_e.png')"
-                            height="47px"
-                            alt="ARPA-E"
+                            :src="require('@/assets/sponsors/cyversebw.png')"
+                            height="42px"
+                            alt="Cyverse"
                         ></b-img>
                     </b-link>
                 </b-card>
@@ -78,11 +78,11 @@
                     border-variant="white"
                     style="border: none; box-shadow: none"
                 >
-                    <b-link href="http://www.cyverse.org/">
+                    <b-link href="http://arpa-e.energy.gov/">
                         <b-img
-                            :src="require('@/assets/sponsors/cyversebw.png')"
-                            height="42px"
-                            alt="Cyverse"
+                            :src="require('@/assets/sponsors/arpa_e.png')"
+                            height="47px"
+                            alt="ARPA-E"
                         ></b-img>
                     </b-link>
                 </b-card>

@@ -30,7 +30,7 @@ def map_dataset_session(session: DatasetSession):
         'guid': session.guid,
         'path': session.path,
         'workdir': session.workdir,
-        'resource': session.resource.name,
+        'agent': session.agent.name,
         'modified': session.modified if session.modified is not None else [],
         'output': lines,
         'opening': session.opening

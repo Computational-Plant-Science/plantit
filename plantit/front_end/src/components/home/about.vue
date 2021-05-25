@@ -20,12 +20,25 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h2 class="text-white">
-                            plant<small class="mb-3 text-success">IT</small>
-                        </h2>
-                        <b class="text-white mt-4">
-                            phenotyping automation in the browser
-                        </b>
+                        <h1 class="text-white" style="text-decoration: underline;">
+                            plant<small
+                                class="mb-3 text-success"
+                                style="text-decoration: underline;"
+                                >IT</small
+                            >
+                        </h1>
+                        <h4 class="text-white mt-4">
+                            A pluggable browser portal for
+                            <span class="text-success"
+                                ><span class="fa-stack mr-0 fa-2x">
+                                    <i class="fas fa-seedling fa-stack-2x"></i>
+                                    <i
+                                        class="text-dark fas fa-camera-retro fa-stack-1x"
+                                        style="opacity: 0.4;"
+                                    ></i> </span
+                                >phenotyping automation.</span
+                            >
+                        </h4>
                     </b-col>
                 </b-row>
                 <br />
@@ -37,7 +50,7 @@
                                 {{ users.length }}
                             </h1></b-col
                         >
-                        <b-col align-self="middle" class="text-left ml-0 pl-0"
+                        <b-col align-self="end" class="text-left ml-0 pl-0"
                             ><h5 class="text-white">users</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
@@ -45,13 +58,13 @@
                                 {{ workflows }}
                             </h1></b-col
                         >
-                        <b-col align-self="middle" class="text-left ml-0 pl-0"
+                        <b-col align-self="end" class="text-left ml-0 pl-0"
                             ><h5 class="text-white">workflows</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 class="text-success">{{ runs }}</h1></b-col
                         >
-                        <b-col align-self="middle" class="text-left ml-0 pl-0"
+                        <b-col align-self="end" class="text-left ml-0 pl-0"
                             ><h5 class="text-white">jobs</h5>
                         </b-col>
                     </b-row>

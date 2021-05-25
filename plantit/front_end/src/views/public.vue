@@ -10,7 +10,7 @@
         <br />
         <br />
         <b-container class="pl-3 pt-3">
-            <b-row align-v="center" align-h="center" v-if="resourcesLoading">
+            <b-row align-v="center" align-h="center" v-if="agentsLoading">
                 <b-col align-self="end" class="text-center">
                     <b-spinner
                         type="grow"
@@ -20,7 +20,7 @@
                 </b-col>
             </b-row>
             <b-row
-                v-else-if="resources.length > 0"
+                v-else-if="agents.length > 0"
                 align-v="center"
                 align-h="center"
             >
@@ -34,7 +34,7 @@
                                         : 'text-dark'
                                 "
                             >
-                                Public Resources
+                                Public Agents
                             </h3> </b-col
                     ></b-row><b-row><b-col
                             ><b-input-group size="sm"
@@ -71,8 +71,8 @@
                         class="justify-content-center mt-3"
                     >
                         <b-card
-                            v-for="resource in filteredResources"
-                            v-bind:key="resource.name"
+                            v-for="agent in filteredAgents"
+                            v-bind:key="agent.name"
                             :bg-variant="profile.darkMode ? 'dark' : 'white'"
                             :header-bg-variant="
                                 profile.darkMode ? 'dark' : 'white'
@@ -96,31 +96,31 @@
                                             "
                                             variant="outline-dark"
                                             v-b-tooltip.hover
-                                            @click="resourceSelected(resource)"
+                                            @click="agentSelected(agent)"
                                         >
-                                            {{ resource.name }}
+                                            {{ agent.name }}
                                         </b-link>
                                     </h2>
                                     <b-badge
-                                        v-if="!resource.public"
+                                        v-if="!agent.public"
                                         variant="warning"
                                         >Private</b-badge
                                     >
                                     <br />
                                     <small>
-                                        {{ resource.description }}
+                                        {{ agent.description }}
                                     </small>
                                     <br />
                                 </b-col>
                                 <b-col cols="1"></b-col>
                             </b-row>
                             <b-img
-                                v-if="resource.logo"
+                                v-if="agent.logo"
                                 rounded
                                 class="card-img-right overflow-hidden"
                                 style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                 right
-                                :src="resource.logo"
+                                :src="agent.logo"
                             ></b-img>
                             <i
                                 v-else
@@ -133,9 +133,9 @@
                     <b-row
                         class="text-center"
                         v-if="
-                            filteredResources.length === 0 && resources.length !== 0
+                            filteredAgents.length === 0 && agents.length !== 0
                         "
-                        ><b-col>No resources matched your search.</b-col></b-row
+                        ><b-col>No agents matched your search.</b-col></b-row
                     >
                 </b-col>
             </b-row>
@@ -155,44 +155,44 @@ import router from '@/router';
 import { mapGetters } from 'vuex';
 
 export default {
-    name: 'resources',
+    name: 'agents',
     data: function() {
         return {
-            resources: [],
-            resourcesLoading: false,
+            agents: [],
+            agentsLoading: false,
             searchText: '',
             includeTags: false
         };
     },
     mounted() {
-        this.loadResources();
+        this.loadAgents();
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        filteredResources() {
-            return this.resources.filter(resource => resource.name.includes(this.searchText));
+        filteredAgents() {
+            return this.agents.filter(agent => agent.name.includes(this.searchText));
         }
     },
     methods: {
-        loadResources() {
-            this.resourcesLoading = true;
+        loadAgents() {
+            this.agentsLoading = true;
             axios
-                .get('/apis/v1/resources/get_all/')
+                .get('/apis/v1/agents/get_all/')
                 .then(response => {
-                    this.resources = response.data.resources;
-                    this.resourcesLoading = false;
+                    this.agents = response.data.agents;
+                    this.agentsLoading = false;
                 })
                 .catch(error => {
-                    this.resourcesLoading = false;
+                    this.agentsLoading = false;
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
                 });
         },
-        resourceSelected(resource) {
+        agentSelected(agent) {
             router.push({
-                name: 'resource',
+                name: 'agent',
                 params: {
-                    name: resource.name
+                    name: agent.name
                 }
             });
         }

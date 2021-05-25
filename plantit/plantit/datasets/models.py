@@ -7,7 +7,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django_enum_choices.fields import EnumChoiceField
 
-from plantit.resources.models import Resource
+from plantit.agents.models import Agent
 
 
 class DatasetRole(Enum):
@@ -29,7 +29,7 @@ class DatasetSession(models.Model):
     guid = models.CharField(max_length=50, null=False, blank=False, primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     path = models.CharField(max_length=250)
-    resource = models.ForeignKey(Resource, null=True, blank=True, on_delete=models.SET_NULL)
+    agent = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.SET_NULL)
     workdir = models.CharField(max_length=100, null=True, blank=True)
     token = models.CharField(max_length=40)
     modified = ArrayField(models.CharField(max_length=250), blank=True, null=True)
@@ -48,4 +48,4 @@ class DatasetSession(models.Model):
 
     @property
     def is_sandbox(self):
-        return self.resource.name is not None and self.resource.name == 'Sandbox'
+        return self.agent.name is not None and self.agent.name == 'Sandbox'

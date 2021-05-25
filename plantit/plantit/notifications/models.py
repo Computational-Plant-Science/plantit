@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 from plantit.datasets.models import DatasetAccessPolicy
-from plantit.resources.models import ResourceAccessPolicy
+from plantit.agents.models import AgentAccessPolicy
 
 
 class Notification(models.Model):
@@ -22,4 +22,4 @@ class DirectoryPolicyNotification(Notification):
 
 
 class TargetPolicyNotification(Notification):
-    policy = models.ForeignKey(ResourceAccessPolicy, on_delete=models.CASCADE)
+    policy = models.ForeignKey(AgentAccessPolicy, on_delete=models.CASCADE)

@@ -3,8 +3,8 @@ import Router from 'vue-router';
 import home from './views/home.vue';
 import workflows from './views/explore-workflows.vue';
 import workflow from './views/workflow.vue';
-import resource from './views/resource.vue';
-import resources from './views/resources.vue';
+import agent from './views/agent.vue';
+import agents from './views/public.vue';
 import user from './views/user.vue';
 import users from './views/users.vue';
 import run from './views/run.vue';
@@ -59,15 +59,15 @@ let router = new Router({
             }
         },
         {
-            path: '/resources',
-            name: 'resources',
-            component: resources,
+            path: '/agents',
+            name: 'agents',
+            component: agents,
             meta: {
-                title: 'Resources',
+                title: 'Agents',
                 crumb: [
                     {
-                        text: 'Resources',
-                        href: '/resources'
+                        text: 'Agents',
+                        href: '/agents'
                     }
                 ],
                 requiresAuth: true
@@ -96,12 +96,12 @@ let router = new Router({
             }
         },
         {
-            path: '/resource/:name',
-            name: 'resource',
+            path: '/agent/:name',
+            name: 'agent',
             props: true,
-            component: resource,
+            component: agent,
             meta: {
-                title: 'Server',
+                title: 'Agent',
                 crumb: [],
                 requiresAuth: true
             }
@@ -161,7 +161,7 @@ router.beforeEach(async (to, from, next) => {
     await store.dispatch('user/loadProfile');
     if (to.name === 'workflow') to.meta.title = `Workflow: ${to.params.name}`;
     if (to.name === 'run') to.meta.title = `Run: ${to.params.id}`;
-    if (to.name === 'resource') to.meta.title = `Resource: ${to.params.name}`;
+    if (to.name === 'agent') to.meta.title = `Resource: ${to.params.name}`;
     if (to.name === 'user') {
         // if (
         //     store.getters['user/profile'].cyverseProfile.username ===
@@ -192,11 +192,11 @@ router.beforeEach(async (to, from, next) => {
             href: `/run/${to.params.id}`
         });
     }
-    if (to.matched.some(record => record.name === 'resource')) {
+    if (to.matched.some(record => record.name === 'agent')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `Resource: ${to.params.name}`,
-            href: `/resource/${to.params.name}`
+            text: `Agent: ${to.params.name}`,
+            href: `/agent/${to.params.name}`
         });
     }
     if (to.matched.some(record => record.name === 'user')) {

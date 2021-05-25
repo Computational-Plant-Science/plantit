@@ -149,7 +149,7 @@
                                     <b-badge
                                         class="ml-0 mr-0"
                                         variant="secondary"
-                                        >{{ run.resource }}</b-badge
+                                        >{{ run.agent }}</b-badge
                                     ><small> {{ prettify(run.updated) }}</small>
                                     <br />
                                     <small
@@ -277,7 +277,7 @@
                                             <b-badge
                                                 class="ml-0 mr-0"
                                                 variant="secondary"
-                                                >{{ run.resource }}</b-badge
+                                                >{{ run.agent }}</b-badge
                                             ><small>
                                                 {{
                                                     prettify(run.updated)
@@ -627,7 +627,7 @@
                                 profile.darkMode ? 'crumb-dark' : 'crumb-light'
                             "
                         >
-                            <h3
+                            <h2
                                 :class="
                                     profile.darkMode
                                         ? 'crumb-dark'
@@ -636,7 +636,7 @@
                             >
                                 Your Runs ({{ runningRuns.length }}
                                 in progress)
-                            </h3>
+                            </h2>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
                     <b-navbar-nav class="m-0 p-0"
@@ -651,7 +651,7 @@
                             >
                                 plant<small
                                     class="mb-3 text-success"
-                                    style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                    style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
                                     >IT</small
                                 >
                             </h3></b-nav-item
@@ -813,10 +813,10 @@
                                 <i class="fas fa-caret-down fa-fw"></i>
                             </b-button>
                         </template>
-                        <b-dropdown-text>Resources</b-dropdown-text>
+                        <b-dropdown-text>Resource Context</b-dropdown-text>
                         <b-dropdown-item
-                            title="Resources"
-                            to="/resources"
+                            title="Agents"
+                            to="/agents"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -828,6 +828,7 @@
                         >
                             <i class="fas fa-users fa-1x fa-fw"></i>
                             Public
+                            <i v-if="$route.name === 'public'" class="fas fa-check fa-1x fa-fw"></i>
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Profile"
@@ -845,6 +846,7 @@
                         >
                             <i class="fas fa-user fa-1x fa-fw"></i>
                             Yours
+                          <i v-if="$route.name === 'user'" class="fas fa-check fa-1x fa-fw"></i>
                         </b-dropdown-item>
                         <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-dropdown-text>Your Account</b-dropdown-text>
@@ -915,12 +917,12 @@
                             class="mr-2"
                         ></b-spinner
                         >Opening <b>{{ openedDataset.path }}</b> on
-                        <b>{{ openedDataset.resource }}</b>
+                        <b>{{ openedDataset.agent }}</b>
                     </span>
                     <span v-else>
                         <i class="far fa-folder-open fa-fw mr-2"></i>
                         <b>{{ openedDataset.path }}</b> open on
-                        <b>{{ openedDataset.resource }}</b
+                        <b>{{ openedDataset.agent }}</b
                         >, {{ openedDataset.modified.length }} file(s)
                         modified</span
                     >
@@ -999,7 +1001,7 @@
                 <b v-if="!toastRun.is_complete">Running</b>
                 <b class="ml-0 mr-0" v-else>{{ toastRun.job_status }}</b>
                 on
-                <b>{{ toastRun.resource }}</b>
+                <b>{{ toastRun.agent }}</b>
                 {{ prettifyShort(toastRun.updated) }}
                 <br />
                 {{
@@ -1152,7 +1154,7 @@ export default {
         async closeDataset() {
             await this.$bvModal
                 .msgBoxConfirm(
-                    `Are you sure you want to close ${this.openedDataset.path} on ${this.openedDataset.resource}?`,
+                    `Are you sure you want to close ${this.openedDataset.path} on ${this.openedDataset.agent}?`,
                     {
                         title: 'Close Dataset?',
                         size: 'sm',

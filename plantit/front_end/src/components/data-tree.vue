@@ -215,17 +215,17 @@
                             <i class="fas fa-folder-open fa-fw"></i>
                         </template>
                         <b-dropdown-text>
-                            Select a resource to open this dataset.
+                            Select a agent to open this dataset.
                         </b-dropdown-text>
                         <b-dropdown-divider></b-dropdown-divider>
                         <b-dropdown-text
                             v-if="
-                                resources !== undefined &&
-                                    resources !== null &&
-                                    resources.length === 0
+                                agents !== undefined &&
+                                    agents !== null &&
+                                    agents.length === 0
                             "
                             ><b class="text-danger"
-                                >You have no resource permissions.</b
+                                >You have no agent permissions.</b
                             ><br />See
                             <b-link
                                 :class="
@@ -233,18 +233,17 @@
                                         ? 'text-light'
                                         : 'text-dark'
                                 "
-                                to="/resources"
+                                to="/agents"
                                 ><i class="fas fa-server fa-1x fa-fw"></i>
-                                Resources</b-link
+                                Agents</b-link
                             >
-                            to request guest access to public computing
-                            resources.</b-dropdown-text
+                            to request guest access to public servers, clusters, and supercomputers.</b-dropdown-text
                         >
                         <b-dropdown-item
-                            @click="openDataset(resource)"
-                            v-for="resource in resources"
-                            v-bind:key="resource.name"
-                            >{{ resource.name }}</b-dropdown-item
+                            @click="openDataset(agent)"
+                            v-for="agent in agents"
+                            v-bind:key="agent.name"
+                            >{{ agent.name }}</b-dropdown-item
                         >
                     </b-dropdown>
                     <b-modal
@@ -706,7 +705,7 @@
                 :select="select"
                 :upload="upload"
                 :download="download"
-                :resources="resources"
+                :agents="agents"
                 title="Upload file(s)"
                 @selectPath="selectNode(child, 'directory')"
                 @deleted="
@@ -786,7 +785,7 @@ export default {
             required: false,
             type: Boolean
         },
-        resources: {
+        agents: {
             required: false,
             type: Array
         }
@@ -884,9 +883,9 @@ export default {
         }
     },
     methods: {
-        openDataset(resource) {
+        openDataset(agent) {
             this.$store.dispatch('datasets/open', {
-                resource: resource,
+                agent: agent,
                 path: this.internalLoaded
                     ? this.internalNode.path
                     : this.node.path

@@ -1,5 +1,6 @@
-import datetime
 import json
+import json
+import logging
 import os
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
@@ -23,7 +24,7 @@ from plantit.runs.tasks import aggregate_usage_statistics
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.users.utils import list_users, get_user_stats
+from plantit.users.utils import list_users, get_cyverse_profile, get_github_profile
 from plantit.utils import get_csrf_token
 
 
@@ -143,6 +144,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
+    logger = logging.getLogger(__name__)
 
     def get_object(self):
         return self.request.user
@@ -197,7 +199,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         cached_users = [json.loads(redis.get(key)) for key in redis.scan_iter(match='user/*')]
 
         if len(users) != len(cached_users):
-            print(f"Populating user cache")
+            self.logger.info(f"Populating user cache")
             for user in users:
                 redis.set(f"user/{user['username']}", json.dumps(user))
 
@@ -210,7 +212,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         stats_last_aggregated = user.profile.stats_last_aggregated
 
         if stats_last_aggregated is None:
-            print(f"No usage statistics for {user.username}. Aggregating stats...")
+            self.logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
             aggregate_usage_statistics.delay(user.username)
             stats = None
         else:
@@ -218,7 +220,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             stats = redis.get(f"stats/{user.username}")
             stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
             if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
-                print(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
+                self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
                 aggregate_usage_statistics.delay(user.username)
                 stats = None
 
@@ -242,25 +244,10 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         }
 
         if request.user.profile.cyverse_token != '':
-            cyverse_response = requests.get(
-                f"https://de.cyverse.org/terrain/secured/user-info?username={user.username}",
-                headers={'Authorization': f"Bearer {request.user.profile.cyverse_token}"})
-            if cyverse_response.status_code == 401:
-                response['cyverse_profile'] = 'expired token'
-            else:
-                cyverse_profile = cyverse_response.json()
-                if user.username in cyverse_profile:
-                    response['cyverse_profile'] = cyverse_response.json()[user.username]
-                    user.first_name = response['cyverse_profile']['first_name']
-                    user.last_name = response['cyverse_profile']['last_name']
-                    user.save()
-                else:
-                    print(f"No CyVerse profile")
+            response['cyverse_profile'] = get_cyverse_profile(request.user)
         if request.user.profile.github_token != '' and user.profile.github_username != '':
-            github_response = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
-                                           headers={'Authorization':
-                                                        f"Bearer {request.user.profile.github_token}"})
-            response['github_profile'] = github_response.json()
+            response['github_profile'] = get_github_profile(request.user)
+
         return JsonResponse(response)
 
     @action(detail=False, methods=['get'])

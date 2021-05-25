@@ -39,7 +39,7 @@
                     </b-badge>
                     on
                     <b-badge variant="secondary" class="text-white">{{
-                        run.cluster
+                        run.agent
                     }}</b-badge>
                 </h4>
             </b-col>

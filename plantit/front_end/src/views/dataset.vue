@@ -31,7 +31,7 @@
                             </h4>
                             <small
                                 >Open on
-                                <b>{{ openedDataset.resource }}</b></small
+                                <b>{{ openedDataset.agent }}</b></small
                             ><br />
                             <small
                                 >Showing
@@ -621,7 +621,7 @@ export default {
         async closeDataset() {
             await this.$bvModal
                 .msgBoxConfirm(
-                    `Are you sure you want to close ${this.openedDataset.path} on ${this.openedDataset.resource}?`,
+                    `Are you sure you want to close ${this.openedDataset.path} on ${this.openedDataset.agent}?`,
                     {
                         title: 'Close Dataset?',
                         size: 'sm',

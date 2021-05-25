@@ -452,7 +452,7 @@
                                         <b-alert show variant="warning"
                                             >This workflow does not specify
                                             resource requests and can only be
-                                            run on resources configured for the
+                                            run on agents configured for the
                                             <b>Local</b> executor.</b-alert
                                         >
                                     </b-col>
