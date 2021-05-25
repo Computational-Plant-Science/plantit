@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from plantit.runs.ssh import SSH
-from plantit.runs.utils import execute_command
+from plantit.ssh import execute_command
 
 
 class UtilsTests(TestCase):

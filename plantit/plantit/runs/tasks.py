@@ -22,9 +22,11 @@ from plantit.datasets.utils import update_dataset_session
 from plantit.redis import RedisClient
 from plantit.agents.models import Agent
 from plantit.runs.models import Run
-from plantit.runs.ssh import SSH
-from plantit.runs.utils import update_status, execute_command, remove_logs, create_run, \
-    container_log_file_name, container_log_file_path, get_run_results, get_job_walltime, get_job_status, submit_run_via_ssh, list_dir, upload_run
+from plantit.runs.utils import update_run_status, remove_logs, create_run, \
+    get_run_container_log_file_name, get_run_container_log_file_path, get_run_results, get_run_job_walltime, get_run_job_status, submit_run_via_ssh, \
+    upload_run
+from plantit.ssh import SSH, execute_command
+from plantit.terrain import list_dir
 from plantit.sns import SnsClient
 from plantit.workflows.utils import refresh_workflow
 
@@ -45,13 +47,13 @@ def submit_run(id: str, flow):
     run.save()
 
     msg = f"Deploying run {run.guid} to {run.agent.name}"
-    update_status(run, msg)
+    update_run_status(run, msg)
     logger.info(msg)
 
     try:
         if 'auth' in flow:
             msg = f"Authenticating with username {flow['auth']['username']}"
-            update_status(run, msg)
+            update_run_status(run, msg)
             logger.info(msg)
             ssh_client = SSH(run.agent.hostname, run.agent.port, flow['auth']['username'], flow['auth']['password'])
         else:
@@ -59,13 +61,13 @@ def submit_run(id: str, flow):
 
         with ssh_client:
             msg = f"Creating working directory {join(run.agent.workdir, run.guid)} and uploading workflow configuration"
-            update_status(run, msg)
+            update_run_status(run, msg)
             logger.info(msg)
 
             if 'input' in flow['config'] and flow['config']['input']['kind'] == 'files':
                 input_files = list_dir(flow['config']['input']['from'], run.user.profile.cyverse_token)
                 msg = f"Found {len(input_files)} input files"
-                update_status(run, msg)
+                update_run_status(run, msg)
                 logger.info(msg)
             else:
                 input_files = None
@@ -73,10 +75,10 @@ def submit_run(id: str, flow):
             upload_run(flow, run, ssh_client, input_files)
 
             msg = 'Running script' if run.is_sandbox else 'Submitting script to scheduler'
-            update_status(run, msg)
+            update_run_status(run, msg)
             logger.info(msg)
 
-            submit_run_via_ssh(flow, run, ssh_client, len(input_files) if input_files is not None else None)
+            submit_run_via_ssh(run, ssh_client, len(input_files) if input_files is not None else None)
 
             if run.is_sandbox:
                 run.job_status = 'SUCCESS'
@@ -88,7 +90,7 @@ def submit_run(id: str, flow):
 
                 cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
                 msg = f"Completed run {run.guid}, cleaning up in {cleanup_delay}m"
-                update_status(run, msg)
+                update_run_status(run, msg)
                 logger.info(msg)
                 cleanup_run.s(id).apply_async(countdown=cleanup_delay * 60)
 
@@ -105,7 +107,7 @@ def submit_run(id: str, flow):
         run.save()
 
         msg = f"Failed to submit run {run.guid}: {traceback.format_exc()}."
-        update_status(run, msg)
+        update_run_status(run, msg)
         logger.error(msg)
 
 
@@ -120,7 +122,7 @@ def poll_run_status(id: str):
     # if the job already failed, schedule cleanup
     if run.job_status == 'FAILURE':
         msg = f"Job {run.job_id} failed, cleaning up in {cleanup_delay}m"
-        update_status(run, msg)
+        update_run_status(run, msg)
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
 
         if run.user.profile.push_notification_status == 'enabled':
@@ -128,8 +130,8 @@ def poll_run_status(id: str):
 
     # otherwise poll the scheduler for its status
     try:
-        job_status = get_job_status(run)
-        job_walltime = get_job_walltime(run)
+        job_status = get_run_job_status(run)
+        job_walltime = get_run_job_walltime(run)
         run.job_status = job_status
         run.job_elapsed_walltime = job_walltime
 
@@ -140,8 +142,8 @@ def poll_run_status(id: str):
         # get container logs
         work_dir = join(run.agent.workdir, run.workdir)
         ssh_client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
-        container_log_file = container_log_file_name(run)
-        container_log_path = container_log_file_path(run)
+        container_log_file = get_run_container_log_file_name(run)
+        container_log_path = get_run_container_log_file_path(run)
 
         with ssh_client:
             with ssh_client.client.open_sftp() as sftp:
@@ -151,7 +153,7 @@ def poll_run_status(id: str):
                 if not stdout.read().decode().strip() == 'exists':
                     container_logs = []
                 else:
-                    with open(container_log_file_path(run), 'a+') as log_file:
+                    with open(get_run_container_log_file_path(run), 'a+') as log_file:
                         sftp.chdir(work_dir)
                         sftp.get(container_log_file, log_file.name)
 
@@ -172,14 +174,14 @@ def poll_run_status(id: str):
 
             msg = f"Job {run.job_id} {job_status}" + (
                 f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
-            update_status(run, msg)
+            update_run_status(run, msg)
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
 
             if run.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
         else:
             msg = f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"
-            update_status(run, msg)
+            update_run_status(run, msg)
             poll_run_status.s(id).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
@@ -190,10 +192,10 @@ def poll_run_status(id: str):
             run.save()
 
             msg = f"Job {run.job_id} not found, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
-            update_status(run, msg)
+            update_run_status(run, msg)
         else:
             msg = f"Job {run.job_id} succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
-            update_status(run, msg)
+            update_run_status(run, msg)
             cleanup_run.s(id).apply_async(countdown=cleanup_delay)
 
             if run.user.profile.push_notification_status == 'enabled':
@@ -206,7 +208,7 @@ def poll_run_status(id: str):
         run.save()
 
         msg = f"Job {run.job_id} encountered unexpected error (cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
-        update_status(run, msg)
+        update_run_status(run, msg)
         cleanup_run.s(id).apply_async(countdown=cleanup_delay)
 
         if run.user.profile.push_notification_status == 'enabled':
@@ -237,7 +239,7 @@ def cleanup_run(id: str):
     run.save()
 
     msg = f"Cleaned up {run.guid}"
-    update_status(run, msg)
+    update_run_status(run, msg)
 
 
 @app.task()
@@ -364,7 +366,7 @@ def list_run_results(id: str):
     results = get_run_results(run, workflow)
     workdir = join(run.agent.workdir, run.workdir)
     redis.set(f"results/{run.guid}", json.dumps(results))
-    update_status(run, f"Found {len(results)} result files")
+    update_run_status(run, f"Found {len(results)} result files")
     print(f"Found {len(results)} result files")
 
     for res in results:
@@ -474,7 +476,7 @@ def list_run_results(id: str):
     run.previews_loaded = True
     run.save()
 
-    update_status(run, f"Created file previews")
+    update_run_status(run, f"Created file previews")
 
 
 @app.task()
@@ -501,7 +503,7 @@ def aggregate_usage_statistics(username: str):
     user.profile.stats_last_aggregated = timezone.now()
     user.profile.save()
 
-    async_to_sync(get_channel_layer().group_send)(f"users-{user.username}", {
-        'type': 'update_status',
-        'run': map_user(user),
-    })
+    # async_to_sync(get_channel_layer().group_send)(f"users-{user.username}", {
+    #     'type': 'update_run_status',
+    #     'run': map_user(user),
+    # })

@@ -5,19 +5,18 @@ from datetime import timedelta
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
 from django.utils import timezone
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
-from plantit.notifications.models import TargetPolicyNotification
-from plantit.runs.ssh import SSH
-from plantit.runs.utils import execute_command
+from plantit.ssh import SSH, execute_command
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentTask, AgentRole, AgentAccessRequest
 from plantit.agents.serializers import AgentSerializer
 from plantit.agents.utils import map_agent, map_agent_task
+from plantit.notifications.models import TargetPolicyNotification
 
 
 class AgentsViewSet(viewsets.ModelViewSet):

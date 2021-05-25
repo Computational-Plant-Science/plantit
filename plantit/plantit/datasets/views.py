@@ -23,8 +23,7 @@ from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole
 from plantit.notifications.models import DirectoryPolicyNotification
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole, DatasetSession
 from plantit.datasets.utils import map_dataset_policy, map_dataset_session, update_dataset_session
-from plantit.runs.ssh import SSH
-from plantit.runs.utils import execute_command
+from plantit.ssh import SSH, execute_command
 from plantit.runs.tasks import open_dataset_session
 
 

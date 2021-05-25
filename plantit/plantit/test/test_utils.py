@@ -1,7 +1,9 @@
 import os
 import requests
 from django.test import TestCase
-from plantit.utils import docker_image_exists, validate_workflow_config, cyverse_path_exists
+from plantit.workflows.utils import validate_workflow_config
+from plantit.docker import image_exists
+from plantit.terrain import path_exists
 
 
 class Token:
@@ -32,22 +34,22 @@ class Token:
 
 class UtilsTest(TestCase):
     def test_docker_container_exists_when_exists_is_true(self):
-        self.assertTrue(docker_image_exists('alpine'))
+        self.assertTrue(image_exists('alpine'))
 
     def test_docker_container_exists_when_doesnt_exist_is_false(self):
-        self.assertFalse(docker_image_exists('notacontainer'))
+        self.assertFalse(image_exists('notacontainer'))
 
     def test_cyverse_path_exists_when_doesnt_exist_is_false(self):
-        result = cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsaid.txt', Token.get())
+        result = path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsaid.txt', Token.get())
         self.assertFalse(result)
 
     def test_cyverse_path_exists_when_is_a_file_is_true(self):
-        result = cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt', Token.get())
+        result = path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt', Token.get())
         self.assertTrue(result[0])
         self.assertEqual(result[1], 'file')
 
     def test_cyverse_path_exists_when_is_a_directory_is_true(self):
-        result = cyverse_path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay', Token.get())
+        result = path_exists('/iplant/home/shared/iplantcollaborative/testing_tools/cowsay', Token.get())
         self.assertTrue(result[0])
         self.assertEqual(result[1], 'directory')
 

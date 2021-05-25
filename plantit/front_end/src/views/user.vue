@@ -538,7 +538,10 @@
                                         >
                                             Your Workflows
                                         </h2></b-col
-                                    ><b-col class="ml-0" align-self="middle"
+                                    ><b-col
+                                        md="auto"
+                                        class="ml-0"
+                                        align-self="middle"
                                         ><b-button
                                             :disabled="workflowsLoading"
                                             :variant="
@@ -548,9 +551,9 @@
                                             "
                                             size="md"
                                             v-b-tooltip.hover
-                                            title="Refresh"
+                                            title="Refresh workflows"
                                             @click="refreshWorkflows"
-                                            class="ml-0 mt-0"
+                                            class="ml-0 mt-0 mr-0"
                                         >
                                             <b-spinner
                                                 small
@@ -568,6 +571,37 @@
                                                 class="fas fa-redo mr-1"
                                             ></i
                                             >Refresh</b-button
+                                        ></b-col
+                                    ><b-col class="ml-0" align-self="middle"
+                                        ><b-button
+                                            :disabled="workflowsLoading"
+                                            :variant="
+                                                profile.darkMode
+                                                    ? 'outline-light'
+                                                    : 'white'
+                                            "
+                                            size="md"
+                                            v-b-tooltip.hover
+                                            title="Connect a new workflow"
+                                            @click="showConnectWorkflowModal"
+                                            class="ml-0 mt-0 mr-0"
+                                        >
+                                            <b-spinner
+                                                small
+                                                v-if="workflowsLoading"
+                                                label="Connecting..."
+                                                :variant="
+                                                    profile.darkMode
+                                                        ? 'light'
+                                                        : 'dark'
+                                                "
+                                                class="mr-1"
+                                            ></b-spinner
+                                            ><i
+                                                v-else
+                                                class="fas fa-plug mr-1"
+                                            ></i
+                                            >Connect</b-button
                                         ></b-col
                                     ></b-row
                                 >
@@ -711,7 +745,8 @@
                                                     !agentsLoading &&
                                                         agents.length === 0
                                                 "
-                                                >You don't have access to any agents yet.</b
+                                                >You don't have access to any
+                                                agents yet.</b
                                             >
                                         </b-col>
                                     </b-row>
@@ -763,9 +798,7 @@
                                                             variant="outline-dark"
                                                             v-b-tooltip.hover
                                                             @click="
-                                                                agentSelected(
-                                                                    agent
-                                                                )
+                                                                goToAgent(agent)
                                                             "
                                                         >
                                                             {{ agent.name }}
@@ -792,8 +825,7 @@
                                                     <b-badge
                                                         variant="warning"
                                                         >{{
-                                                            agent.role ===
-                                                            'own'
+                                                            agent.role === 'own'
                                                                 ? 'Owner'
                                                                 : 'Guest'
                                                         }}</b-badge
@@ -801,9 +833,7 @@
 
                                                     <br />
                                                     <small>
-                                                        {{
-                                                            agent.description
-                                                        }}
+                                                        {{ agent.description }}
                                                     </small>
                                                     <br />
                                                 </b-col>
@@ -1247,7 +1277,7 @@
                                                                     title="Delete Run"
                                                                     class="text-right"
                                                                     @click="
-                                                                        showDeletePrompt(
+                                                                        showDeleteRunPrompt(
                                                                             run
                                                                         )
                                                                     "
@@ -1630,7 +1660,7 @@
                 </b-row>
             </div>
             <b-modal
-                id="newAgent"
+                id="connectAgent"
                 :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
                 centered
                 close
@@ -1646,10 +1676,7 @@
                 :ok-disabled="agentInvalid"
                 ok-title="Connect"
             >
-                <b-form-group
-                    label="Name"
-                    description="A name for this agent."
-                >
+                <b-form-group label="Name" description="A name for this agent.">
                     <b-form-input
                         :state="agentName !== ''"
                         v-model="agentName"
@@ -1740,6 +1767,278 @@
                     </b-form-checkbox>
                 </b-form-group>
             </b-modal>
+            <b-modal
+                id="connectWorkflow"
+                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+                centered
+                close
+                size="lg"
+                :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+                title="Connect Workflow"
+                @ok="connectWorkflow"
+                :ok-disabled="workflowInvalid"
+                ok-title="Connect"
+            >
+                <div class="text-left">
+                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Specify the GitHub repository containing your workflow.
+                        Before a repository can be connected, you must have a
+                        file named <code>plantit.yaml</code> in your project
+                        root.
+                    </p>
+                </div>
+                <b-form-group
+                    description="Type the name of the GitHub repository you'd like to connect."
+                >
+                    <b-form-input
+                        v-model="workflowName"
+                        :state="!workflowInvalid"
+                        type="text"
+                        placeholder="Enter a repository name"
+                        required
+                        @input="onWorkflowNameChange"
+                    ></b-form-input>
+                </b-form-group>
+                <div class="text-center" v-if="isLoading">
+                    <b-spinner
+                        type="grow"
+                        label="Loading..."
+                        variant="secondary"
+                    ></b-spinner>
+                </div>
+                <div
+                    class="text-center"
+                    v-else-if="
+                        workflowSearchResult === null && workflowName !== ''
+                    "
+                >
+                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">Repository <b>{{ workflowName }}</b> not found.</p>
+                </div>
+                <div
+                    class="text-left"
+                    v-else-if="workflowSearchResult !== null"
+                >
+                    <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Repository
+                    </h5>
+                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        <b-link
+                            target="_blank"
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            :href="workflowSearchResult.repo.html_url"
+                            ><i class="fab fa-github fa-fw mr-1"></i
+                            >{{ workflowSearchResult.repo.full_name }}</b-link
+                        >
+                        <br />
+                        {{ workflowSearchResult.repo.description }}
+                        <br />
+                        Last updated:
+                        {{ prettify(workflowSearchResult.repo.updated_at) }}
+                        <br />
+                        Language: {{ workflowSearchResult.repo.language }}
+                        <br />
+                        Stars: {{ workflowSearchResult.repo.stargazers_count }}
+                    </p>
+                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <div v-if="workflowSearchResult.validation.is_valid">
+                        <h5
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            Configuration
+                        </h5>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            <b-row>
+                                <b-col>
+                                    <small>Image</small>
+                                </b-col>
+                                <b-col cols="10">
+                                    <b>{{
+                                        workflowSearchResult.config.image
+                                    }}</b>
+                                </b-col>
+                            </b-row>
+                            <b-row>
+                                <b-col>
+                                    <small>GPU</small>
+                                </b-col>
+                                <b-col cols="10">
+                                    {{
+                                        workflowSearchResult.config.gpu
+                                            ? 'Yes'
+                                            : 'No'
+                                    }}
+                                </b-col>
+                            </b-row>
+                            <b-row>
+                                <b-col>
+                                    <small>Mount</small>
+                                </b-col>
+                                <b-col cols="10">
+                                    {{
+                                        workflowSearchResult.config.mount
+                                            ? workflowSearchResult.config.mount
+                                            : 'None'
+                                    }}
+                                </b-col>
+                            </b-row>
+                            <b-row>
+                                <b-col>
+                                    <small>Parameters</small>
+                                </b-col>
+                                <b-col cols="10">
+                                    <b>{{
+                                        workflowSearchResult.config.params
+                                            ? workflowSearchResult.config.params
+                                                  .length
+                                            : 'None'
+                                    }}</b>
+                                </b-col>
+                            </b-row>
+                            <b-row>
+                                <b-col>
+                                    <small>Command</small>
+                                </b-col>
+                                <b-col cols="10">
+                                    <b
+                                        ><code>{{
+                                            ' ' +
+                                                workflowSearchResult.config
+                                                    .commands
+                                        }}</code></b
+                                    >
+                                </b-col>
+                            </b-row>
+                            <b-row
+                                v-if="
+                                    workflowSearchResult.config.input !==
+                                        undefined
+                                "
+                            >
+                                <b-col>
+                                    <small>Input</small>
+                                </b-col>
+                                <b-col cols="10">
+                                    <b
+                                        ><code
+                                            >[working directory]/input/{{
+                                                workflowSearchResult.config
+                                                    .input.filetypes
+                                                    ? '[' +
+                                                      (workflowSearchResult
+                                                          .config.input
+                                                          .filetypes
+                                                          ? '*.' +
+                                                            workflowSearchResult.config.input.filetypes.join(
+                                                                ', *.'
+                                                            )
+                                                          : []) +
+                                                      ']'
+                                                    : ''
+                                            }}</code
+                                        ></b
+                                    >
+                                </b-col>
+                            </b-row>
+                            <b-row
+                                v-if="
+                                    workflowSearchResult.config.output !==
+                                        undefined
+                                "
+                            >
+                                <b-col>
+                                    <small>Output</small>
+                                </b-col>
+                                <b-col cols="10">
+                                    <b
+                                        ><code
+                                            >[working directory]/{{
+                                                workflowSearchResult.config
+                                                    .output.path
+                                                    ? workflowSearchResult
+                                                          .config.output.path +
+                                                      '/'
+                                                    : ''
+                                            }}{{
+                                                workflowSearchResult.config
+                                                    .output.include
+                                                    ? '[' +
+                                                      (workflowSearchResult
+                                                          .config.output.exclude
+                                                          ? '+ '
+                                                          : '') +
+                                                      (workflowSearchResult
+                                                          .config.output.include
+                                                          .patterns
+                                                          ? '*.' +
+                                                            workflowSearchResult.config.output.include.patterns.join(
+                                                                ', *.'
+                                                            )
+                                                          : []) +
+                                                      (workflowSearchResult
+                                                          .config.output.include
+                                                          .names
+                                                          ? ', ' +
+                                                            workflowSearchResult.config.output.include.names.join(
+                                                                ', '
+                                                            )
+                                                          : [])
+                                                    : ''
+                                            }}{{
+                                                workflowSearchResult.config
+                                                    .output.exclude
+                                                    ? ' - ' +
+                                                      (workflowSearchResult
+                                                          .config.output.exclude
+                                                          .patterns
+                                                          ? '*.' +
+                                                            workflowSearchResult.config.output.exclude.patterns.join(
+                                                                ', *.'
+                                                            )
+                                                          : []) +
+                                                      (workflowSearchResult
+                                                          .config.output.exclude
+                                                          .names
+                                                          ? ', ' +
+                                                            workflowSearchResult.config.output.exclude.names.join(
+                                                                ', '
+                                                            )
+                                                          : [])
+                                                    : '' + ']'
+                                            }}
+                                        </code></b
+                                    >
+                                </b-col>
+                            </b-row>
+                        </p>
+                    </div>
+                    <div v-else>
+                        <h5
+                            class="text-danger"
+                        >
+                            Configuration Errors
+                        </h5>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        ></p>
+                    </div>
+                </div>
+                <div></div>
+            </b-modal>
         </b-container>
     </div>
 </template>
@@ -1761,7 +2060,13 @@ export default {
     },
     data: function() {
         return {
+            isOpen: false,
+            isLoading: false,
             statsScope: 'Hour',
+            workflowName: '',
+            workflowSearchResult: null,
+            workflowExists: false,
+            arrowCounter: -1,
             agentName: '',
             agentHost: '',
             agentDescription: '',
@@ -1850,6 +2155,9 @@ export default {
                     r.tags.some(t => t.includes(this.runSearchText))
             );
         },
+        workflowInvalid() {
+            return this.workflowSearchResult === null;
+        },
         agentInvalid() {
             return (
                 this.agentName === '' ||
@@ -1894,6 +2202,7 @@ export default {
         }
     },
     async mounted() {
+        document.addEventListener('click', this.handleClickOutside);
         await Promise.all([
             this.$store.dispatch('workflows/loadAll'),
             this.$store.dispatch('users/loadAll'),
@@ -1906,60 +2215,84 @@ export default {
             this.loadSharingDatasets()
         ]);
     },
+    destroyed() {
+        document.removeEventListener('click', this.handleClickOutside);
+    },
+    watch: {
+        // eslint-disable-next-line no-unused-vars
+        items: function(value, _) {
+            if (this.isAsync) {
+                this.workflowSearchResult = value;
+                this.isLoading = false;
+            }
+        }
+    },
     methods: {
+        onWorkflowNameChange() {
+            this.isLoading = true;
+            return axios
+                .get(
+                    `/apis/v1/workflows/${this.profile.githubProfile.login}/${this.workflowName}/search/`
+                )
+                .then(response => {
+                    this.workflowSearchResult = response.data;
+                    this.isLoading = false;
+                    this.$emit('input', this.workflowName);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.workflowSearchResult = null;
+                    this.isLoading = false;
+                    if (error.response.status === 500) throw error;
+                });
+        },
+        setWorkflowName(result) {
+            this.workflowName = result;
+            this.isOpen = false;
+        },
+        handleClickOutside(event) {
+            if (!this.$el.contains(event.target)) {
+                this.arrowCounter = -1;
+                this.isOpen = false;
+            }
+        },
+        prettify: function(date) {
+            return `${moment(date).fromNow()} (${moment(date).format(
+                'MMMM Do YYYY, h:mm a'
+            )})`;
+        },
+        prettifyShort: function(date) {
+            return `${moment(date).fromNow()}`;
+        },
+        prettifyDuration: function(dur) {
+            return moment.duration(dur, 'seconds').humanize();
+        },
+        tabLinkClass(idx) {
+            if (this.profile.djangoProfile === null)
+                return this.profile.darkMode ? '' : 'text-dark';
+            if (this.currentTab === idx) {
+                return this.profile.darkMode ? '' : 'text-dark';
+            } else {
+                return this.profile.darkMode
+                    ? 'background-dark text-light'
+                    : 'text-dark';
+            }
+        },
         isJobQueue(executor) {
             return executor !== 'Local';
         },
         isSLURM(executor) {
             return executor === 'SLURM';
         },
+        showConnectWorkflowModal() {
+            this.$bvModal.show('connectWorkflow');
+        },
+        connectWorkflow() {},
         refreshWorkflows() {
             this.$store.dispatch('workflows/refreshAll');
         },
-        async togglePushNotifications() {
-            this.togglingPushNotifications = true;
-            await this.$store.dispatch('user/togglePushNotifications');
-            this.togglingPushNotifications = false;
-            this.alertMessage = `Push notifications ${this.profile.pushNotifications}`;
-            this.alertEnabled = true;
-        },
-        async toggleDarkMode() {
-            this.togglingDarkMode = true;
-            this.$store.dispatch('user/toggleDarkMode');
-            this.togglingDarkMode = false;
-            this.alertMessage = `Dark mode ${this.profile.pushNotifications}`;
-            this.alertEnabled = true;
-        },
-        onDelete(run) {
-            axios
-                .get(`/apis/v1/runs/${run.id}/delete/`)
-                .then(response => {
-                    if (response.status === 200) {
-                        this.showCanceledAlert = true;
-                        this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('runs/loadAll');
-                        if (
-                            this.$router.currentRoute.name === 'run' &&
-                            run.id === this.$router.currentRoute.params.id
-                        )
-                            router.push({
-                                name: 'user',
-                                params: {
-                                    username: this.profile.djangoProfile
-                                        .username
-                                }
-                            });
-                    } else {
-                        this.showFailedToCancelAlert = true;
-                    }
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    return error;
-                });
-        },
         showConnectAgentModal() {
-            this.$bvModal.show('newAgent');
+            this.$bvModal.show('connectAgent');
         },
         async connectAgent() {
             let data = {
@@ -1996,92 +2329,62 @@ export default {
                     throw error;
                 });
         },
-        showDeletePrompt(run) {
+        showDeleteRunPrompt(run) {
             this.$bvModal.show('delete ' + run.id);
         },
-        prettify: function(date) {
-            return `${moment(date).fromNow()} (${moment(date).format(
-                'MMMM Do YYYY, h:mm a'
-            )})`;
-        },
-        prettifyShort: function(date) {
-            return `${moment(date).fromNow()}`;
-        },
-        openDataset() {
-            this.$store.dispatch('datasets/updateLoading', true);
-            let data = { agent: this.agent.name };
-            // if (this.mustAuthenticate)
-            //     data['auth'] = {
-            //         username: this.authenticationUsername,
-            //         password: this.authenticationPassword
-            //     };
-
-            axios({
-                method: 'post',
-                url: `/apis/v1/datasets/open/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(async response => {
-                    await this.$store.dispatch(
-                        'datasets/updateOpened',
-                        response.data.session
-                    );
+        deleteRun(run) {
+            axios
+                .get(`/apis/v1/runs/${run.id}/delete/`)
+                .then(response => {
+                    if (response.status === 200) {
+                        this.showCanceledAlert = true;
+                        this.canceledAlertMessage = response.data;
+                        this.$store.dispatch('runs/loadAll');
+                        if (
+                            this.$router.currentRoute.name === 'run' &&
+                            run.id === this.$router.currentRoute.params.id
+                        )
+                            router.push({
+                                name: 'user',
+                                params: {
+                                    username: this.profile.djangoProfile
+                                        .username
+                                }
+                            });
+                    } else {
+                        this.showFailedToCancelAlert = true;
+                    }
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    throw error;
+                    return error;
                 });
         },
-        // selectNode(node) {
-        //     if (
-        //         !this.sessionLoading &&
-        //         this.session !== null &&
-        //         this.session !== undefined
-        //     )
-        //         if (node.kind === 'directory')
-        //             router.push({
-        //                 name: 'dataset',
-        //                 params: {
-        //                     path: node.path
-        //                 }
-        //             });
-        //         else
-        //             router.push({
-        //                 name: 'artifact',
-        //                 params: {
-        //                     path: node.path
-        //                 }
-        //             });
-        // },
-        async unshareDataset(directory) {
-            await axios({
-                method: 'post',
-                url: `/apis/v1/datasets/unshare/`,
-                data: {
-                    user: directory.guest,
-                    path: directory.path,
-                    role: directory.role
-                },
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(() => {
-                    this.loadSharingDatasets();
-                    this.alertMessage = `Unshared dataset ${
-                        this.internalLoaded
-                            ? this.internalNode.path
-                            : this.node.path
-                    } with ${this.sharedUsers.length} user(s)`;
-                    this.alertEnabled = true;
+        async loadAgents() {
+            this.agentsLoading = true;
+            return axios
+                .get(`/apis/v1/agents/get_by_username/`)
+                .then(response => {
+                    this.agentsLoading = false;
+                    this.agents = response.data.agents;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to unshare dataset ${
-                        this.internalLoaded
-                            ? this.internalNode.path
-                            : this.node.path
-                    } with ${this.sharedUsers.length} user(s)`;
-                    this.alertEnabled = true;
+                    this.agentsLoading = false;
+                    if (error.response.status === 500) throw error;
+                });
+        },
+        async loadDataset(path, token) {
+            return axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
+                    { headers: { Authorization: 'Bearer ' + token } }
+                )
+                .then(response => {
+                    this.data = response.data;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
                     throw error;
                 });
         },
@@ -2117,17 +2420,79 @@ export default {
                     this.sharedDataLoading = false;
                     throw error;
                 });
-            // await axios
-            //     .get(`/apis/v1/datasets/shared/`)
-            //     .then(response => {
-            //         this.sharedDatasets = response.data;
-            //     })
-            //     .catch(error => {
-            //         Sentry.captureException(error);
-            //         throw error;
-            //     });
         },
-        agentSelected: function(agent) {
+        openDataset() {
+            this.$store.dispatch('datasets/updateLoading', true);
+            let data = { agent: this.agent.name };
+            // if (this.mustAuthenticate)
+            //     data['auth'] = {
+            //         username: this.authenticationUsername,
+            //         password: this.authenticationPassword
+            //     };
+
+            axios({
+                method: 'post',
+                url: `/apis/v1/datasets/open/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    await this.$store.dispatch(
+                        'datasets/updateOpened',
+                        response.data.session
+                    );
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
+        async unshareDataset(directory) {
+            await axios({
+                method: 'post',
+                url: `/apis/v1/datasets/unshare/`,
+                data: {
+                    user: directory.guest,
+                    path: directory.path,
+                    role: directory.role
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(() => {
+                    this.loadSharingDatasets();
+                    this.alertMessage = `Unshared dataset ${
+                        this.internalLoaded
+                            ? this.internalNode.path
+                            : this.node.path
+                    } with ${this.sharedUsers.length} user(s)`;
+                    this.alertEnabled = true;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.alertMessage = `Failed to unshare dataset ${
+                        this.internalLoaded
+                            ? this.internalNode.path
+                            : this.node.path
+                    } with ${this.sharedUsers.length} user(s)`;
+                    this.alertEnabled = true;
+                    throw error;
+                });
+        },
+        async togglePushNotifications() {
+            this.togglingPushNotifications = true;
+            await this.$store.dispatch('user/togglePushNotifications');
+            this.togglingPushNotifications = false;
+            this.alertMessage = `Push notifications ${this.profile.pushNotifications}`;
+            this.alertEnabled = true;
+        },
+        async toggleDarkMode() {
+            this.togglingDarkMode = true;
+            this.$store.dispatch('user/toggleDarkMode');
+            this.togglingDarkMode = false;
+            this.alertMessage = `Dark mode ${this.profile.pushNotifications}`;
+            this.alertEnabled = true;
+        },
+        goToAgent: function(agent) {
             router.push({
                 name: 'agent',
                 params: {
@@ -2135,21 +2500,7 @@ export default {
                 }
             });
         },
-        prettifyDuration: function(dur) {
-            return moment.duration(dur, 'seconds').humanize();
-        },
-        tabLinkClass(idx) {
-            if (this.profile.djangoProfile === null)
-                return this.profile.darkMode ? '' : 'text-dark';
-            if (this.currentTab === idx) {
-                return this.profile.darkMode ? '' : 'text-dark';
-            } else {
-                return this.profile.darkMode
-                    ? 'background-dark text-light'
-                    : 'text-dark';
-            }
-        },
-        onRunSelected: function(items) {
+        goToRun: function(items) {
             router.push({
                 name: 'run',
                 params: {
@@ -2158,21 +2509,7 @@ export default {
                 }
             });
         },
-        async loadAgents() {
-            this.agentsLoading = true;
-            return axios
-                .get(`/apis/v1/agents/get_by_username/`)
-                .then(response => {
-                    this.agentsLoading = false;
-                    this.agents = response.data.agents;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.agentsLoading = false;
-                    if (error.response.status === 500) throw error;
-                });
-        },
-        workflowSelected: function(workflow) {
+        goToWorkflow: function(workflow) {
             router.push({
                 name: 'workflow',
                 params: {
@@ -2180,40 +2517,6 @@ export default {
                     name: workflow['repo']['name']
                 }
             });
-        },
-        async getDirectory(path) {
-            await axios
-                .get(
-                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
-                    {
-                        headers: {
-                            Authorization:
-                                'Bearer ' +
-                                this.profile.djangoProfile.cyverse_token
-                        }
-                    }
-                )
-                .then(response => {
-                    this.sharedDatasets.push(response.data);
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
-        async loadDataset(path, token) {
-            return axios
-                .get(
-                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
-                    { headers: { Authorization: 'Bearer ' + token } }
-                )
-                .then(response => {
-                    this.data = response.data;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
         }
     },
     filters: {
@@ -2227,6 +2530,11 @@ export default {
 <style lang="sass">
 @import "../scss/_colors.sass"
 @import "../scss/main.sass"
+
+.autocomplete-result.is-active
+  .autocomplete-result:hover
+    background-color: #4AAE9B
+    color: white
 
 .background-dark
   background-color: $dark !important

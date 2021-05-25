@@ -1,34 +1,26 @@
+import base64
 import json
 import tempfile
-import base64
 from os.path import join
 from pathlib import Path
 
 from celery.result import AsyncResult
-from cv2 import cv2
-from czifile import czifile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
-from django.shortcuts import redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django_celery_beat.models import IntervalSchedule
-from preview_generator.exception import UnsupportedMimeType
-from preview_generator.manager import PreviewManager
 from rest_framework.decorators import api_view
 
 from plantit import settings
+from plantit.agents.models import Agent
 from plantit.redis import RedisClient
 from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
-from plantit.runs.ssh import SSH
-from plantit.runs.tasks import submit_run, list_run_results
-from plantit.runs.thumbnail import Thumbnail
-from plantit.runs.utils import update_status, map_run, submission_log_file_path, create_run, parse_eta, map_delayed_run_task, \
-    map_repeating_run_task, get_run_results, cancel_run
-from plantit.agents.models import Agent
-from plantit.utils import get_repo_config
-from plantit.workflows.utils import refresh_workflow
+from plantit.runs.tasks import submit_run
+from plantit.runs.utils import update_run_status, map_run, get_run_submission_log_file_path, create_run, parse_eta, map_delayed_run_task, \
+    map_repeating_run_task, cancel_run
+from plantit.ssh import SSH
 
 
 @api_view(['GET'])
@@ -167,7 +159,7 @@ def get_submission_logs(request, id):
     except Run.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = submission_log_file_path(run)
+    log_path = get_run_submission_log_file_path(run)
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
@@ -398,7 +390,7 @@ def cancel(request, id):
         run.completed = now
         run.save()
 
-        update_status(run, message)
+        update_run_status(run, message)
         return HttpResponse(message)
     else:
         # cancel the scheduler job
@@ -409,7 +401,7 @@ def cancel(request, id):
         run.completed = now
         run.save()
 
-        update_status(run, message)
+        update_run_status(run, message)
         return HttpResponse(message)
 
 
@@ -453,7 +445,7 @@ def status(request, id):
                 run.updated = timezone.now()
                 run.save()
 
-            update_status(run, line)
+            update_run_status(run, line)
 
         run.updated = timezone.now()
         run.save()

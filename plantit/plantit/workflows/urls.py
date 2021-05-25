@@ -10,4 +10,5 @@ urlpatterns = [
     path(r'<username>/<name>/readme/', views.get_readme),
     path(r'<username>/<name>/refresh/', views.refresh),
     path(r'<username>/<name>/validate/', views.validate),
+    path(r'<username>/<name>/search/', views.search_by_name),
 ]

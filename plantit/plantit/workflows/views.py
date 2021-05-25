@@ -4,13 +4,12 @@ import json
 import httpx
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseNotFound
 
 from plantit import settings
 from plantit.redis import RedisClient
-from plantit.runs.utils import list_workflows_for_users
-from plantit.utils import get_repo_config, validate_workflow_config, get_repo_readme
-from plantit.workflows.utils import refresh_workflow
+from plantit.github import get_repo_config, get_repo_readme
+from plantit.workflows.utils import refresh_workflow, list_workflows_for_users, validate_workflow_config, search_workflows_by_name
 
 
 @login_required
@@ -53,6 +52,13 @@ def refresh_all(request):
 def list_by_user(request, username):
     workflows = asyncio.run(list_workflows_for_users([username], request.user.profile.github_token))
     return JsonResponse({'workflows': workflows})
+
+
+@login_required
+def search_by_name(request, username, name):
+    workflow = search_workflows_by_name(username, name, request.user.profile.github_token)
+
+    return HttpResponseNotFound() if workflow is None else JsonResponse(workflow)
 
 
 @login_required
