@@ -6,9 +6,9 @@
                 class="p-3 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
-                :border-variant="profile.darkMode ? 'default' : 'default'"
-                :text-variant="profile.darkMode ? 'dark' : 'white'"
-                :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                border-variant="default"
+                text-variant="white"
+                bg-variant="white"
                 style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.95"
             >
                 <b-row align-v="center" class="justify-content-md-center">
@@ -20,9 +20,7 @@
                             class="m-0 p-0"
                         ></b-img>
                         <h1
-                            :class="
-                                profile.darkMode ? 'text-white' : 'text-dark'
-                            "
+                            class="text-dark"
                             style="text-decoration: underline;"
                         >
                             plant<small
@@ -42,11 +40,7 @@
                                 class="m-0 p-0"
                             >
                                 <b-button
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
+                                    variant="outline-dark"
                                 >
                                     <i class="fas fa-book fa-2x"></i>
                                     <br />
@@ -59,11 +53,7 @@
                                 href="https://github.com/Computational-Plant-Science/plantit/discussions/63"
                             >
                                 <b-button
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
+                                    variant="outline-dark"
                                     title="GitHub"
                                 >
                                     <i class="fab fa-github fa-2x"></i>
@@ -73,11 +63,7 @@
                             </b-nav-item>
                             <b-nav-item href="#" class="m-0 p-0" title="Slack">
                                 <b-button
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
+                                    variant="outline-dark"
                                     title="GitHub"
                                 >
                                     <i class="fab fa-slack fa-2x"></i>
@@ -87,11 +73,7 @@
                             </b-nav-item>
                             <!--<b-nav-item class="m-0 p-0" title="Slack">
                                 <b-button
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
+                                    variant="outline-dark"
                                     title="Slack"
                                 >
                                     <i class="fab fa-slack fa-2x"></i>
@@ -110,11 +92,7 @@
                                 "
                             >
                                 <b-button
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'white'
-                                    "
+                                    variant="white"
                                 >
                                     <b-img
                                         v-if="profile.githubProfile"
@@ -141,9 +119,7 @@
                 <b-row class="m-0 p-0" v-if="!profile.loggedIn">
                     <b-col class="m-0 p-0">
                         <b-button
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
+                            variant="white"
                             block
                             class="text-center"
                             href="/apis/v1/idp/cyverse_login/"

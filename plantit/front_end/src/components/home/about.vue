@@ -21,11 +21,11 @@
                             class="m-0 p-0"
                         ></b-img>
                         <div
-                            style="background: linear-gradient(rgba(97,97,99,1), rgba(97,97,99,1)) no-repeat center/3px 92%;margin-left: -2px"
+                            style="background: linear-gradient(rgba(97,97,99,1), rgba(97,97,99,1)) no-repeat center/3px 75%;margin-left: -2px"
                         >
                             <h1
-                                class="text-white"
-                                style="text-decoration: underline;"
+                                class="text-white mb-0"
+                                style="text-decoration: underline; z-index: 10"
                             >
                                 plant<small
                                     class="mb-3 text-success"
@@ -33,6 +33,12 @@
                                     >IT</small
                                 >
                             </h1>
+                            <b-img
+                                class="mt-0 pt-0"
+                                :src="require('../../assets/coil.png')"
+                                style="max-width: 3rem; overflow: hidden; position: absolute; left: 48.6%; z-index: 1; opacity: 0.2"
+                                center
+                            ></b-img>
                             <h4 class="text-white mt-4">
                                 A browser portal for easy
                                 <span class="text-success"
