@@ -20,25 +20,34 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h1 class="text-white" style="text-decoration: underline;">
-                            plant<small
-                                class="mb-3 text-success"
+                        <div
+                            style="background: linear-gradient(rgba(97,97,99,1), rgba(97,97,99,1)) no-repeat center/3px 92%;margin-left: -2px"
+                        >
+                            <h1
+                                class="text-white"
                                 style="text-decoration: underline;"
-                                >IT</small
                             >
-                        </h1>
-                        <h4 class="text-white mt-4">
-                            A pluggable browser portal for
-                            <span class="text-success"
-                                ><span class="fa-stack mr-0 fa-2x">
-                                    <i class="fas fa-seedling fa-stack-2x"></i>
-                                    <i
-                                        class="text-dark fas fa-camera-retro fa-stack-1x"
-                                        style="opacity: 0.4;"
-                                    ></i> </span
-                                >phenotyping automation.</span
-                            >
-                        </h4>
+                                plant<small
+                                    class="mb-3 text-success"
+                                    style="text-decoration: underline;"
+                                    >IT</small
+                                >
+                            </h1>
+                            <h4 class="text-white mt-4">
+                                A browser portal for easy
+                                <span class="text-success"
+                                    ><span class="fa-stack mr-0 fa-2x">
+                                        <i
+                                            class="fas fa-seedling fa-stack-2x"
+                                        ></i>
+                                        <i
+                                            class="text-dark fas fa-camera-retro fa-stack-1x"
+                                            style="opacity: 0.4;"
+                                        ></i> </span
+                                    >phenotyping automation.</span
+                                >
+                            </h4>
+                        </div>
                     </b-col>
                 </b-row>
                 <br />
