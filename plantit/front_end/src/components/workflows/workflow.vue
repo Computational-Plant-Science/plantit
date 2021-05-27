@@ -1,15 +1,13 @@
 <template>
     <div
-        class="w-100 h-100 p-2"
+        class="w-100 h-100"
         :style="
             profile.darkMode
                 ? 'background-color: #616163'
                 : 'background-color: white' + '; min-height: 100%'
         "
     >
-        <br />
-        <br />
-        <b-container class="p-3 vl" fluid>
+        <b-container class="p-2 vl" fluid>
             <b-row no-gutters class="mt-3">
                 <b-col v-if="showStatusAlert">
                     <b-alert
@@ -37,52 +35,43 @@
                 <b-col>
                     <b-row>
                         <b-col>
-                            <b-card
-                                :bg-variant="
-                                    profile.darkMode ? 'dark' : 'white'
+                            <b-alert
+                                id="flowInvalid"
+                                v-if="
+                                    this.getWorkflow.validation_errors !==
+                                        undefined
                                 "
-                                :header-bg-variant="
-                                    profile.darkMode ? 'dark' : 'white'
+                                :show="
+                                    this.getWorkflow.validation_errors !==
+                                        undefined
                                 "
-                                border-variant="default"
-                                :header-border-variant="
-                                    profile.darkMode ? 'dark' : 'white'
-                                "
-                                :text-variant="
-                                    profile.darkMode ? 'white' : 'dark'
-                                "
-                                class="overflow-hidden"
-                            >
-                                <b-alert
-                                    id="flowInvalid"
-                                    v-if="this.getWorkflow.validation_errors !== undefined"
-                                    :show="this.getWorkflow.validation_errors !== undefined"
-                                    variant="danger"
-                                    >This flow's configuration is invalid. It
-                                    cannot be run in this state.
-                                    <b-link
-                                        :href="
-                                            'https://github.com/' +
-                                                this.username +
-                                                '/' +
-                                                this.name +
-                                                '/issues/new'
-                                        "
-                                        ><i
-                                            class="fab fa-github fa-1x mr-1 fa-fw"
-                                        ></i
-                                        >File an issue?</b-link
-                                    ><br />
-                                    Errors:
-                                    {{
-                                        this.getWorkflow.validation_errors.join(', ')
-                                    }}
-                                </b-alert>
-                                <workflowdetail
-                                    :show-public="true"
-                                    :workflow="getWorkflow"
-                                ></workflowdetail>
-                            </b-card>
+                                variant="danger"
+                                >This flow's configuration is invalid. It cannot
+                                be run in this state.
+                                <b-link
+                                    :href="
+                                        'https://github.com/' +
+                                            this.owner +
+                                            '/' +
+                                            this.name +
+                                            '/issues/new'
+                                    "
+                                    ><i
+                                        class="fab fa-github fa-1x mr-1 fa-fw"
+                                    ></i
+                                    >File an issue?</b-link
+                                ><br />
+                                Errors:
+                                {{
+                                    this.getWorkflow.validation_errors.join(
+                                        ', '
+                                    )
+                                }}
+                            </b-alert>
+                            <workflowdetail
+                                :show-public="true"
+                                :workflow="getWorkflow"
+                            ></workflowdetail>
                         </b-col>
                     </b-row>
                     <br />
@@ -638,9 +627,7 @@
                                                             "
                                                             >virtual
                                                             memory</span
-                                                        ><span
-                                                            v-if="agent.gpu"
-                                                        >
+                                                        ><span v-if="agent.gpu">
                                                             , GPU
                                                         </span>
                                                         <span v-else
@@ -653,8 +640,7 @@
                                                     class="text-center"
                                                     v-if="
                                                         !publicResourcesLoading &&
-                                                            agents.length ===
-                                                                0
+                                                            agents.length === 0
                                                     "
                                                 >
                                                     <b-col>
@@ -905,7 +891,7 @@
                             ><b-button
                                 :disabled="!flowReady || submitted"
                                 @click="onTryStart"
-                                variant="success"
+                                variant="warning"
                                 block
                             >
                                 {{
@@ -1055,7 +1041,7 @@
                             </b-row>
                         </b-list-group-item>
                     </b-list-group>
-                    <hr />
+                    <hr class="mt-2 mb-2" style="border-color: gray" />
                     <b-row
                         ><b-col align-self="end"
                             ><h5
@@ -1204,12 +1190,12 @@
 </template>
 
 <script>
-import workflowdetail from '../components/workflow-detail';
-import runinput from '../components/run-input';
+import workflowdetail from '@/components/workflows/workflow-detail';
+import runinput from '@/components/runs/run-input';
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
-import router from '../router';
+import router from '../../router';
 import Multiselect from 'vue-multiselect';
 import moment from 'moment';
 import cronstrue from 'cronstrue';
@@ -1226,7 +1212,7 @@ export default {
         runinput
     },
     props: {
-        username: {
+        owner: {
             required: true
         },
         name: {
@@ -1630,9 +1616,9 @@ export default {
             // if we have pre-configured values for this flow, populate them
             if (
                 `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}` in
-                this.workflowsRecentlyRun
+                this.recentlyRun
             ) {
-                let flowConfig = this.workflowsRecentlyRun[
+                let flowConfig = this.recentlyRun[
                     `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`
                 ];
                 this.params =
@@ -1767,14 +1753,18 @@ export default {
                 })
                     .then(response => {
                         setTimeout(
-                            router.push({
-                                name: 'run',
-                                params: {
-                                    username: this.profile.djangoProfile
-                                        .username,
-                                    id: response.data.id
-                                }
+                            this.$emit('runSubmitted', {
+                                username: this.profile.djangoProfile.username,
+                                id: response.data.id
                             }),
+                            // router.push({
+                            //     name: 'run',
+                            //     params: {
+                            //         username: this.profile.djangoProfile
+                            //             .username,
+                            //         id: response.data.id
+                            //     }
+                            // }),
                             2000
                         );
                     })
@@ -1843,8 +1833,8 @@ export default {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', [
             'workflow',
-            'workflowsLoading',
-            'workflowsRecentlyRun'
+            'publicLoading',
+            'recentlyRun'
         ]),
         mustAuthenticate() {
             return !this.selectedResource.policies.some(
@@ -1855,11 +1845,7 @@ export default {
             );
         },
         getWorkflow() {
-            var workflow = this.workflow(
-                this.$router.currentRoute.params.username,
-                this.$router.currentRoute.params.name
-            );
-            return workflow;
+            return this.workflow(this.owner, this.name);
         },
         scheduledTime: function() {
             return `${this.submitType === 'After' ? 'in' : 'every'} ${
@@ -1924,8 +1910,8 @@ export default {
 </script>
 
 <style scoped lang="sass">
-@import "../scss/_colors.sass"
-@import "../scss/main.sass"
+@import "../../scss/_colors.sass"
+@import "../../scss/main.sass"
 
 .workflow-icon
     width: 200px

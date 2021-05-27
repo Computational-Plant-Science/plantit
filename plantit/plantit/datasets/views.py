@@ -58,7 +58,7 @@ def share(request):
 
     for guest in guests:
         try:
-            user = User.objects.get(username=guest['user'])
+            user = User.objects.get(owner=guest['user'])
         except:
             return HttpResponseNotFound()
 
@@ -110,7 +110,7 @@ def unshare(request):
         role = DatasetRole.read if role_str.lower() == 'read' else DatasetRole.write
 
     try:
-        guest = User.objects.get(username=guest_username)
+        guest = User.objects.get(owner=guest_username)
     except:
         return HttpResponseNotFound()
 

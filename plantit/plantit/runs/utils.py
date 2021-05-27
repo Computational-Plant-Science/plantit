@@ -260,24 +260,24 @@ def prep_run_command(
 
 def create_run(username: str, agent_name: str, workflow: dict) -> Run:
     now = timezone.now()
-    user = User.objects.get(username=username)
+    user = User.objects.get(owner=username)
     agent = Agent.objects.get(name=agent_name)
-    workflow_owner = workflow['repo']['owner']['login']
-    workflow_name = workflow['repo']['name']
-    workflow_config = get_repo_config(workflow_name, workflow_owner, user.profile.github_token)
+    repo_name = workflow['repo']['owner']['login']
+    repo_owner = workflow['repo']['name']
+    repo_config = get_repo_config(repo_name, repo_owner, user.profile.github_token)
     run = Run.objects.create(
         guid=str(uuid.uuid4()),
         user=user,
-        workflow_owner=workflow_owner,
-        workflow_name=workflow_name,
+        workflow_owner=repo_name,
+        workflow_name=repo_owner,
         agent=agent,
         job_status='CREATED',
         created=now,
         updated=now,
         token=binascii.hexlify(os.urandom(20)).decode())
 
-    if 'logo' in workflow_config:
-        run.workflow_image_url = f"https://raw.githubusercontent.com/{workflow_owner}/{workflow_name}/master/{workflow_config['logo']}"
+    if 'logo' in repo_config:
+        run.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{repo_config['logo']}"
 
     # add tags
     for tag in workflow['config']['tags']:

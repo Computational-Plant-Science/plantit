@@ -115,7 +115,7 @@
                                 :img-src="
                                     openedDataset.opening ||
                                     fileIs3dModel(file.label)
-                                        ? require('../assets/no_preview_thumbnail.png')
+                                        ? require('../../assets/no_preview_thumbnail.png')
                                         : `/apis/v1/datasets/thumbnail/?path=${file.path}`
                                 "
                                 v-for="file in currentPageFiles"
@@ -700,7 +700,7 @@ export default {
     asyncComputed: {},
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
+        ...mapGetters('workflows', ['workflow', 'recentlyRun']),
         ...mapGetters('datasets', [
             'openedDataset',
             'openedDatasetLoading'

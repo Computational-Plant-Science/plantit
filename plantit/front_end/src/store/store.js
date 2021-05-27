@@ -5,6 +5,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { user } from '@/store/user';
 import { users } from '@/store/users';
+// import { agents } from '@/store/agents';
 import { workflows } from '@/store/workflows';
 import { runs } from '@/store/runs';
 import { datasets } from '@/store/datasets';
@@ -27,6 +28,7 @@ const store = new Vuex.Store({
     modules: {
         user,
         users,
+        // agents,
         workflows,
         runs,
         datasets,

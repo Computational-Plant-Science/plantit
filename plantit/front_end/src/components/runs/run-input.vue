@@ -135,7 +135,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import datatree from '@/components/data-tree.vue';
+import datatree from '@/components/datasets/data-tree.vue';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 
@@ -169,7 +169,7 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['workflowsRecentlyRun']),
+        ...mapGetters('workflows', ['recentlyRun']),
         workflowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }

@@ -18,7 +18,7 @@ def get_by_user(request, username):
     count = start + 20
 
     try:
-        user = User.objects.get(username=username)
+        user = User.objects.get(owner=username)
     except:
         return HttpResponseNotFound()
 

@@ -20,7 +20,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from plantit.redis import RedisClient
-from plantit.runs.tasks import aggregate_usage_statistics
+from plantit.runs.tasks import aggregate_user_statistics
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
@@ -100,7 +100,8 @@ class IDPViewSet(viewsets.ViewSet):
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-        return redirect(f"/user/{user.username}/")
+        # return redirect(f"/user/{user.username}/")
+        return redirect(f"/dashboard/")
 
     @action(methods=['get'], detail=False)
     def github_request_identity(self, request):
@@ -213,7 +214,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         if stats_last_aggregated is None:
             self.logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
-            aggregate_usage_statistics.delay(user.username)
+            aggregate_user_statistics.delay(user.username)
             stats = None
         else:
 
@@ -221,7 +222,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
             if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
                 self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
-                aggregate_usage_statistics.delay(user.username)
+                aggregate_user_statistics.delay(user.username)
                 stats = None
 
         if user.profile.push_notification_status == 'pending':
@@ -271,7 +272,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                     'cyverse_profile': None,
                 })
 
-        user = self.queryset.get(username=username)
+        user = self.queryset.get(owner=username)
         response = {
             'django_profile': {
                 'username': username,

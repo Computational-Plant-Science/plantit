@@ -54,9 +54,6 @@ export const runs = {
             ]);
             commit('setLoading', false);
         },
-        update({ commit }, run) {
-            commit('update', run);
-        },
         refresh({ commit }, id) {
             axios
                 .get(`/apis/v1/runs/${id}/`)
@@ -67,7 +64,10 @@ export const runs = {
                     Sentry.captureException(error);
                     return error;
                 });
-        }
+        },
+        update({ commit }, run) {
+            commit('update', run);
+        },
     },
     getters: {
         run: state => id => {

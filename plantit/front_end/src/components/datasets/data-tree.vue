@@ -1397,8 +1397,8 @@ export default {
 </script>
 
 <style scoped lang="sass">
-@import "../scss/_colors.sass"
-@import "../scss/main.sass"
+@import "../../scss/_colors.sass"
+@import "../../scss/main.sass"
 .custom-file-input:lang(en) ~ .custom-file-label::after
   content: 'Upload'
 </style>

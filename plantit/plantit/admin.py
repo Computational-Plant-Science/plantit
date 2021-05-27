@@ -2,15 +2,16 @@ from django.contrib import admin
 
 from plantit.agents.models import Agent, AgentAccessPolicy
 from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
+from plantit.workflows.models import Workflow
 
 
 @admin.register(Agent)
-class ResourceAdmin(admin.ModelAdmin):
+class AgentAdmin(admin.ModelAdmin):
     pass
 
 
 @admin.register(AgentAccessPolicy)
-class ResourceAccessPolicyAdmin(admin.ModelAdmin):
+class AgentAccessPolicyAdmin(admin.ModelAdmin):
     pass
 
 
@@ -20,5 +21,10 @@ class DatasetAccessPolicyAdmin(admin.ModelAdmin):
 
 
 @admin.register(DatasetSession)
-class SessionAdmin(admin.ModelAdmin):
+class DatasetSessionAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Workflow)
+class WorkflowAdmin(admin.ModelAdmin):
     pass

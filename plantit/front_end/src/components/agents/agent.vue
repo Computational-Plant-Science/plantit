@@ -794,7 +794,7 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['workflowsRecentlyRun']),
+        ...mapGetters('workflows', ['recentlyRun']),
         ...mapGetters('datasets', [
             'openedDatasetLoading',
             'openedDataset'
@@ -1091,6 +1091,6 @@ export default {
 </script>
 
 <style scoped lang="sass">
-@import "../scss/_colors.sass"
-@import "../scss/main.sass"
+@import "../../scss/_colors.sass"
+@import "../../scss/main.sass"
 </style>

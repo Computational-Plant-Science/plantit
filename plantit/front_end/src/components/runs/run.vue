@@ -1063,7 +1063,7 @@
                                                                     >
                                                                         <b-img
                                                                             :src="
-                                                                                require('../assets/no_preview_thumbnail.png')
+                                                                                require('../../assets/no_preview_thumbnail.png')
                                                                             "
                                                                         ></b-img></div
                                                                 ></template>
@@ -1363,7 +1363,7 @@
     </div>
 </template>
 <script>
-import WorkflowBlurb from '@/components/workflow-blurb.vue';
+import WorkflowBlurb from '@/components/workflows/workflow-blurb.vue';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
 import axios from 'axios';
@@ -1428,9 +1428,9 @@ export default {
         },
         thumbnailPath(file) {
             if (this.noPreview(file))
-                return require('../assets/no_preview_thumbnail.png');
+                return require('../../assets/no_preview_thumbnail.png');
             else if (!this.getRun.result_previews_loaded)
-                return require('../assets/PlantITLoading.gif');
+                return require('../../assets/PlantITLoading.gif');
             else return this.thumbnailFor(file.path);
         },
         thumbnailFor(path) {
@@ -1880,7 +1880,7 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['workflow', 'workflowsRecentlyRun']),
+        ...mapGetters('workflows', ['workflow', 'recentlyRun']),
         ...mapGetters('runs', ['run', 'runs', 'runsLoading']),
         filteredResults() {
             return this.getRun.output_files
@@ -1965,8 +1965,8 @@ export default {
 </script>
 
 <style scoped lang="sass">
-@import "../scss/_colors.sass"
-@import "../scss/main.sass"
+@import "../../scss/_colors.sass"
+@import "../../scss/main.sass"
 
 
 .green

@@ -28,7 +28,7 @@
                 class="card-img-left"
                 style="max-width: 7rem"
                 right
-                :src="require('../assets/logo.png')"
+                :src="require('../../assets/logo.png')"
             ></b-img>
             <b-col>
                 <b-row>
@@ -534,7 +534,7 @@
                                     <div
                                         :class="
                                             profile.darkMode
-                                                ? 'theme-container-readme m-0 p-3'
+                                                ? 'theme-container-get_readme m-0 p-3'
                                                 : 'theme-container-light m-0 p-3'
                                         "
                                     >
@@ -600,8 +600,8 @@ export default {
 };
 </script>
 <style scoped lang="sass">
-@import "../scss/_colors.sass"
-@import "../scss/main.sass"
+@import "../../scss/_colors.sass"
+@import "../../scss/main.sass"
 
 .flow-icon
     width: 200px

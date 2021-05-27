@@ -8,7 +8,9 @@ from os import environ
 from os.path import join
 
 import cv2
+from asgiref.sync import async_to_sync
 from celery.utils.log import get_task_logger
+from channels.layers import get_channel_layer
 from czifile import czifile
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -28,7 +30,8 @@ from plantit.runs.utils import update_run_status, remove_logs, create_run, \
 from plantit.ssh import SSH, execute_command
 from plantit.terrain import list_dir
 from plantit.sns import SnsClient
-from plantit.workflows.utils import refresh_workflow
+from plantit.github import get_repo
+from plantit.workflows.models import Workflow
 
 logger = get_task_logger(__name__)
 
@@ -41,7 +44,12 @@ def create_and_submit_run(username: str, agent: str, flow: dict):
 
 @app.task(track_started=True)
 def submit_run(id: str, flow):
-    run = Run.objects.get(guid=id)
+    try:
+        run = Run.objects.get(guid=id)
+    except:
+        logger.warning(f"Could not find run {id} (might have been deleted?)")
+        return
+
     run.job_status = 'RUNNING'
     run.submission_id = submit_run.request.id  # set this task's ID on the run so user can cancel it
     run.save()
@@ -113,10 +121,14 @@ def submit_run(id: str, flow):
 
 @app.task()
 def poll_run_status(id: str):
-    run = Run.objects.get(guid=id)
+    try:
+        run = Run.objects.get(guid=id)
+    except:
+        logger.warning(f"Could not find run {id} (might have been deleted?)")
+        return
+
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
     cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES')) * 60
-
     logger.info(f"Checking {run.agent.name} scheduler status for run {id} (SLURM job {run.job_id})")
 
     # if the job already failed, schedule cleanup
@@ -220,7 +232,7 @@ def cleanup_run(id: str):
     try:
         run = Run.objects.get(guid=id)
     except:
-        logger.info(f"Could not find run {id} (might have been deleted?)")
+        logger.warning(f"Could not find run {id} (might have been deleted?)")
         return
 
     logger.info(f"Cleaning up run {id} local working directory {run.agent.workdir}")
@@ -243,114 +255,11 @@ def cleanup_run(id: str):
 
 
 @app.task()
-def clean_singularity_cache(agent_name: str):
-    agent = Agent.objects.get(name=agent_name)
-    ssh = SSH(agent.hostname, agent.port, agent.username)
-    with ssh:
-        execute_command(
-            ssh_client=ssh,
-            pre_command=agent.pre_commands,
-            command="singularity cache clean",
-            directory=agent.workdir,
-            allow_stderr=True)
-
-
-@app.task()
-def run_command(agent_name: str, command: str, pre_command: str = None):
-    agent = Agent.objects.get(name=agent_name)
-    ssh = SSH(agent.hostname, agent.port, agent.username)
-    with ssh:
-        lines = execute_command(
-            ssh_client=ssh,
-            pre_command=agent.pre_commands + '' if pre_command is None else f"&& {pre_command}",
-            command=command,
-            directory=agent.workdir,
-            allow_stderr=True)
-
-
-@app.task()
-def open_dataset_session(id: str):
-    try:
-        session = DatasetSession.objects.get(guid=id)
-        ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
-
-        with ssh:
-            msg = f"Creating working directory {session.workdir}"
-            update_dataset_session(session, [f"Creating working directory {session.workdir}"])
-            logger.info(msg)
-
-            execute_command(
-                ssh_client=ssh,
-                pre_command=':',
-                command=f"mkdir {session.guid}/",
-                directory=session.agent.workdir)
-
-            msg = f"Transferring files from {session.path} to {session.agent.name}"
-            update_dataset_session(session, [msg])
-            logger.info(msg)
-
-            command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_token}\n"
-            lines = execute_command(
-                ssh_client=ssh,
-                pre_command=session.agent.pre_commands,
-                command=command,
-                directory=session.workdir,
-                allow_stderr=True)
-            update_dataset_session(session, lines)
-
-            session.opening = False
-            session.save()
-            msg = f"Succesfully opened dataset"
-            update_dataset_session(session, [msg])
-            logger.info(msg)
-    except:
-        msg = f"Failed to open session: {traceback.format_exc()}."
-        logger.error(msg)
-
-
-@app.task()
-def save_dataset_session(id: str, only_modified: bool):
-    try:
-        session = DatasetSession.objects.get(guid=id)
-
-        msg = f"Saving dataset session {session.guid} on {session.agent.name}"
-        update_dataset_session(session, [msg])
-        logger.info(msg)
-
-        ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
-
-        with ssh:
-            msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.agent.name} to {session.path}"
-            update_dataset_session(session, [msg])
-            logger.info(msg)
-
-            command = f"plantit terrain push {session.path} --terrain_token {session.user.profile.cyverse_token}"
-            for file in session.modified:
-                command += f" --include_name {file}"
-
-            lines = execute_command(
-                ssh_client=ssh,
-                pre_command=session.agent.pre_commands,
-                command=command,
-                directory=session.workdir,
-                allow_stderr=True)
-            update_dataset_session(session, lines)
-    except:
-        msg = f"Failed to open session: {traceback.format_exc()}."
-        logger.error(msg)
-
-
-@app.task()
-def close_dataset_session(id: str):
-    pass
-
-
-@app.task()
 def list_run_results(id: str):
     try:
         run = Run.objects.get(guid=id)
     except:
-        logger.info(f"Could not find run {id} (might have been deleted?)")
+        logger.warning(f"Could not find run {id} (might have been deleted?)")
         return
 
     redis = RedisClient.get()
@@ -359,7 +268,7 @@ def list_run_results(id: str):
     workflow = redis.get(f"workflow/{run.workflow_owner}/{run.workflow_name}")
 
     if workflow is None:
-        workflow = refresh_workflow(run.workflow_owner, run.workflow_name, run.user.profile.github_token)['config']
+        workflow = get_repo(run.workflow_owner, run.workflow_name, run.user.profile.github_token)['config']
     else:
         workflow = json.loads(workflow)['config']
 
@@ -480,11 +389,124 @@ def list_run_results(id: str):
 
 
 @app.task()
-def aggregate_usage_statistics(username: str):
+def clean_agent_singularity_cache(agent_name: str):
     try:
-        user = User.objects.get(username=username)
+        agent = Agent.objects.get(name=agent_name)
     except:
-        logger.info(f"Could not find user {username}")
+        logger.warning(f"Agent {agent_name} does not exist")
+        return
+
+    ssh = SSH(agent.hostname, agent.port, agent.username)
+    with ssh:
+        execute_command(
+            ssh_client=ssh,
+            pre_command=agent.pre_commands,
+            command="singularity cache clean",
+            directory=agent.workdir,
+            allow_stderr=True)
+
+
+@app.task()
+def execute_agent_command(agent_name: str, command: str, pre_command: str = None):
+    try:
+        agent = Agent.objects.get(name=agent_name)
+    except:
+        logger.warning(f"Agent {agent_name} does not exist")
+        return
+
+    ssh = SSH(agent.hostname, agent.port, agent.username)
+    with ssh:
+        lines = execute_command(
+            ssh_client=ssh,
+            pre_command=agent.pre_commands + '' if pre_command is None else f"&& {pre_command}",
+            command=command,
+            directory=agent.workdir,
+            allow_stderr=True)
+
+
+@app.task()
+def open_dataset_session(id: str):
+    try:
+        session = DatasetSession.objects.get(guid=id)
+        ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
+
+        with ssh:
+            msg = f"Creating working directory {session.workdir}"
+            update_dataset_session(session, [f"Creating working directory {session.workdir}"])
+            logger.info(msg)
+
+            execute_command(
+                ssh_client=ssh,
+                pre_command=':',
+                command=f"mkdir {session.guid}/",
+                directory=session.agent.workdir)
+
+            msg = f"Transferring files from {session.path} to {session.agent.name}"
+            update_dataset_session(session, [msg])
+            logger.info(msg)
+
+            command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_token}\n"
+            lines = execute_command(
+                ssh_client=ssh,
+                pre_command=session.agent.pre_commands,
+                command=command,
+                directory=session.workdir,
+                allow_stderr=True)
+            update_dataset_session(session, lines)
+
+            session.opening = False
+            session.save()
+            msg = f"Succesfully opened dataset"
+            update_dataset_session(session, [msg])
+            logger.info(msg)
+    except:
+        msg = f"Failed to open session: {traceback.format_exc()}."
+        logger.error(msg)
+
+
+@app.task()
+def save_dataset_session(id: str, only_modified: bool):
+    try:
+        session = DatasetSession.objects.get(guid=id)
+
+        msg = f"Saving dataset session {session.guid} on {session.agent.name}"
+        update_dataset_session(session, [msg])
+        logger.info(msg)
+
+        ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
+
+        with ssh:
+            msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.agent.name} to {session.path}"
+            update_dataset_session(session, [msg])
+            logger.info(msg)
+
+            command = f"plantit terrain push {session.path} --terrain_token {session.user.profile.cyverse_token}"
+            for file in session.modified:
+                command += f" --include_name {file}"
+
+            lines = execute_command(
+                ssh_client=ssh,
+                pre_command=session.agent.pre_commands,
+                command=command,
+                directory=session.workdir,
+                allow_stderr=True)
+            update_dataset_session(session, lines)
+    except:
+        msg = f"Failed to open session: {traceback.format_exc()}."
+        logger.error(msg)
+
+
+@app.task()
+def close_dataset_session(id: str):
+    pass
+
+
+@app.task()
+def aggregate_user_statistics(username: str):
+    try:
+        user = User.objects.get(owner=username)
+    except:
+        logger.warning(f"User {username} does not exist")
         return
 
     redis = RedisClient.get()
@@ -507,3 +529,56 @@ def aggregate_usage_statistics(username: str):
     #     'type': 'update_run_status',
     #     'run': map_user(user),
     # })
+
+
+@app.task()
+def refresh_personal_workflows(owner: str):
+    try:
+        user = User.objects.get(profile__github_username=owner)
+    except:
+        logger.warning(f"User {owner} does not exist")
+        return
+
+    redis = RedisClient.get()
+    deleted = 0
+    for key in redis.scan_iter(match=f"workflows/{owner}/*"):
+        repo = json.loads(redis.get(key))
+        deleted += 1
+        redis.delete(key)
+        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
+            'type': 'remove_workflow',
+            'workflow': repo
+        })
+
+    logger.info(f"Cleaned {deleted} stale workflow(s) from {owner}'s cache ")
+
+    workflows = Workflow.objects.filter(user=user)
+    for workflow in workflows:
+        repo = get_repo(workflow.repo_owner, workflow.repo_name, user.profile.github_token)
+        repo['public'] = workflow.public
+        redis.set(f"workflows/{owner}/{workflow.repo_name}", json.dumps(repo))
+        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
+            'type': 'update_workflow',
+            'workflow': repo
+        })
+
+    logger.info(f"Wrote {len(workflows)} workflow(s) to {owner}'s cache")
+
+
+@app.task()
+def refresh_all_workflows(token: str):
+    redis = RedisClient.get()
+    public = Workflow.objects.filter(public=True)
+    private = Workflow.objects.filter(public=False)
+
+    for workflow in public:
+        repo = get_repo(workflow.repo_owner, workflow.repo_name, token)
+        repo['public'] = True
+        redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
+
+    for workflow in private:
+        repo = get_repo(workflow.repo_owner, workflow.repo_name, token)
+        repo['public'] = False
+        redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
+
+    logger.info(f"Refreshed public workflows ({len(public)})")

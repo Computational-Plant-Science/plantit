@@ -7,7 +7,7 @@
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
                         variant="outline-dark"
                         v-b-tooltip.hover
-                        @click="workflowSelected"
+                        @click="selectWorkflow"
                     >
                         {{ workflow.config.name }}
                     </b-link>
@@ -58,7 +58,6 @@
 </template>
 
 <script>
-import router from '@/router';
 import { mapGetters } from 'vuex';
 
 export default {
@@ -70,14 +69,8 @@ export default {
         }
     },
     methods: {
-        workflowSelected() {
-            router.push({
-                name: 'workflow',
-                params: {
-                    username: this.workflow['repo']['owner']['login'],
-                    name: this.workflow['repo']['name']
-                }
-            });
+        selectWorkflow() {
+            this.$emit('selectWorkflow', this.workflow);
         },
         openRepo(url) {
             window.open(url);
@@ -87,6 +80,6 @@ export default {
 };
 </script>
 <style scoped lang="sass">
-@import "../scss/_colors.sass"
-@import "../scss/main.sass"
+@import "../../scss/_colors.sass"
+@import "../../scss/main.sass"
 </style>

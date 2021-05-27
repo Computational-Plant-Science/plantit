@@ -112,7 +112,7 @@ new Vue({
 // `                    }
 // `                })
 // `                .catch(() => {
-// `                    Vue.$log.error('Failed to refresh token');
+// `                    Vue.$log.error('Failed to refresh_user_workflow token');
 // `                });
 // `        }, 6000);
 // `    })

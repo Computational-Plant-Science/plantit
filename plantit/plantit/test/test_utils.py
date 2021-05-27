@@ -1,7 +1,7 @@
 import os
 import requests
 from django.test import TestCase
-from plantit.workflows.utils import validate_workflow_config
+from plantit.github import validate_repo_config
 from plantit.docker import image_exists
 from plantit.terrain import path_exists
 
@@ -54,7 +54,7 @@ class UtilsTest(TestCase):
         self.assertEqual(result[1], 'directory')
 
     def test_validate_config_when_is_not_valid_missing_name(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'author': 'Computational Plant Science Lab',
             'public': True,
             'image': 'docker://alpine',
@@ -64,7 +64,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Missing attribute \'name\'' in result[1])
 
     # def test_validate_config_when_is_not_valid_missing_author(self):
-    #     result = validate_workflow_config({
+    #     result = validate_repo_config({
     #         'name': 'Test Flow',
     #         'public': True,
     #         'image': 'docker://alpine',
@@ -74,7 +74,7 @@ class UtilsTest(TestCase):
     #     self.assertTrue('Missing attribute \'author\'' in result[1])
 
     def test_validate_config_when_is_not_valid_missing_public(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'image': 'docker://alpine',
@@ -84,7 +84,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Missing attribute \'public\'' in result[1])
 
     def test_validate_config_when_is_not_valid_missing_image(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -94,7 +94,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Missing attribute \'image\'' in result[1])
 
     def test_validate_config_when_is_not_valid_missing_commands(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -104,7 +104,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Missing attribute \'commands\'' in result[1])
 
     def test_validate_config_when_is_not_valid_name_wrong_type(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': True,
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -115,7 +115,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Attribute \'name\' must be a str' in result[1])
 
     # def test_validate_config_when_is_not_valid_author_wrong_type(self):
-    #     result = validate_workflow_config({
+    #     result = validate_repo_config({
     #         'name': 'Test Flow',
     #         'author': True,
     #         'public': True,
@@ -126,7 +126,7 @@ class UtilsTest(TestCase):
     #     self.assertTrue('Attribute \'author\' must be a str' in result[1])
 
     def test_validate_config_when_is_not_valid_public_wrong_type(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': '',
@@ -137,7 +137,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Attribute \'public\' must be a bool' in result[1])
 
     def test_validate_config_when_is_not_valid_image_wrong_type(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -148,7 +148,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Attribute \'image\' must be a str' in result[1])
 
     def test_validate_config_when_is_not_valid_commands_wrong_type(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -159,7 +159,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Attribute \'commands\' must be a str' in result[1])
 
     def test_validate_config_when_is_not_valid_mount_wrong_type(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -171,7 +171,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Attribute \'mount\' must be a list' in result[1])
 
     def test_validate_config_when_is_not_valid_mount_none(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -183,7 +183,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Attribute \'mount\' must be a list' in result[1])
 
     def test_validate_config_when_is_not_valid_mount_empty(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -195,7 +195,7 @@ class UtilsTest(TestCase):
         self.assertTrue('Attribute \'mount\' must not be empty' in result[1])
 
     def test_validate_config_when_is_valid_with_no_input_or_output(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -205,7 +205,7 @@ class UtilsTest(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_no_input_and_empty_file_output(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -218,7 +218,7 @@ class UtilsTest(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_no_input_and_nonempty_output(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -231,7 +231,7 @@ class UtilsTest(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_file_and_empty_output(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -243,7 +243,7 @@ class UtilsTest(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_file_and_nonempty_output(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -256,7 +256,7 @@ class UtilsTest(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_files_and_empty_output(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -269,7 +269,7 @@ class UtilsTest(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_files_and_nonempty_output(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -282,7 +282,7 @@ class UtilsTest(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_directory_and_empty_output(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,
@@ -295,7 +295,7 @@ class UtilsTest(TestCase):
         self.assertTrue(result)
 
     def test_validate_config_when_is_valid_with_input_directory_and_nonempty_output(self):
-        result = validate_workflow_config({
+        result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
             'public': True,

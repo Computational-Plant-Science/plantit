@@ -12,6 +12,7 @@ from .agents.views import AgentsViewSet
 from .users.views import UsersViewSet, IDPViewSet
 from .runs.consumers import RunConsumer
 from .notifications.consumers import NotificationConsumer
+from .workflows.consumers import WorkflowConsumer
 
 router = routers.DefaultRouter()
 router.register('users', UsersViewSet)
@@ -42,6 +43,7 @@ urlpatterns = [
 
 websocket_urlpatterns = [
     path(r'ws/runs/<username>/', RunConsumer.as_asgi()),
+    path(r'ws/workflows/<owner>/', WorkflowConsumer.as_asgi()),
     path(r'ws/notifications/<username>/', NotificationConsumer.as_asgi()),
     path(r'ws/sessions/<guid>/', DatasetSessionConsumer.as_asgi())
 ]

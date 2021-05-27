@@ -87,7 +87,7 @@ class AgentsViewSet(viewsets.ModelViewSet):
 
         try:
             agent = Agent.objects.get(name=agent_name)
-            user = User.objects.get(username=user_name)
+            user = User.objects.get(owner=user_name)
         except:
             return HttpResponseNotFound()
 
@@ -128,7 +128,7 @@ class AgentsViewSet(viewsets.ModelViewSet):
 
         try:
             agent = Agent.objects.get(name=agent)
-            user = User.objects.get(username=user_name)
+            user = User.objects.get(owner=user_name)
             policy = AgentAccessPolicy.objects.get(user=user, agent=agent)
         except:
             return HttpResponseNotFound()
@@ -282,7 +282,7 @@ class AgentsViewSet(viewsets.ModelViewSet):
             name=task_name,
             command=task_command,
             description=task_description,
-            task='plantit.runs.tasks.run_command',
+            task='plantit.runs.tasks.execute_agent_command',
             args=json.dumps([agent.name, task_command]))
 
         return JsonResponse({

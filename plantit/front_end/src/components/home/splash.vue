@@ -85,11 +85,7 @@
                                 v-if="profile.loggedIn"
                                 title="Enter PlantIT"
                                 class="m-0 p-0"
-                                :to="
-                                    '/user/' +
-                                        profile.djangoProfile.username +
-                                        '/'
-                                "
+                                :to="'/dashboard/'"
                             >
                                 <b-button
                                     variant="white"

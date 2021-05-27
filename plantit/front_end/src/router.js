@@ -1,15 +1,17 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import home from './views/home.vue';
-import workflows from './views/explore-workflows.vue';
-import workflow from './views/workflow.vue';
-import agent from './views/agent.vue';
-import agents from './views/public.vue';
-import user from './views/user.vue';
-import users from './views/users.vue';
-import run from './views/run.vue';
-import dataset from './views/dataset.vue';
-import annotate from './views/annotate.vue';
+import dashboard from './views/dashboard.vue';
+import users from './components/users/users.vue';
+import user from './components/users/user.vue';
+import workflows from './components/workflows/workflows.vue';
+import workflow from './components/workflows/workflow.vue';
+import agents from './components/agents/agents.vue';
+import agent from './components/agents/agent.vue';
+import runs from './components/runs/runs.vue';
+import run from './components/runs/run.vue';
+import datasets from './components/datasets/datasets.vue';
+import dataset from './components/datasets/dataset.vue';
 import store from './store/store.js';
 
 Vue.use(Router);
@@ -29,121 +31,161 @@ let router = new Router({
             }
         },
         {
-            path: '/users',
-            name: 'users',
-            component: users,
+            path: '/',
+            name: 'dashboard',
+            component: dashboard,
             meta: {
-                title: 'Users',
-                crumb: [
-                    {
-                        text: 'Users',
-                        href: '/users'
-                    }
-                ],
-                requiresAuth: true
-            }
-        },
-        {
-            path: '/workflows',
-            name: 'workflows',
-            component: workflows,
-            meta: {
-                title: 'Workflows',
-                crumb: [
-                    {
-                        text: 'Workflows',
-                        href: '/workflows'
-                    }
-                ],
-                requiresAuth: true
-            }
-        },
-        {
-            path: '/agents',
-            name: 'agents',
-            component: agents,
-            meta: {
-                title: 'Agents',
-                crumb: [
-                    {
-                        text: 'Agents',
-                        href: '/agents'
-                    }
-                ],
-                requiresAuth: true
-            }
-        },
-        {
-            path: '/workflow/:username/:name',
-            name: 'workflow',
-            props: true,
-            component: workflow,
-            meta: {
-                title: 'Workflow',
+                title: 'Dashboard',
                 crumb: [],
-                requiresAuth: true
-            }
-        },
-        {
-            path: '/run/:id',
-            name: 'run',
-            props: true,
-            component: run,
-            meta: {
-                title: 'Run',
-                crumb: [],
-                requiresAuth: true
-            }
-        },
-        {
-            path: '/agent/:name',
-            name: 'agent',
-            props: true,
-            component: agent,
-            meta: {
-                title: 'Agent',
-                crumb: [],
-                requiresAuth: true
-            }
-        },
-        {
-            path: '/user/:username',
-            name: 'user',
-            props: true,
-            component: user,
-            meta: {
-                title: 'User',
-                crumb: [],
-                requiresAuth: true
-            }
-        },
-        {
-            path: '/dataset/:path',
-            name: 'dataset',
-            props: true,
-            component: dataset,
-            meta: {
-                title: 'Dataset',
-                crumb: [],
-                requiresAuth: true
-            }
-        },
-        {
-            path: '/annotate/:path',
-            name: 'annotate',
-            props: true,
-            component: annotate,
-            meta: {
-                title: 'Annotate',
-                crumb: [],
-                requiresAuth: true
-            }
+                requiresAuth: false
+            },
+            children: [
+                {
+                    path: '/users',
+                    name: 'users',
+                    component: users,
+                    meta: {
+                        title: 'Users',
+                        crumb: [
+                            {
+                                text: 'Users',
+                                href: '/users'
+                            }
+                        ],
+                        requiresAuth: true
+                    },
+                    children: [
+                        {
+                            path: '/user/:username',
+                            name: 'user',
+                            props: true,
+                            component: user,
+                            meta: {
+                                title: 'User',
+                                crumb: [],
+                                requiresAuth: true
+                            },
+                            children: []
+                        }
+                    ]
+                },
+                {
+                    path: '/datasets',
+                    name: 'datasets',
+                    props: true,
+                    component: datasets,
+                    meta: {
+                        title: 'Datasets',
+                        crumb: [],
+                        requiresAuth: true
+                    },
+                    children: [
+                        {
+                            path: '/dataset/:path',
+                            name: 'dataset',
+                            props: true,
+                            component: dataset,
+                            meta: {
+                                title: 'Dataset',
+                                crumb: [],
+                                requiresAuth: true
+                            }
+                        }
+                    ]
+                },
+                {
+                    path: '/workflows',
+                    name: 'workflows',
+                    component: workflows,
+                    meta: {
+                        title: 'Workflows',
+                        crumb: [
+                            {
+                                text: 'Workflows',
+                                href: '/workflows'
+                            }
+                        ],
+                        requiresAuth: true
+                    },
+                    children: [
+                        {
+                            path: '/workflow/:username/:name',
+                            name: 'workflow',
+                            props: true,
+                            component: workflow,
+                            meta: {
+                                title: 'Workflow',
+                                crumb: [],
+                                requiresAuth: true
+                            }
+                        }
+                    ]
+                },
+                {
+                    path: '/agents',
+                    name: 'agents',
+                    component: agents,
+                    meta: {
+                        title: 'Agents',
+                        crumb: [
+                            {
+                                text: 'Agents',
+                                href: '/agents'
+                            }
+                        ],
+                        requiresAuth: true
+                    },
+                    children: [
+                        {
+                            path: '/agent/:name',
+                            name: 'agent',
+                            props: true,
+                            component: agent,
+                            meta: {
+                                title: 'Agent',
+                                crumb: [],
+                                requiresAuth: true
+                            }
+                        }
+                    ]
+                },
+                {
+                    path: '/runs',
+                    name: 'runs',
+                    component: runs,
+                    meta: {
+                        title: 'Runs',
+                        crumb: [
+                            {
+                                text: 'Runs',
+                                href: '/runs'
+                            }
+                        ],
+                        requiresAuth: true
+                    },
+                    children: [
+                        {
+                            path: '/run/:id',
+                            name: 'run',
+                            props: true,
+                            component: run,
+                            meta: {
+                                title: 'Run',
+                                crumb: [],
+                                requiresAuth: true
+                            }
+                        }
+                    ]
+                }
+            ]
         },
         {
             path: '*',
             name: '404',
             component: () =>
-                import(/* webpackChunkName: "about" */ './views/not-found.vue'),
+                import(
+                    /* webpackChunkName: "about" */ './components/not-found.vue'
+                ),
             meta: {
                 title: 'Not Found',
                 crumb: [
@@ -201,11 +243,11 @@ router.beforeEach(async (to, from, next) => {
     }
     if (to.matched.some(record => record.name === 'user')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        to.meta.crumb.push({text: 'Your Dashboard'});
-        // to.meta.crumb.push({
-        //     text: `User: ${to.params.username}`,
-        //     href: `/user/${to.params.username}`
-        // });
+        to.meta.crumb.push({ text: 'Your Dashboard' });
+        to.meta.crumb.push({
+            text: `User: ${to.params.username}`,
+            href: `/user/${to.params.username}`
+        });
     }
     if (to.matched.some(record => record.name === 'dataset')) {
         while (to.meta.crumb.length > 0) to.meta.crumb.pop();

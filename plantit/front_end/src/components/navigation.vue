@@ -62,7 +62,7 @@
                             </b-button>
                         </b-col>
                     </b-row>
-                    <br/>
+                    <br />
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -184,7 +184,7 @@
                             </p>
                         </b-col></b-row
                     >
-                  <br/>
+                    <br />
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -467,7 +467,7 @@
                             </b-button>
                         </b-col>
                     </b-row>
-                  <br/>
+                    <br />
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -539,7 +539,7 @@
                             </p>
                         </b-col>
                     </b-row>
-                  <br/>
+                    <br />
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -828,7 +828,10 @@
                         >
                             <i class="fas fa-users fa-1x fa-fw"></i>
                             Public
-                            <i v-if="$route.name === 'public'" class="fas fa-check fa-1x fa-fw"></i>
+                            <i
+                                v-if="$route.name === 'public'"
+                                class="fas fa-check fa-1x fa-fw"
+                            ></i>
                         </b-dropdown-item>
                         <b-dropdown-item
                             title="Profile"
@@ -846,7 +849,10 @@
                         >
                             <i class="fas fa-user fa-1x fa-fw"></i>
                             Yours
-                          <i v-if="$route.name === 'user'" class="fas fa-check fa-1x fa-fw"></i>
+                            <i
+                                v-if="$route.name === 'user'"
+                                class="fas fa-check fa-1x fa-fw"
+                            ></i>
                         </b-dropdown-item>
                         <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-dropdown-text>Your Account</b-dropdown-text>
@@ -1037,6 +1043,7 @@ export default {
             FAILURE: 'FAILURE',
             REVOKED: 'REVOKED',
             // websockets
+            workflowSocket: null,
             runSocket: null,
             notificationSocket: null,
             interactiveSocket: null,
@@ -1119,19 +1126,23 @@ export default {
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
         this.viewingDataset = this.$router.currentRoute.name === 'dataset';
-        let ws_protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        let wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
 
         // TODO move websockets to vuex
+        this.workflowSocket = new WebSocket(
+            `${wsProtocol}${window.location.host}/ws/workflows/${this.profile.githubProfile.login}/`
+        );
+        this.workflowSocket.onmessage = this.onWorkflowMessage;
 
         // subscribe to run channel
         this.runSocket = new WebSocket(
-            `${ws_protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
+            `${wsProtocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
         );
         this.runSocket.onmessage = this.onRunUpdate;
 
         // subscribe to notification channel
         this.notificationSocket = new WebSocket(
-            `${ws_protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
+            `${wsProtocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
         );
         this.notificationSocket.onmessage = this.onNotification;
 
@@ -1195,6 +1206,15 @@ export default {
                 });
         },
         // TODO move to VUEX
+        async onWorkflowMessage(event) {
+            let data = JSON.parse(event.data);
+            let operation = data.operation;
+            let workflow = data.workflow;
+            if (operation === 'update')
+                await this.$store.dispatch('workflows/addOrUpdate', workflow);
+            else if (operation === 'remove')
+                await this.$store.dispatch('workflows/remove', workflow);
+        },
         async onRunUpdate(event) {
             let data = JSON.parse(event.data);
             var run = data.run;
@@ -1207,7 +1227,7 @@ export default {
             let notification = data.notification;
             await this.$store.dispatch('notifications/update', notification);
         },
-        async onSessionEvent(event) {
+        async onDatasetSessionUpdate(event) {
             let data = JSON.parse(event.data);
             await this.$store.dispatch('datasets/updateOpened', data.session);
         },
