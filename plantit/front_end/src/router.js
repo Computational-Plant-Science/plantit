@@ -36,7 +36,12 @@ let router = new Router({
             component: dashboard,
             meta: {
                 title: 'Dashboard',
-                crumb: [],
+                crumb: [
+                    {
+                        text: 'Dashboard',
+                        href: '/dashboard'
+                    }
+                ],
                 requiresAuth: false
             },
             children: [
@@ -48,8 +53,12 @@ let router = new Router({
                         title: 'Users',
                         crumb: [
                             {
+                                text: 'Dashboard',
+                                href: '/dashboard'
+                            },
+                            {
                                 text: 'Users',
-                                href: 'users'
+                                href: '/dashboard/users'
                             }
                         ],
                         requiresAuth: true
@@ -62,7 +71,16 @@ let router = new Router({
                             component: user,
                             meta: {
                                 title: 'User',
-                                crumb: [],
+                                crumb: [
+                                    {
+                                        text: 'Dashboard',
+                                        href: '/dashboard'
+                                    },
+                                    {
+                                        text: 'Users',
+                                        href: '/dashboard/users'
+                                    }
+                                ],
                                 requiresAuth: true
                             },
                             children: []
@@ -76,7 +94,16 @@ let router = new Router({
                     component: datasets,
                     meta: {
                         title: 'Datasets',
-                        crumb: [],
+                        crumb: [
+                            {
+                                text: 'Dashboard',
+                                href: '/dashboard'
+                            },
+                            {
+                                text: 'Datasets',
+                                href: '/dashboard/datasets'
+                            }
+                        ],
                         requiresAuth: true
                     },
                     children: [
@@ -87,7 +114,16 @@ let router = new Router({
                             component: dataset,
                             meta: {
                                 title: 'Dataset',
-                                crumb: [],
+                                crumb: [
+                                    {
+                                        text: 'Dashboard',
+                                        href: '/dashboard'
+                                    },
+                                    {
+                                        text: 'Datasets',
+                                        href: '/datasets/datasets'
+                                    }
+                                ],
                                 requiresAuth: true
                             }
                         }
@@ -101,21 +137,34 @@ let router = new Router({
                         title: 'Workflows',
                         crumb: [
                             {
+                                text: 'Dashboard',
+                                href: '/dashboard'
+                            },
+                            {
                                 text: 'Workflows',
-                                href: 'workflows'
+                                href: '/dashboard/workflows'
                             }
                         ],
                         requiresAuth: true
                     },
                     children: [
                         {
-                            path: 'workflow/:username/:name',
+                            path: ':owner/:name',
                             name: 'workflow',
                             props: true,
                             component: workflow,
                             meta: {
                                 title: 'Workflow',
-                                crumb: [],
+                                crumb: [
+                                    {
+                                        text: 'Dashboard',
+                                        href: '/dashboard'
+                                    },
+                                    {
+                                        text: 'Workflows',
+                                        href: '/dashboard/workflows'
+                                    }
+                                ],
                                 requiresAuth: true
                             }
                         }
@@ -129,8 +178,12 @@ let router = new Router({
                         title: 'Agents',
                         crumb: [
                             {
+                                text: 'Dashboard',
+                                href: '/dashboard'
+                            },
+                            {
                                 text: 'Agents',
-                                href: 'agents'
+                                href: '/dashboard/agents'
                             }
                         ],
                         requiresAuth: true
@@ -143,7 +196,16 @@ let router = new Router({
                             component: agent,
                             meta: {
                                 title: 'Agent',
-                                crumb: [],
+                                crumb: [
+                                    {
+                                        text: 'Dashboard',
+                                        href: '/dashboard'
+                                    },
+                                    {
+                                        text: 'Agents',
+                                        href: '/dashboard/agents'
+                                    }
+                                ],
                                 requiresAuth: true
                             }
                         }
@@ -157,8 +219,12 @@ let router = new Router({
                         title: 'Runs',
                         crumb: [
                             {
+                                text: 'Dashboard',
+                                href: '/dashboard'
+                            },
+                            {
                                 text: 'Runs',
-                                href: 'runs'
+                                href: '/dashboard/runs'
                             }
                         ],
                         requiresAuth: true
@@ -171,7 +237,16 @@ let router = new Router({
                             component: run,
                             meta: {
                                 title: 'Run',
-                                crumb: [],
+                                crumb: [
+                                    {
+                                        text: 'Dashboard',
+                                        href: '/dashboard'
+                                    },
+                                    {
+                                        text: 'Runs',
+                                        href: '/dashboard/runs'
+                                    }
+                                ],
                                 requiresAuth: true
                             }
                         }
@@ -203,78 +278,74 @@ router.beforeEach(async (to, from, next) => {
     if (to.name === 'dashboard') {
         await store.dispatch('user/loadProfile'); // refresh user profile
         to.meta.title = 'Dashboard';
-        // while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        // to.meta.crumb.push({
-        //     text: 'Dashboard'
-        // });
     }
     if (to.name === 'workflow') {
         to.meta.title = `Workflow: ${to.params.name}`;
-        // while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        // to.meta.crumb.push({
-        //     text: 'Workflow'
-        // });
+        while (to.meta.crumb.length > 2) to.meta.crumb.pop();
+        to.meta.crumb.push({
+            text: `${to.params.owner}/${to.params.name}`
+        });
     }
     if (to.name === 'run') {
         to.meta.title = `Run: ${to.params.id}`;
-        // while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        // to.meta.crumb.push({
-        //     text: 'Run'
-        // });
+        while (to.meta.crumb.length > 2) to.meta.crumb.pop();
+        to.meta.crumb.push({
+            text: `${to.params.id}`
+        });
     }
     if (to.name === 'agent') {
         to.meta.title = `Agent: ${to.params.name}`;
-        // while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        // to.meta.crumb.push({
-        //     text: 'Agent'
-        // });
+        while (to.meta.crumb.length > 2) to.meta.crumb.pop();
+        to.meta.crumb.push({
+            text: `${to.params.id}`
+        });
     }
-    if (to.name === 'dataset') to.meta.title = `Dataset: ${to.params.path}`;
-    if (to.name === 'artifact') to.meta.title = `Artifact: ${to.params.path}`;
+    // if (to.name === 'dataset') to.meta.title = `Dataset: ${to.params.path}`;
+    // if (to.name === 'artifact') to.meta.title = `Artifact: ${to.params.path}`;
     if (to.meta.name !== null) document.title = to.meta.title;
-    if (to.matched.some(record => record.name === 'workflow')) {
-        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        // to.meta.crumb.push({
-        //     text: `Workflow: ${to.params.username}/${to.params.name}`,
-        //     href: `/workflow/${to.params.username}/${to.params.name}`
-        // });
-    }
-    if (to.matched.some(record => record.name === 'run')) {
-        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        // to.meta.crumb.push({
-        //     text: `Run: ${to.params.id}`,
-        //     href: `/run/${to.params.id}`
-        // });
-    }
-    if (to.matched.some(record => record.name === 'agent')) {
-        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        to.meta.crumb.push({
-            text: `Agent: ${to.params.name}`,
-            href: `/agent/${to.params.name}`
-        });
-    }
-    if (to.matched.some(record => record.name === 'user')) {
-        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        to.meta.crumb.push({ text: 'Your Dashboard' });
-        to.meta.crumb.push({
-            text: `User: ${to.params.username}`,
-            href: `/user/${to.params.username}`
-        });
-    }
-    if (to.matched.some(record => record.name === 'dataset')) {
-        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        to.meta.crumb.push({
-            text: `Dataset: ${to.params.path}`,
-            href: `/dataset/${to.params.path}`
-        });
-    }
-    if (to.matched.some(record => record.name === 'artifact')) {
-        while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-        to.meta.crumb.push({
-            text: `Artifact: ${to.params.path}`,
-            href: `/artifact/${to.params.path}`
-        });
-    }
+    // if (to.matched.some(record => record.name === 'workflow')) {
+    //     while (to.meta.crumb.length > 0) to.meta.crumb.pop();
+    //     // to.meta.crumb.push({
+    //     //     text: `Workflow: ${to.params.username}/${to.params.name}`,
+    //     //     href: `/workflow/${to.params.username}/${to.params.name}`
+    //     // });
+    // }
+    // if (to.matched.some(record => record.name === 'run')) {
+    //     while (to.meta.crumb.length > 0) to.meta.crumb.pop();
+    //     // to.meta.crumb.push({
+    //     //     text: `Run: ${to.params.id}`,
+    //     //     href: `/run/${to.params.id}`
+    //     // });
+    // }
+    // if (to.matched.some(record => record.name === 'agent')) {
+    //     while (to.meta.crumb.length > 0) to.meta.crumb.pop();
+    //     to.meta.crumb.push({
+    //         text: `Agent: ${to.params.name}`,
+    //         href: `/agent/${to.params.name}`
+    //     });
+    // }
+    // if (to.matched.some(record => record.name === 'user')) {
+    //     while (to.meta.crumb.length > 0) to.meta.crumb.pop();
+    //     to.meta.crumb.push({ text: 'Your Dashboard' });
+    //     to.meta.crumb.push({
+    //         text: `User: ${to.params.username}`,
+    //         href: `/user/${to.params.username}`
+    //     });
+    // }
+    // if (to.matched.some(record => record.name === 'dataset')) {
+    //     while (to.meta.crumb.length > 0) to.meta.crumb.pop();
+    //     to.meta.crumb.push({
+    //         text: `Dataset: ${to.params.path}`,
+    //         href: `/dataset/${to.params.path}`
+    //     });
+    // }
+    // if (to.matched.some(record => record.name === 'artifact')) {
+    //     while (to.meta.crumb.length > 0) to.meta.crumb.pop();
+    //     to.meta.crumb.push({
+    //         text: `Artifact: ${to.params.path}`,
+    //         href: `/artifact/${to.params.path}`
+    //     });
+    // }
     if (to.meta.requiresAuth && !store.getters['user/profile'].loggedIn) {
         window.location.replace(
             process.env.VUE_APP_URL + '/apis/v1/idp/cyverse_login/'

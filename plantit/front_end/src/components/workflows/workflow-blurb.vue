@@ -7,7 +7,13 @@
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
                         variant="outline-dark"
                         v-b-tooltip.hover
-                        @click="selectWorkflow"
+                        :to="{
+                            name: 'workflow',
+                            params: {
+                                owner: workflow['repo']['owner']['login'],
+                                name: workflow['repo']['name']
+                            }
+                        }"
                     >
                         {{ workflow.config.name }}
                     </b-link>
@@ -69,9 +75,6 @@ export default {
         }
     },
     methods: {
-        selectWorkflow() {
-            this.$emit('selectWorkflow', this.workflow);
-        },
         openRepo(url) {
             window.open(url);
         }

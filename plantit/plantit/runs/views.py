@@ -30,7 +30,7 @@ def get_by_user(request, username):
     page = params.get('page') if 'page' in params else -1
 
     try:
-        user = User.objects.get(owner=username)
+        user = User.objects.get(username=username)
     except:
         return HttpResponseNotFound()
 
@@ -226,7 +226,7 @@ def get_file_text(request, id):
 @login_required
 def get_runs_by_user_and_workflow(request, username, workflow, page):
     try:
-        user = User.objects.get(owner=username)
+        user = User.objects.get(username=username)
         start = int(page) * 20
         count = start + 20
         runs = Run.objects.filter(user=user, workflow_name=workflow).order_by('-created')[start:(start + count)]
@@ -238,7 +238,7 @@ def get_runs_by_user_and_workflow(request, username, workflow, page):
 @api_view(['GET'])
 @login_required
 def get_delayed_runs_by_user_and_workflow(request, username, workflow):
-    user = User.objects.get(owner=username)
+    user = User.objects.get(username=username)
     try:
         tasks = DelayedRunTask.objects.filter(user=user)
     except:
@@ -267,7 +267,7 @@ def remove_delayed(request):
 @api_view(['GET'])
 @login_required
 def get_repeating_runs_by_user_and_workflow(request, username, workflow):
-    user = User.objects.get(owner=username)
+    user = User.objects.get(username=username)
     try:
         tasks = RepeatingRunTask.objects.filter(user=user)
     except:

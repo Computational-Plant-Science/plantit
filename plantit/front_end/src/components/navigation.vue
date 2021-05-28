@@ -602,7 +602,7 @@
                             v-bind:class="{ 'not-found': notFound }"
                             variant="outline-white"
                             @mouseenter="titleContent = 'sidebar'"
-                            @mouseleave="titleContent = 'breadcrumb'"
+                            @mouseleave="titleContent = 'brand'"
                         >
                             <b-img
                                 class="m-0 p-0 mb-3"
@@ -715,29 +715,6 @@
                             >
                         </b-nav-item>
                     </b-navbar-nav>
-                    <b-breadcrumb
-                        class="m-o p-0 mt-2 text-warning"
-                        style="background-color: transparent"
-                        v-if="titleContent === 'breadcrumb'"
-                    >
-                        <b-breadcrumb-item
-                            v-for="crumb in crumbs"
-                            :key="crumb.text"
-                            :to="crumb.href"
-                            :disabled="crumb.text === 'runs'"
-                            class="ml-0 mr-0"
-                        >
-                            <h5
-                                :class="
-                                    profile.darkMode
-                                        ? 'crumb-dark'
-                                        : 'crumb-light'
-                                "
-                            >
-                                {{ crumb.text }}
-                            </h5>
-                        </b-breadcrumb-item>
-                    </b-breadcrumb>
                 </transition>
                 <b-navbar-nav class="ml-auto p-0 mt-1">
                     <b-nav-item
@@ -813,10 +790,9 @@
                                 <i class="fas fa-caret-down fa-fw"></i>
                             </b-button>
                         </template>
-                        <b-dropdown-text>Resource Context</b-dropdown-text>
                         <b-dropdown-item
-                            title="Agents"
-                            to="/agents"
+                            title="Dashboard"
+                            to="/dashboard/"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -826,36 +802,9 @@
                                     : 'text-dark'
                             "
                         >
-                            <i class="fas fa-users fa-1x fa-fw"></i>
-                            Public
-                            <i
-                                v-if="$route.name === 'public'"
-                                class="fas fa-check fa-1x fa-fw"
-                            ></i>
+                            <i class="fas fa-desktop fa-1x fa-fw"></i>
+                            Dashboard
                         </b-dropdown-item>
-                        <b-dropdown-item
-                            title="Profile"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            :to="
-                                '/user/' + profile.djangoProfile.username + '/'
-                            "
-                        >
-                            <i class="fas fa-user fa-1x fa-fw"></i>
-                            Yours
-                            <i
-                                v-if="$route.name === 'user'"
-                                class="fas fa-check fa-1x fa-fw"
-                            ></i>
-                        </b-dropdown-item>
-                        <hr class="mt-2 mb-2" style="border-color: gray" />
-                        <b-dropdown-text>Your Account</b-dropdown-text>
                         <b-dropdown-item
                             :title="
                                 'Notifications (' +
@@ -878,6 +827,35 @@
                                 >({{ unreadNotifications.length }} unread)</span
                             >
                         </b-dropdown-item>
+                        <b-dropdown-item
+                            :title="
+                                profile.darkMode ? 'Light Mode' : 'Dark Mode'
+                            "
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            @click="toggleDarkMode"
+                        >
+                            <b-spinner
+                                small
+                                v-if="togglingDarkMode"
+                                label="Loading..."
+                                :variant="profile.darkMode ? 'light' : 'dark'"
+                                class="ml-2 mb-1"
+                            ></b-spinner
+                            ><span v-else-if="profile.darkMode"
+                                ><i class="fas fa-sun fa-fw"></i> Light
+                                Mode</span
+                            ><span v-else
+                                ><i class="fas fa-moon fa-fw"></i> Dark
+                                Mode</span
+                            ></b-dropdown-item
+                        >
                         <b-dropdown-item
                             title="Log Out"
                             @click="logOut"
@@ -1032,6 +1010,7 @@ export default {
     components: {},
     data() {
         return {
+            togglingDarkMode: false,
             viewingDataset: false,
             // deployment target authentication
             authenticationUsername: '',
@@ -1051,9 +1030,9 @@ export default {
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null,
+          notFound: false,
             crumbs: [],
-            notFound: false,
-            titleContent: 'breadcrumb',
+            titleContent: 'brand',
             currentRunPage: 0,
             loadingMoreRuns: false,
             toastRun: null,
@@ -1162,6 +1141,11 @@ export default {
         }
     },
     methods: {
+        async toggleDarkMode() {
+            this.togglingDarkMode = true;
+            await this.$store.dispatch('user/toggleDarkMode');
+            this.togglingDarkMode = false;
+        },
         async closeDataset() {
             await this.$bvModal
                 .msgBoxConfirm(
