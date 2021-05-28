@@ -2103,8 +2103,6 @@ export default {
             currentTab: 0,
             sharedDatasets: [],
             sharingDatasets: [],
-            directoryPolicies: [],
-            directoryPolicyNodes: [],
             data: {},
             loadingMoreRuns: false,
             agents: [],
@@ -2402,124 +2400,6 @@ export default {
                     this.agentsLoading = false;
                     if (error.response.status === 500) throw error;
                 });
-        },
-        async loadDataset(path, token) {
-            return axios
-                .get(
-                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
-                    { headers: { Authorization: 'Bearer ' + token } }
-                )
-                .then(response => {
-                    this.data = response.data;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
-        async loadSharingDatasets() {
-            await axios
-                .get(`/apis/v1/datasets/sharing/`)
-                .then(response => {
-                    this.sharingDatasets = response.data;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
-        async loadSharedDatasets() {
-            await axios
-                .get(
-                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/`,
-                    {
-                        headers: {
-                            Authorization:
-                                'Bearer ' +
-                                this.profile.djangoProfile.cyverse_token
-                        }
-                    }
-                )
-                .then(response => {
-                    this.sharedDatasets = response.data;
-                    this.sharedDataLoading = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.sharedDataLoading = false;
-                    throw error;
-                });
-        },
-        openDataset() {
-            this.$store.dispatch('datasets/updateLoading', true);
-            let data = { agent: this.agent.name };
-            // if (this.mustAuthenticate)
-            //     data['auth'] = {
-            //         username: this.authenticationUsername,
-            //         password: this.authenticationPassword
-            //     };
-
-            axios({
-                method: 'post',
-                url: `/apis/v1/datasets/open/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(async response => {
-                    await this.$store.dispatch(
-                        'datasets/updateOpened',
-                        response.data.session
-                    );
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
-        async unshareDataset(directory) {
-            await axios({
-                method: 'post',
-                url: `/apis/v1/datasets/unshare/`,
-                data: {
-                    user: directory.guest,
-                    path: directory.path,
-                    role: directory.role
-                },
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(() => {
-                    this.loadSharingDatasets();
-                    this.alertMessage = `Unshared dataset ${
-                        this.internalLoaded
-                            ? this.internalNode.path
-                            : this.node.path
-                    } with ${this.sharedUsers.length} user(s)`;
-                    this.alertEnabled = true;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.alertMessage = `Failed to unshare dataset ${
-                        this.internalLoaded
-                            ? this.internalNode.path
-                            : this.node.path
-                    } with ${this.sharedUsers.length} user(s)`;
-                    this.alertEnabled = true;
-                    throw error;
-                });
-        },
-        async togglePushNotifications() {
-            this.togglingPushNotifications = true;
-            await this.$store.dispatch('user/togglePushNotifications');
-            this.togglingPushNotifications = false;
-            this.alertMessage = `Push notifications ${this.profile.pushNotifications}`;
-            this.alertEnabled = true;
-        },
-        async toggleDarkMode() {
-            this.togglingDarkMode = true;
-            this.$store.dispatch('user/toggleDarkMode');
-            this.togglingDarkMode = false;
-            this.alertMessage = `Dark mode ${this.profile.pushNotifications}`;
-            this.alertEnabled = true;
         },
         goToAgent: function(agent) {
             router.push({

@@ -1,12 +1,23 @@
 <template>
-    <div
-        class="w-100 h-100"
-        :style="
-            profile.darkMode
-                ? 'background-color: #616163'
-                : 'background-color: white' + '; min-height: 100%'
-        "
-    >
+  <div>
+    <div class="p-2">
+            <b-row>
+                <b-col>
+                    <b-button
+                        @click="back"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="md"
+                        v-b-tooltip.hover
+                        title="Back to workflows"
+                        class="text-left"
+                        ><i class="fas fa-caret-left fa-fw"></i
+                        >Workflows</b-button
+                    >
+                </b-col>
+            </b-row>
+            <hr class="mt-2 mb-2" style="border-color: gray" />
+            <workflow :owner="selected.owner" :name="selected.name" v-on:runSubmitted="runSubmitted"></workflow>
+        </div>
         <b-container class="p-2 vl" fluid>
             <b-row no-gutters class="mt-3">
                 <b-col v-if="showStatusAlert">

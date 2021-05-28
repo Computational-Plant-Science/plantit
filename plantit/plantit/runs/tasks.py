@@ -582,3 +582,4 @@ def refresh_all_workflows(token: str):
         redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
 
     logger.info(f"Refreshed public workflows ({len(public)})")
+    redis.set(f"public_workflows_updated", timezone.now().timestamp())

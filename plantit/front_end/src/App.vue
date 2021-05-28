@@ -10,6 +10,8 @@
             style="min-height: 98vh; background-color: transparent;"
         >
             <navigation v-if="$route.path !== '/'"></navigation>
+            <br/>
+          <br/>
             <router-view
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             ></router-view>

@@ -1,32 +1,17 @@
 <template>
-    <b-container fluid>
-        <div v-if="selected === null">
+    <b-container fluid class="m-0 p-3" style="background-color: transparent;">
+        <div>
             <b-row
-                ><b-col md="auto"
+                ><b-col
                     ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Workflows
                     </h2></b-col
-                ><b-col md="auto" class="ml-0" align-self="middle"
-                    ><b-button
-                        :disabled="personalLoading"
-                        :variant="profile.darkMode ? 'outline-light' : 'white'"
-                        size="md"
-                        v-b-tooltip.hover
-                        title="Refresh workflows"
-                        @click="refreshWorkflows"
-                        class="ml-0 mt-0 mr-0"
-                    >
-                        <b-spinner
-                            small
-                            v-if="personalLoading"
-                            label="Refreshing..."
-                            :variant="profile.darkMode ? 'light' : 'dark'"
-                            class="mr-1"
-                        ></b-spinner
-                        ><i v-else class="fas fa-redo mr-1"></i
-                        >Refresh</b-button
-                    ></b-col
-                ><b-col class="ml-0" align-self="middle"
+                >
+                <b-col
+                    md="auto"
+                    class="ml-0"
+                    align-self="middle"
+                    v-if="!publicContext"
                     ><b-button
                         :disabled="personalLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
@@ -46,12 +31,66 @@
                         ><i v-else class="fas fa-plug mr-1"></i
                         >Connect</b-button
                     ></b-col
+                >
+                <b-col md="auto" class="ml-0" align-self="middle"
+                    ><b-button
+                        :disabled="
+                            (!publicContext && personalLoading) ||
+                                (publicContext && publicLoading)
+                        "
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="md"
+                        v-b-tooltip.hover
+                        title="Refresh workflows"
+                        @click="refreshWorkflows"
+                        class="ml-0 mt-0 mr-0"
+                    >
+                        <b-spinner
+                            small
+                            v-if="
+                                (!publicContext && personalLoading) ||
+                                    (publicContext && publicLoading)
+                            "
+                            label="Refreshing..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-redo mr-1"></i
+                        >Refresh</b-button
+                    ></b-col
+                >
+                <b-col md="auto" align-self="middle"
+                    ><b-form-checkbox
+                        :disabled="
+                            (!publicContext && personalLoading) ||
+                                (publicContext && publicLoading)
+                        "
+                        :button-variant="
+                            profile.darkMode ? 'outline-light' : 'white'
+                        "
+                        v-model="publicContext"
+                        button
+                        size="md"
+                        class="ml-0 mt-0 mr-0"
+                        @click="toggleContext"
+                        :title="
+                            publicContext
+                                ? 'View your workflows'
+                                : 'View public workflows'
+                        "
+                        v-b-tooltip:hover
+                        ><span v-if="publicContext"
+                            ><i class="fas fa-users"></i> Public</span
+                        ><span v-else
+                            ><i class="fas fa-user"></i> Yours</span
+                        ></b-form-checkbox
+                    ></b-col
                 ></b-row
             >
             <hr class="mt-2 mb-2" style="border-color: gray" />
             <b-card-group deck columns>
                 <b-card
-                    v-for="workflow in workflows"
+                    v-for="workflow in getWorkflows"
                     :key="workflow.repo.name"
                     :bg-variant="profile.darkMode ? 'dark' : 'white'"
                     :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
@@ -70,24 +109,6 @@
                     ></blurb>
                 </b-card>
             </b-card-group>
-        </div>
-        <div v-else class="p-2">
-            <b-row>
-                <b-col>
-                    <b-button
-                        @click="back"
-                        :variant="profile.darkMode ? 'outline-light' : 'white'"
-                        size="md"
-                        v-b-tooltip.hover
-                        title="Back to workflows"
-                        class="text-left"
-                        ><i class="fas fa-caret-left fa-fw"></i
-                        >Workflows</b-button
-                    >
-                </b-col>
-            </b-row>
-            <hr class="mt-2 mb-2" style="border-color: gray" />
-            <workflow :owner="selected.owner" :name="selected.name" v-on:runSubmitted="runSubmitted"></workflow>
         </div>
         <b-modal
             id="connectWorkflow"
@@ -351,32 +372,52 @@
 
 <script>
 import blurb from '@/components/workflows/workflow-blurb.vue';
-import workflow from '@/components/workflows/workflow.vue';
 import { mapGetters } from 'vuex';
-import axios from 'axios';
 import * as Sentry from '@sentry/browser';
-import moment from "moment";
+import axios from 'axios';
+import moment from 'moment';
+import router from '@/router';
 
 export default {
     name: 'workflows',
     components: {
-        blurb,
-        workflow
-    },
-    props: {
-        workflows: {
-            required: true,
-            type: Array
-        }
+        blurb
     },
     data: function() {
         return {
             login: false,
-            selected: null,
             workflowName: '',
             workflowSearchResult: null,
-            workflowExists: false
+            workflowExists: false,
+            publicContext: false,
+            togglingContext: false,
+            isOpen: false,
+            isLoading: false,
+            isAsync: false
         };
+    },
+    async mounted() {
+        await Promise.all([
+            this.$store.dispatch(
+                'workflows/loadPersonal',
+                this.profile.githubProfile.login
+            ),
+            this.$store.dispatch('workflows/loadPublic')
+        ]);
+    },
+    watch: {
+        // TODO get rid of this, it's hacky
+        // eslint-disable-next-line no-unused-vars
+        publicContext: function(_) {
+          this.refreshWorkflows();
+        },
+        // eslint-disable-next-line no-unused-vars
+        items: function(value, _) {
+            if (this.isAsync) {
+                this.workflowSearchResult = value;
+                this.isLoading = false;
+            }
+        }
     },
     methods: {
         prettify: function(date) {
@@ -384,21 +425,19 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        back() {
-            this.selected = null;
+        toggleContext() {
+            this.togglingContext = true;
+            this.publicContext = !this.publicContext;
+            this.togglingContext = false;
         },
-        selectWorkflow: function(wf) {
-            this.selected = {
-                owner: wf['repo']['owner']['login'],
-                name: wf['repo']['name']
-            };
-            // router.push({
-            //     name: 'workflow',
-            //     params: {
-            //         username: workflow['repo']['owner']['login'],
-            //         name: workflow['repo']['name']
-            //     }
-            // });
+        selectWorkflow: function(workflow) {
+            router.push({
+                name: 'workflow',
+                params: {
+                    owner: workflow['repo']['owner']['login'],
+                    name: workflow['repo']['name']
+                }
+            });
         },
         onWorkflowNameChange() {
             this.isLoading = true;
@@ -417,6 +456,16 @@ export default {
                     this.isLoading = false;
                     if (error.response.status === 500) throw error;
                 });
+        },
+        setWorkflowName(result) {
+            this.workflowName = result;
+            this.isOpen = false;
+        },
+        handleClickOutside(event) {
+            if (!this.$el.contains(event.target)) {
+                this.arrowCounter = -1;
+                this.isOpen = false;
+            }
         },
         showConnectWorkflowModal() {
             this.$bvModal.show('connectWorkflow');
@@ -452,15 +501,27 @@ export default {
             return 0;
         },
         refreshWorkflows() {
-            this.$store.dispatch(
-                'workflows/loadPersonal',
-                this.profile.githubProfile.login
-            );
+            if (this.publicContext)
+                this.$store.dispatch('workflows/loadPublic');
+            else
+                this.$store.dispatch(
+                    'workflows/loadPersonal',
+                    this.profile.githubProfile.login
+                );
         }
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['personal', 'personalLoading']),
+        ...mapGetters('workflows', [
+            'personal',
+            'personalLoading',
+            'public',
+            'publicLoading'
+        ]),
+        getWorkflows() {
+            if (this.publicContext) return this.public;
+            else return this.personal;
+        },
         workflowInvalid() {
             return (
                 this.workflowSearchResult === null ||

@@ -23,13 +23,11 @@ def list_public(request):
     updated = redis.get('public_workflows_updated')
 
     if updated is None:
-        refresh_all_workflows.delay()
-        redis.set(f"public_workflows_updated", timezone.now().timestamp())
+        refresh_all_workflows.delay(token=request.user.profile.github_token)
     else:
-        seconds_since_refresh = (timezone.now() - datetime.fromtimestamp(float(updated)))
-        if seconds_since_refresh.total_seconds() > (settings.WORKFLOWS_REFRESH_MINUTES * 60):
+        seconds_since_refresh = (datetime.now() - datetime.fromtimestamp(float(updated)))
+        if seconds_since_refresh.total_seconds() > (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60):
             refresh_all_workflows.delay(token=request.user.profile.github_token)
-            redis.set(f"public_workflows_updated", timezone.now().timestamp())
 
     workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')]
     workflows = [workflow for workflow in workflows if workflow['public']]
@@ -38,15 +36,14 @@ def list_public(request):
 
 @login_required
 def list_personal(request, owner):
-    redis = RedisClient.get()
-    updated = redis.get(f"workflows_updated/{owner}")
-
     if owner != request.user.profile.github_username:
         try:
             Profile.objects.get(github_username=owner)
         except:
             return HttpResponseNotFound()
 
+    redis = RedisClient.get()
+    # updated = redis.get(f"workflows_updated/{owner}")
     # if updated is None:
     #     logger.info(f"Updating workflow cache for {owner}")
     #     refresh_personal_workflows.delay(owner=owner)
