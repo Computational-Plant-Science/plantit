@@ -13,9 +13,9 @@
             <b-row
                 no-gutters
                 v-if="
-                    agent.role !== 'own' &&
-                        agent.role !== 'run' &&
-                        !agent.public
+                    getAgent.role !== 'admin' &&
+                        getAgent.role !== 'run' &&
+                        !getAgent.public
                 "
                 ><b-col class="text-center"
                     ><p
@@ -38,7 +38,7 @@
                             "
                             size="md"
                             v-b-tooltip.hover
-                            :title="'Request guest access for ' + agent.name"
+                            :title="'Request guest access for ' + getAgent.name"
                             @click="requestAccess"
                         >
                             <i class="fas fa-key fa-fw"></i>
@@ -116,12 +116,12 @@
                                 "
                             >
                                 <b-img
-                                    v-if="agent.logo"
+                                    v-if="getAgent.logo"
                                     rounded
                                     class="card-img-right overflow-hidden"
                                     style="max-height: 5rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                     right
-                                    :src="agent.logo"
+                                    :src="getAgent.logo"
                                 ></b-img>
                                 <i
                                     v-else
@@ -140,25 +140,23 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    {{ agent.name }}
+                                                    {{ getAgent.name }}
                                                 </h2>
                                                 <b-badge
-                                                    v-if="
-                                                        agent.role === 'use'
-                                                    "
+                                                    v-if="getAgent.role === 'guest'"
                                                     variant="warning"
                                                     >Guest</b-badge
                                                 >
                                                 <b-badge
                                                     v-else-if="
-                                                        agent.role === 'own'
+                                                        getAgent.role === 'admin'
                                                     "
                                                     variant="success"
                                                     >Owner</b-badge
                                                 >
                                                 <br />
                                                 <small>{{
-                                                    agent.description
+                                                    getAgent.description
                                                 }}</small>
                                             </b-col>
                                         </b-row>
@@ -180,9 +178,7 @@
                                                     </b-col>
                                                     <b-col cols="9">
                                                         <b class="ml-3">
-                                                            {{
-                                                                agent.executor
-                                                            }}
+                                                            {{ getAgent.executor }}
                                                         </b>
                                                     </b-col>
                                                 </b-row>
@@ -195,9 +191,7 @@
                                                     </b-col>
                                                     <b-col cols="9">
                                                         <b class="ml-3">
-                                                            {{
-                                                                agent.workdir
-                                                            }}
+                                                            {{ getAgent.workdir }}
                                                         </b>
                                                     </b-col>
                                                 </b-row>
@@ -210,7 +204,7 @@
                                                     <b-col cols="9"
                                                         ><b class="ml-3"
                                                             ><code>{{
-                                                                agent.pre_commands
+                                                                getAgent.pre_commands
                                                             }}</code></b
                                                         ></b-col
                                                     >
@@ -227,18 +221,16 @@
                                                     Resources Available
                                                     <small>per container</small>
                                                 </h5>
-                                                <b>{{ agent.max_cores }}</b>
+                                                <b>{{ getAgent.max_cores }}</b>
                                                 <small> cores</small>
                                                 <br />
-                                                <b>{{
-                                                    agent.max_processes
-                                                }}</b>
+                                                <b>{{ getAgent.max_processes }}</b>
                                                 <small> processes</small>
                                                 <br />
                                                 <span
                                                     v-if="
                                                         parseInt(
-                                                            agent.max_mem
+                                                            getAgent.max_mem
                                                         ) < 0
                                                     "
                                                 >
@@ -249,10 +241,10 @@
                                                 <span
                                                     v-else-if="
                                                         parseInt(
-                                                            agent.max_mem
+                                                            getAgent.max_mem
                                                         ) > 0
                                                     "
-                                                    >{{ agent.max_mem
+                                                    >{{ getAgent.max_mem
                                                     }}<small>
                                                         GB memory</small
                                                     ></span
@@ -260,7 +252,7 @@
                                                 <span
                                                     v-else-if="
                                                         parseInt(
-                                                            agent.max_mem
+                                                            getAgent.max_mem
                                                         ) === -1
                                                     "
                                                     ><small
@@ -268,10 +260,10 @@
                                                     ></span
                                                 >
                                                 <br />
-                                                <span v-if="agent.gpu">
+                                                <span v-if="getAgent.gpu">
                                                     <i
                                                         :class="
-                                                            agent.gpu
+                                                            getAgent.gpu
                                                                 ? 'text-warning'
                                                                 : ''
                                                         "
@@ -289,12 +281,12 @@
                                         <hr />
                                         <b-row>
                                             <b-col
-                                                v-if="agent.role === 'own'"
+                                                v-if="getAgent.role === 'admin'"
                                                 class="mr-0"
                                                 md="auto"
                                                 align-self="end"
                                                 ><b-form-checkbox
-                                                    v-model="agent.public"
+                                                    v-model="getAgent.public"
                                                     button
                                                     class="mr-0"
                                                     size="sm"
@@ -302,7 +294,7 @@
                                                     @change="togglePublic"
                                                 >
                                                     <i
-                                                        v-if="agent.public"
+                                                        v-if="getAgent.public"
                                                         class="fas fa-lock-open fa-fw"
                                                     ></i>
                                                     <i
@@ -310,7 +302,7 @@
                                                         class="fas fa-lock fa-fw"
                                                     ></i>
                                                     {{
-                                                        agent.public
+                                                        getAgent.public
                                                             ? 'Public'
                                                             : 'Private'
                                                     }}
@@ -318,7 +310,7 @@
                                             </b-col>
                                             <b-col
                                                 v-else-if="
-                                                    agent.role === 'none' &&
+                                                    getAgent.role === 'none' &&
                                                         !accessRequested
                                                 "
                                                 class="ml-0"
@@ -335,7 +327,7 @@
                                                     v-b-tooltip.hover
                                                     :title="
                                                         'Request access to ' +
-                                                            agent.name
+                                                            getAgent.name
                                                     "
                                                     @click="requestAccess"
                                                 >
@@ -347,7 +339,7 @@
                                             >
                                             <b-col></b-col>
                                             <b-col
-                                                v-if="agent.role !== 'none'"
+                                                v-if="getAgent.role !== 'none'"
                                                 class="ml-0"
                                                 md="auto"
                                                 align-self="end"
@@ -362,8 +354,7 @@
                                                     v-b-tooltip.hover
                                                     title="Check Connection Status"
                                                     :disabled="
-                                                        agent.role ===
-                                                            'none' ||
+                                                        getAgent.role === 'none' ||
                                                             statusChecking
                                                     "
                                                     @click="checkStatus"
@@ -385,7 +376,7 @@
                                             ></b-col>
                                             <b-col
                                                 v-if="
-                                                    agent.role === 'none' &&
+                                                    getAgent.role === 'none' &&
                                                         accessRequested
                                                 "
                                                 class="ml-0"
@@ -447,7 +438,7 @@
                             </div>
                         </b-card>
                         <br />
-                        <div v-if="agent.policies && agent.role === 'own'">
+                        <div v-if="getAgent.policies && getAgent.role === 'admin'">
                             <b-row no-gutters>
                                 <b-col align-self="end"
                                     ><h5
@@ -466,7 +457,7 @@
                                     <b-row
                                         v-if="
                                             !agentLoading &&
-                                                agent.policies.length === 1
+                                                getAgent.policies.length === 1
                                         "
                                         ><b-col
                                             ><small
@@ -477,7 +468,7 @@
                                     >
                                     <b-row
                                         v-else
-                                        v-for="policy in agent.policies.filter(
+                                        v-for="policy in getAgent.policies.filter(
                                             p =>
                                                 p.user !==
                                                 profile.djangoProfile.username
@@ -523,7 +514,7 @@
                             >
                             <hr />
                         </div>
-                        <div v-if="agent.role === 'own'">
+                        <div v-if="getAgent.role === 'admin'">
                             <b-row no-gutters>
                                 <b-col align-self="end"
                                     ><h5
@@ -537,7 +528,7 @@
                                     </h5></b-col
                                 >
                             </b-row>
-                            <b-row v-if="agent.access_requests.length === 0"
+                            <b-row v-if="getAgent.access_requests.length === 0"
                                 ><b-col
                                     ><small
                                         >No pending access requests.</small
@@ -547,7 +538,7 @@
                             <b-row v-else
                                 ><b-col align-self="end">
                                     <b-row
-                                        v-for="request in agent.access_requests"
+                                        v-for="request in getAgent.access_requests"
                                         v-bind:key="request.user"
                                     >
                                         <b-col md="auto">{{
@@ -614,7 +605,7 @@
                                     size="sm"
                                     v-b-tooltip.hover
                                     title="Create Periodic Task"
-                                    :disabled="agent.role !== 'own'"
+                                    :disabled="getAgent.role !== 'admin'"
                                     v-b-modal.createTask
                                 >
                                     <i class="fas fa-plus fa-fw"></i>
@@ -623,14 +614,14 @@
                             ></b-row
                         >
                         <div
-                            v-for="task in agent.tasks"
+                            v-for="task in getAgent.tasks"
                             v-bind:key="task.name"
                             class="pb-2"
                         >
                             <b-row class="pt-1">
                                 <b-col
                                     md="auto"
-                                    v-if="agent.role === 'own'"
+                                    v-if="getAgent.role === 'admin'"
                                     align-self="end"
                                     :class="
                                         profile.darkMode
@@ -652,7 +643,7 @@
                                 <b-col
                                     md="auto"
                                     align-self="end"
-                                    v-if="agent.role === 'own'"
+                                    v-if="getAgent.role === 'admin'"
                                     ><b-button
                                         size="sm"
                                         variant="outline-danger"
@@ -738,7 +729,7 @@
             :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="'Authenticate with ' + this.agent.name"
+            :title="'Authenticate with ' + this.getAgent.name"
             @ok="openDataset"
         >
             <b-form-input
@@ -774,7 +765,6 @@ export default {
         return {
             authenticationUsername: '',
             authenticationPassword: '',
-            agent: null,
             agentLoading: false,
             statusChecking: false,
             alertEnabled: false,
@@ -795,29 +785,30 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['recentlyRunWorkflows']),
-        ...mapGetters('datasets', [
-            'openedDatasetLoading',
-            'openedDataset'
-        ]),
+        ...mapGetters('datasets', ['openedDatasetLoading', 'openedDataset']),
+        ...mapGetters('agents', ['agent']),
+        getAgent() {
+            return this.agent(this.$router.currentRoute.params.guid);
+        },
         mustAuthenticate() {
             return (
-                this.agent.policies.length === 0 ||
-                (this.agent.policies.length > 0 &&
-                    !this.agent.policies.some(
+                this.getAgent.policies.length === 0 ||
+                (this.getAgent.policies.length > 0 &&
+                    !this.getAgent.policies.some(
                         p =>
                             p.user === this.profile.djangoProfile.username &&
-                            (p.role.toLowerCase() === 'use' ||
-                                p.role.toLowerCase() === 'own')
+                            (p.role.toLowerCase() === 'guest' ||
+                                p.role.toLowerCase() === 'admin')
                     ))
             );
         },
         accessRequested: function() {
-            return this.agent.access_requests.some(
+            return this.getAgent.access_requests.some(
                 r => r.user === this.profile.djangoProfile.username
             );
         },
         accessRequest: function() {
-            return this.agent.access_requests.find(
+            return this.getAgent.access_requests.find(
                 r => r.user === this.profile.djangoProfile.username
             );
         }
@@ -832,7 +823,7 @@ export default {
         },
         // openDataset() {
         //     this.$store.dispatch('updateSessionLoading', true);
-        //     let data = { agent: this.agent.name };
+        //     let data = { getAgent: this.getAgent.name };
         //     if (this.mustAuthenticate)
         //         data['auth'] = {
         //             username: this.authenticationUsername,
@@ -925,9 +916,9 @@ export default {
                     `/apis/v1/agents/toggle_public/?name=${this.$route.params.name}`
                 )
                 .then(response => {
-                    this.agent.public = response.data.public;
+                    this.getAgent.public = response.data.public;
                     this.alertMessage = `${this.$route.params.name} is now ${
-                        this.agent.public ? 'public' : 'private'
+                        this.getAgent.public ? 'public' : 'private'
                     }`;
                     this.alertEnabled = true;
                 })
@@ -959,13 +950,13 @@ export default {
                 .get(`/apis/v1/agents/remove_task/?name=${task.name}`)
                 .then(() => {
                     this.loadTarget();
-                    this.alertMessage = `Deleted task ${task.name} on ${this.agent.name}`;
+                    this.alertMessage = `Deleted task ${task.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to delete ${task.name} on ${this.agent.name}`;
+                    this.alertMessage = `Failed to delete ${task.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                     throw error;
@@ -978,7 +969,7 @@ export default {
                 url: `/apis/v1/agents/create_task/`,
                 data: {
                     name: this.createTaskForm.name,
-                    agent: this.agent.name,
+                    agent: this.getAgent.name,
                     description: this.createTaskForm.description,
                     command: this.createTaskForm.command,
                     delay: this.createTaskForm.time
@@ -994,10 +985,10 @@ export default {
                 .then(response => {
                     this.alertMessage =
                         response.status === 200 && response.data.created
-                            ? `Created task ${this.createTaskForm.name} on ${this.agent.name}`
+                            ? `Created task ${this.createTaskForm.name} on ${this.getAgent.name}`
                             : response.status === 200 && !response.data.created
-                            ? `Task ${this.createTaskForm.name} already exists on ${this.agent.name}`
-                            : `Failed to create task ${this.createTaskForm.name} on ${this.agent.name}`;
+                            ? `Task ${this.createTaskForm.name} already exists on ${this.getAgent.name}`
+                            : `Failed to create task ${this.createTaskForm.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                     this.$bvModal.hide('createTask');
@@ -1005,7 +996,7 @@ export default {
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to create task ${this.createTaskForm.name} on ${this.agent.name}`;
+                    this.alertMessage = `Failed to create task ${this.createTaskForm.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                     this.$bvModal.hide('createTask');
@@ -1036,7 +1027,7 @@ export default {
                     `/apis/v1/agents/get_by_name/?name=${this.$route.params.name}`
                 )
                 .then(response => {
-                    this.agent = response.data;
+                    this.getAgent = response.data;
                     this.singularityCacheCleaning =
                         response.data.singularity_cache_clean_enabled;
                     this.agentLoading = false;
@@ -1049,19 +1040,17 @@ export default {
         checkStatus: function() {
             this.statusChecking = true;
             return axios
-                .get(
-                    `/apis/v1/agents/status/?name=${this.$route.params.name}`
-                )
+                .get(`/apis/v1/agents/status/?name=${this.$route.params.name}`)
                 .then(response => {
                     this.alertMessage = response.data.healthy
-                        ? `Connection to ${this.agent.name} succeeded`
-                        : `Failed to connect to ${this.agent.name}`;
+                        ? `Connection to ${this.getAgent.name} succeeded`
+                        : `Failed to connect to ${this.getAgent.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to connect to ${this.agent.name}`;
+                    this.alertMessage = `Failed to connect to ${this.getAgent.name}`;
                     this.alertEnabled = true;
                     this.statusChecking = false;
                     throw error;
@@ -1074,13 +1063,13 @@ export default {
                     this.loadTarget();
                     this.alertMessage = `${
                         response.data.enabled ? 'Enabled' : 'Disabled'
-                    } task ${task.name} on ${this.agent.name}`;
+                    } task ${task.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) {
-                        this.alertMessage = `Failed to disable task ${task.name} on ${this.agent.name}`;
+                        this.alertMessage = `Failed to disable task ${task.name} on ${this.getAgent.name}`;
                         this.alertEnabled = true;
                         throw error;
                     }

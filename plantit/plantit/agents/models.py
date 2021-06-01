@@ -10,7 +10,7 @@ from django_enum_choices.fields import EnumChoiceField
 
 
 class Agent(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=50)
     guid = models.CharField(max_length=50, null=False, blank=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
@@ -52,8 +52,8 @@ class Agent(models.Model):
 
 
 class AgentRole(Enum):
-    own = 'OWN'
-    run = 'USE'
+    admin = 'ADMIN'
+    guest = 'GUEST'
     none = 'NONE'
 
 

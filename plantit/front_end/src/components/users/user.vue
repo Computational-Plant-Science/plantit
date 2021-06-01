@@ -778,8 +778,8 @@
                                                     <b-badge
                                                         variant="warning"
                                                         >{{
-                                                            agent.role === 'own'
-                                                                ? 'Owner'
+                                                            agent.role === 'admin'
+                                                                ? 'Admin'
                                                                 : 'Guest'
                                                         }}</b-badge
                                                     >

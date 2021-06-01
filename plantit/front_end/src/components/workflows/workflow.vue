@@ -2570,7 +2570,7 @@
                                 size="sm"
                                 v-b-tooltip.hover
                                 title="Create Periodic Task"
-                                :disabled="agent.role !== 'own'"
+                                :disabled="agent.role !== 'admin'"
                                 v-b-modal.createTask
                             >
                                 <i class="fas fa-plus fa-fw"></i>
@@ -3492,8 +3492,8 @@ export default {
             return !this.selectedAgent.policies.some(
                 p =>
                     p.user === this.profile.djangoProfile.username &&
-                    (p.role.toLowerCase() === 'use' ||
-                        p.role.toLowerCase() === 'own')
+                    (p.role.toLowerCase() === 'guest' ||
+                        p.role.toLowerCase() === 'admin')
             );
         },
         getWorkflow() {

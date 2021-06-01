@@ -96,222 +96,130 @@
                         ></b-col
                     >
                 </b-row>
-                <div>
-                    <b-row v-if="agentsLoading" class="mt-2">
-                        <b-col class="text-center">
-                            <b-spinner
-                                type="grow"
-                                label="Loading..."
-                                variant="secondary"
-                            ></b-spinner>
-                        </b-col>
-                    </b-row>
-                    <b-card-group
-                        deck
-                        columns
-                        v-else-if="getAgents.length !== 0"
+                <b-row v-if="agentsLoading" class="mt-2">
+                    <b-col class="text-center">
+                        <b-spinner
+                            type="grow"
+                            label="Loading..."
+                            variant="secondary"
+                        ></b-spinner>
+                    </b-col>
+                </b-row>
+                <b-card-group deck columns v-else-if="getAgents.length !== 0">
+                    <b-card
+                        v-for="agent in getAgents"
+                        v-bind:key="agent.guid"
+                        :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                        :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                        border-variant="default"
+                        :header-border-variant="
+                            profile.darkMode ? 'secondary' : 'default'
+                        "
+                        :text-variant="profile.darkMode ? 'white' : 'dark'"
+                        style="min-width: 30rem;"
+                        class="overflow-hidden mb-4"
                     >
-                        <b-card
-                            v-for="agent in getAgents"
-                            v-bind:key="agent.guid"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            border-variant="default"
-                            :header-border-variant="
-                                profile.darkMode ? 'secondary' : 'default'
-                            "
-                            :text-variant="profile.darkMode ? 'white' : 'dark'"
-                            style="min-width: 30rem;"
-                            class="overflow-hidden mb-4"
-                        >
-                            <b-row style="z-index: 10">
-                                <b-col cols="10">
-                                    <h2>
-                                        <b-link
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                            variant="outline-dark"
-                                            v-b-tooltip.hover
-                                            :to="{
-                                                name: 'agent',
-                                                params: {
-                                                    guid: agent.guid
-                                                }
-                                            }"
-                                        >
-                                            {{ agent.name }}
-                                        </b-link>
-                                    </h2>
-                                    <b-badge
-                                        v-if="!agent.public"
-                                        class="mr-1"
-                                        variant="info"
-                                        ><i class="fas fa-lock fa-fw"></i>
-                                        Private</b-badge
+                        <b-row style="z-index: 10">
+                            <b-col cols="10">
+                                <h2>
+                                    <b-link
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                        variant="outline-dark"
+                                        v-b-tooltip.hover
+                                        :to="{
+                                            name: 'agent',
+                                            params: {
+                                                guid: agent.guid
+                                            }
+                                        }"
                                     >
-                                    <b-badge
-                                        v-else
-                                        variant="success"
-                                        class="mr-1"
-                                        ><i class="fas fa-lock-open fa-fw"></i>
-                                        Public</b-badge
-                                    >
-                                    <b-badge variant="warning">{{
-                                        agent.role === 'own' ? 'Owner' : 'Guest'
-                                    }}</b-badge>
-
-                                    <br />
-                                    <small>
-                                        {{ agent.description }}
-                                    </small>
-                                    <br />
-                                </b-col>
-                                <b-col cols="1"></b-col>
-                            </b-row>
-                            <b-img
-                                v-if="agent.logo"
-                                rounded
-                                class="card-img-right overflow-hidden"
-                                style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
-                                right
-                                :src="agent.logo"
-                            ></b-img>
-                            <i
-                                v-else
-                                style="max-width: 7rem;position: absolute;right: 20px;top: 20px;"
-                                right
-                                class="card-img-left fas fa-server fa-2x fa-fw"
-                            ></i>
-                        </b-card>
-                    </b-card-group>
-                    <b-row v-else
-                        ><b-col
-                            ><span class="text-danger">{{
-                                publicContext
-                                    ? 'No public agents available.'
-                                    : "You haven't connected any agents yet."
-                            }}</span>
-                            <br />
-                            <span v-if="!publicContext">
-                                View
-                                <b-link
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                    @click="toggleContext"
-                                    ><i class="fas fa-users fa-1x fa-fw"></i>
-                                    Public</b-link
+                                        {{ agent.name }}
+                                    </b-link>
+                                </h2>
+                                <b-badge
+                                    v-if="!agent.public"
+                                    class="mr-1"
+                                    variant="info"
+                                    ><i class="fas fa-lock fa-fw"></i>
+                                    Private</b-badge
                                 >
-                                agents to request guest access to a public
-                                server, cluster, or supercomputer, or
-                                <b-link
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                    @click="showConnectAgentModal"
-                                    ><i class="fas fa-plug fa-1x fa-fw"></i>
-                                    connect an agent</b-link
+                                <b-badge v-else variant="success" class="mr-1"
+                                    ><i class="fas fa-lock-open fa-fw"></i>
+                                    Public</b-badge
                                 >
-                                of your own.</span
-                            ></b-col
-                        ></b-row
-                    >
+                                <b-badge variant="warning">{{
+                                    agent.role === 'admin' ? 'Admin' : 'Guest'
+                                }}</b-badge>
 
-                    <b-card-group
-                        v-if="!agentsLoading && agents.length !== 0"
-                        deck
-                        columns
-                        class="justify-content-center mt-3"
-                    >
-                        <b-card
-                            v-for="agent in agents"
-                            v-bind:key="agent.name"
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            :header-bg-variant="
-                                profile.darkMode ? 'dark' : 'white'
-                            "
-                            border-variant="default"
-                            :header-border-variant="
-                                profile.darkMode ? 'secondary' : 'default'
-                            "
-                            :text-variant="profile.darkMode ? 'white' : 'dark'"
-                            style="min-width: 30rem;"
-                            class="overflow-hidden mb-4"
-                        >
-                            <b-row style="z-index: 10">
-                                <b-col cols="10">
-                                    <h2>
-                                        <b-link
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                            variant="outline-dark"
-                                            v-b-tooltip.hover
-                                            :to="{
-                                                name: 'agent',
-                                                params: {
-                                                    guid: agent.guid
-                                                }
-                                            }"
-                                        >
-                                            {{ agent.name }}
-                                        </b-link>
-                                    </h2>
-                                    <b-badge
-                                        v-if="!agent.public"
-                                        class="mr-1"
-                                        variant="info"
-                                        ><i class="fas fa-lock fa-fw"></i>
-                                        Private</b-badge
-                                    >
-                                    <b-badge
-                                        v-else
-                                        variant="success"
-                                        class="mr-1"
-                                        ><i class="fas fa-lock-open fa-fw"></i>
-                                        Public</b-badge
-                                    >
-                                    <b-badge variant="warning">{{
-                                        agent.role === 'own' ? 'Owner' : 'Guest'
-                                    }}</b-badge>
-
-                                    <br />
-                                    <small>
-                                        {{ agent.description }}
-                                    </small>
-                                    <br />
-                                </b-col>
-                                <b-col cols="1"></b-col>
-                            </b-row>
-                            <b-img
-                                v-if="agent.logo"
-                                rounded
-                                class="card-img-right overflow-hidden"
-                                style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
-                                right
-                                :src="agent.logo"
-                            ></b-img>
-                            <i
-                                v-else
-                                style="max-width: 7rem;position: absolute;right: 20px;top: 20px;"
-                                right
-                                class="card-img-left fas fa-server fa-2x fa-fw"
-                            ></i>
-                        </b-card>
-                    </b-card-group>
-                </div>
+                                <br />
+                                <small>
+                                    {{ agent.description }}
+                                </small>
+                                <br />
+                            </b-col>
+                            <b-col cols="1"></b-col>
+                        </b-row>
+                        <b-img
+                            v-if="agent.logo"
+                            rounded
+                            class="card-img-right overflow-hidden"
+                            style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                            right
+                            :src="agent.logo"
+                        ></b-img>
+                        <i
+                            v-else
+                            style="max-width: 7rem;position: absolute;right: 20px;top: 20px;"
+                            right
+                            class="card-img-left fas fa-server fa-2x fa-fw"
+                        ></i>
+                    </b-card>
+                </b-card-group>
+                <b-row v-else
+                    ><b-col
+                        ><span class="text-danger">{{
+                            publicContext
+                                ? 'No public agents available.'
+                                : "You haven't connected any agents yet."
+                        }}</span>
+                        <br />
+                        <span v-if="!publicContext">
+                            View
+                            <b-link
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                                @click="toggleContext"
+                                ><i class="fas fa-users fa-1x fa-fw"></i>
+                                Public</b-link
+                            >
+                            agents to request guest access to a public server,
+                            cluster, or supercomputer, or
+                            <b-link
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                                @click="showConnectAgentModal"
+                                ><i class="fas fa-plug fa-1x fa-fw"></i> connect
+                                an agent</b-link
+                            >
+                            of your own.</span
+                        ></b-col
+                    ></b-row
+                >
             </div>
+            <router-view
+                v-else
+                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+            ></router-view>
         </div>
         <b-modal
             id="connectAgent"
@@ -559,7 +467,6 @@ export default {
     name: 'agents',
     data: function() {
         return {
-            agents: [],
             agentName: '',
             agentHost: '',
             agentDescription: '',
