@@ -69,7 +69,6 @@
                         ></b-col
                     ></b-row
                 >
-                <hr class="mt-2 mb-2" style="border-color: gray" />
                 <b-row v-if="publicContext">
                     <b-col
                         ><b-row v-if="publicDatasetsLoading" class="text-center"

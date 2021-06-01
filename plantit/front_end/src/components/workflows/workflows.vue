@@ -111,7 +111,6 @@
                         ></b-col
                     ></b-row
                 >
-                <hr class="mt-2 mb-2" style="border-color: gray" />
                 <b-row v-if="workflowsLoading" class="mt-2">
                     <b-col class="text-center">
                         <b-spinner

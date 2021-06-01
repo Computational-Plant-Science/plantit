@@ -33,7 +33,6 @@
                         </h1></b-col
                     ></b-row
                 >
-                <hr class="mt-2 mb-2" style="border-color: gray" />
                 <b-row align-v="center" class="mt-3"
                     ><b-col>
                         <b-tabs
@@ -71,9 +70,7 @@
                                         </h2></b-col
                                     ></b-row
                                 >
-                                <hr
-                                    class="mt-2 mb-2"
-                                    style="border-color: gray"/>
+
                                 <b-row align-v="start" class="mb-2">
                                     <b-col md="auto">
                                         <h5
@@ -91,10 +88,7 @@
                                         <b>{{ unreadNotifications.length }}</b>
                                         unread notifications
                                         <div v-if="profile.stats !== null">
-                                            <hr
-                                                class="mt-2 mb-2"
-                                                style="border-color: gray"
-                                            />
+
                                             <h5
                                                 :class="
                                                     profile.darkMode
@@ -129,10 +123,7 @@
                                             <b>{{
                                                 stats.most_frequent_collaborator
                                             }}</b>-->
-                                            <hr
-                                                class="mt-2 mb-2"
-                                                style="border-color: gray"
-                                            />
+
                                             <h5
                                                 :class="
                                                     profile.darkMode
@@ -283,10 +274,7 @@
                                         </h2></b-col
                                     ></b-row
                                 >
-                                <hr
-                                    class="mt-2 mb-2"
-                                    style="border-color: gray"
-                                />
+
                                 <b-tabs
                                     nav-class="bg-transparent"
                                     active-nav-item-class="bg-secondary text-dark"
@@ -663,10 +651,7 @@
                                         </h2></b-col
                                     ></b-row
                                 >
-                                <hr
-                                    class="mt-2 mb-2"
-                                    style="border-color: gray"
-                                />
+
                                 <div>
                                     <b-row v-if="agentsLoading">
                                         <b-spinner
@@ -853,10 +838,7 @@
                                             </h2></b-col
                                         ></b-row
                                     >
-                                    <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
+
                                     <b-tabs
                                         nav-class="bg-transparent"
                                         active-nav-item-class="bg-secondary text-dark"
@@ -1357,10 +1339,7 @@
                                             </h2></b-col
                                         ></b-row
                                     >
-                                    <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
+
                                     <b-row align-v="start" class="mb-2">
                                         <b-col md="auto">
                                             <div>
@@ -1566,10 +1545,6 @@
                                             </h2></b-col
                                         ></b-row
                                     >
-                                    <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
                                     <b-row class="m-1">
                                         <b-col align-self="center" cols="3"
                                             ><i
@@ -1838,7 +1813,6 @@
                         <br />
                         Stars: {{ workflowSearchResult.repo.stargazers_count }}
                     </p>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
                     <div v-if="workflowSearchResult.validation.is_valid">
                         <h5
                             :class="

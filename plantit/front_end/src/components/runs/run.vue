@@ -1424,7 +1424,7 @@ export default {
                 i >= (this.outputFilePage - 1) * this.outputPageSize &&
                 i <= this.outputFilePage * this.outputPageSize
             )
-                return `/apis/v1/runs/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
+                return `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
             else return null;
         },
         prettifyShort: function(date) {
@@ -1515,7 +1515,7 @@ export default {
             const loader = new PLYLoader();
             var comp = {};
             loader.load(
-                `/apis/v1/runs/${this.$router.currentRoute.params.name}/3d_model/?path=${f.name}`,
+                `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/3d_model/?path=${f.name}`,
                 function(geometry) {
                     geometry.computeVertexNormals();
 
@@ -1661,7 +1661,7 @@ export default {
             this.cancelled = true;
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.name}/cancel/`
+                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`
                 )
                 .then(response => {
                     this.cancelled = false;
@@ -1681,7 +1681,7 @@ export default {
         onDelete() {
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.name}/delete/`
+                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/delete/`
                 )
                 .then(response => {
                     if (response.status === 200 && response.data.deleted) {
@@ -1757,7 +1757,7 @@ export default {
         },
         viewFile(file) {
             this.thumbnailName = file;
-            this.thumbnailUrl = `/apis/v1/runs/${this.$router.currentRoute.params.name}/thumbnail/?path=${file}`;
+            this.thumbnailUrl = `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${file}`;
             this.thumbnailTitle = file;
             this.$bvModal.show('thumbnail');
         },
@@ -1765,7 +1765,7 @@ export default {
             this.downloading = true;
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.name}/output/${file}/`,
+                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/output/${file}/`,
                     { responseType: 'blob' }
                 )
                 .then(response => {
@@ -1792,7 +1792,7 @@ export default {
         downloadSubmissionLogs() {
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.name}/submission_logs/`
+                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/submission_logs/`
                 )
                 .then(response => {
                     if (response && response.status === 404) {
@@ -1817,7 +1817,7 @@ export default {
         downloadContainerLogs() {
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.name}/container_logs/`
+                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/container_logs/`
                 )
                 .then(response => {
                     if (response && response.status === 404) {
@@ -1844,7 +1844,7 @@ export default {
             this.textContent = [];
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.name}/file_text/?path=${file.path}`
+                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/file_text/?path=${file.path}`
                 )
                 .then(response => {
                     if (response.status === 200) {
@@ -1922,14 +1922,14 @@ export default {
         }
     },
     watch: {
-        async $route() {
-            await this.$store.dispatch('runs/refresh', this.getRun);
-            window.location.reload(false);
-            // this.$forceUpdate();
-        },
-        '$route.params.name'() {
-            // need to watch for route change to prompt reload
-        },
+        // async $route() {
+        //     await this.$store.dispatch('runs/refresh', this.getRun);
+        //     window.location.reload(false);
+        //     // this.$forceUpdate();
+        // },
+        // '$route.params.name'() {
+        //     // need to watch for route change to prompt reload
+        // },
         viewMode() {
             if (
                 this.data !== null &&

@@ -5,7 +5,7 @@
                 <splash></splash>
                 <about></about>
                 <sponsors></sponsors>
-                <people></people>
+                <!--<people></people>-->
             </b-col>
         </b-row>
     </b-container>

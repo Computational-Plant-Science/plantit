@@ -96,7 +96,6 @@
                         ></b-col
                     >
                 </b-row>
-                <hr class="mt-2 mb-2" style="border-color: gray" />
                 <div>
                     <b-row v-if="agentsLoading" class="mt-2">
                         <b-col class="text-center">
@@ -419,7 +418,10 @@
             <b-form-group
                 v-if="isSLURM(agentExecutor)"
                 description="Should this SLURM agent use job arrays for parallelization instead of Dask?"
-                ><b-form-checkbox :class="profile.darkMode ? 'text-light' : 'text-dark'" v-model="agentJobArray">
+                ><b-form-checkbox
+                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    v-model="agentJobArray"
+                >
                     Enable job arrays
                 </b-form-checkbox>
             </b-form-group>
@@ -427,7 +429,10 @@
                 v-if="isSLURM(agentExecutor)"
                 description="Should this SLURM agent use the TACC launcher instead of Dask?"
             >
-                <b-form-checkbox :class="profile.darkMode ? 'text-light' : 'text-dark'" v-model="agentLauncher">
+                <b-form-checkbox
+                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    v-model="agentLauncher"
+                >
                     Enable TACC launcher parameter sweep utility (for
                     Dask-incompatible hosts)
                 </b-form-checkbox>
@@ -636,11 +641,11 @@ export default {
         }
     },
     watch: {
-      // TODO get rid of this, it's hacky
-    // eslint-disable-next-line no-unused-vars
-    publicContext: function(_) {
-        this.refreshAgents();
-    },
+        // TODO get rid of this, it's hacky
+        // eslint-disable-next-line no-unused-vars
+        publicContext: function(_) {
+            this.refreshAgents();
+        }
     },
     methods: {
         prettify: function(date) {

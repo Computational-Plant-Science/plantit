@@ -369,9 +369,9 @@ def delete(request, owner, name):
 
     try:
         run.delete()
-        return HttpResponse({'deleted': True})
+        return JsonResponse({'deleted': True})
     except:
-        return HttpResponse({'deleted': False})
+        return JsonResponse({'deleted': False})
 
 
 @api_view(['GET'])
@@ -454,8 +454,3 @@ def search_repeating(request, owner, workflow_name):
 
     tasks = [task for task in tasks if task.workflow_name == workflow_name]
     return JsonResponse([map_repeating_run_task(task) for task in tasks], safe=False)
-
-# @api_view(['GET'])
-# def get_total_count(request):
-#     runs = Run.objects.all()
-#     return JsonResponse({'count': len(runs)})

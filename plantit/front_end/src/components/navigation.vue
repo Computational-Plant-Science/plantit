@@ -597,7 +597,7 @@
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo p-0"
+            class="logo p-0 pt-1 pb-2"
             style="min-height: 44px; max-height: 46px; z-index: 1000"
             fixed="top"
             :type="profile.darkMode ? 'dark' : 'secondary'"
@@ -664,7 +664,29 @@
                                     >IT</small
                                 >
                             </h3></b-nav-item
-                        ><b-nav-item
+                        >
+                        <b-nav-item
+                            title="About"
+                            to="/about"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i
+                                    class="fas fa-question-circle fa-1x fa-fw"
+                                ></i
+                                >About</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
                             title="Docs"
                             href="https://plantit.readthedocs.io/en/latest"
                             class="mt-2"
@@ -761,7 +783,7 @@
                                 :variant="
                                     profile.darkMode ? 'outline-light' : 'white'
                                 "
-                                class="ml-0 mr-0 mt-2 text-left"
+                                class="ml-0 mr-0 mt-1 text-left"
                                 size="md"
                             >
                                 <span
@@ -782,7 +804,7 @@
                                 <b-img
                                     v-if="profile.githubProfile"
                                     class="avatar m-0 mb-1 p-0 github-hover logo"
-                                    style="min-width: 32px; min-height: 32px; position: relative; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                                    style="min-width: 27px; min-height: 27px; position: relative; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
                                     rounded="circle"
                                     :src="
                                         profile.githubProfile
@@ -1137,9 +1159,15 @@ export default {
         await Promise.all([
             this.$store.dispatch('runs/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
-            this.$store.dispatch('workflows/loadPersonal', this.profile.githubProfile.login),
+            this.$store.dispatch(
+                'workflows/loadPersonal',
+                this.profile.githubProfile.login
+            ),
             this.$store.dispatch('workflows/loadPublic'),
-            this.$store.dispatch('agents/loadPersonal', this.profile.djangoProfile.username),
+            this.$store.dispatch(
+                'agents/loadPersonal',
+                this.profile.djangoProfile.username
+            ),
             this.$store.dispatch('agents/loadPublic'),
             this.$store.dispatch('datasets/loadPublicDatasets'),
             this.$store.dispatch('datasets/loadPersonalDatasets'),

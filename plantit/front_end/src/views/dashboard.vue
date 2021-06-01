@@ -45,7 +45,6 @@
                     </b></b-col
                 >--></b-row
             >
-            <hr class="mt-1 mb-2" style="border-color: gray" />
             <b-row
                 ><b-col md="auto" style="max-width: 15rem"
                     ><b-button
@@ -93,7 +92,6 @@
                                 </h2>
                             </b-col></b-row
                         >
-                        <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-row align-v="start">
                             <b-col md="auto">
                                 <h5

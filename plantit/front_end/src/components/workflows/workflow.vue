@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-container class="p-2 vl" fluid>
+        <b-container class="vl" fluid>
             <b-row no-gutters>
                 <b-col v-if="showStatusAlert">
                     <b-alert
@@ -165,10 +165,6 @@
                                                 ></b-col
                                             >
                                         </b-row>
-                                        <hr
-                                            class="mt-2 mb-2"
-                                            style="border-color: gray"
-                                        />
                                         <b-row class="mb-3">
                                             <b-col md="auto" class="mr-0 ml-0">
                                                 <b-badge
@@ -2556,7 +2552,7 @@
                                                         </b-list-group>
                                                     </b-col>-->
                                                     <b-col>
-                                                        <b-row
+                                                        <!--<b-row
                                                             ><b-col
                                                                 align-self="end"
                                                                 ><h5
@@ -2568,7 +2564,7 @@
                                                                 >
                                                                     Recent Runs
                                                                 </h5></b-col
-                                                            ><!--<b-col class="mb-1" align-self="start" md="auto"
+                                                            ><b-col class="mb-1" align-self="start" md="auto"
                             ><b-button
                                 :variant="profile.darkMode ? 'outline-light' : 'white'"
                                 size="sm"
@@ -2580,8 +2576,8 @@
                                 <i class="fas fa-plus fa-fw"></i>
                                 Create
                             </b-button></b-col
-                        >--></b-row
-                                                        >
+                        ></b-row
+                                                        >-->
                                                         <b-list-group
                                                             class="text-left m-0 p-0"
                                                         >
@@ -2609,17 +2605,12 @@
                                                                 style="box-shadow: -2px 2px 2px #adb5bd"
                                                                 v-for="run in runHistory"
                                                                 v-bind:key="
-                                                                    run.id
+                                                                    run.guid
                                                                 "
                                                                 :class="
                                                                     profile.darkMode
                                                                         ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                                                         : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
-                                                                "
-                                                                @click="
-                                                                    onRunSelected(
-                                                                        run
-                                                                    )
                                                                 "
                                                             >
                                                                 <!--<b-img
@@ -2633,18 +2624,25 @@
                                         right
                                         :src="run.flow_image_url"
                                     ></b-img>-->
-                                                                <a
+                                                                <b-link
                                                                     :class="
                                                                         profile.darkMode
                                                                             ? 'text-light'
                                                                             : 'text-dark'
                                                                     "
-                                                                    :href="
-                                                                        `/run/${run.id}`
-                                                                    "
+                                                                    :to="{
+                                                                        name:
+                                                                            'run',
+                                                                        params: {
+                                                                            owner:
+                                                                                run.owner,
+                                                                            name:
+                                                                                run.name
+                                                                        }
+                                                                    }"
                                                                     >{{
-                                                                        run.id
-                                                                    }}</a
+                                                                        run.name
+                                                                    }}</b-link
                                                                 >
                                                                 <br />
                                                                 <b-badge
@@ -3105,14 +3103,6 @@ export default {
         parseCronTime(time) {
             let cron = cronstrue.toString(time);
             return cron.charAt(0).toLowerCase() + cron.slice(1);
-        },
-        onRunSelected: function(items) {
-            router.push({
-                name: 'run',
-                params: {
-                    id: items[0].id
-                }
-            });
         },
         prettify: function(date) {
             return `${moment(date).fromNow()} (${moment(date).format(

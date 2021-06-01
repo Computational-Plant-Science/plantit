@@ -34,15 +34,16 @@ router.register('miappe/samples', SampleViewSet)
 router.register('miappe/observed_variables', ObservedVariableViewSet)
 
 urlpatterns = [
-    url('', include(router.urls)),
-    url('auth/login/', login_view),
-    url('auth/logout/', logout_view),
-    url('runs/', include("plantit.runs.urls")),
-    url('workflows/', include("plantit.workflows.urls")),
-    url('datasets/', include("plantit.datasets.urls")),
-    url('notifications/', include("plantit.notifications.urls")),
-    # url('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'))),
-] + static(r'/favicon.ico', document_root='static/favicon.ico')
+                  url('', include(router.urls)),
+                  url('auth/login/', login_view),
+                  url('auth/logout/', logout_view),
+                  url('datasets/', include("plantit.datasets.urls")),
+                  url('workflows/', include("plantit.workflows.urls")),
+                  url('runs/', include("plantit.runs.urls")),
+                  url('stats/', include("plantit.stats.urls")),
+                  url('notifications/', include("plantit.notifications.urls")),
+                  # url('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'))),
+              ] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
 websocket_urlpatterns = [
     path(r'ws/runs/<username>/', RunConsumer.as_asgi()),

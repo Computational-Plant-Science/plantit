@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import home from './views/home.vue';
+import about from './views/about.vue';
 import dashboard from './views/dashboard.vue';
 import users from './components/users/users.vue';
 import user from './components/users/user.vue';
@@ -26,6 +27,16 @@ let router = new Router({
             component: home,
             meta: {
                 title: 'PlantIT',
+                crumb: [],
+                requiresAuth: false
+            }
+        },
+        {
+            path: '/about',
+            name: 'about',
+            component: about,
+            meta: {
+                title: 'About PlantIT',
                 crumb: [],
                 requiresAuth: false
             }

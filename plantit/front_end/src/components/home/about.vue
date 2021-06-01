@@ -61,24 +61,34 @@
                 <b-container>
                     <b-row>
                         <b-col align-self="end" class="text-right mr-0"
-                            ><h1 class="text-success">
-                                {{ users.length }}
+                            ><h1 v-if="userCount >= 0" class="text-success">
+                                {{ userCount }}
                             </h1></b-col
                         >
                         <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 class="text-white">users</h5>
+                            ><h5 v-if="workflowCount >= 0" class="text-white">
+                                users
+                            </h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 class="text-success">
-                                {{ workflows }}
+                                {{ workflowCount }}
                             </h1></b-col
                         >
                         <b-col align-self="end" class="text-left ml-0 pl-0"
                             ><h5 class="text-white">workflows</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
-                            ><h1 class="text-success">{{ runs }}</h1></b-col
-                        >
+                            ><h1 v-if="runCount >= 0" class="text-success">
+                                {{ runCount }}
+                            </h1>
+                            <b-spinner
+                                v-else
+                                type="grow"
+                                label="Loading..."
+                                variant="secondary"
+                            ></b-spinner>
+                        </b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
                             ><h5 class="text-white">jobs</h5>
                         </b-col>
@@ -95,7 +105,7 @@
                             class="text-left rounded-0 overflow-hidden"
                             bg-variant="dark"
                             no-body
-                            text-variant="success"
+                            text-variant="white"
                             img-width="120px"
                             :img-src="
                                 require('../../assets/frontpage/icons/algorithm.png')
@@ -104,12 +114,12 @@
                             style="border: none; box-shadow: none"
                         >
                             <b-card-text class="ml-4 mr-4">
-                                <h4 class="text-white">
-                                    Plug in your data
+                                <h4 class="text-success">
+                                    Tame your data
                                 </h4>
-                                Share datasets and collaborate with team members
+                                Store, share, and collaborate in the cloud
                                 <br />
-                                Upload, annotate, and publish datasets with
+                                Upload, annotate, and publish with
                                 <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
@@ -129,7 +139,9 @@
                                 rounded
                                 style="max-height: 5rem;"
                                 center
-                                :src="require('../../assets/logos/cyverse.png')"
+                                :src="
+                                    require('../../assets/logos/cyverse_bright.png')
+                                "
                             ></b-img></b-col
                     ></b-col>
                 </b-row>
@@ -141,7 +153,9 @@
                             rounded
                             style="max-height: 6rem;"
                             center
-                            :src="require('../../assets/logos/github_white.png')"
+                            :src="
+                                require('../../assets/logos/github_white.png')
+                            "
                         ></b-img
                     ></b-col>
                     <b-col>
@@ -149,7 +163,7 @@
                             sub-title-text-variant="success"
                             class="text-left rounded-0 overflow-hidden"
                             bg-variant="dark"
-                            text-variant="success"
+                            text-variant="white"
                             no-body
                             img-width="120px"
                             :img-src="
@@ -159,31 +173,31 @@
                             style="border: none; box-shadow: none"
                         >
                             <b-card-text
-                                class="ml-4 mr-4 text-success text-right"
+                                class="ml-4 mr-4 text-white text-right"
                             >
-                                <h4 class="text-white">
-                                    Host your software
+                                <h4 class="text-success">
+                                    Hack agriculture, together
                                 </h4>
-                                Discover projects or publish your own code with
+                                Join the open source plant science ecosystem on
                                 <b-link
                                     class="text-white"
                                     href="https://www.github.com/"
                                     >Github</b-link
                                 >
                                 <br />
-                                If it runs in
+                                Build with
                                 <b-link
                                     class="text-white"
                                     href="https://www.docker.com/"
                                     >Docker</b-link
                                 >
-                                or
+                                and
                                 <b-link
                                     class="text-white"
                                     href="https://sylabs.io/docs/"
                                     >Singularity</b-link
-                                >, it will run on
-                                <b-link class="text-white">PlantIT</b-link>
+                                >
+                                and deploy anywhere
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -198,7 +212,7 @@
                             no-body
                             img-width="120px"
                             bg-variant="dark"
-                            text-variant="success"
+                            text-variant="white"
                             :img-src="
                                 require('../../assets/frontpage/icons/UI.png')
                             "
@@ -206,12 +220,21 @@
                             style="border: none; box-shadow: none"
                         >
                             <b-card-text class="ml-4 mr-4">
-                                <h4 class="text-white">
-                                    Workflows on the web
+                                <h4 class="text-success">
+                                    No code, no problem
                                 </h4>
-                                Configure parameters and deploy to a cluster
+                                Reproducible workflows in the browser, no
+                                programming required
                                 <br />
-                                All from the browser, no programming required
+                                Click
+                                <b-badge
+                                    size="sm"
+                                    class="m-0 p-1 mr-1"
+                                    disabled
+                                    variant="success"
+                                    >Submit</b-badge
+                                >&mdash; grab coffee &mdash; get notified when
+                                results are ready
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -245,37 +268,27 @@ import * as Sentry from '@sentry/browser';
 export default {
     name: 'home-about',
     async mounted() {
-        this.loadAllUsers();
-        await this.loadRuns();
+        await this.loadCounts();
     },
     data: function() {
         return {
-            users: [],
-            runs: 0,
-            workflows: 0
+            userCount: -1,
+            workflowCount: -1,
+            runCount: -1
         };
     },
     methods: {
-        loadAllUsers() {
+        loadCounts() {
             axios
-                .get('/apis/v1/users/get_all/')
+                .get('/apis/v1/stats/counts/')
                 .then(response => {
-                    this.users = response.data.users;
+                    this.userCount = response.data.users;
+                    this.workflowCount = response.data.workflows;
+                    this.runCount = response.data.runs;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
-                });
-        },
-        async loadRuns() {
-            return axios
-                .get('/apis/v1/runs/get_total_count/')
-                .then(response => {
-                    this.runs = response.data.count;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
                 });
         }
     }

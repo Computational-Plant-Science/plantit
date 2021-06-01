@@ -23,7 +23,6 @@ urlpatterns = [
     # path(r'<owner>/<workflow_name>/remove_delayed', views.remove_delayed),  # TODO move to separate API (Schedules?)
     # path(r'<owner>/<workflow_name>/remove_repeating', views.remove_repeating),
     # path(r'<owner>/<workflow_name>/toggle_repeating', views.toggle_repeating),
-    # path(r'get_total_count/', views.get_total_count),  # TODO move to separate Stats API
 ]
 
 websocket_urlpatterns = [
