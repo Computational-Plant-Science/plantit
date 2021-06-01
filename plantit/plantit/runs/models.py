@@ -17,6 +17,7 @@ class Run(models.Model):
         ordering = ['-created']
 
     guid = models.CharField(max_length=50, null=False, blank=False)
+    name = models.CharField(max_length=250, null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     agent = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.SET_NULL)
     workdir = models.CharField(max_length=100, null=True, blank=True)

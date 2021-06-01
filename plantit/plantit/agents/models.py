@@ -11,6 +11,8 @@ from django_enum_choices.fields import EnumChoiceField
 
 class Agent(models.Model):
     name = models.CharField(max_length=20)
+    guid = models.CharField(max_length=50, null=False, blank=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
     workdir = models.CharField(max_length=250)
     username = models.CharField(max_length=100)

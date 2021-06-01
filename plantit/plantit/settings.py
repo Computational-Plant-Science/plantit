@@ -60,9 +60,10 @@ GITHUB_KEY = os.environ.get('GITHUB_KEY')
 GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
-STATIC_URL = "/assets/"
+STATIC_URL = "assets/"
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "front_end", "dist", "assets"),
+    os.path.join(BASE_DIR, "front_end", "static")
 )
 
 STATICFILES_FINDERS = [

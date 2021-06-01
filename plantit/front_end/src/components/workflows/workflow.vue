@@ -1,5 +1,5 @@
 <template>
-  <div>
+    <div>
         <b-container class="p-2 vl" fluid>
             <b-row no-gutters>
                 <b-col v-if="showStatusAlert">
@@ -17,14 +17,17 @@
                     </b-alert>
                 </b-col>
             </b-row>
-            <b-row align-h="center" v-show="false">
+            <b-row
+                align-h="center"
+                v-if="workflowLoading || getWorkflow === null"
+            >
                 <b-spinner
                     type="grow"
                     label="Loading..."
                     variant="secondary"
                 ></b-spinner>
             </b-row>
-            <b-row>
+            <b-row v-else>
                 <b-col>
                     <b-row>
                         <b-col>
@@ -61,340 +64,1685 @@
                                     )
                                 }}
                             </b-alert>
-                            <workflowdetail
-                                :show-public="true"
-                                :workflow="getWorkflow"
-                            ></workflowdetail>
-                        </b-col>
-                    </b-row>
-                    <br />
-                    <b-row>
-                        <b-col>
-                            <b-card-group deck columns>
-                                <b-card
-                                    :bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :header-bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    border-variant="default"
-                                    :header-border-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :text-variant="
-                                        profile.darkMode ? 'white' : 'dark'
-                                    "
-                                    style="min-width: 60rem"
-                                    class="mb-4"
+                            <div
+                                v-if="getWorkflow && getWorkflow.config"
+                                :class="
+                                    profile.darkMode
+                                        ? 'theme-dark'
+                                        : 'theme-light'
+                                "
+                            >
+                                <b-row
+                                    align-v="center"
+                                    align-h="center"
+                                    v-if="workflowLoading"
                                 >
-                                    <b-row>
-                                        <b-col>
-                                            <h4
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
+                                    <b-col align-self="end" class="text-center">
+                                        <b-spinner
+                                            type="grow"
+                                            label="Loading..."
+                                            variant="secondary"
+                                        ></b-spinner>
+                                    </b-col>
+                                </b-row>
+                                <b-row no-gutters v-else>
+                                    <b-img
+                                        v-if="getWorkflow.config.logo"
+                                        rounded
+                                        class="card-img-right"
+                                        style="max-width: 7rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                                        right
+                                        :src="
+                                            `https://raw.githubusercontent.com/${getWorkflow.repo.owner.login}/${getWorkflow.repo.name}/master/${getWorkflow.config.logo}`
+                                        "
+                                    ></b-img>
+                                    <b-img
+                                        v-else
+                                        class="card-img-right"
+                                        style="max-width: 7rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                                        right
+                                        :src="require('../../assets/logo.png')"
+                                    ></b-img>
+                                    <b-col>
+                                        <b-row>
+                                            <b-col
+                                                md="auto"
+                                                class="mr-0"
+                                                align-self="end"
                                             >
-                                                <i
-                                                    v-if="tags.length > 0"
-                                                    class="fas fa-tags fa-fw text-warning"
-                                                ></i>
-                                                <i
-                                                    v-else
-                                                    class="fas fa-tags fa-fw"
-                                                ></i>
-                                                Tags
-                                            </h4>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row
-                                        ><b-col
-                                            ><b
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                            >
-                                                Attach tags to this run.
-                                            </b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row class="mt-1">
-                                        <b-col>
-                                            <multiselect
-                                                style="z-index: 100"
-                                                v-model="tags"
-                                                mode="tags"
-                                                :multiple="true"
-                                                :close-on-select="false"
-                                                :clear-on-select="false"
-                                                :preserve-search="true"
-                                                :options="tagOptions"
-                                                :taggable="true"
-                                                placeholder="Add tags..."
-                                                :createTag="true"
-                                                :appendNewTag="true"
-                                                :searchable="true"
-                                                @tag="addTag"
-                                            >
-                                            </multiselect>
-                                        </b-col>
-                                    </b-row>
-                                </b-card>
-                                <b-card
-                                    v-if="
-                                        workflow !== null &&
-                                        getWorkflow.config.params !== undefined
-                                            ? getWorkflow.config.params
-                                                  .length !== 0
-                                            : false
-                                    "
-                                    :bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :header-bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    border-variant="default"
-                                    :header-border-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :text-variant="
-                                        profile.darkMode ? 'white' : 'dark'
-                                    "
-                                    style="min-width: 40rem"
-                                    class="mb-4"
-                                >
-                                    <b-row>
-                                        <b-col>
-                                            <h4
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                            >
-                                                <i
-                                                    v-if="
-                                                        params &&
-                                                            params.every(
-                                                                p =>
-                                                                    p.name !==
-                                                                    ''
-                                                            )
+                                                <h2
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-white'
+                                                            : 'text-dark'
                                                     "
-                                                    class="fas fa-keyboard fa-fw text-warning"
-                                                ></i>
-                                                <i
-                                                    v-else
-                                                    class="fas fa-keyboard fa-fw"
-                                                ></i>
-                                                Parameters
-                                            </h4>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row
-                                        ><b-col
-                                            ><b
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
+                                                >
+                                                    {{
+                                                        getWorkflow.config.name
+                                                    }}
+                                                </h2> </b-col
+                                            ><b-col
+                                                class="m-0"
+                                                align-self="center"
+                                                md="auto"
+                                                ><b-button
+                                                    size="sm"
+                                                    :disabled="workflowLoading"
+                                                    :variant="
+                                                        profile.darkMode
+                                                            ? 'outline-light'
+                                                            : 'white'
+                                                    "
+                                                    v-b-tooltip.hover
+                                                    title="Refresh"
+                                                    @click="refreshWorkflow"
+                                                >
+                                                    <i class="fas fa-redo"></i>
+                                                    Refresh
+                                                    <b-spinner
+                                                        small
+                                                        v-if="workflowLoading"
+                                                        label="Refreshing..."
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'light'
+                                                                : 'dark'
+                                                        "
+                                                        class="ml-2 mb-1"
+                                                    ></b-spinner> </b-button></b-col
+                                            ><b-col
+                                                class="m-0"
+                                                align-self="center"
+                                                md="auto"
+                                                ><b-button
+                                                    @click="disconnectWorkflow"
+                                                    size="sm"
+                                                    variant="outline-danger"
+                                                    ><i
+                                                        class="fas fa-times-circle fa-fw fa-1x"
+                                                    ></i>
+                                                    Disconnect</b-button
+                                                ></b-col
                                             >
-                                                Configure parameters for this
-                                                run.
-                                            </b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row
-                                        ><b-col>
-                                            <b-row
-                                                class="mt-1"
-                                                v-for="param in params"
-                                                v-bind:key="param.name"
-                                            >
-                                                <b-col>{{
-                                                    param.name.toLowerCase()
-                                                }}</b-col
-                                                ><b-col>
-                                                    <b-form-input
+                                        </b-row>
+                                        <hr
+                                            class="mt-2 mb-2"
+                                            style="border-color: gray"
+                                        />
+                                        <b-row class="mb-3">
+                                            <b-col md="auto" class="mr-0 ml-0">
+                                                <b-badge
+                                                    class="mr-1"
+                                                    :variant="
+                                                        getWorkflow.public
+                                                            ? 'success'
+                                                            : 'warning'
+                                                    "
+                                                    ><span
                                                         v-if="
-                                                            param.type ===
-                                                                'string'
+                                                            getWorkflow.public
                                                         "
-                                                        size="sm"
-                                                        v-model="param.value"
-                                                        :placeholder="
-                                                            param.value === ''
-                                                                ? 'Enter a value for \'' +
-                                                                  param.name.toLowerCase() +
-                                                                  '\''
-                                                                : param.value
+                                                        ><i
+                                                            class="fas fa-unlock fa-fw"
+                                                        ></i>
+                                                        Public</span
+                                                    ><span v-else
+                                                        ><i
+                                                            class="fas fa-lock fa-fw"
+                                                        ></i>
+                                                        Private</span
+                                                    ></b-badge
+                                                ><b-badge
+                                                    v-for="topic in getWorkflow
+                                                        .repo.topics"
+                                                    v-bind:key="topic"
+                                                    class="mr-1"
+                                                    variant="secondary"
+                                                    >{{ topic }}</b-badge
+                                                >
+                                            </b-col>
+                                            <b-col md="auto" class="mr-0 ml-0">
+                                                <small>
+                                                    <b-link
+                                                        :class="
+                                                            profile.darkMode
+                                                                ? 'text-light'
+                                                                : 'text-dark'
                                                         "
-                                                    ></b-form-input>
-                                                    <b-form-select
-                                                        v-if="
-                                                            param.type ===
-                                                                'select'
+                                                        :href="
+                                                            'https://github.com/' +
+                                                                getWorkflow.repo
+                                                                    .owner
+                                                                    .login +
+                                                                '/' +
+                                                                getWorkflow.repo
+                                                                    .name
                                                         "
-                                                        size="sm"
-                                                        v-model="param.value"
-                                                        :options="param.options"
-                                                    ></b-form-select>
-                                                    <b-form-checkbox-group
-                                                        v-if="
-                                                            param.type ===
-                                                                'multiselect'
-                                                        "
-                                                        size="sm"
-                                                        v-model="param.value"
-                                                        :options="param.options"
-                                                    ></b-form-checkbox-group>
-                                                    <b-form-spinbutton
-                                                        v-if="
-                                                            param.type ===
-                                                                'number'
-                                                        "
-                                                        size="sm"
-                                                        v-model="param.value"
-                                                        :min="param.min"
-                                                        :max="param.max"
-                                                        :step="param.step"
-                                                    ></b-form-spinbutton>
-                                                    <b-form-checkbox
-                                                        v-if="
-                                                            param.type ===
-                                                                'boolean'
-                                                        "
-                                                        size="sm"
-                                                        v-model="param.value"
-                                                        switch
                                                     >
-                                                        <b>
-                                                            {{ param.value }}</b
+                                                        <i
+                                                            class="fab fa-github fa-fw"
+                                                        ></i>
+                                                        {{
+                                                            getWorkflow.repo
+                                                                .owner.login
+                                                        }}/{{
+                                                            getWorkflow.repo
+                                                                .name
+                                                        }}
+                                                    </b-link>
+                                                </small>
+                                            </b-col>
+                                            <b-col md="auto" class="mr-0 ml-0"
+                                                ><small
+                                                    >Stargazers:
+                                                    <b>{{
+                                                        getWorkflow.repo
+                                                            .stargazers_count
+                                                    }}</b></small
+                                                ></b-col
+                                            >
+                                            <b-col md="auto" class="mr-0 ml-0"
+                                                ><small
+                                                    >Runs: <b>0</b></small
+                                                ></b-col
+                                            >
+                                        </b-row>
+                                        <b-tabs
+                                            v-model="activeTab"
+                                            nav-class="bg-transparent"
+                                            active-nav-item-class="bg-info text-dark"
+                                            pills
+                                            ><b-tab
+                                                title="About"
+                                                :title-link-class="
+                                                    profile.darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'theme-dark m-0 p-3'
+                                                        : 'theme-light m-0 p-3'
+                                                "
+                                            >
+                                                <b-row>
+                                                    <b-col>
+                                                        <h5
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'text-light'
+                                                                    : 'text-dark'
+                                                            "
                                                         >
-                                                    </b-form-checkbox>
-                                                </b-col></b-row
-                                            >
-                                        </b-col></b-row
-                                    >
-                                </b-card>
-                                <b-card
-                                    v-if="
-                                        workflow !== null &&
-                                            getWorkflow.config.input !==
-                                                undefined &&
-                                            getWorkflow.config.input.path !==
-                                                undefined &&
-                                            input.kind !== undefined &&
-                                            input.kind !== null &&
-                                            input.kind.length > 0
-                                    "
-                                    :bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :header-bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    border-variant="default"
-                                    :header-border-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :text-variant="
-                                        profile.darkMode ? 'white' : 'dark'
-                                    "
-                                    style="min-width: 50rem"
-                                    class="mb-4"
-                                >
-                                    <b-row>
-                                        <b-col>
-                                            <h4
-                                                :class="
+                                                            Description
+                                                        </h5>
+                                                        <b-row>
+                                                            <b-col>
+                                                                {{
+                                                                    getWorkflow
+                                                                        .repo
+                                                                        .description
+                                                                }}
+                                                            </b-col>
+                                                        </b-row>
+                                                        <hr
+                                                            class="mt-2 mb-2"
+                                                            style="border-color: gray"
+                                                        />
+                                                        <div
+                                                            v-if="
+                                                                getWorkflow
+                                                                    .config
+                                                                    .author !==
+                                                                    undefined &&
+                                                                    getWorkflow
+                                                                        .config
+                                                                        .author !==
+                                                                        null
+                                                            "
+                                                        >
+                                                            <h5
+                                                                :class="
+                                                                    profile.darkMode
+                                                                        ? 'text-light'
+                                                                        : 'text-dark'
+                                                                "
+                                                            >
+                                                                Author(s)
+                                                            </h5>
+                                                            <b-row>
+                                                                <b-col>
+                                                                    <b-row
+                                                                        v-if="
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .author !==
+                                                                                undefined
+                                                                        "
+                                                                    >
+                                                                        <b-col>
+                                                                            <span
+                                                                                v-if="
+                                                                                    typeof getWorkflow
+                                                                                        .config
+                                                                                        .author ===
+                                                                                        'string' ||
+                                                                                        (Array.isArray(
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .author
+                                                                                        ) &&
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .author
+                                                                                                .length ===
+                                                                                                1)
+                                                                                "
+                                                                                :class="
+                                                                                    profile.darkMode
+                                                                                        ? 'text-light'
+                                                                                        : 'text-dark'
+                                                                                "
+                                                                                >{{
+                                                                                    getWorkflow
+                                                                                        .config
+                                                                                        .author
+                                                                                }}</span
+                                                                            >
+                                                                            <b-list-group
+                                                                                v-else
+                                                                            >
+                                                                                <b-list-group-item
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'dark'
+                                                                                            : 'light'
+                                                                                    "
+                                                                                    v-for="author in getWorkflow
+                                                                                        .config
+                                                                                        .author"
+                                                                                    v-bind:key="
+                                                                                        author
+                                                                                    "
+                                                                                    >{{
+                                                                                        author
+                                                                                    }}</b-list-group-item
+                                                                                >
+                                                                            </b-list-group>
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                </b-col>
+                                                            </b-row>
+                                                        </div>
+                                                        <div
+                                                            v-if="
+                                                                getWorkflow
+                                                                    .config
+                                                                    .doi !==
+                                                                    undefined &&
+                                                                    getWorkflow
+                                                                        .config
+                                                                        .doi !==
+                                                                        null
+                                                            "
+                                                        >
+                                                            <br />
+                                                            <h5
+                                                                :class="
+                                                                    profile.darkMode
+                                                                        ? 'text-light'
+                                                                        : 'text-dark'
+                                                                "
+                                                            >
+                                                                Publications/DOIs
+                                                            </h5>
+                                                            <b-row>
+                                                                <b-col>
+                                                                    <b-row
+                                                                        v-if="
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .doi !==
+                                                                                undefined
+                                                                        "
+                                                                    >
+                                                                        <b-col>
+                                                                            <b-link
+                                                                                v-if="
+                                                                                    typeof getWorkflow
+                                                                                        .config
+                                                                                        .doi ===
+                                                                                        'string' ||
+                                                                                        (Array.isArray(
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .doi
+                                                                                        ) &&
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .doi
+                                                                                                .length ===
+                                                                                                1)
+                                                                                "
+                                                                                :class="
+                                                                                    profile.darkMode
+                                                                                        ? 'text-light'
+                                                                                        : 'text-dark'
+                                                                                "
+                                                                                :href="
+                                                                                    `https://doi.org/${getWorkflow.config.doi}`
+                                                                                "
+                                                                                >{{
+                                                                                    getWorkflow
+                                                                                        .config
+                                                                                        .doi
+                                                                                }}</b-link
+                                                                            >
+                                                                            <b-list-group
+                                                                                v-else
+                                                                            >
+                                                                                <b-list-group-item
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'dark'
+                                                                                            : 'light'
+                                                                                    "
+                                                                                    v-for="doi in getWorkflow
+                                                                                        .config
+                                                                                        .doi"
+                                                                                    v-bind:key="
+                                                                                        doi
+                                                                                    "
+                                                                                    ><b-link
+                                                                                        class="
+                                                        text-dark
+                                                    "
+                                                                                        :href="
+                                                                                            `https://doi.org/${doi}`
+                                                                                        "
+                                                                                        >{{
+                                                                                            doi
+                                                                                        }}</b-link
+                                                                                    ></b-list-group-item
+                                                                                >
+                                                                            </b-list-group>
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                </b-col>
+                                                            </b-row>
+                                                        </div>
+                                                        <hr
+                                                            class="mt-2 mb-2"
+                                                            style="border-color: gray"
+                                                        />
+                                                        <div>
+                                                            <h5
+                                                                :class="
+                                                                    profile.darkMode
+                                                                        ? 'text-light'
+                                                                        : 'text-dark'
+                                                                "
+                                                            >
+                                                                Configuration
+                                                            </h5>
+                                                            <b-row>
+                                                                <b-col>
+                                                                    <b-row>
+                                                                        <b-col>
+                                                                            <small
+                                                                                >Image</small
+                                                                            >
+                                                                        </b-col>
+                                                                        <b-col
+                                                                            cols="10"
+                                                                        >
+                                                                            <b
+                                                                                >{{
+                                                                                    getWorkflow
+                                                                                        .config
+                                                                                        .image
+                                                                                }}</b
+                                                                            >
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                    <b-row>
+                                                                        <b-col>
+                                                                            <small
+                                                                                >GPU</small
+                                                                            >
+                                                                        </b-col>
+                                                                        <b-col
+                                                                            cols="10"
+                                                                        >
+                                                                            {{
+                                                                                getWorkflow
+                                                                                    .config
+                                                                                    .gpu
+                                                                                    ? 'Yes'
+                                                                                    : 'No'
+                                                                            }}
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                    <b-row>
+                                                                        <b-col>
+                                                                            <small
+                                                                                >Mount</small
+                                                                            >
+                                                                        </b-col>
+                                                                        <b-col
+                                                                            cols="10"
+                                                                        >
+                                                                            {{
+                                                                                getWorkflow
+                                                                                    .config
+                                                                                    .mount
+                                                                                    ? getWorkflow
+                                                                                          .config
+                                                                                          .mount
+                                                                                    : 'None'
+                                                                            }}
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                    <b-row>
+                                                                        <b-col>
+                                                                            <small
+                                                                                >Parameters</small
+                                                                            >
+                                                                        </b-col>
+                                                                        <b-col
+                                                                            cols="10"
+                                                                        >
+                                                                            <b
+                                                                                >{{
+                                                                                    getWorkflow
+                                                                                        .config
+                                                                                        .params
+                                                                                        ? getWorkflow
+                                                                                              .config
+                                                                                              .params
+                                                                                              .length
+                                                                                        : 'None'
+                                                                                }}</b
+                                                                            >
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                    <b-row>
+                                                                        <b-col>
+                                                                            <small
+                                                                                >Command</small
+                                                                            >
+                                                                        </b-col>
+                                                                        <b-col
+                                                                            cols="10"
+                                                                        >
+                                                                            <b
+                                                                                ><code
+                                                                                    >{{
+                                                                                        ' ' +
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .commands
+                                                                                    }}</code
+                                                                                ></b
+                                                                            >
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                    <b-row
+                                                                        v-if="
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .input !==
+                                                                                undefined
+                                                                        "
+                                                                    >
+                                                                        <b-col>
+                                                                            <small
+                                                                                >Input</small
+                                                                            >
+                                                                        </b-col>
+                                                                        <b-col
+                                                                            cols="10"
+                                                                        >
+                                                                            <b
+                                                                                ><code
+                                                                                    >[working
+                                                                                    directory]/input/{{
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .input
+                                                                                            .filetypes
+                                                                                            ? '[' +
+                                                                                              (getWorkflow
+                                                                                                  .config
+                                                                                                  .input
+                                                                                                  .filetypes
+                                                                                                  ? '*.' +
+                                                                                                    getWorkflow.config.input.filetypes.join(
+                                                                                                        ', *.'
+                                                                                                    )
+                                                                                                  : []) +
+                                                                                              ']'
+                                                                                            : ''
+                                                                                    }}</code
+                                                                                ></b
+                                                                            >
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                    <b-row
+                                                                        v-if="
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .output !==
+                                                                                undefined
+                                                                        "
+                                                                    >
+                                                                        <b-col>
+                                                                            <small
+                                                                                >Output</small
+                                                                            >
+                                                                        </b-col>
+                                                                        <b-col
+                                                                            cols="10"
+                                                                        >
+                                                                            <b
+                                                                                ><code
+                                                                                    >[working
+                                                                                    directory]/{{
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .output
+                                                                                            .path
+                                                                                            ? getWorkflow
+                                                                                                  .config
+                                                                                                  .output
+                                                                                                  .path +
+                                                                                              '/'
+                                                                                            : ''
+                                                                                    }}{{
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .output
+                                                                                            .include
+                                                                                            ? '[' +
+                                                                                              (getWorkflow
+                                                                                                  .config
+                                                                                                  .output
+                                                                                                  .exclude
+                                                                                                  ? '+ '
+                                                                                                  : '') +
+                                                                                              (getWorkflow
+                                                                                                  .config
+                                                                                                  .output
+                                                                                                  .include
+                                                                                                  .patterns
+                                                                                                  ? '*.' +
+                                                                                                    getWorkflow.config.output.include.patterns.join(
+                                                                                                        ', *.'
+                                                                                                    )
+                                                                                                  : []) +
+                                                                                              (getWorkflow
+                                                                                                  .config
+                                                                                                  .output
+                                                                                                  .include
+                                                                                                  .names
+                                                                                                  ? ', ' +
+                                                                                                    getWorkflow.config.output.include.names.join(
+                                                                                                        ', '
+                                                                                                    )
+                                                                                                  : [])
+                                                                                            : ''
+                                                                                    }}{{
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .output
+                                                                                            .exclude
+                                                                                            ? ' - ' +
+                                                                                              (getWorkflow
+                                                                                                  .config
+                                                                                                  .output
+                                                                                                  .exclude
+                                                                                                  .patterns
+                                                                                                  ? '*.' +
+                                                                                                    getWorkflow.config.output.exclude.patterns.join(
+                                                                                                        ', *.'
+                                                                                                    )
+                                                                                                  : []) +
+                                                                                              (getWorkflow
+                                                                                                  .config
+                                                                                                  .output
+                                                                                                  .exclude
+                                                                                                  .names
+                                                                                                  ? ', ' +
+                                                                                                    getWorkflow.config.output.exclude.names.join(
+                                                                                                        ', '
+                                                                                                    )
+                                                                                                  : [])
+                                                                                            : '' +
+                                                                                              ']'
+                                                                                    }}
+                                                                                </code></b
+                                                                            >
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                </b-col>
+                                                            </b-row>
+                                                            <hr
+                                                                class="mt-2 mb-2"
+                                                                style="border-color: gray"
+                                                            />
+                                                            <h5
+                                                                :class="
+                                                                    profile.darkMode
+                                                                        ? 'text-light'
+                                                                        : 'text-dark'
+                                                                "
+                                                            >
+                                                                Resource
+                                                                Requests
+                                                            </h5>
+                                                            <b-row>
+                                                                <b-col
+                                                                    align-self="end"
+                                                                    md="auto"
+                                                                    class="text-right"
+                                                                    v-if="
+                                                                        !getWorkflow
+                                                                            .config
+                                                                            .resources
+                                                                    "
+                                                                >
+                                                                    <b-alert
+                                                                        show
+                                                                        variant="warning"
+                                                                        >This
+                                                                        workflow
+                                                                        does not
+                                                                        specify
+                                                                        resource
+                                                                        requests
+                                                                        and can
+                                                                        only be
+                                                                        run on
+                                                                        agents
+                                                                        configured
+                                                                        for the
+                                                                        <b
+                                                                            >Local</b
+                                                                        >
+                                                                        executor.</b-alert
+                                                                    >
+                                                                </b-col>
+                                                                <b-col
+                                                                    align-self="end"
+                                                                    class="text-left"
+                                                                    v-else
+                                                                >
+                                                                    <b-row>
+                                                                        <b-col>
+                                                                            <b
+                                                                                ><code
+                                                                                    >{{
+                                                                                        ' ' +
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .resources
+                                                                                                .time
+                                                                                    }}</code
+                                                                                ></b
+                                                                            >
+                                                                            <small>
+                                                                                time</small
+                                                                            >
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                    <b-row>
+                                                                        <b-col>
+                                                                            <b
+                                                                                ><code
+                                                                                    >{{
+                                                                                        ' ' +
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .resources
+                                                                                                .mem
+                                                                                    }}</code
+                                                                                ></b
+                                                                            >
+                                                                            <small>
+                                                                                memory</small
+                                                                            >
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                    <b-row>
+                                                                        <b-col>
+                                                                            <b
+                                                                                ><code
+                                                                                    >{{
+                                                                                        ' ' +
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .resources
+                                                                                                .processes
+                                                                                    }}</code
+                                                                                ></b
+                                                                            >
+                                                                            <small>
+                                                                                process(es)</small
+                                                                            >
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                    <b-row>
+                                                                        <b-col>
+                                                                            <b
+                                                                                ><code
+                                                                                    >{{
+                                                                                        ' ' +
+                                                                                            getWorkflow
+                                                                                                .config
+                                                                                                .resources
+                                                                                                .cores
+                                                                                    }}</code
+                                                                                ></b
+                                                                            >
+                                                                            <small>
+                                                                                core(s)</small
+                                                                            >
+                                                                        </b-col>
+                                                                    </b-row>
+                                                                </b-col>
+                                                            </b-row>
+                                                        </div>
+                                                        <div
+                                                            v-if="
+                                                                getWorkflow.readme !==
+                                                                    undefined &&
+                                                                    getWorkflow.readme !==
+                                                                        null
+                                                            "
+                                                        >
+                                                            <div
+                                                                :class="
+                                                                    profile.darkMode
+                                                                        ? 'theme-container-get_readme m-0 p-3'
+                                                                        : 'theme-container-light m-0 p-3'
+                                                                "
+                                                            >
+                                                                <br />
+                                                                <b-row>
+                                                                    <b-col
+                                                                        ><vue-markdown
+                                                                            >{{
+                                                                                getWorkflow.readme
+                                                                            }}</vue-markdown
+                                                                        ></b-col
+                                                                    >
+                                                                </b-row>
+                                                            </div>
+                                                        </div>
+                                                    </b-col>
+                                                </b-row>
+                                            </b-tab>
+                                            <b-tab
+                                                title="Submit"
+                                                :title-link-class="
                                                     profile.darkMode
                                                         ? 'text-white'
                                                         : 'text-dark'
                                                 "
-                                            >
-                                                <i
-                                                    v-if="inputReady"
-                                                    class="fas fa-download fa-fw text-warning"
-                                                ></i>
-                                                <i
-                                                    v-else
-                                                    class="fas fa-download fa-fw"
-                                                ></i>
-                                                Input
-                                                {{
-                                                    this.input.kind[0].toUpperCase() +
-                                                        this.input.kind.substr(
-                                                            1
-                                                        )
-                                                }}
-                                            </h4>
-                                        </b-col>
-                                    </b-row>
-                                    <runinput
-                                        :default-path="
-                                            getWorkflow.config.input.path
-                                        "
-                                        :kind="input.kind"
-                                        v-on:inputSelected="inputSelected"
-                                    ></runinput>
-                                    <b-row v-if="input.filetypes.length > 0">
-                                        <b-col>
-                                            <b
                                                 :class="
                                                     profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
+                                                        ? 'theme-dark m-0 p-3'
+                                                        : 'theme-light m-0 p-3'
                                                 "
-                                            >
-                                                Select one or more input
-                                                filetypes.
-                                            </b>
-                                            <multiselect
-                                                :multiple="true"
-                                                :close-on-select="false"
-                                                :clear-on-select="false"
-                                                :preserve-search="true"
-                                                :preselect-first="true"
-                                                v-model="inputSelectedPatterns"
-                                                :options="input.filetypes"
-                                            ></multiselect>
-                                        </b-col>
-                                    </b-row>
-                                    <b-alert
-                                        class="mt-1"
-                                        :variant="
-                                            inputFiletypeSelected
-                                                ? 'success'
-                                                : 'danger'
-                                        "
-                                        :show="true"
-                                        >Selected:
-                                        {{
-                                            inputFiletypeSelected
-                                                ? '*.' +
-                                                  inputSelectedPatterns.join(
-                                                      ', *.'
-                                                  )
-                                                : 'None'
-                                        }}
-                                        <i
-                                            v-if="inputFiletypeSelected"
-                                            class="fas fa-check text-success"
-                                        ></i>
-                                        <i
-                                            v-else
-                                            class="fas fa-exclamation text-danger"
-                                        ></i>
-                                    </b-alert>
-                                </b-card>
-                                <!--<b-card
+                                                ><b-row>
+                                                    <b-col>
+                                                        <b-card-group
+                                                            deck
+                                                            columns
+                                                        >
+                                                            <b-card
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                border-variant="default"
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
+                                                                style="min-width: 60rem"
+                                                                class="mb-4"
+                                                                ><b-row
+                                                                    ><b-col
+                                                                        ><h4
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-light'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <i
+                                                                                v-if="
+                                                                                    nameValid
+                                                                                "
+                                                                                class="fas fa-pen fa-fw text-success"
+                                                                            ></i
+                                                                            ><i
+                                                                                v-else
+                                                                                class="fas fa-pen fa-fw"
+                                                                            ></i>
+                                                                            Name
+                                                                        </h4>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        ><h5
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            {{
+                                                                                runName
+                                                                            }}
+                                                                            <i
+                                                                                v-if="
+                                                                                    nameValid
+                                                                                "
+                                                                                class="fas fa-check text-success fa-fw"
+                                                                            ></i>
+                                                                            <span
+                                                                                class="text-danger"
+                                                                                v-if="
+                                                                                    runNameExists
+                                                                                "
+                                                                                >Duplicate
+                                                                                name</span
+                                                                            >
+                                                                            <i
+                                                                                v-if="
+                                                                                    !nameValid
+                                                                                "
+                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                            ></i></h5
+                                                                    ></b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    ><b-col
+                                                                        ><b
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            Provide
+                                                                            a
+                                                                            name
+                                                                            for
+                                                                            this
+                                                                            run.
+                                                                        </b>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    class="mt-1"
+                                                                >
+                                                                    <b-col>
+                                                                        <b-form-input
+                                                                            v-model="
+                                                                                runName
+                                                                            "
+                                                                            placeholder="Type a name..."
+                                                                        ></b-form-input>
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </b-card>
+                                                            <b-card
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                border-variant="default"
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
+                                                                style="min-width: 60rem"
+                                                                class="mb-4"
+                                                            >
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <h4
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <i
+                                                                                v-if="
+                                                                                    tags.length >
+                                                                                        0
+                                                                                "
+                                                                                class="fas fa-tags fa-fw text-success"
+                                                                            ></i>
+                                                                            <i
+                                                                                v-else
+                                                                                class="fas fa-tags fa-fw"
+                                                                            ></i>
+                                                                            Tags
+                                                                        </h4>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        ><h5
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            {{
+                                                                                tags.length
+                                                                            }}
+                                                                            <i
+                                                                                v-if="
+                                                                                    tags.length >
+                                                                                        0
+                                                                                "
+                                                                                class="fas fa-check text-success fa-fw"
+                                                                            ></i></h5
+                                                                    ></b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    ><b-col
+                                                                        ><b
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            Attach
+                                                                            tags
+                                                                            to
+                                                                            this
+                                                                            run.
+                                                                        </b>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    class="mt-1"
+                                                                >
+                                                                    <b-col>
+                                                                        <multiselect
+                                                                            style="z-index: 100"
+                                                                            v-model="
+                                                                                tags
+                                                                            "
+                                                                            mode="tags"
+                                                                            :multiple="
+                                                                                true
+                                                                            "
+                                                                            :close-on-select="
+                                                                                false
+                                                                            "
+                                                                            :clear-on-select="
+                                                                                false
+                                                                            "
+                                                                            :preserve-search="
+                                                                                true
+                                                                            "
+                                                                            :options="
+                                                                                tagOptions
+                                                                            "
+                                                                            :taggable="
+                                                                                true
+                                                                            "
+                                                                            placeholder="Add tags..."
+                                                                            :createTag="
+                                                                                true
+                                                                            "
+                                                                            :appendNewTag="
+                                                                                true
+                                                                            "
+                                                                            :searchable="
+                                                                                true
+                                                                            "
+                                                                            @tag="
+                                                                                addTag
+                                                                            "
+                                                                        >
+                                                                        </multiselect>
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </b-card>
+                                                            <b-card
+                                                                v-if="
+                                                                    workflow !==
+                                                                        null &&
+                                                                    getWorkflow
+                                                                        .config
+                                                                        .params !==
+                                                                        undefined
+                                                                        ? getWorkflow
+                                                                              .config
+                                                                              .params
+                                                                              .length !==
+                                                                          0
+                                                                        : false
+                                                                "
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                border-variant="default"
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
+                                                                style="min-width: 40rem"
+                                                                class="mb-4"
+                                                            >
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <h4
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <i
+                                                                                v-if="
+                                                                                    params &&
+                                                                                        params.every(
+                                                                                            p =>
+                                                                                                p.name !==
+                                                                                                ''
+                                                                                        )
+                                                                                "
+                                                                                class="fas fa-keyboard fa-fw text-success"
+                                                                            ></i>
+                                                                            <i
+                                                                                v-else
+                                                                                class="fas fa-keyboard fa-fw"
+                                                                            ></i>
+                                                                            Parameters
+                                                                        </h4> </b-col
+                                                                    ><b-col
+                                                                        md="auto"
+                                                                        ><h5
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <span
+                                                                                v-if="
+                                                                                    paramsValid
+                                                                                "
+                                                                                >{{
+                                                                                    params.length
+                                                                                }}</span
+                                                                            >
+                                                                            <i
+                                                                                v-if="
+                                                                                    paramsValid
+                                                                                "
+                                                                                class="fas fa-check text-success fa-fw"
+                                                                            ></i>
+                                                                            <i
+                                                                                v-else
+                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                            ></i></h5
+                                                                    ></b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    ><b-col
+                                                                        ><b
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            Configure
+                                                                            parameters
+                                                                            for
+                                                                            this
+                                                                            run.
+                                                                        </b>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    ><b-col>
+                                                                        <b-row
+                                                                            class="mt-1"
+                                                                            v-for="param in params"
+                                                                            v-bind:key="
+                                                                                param.name
+                                                                            "
+                                                                        >
+                                                                            <b-col
+                                                                                >{{
+                                                                                    param.name.toLowerCase()
+                                                                                }}</b-col
+                                                                            ><b-col>
+                                                                                <b-form-input
+                                                                                    v-if="
+                                                                                        param.type ===
+                                                                                            'string'
+                                                                                    "
+                                                                                    size="sm"
+                                                                                    v-model="
+                                                                                        param.value
+                                                                                    "
+                                                                                    :placeholder="
+                                                                                        param.value ===
+                                                                                        ''
+                                                                                            ? 'Enter a value for \'' +
+                                                                                              param.name.toLowerCase() +
+                                                                                              '\''
+                                                                                            : param.value
+                                                                                    "
+                                                                                ></b-form-input>
+                                                                                <b-form-select
+                                                                                    v-if="
+                                                                                        param.type ===
+                                                                                            'select'
+                                                                                    "
+                                                                                    size="sm"
+                                                                                    v-model="
+                                                                                        param.value
+                                                                                    "
+                                                                                    :options="
+                                                                                        param.options
+                                                                                    "
+                                                                                ></b-form-select>
+                                                                                <b-form-checkbox-group
+                                                                                    v-if="
+                                                                                        param.type ===
+                                                                                            'multiselect'
+                                                                                    "
+                                                                                    size="sm"
+                                                                                    v-model="
+                                                                                        param.value
+                                                                                    "
+                                                                                    :options="
+                                                                                        param.options
+                                                                                    "
+                                                                                ></b-form-checkbox-group>
+                                                                                <b-form-spinbutton
+                                                                                    v-if="
+                                                                                        param.type ===
+                                                                                            'number'
+                                                                                    "
+                                                                                    size="sm"
+                                                                                    v-model="
+                                                                                        param.value
+                                                                                    "
+                                                                                    :min="
+                                                                                        param.min
+                                                                                    "
+                                                                                    :max="
+                                                                                        param.max
+                                                                                    "
+                                                                                    :step="
+                                                                                        param.step
+                                                                                    "
+                                                                                ></b-form-spinbutton>
+                                                                                <b-form-checkbox
+                                                                                    v-if="
+                                                                                        param.type ===
+                                                                                            'boolean'
+                                                                                    "
+                                                                                    size="sm"
+                                                                                    v-model="
+                                                                                        param.value
+                                                                                    "
+                                                                                    switch
+                                                                                >
+                                                                                    <b>
+                                                                                        {{
+                                                                                            param.value
+                                                                                        }}</b
+                                                                                    >
+                                                                                </b-form-checkbox>
+                                                                            </b-col></b-row
+                                                                        >
+                                                                    </b-col></b-row
+                                                                >
+                                                            </b-card>
+                                                            <b-card
+                                                                v-if="
+                                                                    workflow !==
+                                                                        null &&
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .input !==
+                                                                            undefined &&
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .input
+                                                                            .path !==
+                                                                            undefined &&
+                                                                        input.kind !==
+                                                                            undefined &&
+                                                                        input.kind !==
+                                                                            null &&
+                                                                        input
+                                                                            .kind
+                                                                            .length >
+                                                                            0
+                                                                "
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                border-variant="default"
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
+                                                                style="min-width: 50rem"
+                                                                class="mb-4"
+                                                            >
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <h4
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <i
+                                                                                v-if="
+                                                                                    inputValid
+                                                                                "
+                                                                                class="fas fa-download fa-fw text-success"
+                                                                            ></i>
+                                                                            <i
+                                                                                v-else
+                                                                                class="fas fa-download fa-fw"
+                                                                            ></i>
+                                                                            Input
+                                                                            {{
+                                                                                this.input.kind[0].toUpperCase() +
+                                                                                    this.input.kind.substr(
+                                                                                        1
+                                                                                    )
+                                                                            }}
+                                                                        </h4>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        ><h5
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <span
+                                                                                v-if="
+                                                                                    inputValid
+                                                                                "
+                                                                                >{{
+                                                                                    selectedDataset.path
+                                                                                }}<i
+                                                                                    class="fas fa-check text-success fa-fw"
+                                                                                ></i
+                                                                            ></span>
+                                                                            <i
+                                                                                v-else
+                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                            ></i></h5
+                                                                    ></b-col>
+                                                                </b-row>
+
+                                                                <div>
+                                                                    <b
+                                                                        :class="
+                                                                            profile.darkMode
+                                                                                ? 'text-white'
+                                                                                : 'text-dark'
+                                                                        "
+                                                                    >
+                                                                        Select a
+                                                                        public
+                                                                        {{
+                                                                            this
+                                                                                .input
+                                                                                .kind ===
+                                                                            'files'
+                                                                                ? 'directory'
+                                                                                : this
+                                                                                      .input
+                                                                                      .kind
+                                                                        }}
+                                                                        from the
+                                                                        Data
+                                                                        Commons
+                                                                        or your
+                                                                        own
+                                                                        {{
+                                                                            this
+                                                                                .input
+                                                                                .kind ===
+                                                                            'files'
+                                                                                ? 'directory'
+                                                                                : this
+                                                                                      .input
+                                                                                      .kind
+                                                                        }}
+                                                                        from the
+                                                                        Data
+                                                                        Store.
+                                                                    </b>
+                                                                    <b-tabs
+                                                                        class="mt-2"
+                                                                        pills
+                                                                        nav-class="bg-transparent"
+                                                                        active-nav-item-class="bg-info text-dark"
+                                                                    >
+                                                                        <b-tab
+                                                                            active
+                                                                            title="Personal"
+                                                                            :title-link-class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'theme-dark m-0 p-3'
+                                                                                    : 'theme-light m-0 p-3'
+                                                                            "
+                                                                        >
+                                                                            <b-row
+                                                                                v-if="
+                                                                                    personalDatasetsLoading
+                                                                                "
+                                                                                align-v="center"
+                                                                                align-h="center"
+                                                                            >
+                                                                                <b-col
+                                                                                    align-self="end"
+                                                                                >
+                                                                                    <b-spinner
+                                                                                        type="grow"
+                                                                                        variant="secondary"
+                                                                                    ></b-spinner> </b-col
+                                                                            ></b-row>
+                                                                            <b-row
+                                                                                v-else
+                                                                            >
+                                                                                <b-col>
+                                                                                    <datatree
+                                                                                        :select="
+                                                                                            input.kind
+                                                                                        "
+                                                                                        :upload="
+                                                                                            true
+                                                                                        "
+                                                                                        :download="
+                                                                                            true
+                                                                                        "
+                                                                                        @selectNode="
+                                                                                            inputSelected
+                                                                                        "
+                                                                                        :node="
+                                                                                            personalDatasets
+                                                                                        "
+                                                                                    ></datatree></b-col
+                                                                            ></b-row>
+                                                                        </b-tab>
+                                                                        <b-tab
+                                                                            title="Shared"
+                                                                            :title-link-class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'theme-dark m-0 p-3'
+                                                                                    : 'theme-light m-0 p-3'
+                                                                            "
+                                                                        >
+                                                                            <b-row
+                                                                                v-if="
+                                                                                    sharedDatasetsLoading
+                                                                                "
+                                                                                align-v="center"
+                                                                                align-h="center"
+                                                                            >
+                                                                                <b-col
+                                                                                    align-self="end"
+                                                                                    ><b-spinner
+                                                                                        type="grow"
+                                                                                        variant="secondary"
+                                                                                    ></b-spinner></b-col
+                                                                            ></b-row>
+                                                                            <b-row
+                                                                                v-else
+                                                                            >
+                                                                                <b-col>
+                                                                                    <datatree
+                                                                                        :select="
+                                                                                            input.kind
+                                                                                        "
+                                                                                        :upload="
+                                                                                            true
+                                                                                        "
+                                                                                        :download="
+                                                                                            true
+                                                                                        "
+                                                                                        @selectNode="
+                                                                                            inputSelected
+                                                                                        "
+                                                                                        :node="
+                                                                                            sharedDatasets
+                                                                                        "
+                                                                                    ></datatree>
+                                                                                    <!--<datatree
+                            v-for="node in sharedDatasets"
+                            v-bind:key="node.path"
+                            v-bind:node="node"
+                            :select="kind"
+                            @selectNode="inputSelected"
+                            :upload="true"
+                            :download="true"
+                            :class="
+                                profile.darkMode ? 'theme-dark' : 'theme-light'
+                            "
+                        ></datatree>--></b-col
+                                                                                ></b-row
+                                                                            ></b-tab
+                                                                        >
+                                                                        <b-tab
+                                                                            title="Public"
+                                                                            :title-link-class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'theme-dark m-0 p-3'
+                                                                                    : 'theme-light m-0 p-3'
+                                                                            "
+                                                                        >
+                                                                            <b-row
+                                                                                v-if="
+                                                                                    publicDatasetsLoading
+                                                                                "
+                                                                                align-v="center"
+                                                                                align-h="center"
+                                                                            >
+                                                                                <b-col
+                                                                                    align-self="end"
+                                                                                >
+                                                                                    <b-spinner
+                                                                                        type="grow"
+                                                                                        variant="secondary"
+                                                                                    ></b-spinner> </b-col
+                                                                            ></b-row>
+                                                                            <b-row
+                                                                                v-else
+                                                                                ><b-col>
+                                                                                    <datatree
+                                                                                        :select="
+                                                                                            input.kind
+                                                                                        "
+                                                                                        :upload="
+                                                                                            true
+                                                                                        "
+                                                                                        :download="
+                                                                                            true
+                                                                                        "
+                                                                                        @selectNode="
+                                                                                            inputSelected
+                                                                                        "
+                                                                                        :node="
+                                                                                            publicDatasets
+                                                                                        "
+                                                                                    ></datatree></b-col
+                                                                            ></b-row>
+                                                                        </b-tab>
+                                                                    </b-tabs>
+                                                                </div>
+                                                                <b-row
+                                                                    v-if="
+                                                                        input
+                                                                            .filetypes
+                                                                            .length >
+                                                                            0
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <b
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            Select
+                                                                            one
+                                                                            or
+                                                                            more
+                                                                            input
+                                                                            filetypes.
+                                                                        </b>
+                                                                        <multiselect
+                                                                            :multiple="
+                                                                                true
+                                                                            "
+                                                                            :close-on-select="
+                                                                                false
+                                                                            "
+                                                                            :clear-on-select="
+                                                                                false
+                                                                            "
+                                                                            :preserve-search="
+                                                                                true
+                                                                            "
+                                                                            :preselect-first="
+                                                                                true
+                                                                            "
+                                                                            v-model="
+                                                                                inputSelectedPatterns
+                                                                            "
+                                                                            :options="
+                                                                                input.filetypes
+                                                                            "
+                                                                        ></multiselect>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-alert
+                                                                    class="mt-1"
+                                                                    :variant="
+                                                                        inputFiletypeSelected
+                                                                            ? 'success'
+                                                                            : 'danger'
+                                                                    "
+                                                                    :show="true"
+                                                                    >Selected:
+                                                                    {{
+                                                                        inputFiletypeSelected
+                                                                            ? '*.' +
+                                                                              inputSelectedPatterns.join(
+                                                                                  ', *.'
+                                                                              )
+                                                                            : 'None'
+                                                                    }}
+                                                                    <i
+                                                                        v-if="
+                                                                            inputFiletypeSelected
+                                                                        "
+                                                                        class="fas fa-check text-success"
+                                                                    ></i>
+                                                                    <i
+                                                                        v-else
+                                                                        class="fas fa-exclamation text-danger"
+                                                                    ></i>
+                                                                </b-alert>
+                                                            </b-card>
+                                                            <!--<b-card
                                     v-if="
                                         getWorkflow !== null &&
                                             getWorkflow.config !== undefined &&
@@ -429,7 +1777,7 @@
                                             >
                                                 <i
                                                     v-if="outputDataset"
-                                                    class="fas fa-upload fa-fw text-warning"
+                                                    class="fas fa-upload fa-fw text-success"
                                                 ></i>
                                                 <i
                                                     v-else-if="
@@ -468,441 +1816,572 @@
                                         v-on:outputSelected="outputSelected"
                                     ></runoutput>
                                 </b-card>-->
-                                <b-card
-                                    :bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :header-bg-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    border-variant="default"
-                                    :header-border-variant="
-                                        profile.darkMode ? 'dark' : 'white'
-                                    "
-                                    :text-variant="
-                                        profile.darkMode ? 'white' : 'dark'
-                                    "
-                                    style="min-width: 40rem"
-                                    class="mb-4"
-                                >
-                                    <b-row>
-                                        <b-col>
-                                            <h4
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                            >
-                                                <i
-                                                    v-if="
-                                                        selectedResource.name !==
-                                                            ''
-                                                    "
-                                                    class="fas fa-server fa-fw text-warning"
-                                                ></i>
-                                                <i
-                                                    v-else
-                                                    class="fas fa-server fa-fw"
-                                                ></i>
-                                                Resource
-                                            </h4>
-                                        </b-col>
-                                    </b-row>
-                                    <div>
-                                        <b
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-white'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            Select an agent to submit this run
-                                            to.
-                                        </b>
-                                        <b-tabs
-                                            class="mt-2"
-                                            vertical
-                                            pills
-                                            nav-class="bg-transparent"
-                                            active-nav-item-class="bg-secondary text-dark"
-                                        >
-                                            <b-tab
-                                                title="Your agents"
-                                                :title-link-class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-dark m-0 p-3'
-                                                        : 'theme-light m-0 p-3'
-                                                "
-                                            >
-                                                <b-row
-                                                    class="text-right"
-                                                    v-for="agent in agents"
-                                                    v-bind:key="agent.name"
-                                                >
-                                                    <b-col md="auto"
-                                                        ><b-button
-                                                            size="md"
-                                                            class="text-left pt-2"
-                                                            @click="
-                                                                agentSelected(
-                                                                    agent
-                                                                )
-                                                            "
-                                                            :variant="
-                                                                profile.darkMode
-                                                                    ? 'dark'
-                                                                    : 'white'
-                                                            "
-                                                            :disabled="
-                                                                agentUnsupported(
-                                                                    agent
-                                                                ) ||
-                                                                    agent.disabled
-                                                            "
-                                                            >{{
-                                                                agent.name
-                                                            }}</b-button
-                                                        ></b-col
-                                                    >
-                                                    <b-col align-self="end">
-                                                        <small
-                                                            >{{
-                                                                agent.max_cores
-                                                            }}
-                                                            cores,
-                                                            {{
-                                                                agent.max_processes
-                                                            }}
-                                                            processes, </small
-                                                        ><span
-                                                            v-if="
-                                                                parseInt(
-                                                                    agent.max_mem
-                                                                ) >=
-                                                                    parseInt(
-                                                                        getWorkflow
-                                                                            .config
-                                                                            .agents
-                                                                            .mem
-                                                                    ) &&
-                                                                    parseInt(
-                                                                        agent.max_mem
-                                                                    ) > 0
-                                                            "
-                                                            >{{
-                                                                agent.max_mem
-                                                            }}
-                                                            GB memory</span
-                                                        >
-                                                        <span
-                                                            v-else-if="
-                                                                parseInt(
-                                                                    agent.max_mem
-                                                                ) > 0
-                                                            "
-                                                            class="text-danger"
-                                                            >{{
-                                                                agent.max_mem
-                                                            }}
-                                                            GB memory</span
-                                                        >
-                                                        <span
-                                                            v-else-if="
-                                                                parseInt(
-                                                                    agent.max_mem
-                                                                ) === -1
-                                                            "
-                                                            >virtual
-                                                            memory</span
-                                                        ><span v-if="agent.gpu">
-                                                            , GPU
-                                                        </span>
-                                                        <span v-else
-                                                            >, No GPU
-                                                        </span></b-col
-                                                    >
-                                                </b-row>
-                                                <b-row
-                                                    align-h="center"
-                                                    class="text-center"
-                                                    v-if="
-                                                        !publicResourcesLoading &&
-                                                            agents.length === 0
-                                                    "
-                                                >
-                                                    <b-col>
-                                                        None to show.
+                                                            <b-card
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                border-variant="default"
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
+                                                                style="min-width: 40rem"
+                                                                class="mb-4"
+                                                            >
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <h4
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <i
+                                                                                v-if="
+                                                                                    selectedAgent.name !==
+                                                                                        ''
+                                                                                "
+                                                                                class="fas fa-server fa-fw text-success"
+                                                                            ></i>
+                                                                            <i
+                                                                                v-else
+                                                                                class="fas fa-server fa-fw"
+                                                                            ></i>
+                                                                            Agent
+                                                                        </h4>
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        ><h5
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            {{
+                                                                                selectedAgent.name !==
+                                                                                ''
+                                                                                    ? selectedAgent.name
+                                                                                    : ''
+                                                                            }}<i
+                                                                                v-if="
+                                                                                    selectedAgent.name !==
+                                                                                        ''
+                                                                                "
+                                                                                class="fas fa-check text-success fa-fw"
+                                                                            ></i>
+                                                                            <i
+                                                                                v-else
+                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                            ></i></h5
+                                                                    ></b-col>
+                                                                </b-row>
+                                                                <div>
+                                                                    <b
+                                                                        :class="
+                                                                            profile.darkMode
+                                                                                ? 'text-white'
+                                                                                : 'text-dark'
+                                                                        "
+                                                                    >
+                                                                        Select
+                                                                        an agent
+                                                                        to
+                                                                        submit
+                                                                        this run
+                                                                        to.
+                                                                    </b>
+                                                                    <b-tabs
+                                                                        class="mt-2"
+                                                                        pills
+                                                                        nav-class="bg-transparent"
+                                                                        active-nav-item-class="bg-info text-dark"
+                                                                    >
+                                                                        <b-tab
+                                                                            title="Personal"
+                                                                            :title-link-class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'theme-dark m-0 p-3'
+                                                                                    : 'theme-light m-0 p-3'
+                                                                            "
+                                                                        >
+                                                                            <b-row
+                                                                                align-h="center"
+                                                                                v-if="
+                                                                                    personalAgentsLoading
+                                                                                "
+                                                                            >
+                                                                                <b-spinner
+                                                                                    type="grow"
+                                                                                    label="Loading..."
+                                                                                    variant="secondary"
+                                                                                ></b-spinner>
+                                                                            </b-row>
+                                                                            <b-row
+                                                                                align-h="center"
+                                                                                class="text-center"
+                                                                                v-else-if="
+                                                                                    personalAgents.length ===
+                                                                                        0
+                                                                                "
+                                                                            >
+                                                                                <b-col>
+                                                                                    None
+                                                                                    to
+                                                                                    show.
+                                                                                </b-col>
+                                                                            </b-row>
+                                                                            <div
+                                                                                v-else
+                                                                            >
+                                                                                <b-row
+                                                                                    class="text-right"
+                                                                                    v-for="agent in personalAgents"
+                                                                                    v-bind:key="
+                                                                                        agent.name
+                                                                                    "
+                                                                                >
+                                                                                    <b-col
+                                                                                        md="auto"
+                                                                                        ><b-button
+                                                                                            size="md"
+                                                                                            class="text-left pt-2"
+                                                                                            @click="
+                                                                                                agentSelected(
+                                                                                                    agent
+                                                                                                )
+                                                                                            "
+                                                                                            :variant="
+                                                                                                profile.darkMode
+                                                                                                    ? 'dark'
+                                                                                                    : 'white'
+                                                                                            "
+                                                                                            :disabled="
+                                                                                                agentUnsupported(
+                                                                                                    agent
+                                                                                                ) ||
+                                                                                                    agent.disabled
+                                                                                            "
+                                                                                            >{{
+                                                                                                agent.name
+                                                                                            }}</b-button
+                                                                                        ></b-col
+                                                                                    >
+                                                                                    <b-col
+                                                                                        align-self="end"
+                                                                                    >
+                                                                                        <small
+                                                                                            >{{
+                                                                                                agent.max_cores
+                                                                                            }}
+                                                                                            cores,
+                                                                                            {{
+                                                                                                agent.max_processes
+                                                                                            }}
+                                                                                            processes,
+                                                                                            <span
+                                                                                                v-if="
+                                                                                                    parseInt(
+                                                                                                        agent.max_mem
+                                                                                                    ) >=
+                                                                                                        parseInt(
+                                                                                                            getWorkflow
+                                                                                                                .config
+                                                                                                                .resources
+                                                                                                                .mem
+                                                                                                        ) &&
+                                                                                                        parseInt(
+                                                                                                            agent.max_mem
+                                                                                                        ) >
+                                                                                                            0
+                                                                                                "
+                                                                                                >{{
+                                                                                                    agent.max_mem
+                                                                                                }}
+                                                                                                GB
+                                                                                                memory</span
+                                                                                            >
+                                                                                            <span
+                                                                                                v-else-if="
+                                                                                                    parseInt(
+                                                                                                        agent.max_mem
+                                                                                                    ) >
+                                                                                                        0
+                                                                                                "
+                                                                                                class="text-danger"
+                                                                                                >{{
+                                                                                                    agent.max_mem
+                                                                                                }}
+                                                                                                GB
+                                                                                                memory</span
+                                                                                            >
+                                                                                            <span
+                                                                                                v-else-if="
+                                                                                                    parseInt(
+                                                                                                        agent.max_mem
+                                                                                                    ) ===
+                                                                                                        -1
+                                                                                                "
+                                                                                                >virtual
+                                                                                                memory</span
+                                                                                            ><span
+                                                                                                v-if="
+                                                                                                    agent.gpu
+                                                                                                "
+                                                                                            >
+                                                                                                ,
+                                                                                                GPU
+                                                                                            </span>
+                                                                                            <span
+                                                                                                v-else
+                                                                                                >,
+                                                                                                No
+                                                                                                GPU
+                                                                                            </span></small
+                                                                                        ></b-col
+                                                                                    >
+                                                                                </b-row>
+                                                                            </div>
+                                                                        </b-tab>
+                                                                        <b-tab
+                                                                            title="Public"
+                                                                            :title-link-class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'theme-dark m-0 p-3'
+                                                                                    : 'theme-light m-0 p-3'
+                                                                            "
+                                                                        >
+                                                                            <b-row
+                                                                                align-h="center"
+                                                                                v-if="
+                                                                                    publicAgentsLoading
+                                                                                "
+                                                                            >
+                                                                                <b-spinner
+                                                                                    type="grow"
+                                                                                    label="Loading..."
+                                                                                    variant="secondary"
+                                                                                ></b-spinner>
+                                                                            </b-row>
+                                                                            <b-row
+                                                                                align-h="center"
+                                                                                class="text-center"
+                                                                                v-else-if="
+                                                                                    publicAgents.length ===
+                                                                                        0
+                                                                                "
+                                                                            >
+                                                                                <b-col>
+                                                                                    None
+                                                                                    to
+                                                                                    show.
+                                                                                </b-col>
+                                                                            </b-row>
+                                                                            <div
+                                                                                v-else
+                                                                            >
+                                                                                <b-row
+                                                                                    class="text-right"
+                                                                                    v-for="agent in publicAgents"
+                                                                                    v-bind:key="
+                                                                                        agent.name
+                                                                                    "
+                                                                                >
+                                                                                    <b-col
+                                                                                        md="auto"
+                                                                                        ><b-button
+                                                                                            size="md"
+                                                                                            class="text-left pt-2"
+                                                                                            @click="
+                                                                                                agentSelected(
+                                                                                                    agent
+                                                                                                )
+                                                                                            "
+                                                                                            :variant="
+                                                                                                profile.darkMode
+                                                                                                    ? 'dark'
+                                                                                                    : 'white'
+                                                                                            "
+                                                                                            :disabled="
+                                                                                                agentUnsupported(
+                                                                                                    agent
+                                                                                                ) ||
+                                                                                                    agent.disabled
+                                                                                            "
+                                                                                            >{{
+                                                                                                agent.name
+                                                                                            }}</b-button
+                                                                                        ></b-col
+                                                                                    >
+                                                                                    <b-col
+                                                                                        align-self="end"
+                                                                                    >
+                                                                                        <small
+                                                                                            >{{
+                                                                                                agent.max_cores
+                                                                                            }}
+                                                                                            cores,
+                                                                                            {{
+                                                                                                agent.max_processes
+                                                                                            }}
+                                                                                            processes, </small
+                                                                                        ><span
+                                                                                            v-if="
+                                                                                                parseInt(
+                                                                                                    agent.max_mem
+                                                                                                ) >=
+                                                                                                    parseInt(
+                                                                                                        getWorkflow
+                                                                                                            .config
+                                                                                                            .resources
+                                                                                                            .mem
+                                                                                                    ) &&
+                                                                                                    parseInt(
+                                                                                                        agent.max_mem
+                                                                                                    ) >
+                                                                                                        0
+                                                                                            "
+                                                                                            >{{
+                                                                                                agent.max_mem
+                                                                                            }}
+                                                                                            GB
+                                                                                            memory</span
+                                                                                        >
+                                                                                        <span
+                                                                                            v-else-if="
+                                                                                                parseInt(
+                                                                                                    agent.max_mem
+                                                                                                ) >
+                                                                                                    0
+                                                                                            "
+                                                                                            class="text-danger"
+                                                                                            >{{
+                                                                                                agent.max_mem
+                                                                                            }}
+                                                                                            GB
+                                                                                            memory</span
+                                                                                        >
+                                                                                        <span
+                                                                                            v-else-if="
+                                                                                                parseInt(
+                                                                                                    agent.max_mem
+                                                                                                ) ===
+                                                                                                    -1
+                                                                                            "
+                                                                                            >virtual
+                                                                                            memory</span
+                                                                                        ><span
+                                                                                            v-if="
+                                                                                                agent.gpu
+                                                                                            "
+                                                                                        >
+                                                                                            ,
+                                                                                            GPU
+                                                                                        </span>
+                                                                                        <span
+                                                                                            v-else
+                                                                                            >,
+                                                                                            No
+                                                                                            GPU
+                                                                                        </span></b-col
+                                                                                    >
+                                                                                </b-row>
+                                                                            </div>
+                                                                        </b-tab>
+                                                                    </b-tabs>
+                                                                </div>
+                                                            </b-card>
+                                                        </b-card-group>
                                                     </b-col>
                                                 </b-row>
-                                            </b-tab>
-                                            <b-tab
-                                                title="Public agents"
-                                                :title-link-class="
-                                                    profile.darkMode
-                                                        ? 'text-white'
-                                                        : 'text-dark'
-                                                "
-                                                :class="
-                                                    profile.darkMode
-                                                        ? 'theme-dark m-0 p-3'
-                                                        : 'theme-light m-0 p-3'
-                                                "
-                                            >
                                                 <b-row
-                                                    class="text-right"
-                                                    v-for="tgt in publicResources"
-                                                    v-bind:key="tgt.name"
-                                                >
-                                                    <b-col md="auto"
-                                                        ><b-button
-                                                            size="md"
-                                                            class="text-left pt-2"
-                                                            @click="
-                                                                agentSelected(
-                                                                    tgt
-                                                                )
-                                                            "
-                                                            :variant="
-                                                                profile.darkMode
-                                                                    ? 'dark'
-                                                                    : 'white'
-                                                            "
-                                                            :disabled="
-                                                                agentUnsupported(
-                                                                    tgt
-                                                                ) ||
-                                                                    tgt.disabled
-                                                            "
-                                                            >{{
-                                                                tgt.name
-                                                            }}</b-button
-                                                        ></b-col
+                                                    ><b-col
+                                                        md="auto"
+                                                        class="mr-0"
+                                                        align-self="end"
                                                     >
-                                                    <b-col align-self="end">
-                                                        <small
-                                                            >{{ tgt.max_cores }}
-                                                            cores,
-                                                            {{
-                                                                tgt.max_processes
-                                                            }}
-                                                            processes, </small
-                                                        ><span
-                                                            v-if="
-                                                                parseInt(
-                                                                    tgt.max_mem
-                                                                ) >=
-                                                                    parseInt(
+                                                        <b-input-group>
+                                                            <template #prepend>
+                                                                <b-input-group-text
+                                                                    >Start
+                                                                    {{
                                                                         getWorkflow
                                                                             .config
-                                                                            .resources
-                                                                            .mem
-                                                                    ) &&
-                                                                    parseInt(
-                                                                        tgt.max_mem
-                                                                    ) > 0
-                                                            "
-                                                            >{{
-                                                                tgt.max_mem
-                                                            }}
-                                                            GB memory</span
-                                                        >
-                                                        <span
-                                                            v-else-if="
-                                                                parseInt(
-                                                                    tgt.max_mem
-                                                                ) > 0
-                                                            "
-                                                            class="text-danger"
-                                                            >{{
-                                                                tgt.max_mem
-                                                            }}
-                                                            GB memory</span
-                                                        >
-                                                        <span
-                                                            v-else-if="
-                                                                parseInt(
-                                                                    tgt.max_mem
-                                                                ) === -1
-                                                            "
-                                                            >virtual
-                                                            memory</span
-                                                        ><span v-if="tgt.gpu">
-                                                            , GPU
-                                                        </span>
-                                                        <span v-else
-                                                            >, No GPU
-                                                        </span></b-col
-                                                    >
-                                                </b-row>
-                                                <b-row
-                                                    align-h="center"
-                                                    class="text-center"
-                                                    v-if="
-                                                        !agentsLoading &&
-                                                            publicResources.length ===
-                                                                0
-                                                    "
-                                                >
-                                                    <b-col>
-                                                        None to show.
-                                                    </b-col>
-                                                </b-row>
-                                            </b-tab>
-                                        </b-tabs>
-                                        <b-row
-                                            align-h="center"
-                                            v-if="agentsLoading"
-                                        >
-                                            <b-spinner
-                                                type="grow"
-                                                label="Loading..."
-                                                variant="secondary"
-                                            ></b-spinner>
-                                        </b-row>
-                                        <b-alert
-                                            v-else
-                                            class="mt-1"
-                                            :variant="
-                                                selectedResource.name !== ''
-                                                    ? 'success'
-                                                    : 'danger'
-                                            "
-                                            :show="true"
-                                            >Selected:
-                                            {{
-                                                selectedResource.name !== ''
-                                                    ? selectedResource.name
-                                                    : 'None'
-                                            }}
-                                            <i
-                                                v-if="
-                                                    selectedResource.name !== ''
-                                                "
-                                                class="fas fa-check text-success"
-                                            ></i>
-                                            <i
-                                                v-else
-                                                class="fas fa-exclamation text-danger"
-                                            ></i>
-                                        </b-alert>
-                                    </div>
-                                </b-card>
-                            </b-card-group>
-                        </b-col>
-                    </b-row>
-                    <b-row
-                        ><b-col md="auto" class="mr-0" align-self="end">
-                            <b-input-group>
-                                <template #prepend>
-                                    <b-input-group-text
-                                        >Run
-                                        {{
-                                            getWorkflow.config.name
-                                        }}</b-input-group-text
-                                    >
-                                </template>
-                                <template #append>
-                                    <b-dropdown
-                                        variant="secondary"
-                                        :text="submitType"
-                                        v-model="submitType"
-                                        block
-                                    >
-                                        <template #button-content>
-                                            {{ submitType }}
-                                            <i
-                                                class="fas fa-caret-down fa-fw"
-                                            ></i>
-                                        </template>
-                                        <b-dropdown-item
-                                            @click="submitType = 'Now'"
-                                            >Now</b-dropdown-item
-                                        >
-                                        <!--<b-dropdown-item
+                                                                            .name
+                                                                    }}</b-input-group-text
+                                                                >
+                                                            </template>
+                                                            <template #append>
+                                                                <b-dropdown
+                                                                    variant="secondary"
+                                                                    :text="
+                                                                        submitType
+                                                                    "
+                                                                    v-model="
+                                                                        submitType
+                                                                    "
+                                                                    block
+                                                                >
+                                                                    <template
+                                                                        #button-content
+                                                                    >
+                                                                        {{
+                                                                            submitType
+                                                                        }}
+                                                                        <i
+                                                                            class="fas fa-caret-down fa-fw"
+                                                                        ></i>
+                                                                    </template>
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            submitType =
+                                                                                'Now'
+                                                                        "
+                                                                        >Now</b-dropdown-item
+                                                                    >
+                                                                    <!--<b-dropdown-item
                                             @click="submitType = 'After'"
                                             >After</b-dropdown-item
                                         >-->
-                                        <b-dropdown-item
-                                            @click="submitType = 'Every'"
-                                            >Every</b-dropdown-item
-                                        >
-                                    </b-dropdown>
-                                </template>
-                            </b-input-group>
-                        </b-col>
-                        <b-col
-                            md="auto"
-                            v-if="
-                                submitType === 'After' || submitType === 'Every'
-                            "
-                            ><b-input-group>
-                                <b-form-spinbutton
-                                    v-model="delayValue"
-                                    min="1"
-                                    max="100"
-                                ></b-form-spinbutton
-                                ><template #append>
-                                    <b-dropdown
-                                        variant="secondary"
-                                        :text="submitType"
-                                        v-model="submitType"
-                                        block
-                                    >
-                                        <template #button-content>
-                                            {{ delayUnits }}
-                                            <i
-                                                class="fas fa-caret-down fa-fw"
-                                            ></i>
-                                        </template>
-                                        <b-dropdown-item
-                                            @click="delayUnits = 'Seconds'"
-                                            >Seconds</b-dropdown-item
-                                        >
-                                        <b-dropdown-item
-                                            @click="delayUnits = 'Minutes'"
-                                            >Minutes</b-dropdown-item
-                                        >
-                                        <b-dropdown-item
-                                            @click="delayUnits = 'Hours'"
-                                            >Hours</b-dropdown-item
-                                        >
-                                        <b-dropdown-item
-                                            @click="delayUnits = 'Days'"
-                                            >Days</b-dropdown-item
-                                        >
-                                    </b-dropdown>
-                                </template></b-input-group
-                            ></b-col
-                        >
-                        <b-col
-                            ><b-button
-                                :disabled="!flowReady || submitted"
-                                @click="onTryStart"
-                                variant="warning"
-                                block
-                            >
-                                {{
-                                    submitType === 'Now'
-                                        ? `Start ${getWorkflow.config.name}`
-                                        : `Schedule ${getWorkflow.config.name} to run ${scheduledTime}`
-                                }}<b-spinner
-                                    small
-                                    v-if="submitted"
-                                    label="Loading..."
-                                    variant="dark"
-                                    class="ml-2 mb-1"
-                                ></b-spinner> </b-button></b-col
-                    ></b-row>
-                    <br />
-                </b-col>
-                <b-col md="auto">
-                    <!--<b-row
+                                                                    <!--<b-dropdown-item
+                                                                        @click="
+                                                                            submitType =
+                                                                                'Every'
+                                                                        "
+                                                                        >Every</b-dropdown-item
+                                                                    >-->
+                                                                </b-dropdown>
+                                                            </template>
+                                                        </b-input-group>
+                                                    </b-col>
+                                                    <b-col
+                                                        md="auto"
+                                                        v-if="
+                                                            submitType ===
+                                                                'After' ||
+                                                                submitType ===
+                                                                    'Every'
+                                                        "
+                                                        ><b-input-group>
+                                                            <b-form-spinbutton
+                                                                v-model="
+                                                                    delayValue
+                                                                "
+                                                                min="1"
+                                                                max="100"
+                                                            ></b-form-spinbutton
+                                                            ><template #append>
+                                                                <b-dropdown
+                                                                    variant="secondary"
+                                                                    :text="
+                                                                        submitType
+                                                                    "
+                                                                    v-model="
+                                                                        submitType
+                                                                    "
+                                                                    block
+                                                                >
+                                                                    <template
+                                                                        #button-content
+                                                                    >
+                                                                        {{
+                                                                            delayUnits
+                                                                        }}
+                                                                        <i
+                                                                            class="fas fa-caret-down fa-fw"
+                                                                        ></i>
+                                                                    </template>
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            delayUnits =
+                                                                                'Seconds'
+                                                                        "
+                                                                        >Seconds</b-dropdown-item
+                                                                    >
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            delayUnits =
+                                                                                'Minutes'
+                                                                        "
+                                                                        >Minutes</b-dropdown-item
+                                                                    >
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            delayUnits =
+                                                                                'Hours'
+                                                                        "
+                                                                        >Hours</b-dropdown-item
+                                                                    >
+                                                                    <b-dropdown-item
+                                                                        @click="
+                                                                            delayUnits =
+                                                                                'Days'
+                                                                        "
+                                                                        >Days</b-dropdown-item
+                                                                    >
+                                                                </b-dropdown>
+                                                            </template></b-input-group
+                                                        ></b-col
+                                                    >
+                                                    <b-col
+                                                        ><b-button
+                                                            :disabled="
+                                                                !canSubmit ||
+                                                                    submitted
+                                                            "
+                                                            @click="onTryStart"
+                                                            variant="success"
+                                                            block
+                                                        >
+                                                            Submit<b-spinner
+                                                                small
+                                                                v-if="submitted"
+                                                                label="Loading..."
+                                                                variant="dark"
+                                                                class="ml-2 mb-1"
+                                                            ></b-spinner> </b-button></b-col
+                                                ></b-row>
+                                            </b-tab>
+                                            <b-tab
+                                                title="Runs"
+                                                :title-link-class="
+                                                    profile.darkMode
+                                                        ? 'text-white'
+                                                        : 'text-dark'
+                                                "
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'theme-dark m-0 p-3'
+                                                        : 'theme-light m-0 p-3'
+                                                "
+                                            >
+                                                <b-row>
+                                                    <!--<b-row
                         ><b-col align-self="end"
                             ><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
                                 Delayed Runs
@@ -957,65 +2436,100 @@
                             </b-row>
                         </b-list-group-item>
                     </b-list-group>
-                    <hr />-->
-                    <b-row
-                        ><b-col align-self="end"
-                            ><h5
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-white'
-                                        : 'text-dark'
-                                "
-                            >
-                                Periodic Runs
-                            </h5></b-col
-                        ></b-row
-                    >
-                    <b-list-group class="text-left m-0 p-0">
-                        <b-row v-if="repeatingRuns.length === 0"
-                            ><b-col
-                                ><small
-                                    >You haven't scheduled any repeating
-                                    {{ getWorkflow.config.name }} runs.</small
-                                ></b-col
-                            ></b-row
-                        >
-                        <b-list-group-item
-                            variant="default"
-                            style="box-shadow: -2px 2px 2px #adb5bd"
-                            v-for="task in repeatingRuns"
-                            v-bind:key="task.id"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
-                                    : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
-                            "
-                        >
-                            <b-row class="pt-1">
-                                <b-col
-                                    >{{
-                                        `Every ${task.interval.every} ${task.interval.period} on ${task.agent.name}`
-                                    }}<br /><b-row
-                                        ><b-col
-                                            md="auto"
-                                            align-self="end"
-                                            class="mb-1"
-                                            ><!--<small v-if="task.enabled"
+                    <hr
+                                                    class="mt-2 mb-2"
+                                                    style="border-color: gray"
+                                                />
+                    -->
+                                                    <!--<b-row
+                                                            ><b-col
+                                                                align-self="end"
+                                                                ><h5
+                                                                    :class="
+                                                                        profile.darkMode
+                                                                            ? 'text-white'
+                                                                            : 'text-dark'
+                                                                    "
+                                                                >
+                                                                    Periodic
+                                                                    Runs
+                                                                </h5></b-col
+                                                            ></b-row
+                                                        >
+                                                        <b-list-group
+                                                            class="text-left m-0 p-0"
+                                                        >
+                                                            <b-row
+                                                                v-if="
+                                                                    repeatingRuns.length ===
+                                                                        0
+                                                                "
+                                                                ><b-col
+                                                                    ><small
+                                                                        >You
+                                                                        haven't
+                                                                        scheduled
+                                                                        any
+                                                                        repeating
+                                                                        {{
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .name
+                                                                        }}
+                                                                        runs.</small
+                                                                    ></b-col
+                                                                ></b-row
+                                                            >
+                                                            <b-list-group-item
+                                                                variant="default"
+                                                                style="box-shadow: -2px 2px 2px #adb5bd"
+                                                                v-for="task in repeatingRuns"
+                                                                v-bind:key="
+                                                                    task.id
+                                                                "
+                                                                :class="
+                                                                    profile.darkMode
+                                                                        ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
+                                                                        : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                                                                "
+                                                            >
+                                                                <b-row
+                                                                    class="pt-1"
+                                                                >
+                                                                    <b-col
+                                                                        >{{
+                                                                            `Every ${task.interval.every} ${task.interval.period} on ${task.agent.name}`
+                                                                        }}<br /><b-row
+                                                                            ><b-col
+                                                                                md="auto"
+                                                                                align-self="end"
+                                                                                class="mb-1"
+                                                                                ><small v-if="task.enabled"
                                     >Next running {{ cronTime(task)
                                     }}<br /></small
-                                >--><small v-if="task.last_run !== null"
-                                                >Last ran
-                                                {{
-                                                    prettify(task.last_run)
-                                                }}</small
-                                            ><small v-else
-                                                >Task has not run yet</small
-                                            ></b-col
-                                        >
-                                    </b-row></b-col
-                                >
-                                <b-col md="auto" align-self="start"
-                                    ><!--<b-form-checkbox
+                                ><small v-if="task.last_run !== null"
+                                                                                    >Last
+                                                                                    ran
+                                                                                    {{
+                                                                                        prettify(
+                                                                                            task.last_run
+                                                                                        )
+                                                                                    }}</small
+                                                                                ><small
+                                                                                    v-else
+                                                                                    >Task
+                                                                                    has
+                                                                                    not
+                                                                                    run
+                                                                                    yet</small
+                                                                                ></b-col
+                                                                            >
+                                                                        </b-row></b-col
+                                                                    >
+                                                                    <b-col
+                                                                        md="auto"
+                                                                        align-self="start"
+                                                                        ><b-form-checkbox
                                         class="text-right"
                                         v-model="task.enabled"
                                         @change="toggleRepeating(task)"
@@ -1023,30 +2537,38 @@
                                         size="md"
                                     >
                                     </b-form-checkbox
-                                    >--><b-button
-                                        size="sm"
-                                        variant="outline-danger"
-                                        @click="deleteRepeating(task)"
-                                        ><i class="fas fa-trash fa-fw"></i>
-                                        Remove</b-button
-                                    ></b-col
-                                >
-                            </b-row>
-                        </b-list-group-item>
-                    </b-list-group>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
-                    <b-row
-                        ><b-col align-self="end"
-                            ><h5
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-white'
-                                        : 'text-dark'
-                                "
-                            >
-                                Recent Runs
-                            </h5></b-col
-                        ><!--<b-col class="mb-1" align-self="start" md="auto"
+                                    ><b-button
+                                                                            size="sm"
+                                                                            variant="outline-danger"
+                                                                            @click="
+                                                                                deleteRepeating(
+                                                                                    task
+                                                                                )
+                                                                            "
+                                                                            ><i
+                                                                                class="fas fa-trash fa-fw"
+                                                                            ></i>
+                                                                            Remove</b-button
+                                                                        ></b-col
+                                                                    >
+                                                                </b-row>
+                                                            </b-list-group-item>
+                                                        </b-list-group>
+                                                    </b-col>-->
+                                                    <b-col>
+                                                        <b-row
+                                                            ><b-col
+                                                                align-self="end"
+                                                                ><h5
+                                                                    :class="
+                                                                        profile.darkMode
+                                                                            ? 'text-white'
+                                                                            : 'text-dark'
+                                                                    "
+                                                                >
+                                                                    Recent Runs
+                                                                </h5></b-col
+                                                            ><!--<b-col class="mb-1" align-self="start" md="auto"
                             ><b-button
                                 :variant="profile.darkMode ? 'outline-light' : 'white'"
                                 size="sm"
@@ -1059,29 +2581,48 @@
                                 Create
                             </b-button></b-col
                         >--></b-row
-                    >
-                    <b-list-group class="text-left m-0 p-0">
-                        <b-row v-if="runs.length === 0"
-                            ><b-col
-                                ><small
-                                    >You haven't run
-                                    {{ getWorkflow.config.name }} yet.</small
-                                ></b-col
-                            ></b-row
-                        >
-                        <b-list-group-item
-                            variant="default"
-                            style="box-shadow: -2px 2px 2px #adb5bd"
-                            v-for="run in runs"
-                            v-bind:key="run.id"
-                            :class="
-                                profile.darkMode
-                                    ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
-                                    : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
-                            "
-                            @click="onRunSelected(run)"
-                        >
-                            <!--<b-img
+                                                        >
+                                                        <b-list-group
+                                                            class="text-left m-0 p-0"
+                                                        >
+                                                            <b-row
+                                                                v-if="
+                                                                    runHistory.length ===
+                                                                        0
+                                                                "
+                                                                ><b-col
+                                                                    ><small
+                                                                        >You
+                                                                        haven't
+                                                                        run
+                                                                        {{
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .name
+                                                                        }}
+                                                                        yet.</small
+                                                                    ></b-col
+                                                                ></b-row
+                                                            >
+                                                            <b-list-group-item
+                                                                variant="default"
+                                                                style="box-shadow: -2px 2px 2px #adb5bd"
+                                                                v-for="run in runHistory"
+                                                                v-bind:key="
+                                                                    run.id
+                                                                "
+                                                                :class="
+                                                                    profile.darkMode
+                                                                        ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
+                                                                        : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
+                                                                "
+                                                                @click="
+                                                                    onRunSelected(
+                                                                        run
+                                                                    )
+                                                                "
+                                                            >
+                                                                <!--<b-img
                                         v-if="
                                             run.flow_image_url !== undefined &&
                                                 run.flow_image_url !== null
@@ -1092,45 +2633,79 @@
                                         right
                                         :src="run.flow_image_url"
                                     ></b-img>-->
-                            <a
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                :href="`/run/${run.id}`"
-                                >{{ run.id }}</a
-                            >
-                            <br />
-                            <b-badge
-                                v-for="tag in run.tags"
-                                v-bind:key="tag"
-                                class="mr-1"
-                                variant="secondary"
-                                >{{ tag }}
-                            </b-badge>
-                            <br v-if="run.tags.length > 0" />
-                            <small v-if="!run.is_complete">Running</small>
-                            <b-badge
-                                :variant="
-                                    run.is_failure || run.is_timeout
-                                        ? 'danger'
-                                        : run.is_cancelled
-                                        ? 'secondary'
-                                        : 'success'
-                                "
-                                v-else
-                                >{{ run.job_status }}</b-badge
-                            >
-                            <small> on </small>
-                            <b-badge class="ml-0 mr-0" variant="secondary">{{
-                                run.agent
-                            }}</b-badge
-                            ><small
-                                v-if="run.job_status === 'Scheduled'"
-                            ></small
-                            ><small v-else> {{ prettify(run.updated) }}</small>
-                            <!--<br />
+                                                                <a
+                                                                    :class="
+                                                                        profile.darkMode
+                                                                            ? 'text-light'
+                                                                            : 'text-dark'
+                                                                    "
+                                                                    :href="
+                                                                        `/run/${run.id}`
+                                                                    "
+                                                                    >{{
+                                                                        run.id
+                                                                    }}</a
+                                                                >
+                                                                <br />
+                                                                <b-badge
+                                                                    v-for="tag in run.tags"
+                                                                    v-bind:key="
+                                                                        tag
+                                                                    "
+                                                                    class="mr-1"
+                                                                    variant="secondary"
+                                                                    >{{ tag }}
+                                                                </b-badge>
+                                                                <br
+                                                                    v-if="
+                                                                        run.tags
+                                                                            .length >
+                                                                            0
+                                                                    "
+                                                                />
+                                                                <small
+                                                                    v-if="
+                                                                        !run.is_complete
+                                                                    "
+                                                                    >Running</small
+                                                                >
+                                                                <b-badge
+                                                                    :variant="
+                                                                        run.is_failure ||
+                                                                        run.is_timeout
+                                                                            ? 'danger'
+                                                                            : run.is_cancelled
+                                                                            ? 'secondary'
+                                                                            : 'success'
+                                                                    "
+                                                                    v-else
+                                                                    >{{
+                                                                        run.job_status
+                                                                    }}</b-badge
+                                                                >
+                                                                <small>
+                                                                    on
+                                                                </small>
+                                                                <b-badge
+                                                                    class="ml-0 mr-0"
+                                                                    variant="secondary"
+                                                                    >{{
+                                                                        run.agent
+                                                                    }}</b-badge
+                                                                ><small
+                                                                    v-if="
+                                                                        run.job_status ===
+                                                                            'Scheduled'
+                                                                    "
+                                                                ></small
+                                                                ><small v-else>
+                                                                    {{
+                                                                        prettify(
+                                                                            run.updated
+                                                                        )
+                                                                    }}</small
+                                                                >
+                                                                <!--<br />
                                     <small class="mr-1"
                                         ><a
                                             :class="
@@ -1147,8 +2722,18 @@
                                             }}</a
                                         >
                                     </small>-->
-                        </b-list-group-item>
-                    </b-list-group>
+                                                            </b-list-group-item>
+                                                        </b-list-group></b-col
+                                                    ></b-row
+                                                ></b-tab
+                                            ></b-tabs
+                                        >
+                                    </b-col>
+                                </b-row>
+                            </div>
+                        </b-col>
+                    </b-row>
+                    <br />
                 </b-col>
             </b-row>
             <b-modal
@@ -1162,8 +2747,9 @@
                 :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
                 :header-border-variant="profile.darkMode ? 'dark' : 'white'"
                 :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :title="'Authenticate with ' + this.selectedResource.name"
+                :title="'Authenticate with ' + this.selectedAgent.name"
                 @ok="onStart"
+                ok-variant="success"
             >
                 <b-form-input
                     v-model="authenticationUsername"
@@ -1183,8 +2769,7 @@
 </template>
 
 <script>
-import workflowdetail from '@/components/workflows/workflow-detail';
-import runinput from '@/components/runs/run-input';
+import datatree from '@/components/datasets/data-tree';
 import { mapGetters } from 'vuex';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
@@ -1192,6 +2777,7 @@ import router from '../../router';
 import Multiselect from 'vue-multiselect';
 import moment from 'moment';
 import cronstrue from 'cronstrue';
+import VueMarkdown from 'vue-markdown';
 
 String.prototype.capitalize = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
@@ -1201,8 +2787,8 @@ export default {
     name: 'workflow',
     components: {
         Multiselect,
-        workflowdetail,
-        runinput
+        VueMarkdown,
+        datatree
     },
     props: {
         owner: {
@@ -1214,6 +2800,9 @@ export default {
     },
     data: function() {
         return {
+            selectedDataset: null,
+            selectedDatasetLoading: false,
+            activeTab: 0,
             submitted: false,
             authenticationUsername: '',
             authenticationPassword: '',
@@ -1224,9 +2813,9 @@ export default {
             crontime: '* */5 * * *',
             delayValue: 10,
             delayUnits: 'Minutes',
-            runs: [],
-            delayedRuns: [],
-            repeatingRuns: [],
+            // delayedRuns: [],
+            // repeatingRuns: [],
+            runName: '',
             tags: [],
             tagOptions: [],
             params: [],
@@ -1295,12 +2884,9 @@ export default {
                     label: 'Actions'
                 }
             ],
-            selectedResource: {
+            selectedAgent: {
                 name: ''
             },
-            agents: [],
-            publicResources: [],
-            agentsLoading: false,
             agentFields: [
                 {
                     key: 'name',
@@ -1341,24 +2927,114 @@ export default {
     },
     async mounted() {
         await Promise.all([
-            this.$store.dispatch('users/loadAll'),
-            this.$store.dispatch('workflows/load', {
-                owner: this.$router.currentRoute.params.username,
-                name: this.$router.currentRoute.params.name
-            }),
-            this.loadResources(),
-            this.loadPublicResources(),
-            this.loadRuns(),
-            this.loadDelayedRuns(),
-            this.loadRepeatingRuns()
+            // this.$store.dispatch('users/loadAll'),
+            // this.$store.dispatch('workflows/load', {
+            //     owner: this.$router.currentRoute.params.owner,
+            //     name: this.$router.currentRoute.params.name
+            // }),
+            // this.$store.dispatch('datasets/l')
+            // this.$store.dispatch(
+            //     'agents/loadPersonal',
+            //     this.profile.djangoProfile.username
+            // ),
+            // this.$store.dispatch('agents/loadPublic')
+            // this.loadRuns()
+            // this.loadDelayedRuns(),
+            // this.loadRepeatingRuns()
         ]);
+
         this.populateComponents();
+
+        if ('input' in this.getWorkflow.config)
+            await Promise.all([
+                this.$store.dispatch('datasets/loadPersonalDatasets'),
+                this.$store.dispatch('datasets/loadPublicDatasets'),
+                this.$store.dispatch('datasets/loadSharedDatasets')
+            ]);
+
+        // if (this.workflowKey in this.recentlyRunWorkflows) {
+        //     let config = this.recentlyRunWorkflows[this.workflowKey];
+        //     if (config.input !== undefined && config.input.from !== undefined)
+        //         this.path = config.input.from;
+        //     this.presetPath(this.path);
+        // }
+        // if (this.defaultPath !== undefined && this.defaultPath !== null) {
+        //     this.path = this.defaultPath;
+        // }
     },
     methods: {
+        // onNameChange() {
+        //     return axios
+        //         .get(
+        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/${this.runName}/exists/`
+        //         )
+        //         .then(response => {
+        //             this.runNameExists = response.exists;
+        //         })
+        //         .catch(error => {
+        //             Sentry.captureException(error);
+        //             throw error;
+        //         });
+        // },
+        presetPath(path) {
+            this.input.from = path;
+            this.loadSelectedDataset(path);
+        },
+        async loadSelectedDataset(path) {
+            this.selectedDatasetLoading = true;
+            return await axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
+                    {
+                        headers: {
+                            Authorization:
+                                'Bearer ' +
+                                this.profile.djangoProfile.cyverse_token
+                        }
+                    }
+                )
+                .then(async response => {
+                    this.selectedDataset = response.data;
+                    this.selectedDatasetLoading = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.selectedDatasetLoading = false;
+                    throw error;
+                });
+        },
+        async refreshWorkflow() {
+            await this.$store.dispatch('workflows/refresh', {
+                owner: this.$router.currentRoute.params.owner,
+                name: this.$router.currentRoute.params.name
+            });
+        },
+        async disconnectWorkflow() {
+            await axios({
+                method: 'delete',
+                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/disconnect/`,
+                data: this.workflowSearchResult,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        this.$store.dispatch('workflows/loadPersonal/loadAll');
+                        router.push({
+                            name: 'workflows'
+                        });
+                    } else {
+                        // this.showFailedToCancelAlert = true;
+                    }
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
         async getWorkflowReadme() {
             return axios
                 .get(
-                    `/apis/v1/workflows/${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}/readme/`
+                    `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/readme/`
                 )
                 .then(response => {
                     return response.data.readme;
@@ -1368,64 +3044,64 @@ export default {
                     throw error;
                 });
         },
-        deleteDelayed(task) {
-            return axios
-                .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/remove_delayed/${this.name}/?name=${task.name}`
-                )
-                .then(() => {
-                    this.loadDelayedRuns();
-                    this.statusAlertMessage = `Deleted delayed run`;
-                    this.showStatusAlert = true;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.statusAlertMessage = `Failed to delete delayed run`;
-                    this.showStatusAlert = true;
-                    throw error;
-                });
-        },
-        deleteRepeating(task) {
-            return axios
-                .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/remove_repeating/${this.name}/?name=${task.name}`
-                )
-                .then(() => {
-                    this.loadRepeatingRuns();
-                    this.statusAlertMessage = `Deleted periodic run`;
-                    this.showStatusAlert = true;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.statusAlertMessage = `Failed to delete periodic run`;
-                    this.showStatusAlert = true;
-                    throw error;
-                });
-        },
-        toggleRepeating: function(task) {
-            axios
-                .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/toggle_repeating/${this.name}/?name=${task.name}`
-                )
-                .then(response => {
-                    this.statusAlertMessage = `${
-                        response.data.enabled ? 'Enabled' : 'Disabled'
-                    } periodic run (every ${
-                        response.data.interval.every
-                    } ${response.data.interval.period.toLowerCase()} on ${
-                        response.data.agent.name
-                    })`;
-                    this.showStatusAlert = true;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) {
-                        this.statusAlertMessage = `Failed to disable repeating run ${task.name}`;
-                        this.showStatusAlert = true;
-                        throw error;
-                    }
-                });
-        },
+        // deleteDelayed(task) {
+        //     return axios
+        //         .get(
+        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/remove_delayed/${this.name}/?name=${task.name}`
+        //         )
+        //         .then(() => {
+        //             this.loadDelayedRuns();
+        //             this.statusAlertMessage = `Deleted delayed run`;
+        //             this.showStatusAlert = true;
+        //         })
+        //         .catch(error => {
+        //             Sentry.captureException(error);
+        //             this.statusAlertMessage = `Failed to delete delayed run`;
+        //             this.showStatusAlert = true;
+        //             throw error;
+        //         });
+        // },
+        // deleteRepeating(task) {
+        //     return axios
+        //         .get(
+        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/remove_repeating/${this.name}/?name=${task.name}`
+        //         )
+        //         .then(() => {
+        //             this.loadRepeatingRuns();
+        //             this.statusAlertMessage = `Deleted periodic run`;
+        //             this.showStatusAlert = true;
+        //         })
+        //         .catch(error => {
+        //             Sentry.captureException(error);
+        //             this.statusAlertMessage = `Failed to delete periodic run`;
+        //             this.showStatusAlert = true;
+        //             throw error;
+        //         });
+        // },
+        // toggleRepeating: function(task) {
+        //     axios
+        //         .get(
+        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/toggle_repeating/${this.name}/?name=${task.name}`
+        //         )
+        //         .then(response => {
+        //             this.statusAlertMessage = `${
+        //                 response.data.enabled ? 'Enabled' : 'Disabled'
+        //             } periodic run (every ${
+        //                 response.data.interval.every
+        //             } ${response.data.interval.period.toLowerCase()} on ${
+        //                 response.data.agent.name
+        //             })`;
+        //             this.showStatusAlert = true;
+        //         })
+        //         .catch(error => {
+        //             Sentry.captureException(error);
+        //             if (error.response.status === 500) {
+        //                 this.statusAlertMessage = `Failed to disable repeating run ${task.name}`;
+        //                 this.showStatusAlert = true;
+        //                 throw error;
+        //             }
+        //         });
+        // },
         parseCronTime(time) {
             let cron = cronstrue.toString(time);
             return cron.charAt(0).toLowerCase() + cron.slice(1);
@@ -1447,71 +3123,71 @@ export default {
             this.tags.push(tag);
             this.tagOptions.push(tag);
         },
-        async loadRuns() {
-            await axios
-                .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_by_user_and_workflow/${this.name}/0/`,
-                    {
-                        headers: {
-                            Authorization: 'Bearer ' + this.githubToken
-                        }
-                    }
-                )
-                .then(response => {
-                    this.runs = response.data;
-                })
-                .catch(error => {
-                    if (error.status_code === 401) {
-                        this.login = true;
-                    } else {
-                        throw error;
-                    }
-                });
-        },
-        async loadDelayedRuns() {
-            await axios
-                .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_delayed_by_user_and_workflow/${this.name}/`,
-                    {
-                        headers: {
-                            Authorization: 'Bearer ' + this.githubToken
-                        }
-                    }
-                )
-                .then(response => {
-                    this.delayedRuns = response.data.filter(
-                        t => t.last_run === null
-                    );
-                })
-                .catch(error => {
-                    if (error.status_code === 401) {
-                        this.login = true;
-                    } else {
-                        throw error;
-                    }
-                });
-        },
-        async loadRepeatingRuns() {
-            await axios
-                .get(
-                    `/apis/v1/runs/${this.profile.djangoProfile.username}/get_repeating_by_user_and_workflow/${this.name}/`,
-                    {
-                        headers: {
-                            Authorization: 'Bearer ' + this.githubToken
-                        }
-                    }
-                )
-                .then(response => {
-                    this.repeatingRuns = response.data;
-                })
-                .catch(error => {
-                    if (error.status_code === 401) {
-                        this.login = true;
-                    } else {
-                        throw error;
-                    }
-                });
-        },
+        // async loadRuns() {
+        //     await axios
+        //         .get(
+        //             `/apis/v1/runs/search/${this.profile.djangoProfile.username}/${this.name}/0/`,
+        //             {
+        //                 headers: {
+        //                     Authorization: 'Bearer ' + this.githubToken
+        //                 }
+        //             }
+        //         )
+        //         .then(response => {
+        //             this.runHistory = response.data;
+        //         })
+        //         .catch(error => {
+        //             if (error.status_code === 401) {
+        //                 this.login = true;
+        //             } else {
+        //                 throw error;
+        //             }
+        //         });
+        // },
+        // async loadDelayedRuns() {
+        //     await axios
+        //         .get(
+        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/get_delayed_by_user_and_workflow/${this.name}/`,
+        //             {
+        //                 headers: {
+        //                     Authorization: 'Bearer ' + this.githubToken
+        //                 }
+        //             }
+        //         )
+        //         .then(response => {
+        //             this.delayedRuns = response.data.filter(
+        //                 t => t.last_run === null
+        //             );
+        //         })
+        //         .catch(error => {
+        //             if (error.status_code === 401) {
+        //                 this.login = true;
+        //             } else {
+        //                 throw error;
+        //             }
+        //         });
+        // },
+        // async loadRepeatingRuns() {
+        //     await axios
+        //         .get(
+        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/get_repeating_by_user_and_workflow/${this.name}/`,
+        //             {
+        //                 headers: {
+        //                     Authorization: 'Bearer ' + this.githubToken
+        //                 }
+        //             }
+        //         )
+        //         .then(response => {
+        //             this.repeatingRuns = response.data;
+        //         })
+        //         .catch(error => {
+        //             if (error.status_code === 401) {
+        //                 this.login = true;
+        //             } else {
+        //                 throw error;
+        //             }
+        //         });
+        // },
         mapParam(param) {
             if (param.type === 'string')
                 return {
@@ -1546,73 +3222,72 @@ export default {
                 };
         },
         populateComponents() {
-            // if a local input path is specified, set it
-            if (
-                'input' in this.getWorkflow.config &&
-                this.getWorkflow.config.input !== undefined &&
-                this.getWorkflow.config.input.path !== undefined &&
-                this.getWorkflow.config.input.kind !== undefined
-            ) {
-                this.input.from =
-                    this.getWorkflow.config.input.path !== null
-                        ? this.getWorkflow.config.input.path
-                        : '';
-                this.input.kind = this.getWorkflow.config.input.kind;
-                this.input.filetypes =
-                    this.getWorkflow.config.input.filetypes !== undefined &&
-                    this.getWorkflow.config.input.filetypes !== null
-                        ? this.getWorkflow.config.input.filetypes
-                        : [];
-                if (this.input.filetypes.length > 0)
-                    this.inputSelectedPatterns = this.input.filetypes;
-            }
+            if (this.getWorkflow !== null) {
+                // if a local input path is specified, set it
+                if ('input' in this.getWorkflow.config) {
+                    this.input.from =
+                        this.getWorkflow.config.input.path !== null
+                            ? this.getWorkflow.config.input.path
+                            : '';
+                    this.input.kind = this.getWorkflow.config.input.kind;
+                    this.input.filetypes =
+                        this.getWorkflow.config.input.filetypes !== undefined &&
+                        this.getWorkflow.config.input.filetypes !== null
+                            ? this.getWorkflow.config.input.filetypes
+                            : [];
+                    if (this.input.filetypes.length > 0)
+                        this.inputSelectedPatterns = this.input.filetypes;
+                }
 
-            // if a local output path is specified, add it to included files
-            if (
-                this.getWorkflow.config.output !== undefined &&
-                this.getWorkflow.config.output.path !== undefined
-            ) {
-                this.output.from =
-                    this.getWorkflow.config.output.path !== null
-                        ? this.getWorkflow.config.output.path
-                        : '';
+                // if a local output path is specified, add it to included files
                 if (
-                    this.getWorkflow.config.output.include !== undefined &&
-                    this.getWorkflow.config.output.include.names !== undefined
-                )
-                    this.output.include.names = this.getWorkflow.config.output.include.names;
-                if (
-                    this.getWorkflow.config.output.include !== undefined &&
-                    this.getWorkflow.config.output.include.patterns !==
-                        undefined
-                )
-                    this.output.include.patterns = this.getWorkflow.config.output.include.patterns;
-                if (
-                    this.getWorkflow.config.output.exclude !== undefined &&
-                    this.getWorkflow.config.output.exclude.names !== undefined
-                )
-                    this.output.exclude.names = this.getWorkflow.config.output.exclude.names;
-                if (
-                    this.getWorkflow.config.output.exclude !== undefined &&
-                    this.getWorkflow.config.output.exclude.patterns !==
-                        undefined
-                )
-                    this.output.exclude.patterns = this.getWorkflow.config.output.exclude.patterns;
-            }
+                    this.getWorkflow.config.output !== undefined &&
+                    this.getWorkflow.config.output.path !== undefined
+                ) {
+                    this.output.from =
+                        this.getWorkflow.config.output.path !== null
+                            ? this.getWorkflow.config.output.path
+                            : '';
+                    if (
+                        this.getWorkflow.config.output.include !== undefined &&
+                        this.getWorkflow.config.output.include.names !==
+                            undefined
+                    )
+                        this.output.include.names = this.getWorkflow.config.output.include.names;
+                    if (
+                        this.getWorkflow.config.output.include !== undefined &&
+                        this.getWorkflow.config.output.include.patterns !==
+                            undefined
+                    )
+                        this.output.include.patterns = this.getWorkflow.config.output.include.patterns;
+                    if (
+                        this.getWorkflow.config.output.exclude !== undefined &&
+                        this.getWorkflow.config.output.exclude.names !==
+                            undefined
+                    )
+                        this.output.exclude.names = this.getWorkflow.config.output.exclude.names;
+                    if (
+                        this.getWorkflow.config.output.exclude !== undefined &&
+                        this.getWorkflow.config.output.exclude.patterns !==
+                            undefined
+                    )
+                        this.output.exclude.patterns = this.getWorkflow.config.output.exclude.patterns;
+                }
 
-            // if params are specified, set them
-            if ('params' in this.getWorkflow['config'])
-                this.params = this.getWorkflow['config']['params'].map(param =>
-                    this.mapParam(param)
-                );
+                // if params are specified, set them
+                if ('params' in this.getWorkflow['config'])
+                    this.params = this.getWorkflow['config'][
+                        'params'
+                    ].map(param => this.mapParam(param));
+            }
 
             // if we have pre-configured values for this flow, populate them
             if (
-                `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}` in
-                this.recentlyRun
+                `${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}` in
+                this.recentlyRunWorkflows
             ) {
-                let flowConfig = this.recentlyRun[
-                    `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`
+                let flowConfig = this.recentlyRunWorkflows[
+                    `${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`
                 ];
                 this.params =
                     flowConfig.params !== undefined
@@ -1620,17 +3295,21 @@ export default {
                         : this.params;
                 this.input = flowConfig.input;
                 this.output = flowConfig.output;
-                this.selectedResource = flowConfig.agent;
+                this.selectedAgent = flowConfig.agent;
             }
+
+            if (this.input.from !== null && this.input.from !== '')
+                this.loadSelectedDataset(this.input.from);
         },
         inputSelected(node) {
             this.input.from = node.path;
+            this.loadSelectedDataset(node.path);
         },
         outputSelected(node) {
             this.output.to = node.path;
         },
         agentSelected(agent) {
-            this.selectedResource = agent;
+            this.selectedAgent = agent;
         },
         agentUnsupported(agent) {
             return (
@@ -1644,32 +3323,6 @@ export default {
             );
             // TODO walltime
         },
-        async loadResources() {
-            this.agentsLoading = true;
-            return await axios
-                .get(`/apis/v1/agents/get_by_username/`)
-                .then(response => {
-                    this.agents = response.data.agents;
-                    this.agentsLoading = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
-        async loadPublicResources() {
-            this.publicResourcesLoading = true;
-            return await axios
-                .get(`/apis/v1/agents/get_all/`)
-                .then(response => {
-                    this.publicResources = response.data.agents;
-                    this.publicResourcesLoading = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
         onTryStart() {
             if (this.mustAuthenticate) this.showAuthenticateModal();
             else this.onStart();
@@ -1680,7 +3333,7 @@ export default {
         async onStart() {
             if (
                 !this.getWorkflow.config.resources &&
-                this.selectedResource.name !== 'Sandbox'
+                this.selectedAgent.name !== 'Sandbox'
             ) {
                 alert('This flow can only run in the Sandbox.');
                 return;
@@ -1689,11 +3342,12 @@ export default {
             // prepare run definition
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/runs/status/';
-            let agent = this.selectedResource;
+            let agent = this.selectedAgent;
             if (this.getWorkflow.config.resources)
                 agent['resources'] = this.getWorkflow.config.resources;
             let config = {
                 name: this.getWorkflow.config.name,
+                run_name: this.runName,
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
                 agent: agent,
@@ -1745,21 +3399,13 @@ export default {
                     headers: { 'Content-Type': 'application/json' }
                 })
                     .then(response => {
-                        setTimeout(
-                            this.$emit('runSubmitted', {
-                                username: this.profile.djangoProfile.username,
-                                id: response.data.id
-                            }),
-                            // router.push({
-                            //     name: 'run',
-                            //     params: {
-                            //         username: this.profile.djangoProfile
-                            //             .username,
-                            //         id: response.data.id
-                            //     }
-                            // }),
-                            2000
-                        );
+                        router.push({
+                            name: 'run',
+                            params: {
+                                owner: this.profile.djangoProfile.username,
+                                name: response.data.name
+                            }
+                        });
                     })
                     .catch(error => {
                         Sentry.captureException(error);
@@ -1788,7 +3434,7 @@ export default {
                     })
                     .catch(error => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedResource.name}`;
+                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedAgent.name}`;
                         this.showStatusAlert = true;
                         throw error;
                     });
@@ -1816,7 +3462,7 @@ export default {
                     })
                     .catch(error => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedResource.name}`;
+                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedAgent.name}`;
                         this.showStatusAlert = true;
                         throw error;
                     });
@@ -1826,11 +3472,34 @@ export default {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', [
             'workflow',
-            'publicLoading',
-            'recentlyRun'
+            'publicWorkflowsLoading',
+            'personalWorkflowsLoading',
+            'recentlyRunWorkflows'
         ]),
+        ...mapGetters('runs', ['runs', 'searchRuns', 'runsLoading']),
+        ...mapGetters('agents', [
+            'publicAgentsLoading',
+            'publicAgents',
+            'personalAgentsLoading',
+            'personalAgents'
+        ]),
+        ...mapGetters('datasets', [
+            'personalDatasets',
+            'publicDatasets',
+            'sharedDatasets',
+            'sharingDatasets',
+            'personalDatasetsLoading',
+            'publicDatasetsLoading',
+            'sharedDatasetsLoading',
+            'sharingDatasetsLoading'
+        ]),
+        runHistory() {
+            return this.$store.getters['runs/searchRuns'](
+                this.profile.djangoProfile.username
+            );
+        },
         mustAuthenticate() {
-            return !this.selectedResource.policies.some(
+            return !this.selectedAgent.policies.some(
                 p =>
                     p.user === this.profile.djangoProfile.username &&
                     (p.role.toLowerCase() === 'use' ||
@@ -1840,6 +3509,9 @@ export default {
         getWorkflow() {
             return this.workflow(this.owner, this.name);
         },
+        workflowLoading() {
+            return this.publicWorkflowsLoading || this.personalWorkflowsLoading;
+        },
         scheduledTime: function() {
             return `${this.submitType === 'After' ? 'in' : 'every'} ${
                 this.delayValue
@@ -1847,12 +3519,20 @@ export default {
             // else return `${this.parseCronTime(this.crontime)}`;  TODO allow direct cron editing
         },
         workflowKey: function() {
-            return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
+            return `${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`;
         },
         inputFiletypeSelected: function() {
             return this.inputSelectedPatterns.some(pattern => pattern !== '');
         },
-        paramsReady: function() {
+        runNameExists() {
+            return this.runs.some(r => r.name === this.runName);
+        },
+        nameValid() {
+            return (
+                this.runName !== '' && !this.runNameExists // && !this.runNameExists
+            );
+        },
+        paramsValid: function() {
             if (
                 this.getWorkflow !== null &&
                 this.getWorkflow.config.params !== undefined &&
@@ -1866,7 +3546,7 @@ export default {
                 );
             else return true;
         },
-        inputReady: function() {
+        inputValid: function() {
             if (
                 this.getWorkflow !== null &&
                 this.getWorkflow.config.input !== undefined
@@ -1879,7 +3559,7 @@ export default {
                 );
             return true;
         },
-        outputReady: function() {
+        outputValid: function() {
             if (
                 this.outputDataset &&
                 this.getWorkflow &&
@@ -1890,12 +3570,13 @@ export default {
                 return this.output.to !== '';
             return true;
         },
-        flowReady: function() {
+        canSubmit: function() {
             return (
-                this.paramsReady &&
-                this.inputReady &&
-                this.outputReady &&
-                this.selectedResource.name !== ''
+                this.nameValid &&
+                this.paramsValid &&
+                this.inputValid &&
+                this.outputValid &&
+                this.selectedAgent.name !== ''
             );
         }
     }

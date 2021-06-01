@@ -9,14 +9,97 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            Your Datasets
+                            {{ publicContext ? 'Public' : 'Your' }} Datasets
                         </h2></b-col
+                    ><b-col md="auto" align-self="center"
+                        ><small>powered by</small
+                        ><b-img
+                            class="ml-2 mt-1"
+                            rounded
+                            style="max-height: 1.1rem;"
+                            right
+                            :src="
+                                require('../../assets/logos/cyverse_bright.png')
+                            "
+                        ></b-img
+                    ></b-col>
+                    <b-col md="auto" class="ml-0" align-self="center"
+                        ><b-button
+                            :disabled="datasetsLoading"
+                            :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
+                            size="md"
+                            v-b-tooltip.hover
+                            title="Refresh datasets"
+                            @click="refreshDatasets"
+                            class="ml-0 mt-0 mr-0"
+                        >
+                            <b-spinner
+                                small
+                                v-if="datasetsLoading"
+                                label="Refreshing..."
+                                :variant="profile.darkMode ? 'light' : 'dark'"
+                                class="mr-1"
+                            ></b-spinner
+                            ><i v-else class="fas fa-redo mr-1"></i
+                            >Refresh</b-button
+                        ></b-col
+                    >
+                    <b-col md="auto" align-self="center"
+                        ><b-button
+                            :disabled="datasetsLoading"
+                            :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
+                            size="md"
+                            class="ml-0 mt-0 mr-0"
+                            @click="toggleContext"
+                            :title="
+                                publicContext
+                                    ? 'View your datasets'
+                                    : 'View public datasets'
+                            "
+                            v-b-tooltip:hover
+                            ><span v-if="publicContext"
+                                ><i class="fas fa-user"></i> Yours</span
+                            ><span v-else
+                                ><i class="fas fa-users"></i> Public</span
+                            ></b-button
+                        ></b-col
                     ></b-row
                 >
                 <hr class="mt-2 mb-2" style="border-color: gray" />
+                <b-row v-if="publicContext">
+                    <b-col
+                        ><b-row v-if="publicDatasetsLoading" class="text-center"
+                            ><b-col
+                                ><b-spinner
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="secondary"
+                                ></b-spinner></b-col
+                        ></b-row>
+                        <b-row v-else>
+                            <b-col>
+                                <datatree
+                                    :node="publicDatasets"
+                                    select="directory"
+                                    :upload="true"
+                                    :download="true"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'theme-dark'
+                                            : 'theme-light'
+                                    "
+                                ></datatree></b-col></b-row
+                    ></b-col>
+                </b-row>
                 <b-tabs
+                    v-else
+                    v-model="activeTab"
                     nav-class="bg-transparent"
-                    active-nav-item-class="bg-secondary text-dark"
+                    active-nav-item-class="bg-info text-dark"
                     pills
                 >
                     <b-tab
@@ -30,7 +113,7 @@
                         "
                     >
                         <template #title>
-                            <b>Yours</b>
+                            <b>Personal</b>
                         </template>
                         <!--<b-row class="mb-2"
                                             ><b-col>
@@ -52,14 +135,23 @@
                                                         "
                                                     ></b-form-input></b-input-group></b-col
                                         ></b-row>-->
-                        <b-row>
+                        <b-row
+                            v-if="personalDatasetsLoading"
+                            class="text-center"
+                            ><b-col
+                                ><b-spinner
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="secondary"
+                                ></b-spinner></b-col
+                        ></b-row>
+                        <b-row v-else>
                             <b-col>
                                 <datatree
-                                    :node="yourDatasets"
+                                    :node="personalDatasets"
                                     select="directory"
                                     :upload="true"
                                     :download="true"
-                                    :agents="agents"
                                     :class="
                                         profile.darkMode
                                             ? 'theme-dark'
@@ -100,12 +192,19 @@
                                                         "
                                                     ></b-form-input></b-input-group></b-col
                                         ></b-row>-->
-                        <b-row>
+                        <b-row v-if="sharedDatasetsLoading" class="text-center"
+                            ><b-col
+                                ><b-spinner
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="secondary"
+                                ></b-spinner></b-col
+                        ></b-row>
+                        <b-row v-else>
                             <b-col>
                                 <datatree
                                     :node="sharedDatasets"
                                     select="directory"
-                                    :agents="agents"
                                     :upload="true"
                                     :download="true"
                                     :class="
@@ -148,7 +247,7 @@
                                                         "
                                                     ></b-form-input></b-input-group></b-col
                                         ></b-row>-->
-                        <b-row v-if="alertEnabled">
+                        <!--<b-row v-if="alertEnabled">
                             <b-col class="m-0 p-0">
                                 <b-alert
                                     :show="alertEnabled"
@@ -163,42 +262,44 @@
                                     {{ alertMessage }}
                                 </b-alert>
                             </b-col>
-                        </b-row>
+                        </b-row>-->
                         <b-row
-                            v-for="directory in sharingDatasets"
-                            v-bind:key="directory.path"
+                            v-if="
+                                sharingDatasets === null ||
+                                    sharingDatasets.length === 0
+                            "
+                            ><b-col class="text-danger">
+                                You haven't shared any datasets with anyone.
+                            </b-col></b-row
                         >
-                            <b-col
-                                ><small>{{ directory.path }}</small></b-col
-                            ><b-col md="auto" class="mt-1">
-                                <small
-                                    >Shared with {{ directory.guest }}</small
-                                ></b-col
-                            ><b-col md="auto">
-                                <b-button
-                                    class="mb-2"
-                                    size="sm"
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
-                                    @click="unshareDataset(directory)"
-                                    ><i class="fas fa-user-lock fa-fw"></i>
-                                    Unshare</b-button
-                                ></b-col
-                            ></b-row
-                        >
-                        <b-row v-if="sharingDatasets.length === 0"
-                            ><b-col
-                                ><p>
-                                    <small class="text-danger"
-                                        >You haven't shared any datasets with
-                                        anyone.</small
-                                    >
-                                </p></b-col
-                            ></b-row
-                        >
+                        <div v-else>
+                            <b-row
+                                v-for="directory in sharingDatasets"
+                                v-bind:key="directory.path"
+                            >
+                                <b-col
+                                    ><small>{{ directory.path }}</small></b-col
+                                ><b-col md="auto" class="mt-1">
+                                    <small
+                                        >Shared with
+                                        {{ directory.guest }}</small
+                                    ></b-col
+                                ><b-col md="auto">
+                                    <b-button
+                                        class="mb-2"
+                                        size="sm"
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'outline-dark'
+                                        "
+                                        @click="unshareDataset(directory)"
+                                        ><i class="fas fa-user-lock fa-fw"></i>
+                                        Unshare</b-button
+                                    ></b-col
+                                ></b-row
+                            >
+                        </div>
                     </b-tab>
                 </b-tabs></b-col
             ></b-row
@@ -218,29 +319,70 @@ export default {
     components: {
         datatree
     },
-    async created() {
-        await Promise.all([
-            this.loadDataset(
-                `/iplant/home/${this.profile.djangoProfile.username}/`,
-                this.profile.djangoProfile.cyverse_token
-            ),
-            this.loadSharedDatasets(),
-            this.loadSharingDatasets()
-        ]);
-    },
     data: function() {
         return {
-            yourDatasets: null,
-            sharedDatasets: null,
-            sharingDatasets: null,
+            activeTab: 0,
+            togglingContext: false,
+            publicContext: false,
             yourDatasetsSearchText: '',
             sharedDatasetsSearchText: '',
             sharingDatasetsSearchText: ''
         };
     },
+    async created() {
+        await Promise.all([
+            // this.$store.dispatch('datasets/loadPublicDatasets'),
+            // this.$store.dispatch('datasets/loadPersonalDatasets'),
+            // this.$store.dispatch('datasets/loadSharedDatasets'),
+            // this.$store.dispatch('datasets/loadSharingDatasets')
+        ]);
+    },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
-        ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading'])
+        ...mapGetters('datasets', [
+            'personalDatasets',
+            'publicDatasets',
+            'sharedDatasets',
+            'sharingDatasets',
+            'personalDatasetsLoading',
+            'publicDatasetsLoading',
+            'sharedDatasetsLoading',
+            'sharingDatasetsLoading',
+            'openedDataset',
+            'openedDatasetLoading'
+        ]),
+        datasetsLoading() {
+            if (this.publicContext) {
+                return this.publicDatasetsLoading;
+            } else {
+                switch (this.activeTab) {
+                    case 0:
+                        return this.personalDatasetsLoading;
+                    case 1:
+                        return this.sharedDatasetsLoading;
+                    case 2:
+                        return this.sharingDatasetsLoading;
+                    default:
+                        return false;
+                }
+            }
+        },
+        getDatasets() {
+            if (this.publicContext) {
+                return this.publicDatasets;
+            } else {
+                switch (this.activeTab) {
+                    case 0:
+                        return this.personalDatasets;
+                    case 1:
+                        return this.sharedDatasets;
+                    case 2:
+                        return this.sharingDatasets;
+                    default:
+                        return [];
+                }
+            }
+        }
     },
     methods: {
         prettify: function(date) {
@@ -248,78 +390,32 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        async loadDataset(path, token) {
-            return axios
-                .get(
-                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
-                    { headers: { Authorization: 'Bearer ' + token } }
-                )
-                .then(response => {
-                    this.yourDatasets = response.data;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
+        toggleContext() {
+            this.togglingContext = true;
+            this.publicContext = !this.publicContext;
+            this.togglingContext = false;
         },
-        async loadSharingDatasets() {
-            await axios
-                .get(`/apis/v1/datasets/sharing/`)
-                .then(response => {
-                    this.sharingDatasets = response.data;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
-        async loadSharedDatasets() {
-            await axios
-                .get(
-                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/`,
-                    {
-                        headers: {
-                            Authorization:
-                                'Bearer ' +
-                                this.profile.djangoProfile.cyverse_token
-                        }
-                    }
-                )
-                .then(response => {
-                    this.sharedDatasets = response.data;
-                    this.sharedDataLoading = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    this.sharedDataLoading = false;
-                    throw error;
-                });
-        },
-        openDataset() {
-            this.$store.dispatch('datasets/updateLoading', true);
-            let data = { agent: this.agent.name };
-            // if (this.mustAuthenticate)
-            //     data['auth'] = {
-            //         username: this.authenticationUsername,
-            //         password: this.authenticationPassword
-            //     };
-
-            axios({
-                method: 'post',
-                url: `/apis/v1/datasets/open/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(async response => {
-                    await this.$store.dispatch(
-                        'datasets/updateOpened',
-                        response.data.session
-                    );
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
+        async refreshDatasets() {
+            if (this.publicContext)
+                await this.$store.dispatch('datasets/loadPublicDatasets');
+            else
+                switch (this.activeTab) {
+                    case 0:
+                        await this.$store.dispatch(
+                            'datasets/loadPersonalDatasets'
+                        );
+                        return;
+                    case 1:
+                        await this.$store.dispatch(
+                            'datasets/loadSharedDatasets'
+                        );
+                        return;
+                    case 2:
+                        await this.$store.dispatch(
+                            'datasets/loadSharingDatasets'
+                        );
+                        return;
+                }
         },
         async unshareDataset(directory) {
             await axios({
@@ -334,21 +430,19 @@ export default {
             })
                 .then(() => {
                     this.loadSharingDatasets();
-                    this.alertMessage = `Unshared dataset ${
-                        this.internalLoaded
-                            ? this.internalNode.path
-                            : this.node.path
-                    } with ${this.sharedUsers.length} user(s)`;
-                    this.alertEnabled = true;
+                    // this.alertMessage = `Unshared dataset ${
+                    //     this.internalLoaded
+                    //         ? this.internalNode.path
+                    //         : this.node.path
+                    // } with ${this.sharedUsers.length} user(s)`;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to unshare dataset ${
-                        this.internalLoaded
-                            ? this.internalNode.path
-                            : this.node.path
-                    } with ${this.sharedUsers.length} user(s)`;
-                    this.alertEnabled = true;
+                    // this.alertMessage = `Failed to unshare dataset ${
+                    //     this.internalLoaded
+                    //         ? this.internalNode.path
+                    //         : this.node.path
+                    // } with ${this.sharedUsers.length} user(s)`;
                     throw error;
                 });
         }

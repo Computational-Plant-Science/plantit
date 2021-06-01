@@ -1,5 +1,7 @@
 <template>
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
+        <br/>
+        <br/>
         <div v-if="profileLoading">
             <b-row>
                 <b-col class="text-center">
@@ -37,11 +39,11 @@
                             </h5>
                         </b-breadcrumb-item>
                     </b-breadcrumb></b-col
-                ><b-col md="auto" align-self="end"
+                ><!--<b-col md="auto" align-self="end"
                     ><b :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Welcome, {{ profile.cyverseProfile.first_name }}.
                     </b></b-col
-                ></b-row
+                >--></b-row
             >
             <hr class="mt-1 mb-2" style="border-color: gray" />
             <b-row
@@ -274,7 +276,7 @@ export default {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('runs', ['runsLoading', 'runs']),
         ...mapGetters('notifications', ['notifications']),
-        ...mapGetters('workflows', ['personal', 'personalLoading']),
+        ...mapGetters('workflows', ['personalWorkflows', 'personalWorkflowsLoading']),
         ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
         isRootPath() {
             return this.$route.name === 'dashboard';

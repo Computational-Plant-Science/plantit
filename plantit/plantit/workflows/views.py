@@ -108,3 +108,21 @@ def connect(request, owner, name):
     else:
         logger.info(f"Repository {owner}/{name} already connected as {request.data['config']['name']} for {request.user.username}")
         return JsonResponse({'connected': False})
+
+
+@api_view(['DELETE'])
+@login_required
+def disconnect(request, owner, name):
+    if owner != request.user.profile.github_username:
+        return HttpResponseNotAllowed()
+
+    try:
+        workflow = Workflow.objects.get(user=request.user, repo_owner=owner, repo_name=name)
+    except:
+        return HttpResponseNotFound()
+
+    workflow.delete()
+
+    redis = RedisClient.get()
+    redis.delete(f"workflows/{owner}/{name}")
+    return HttpResponse()

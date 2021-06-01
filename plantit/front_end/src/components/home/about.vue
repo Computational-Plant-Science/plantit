@@ -141,7 +141,7 @@
                             rounded
                             style="max-height: 6rem;"
                             center
-                            :src="require('../../assets/logos/github.png')"
+                            :src="require('../../assets/logos/github_white.png')"
                         ></b-img
                     ></b-col>
                     <b-col>

@@ -11,14 +11,14 @@ from plantit.notifications.utils import map_notification
 
 @api_view(['GET'])
 @login_required
-def get_by_user(request, username):
+def get_by_user(request, owner):
     params = request.query_params
     page = params.get('page') if 'page' in params else 0
     start = int(page) * 20
     count = start + 20
 
     try:
-        user = User.objects.get(owner=username)
+        user = User.objects.get(username=owner)
     except:
         return HttpResponseNotFound()
 
@@ -31,14 +31,14 @@ def get_by_user(request, username):
 
 @api_view(['POST'])
 @login_required
-def mark_many_read(request, username):
+def mark_many_read(request, owner):
     # TODO
     pass
 
 
 @api_view(['POST'])
 @login_required
-def mark_read(request, username):
+def mark_read(request, owner):
     user = request.user
     guid = request.data['notification']['id']
 

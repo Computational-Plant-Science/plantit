@@ -37,17 +37,17 @@ logger = get_task_logger(__name__)
 
 
 @app.task(track_started=True)
-def create_and_submit_run(username: str, agent: str, flow: dict):
-    run = create_run(username, agent, flow)
-    submit_run.s(run.guid, flow).apply_async()
+def create_and_submit_run(username: str, agent_name: str, workflow: dict):
+    run = create_run(username, agent_name, workflow)
+    submit_run.s(run.guid, workflow).apply_async()
 
 
 @app.task(track_started=True)
-def submit_run(id: str, flow):
+def submit_run(guid: str, workflow):
     try:
-        run = Run.objects.get(guid=id)
+        run = Run.objects.get(guid=guid)
     except:
-        logger.warning(f"Could not find run {id} (might have been deleted?)")
+        logger.warning(f"Could not find run {guid} (might have been deleted?)")
         return
 
     run.job_status = 'RUNNING'
@@ -59,33 +59,31 @@ def submit_run(id: str, flow):
     logger.info(msg)
 
     try:
-        if 'auth' in flow:
-            msg = f"Authenticating with username {flow['auth']['username']}"
+        if 'auth' in workflow:
+            msg = f"Authenticating with username {workflow['auth']['username']}"
             update_run_status(run, msg)
             logger.info(msg)
-            ssh_client = SSH(run.agent.hostname, run.agent.port, flow['auth']['username'], flow['auth']['password'])
+            ssh_client = SSH(run.agent.hostname, run.agent.port, workflow['auth']['username'], workflow['auth']['password'])
         else:
             ssh_client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
 
         with ssh_client:
-            msg = f"Creating working directory {join(run.agent.workdir, run.guid)} and uploading workflow configuration"
-            update_run_status(run, msg)
-            logger.info(msg)
-
-            if 'input' in flow['config'] and flow['config']['input']['kind'] == 'files':
-                input_files = list_dir(flow['config']['input']['from'], run.user.profile.cyverse_token)
+            if 'input' in workflow['config'] and workflow['config']['input']['kind'] == 'files':
+                input_files = list_dir(workflow['config']['input']['from'], run.user.profile.cyverse_token)
                 msg = f"Found {len(input_files)} input files"
                 update_run_status(run, msg)
                 logger.info(msg)
             else:
                 input_files = None
 
-            upload_run(flow, run, ssh_client, input_files)
+            msg = f"Creating working directory {join(run.agent.workdir, run.guid)} and uploading workflow configuration"
+            update_run_status(run, msg)
+            logger.info(msg)
+            upload_run(workflow, run, ssh_client, input_files)
 
             msg = 'Running script' if run.is_sandbox else 'Submitting script to scheduler'
             update_run_status(run, msg)
             logger.info(msg)
-
             submit_run_via_ssh(run, ssh_client, len(input_files) if input_files is not None else None)
 
             if run.is_sandbox:
@@ -94,13 +92,13 @@ def submit_run(id: str, flow):
                 run.updated = now
                 run.completed = now
                 run.save()
-                list_run_results.s(id).apply_async()
+                list_run_results.s(guid).apply_async()
 
                 cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
                 msg = f"Completed run {run.guid}, cleaning up in {cleanup_delay}m"
                 update_run_status(run, msg)
                 logger.info(msg)
-                cleanup_run.s(id).apply_async(countdown=cleanup_delay * 60)
+                cleanup_run.s(guid).apply_async(countdown=cleanup_delay * 60)
 
                 if run.user.profile.push_notification_status == 'enabled':
                     SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
@@ -120,22 +118,22 @@ def submit_run(id: str, flow):
 
 
 @app.task()
-def poll_run_status(id: str):
+def poll_run_status(guid: str):
     try:
-        run = Run.objects.get(guid=id)
+        run = Run.objects.get(guid=guid)
     except:
-        logger.warning(f"Could not find run {id} (might have been deleted?)")
+        logger.warning(f"Could not find run {guid} (might have been deleted?)")
         return
 
     refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
     cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES')) * 60
-    logger.info(f"Checking {run.agent.name} scheduler status for run {id} (SLURM job {run.job_id})")
+    logger.info(f"Checking {run.agent.name} scheduler status for run {guid} (SLURM job {run.job_id})")
 
     # if the job already failed, schedule cleanup
     if run.job_status == 'FAILURE':
         msg = f"Job {run.job_id} failed, cleaning up in {cleanup_delay}m"
         update_run_status(run, msg)
-        cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+        cleanup_run.s(guid).apply_async(countdown=cleanup_delay)
 
         if run.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
@@ -182,19 +180,19 @@ def poll_run_status(id: str):
         if job_status == 'COMPLETED' or job_status == 'FAILED' or job_status == 'CANCELLED' or job_status == 'TIMEOUT':
             run.completed = now
             run.save()
-            list_run_results.s(id).apply_async()
+            list_run_results.s(guid).apply_async()
 
             msg = f"Job {run.job_id} {job_status}" + (
                 f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             update_run_status(run, msg)
-            cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+            cleanup_run.s(guid).apply_async(countdown=cleanup_delay)
 
             if run.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
         else:
             msg = f"Job {run.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"
             update_run_status(run, msg)
-            poll_run_status.s(id).apply_async(countdown=refresh_delay)
+            poll_run_status.s(guid).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (run.job_status == 'COMPLETED' or run.job_status == 'COMPLETING'):
             run.job_status = 'FAILURE'
@@ -208,7 +206,7 @@ def poll_run_status(id: str):
         else:
             msg = f"Job {run.job_id} succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             update_run_status(run, msg)
-            cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+            cleanup_run.s(guid).apply_async(countdown=cleanup_delay)
 
             if run.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
@@ -221,23 +219,23 @@ def poll_run_status(id: str):
 
         msg = f"Job {run.job_id} encountered unexpected error (cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
         update_run_status(run, msg)
-        cleanup_run.s(id).apply_async(countdown=cleanup_delay)
+        cleanup_run.s(guid).apply_async(countdown=cleanup_delay)
 
         if run.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(run.user.profile.push_notification_topic_arn, f"PlantIT run {run.guid}", msg, {})
 
 
 @app.task()
-def cleanup_run(id: str):
+def cleanup_run(guid: str):
     try:
-        run = Run.objects.get(guid=id)
+        run = Run.objects.get(guid=guid)
     except:
-        logger.warning(f"Could not find run {id} (might have been deleted?)")
+        logger.warning(f"Could not find run {guid} (might have been deleted?)")
         return
 
-    logger.info(f"Cleaning up run {id} local working directory {run.agent.workdir}")
+    logger.info(f"Cleaning up run {guid} local working directory {run.agent.workdir}")
     remove_logs(run.guid, run.agent.name)
-    logger.info(f"Cleaning up run {id} remote working directory {run.agent.workdir}")
+    logger.info(f"Cleaning up run {guid} remote working directory {run.agent.workdir}")
     ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
     with ssh:
         execute_command(
@@ -255,17 +253,17 @@ def cleanup_run(id: str):
 
 
 @app.task()
-def list_run_results(id: str):
+def list_run_results(guid: str):
     try:
-        run = Run.objects.get(guid=id)
+        run = Run.objects.get(guid=guid)
     except:
-        logger.warning(f"Could not find run {id} (might have been deleted?)")
+        logger.warning(f"Could not find run {guid} (might have been deleted?)")
         return
 
     redis = RedisClient.get()
     ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
     previews = PreviewManager(join(settings.MEDIA_ROOT, run.guid), create_folder=True)
-    workflow = redis.get(f"workflow/{run.workflow_owner}/{run.workflow_name}")
+    workflow = redis.get(f"workflows/{run.workflow_owner}/{run.workflow_name}")
 
     if workflow is None:
         workflow = get_repo(run.workflow_owner, run.workflow_name, run.user.profile.github_token)['config']
@@ -299,14 +297,14 @@ def list_run_results(id: str):
                 try:
                     preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                 except UnsupportedMimeType:
-                    redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
+                    redis.set(f"previews/{run.user.username}/{run.guid}/{name}", 'EMPTY')
                     print(f"Saved empty file preview to cache: {name}")
                     continue
 
                 with open(preview, 'rb') as pf:
                     content = pf.read()
                     encoded = base64.b64encode(content)
-                    redis.set(f"preview/{run.guid}/{name}", encoded)
+                    redis.set(f"previews/{run.user.username}/{run.guid}/{name}", encoded)
                     print(f"Saved file preview to cache: {name}")
         elif path.endswith('png'):
             print(f"Creating preview for PNG file: {name}")
@@ -319,14 +317,14 @@ def list_run_results(id: str):
                 try:
                     preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                 except UnsupportedMimeType:
-                    redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
+                    redis.set(f"previews/{run.user.username}/{run.guid}/{name}", 'EMPTY')
                     print(f"Saved empty preview for PNG file to cache: {name}")
                     continue
 
                 with open(preview, 'rb') as pf:
                     content = pf.read()
                     encoded = base64.b64encode(content)
-                    redis.set(f"preview/{run.guid}/{name}", encoded)
+                    redis.set(f"previews/{run.user.username}/{run.guid}/{name}", encoded)
                     print(f"Saved file preview to cache: {name}")
         elif path.endswith('jpg') or path.endswith('jpeg'):
             print(f"Creating preview for JPG file: {name}")
@@ -339,14 +337,14 @@ def list_run_results(id: str):
                 try:
                     preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                 except UnsupportedMimeType:
-                    redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
+                    redis.set(f"previews/{run.user.username}/{run.guid}/{name}", 'EMPTY')
                     print(f"Saved empty preview for JPG file to cache: {name}")
                     continue
 
                 with open(preview, 'rb') as pf:
                     content = pf.read()
                     encoded = base64.b64encode(content)
-                    redis.set(f"preview/{run.guid}/{name}", encoded)
+                    redis.set(f"previews/{run.user.username}/{run.guid}/{name}", encoded)
                     print(f"Saved JPG file preview to cache: {name}")
         elif path.endswith('czi'):
             print(f"Creating preview for CZI file: {name}")
@@ -365,14 +363,14 @@ def list_run_results(id: str):
                 try:
                     preview = previews.get_jpeg_preview(temp_file.name, width=1024, height=1024)
                 except UnsupportedMimeType:
-                    redis.set(f"preview/{run.guid}/{name}", 'EMPTY')
+                    redis.set(f"previews/{run.user.username}/{run.guid}/{name}", 'EMPTY')
                     print(f"Saved empty preview for CZI file to cache: {name}")
                     continue
 
                 with open(preview, 'rb') as pf:
                     content = pf.read()
                     encoded = base64.b64encode(content)
-                    redis.set(f"preview/{run.guid}/{name}", encoded)
+                    redis.set(f"previews/{run.user.username}/{run.guid}/{name}", encoded)
                     print(f"Saved file preview to cache: {name}")
         elif path.endswith('ply'):
             print(f"Creating preview for PLY file: {name}")
@@ -425,9 +423,9 @@ def execute_agent_command(agent_name: str, command: str, pre_command: str = None
 
 
 @app.task()
-def open_dataset_session(id: str):
+def open_dataset_session(guid: str):
     try:
-        session = DatasetSession.objects.get(guid=id)
+        session = DatasetSession.objects.get(guid=guid)
         ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
 
         with ssh:
@@ -465,9 +463,9 @@ def open_dataset_session(id: str):
 
 
 @app.task()
-def save_dataset_session(id: str, only_modified: bool):
+def save_dataset_session(guid: str, only_modified: bool):
     try:
-        session = DatasetSession.objects.get(guid=id)
+        session = DatasetSession.objects.get(guid=guid)
 
         msg = f"Saving dataset session {session.guid} on {session.agent.name}"
         update_dataset_session(session, [msg])
@@ -497,7 +495,7 @@ def save_dataset_session(id: str, only_modified: bool):
 
 
 @app.task()
-def close_dataset_session(id: str):
+def close_dataset_session(guid: str):
     pass
 
 
@@ -526,7 +524,7 @@ def aggregate_user_statistics(username: str):
     user.profile.save()
 
     # async_to_sync(get_channel_layer().group_send)(f"users-{user.username}", {
-    #     'type': 'update_run_status',
+    #     'type': 'update_status',
     #     'run': map_user(user),
     # })
 

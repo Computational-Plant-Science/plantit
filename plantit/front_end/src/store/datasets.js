@@ -6,7 +6,14 @@ export const datasets = {
     state: () => ({
         opened: null,
         openedSocket: null,
-        loading: true
+        public: [],
+        publicLoading: true,
+        personal: [],
+        personalLoading: true,
+        shared: [],
+        sharedLoading: true,
+        sharing: [],
+        sharingLoading: true
     }),
     mutations: {
         openSocket(state, guid) {
@@ -24,14 +31,116 @@ export const datasets = {
             state.openedSocket.close();
             state.openedSocket = null;
         },
-        setOpened(state, opened) {
-            state.opened = opened;
+        setOpened(state, dataset) {
+            state.opened = dataset;
         },
-        setLoading(state, loading) {
-            state.loading = loading;
+        setPublic(state, datasets) {
+            state.public = datasets;
+        },
+        setPersonal(state, datasets) {
+            state.personal = datasets;
+        },
+        setShared(state, datasets) {
+            state.shared = datasets;
+        },
+        setSharing(state, datasets) {
+            state.sharing = datasets;
+        },
+        setPublicLoading(state, loading) {
+            state.publicLoading = loading;
+        },
+        setPersonalLoading(state, loading) {
+            state.personalLoading = loading;
+        },
+        setSharedLoading(state, loading) {
+            state.sharedLoading = loading;
+        },
+        setSharingLoading(state, loading) {
+            state.sharingLoading = loading;
         }
     },
     actions: {
+        async loadPersonalDatasets({ commit, rootState }) {
+            commit('setPersonalLoading', true);
+            return axios
+                .get(
+                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${rootState.user.profile.djangoProfile.username}/`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`
+                        }
+                    }
+                )
+                .then(response => {
+                    commit('setPersonal', response.data);
+                    commit('setPersonalLoading', false);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    commit('setPersonalLoading', true);
+                    throw error;
+                });
+        },
+        async loadPublicDatasets({ commit, rootState }) {
+            commit('setPublicLoading', true);
+            return axios
+                .get(
+                    'https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/shared',
+                    {
+                        headers: {
+                            Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`
+                        }
+                    }
+                )
+                .then(response => {
+                    commit('setPublic', response.data);
+                    commit('setPublicLoading', false);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    commit('setPublicLoading', true);
+                    throw error;
+                });
+        },
+        async loadSharedDatasets({ commit, rootState }) {
+            commit('setSharedLoading', true);
+            return axios
+                .get(
+                    'https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/',
+                    {
+                        headers: {
+                            Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`
+                        }
+                    }
+                )
+                .then(response => {
+                    commit('setShared', response.data);
+                    commit('setSharedLoading', false);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    commit('setSharedLoading', true);
+                    throw error;
+                });
+        },
+        async loadSharingDatasets({ commit, rootState }) {
+            commit('setSharingLoading', true);
+            return axios
+                .get('/apis/v1/datasets/sharing/', {
+                    headers: {
+                        Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`
+                    }
+                })
+                .then(response => {
+                    commit('setSharing', response.data);
+                    commit('setSharingLoading', false);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    commit('setSharingLoading', true);
+                    throw error;
+                });
+        },
         async loadOpened({ commit }) {
             commit('setLoading', true);
             await axios
@@ -52,9 +161,6 @@ export const datasets = {
         updateOpened({ commit }, session) {
             commit('setOpened', session);
             commit('setLoading', false);
-        },
-        updateLoading({ commit }, loading) {
-            commit('setLoading', loading);
         },
         async open({ commit }, payload) {
             commit('setLoading', true);
@@ -80,7 +186,7 @@ export const datasets = {
                     throw error;
                 });
         },
-        async closeOpened({ commit }) {
+        async close({ commit }) {
             commit('setLoading', true);
             await axios
                 .get(`/apis/v1/datasets/close/`)
@@ -97,6 +203,14 @@ export const datasets = {
         }
     },
     getters: {
+        personalDatasets: state => state.personal,
+        publicDatasets: state => state.public,
+        sharedDatasets: state => state.shared,
+        sharingDatasets: state => state.sharing,
+        personalDatasetsLoading: state => state.personalLoading,
+        publicDatasetsLoading: state => state.publicLoading,
+        sharedDatasetsLoading: state => state.sharedLoading,
+        sharingDatasetsLoading: state => state.sharingLoading,
         openedDataset: state => state.opened,
         openedDatasetLoading: state => state.loading
     }

@@ -16,7 +16,7 @@ export const runs = {
             state.loading = loading;
         },
         update(state, run) {
-            let i = state.runs.findIndex(r => r.id === run.id);
+            let i = state.runs.findIndex(r => r.guid === run.guid);
             if (i === -1) state.runs.unshift(run);
             else Vue.set(state.runs, i, run);
         }
@@ -27,16 +27,16 @@ export const runs = {
             await Promise.all([
                 axios
                     .get(
-                        `/apis/v1/runs/${rootState.user.profile.djangoProfile.username}/get_by_user/`
+                        `/apis/v1/runs/${rootState.user.profile.djangoProfile.username}/`
                     )
                     .then(response => {
-                        var ids = [];
+                        var guids = [];
                         var runs = Array.prototype.slice.call(response.data);
 
                         // filter unique?
                         runs = runs.filter(function(run) {
-                            if (ids.indexOf(run.id) >= 0) return false;
-                            ids.push(run.id);
+                            if (guids.indexOf(run.guid) >= 0) return false;
+                            guids.push(run.guid);
                             return true;
                         });
 
@@ -54,14 +54,17 @@ export const runs = {
             ]);
             commit('setLoading', false);
         },
-        refresh({ commit }, id) {
+        refresh({ commit }, payload) {
+            commit('setLoading', true);
             axios
-                .get(`/apis/v1/runs/${id}/`)
+                .get(`/apis/v1/runs/${payload.owner}/${payload.name}/`)
                 .then(response => {
                     commit('update', response.data);
+                    commit('setLoading', false);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    commit('setLoading', false);
                     return error;
                 });
         },
@@ -70,10 +73,13 @@ export const runs = {
         },
     },
     getters: {
-        run: state => id => {
-            let found = state.runs.find(run => id === run.id);
+        searchRun: state => (owner, name) => {
+            let found = state.runs.find(run => owner === run.owner && name === run.name);
             if (found !== undefined) return found;
             return null;
+        },
+        searchRuns: state => owner => {
+            return state.runs.filter(run => owner === run.owner);
         },
         runs: state => (state.runs === undefined ? [] : state.runs),
         runsLoading: state => state.loading

@@ -700,7 +700,7 @@ export default {
     asyncComputed: {},
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['workflow', 'recentlyRun']),
+        ...mapGetters('workflows', ['workflow', 'recentlyRunWorkflows']),
         ...mapGetters('datasets', [
             'openedDataset',
             'openedDatasetLoading'

@@ -3,6 +3,7 @@ import fileinput
 import json
 import os
 import sys
+import tempfile
 import uuid
 from datetime import timedelta, datetime
 from math import ceil
@@ -17,6 +18,7 @@ from celery.utils.log import get_task_logger
 from channels.layers import get_channel_layer
 from dateutil import parser
 from django.contrib.auth.models import User
+from django.http import HttpResponseNotFound, HttpResponse
 from django.utils import timezone
 
 from plantit import settings
@@ -258,15 +260,17 @@ def prep_run_command(
     return cmd
 
 
-def create_run(username: str, agent_name: str, workflow: dict) -> Run:
+def create_run(username: str, agent_name: str, workflow: dict, name: str = None) -> Run:
     now = timezone.now()
-    user = User.objects.get(owner=username)
+    user = User.objects.get(username=username)
     agent = Agent.objects.get(name=agent_name)
     repo_name = workflow['repo']['owner']['login']
     repo_owner = workflow['repo']['name']
     repo_config = get_repo_config(repo_name, repo_owner, user.profile.github_token)
+    guid = str(uuid.uuid4())
     run = Run.objects.create(
-        guid=str(uuid.uuid4()),
+        guid=guid,
+        name=guid if name is None else name,
         user=user,
         workflow_owner=repo_name,
         workflow_name=repo_owner,
@@ -599,7 +603,7 @@ def update_run_status(run: Run, description: str):
         log.write(f"{description}\n")
 
     async_to_sync(get_channel_layer().group_send)(f"runs-{run.user.username}", {
-        'type': 'update_run_status',
+        'type': 'update_status',
         'run': map_run(run),
     })
 
@@ -734,7 +738,9 @@ def map_run(run: Run):
 
     return {
         'can_restart': can_restart,
-        'id': run.guid,
+        'guid': run.guid,
+        'owner': run.user.username,
+        'name': run.name,
         'job_id': run.job_id,
         'job_status': run.job_status,
         'job_walltime': run.job_elapsed_walltime,
@@ -755,7 +761,7 @@ def map_run(run: Run):
         'workflow_image_url': run.workflow_image_url,
         'result_previews_loaded': run.previews_loaded,
         'cleaned_up': run.cleaned_up,
-        'output_files': json.loads(results) if results is not None else None
+        'output_files': json.loads(results) if results is not None else []
     }
 
 
@@ -784,3 +790,23 @@ def map_repeating_run_task(task: RepeatingRunTask):
         'enabled': task.enabled,
         'last_run': task.last_run_at
     }
+
+
+def get_3d_model(request, guid):
+    path = request.GET.get('path')
+    file = path.rpartition('/')[2]
+
+    try:
+        run = Run.objects.get(guid=guid)
+    except:
+        return HttpResponseNotFound()
+
+    client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
+    work_dir = join(run.agent.workdir, run.workdir)
+
+    with tempfile.NamedTemporaryFile() as temp_file:
+        with client:
+            with client.client.open_sftp() as sftp:
+                sftp.chdir(work_dir)
+                sftp.get(file, temp_file.name)
+        return HttpResponse(temp_file, content_type="applications/octet-stream")

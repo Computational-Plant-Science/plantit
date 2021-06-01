@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 from datetime import timedelta
 
@@ -23,14 +24,66 @@ class AgentsViewSet(viewsets.ModelViewSet):
     queryset = Agent.objects.all()
     serializer_class = AgentSerializer
     permission_classes = (IsAuthenticated,)
+    logger = logging.getLogger(__name__)
 
     @action(methods=['get'], detail=False)
-    def get_all(self, request):
-        agents = list(Agent.objects.filter(public=True))
-        return JsonResponse({'agents': [map_agent(agent) for agent in agents]})
+    def get_by_query(self, request):
+        agents = Agent.objects.all()
+        public = request.GET.get('public')
+        agent_name = request.GET.get('name')
+        agent_owner = request.GET.get('owner')
+
+        if public is not None and bool(public):
+            self.logger.info(f"Filtering agents by {'public' if bool(public) else 'private'} visibility")
+            agents = agents.filter(public=bool(public))
+        if agent_name is not None and type(agent_name) is str:
+            self.logger.info(f"Filtering agents by name: {agent_name}")
+            agents = agents.filter(name=agent_name)
+        if agent_owner is not None and type(agent_owner) is str:
+            self.logger.info(f"Filtering agents by owner: {agent_owner}")
+            try:
+                agents = agents.filter(user=User.objects.get(username=agent_owner))
+            except:
+                return HttpResponseNotFound()
+
+        return JsonResponse({'agents': [map_agent(agent, AgentRole.own) for agent in agents]})
+
+    @action(methods=['get'], detail=False)
+    def get_by_name(self, request):
+        agent_name = request.GET.get('name')
+
+        try:
+            agent = Agent.objects.get(name=agent_name)
+        except:
+            return HttpResponseNotFound()
+
+        user = request.user
+        policies = AgentAccessPolicy.objects.filter(agent=agent)
+
+        try:
+            access_requests = AgentAccessRequest.objects.filter(agent=agent)
+        except:
+            access_requests = None
+
+        if agent not in [policy.agent for policy in policies]:
+            return JsonResponse(map_agent(agent, AgentRole.none, None, access_requests))
+
+        try:
+            role = AgentAccessPolicy.objects.get(user=user, agent=agent).role
+        except:
+            role = AgentRole.none
+        return JsonResponse(map_agent(agent, role, list(policies), access_requests))
+
+    @action(methods=['get'], detail=False)
+    def get_by_username(self, request):
+        user = request.user
+        policies = AgentAccessPolicy.objects.filter(user=user, role__in=[AgentRole.own, AgentRole.run])
+        agents = [map_agent(agent, policy.role, list(policies)) for agent, policy in
+                  zip([policy.agent for policy in policies], policies) if policy.role != AgentRole.none]
+        return JsonResponse({'agents': agents})
 
     @action(methods=['post'], detail=False)
-    def new(self, request):
+    def connect(self, request):
         # make sure we can authenticate
         ssh = SSH(
             host=request.data['config']['hostname'],
@@ -48,6 +101,8 @@ class AgentsViewSet(viewsets.ModelViewSet):
         executor = str(request.data['config']['executor']).lower()
         agent, created = Agent.objects.get_or_create(
             name=request.data['config']['name'],
+            guid=str(uuid.uuid4()),
+            user=request.user,
             description=request.data['config']['description'],
             workdir=request.data['config']['workdir'],
             username=request.user.username,
@@ -61,19 +116,23 @@ class AgentsViewSet(viewsets.ModelViewSet):
             callbacks=False,
             executor=executor)
 
-        if created and executor != 'local':
-            agent.max_walltime = int(request.data['config']['max_walltime'])
-            agent.max_mem = int(request.data['config']['max_mem'])
-            agent.max_cores = int(request.data['config']['max_cores'])
-            agent.max_nodes = int(request.data['config']['max_nodes'])
-            agent.queue = request.data['config']['queue']
-            agent.project = request.data['config']['project']
-            agent.header_skip = request.data['config']['header_skip']
-            agent.gpu = bool(request.data['config']['gpu'])
-            agent.gpu_queue = request.data['config']['gpu_queue']
-            agent.job_array = bool(request.data['config']['job_array'])
-            agent.launcher = bool(request.data['config']['launcher'])
-            agent.save()
+        if created:
+            if executor != 'local':
+                agent.max_walltime = int(request.data['config']['max_walltime'])
+                agent.max_mem = int(request.data['config']['max_mem'])
+                agent.max_cores = int(request.data['config']['max_cores'])
+                agent.max_nodes = int(request.data['config']['max_nodes'])
+                agent.queue = request.data['config']['queue']
+                agent.project = request.data['config']['project']
+                agent.header_skip = request.data['config']['header_skip']
+                agent.gpu = bool(request.data['config']['gpu'])
+                agent.gpu_queue = request.data['config']['gpu_queue']
+                agent.job_array = bool(request.data['config']['job_array'])
+                agent.launcher = bool(request.data['config']['launcher'])
+                agent.save()
+
+            policy = AgentAccessPolicy.objects.create(user=request.user, agent=agent, role=AgentRole.own)
+            return JsonResponse({'created': created, 'agent': map_agent(agent, policy.role)})
 
         return JsonResponse({'created': created, 'agent': map_agent(agent)})
 
@@ -190,32 +249,6 @@ class AgentsViewSet(viewsets.ModelViewSet):
         return JsonResponse({'public': agent.public})
 
     @action(methods=['get'], detail=False)
-    def get_by_name(self, request):
-        agent_name = request.GET.get('name')
-
-        try:
-            agent = Agent.objects.get(name=agent_name)
-        except:
-            return HttpResponseNotFound()
-
-        user = request.user
-        policies = AgentAccessPolicy.objects.filter(agent=agent)
-
-        try:
-            access_requests = AgentAccessRequest.objects.filter(agent=agent)
-        except:
-            access_requests = None
-
-        if agent not in [policy.agent for policy in policies]:
-            return JsonResponse(map_agent(agent, AgentRole.none, None, access_requests))
-
-        try:
-            role = AgentAccessPolicy.objects.get(user=user, agent=agent).role
-        except:
-            role = AgentRole.none
-        return JsonResponse(map_agent(agent, role, list(policies), access_requests))
-
-    @action(methods=['get'], detail=False)
     def status(self, request):
         agent_name = request.GET.get('name')
 
@@ -248,14 +281,6 @@ class AgentsViewSet(viewsets.ModelViewSet):
 
         policies = AgentAccessPolicy.objects.filter(agent=agent)
         JsonResponse({'policies': list(policies)})
-
-    @action(methods=['get'], detail=False)
-    def get_by_username(self, request):
-        user = request.user
-        policies = AgentAccessPolicy.objects.filter(user=user, role__in=[AgentRole.own, AgentRole.run])
-        agents = [map_agent(agent, policy.role, list(policies)) for agent, policy in
-                     zip([policy.agent for policy in policies], policies) if policy.role != AgentRole.none]
-        return JsonResponse({'agents': agents})
 
     @action(methods=['post'], detail=False)
     def create_task(self, request):

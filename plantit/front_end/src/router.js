@@ -65,7 +65,7 @@ let router = new Router({
                     },
                     children: [
                         {
-                            path: 'user/:username',
+                            path: ':username',
                             name: 'user',
                             props: true,
                             component: user,
@@ -108,7 +108,7 @@ let router = new Router({
                     },
                     children: [
                         {
-                            path: 'dataset/:path',
+                            path: ':path',
                             name: 'dataset',
                             props: true,
                             component: dataset,
@@ -190,7 +190,7 @@ let router = new Router({
                     },
                     children: [
                         {
-                            path: 'agent/:name',
+                            path: ':guid',
                             name: 'agent',
                             props: true,
                             component: agent,
@@ -231,7 +231,7 @@ let router = new Router({
                     },
                     children: [
                         {
-                            path: 'run/:id',
+                            path: ':owner/:name',
                             name: 'run',
                             props: true,
                             component: run,
@@ -287,17 +287,17 @@ router.beforeEach(async (to, from, next) => {
         });
     }
     if (to.name === 'run') {
-        to.meta.title = `Run: ${to.params.id}`;
+        to.meta.title = `Run: ${to.params.owner}/${to.params.name}`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `${to.params.id}`
+            text: `${to.params.owner}/${to.params.name}`
         });
     }
     if (to.name === 'agent') {
-        to.meta.title = `Agent: ${to.params.name}`;
+        to.meta.title = `Agent: ${to.params.guid}`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `${to.params.id}`
+            text: `${to.params.guid}`
         });
     }
     // if (to.name === 'dataset') to.meta.title = `Dataset: ${to.params.path}`;

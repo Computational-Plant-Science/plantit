@@ -22,14 +22,29 @@
                         >
                             {{ publicContext ? 'Public' : 'Your' }} Workflows
                         </h2></b-col
-                    >
+                    ><b-col md="auto" align-self="center"
+                        ><small
+                            >powered by
+                            <i class="fab fa-github fa-fw fa-1x"></i></small
+                        ><b-img
+                            class="mt-1"
+                            rounded
+                            style="max-height: 1.2rem;"
+                            right
+                            :src="
+                                profile.darkMode
+                                    ? require('../../assets/logos/github_white.png')
+                                    : require('../../assets/logos/github_black.png')
+                            "
+                        ></b-img
+                    ></b-col>
                     <b-col
                         md="auto"
                         class="ml-0"
                         align-self="center"
                         v-if="!publicContext"
                         ><b-button
-                            :disabled="personalLoading"
+                            :disabled="workflowsLoading"
                             :variant="
                                 profile.darkMode ? 'outline-light' : 'white'
                             "
@@ -41,7 +56,7 @@
                         >
                             <b-spinner
                                 small
-                                v-if="personalLoading"
+                                v-if="workflowsLoading"
                                 label="Connecting..."
                                 :variant="profile.darkMode ? 'light' : 'dark'"
                                 class="mr-1"
@@ -52,10 +67,7 @@
                     >
                     <b-col md="auto" class="ml-0" align-self="center"
                         ><b-button
-                            :disabled="
-                                (!publicContext && personalLoading) ||
-                                    (publicContext && publicLoading)
-                            "
+                            :disabled="workflowsLoading"
                             :variant="
                                 profile.darkMode ? 'outline-light' : 'white'
                             "
@@ -67,10 +79,7 @@
                         >
                             <b-spinner
                                 small
-                                v-if="
-                                    (!publicContext && personalLoading) ||
-                                        (publicContext && publicLoading)
-                                "
+                                v-if="workflowsLoading"
                                 label="Refreshing..."
                                 :variant="profile.darkMode ? 'light' : 'dark'"
                                 class="mr-1"
@@ -81,10 +90,7 @@
                     >
                     <b-col md="auto" align-self="center"
                         ><b-button
-                            :disabled="
-                                (!publicContext && personalLoading) ||
-                                    (publicContext && publicLoading)
-                            "
+                            :disabled="workflowsLoading"
                             :variant="
                                 profile.darkMode ? 'outline-light' : 'white'
                             "
@@ -106,7 +112,20 @@
                     ></b-row
                 >
                 <hr class="mt-2 mb-2" style="border-color: gray" />
-                <b-card-group deck columns>
+                <b-row v-if="workflowsLoading" class="mt-2">
+                    <b-col class="text-center">
+                        <b-spinner
+                            type="grow"
+                            label="Loading..."
+                            variant="secondary"
+                        ></b-spinner>
+                    </b-col>
+                </b-row>
+                <b-card-group
+                    deck
+                    columns
+                    v-else-if="getWorkflows.length !== 0"
+                >
                     <b-card
                         v-for="workflow in getWorkflows"
                         :key="workflow.repo.name"
@@ -122,14 +141,14 @@
                     >
                         <blurb :showPublic="false" :workflow="workflow"></blurb>
                     </b-card>
-                    <b-row v-if="getWorkflows.length === 0"
-                        ><b-col class="text-danger">{{
-                            publicContext
-                                ? 'No workflows have been published by the community yet.'
-                                : "You haven't connected any workflows yet."
-                        }}</b-col></b-row
-                    >
                 </b-card-group>
+                <b-row v-else
+                    ><b-col class="text-danger">{{
+                        publicContext
+                            ? 'No workflows have been published by the community yet.'
+                            : "You haven't connected any workflows yet."
+                    }}</b-col></b-row
+                >
             </div>
             <router-view
                 v-else
@@ -194,7 +213,7 @@
                     v-else-if="workflowSearchResult !== null"
                 >
                     <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Repository
+                        Repository Details
                     </h5>
                     <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <b-link
@@ -214,9 +233,9 @@
                         <br />
                         Language: {{ workflowSearchResult.repo.language }}
                         <br />
-                        Stars: {{ workflowSearchResult.repo.stargazers_count }}
+                        Stargazers:
+                        {{ workflowSearchResult.repo.stargazers_count }}
                     </p>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
                     <div v-if="workflowSearchResult.validation.is_valid">
                         <h5
                             :class="
@@ -435,7 +454,6 @@ import { mapGetters } from 'vuex';
 import * as Sentry from '@sentry/browser';
 import axios from 'axios';
 import moment from 'moment';
-import router from '@/router';
 
 export default {
     name: 'workflows',
@@ -456,13 +474,13 @@ export default {
         };
     },
     async mounted() {
-        await Promise.all([
-            this.$store.dispatch(
-                'workflows/loadPersonal',
-                this.profile.githubProfile.login
-            ),
-            this.$store.dispatch('workflows/loadPublic')
-        ]);
+        // await Promise.all([
+        //     this.$store.dispatch(
+        //         'workflows/loadPersonal',
+        //         this.profile.githubProfile.login
+        //     ),
+        //     this.$store.dispatch('workflows/loadPublic')
+        // ]);
     },
     watch: {
         // TODO get rid of this, it's hacky
@@ -506,10 +524,6 @@ export default {
                     this.isLoading = false;
                     if (error.response.status === 500) throw error;
                 });
-        },
-        setWorkflowName(result) {
-            this.workflowName = result;
-            this.isOpen = false;
         },
         handleClickOutside(event) {
             if (!this.$el.contains(event.target)) {
@@ -563,17 +577,23 @@ export default {
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('workflows', [
-            'personal',
-            'personalLoading',
-            'public',
-            'publicLoading'
+            'personalWorkflows',
+            'personalWorkflowsLoading',
+            'publicWorkflows',
+            'publicWorkflowsLoading'
         ]),
         isRootPath() {
             return this.$route.name === 'workflows';
         },
         getWorkflows() {
-            if (this.publicContext) return this.public;
-            else return this.personal;
+            return this.publicContext
+                ? this.publicWorkflows
+                : this.personalWorkflows;
+        },
+        workflowsLoading() {
+            return this.publicContext
+                ? this.publicWorkflowsLoading
+                : this.personalWorkflowsLoading;
         },
         workflowInvalid() {
             return (

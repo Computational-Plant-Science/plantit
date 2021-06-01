@@ -17,7 +17,7 @@ class RunConsumer(WebsocketConsumer):
 
     def update_status(self, event):
         run = event['run']
-        print(f"Sending websocket update for run {run['id']} with status {run['job_status']}")
+        print(f"Sending websocket update for run {run['name']} with status {run['job_status']}")
         self.send(text_data=json.dumps({
             'run': run,
         }))

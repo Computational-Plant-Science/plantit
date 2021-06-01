@@ -10,6 +10,7 @@ urlpatterns = [
     path(r'<owner>/<name>/refresh/', views.refresh),
     path(r'<owner>/<name>/readme/', views.readme),
     path(r'<owner>/<name>/connect/', views.connect),
+    path(r'<owner>/<name>/disconnect/', views.disconnect),
 ]
 
 websocket_urlpatterns = [

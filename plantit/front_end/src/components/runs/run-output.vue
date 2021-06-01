@@ -51,7 +51,7 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['recentlyRun']),
+        ...mapGetters('workflows', ['recentlyRunWorkflows']),
         flowKey: function() {
             return `${this.$router.currentRoute.params.username}/${this.$router.currentRoute.params.name}`;
         }
@@ -61,8 +61,8 @@ export default {
             `/iplant/home/${this.profile.djangoProfile.username}/`,
             this.profile.djangoProfile.profile.cyverse_token
         );
-        if (this.flowKey in this.workflowsRecentlyRun) {
-            let flowConfig = this.workflowsRecentlyRun[this.flowKey];
+        if (this.flowKey in this.recentlyRunWorkflows) {
+            let flowConfig = this.recentlyRunWorkflows[this.flowKey];
             if (
                 flowConfig.output !== undefined &&
                 flowConfig.output.to !== undefined

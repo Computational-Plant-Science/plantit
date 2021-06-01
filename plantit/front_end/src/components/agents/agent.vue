@@ -794,7 +794,7 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['recentlyRun']),
+        ...mapGetters('workflows', ['recentlyRunWorkflows']),
         ...mapGetters('datasets', [
             'openedDatasetLoading',
             'openedDataset'

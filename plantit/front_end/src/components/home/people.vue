@@ -36,8 +36,8 @@
                         <b-tabs
                             justified
                             pills
-                            active-nav-item-class="text-dark bg-white"
-                            nav-class=""
+                            nav-class="bg-transparent"
+                    active-nav-item-class="bg-info text-dark"
                         >
                             <br />
                             <b-tab title="Active" active>

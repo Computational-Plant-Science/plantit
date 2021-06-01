@@ -1,27 +1,29 @@
 from django.urls import path
 
+import plantit.runs.utils
 from . import views, consumers
 
 urlpatterns = [
-    path(r'', views.runs),
-    path(r'get_total_count/', views.get_total_count),
-    path(r'<username>/get_by_user/', views.get_by_user),
-    path(r'<username>/get_by_user_and_workflow/<workflow>/<page>/', views.get_runs_by_user_and_workflow),
-    path(r'<username>/get_delayed_by_user_and_workflow/<workflow>/', views.get_delayed_runs_by_user_and_workflow),
-    path(r'<username>/get_repeating_by_user_and_workflow/<workflow>/', views.get_repeating_runs_by_user_and_workflow),
-    path(r'<username>/remove_delayed/<workflow>/', views.remove_delayed),
-    path(r'<username>/remove_repeating/<workflow>/', views.remove_repeating),
-    path(r'<username>/toggle_repeating/<workflow>/', views.toggle_repeating),
-    path(r'<id>/', views.run),
-    path(r'<id>/output/<file>/', views.get_output_file),
-    path(r'<id>/file_text/', views.get_file_text),
-    path(r'<id>/thumbnail/', views.get_thumbnail),
-    path(r'<id>/3d_model/', views.get_3d_model),
-    path(r'<id>/submission_logs/', views.get_submission_logs),
-    path(r'<id>/container_logs/', views.get_container_logs),
-    path(r'<id>/status/', views.status),
-    path(r'<id>/cancel/', views.cancel),
-    path(r'<id>/delete/', views.delete)
+    path(r'', views.get_all_or_create),
+    path(r'<owner>/', views.get_by_owner),
+    path(r'<owner>/<name>/', views.get_by_owner_and_name),
+    path(r'<owner>/<name>/exists/', views.exists),
+    path(r'<owner>/<name>/status/', views.status),
+    path(r'<owner>/<name>/cancel/', views.cancel),
+    path(r'<owner>/<name>/delete/', views.delete),
+    path(r'<owner>/<name>/output/<file>/', views.get_output_file),
+    path(r'<owner>/<name>/file_text/', views.get_file_text),
+    path(r'<owner>/<name>/thumbnail/', views.get_thumbnail),
+    path(r'<owner>/<name>/3d_model/', plantit.runs.utils.get_3d_model),
+    path(r'<owner>/<name>/submission_logs/', views.get_submission_logs),
+    path(r'<owner>/<name>/container_logs/', views.get_container_logs),
+    path(r'search/<owner>/<workflow_name>/<page>/', views.search),
+    path(r'search_delayed/<owner>/<workflow_name>/', views.search_delayed),
+    path(r'search_repeating/<owner>/<workflow_name>/', views.search_repeating),
+    # path(r'<owner>/<workflow_name>/remove_delayed', views.remove_delayed),  # TODO move to separate API (Schedules?)
+    # path(r'<owner>/<workflow_name>/remove_repeating', views.remove_repeating),
+    # path(r'<owner>/<workflow_name>/toggle_repeating', views.toggle_repeating),
+    # path(r'get_total_count/', views.get_total_count),  # TODO move to separate Stats API
 ]
 
 websocket_urlpatterns = [

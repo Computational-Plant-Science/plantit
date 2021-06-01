@@ -79,7 +79,7 @@
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
                                     v-for="run in filteredRunningRuns"
-                                    v-bind:key="run.id"
+                                    v-bind:key="run.name"
                                     :class="
                                         profile.darkMode
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
@@ -87,7 +87,10 @@
                                     "
                                     :to="{
                                         name: 'run',
-                                        params: { id: run.id }
+                                        params: {
+                                            owner: run.owner,
+                                            name: run.name
+                                        }
                                     }"
                                 >
                                     <b-img
@@ -110,10 +113,13 @@
                                         "
                                         :to="{
                                             name: 'run',
-                                            params: { id: run.id }
+                                            params: {
+                                                owner: run.owner,
+                                                name: run.name
+                                            }
                                         }"
                                         replace
-                                        >{{ run.id }}</b-link
+                                        >{{ run.name }}</b-link
                                     >
                                     <br />
                                     <div
@@ -202,7 +208,7 @@
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
                                     v-for="run in filteredCompletedRuns"
-                                    v-bind:key="run.id"
+                                    v-bind:key="run.name"
                                     :class="
                                         profile.darkMode
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
@@ -232,10 +238,13 @@
                                                 "
                                                 :to="{
                                                     name: 'run',
-                                                    params: { id: run.id }
+                                                    params: {
+                                                        owner: run.owner,
+                                                        name: run.name
+                                                    }
                                                 }"
                                                 replace
-                                                >{{ run.id }}</b-link
+                                                >{{ run.name }}</b-link
                                             >
                                         </b-col>
                                     </b-row>
@@ -322,7 +331,7 @@
                                         </b-col></b-row
                                     >
                                     <b-modal
-                                        :id="'delete ' + run.id"
+                                        :id="'delete ' + run.name"
                                         :title-class="
                                             profile.darkMode
                                                 ? 'text-white'
@@ -694,7 +703,7 @@
                                 Github</span
                             >
                         </b-nav-item>
-                        <b-nav-item
+                        <!--<b-nav-item
                             href="#"
                             class="mt-2"
                             :link-class="
@@ -713,7 +722,7 @@
                                 ><i class="fab fa-slack fa-1x fa-fw"></i>
                                 Slack</span
                             >
-                        </b-nav-item>
+                        </b-nav-item>-->
                     </b-navbar-nav>
                 </transition>
                 <b-navbar-nav class="ml-auto p-0 mt-1">
@@ -976,9 +985,9 @@
                     class="text-dark"
                     :to="{
                         name: 'run',
-                        params: { id: toastRun.id }
+                        params: { name: toastRun.name }
                     }"
-                    >{{ `Run ${toastRun.id}` }}</b-link
+                    >{{ `Run ${toastRun.name}` }}</b-link
                 ></template
             >
             <small>
@@ -1030,7 +1039,7 @@ export default {
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null,
-          notFound: false,
+            notFound: false,
             crumbs: [],
             titleContent: 'brand',
             currentRunPage: 0,
@@ -1127,7 +1136,15 @@ export default {
 
         await Promise.all([
             this.$store.dispatch('runs/loadAll'),
-            this.$store.dispatch('notifications/loadAll')
+            this.$store.dispatch('notifications/loadAll'),
+            this.$store.dispatch('workflows/loadPersonal', this.profile.githubProfile.login),
+            this.$store.dispatch('workflows/loadPublic'),
+            this.$store.dispatch('agents/loadPersonal', this.profile.djangoProfile.username),
+            this.$store.dispatch('agents/loadPublic'),
+            this.$store.dispatch('datasets/loadPublicDatasets'),
+            this.$store.dispatch('datasets/loadPersonalDatasets'),
+            this.$store.dispatch('datasets/loadSharedDatasets'),
+            this.$store.dispatch('datasets/loadSharingDatasets')
             // this.$store.dispatch('datasets/loadOpened')
         ]);
     },
@@ -1217,7 +1234,7 @@ export default {
         },
         onDelete(run) {
             axios
-                .get(`/apis/v1/runs/${run.id}/delete/`)
+                .get(`/apis/v1/runs/${run.owner}/${run.name}/delete/`)
                 .then(response => {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
@@ -1225,7 +1242,7 @@ export default {
                         this.$store.dispatch('runs/loadAll');
                         if (
                             this.$router.currentRoute.name === 'run' &&
-                            run.id === this.$router.currentRoute.params.id
+                            run.name === this.$router.currentRoute.params.name
                         )
                             router.push({
                                 name: 'user',
@@ -1244,7 +1261,7 @@ export default {
                 });
         },
         showDeletePrompt(run) {
-            this.$bvModal.show('delete ' + run.id);
+            this.$bvModal.show('delete ' + run.name);
         },
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');

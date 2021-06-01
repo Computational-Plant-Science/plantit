@@ -7,11 +7,9 @@
         <b-container
             fluid
             class="m-0 p-0"
-            style="min-height: 98vh; background-color: transparent;"
+            style="background-color: transparent;"
         >
             <navigation v-if="$route.path !== '/'"></navigation>
-            <br/>
-          <br/>
             <router-view
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             ></router-view>

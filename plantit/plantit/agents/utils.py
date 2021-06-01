@@ -22,6 +22,7 @@ def map_agent(
     tasks = AgentTask.objects.filter(agent=agent)
     mapped = {
         'name': agent.name,
+        'guid': agent.guid,
         'description': agent.description,
         'hostname': agent.hostname,
         'pre_commands': agent.pre_commands,
@@ -39,6 +40,9 @@ def map_agent(
         'tasks': [map_agent_task(task) for task in tasks],
         'logo': agent.logo
     }
+
+    if agent.user is not None:
+        mapped['user'] = agent.user.username
 
     if role is not None:
         mapped['role'] = role.value.lower()

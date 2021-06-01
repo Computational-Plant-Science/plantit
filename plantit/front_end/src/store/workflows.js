@@ -102,7 +102,7 @@ export const workflows = {
                     }
                 })
                 .then(response => {
-                    commit('update', response.data);
+                    commit('addOrUpdate', response.data);
                     commit('setPersonalLoading', false);
                     commit('setPublicLoading', false);
                 })
@@ -126,7 +126,7 @@ export const workflows = {
                     }
                 )
                 .then(response => {
-                    commit('update', response.data);
+                    commit('addOrUpdate', response.data);
                     commit('setPersonalLoading', false);
                     commit('setPublicLoading', false);
                 })
@@ -152,17 +152,22 @@ export const workflows = {
     },
     getters: {
         workflow: state => (owner, name) => {
-            let found = state.public.find(
+            var found = state.public.find(
+                repo =>
+                    owner === repo.repo.owner.login && name === repo.repo.name
+            );
+            if (found !== undefined) return found;
+            found = state.personal.find(
                 repo =>
                     owner === repo.repo.owner.login && name === repo.repo.name
             );
             if (found !== undefined) return found;
             return null;
         },
-        public: state => state.public,
-        publicLoading: state => state.publicLoading,
-        personal: state => state.personal,
-        personalLoading: state => state.personalLoading,
-        recentlyRun: state => state.recentlyRun
+        publicWorkflows: state => state.public,
+        publicWorkflowsLoading: state => state.publicLoading,
+        personalWorkflows: state => state.personal,
+        personalWorkflowsLoading: state => state.personalLoading,
+        recentlyRunWorkflows: state => state.recentlyRun
     }
 };

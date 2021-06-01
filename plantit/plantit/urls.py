@@ -1,5 +1,8 @@
+from django.conf import settings
 from django.conf.urls import url, include
+from django.conf.urls.static import static
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.http import HttpResponseRedirect
 from django.views.generic import RedirectView
 from rest_framework import routers
 
@@ -38,8 +41,8 @@ urlpatterns = [
     url('workflows/', include("plantit.workflows.urls")),
     url('datasets/', include("plantit.datasets.urls")),
     url('notifications/', include("plantit.notifications.urls")),
-    url('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'))),
-]
+    # url('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.ico'))),
+] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
 websocket_urlpatterns = [
     path(r'ws/runs/<username>/', RunConsumer.as_asgi()),

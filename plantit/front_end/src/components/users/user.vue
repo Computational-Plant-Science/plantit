@@ -537,7 +537,7 @@
                                 <b-row
                                     v-if="
                                         personal.length === 0 &&
-                                            !personalLoading
+                                            !personalWorkflowsLoading
                                     "
                                     ><b-col
                                         ><span class="text-danger"
@@ -2074,6 +2074,8 @@ export default {
             workflowSearchResult: null,
             workflowExists: false,
             arrowCounter: -1,
+            agents: [],
+            agentsLoading: false,
             agentName: '',
             agentHost: '',
             agentDescription: '',
@@ -2104,9 +2106,6 @@ export default {
             sharedDatasets: [],
             sharingDatasets: [],
             data: {},
-            loadingMoreRuns: false,
-            agents: [],
-            agentsLoading: false,
             alertEnabled: false,
             alertMessage: '',
             runSearchText: '',
@@ -2120,7 +2119,7 @@ export default {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('runs', ['runsLoading', 'runs']),
         ...mapGetters('notifications', ['notifications']),
-        ...mapGetters('workflows', ['personal', 'personalLoading']),
+        ...mapGetters('workflows', ['personalWorkflows', 'personalWorkflowsLoading']),
         ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
         unreadNotifications() {
             return this.notifications.filter(n => !n.read);

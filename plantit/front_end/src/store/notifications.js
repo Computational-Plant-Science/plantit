@@ -28,7 +28,7 @@ export const notifications = {
             commit('setLoading', true);
             await axios
                 .get(
-                    `/apis/v1/notifications/${rootState.user.profile.djangoProfile.username}/get_by_user/?page=0`
+                    `/apis/v1/notifications/${rootState.user.profile.djangoProfile.username}/`
                 )
                 .then(response => {
                     var ids = [];

@@ -58,21 +58,9 @@
                         ></b-img>
                     </b-link>
                 </b-card>
-                <b-card
-                    align="center"
-                    bg-variant="transparent"
-                    border-variant="white"
-                    style="border: none; box-shadow: none"
-                >
-                    <b-link href="http://www.xsede.org/">
-                        <b-img
-                            :src="require('@/assets/sponsors/xsede.png')"
-                            height="60px"
-                            alt="XSEDE"
-                        ></b-img>
-                    </b-link>
-                </b-card>
-                <b-card
+
+              <b-card
+                  class="mt-1"
                     align="center"
                     bg-variant="transparent"
                     border-variant="white"
@@ -97,6 +85,20 @@
                             :src="require('@/assets/sponsors/uga.png')"
                             height="47px"
                             alt="University Of Georgia"
+                        ></b-img>
+                    </b-link>
+                </b-card>
+              <b-card
+                    align="center"
+                    bg-variant="transparent"
+                    border-variant="white"
+                    style="border: none; box-shadow: none"
+                >
+                    <b-link href="http://www.xsede.org/">
+                        <b-img
+                            :src="require('@/assets/sponsors/xsede.png')"
+                            height="60px"
+                            alt="XSEDE"
                         ></b-img>
                     </b-link>
                 </b-card>
