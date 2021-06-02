@@ -141,7 +141,7 @@ services:
     privileged: true
     restart: always
     volumes:
-      - ./opt/plantit-cli/runs/:/opt/plantit-cli/runs/
+      - ./opt/plantit-cli/submissions/:/opt/plantit-cli/submissions/
   nginx:
     image: nginx
     ports:

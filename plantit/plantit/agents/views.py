@@ -124,6 +124,26 @@ def get_by_name(request, name):
     return JsonResponse(map_agent(agent, role, list(policies), access_requests))
 
 
+@api_view(['GET'])
+@login_required
+def exists(request, name):
+    try:
+        Agent.objects.get(name=name)
+        return JsonResponse({'exists': True})
+    except:
+        return JsonResponse({'exists': False})
+
+
+@api_view(['GET'])
+@login_required
+def host_exists(request, host):
+    try:
+        Agent.objects.get(hostname=host)
+        return JsonResponse({'exists': True})
+    except:
+        return JsonResponse({'exists': False})
+
+
 @api_view(['POST'])
 @login_required
 def request_access(request, name):

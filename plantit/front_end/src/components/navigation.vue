@@ -530,7 +530,11 @@
                                                         : 'light'
                                                 "
                                                 class="text-left m-0"
-                                                @click="markNotificationRead(notification)"
+                                                @click="
+                                                    markNotificationRead(
+                                                        notification
+                                                    )
+                                                "
                                             >
                                                 Mark Read
                                                 <i class="fas fa-check"></i>
@@ -905,6 +909,20 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
+        <br />
+        <br />
+        <div v-if="alerts.length > 0">
+            <b-alert
+                class="m-0"
+                show
+                v-for="alert in alerts"
+                v-bind:key="alert.guid"
+                :variant="alert.variant"
+                dismissible
+                @dismissed="removeAlert(alert)"
+                >{{ alert.message }}</b-alert
+            >
+        </div>
         <b-toast
             auto-hide-delay="10000"
             v-if="$route.name !== 'submission' && submissionToasted !== null"
@@ -979,6 +997,7 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile']),
+        ...mapGetters('alerts', ['alerts']),
         ...mapGetters('submissions', [
             'submissions',
             'submissionsLoading',
@@ -1022,9 +1041,15 @@ export default {
         await Promise.all([
             this.$store.dispatch('submissions/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
-            this.$store.dispatch('workflows/loadPersonal', this.profile.githubProfile.login),
+            this.$store.dispatch(
+                'workflows/loadPersonal',
+                this.profile.githubProfile.login
+            ),
             this.$store.dispatch('workflows/loadPublic'),
-            this.$store.dispatch('agents/loadPersonal', this.profile.djangoProfile.username),
+            this.$store.dispatch(
+                'agents/loadPersonal',
+                this.profile.djangoProfile.username
+            ),
             this.$store.dispatch('agents/loadPublic'),
             this.$store.dispatch('datasets/loadPublic'),
             this.$store.dispatch('datasets/loadPersonal'),
@@ -1035,13 +1060,19 @@ export default {
         // TODO move websockets to vuex
         let wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
 
-        this.workflowSocket = new WebSocket(`${wsProtocol}${window.location.host}/ws/workflows/${this.profile.githubProfile.login}/`);
+        this.workflowSocket = new WebSocket(
+            `${wsProtocol}${window.location.host}/ws/workflows/${this.profile.githubProfile.login}/`
+        );
         this.workflowSocket.onmessage = this.handleWorkflowEvent;
 
-        this.submissionSocket = new WebSocket(`${wsProtocol}${window.location.host}/ws/submissions/${this.profile.djangoProfile.username}/`);
+        this.submissionSocket = new WebSocket(
+            `${wsProtocol}${window.location.host}/ws/submissions/${this.profile.djangoProfile.username}/`
+        );
         this.submissionSocket.onmessage = this.handleSubmissionEvent;
 
-        this.notificationSocket = new WebSocket(`${wsProtocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`);
+        this.notificationSocket = new WebSocket(
+            `${wsProtocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
+        );
         this.notificationSocket.onmessage = this.handleNotificationEvent;
     },
     watch: {
@@ -1050,6 +1081,9 @@ export default {
         }
     },
     methods: {
+        removeAlert(alert) {
+            this.$store.dispatch('alerts/remove', alert);
+        },
         async toggleDarkMode() {
             this.togglingDarkMode = true;
             await this.$store.dispatch('user/toggleDarkMode');

@@ -41,7 +41,7 @@
                         >
                             <b-spinner
                                 small
-                                v-if="agentsLoading"
+                                v-if="agentsLoading || addingAgent"
                                 label="Connecting..."
                                 :variant="profile.darkMode ? 'light' : 'dark'"
                                 class="mr-1"
@@ -108,7 +108,7 @@
                 <b-card-group deck columns v-else-if="getAgents.length !== 0">
                     <b-card
                         v-for="agent in getAgents"
-                        v-bind:key="agent.guid"
+                        v-bind:key="agent.name"
                         :bg-variant="profile.darkMode ? 'dark' : 'white'"
                         :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
                         border-variant="default"
@@ -133,7 +133,7 @@
                                         :to="{
                                             name: 'agent',
                                             params: {
-                                                guid: agent.guid
+                                                name: agent.name
                                             }
                                         }"
                                     >
@@ -245,25 +245,33 @@
                 public, other users will receive an authentication prompt prior
                 to submitting workflows.
             </p>
+            <b-alert variant="danger" :show="agentNameExists"
+                >This name is already in use. Please pick another.</b-alert
+            >
             <b-form-group label="Name" description="A name for this agent.">
                 <b-form-input
-                    :state="agentName !== ''"
+                    :state="agentName !== '' && !agentNameExists"
                     v-model="agentName"
                     type="text"
                     placeholder="Enter a name"
                     required
+                    @input="onAgentNameChange"
                 ></b-form-input>
             </b-form-group>
+            <b-alert variant="danger" :show="agentHostExists"
+                >This host is already in use.</b-alert
+            >
             <b-form-group
                 label="Host"
                 description="This agent's FQDN or IP address."
             >
                 <b-form-input
-                    :state="agentHost !== ''"
+                    :state="agentHost !== '' && !agentHostExists"
                     v-model="agentHost"
                     type="text"
                     placeholder="Enter a host or IP address"
                     required
+                    @input="onAgentHostChange"
                 ></b-form-input>
             </b-form-group>
             <b-form-group
@@ -354,20 +362,19 @@
                     v-model="agentQueue"
                     :state="agentQueue !== ''"
                     type="text"
-                    placeholder="Enter a scheduler queue name"
+                    placeholder="Enter a queue name"
                     required
                 ></b-form-input
             ></b-form-group>
             <b-form-group
                 v-if="isJobQueue(agentExecutor)"
-                label="Project ID"
-                description="Enter a scheduler project ID or allocation number to use."
+                label="Project"
+                description="Enter a project name or allocation number (optional on some schedulers)."
             >
                 <b-form-input
                     v-model="agentProject"
-                    :state="agentProject !== ''"
                     type="text"
-                    placeholder="Enter a scheduler project name"
+                    placeholder="Enter a project name"
                     required
                 ></b-form-input
             ></b-form-group>
@@ -462,12 +469,17 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import { mapGetters } from 'vuex';
 import moment from 'moment';
+import { guid } from '@/utils';
 
 export default {
     name: 'agents',
     data: function() {
         return {
+            agentNameLoading: false,
+            agentNameExists: false,
             agentName: '',
+            agentHostLoading: false,
+            agentHostExists: false,
             agentHost: '',
             agentDescription: '',
             agentWorkdir: '',
@@ -495,9 +507,7 @@ export default {
             authenticationPassword: '',
             publicContext: false,
             togglingContext: false,
-            isOpen: false,
-            isLoading: false,
-            isAsync: false
+            addingAgent: false
         };
     },
     async mounted() {
@@ -552,6 +562,10 @@ export default {
         // eslint-disable-next-line no-unused-vars
         publicContext: function(_) {
             this.refreshAgents();
+        },
+        items: function(value, _) {
+            this.agentNameExists = value;
+            this.agentNameLoading = false;
         }
     },
     methods: {
@@ -564,6 +578,36 @@ export default {
             this.togglingContext = true;
             this.publicContext = !this.publicContext;
             this.togglingContext = false;
+        },
+        onAgentNameChange() {
+            this.agentNameLoading = true;
+            return axios
+                .get(`/apis/v1/agents/${this.agentName}/exists/`)
+                .then(response => {
+                    this.agentNameExists = response.data.exists;
+                    this.agentNameLoading = false;
+                    this.$emit('input', this.name);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.agentNameLoading = false;
+                    if (error.response.status === 500) throw error;
+                });
+        },
+        onAgentHostChange() {
+            this.agentHostLoading = true;
+            return axios
+                .get(`/apis/v1/agents/${this.agentHost}/host_exists/`)
+                .then(response => {
+                    this.agentHostExists = response.data.exists;
+                    this.agentHostLoading = false;
+                    this.$emit('input', this.name);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.agentHostLoading = false;
+                    if (error.response.status === 500) throw error;
+                });
         },
         resetAgentInfo() {
             this.agentName = '';
@@ -600,6 +644,7 @@ export default {
             this.$bvModal.show('connectAgent');
         },
         async connectAgent() {
+            this.addingAgent = true;
             let data = {
                 auth: {
                     username: this.authenticationUsername,
@@ -621,20 +666,31 @@ export default {
 
             await axios({
                 method: 'post',
-                url: `/apis/v1/agents/connect/`,
+                url: `/apis/v1/agents/`,
                 data: data,
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(response => {
-                    alert(response.data.created);
                     this.$store.dispatch(
                         'agents/addOrUpdate',
                         response.data.agent
                     );
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'success',
+                        message: `Added agent ${response.data.agent.name}`,
+                        guid: guid().toString()
+                    });
                     this.resetAgentInfo();
+                    this.addingAgent = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to add agent ${this.agentName}`,
+                        guid: guid().toString()
+                    });
+                    this.addingAgent = false;
                     // TODO probably an auth error: display info and allow user to edit info and retry connection
                     throw error;
                 });

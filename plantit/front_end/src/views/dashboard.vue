@@ -1,7 +1,5 @@
 <template>
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
-        <br />
-        <br />
         <div v-if="profileLoading">
             <b-row>
                 <b-col class="text-center">

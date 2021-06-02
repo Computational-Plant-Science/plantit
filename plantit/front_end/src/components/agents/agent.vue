@@ -788,7 +788,7 @@ export default {
         ...mapGetters('datasets', ['openedDatasetLoading', 'openedDataset']),
         ...mapGetters('agents', ['agent']),
         getAgent() {
-            return this.agent(this.$router.currentRoute.params.guid);
+            return this.agent(this.$router.currentRoute.params.name);
         },
         mustAuthenticate() {
             return (

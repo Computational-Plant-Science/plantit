@@ -201,7 +201,7 @@ let router = new Router({
                     },
                     children: [
                         {
-                            path: ':guid',
+                            path: ':name',
                             name: 'agent',
                             props: true,
                             component: agent,
@@ -305,10 +305,10 @@ router.beforeEach(async (to, from, next) => {
         });
     }
     if (to.name === 'agent') {
-        to.meta.title = `Agent: ${to.params.guid}`;
+        to.meta.title = `Agent: ${to.params.name}`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
-            text: `${to.params.guid}`
+            text: `${to.params.name}`
         });
     }
     // if (to.name === 'dataset') to.meta.title = `Dataset: ${to.params.path}`;

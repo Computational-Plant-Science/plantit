@@ -5,6 +5,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { user } from '@/store/user';
 import { users } from '@/store/users';
+import { alerts } from '@/store/alerts';
 import { agents } from '@/store/agents';
 import { workflows } from '@/store/workflows';
 import { submissions } from '@/store/submissions';
@@ -28,6 +29,7 @@ const store = new Vuex.Store({
     modules: {
         user,
         users,
+        alerts,
         agents,
         datasets,
         workflows,
