@@ -1,7 +1,0 @@
-resources:
-  ssh_client:
-    config:
-      host: "ssh"
-      port: 22
-      username: "root"
-      password: "root"

@@ -27,7 +27,7 @@
             <b-row
                 ><b-col>
                     <b-img
-                        :src="require('../assets/about_summary.png')"
+                        :src="require('../assets/about/summary.png')"
                         center
                         style="max-width: 69rem;"
                     ></b-img>
@@ -63,7 +63,7 @@
                     </p>
                     <br />
                     <b-img
-                        :src="require('../assets/about_features.png')"
+                        :src="require('../assets/about/features.png')"
                         center
                         style="max-width: 69rem;"
                     ></b-img>
@@ -90,7 +90,7 @@
                     </p>
                     <br />
                     <b-img
-                        :src="require('../assets/about_examples.png')"
+                        :src="require('../assets/about/examples.png')"
                         center
                         style="max-width: 69rem;"
                     ></b-img>
@@ -117,7 +117,7 @@
                     </p>
                     <br />
                     <b-img
-                        :src="require('../assets/about_configuring.png')"
+                        :src="require('../assets/about/configuring.png')"
                         center
                         style="max-width: 69rem;"
                     ></b-img>

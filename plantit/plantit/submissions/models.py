@@ -2,17 +2,26 @@ import json
 from itertools import chain
 
 from django.conf import settings
-from django.db import models
-from django.forms import model_to_dict
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy
 from django_celery_beat.models import PeriodicTask
 from taggit.managers import TaggableManager
 
 from plantit.agents.models import Agent
 
 
-class Run(models.Model):
+class SubmissionStatus(models.TextChoices):
+    CREATED = 'created', gettext_lazy('Created')
+    RUNNING = 'running', gettext_lazy('Running')
+    SUCCESS = 'success', gettext_lazy('Success')
+    FAILURE = 'failure', gettext_lazy('Failure')
+    TIMEOUT = 'timeout', gettext_lazy('Timeout')
+    CANCELED = 'canceled', gettext_lazy('Canceled')
+
+
+class Submission(models.Model):
     class Meta:
         ordering = ['-created']
 
@@ -23,21 +32,21 @@ class Run(models.Model):
     workdir = models.CharField(max_length=100, null=True, blank=True)
     token = models.CharField(max_length=40)
     tags = TaggableManager()
-    submission_id = models.CharField(max_length=50, null=True, blank=True)
-    job_id = models.CharField(max_length=7, null=True, blank=True)
-    job_status = models.CharField(max_length=15, null=True, blank=True)
-    job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
-    job_elapsed_walltime = models.CharField(max_length=8, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
     workflow_name = models.CharField(max_length=280, null=True, blank=True)
     workflow_image_url = models.URLField(null=True, blank=True)
-    task = models.ForeignKey(PeriodicTask, null=True, blank=True, on_delete=models.CASCADE)
     results = ArrayField(models.CharField(max_length=250), blank=True, null=True)
     previews_loaded = models.BooleanField(default=False)
     cleaned_up = models.BooleanField(default=False)
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(default=timezone.now)
     completed = models.DateTimeField(null=True, blank=True)
+    celery_task_id = models.CharField(max_length=50, null=True, blank=True)
+
+    status = models.CharField(
+        max_length=8,
+        choices=SubmissionStatus.choices,
+        default=SubmissionStatus.CREATED)
 
     def __str__(self):
         opts = self._meta
@@ -47,6 +56,37 @@ class Run(models.Model):
         for f in opts.many_to_many:
             data[f.name] = [i.id for i in f.value_from_object(self)]
         return json.dumps(data)
+
+    @property
+    def is_sandbox(self):
+        return self.agent.name is not None and self.agent.name == 'Sandbox'
+
+    @property
+    def is_success(self):
+        return self.status == 'SUCCESS'
+
+    @property
+    def is_failure(self):
+        return self.status == 'FAILURE'
+
+    @property
+    def is_timeout(self):
+        return self.status == 'TIMEOUT'
+
+    @property
+    def is_cancelled(self):
+        return self.status == 'CANCELED'
+
+    @property
+    def is_complete(self):
+        return self.is_success or self.is_failure or self.is_timeout or self.is_cancelled
+
+
+class JobQueueSubmission(Submission):
+    job_id = models.CharField(max_length=7, null=True, blank=True)
+    job_status = models.CharField(max_length=15, null=True, blank=True)
+    job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
+    job_elapsed_walltime = models.CharField(max_length=8, null=True, blank=True)
 
     @property
     def is_sandbox(self):
@@ -73,7 +113,7 @@ class Run(models.Model):
         return self.job_status == 'TIMEOUT'
 
 
-class DelayedRunTask(PeriodicTask):
+class DelayedSubmissionTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
@@ -81,7 +121,7 @@ class DelayedRunTask(PeriodicTask):
     eta = models.DateTimeField(null=False, blank=False)
 
 
-class RepeatingRunTask(PeriodicTask):
+class RepeatingSubmissionTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)

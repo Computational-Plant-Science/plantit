@@ -1,7 +1,7 @@
 <template>
     <div class="m-0 p-0">
         <b-sidebar
-            id="runs"
+            id="submissions"
             shadow="lg"
             :bg-variant="profile.darkMode ? 'dark' : 'white'"
             :text-variant="profile.darkMode ? 'light' : 'dark'"
@@ -26,7 +26,7 @@
                                         : 'text-dark mt-1'
                                 "
                             >
-                                Runs
+                                Submissions
                             </h4>
                         </b-col>
                         <b-col align-self="center"
@@ -43,7 +43,7 @@
                                     "
                                     size="lg"
                                     type="search"
-                                    v-model="runSearchText"
+                                    v-model="submissionSearchText"
                                 ></b-form-input>
                             </b-input-group>
                         </b-col>
@@ -72,38 +72,39 @@
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col class="m-0 pl-0 pr-0 text-center">
                             <b-list-group
-                                v-if="runningRuns.length > 0"
+                                v-if="submissionsRunning.length > 0"
                                 class="text-left m-0 p-0"
                             >
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="run in filteredRunningRuns"
-                                    v-bind:key="run.name"
+                                    v-for="submission in filteredRunningSubmissions"
+                                    v-bind:key="submission.name"
                                     :class="
                                         profile.darkMode
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                             : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                                     "
                                     :to="{
-                                        name: 'run',
+                                        name: 'submission',
                                         params: {
-                                            owner: run.owner,
-                                            name: run.name
+                                            owner: submission.owner,
+                                            name: submission.name
                                         }
                                     }"
                                 >
                                     <b-img
                                         v-if="
-                                            run.workflow_image_url !==
+                                            submission.workflow_image_url !==
                                                 undefined &&
-                                                run.workflow_image_url !== null
+                                                submission.workflow_image_url !==
+                                                    null
                                         "
                                         rounded
                                         class="card-img-right"
                                         style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                         right
-                                        :src="run.workflow_image_url"
+                                        :src="submission.workflow_image_url"
                                     ></b-img>
                                     <b-link
                                         :class="
@@ -112,24 +113,24 @@
                                                 : 'text-dark'
                                         "
                                         :to="{
-                                            name: 'run',
+                                            name: 'submission',
                                             params: {
-                                                owner: run.owner,
-                                                name: run.name
+                                                owner: submission.owner,
+                                                name: submission.name
                                             }
                                         }"
                                         replace
-                                        >{{ run.name }}</b-link
+                                        >{{ submission.name }}</b-link
                                     >
                                     <br />
                                     <div
                                         v-if="
-                                            run.tags !== undefined &&
-                                                run.tags.length > 0
+                                            submission.tags !== undefined &&
+                                                submission.tags.length > 0
                                         "
                                     >
                                         <b-badge
-                                            v-for="tag in run.tags"
+                                            v-for="tag in submission.tags"
                                             v-bind:key="tag"
                                             class="mr-1"
                                             variant="secondary"
@@ -137,29 +138,34 @@
                                         </b-badge>
                                         <br />
                                     </div>
-                                    <small v-if="!run.is_complete"
+                                    <small v-if="!submission.is_complete"
                                         >Running</small
                                     >
                                     <b-badge
                                         :variant="
-                                            run.is_failure || run.is_timeout
+                                            submission.is_failure ||
+                                            submission.is_timeout
                                                 ? 'danger'
-                                                : run.is_cancelled
+                                                : submission.is_cancelled
                                                 ? 'secondary'
                                                 : 'success'
                                         "
                                         v-else
-                                        >{{ run.job_status }}</b-badge
+                                        >{{ submission.job_status }}</b-badge
                                     >
                                     <small> on </small>
                                     <b-badge
                                         class="ml-0 mr-0"
                                         variant="secondary"
-                                        >{{ run.agent }}</b-badge
-                                    ><small> {{ prettify(run.updated) }}</small>
+                                        >{{ submission.agent }}</b-badge
+                                    ><small>
+                                        {{
+                                            prettify(submission.updated)
+                                        }}</small
+                                    >
                                     <br />
                                     <small
-                                        v-if="run.workflow_name !== null"
+                                        v-if="submission.workflow_name !== null"
                                         class="mr-1"
                                         ><a
                                             :class="
@@ -168,11 +174,11 @@
                                                     : 'text-dark'
                                             "
                                             :href="
-                                                `https://github.com/${run.workflow_owner}/${run.workflow_name}`
+                                                `https://github.com/${submission.workflow_owner}/${submission.workflow_name}`
                                             "
                                             ><i class="fab fa-github fa-fw"></i>
-                                            {{ run.workflow_owner }}/{{
-                                                run.workflow_name
+                                            {{ submission.workflow_owner }}/{{
+                                                submission.workflow_name
                                             }}</a
                                         >
                                     </small>
@@ -184,9 +190,9 @@
                                         ? 'text-center text-light pl-3 pr-3'
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
-                                v-if="runningRuns.length === 0"
+                                v-if="submissionsRunning.length === 0"
                             >
-                                No workflows are running right now.
+                                No submissions are running right now.
                             </p>
                         </b-col></b-row
                     >
@@ -200,15 +206,18 @@
 
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col
-                            v-if="!runsLoading && completedRuns.length > 0"
+                            v-if="
+                                !submissionsLoading &&
+                                    submissionsCompleted.length > 0
+                            "
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <b-list-group class="text-left m-0 p-0">
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="run in filteredCompletedRuns"
-                                    v-bind:key="run.name"
+                                    v-for="submission in filteredCompletedSubmissions"
+                                    v-bind:key="submission.name"
                                     :class="
                                         profile.darkMode
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
@@ -219,16 +228,18 @@
                                         ><b-col>
                                             <b-img
                                                 v-if="
-                                                    run.workflow_image_url !==
+                                                    submission.workflow_image_url !==
                                                         undefined &&
-                                                        run.workflow_image_url !==
+                                                        submission.workflow_image_url !==
                                                             null
                                                 "
                                                 rounded
                                                 class="card-img-right"
                                                 style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                 right
-                                                :src="run.workflow_image_url"
+                                                :src="
+                                                    submission.workflow_image_url
+                                                "
                                             ></b-img>
                                             <b-link
                                                 :class="
@@ -237,14 +248,14 @@
                                                         : 'text-dark'
                                                 "
                                                 :to="{
-                                                    name: 'run',
+                                                    name: 'submission',
                                                     params: {
-                                                        owner: run.owner,
-                                                        name: run.name
+                                                        owner: submission.owner,
+                                                        name: submission.name
                                                     }
                                                 }"
                                                 replace
-                                                >{{ run.name }}</b-link
+                                                >{{ submission.name }}</b-link
                                             >
                                         </b-col>
                                     </b-row>
@@ -252,44 +263,52 @@
                                         ><b-col>
                                             <div
                                                 v-if="
-                                                    run.tags !== undefined &&
-                                                        run.tags.length > 0
+                                                    submission.tags !==
+                                                        undefined &&
+                                                        submission.tags.length >
+                                                            0
                                                 "
                                             >
                                                 <b-badge
-                                                    v-for="tag in run.tags"
+                                                    v-for="tag in submission.tags"
                                                     v-bind:key="tag"
                                                     class="mr-1"
                                                     variant="secondary"
                                                     >{{ tag }}
                                                 </b-badge>
                                                 <br
-                                                    v-if="run.tags.length > 0"
+                                                    v-if="
+                                                        submission.tags.length >
+                                                            0
+                                                    "
                                                 />
                                             </div>
-                                            <small v-if="!run.is_complete"
+                                            <small
+                                                v-if="!submission.is_complete"
                                                 >Running</small
                                             >
                                             <b-badge
                                                 :variant="
-                                                    run.is_failure ||
-                                                    run.is_timeout
+                                                    submission.is_failure ||
+                                                    submission.is_timeout
                                                         ? 'danger'
-                                                        : run.is_cancelled
+                                                        : submission.is_cancelled
                                                         ? 'secondary'
                                                         : 'success'
                                                 "
                                                 v-else
-                                                >{{ run.job_status }}</b-badge
+                                                >{{
+                                                    submission.job_status
+                                                }}</b-badge
                                             >
                                             <small> on </small>
                                             <b-badge
                                                 class="ml-0 mr-0"
                                                 variant="secondary"
-                                                >{{ run.agent }}</b-badge
+                                                >{{ submission.agent }}</b-badge
                                             ><small>
                                                 {{
-                                                    prettify(run.updated)
+                                                    prettify(submission.updated)
                                                 }}</small
                                             >
                                         </b-col>
@@ -304,26 +323,30 @@
                                                             : 'text-dark'
                                                     "
                                                     :href="
-                                                        `https://github.com/${run.workflow_owner}/${run.workflow_name}`
+                                                        `https://github.com/${submission.workflow_owner}/${submission.workflow_name}`
                                                     "
                                                     ><i
                                                         class="fab fa-github fa-fw"
                                                     ></i>
-                                                    {{ run.workflow_owner }}/{{
-                                                        run.workflow_name
+                                                    {{
+                                                        submission.workflow_owner
+                                                    }}/{{
+                                                        submission.workflow_name
                                                     }}</a
                                                 >
                                             </small>
                                         </b-col>
                                         <b-col md="auto">
                                             <b-button
-                                                v-if="run.is_complete"
+                                                v-if="submission.is_complete"
                                                 variant="outline-danger"
                                                 size="sm"
                                                 v-b-tooltip.hover
                                                 title="Delete Run"
                                                 class="text-right"
-                                                @click="showDeletePrompt(run)"
+                                                @click="
+                                                    showDeletePrompt(submission)
+                                                "
                                             >
                                                 <i class="fas fa-trash"></i>
                                                 Delete
@@ -331,7 +354,7 @@
                                         </b-col></b-row
                                     >
                                     <b-modal
-                                        :id="'delete ' + run.name"
+                                        :id="'delete ' + submission.name"
                                         :title-class="
                                             profile.darkMode
                                                 ? 'text-white'
@@ -358,8 +381,8 @@
                                             profile.darkMode ? 'dark' : 'white'
                                         "
                                         ok-variant="outline-danger"
-                                        title="Delete this run?"
-                                        @ok="onDelete(run)"
+                                        title="Delete this submission?"
+                                        @ok="removeSubmission(submission)"
                                     >
                                         <p
                                             :class="
@@ -375,7 +398,7 @@
                             </b-list-group>
                         </b-col>
                         <b-col
-                            v-if="runsLoading || loadingMoreRuns"
+                            v-if="submissionsLoading"
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <b-spinner
@@ -383,31 +406,11 @@
                                 variant="secondary"
                             ></b-spinner
                         ></b-col>
-                        <!--<b-col
-                            v-else-if="completedRuns.length > 0"
-                            class="m-0 pl-0 pr-0 text-center"
-                        >
-                            <b-nav vertical class="m-0 p-0">
-                                <b-nav-item class="m-0 p-0">
-                                    <b-button
-                                        :variant="
-                                            profile.darkMode ? 'dark' : 'light'
-                                        "
-                                        :disabled="runsLoading"
-                                        block
-                                        class="text-center m-0"
-                                        @click="loadRuns(currentRunPage + 1)"
-                                    >
-                                        <i
-                                            class="fas fa-chevron-down fa-fw"
-                                        ></i>
-                                        Load More
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                        </b-col>-->
                         <b-col
-                            v-if="!runsLoading && completedRuns.length === 0"
+                            v-if="
+                                !submissionsLoading &&
+                                    submissionsCompleted.length === 0
+                            "
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <p
@@ -417,7 +420,7 @@
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
                             >
-                                You haven't run any workflows yet.
+                                No workflow submissions.
                             </p>
                         </b-col>
                     </b-row>
@@ -486,13 +489,13 @@
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col class="m-0 pl-0 pr-0 text-center">
                             <b-list-group
-                                v-if="unreadNotifications.length > 0"
+                                v-if="notificationsUnread.length > 0"
                                 class="text-left m-0 p-0"
                             >
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="notification in unreadNotifications"
+                                    v-for="notification in notificationsUnread"
                                     v-bind:key="notification.id"
                                     :class="
                                         profile.darkMode
@@ -527,7 +530,7 @@
                                                         : 'light'
                                                 "
                                                 class="text-left m-0"
-                                                @click="markRead(notification)"
+                                                @click="markNotificationRead(notification)"
                                             >
                                                 Mark Read
                                                 <i class="fas fa-check"></i>
@@ -542,7 +545,7 @@
                                         ? 'text-center text-light pl-3 pr-3'
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
-                                v-if="unreadNotifications.length === 0"
+                                v-if="notificationsUnread.length === 0"
                             >
                                 No notifications to show.
                             </p>
@@ -558,13 +561,13 @@
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col class="m-0 pl-0 pr-0 text-center">
                             <b-list-group
-                                v-if="readNotifications.length > 0"
+                                v-if="notificationsRead.length > 0"
                                 class="text-left m-0 p-0"
                             >
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="notification in readNotifications"
+                                    v-for="notification in notificationsRead"
                                     v-bind:key="notification.id"
                                     :class="
                                         profile.darkMode
@@ -586,9 +589,9 @@
                                         ? 'text-center text-light pl-3 pr-3'
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
-                                v-if="readNotifications.length === 0"
+                                v-if="notificationsRead.length === 0"
                             >
-                                No notifications to show.
+                                No notifications.
                             </p>
                         </b-col>
                     </b-row>
@@ -605,7 +608,7 @@
         >
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-3 mr-1">
-                    <b-nav-item class="m-0 p-0" v-b-toggle.runs>
+                    <b-nav-item class="m-0 p-0" v-b-toggle.submissions>
                         <b-button
                             class="brand-img m-0 p-0"
                             v-bind:class="{ 'not-found': notFound }"
@@ -643,7 +646,9 @@
                                         : 'crumb-light'
                                 "
                             >
-                                Your Runs ({{ runningRuns.length }}
+                                Your Submissions ({{
+                                    submissionsRunning.length
+                                }}
                                 in progress)
                             </h2>
                         </b-breadcrumb-item>
@@ -747,7 +752,7 @@
                         </b-nav-item>-->
                     </b-navbar-nav>
                 </transition>
-                <b-navbar-nav class="ml-auto p-0 mt-1">
+                <b-navbar-nav class="ml-auto p-0 m-0">
                     <b-nav-item
                         v-if="
                             profile.loggedIn
@@ -757,7 +762,7 @@
                         "
                         title="Log in to GitHub"
                         href="/apis/v1/idp/github_request_identity/"
-                        class="p-1 mt-2 ml-0 mr-0"
+                        class="p-0 mt-2 ml-0 mr-0"
                     >
                         <b-button
                             class="mt-2 text-left"
@@ -789,10 +794,10 @@
                                 <span
                                     :title="
                                         'Notifications (' +
-                                            unreadNotifications.length +
+                                            notificationsUnread.length +
                                             ')'
                                     "
-                                    v-if="unreadNotifications.length > 0"
+                                    v-if="notificationsUnread.length > 0"
                                     class="fa-stack mr-2"
                                     ><i
                                         class="fas fa-dot-circle fa-stack-2x text-warning"
@@ -839,7 +844,7 @@
                         <b-dropdown-item
                             :title="
                                 'Notifications (' +
-                                    unreadNotifications.length +
+                                    notificationsUnread.length +
                                     ')'
                             "
                             :class="
@@ -854,8 +859,8 @@
                         >
                             <i class="fas fa-bell fa-1x fa-fw"></i>
                             Notifications
-                            <span v-if="unreadNotifications.length > 0"
-                                >({{ unreadNotifications.length }} unread)</span
+                            <span v-if="notificationsUnread.length > 0"
+                                >({{ notificationsUnread.length }} unread)</span
                             >
                         </b-dropdown-item>
                         <b-dropdown-item
@@ -900,104 +905,9 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
-        <!--<b-navbar
-            v-if="
-                openedDatasetLoading ||
-                    (openedDataset !== undefined &&
-                        openedDataset !== null &&
-                        !viewingDataset)
-            "
-            toggleable="sm"
-            fixed="bottom"
-            style="border-top: 1px solid gray"
-            :variant="profile.darkMode ? 'dark' : 'white'"
-        >
-            <b-navbar-nav v-if="openedDatasetLoading">
-                <b-spinner
-                    :variant="profile.darkMode ? 'light' : 'dark'"
-                    small
-                    class="mr-2"
-                ></b-spinner>
-            </b-navbar-nav>
-            <b-navbar-nav
-                v-else-if="
-                    openedDataset !== null && openedDataset !== undefined
-                "
-            >
-                <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
-                    <span v-if="openedDataset.opening">
-                        <b-spinner
-                            :variant="profile.darkMode ? 'light' : 'dark'"
-                            small
-                            class="mr-2"
-                        ></b-spinner
-                        >Opening <b>{{ openedDataset.path }}</b> on
-                        <b>{{ openedDataset.agent }}</b>
-                    </span>
-                    <span v-else>
-                        <i class="far fa-folder-open fa-fw mr-2"></i>
-                        <b>{{ openedDataset.path }}</b> open on
-                        <b>{{ openedDataset.agent }}</b
-                        >, {{ openedDataset.modified.length }} file(s)
-                        modified</span
-                    >
-                </b></b-navbar-nav
-            >
-            <b-navbar-nav
-                class="ml-auto"
-                v-if="
-                    openedDataset !== null &&
-                        openedDataset !== undefined &&
-                        openedDataset.opening
-                "
-            >
-                <small>{{
-                    openedDataset.output[openedDataset.output.length - 1]
-                }}</small>
-            </b-navbar-nav>
-            <b-navbar-nav class="ml-auto" v-if="!openedDatasetLoading">
-                <b-button
-                    :variant="profile.darkMode ? 'outline-light' : 'white'"
-                    title="View collection"
-                    class="mr-2"
-                    :to="{
-                        name: 'collection',
-                        params: { path: openedDataset.path }
-                    }"
-                >
-                    View
-                    <i class="fas fa-th fa-1x fa-fw"></i>
-                </b-button>
-                <b-dropdown
-                    v-if="openedDataset.modified.length !== 0"
-                    dropup
-                    :variant="profile.darkMode ? 'outline-light' : 'white'"
-                    class="mr-2"
-                >
-                    <template #button-content>
-                        Save
-                    </template>
-                    <b-dropdown-item @click="saveSession(false)"
-                        >All files</b-dropdown-item
-                    >
-                    <b-dropdown-item @click="saveSession(true)"
-                        >Only modified files</b-dropdown-item
-                    >
-                </b-dropdown>
-                <b-button
-                    variant="outline-danger"
-                    title="Close collection"
-                    class="text-left m-0"
-                    @click="closeDataset"
-                >
-                    Close
-                    <i class="far fa-folder fa-1x fa-fw"></i>
-                </b-button>
-            </b-navbar-nav>
-        </b-navbar>-->
         <b-toast
             auto-hide-delay="10000"
-            v-if="$route.name !== 'run' && toastRun !== null"
+            v-if="$route.name !== 'submission' && submissionToasted !== null"
             id="toast"
             :variant="profile.darkMode ? 'dark text-light' : 'light text-dark'"
             solid
@@ -1006,22 +916,27 @@
                 ><b-link
                     class="text-dark"
                     :to="{
-                        name: 'run',
-                        params: { name: toastRun.name }
+                        name: 'submission',
+                        params: {
+                            name: submissionToasted.name,
+                            owner: submissionToasted.owner
+                        }
                     }"
-                    >{{ `Run ${toastRun.name}` }}</b-link
+                    >{{ `Submission ${submissionToasted.name}` }}</b-link
                 ></template
             >
             <small>
-                <b v-if="!toastRun.is_complete">Running</b>
-                <b class="ml-0 mr-0" v-else>{{ toastRun.job_status }}</b>
+                <b v-if="!submissionToasted.is_complete">Running</b>
+                <b class="ml-0 mr-0" v-else>{{
+                    submissionToasted.job_status
+                }}</b>
                 on
-                <b>{{ toastRun.agent }}</b>
-                {{ prettifyShort(toastRun.updated) }}
+                <b>{{ submissionToasted.agent }}</b>
+                {{ prettifyShort(submissionToasted.updated) }}
                 <br />
                 {{
-                    toastRun.submission_logs[
-                        toastRun.submission_logs.length - 1
+                    submissionToasted.submission_logs[
+                        submissionToasted.submission_logs.length - 1
                     ]
                 }}
             </small>
@@ -1041,148 +956,97 @@ export default {
     components: {},
     data() {
         return {
-            togglingDarkMode: false,
-            viewingDataset: false,
-            // deployment target authentication
-            authenticationUsername: '',
-            authenticationPassword: '',
-            // run status constants
-            PENDING: 'PENDING',
-            STARTED: 'STARTED',
-            SUCCESS: 'SUCCESS',
-            FAILURE: 'FAILURE',
-            REVOKED: 'REVOKED',
-            // websockets
-            workflowSocket: null,
-            runSocket: null,
-            notificationSocket: null,
-            interactiveSocket: null,
             // user data
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null,
-            notFound: false,
+            // websockets
+            workflowSocket: null,
+            submissionSocket: null,
+            notificationSocket: null,
+            interactiveSocket: null,
+            // breadcrumb & brand
             crumbs: [],
             titleContent: 'brand',
-            currentRunPage: 0,
-            loadingMoreRuns: false,
-            toastRun: null,
-            fields: [
-                {
-                    key: 'id',
-                    label: 'Id',
-                    sortable: true
-                },
-                {
-                    key: 'state',
-                    label: 'State'
-                },
-                {
-                    key: 'created',
-                    sortable: true,
-                    formatter: value => {
-                        return `${moment(value).fromNow()} (${moment(
-                            value
-                        ).format('h:mm a')})`;
-                    }
-                },
-                {
-                    key: 'workflow_name',
-                    label: 'Workflow',
-                    sortable: true
-                }
-            ],
-            // run search
-            runSearchText: ''
+            // submission sidebar & toasts
+            submissionPage: 0,
+            submissionToasted: null,
+            submissionSearchText: '',
+            // flags
+            togglingDarkMode: false,
+            notFound: false
         };
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('runs', ['runsLoading', 'runs']),
-        ...mapGetters('notifications', [
-            'notificationsLoading',
-            'notifications'
+        ...mapGetters('submissions', [
+            'submissions',
+            'submissionsLoading',
+            'submissionsRunning',
+            'submissionsCompleted'
         ]),
-        ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
-        runningRuns() {
-            return this.runs.filter(r => !r.is_complete);
-        },
-        completedRuns() {
-            return this.runs.filter(r => r.is_complete);
-        },
-        filteredRunningRuns() {
-            return this.runningRuns.filter(
-                r =>
-                    (r.workflow_name !== null &&
-                        r.workflow_name.includes(this.runSearchText)) ||
-                    r.tags.some(t => t.includes(this.runSearchText))
+        ...mapGetters('notifications', [
+            'notifications',
+            'notificationsLoading',
+            'notificationsRead',
+            'notificationsUnread'
+        ]),
+        filteredRunningSubmissions() {
+            return this.submissionsRunning.filter(
+                sub =>
+                    (sub.workflow_name !== null &&
+                        sub.workflow_name.includes(
+                            this.submissionSearchText
+                        )) ||
+                    sub.tags.some(tag =>
+                        tag.includes(this.submissionSearchText)
+                    )
             );
         },
-        filteredCompletedRuns() {
-            return this.completedRuns.filter(
-                r =>
-                    (r.workflow_name !== null &&
-                        r.workflow_name.includes(this.runSearchText)) ||
-                    r.tags.some(t => t.includes(this.runSearchText))
+        filteredCompletedSubmissions() {
+            return this.submissionsCompleted.filter(
+                sub =>
+                    (sub.workflow_name !== null &&
+                        sub.workflow_name.includes(
+                            this.submissionSearchText
+                        )) ||
+                    sub.tags.some(tag =>
+                        tag.includes(this.submissionSearchText)
+                    )
             );
-        },
-        unreadNotifications() {
-            return this.notifications.filter(n => !n.read);
-        },
-        readNotifications() {
-            return this.notifications.filter(n => n.read);
         }
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
-        this.viewingDataset = this.$router.currentRoute.name === 'dataset';
-        let wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-
-        // TODO move websockets to vuex
-        this.workflowSocket = new WebSocket(
-            `${wsProtocol}${window.location.host}/ws/workflows/${this.profile.githubProfile.login}/`
-        );
-        this.workflowSocket.onmessage = this.onWorkflowMessage;
-
-        // subscribe to run channel
-        this.runSocket = new WebSocket(
-            `${wsProtocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
-        );
-        this.runSocket.onmessage = this.onRunUpdate;
-
-        // subscribe to notification channel
-        this.notificationSocket = new WebSocket(
-            `${wsProtocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
-        );
-        this.notificationSocket.onmessage = this.onNotification;
 
         await Promise.all([
-            this.$store.dispatch('runs/loadAll'),
+            this.$store.dispatch('submissions/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
-            this.$store.dispatch(
-                'workflows/loadPersonal',
-                this.profile.githubProfile.login
-            ),
+            this.$store.dispatch('workflows/loadPersonal', this.profile.githubProfile.login),
             this.$store.dispatch('workflows/loadPublic'),
-            this.$store.dispatch(
-                'agents/loadPersonal',
-                this.profile.djangoProfile.username
-            ),
+            this.$store.dispatch('agents/loadPersonal', this.profile.djangoProfile.username),
             this.$store.dispatch('agents/loadPublic'),
-            this.$store.dispatch('datasets/loadPublicDatasets'),
-            this.$store.dispatch('datasets/loadPersonalDatasets'),
-            this.$store.dispatch('datasets/loadSharedDatasets'),
-            this.$store.dispatch('datasets/loadSharingDatasets')
-            // this.$store.dispatch('datasets/loadOpened')
+            this.$store.dispatch('datasets/loadPublic'),
+            this.$store.dispatch('datasets/loadPersonal'),
+            this.$store.dispatch('datasets/loadShared'),
+            this.$store.dispatch('datasets/loadSharing')
         ]);
+
+        // TODO move websockets to vuex
+        let wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+
+        this.workflowSocket = new WebSocket(`${wsProtocol}${window.location.host}/ws/workflows/${this.profile.githubProfile.login}/`);
+        this.workflowSocket.onmessage = this.handleWorkflowEvent;
+
+        this.submissionSocket = new WebSocket(`${wsProtocol}${window.location.host}/ws/submissions/${this.profile.djangoProfile.username}/`);
+        this.submissionSocket.onmessage = this.handleSubmissionEvent;
+
+        this.notificationSocket = new WebSocket(`${wsProtocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`);
+        this.notificationSocket.onmessage = this.handleNotificationEvent;
     },
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
-            this.viewingDataset = this.$router.currentRoute.name === 'dataset';
-        },
-        openedDataset() {
-            // need this so the bottom navbar will hide itself after dataset is closed
         }
     },
     methods: {
@@ -1191,30 +1055,8 @@ export default {
             await this.$store.dispatch('user/toggleDarkMode');
             this.togglingDarkMode = false;
         },
-        async closeDataset() {
-            await this.$bvModal
-                .msgBoxConfirm(
-                    `Are you sure you want to close ${this.openedDataset.path} on ${this.openedDataset.agent}?`,
-                    {
-                        title: 'Close Dataset?',
-                        size: 'sm',
-                        okVariant: 'outline-danger',
-                        cancelVariant: 'white',
-                        okTitle: 'Yes',
-                        cancelTitle: 'No',
-                        centered: true
-                    }
-                )
-                .then(async value => {
-                    if (value)
-                        await this.$store.dispatch('datasets/closeOpened');
-                })
-                .catch(err => {
-                    throw err;
-                });
-        },
-        markAllRead() {},
-        markRead(notification) {
+        markAllNotificationsRead() {},
+        markNotificationRead(notification) {
             axios({
                 method: 'post',
                 url: `/apis/v1/notifications/${this.profile.djangoProfile.username}/mark_read/`,
@@ -1234,8 +1076,7 @@ export default {
                     return error;
                 });
         },
-        // TODO move to VUEX
-        async onWorkflowMessage(event) {
+        async handleWorkflowEvent(event) {
             let data = JSON.parse(event.data);
             let operation = data.operation;
             let workflow = data.workflow;
@@ -1244,33 +1085,32 @@ export default {
             else if (operation === 'remove')
                 await this.$store.dispatch('workflows/remove', workflow);
         },
-        async onRunUpdate(event) {
+        async handleSubmissionEvent(event) {
             let data = JSON.parse(event.data);
-            var run = data.run;
-            this.toastRun = run;
+            let submission = data.submission;
+            this.submissionToasted = submission;
             this.$bvToast.show('toast');
-            await this.$store.dispatch('runs/update', run);
+            await this.$store.dispatch('submissions/update', submission);
         },
-        async onNotification(event) {
+        async handleNotificationEvent(event) {
             let data = JSON.parse(event.data);
             let notification = data.notification;
             await this.$store.dispatch('notifications/update', notification);
         },
-        async onDatasetSessionUpdate(event) {
-            let data = JSON.parse(event.data);
-            await this.$store.dispatch('datasets/updateOpened', data.session);
-        },
-        onDelete(run) {
+        removeSubmission(submission) {
             axios
-                .get(`/apis/v1/runs/${run.owner}/${run.name}/delete/`)
+                .get(
+                    `/apis/v1/submissions/${submission.owner}/${submission.name}/delete/`
+                )
                 .then(response => {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('runs/loadAll');
+                        this.$store.dispatch('submissions/loadAll');
                         if (
-                            this.$router.currentRoute.name === 'run' &&
-                            run.name === this.$router.currentRoute.params.name
+                            this.$router.currentRoute.name === 'submission' &&
+                            submission.name ===
+                                this.$router.currentRoute.params.name
                         )
                             router.push({
                                 name: 'user',
@@ -1288,8 +1128,8 @@ export default {
                     return error;
                 });
         },
-        showDeletePrompt(run) {
-            this.$bvModal.show('delete ' + run.name);
+        showDeletePrompt(submission) {
+            this.$bvModal.show('delete ' + submission.name);
         },
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');

@@ -9,8 +9,8 @@ import workflows from './components/workflows/workflows.vue';
 import workflow from './components/workflows/workflow.vue';
 import agents from './components/agents/agents.vue';
 import agent from './components/agents/agent.vue';
-import runs from './components/runs/runs.vue';
-import run from './components/runs/run.vue';
+import submissions from './components/submissions/submissions.vue';
+import submission from './components/submissions/submission.vue';
 import datasets from './components/datasets/datasets.vue';
 import dataset from './components/datasets/dataset.vue';
 import store from './store/store.js';
@@ -223,19 +223,19 @@ let router = new Router({
                     ]
                 },
                 {
-                    path: 'runs',
-                    name: 'runs',
-                    component: runs,
+                    path: 'submissions',
+                    name: 'submissions',
+                    component: submissions,
                     meta: {
-                        title: 'Runs',
+                        title: 'Submissions',
                         crumb: [
                             {
                                 text: 'Dashboard',
                                 href: '/dashboard'
                             },
                             {
-                                text: 'Runs',
-                                href: '/dashboard/runs'
+                                text: 'Submissions',
+                                href: '/dashboard/submissions'
                             }
                         ],
                         requiresAuth: true
@@ -243,19 +243,19 @@ let router = new Router({
                     children: [
                         {
                             path: ':owner/:name',
-                            name: 'run',
+                            name: 'Submission',
                             props: true,
-                            component: run,
+                            component: submission,
                             meta: {
-                                title: 'Run',
+                                title: 'Submission',
                                 crumb: [
                                     {
                                         text: 'Dashboard',
                                         href: '/dashboard'
                                     },
                                     {
-                                        text: 'Runs',
-                                        href: '/dashboard/runs'
+                                        text: 'Submissions',
+                                        href: '/dashboard/submissions'
                                     }
                                 ],
                                 requiresAuth: true
@@ -297,8 +297,8 @@ router.beforeEach(async (to, from, next) => {
             text: `${to.params.owner}/${to.params.name}`
         });
     }
-    if (to.name === 'run') {
-        to.meta.title = `Run: ${to.params.owner}/${to.params.name}`;
+    if (to.name === 'submission') {
+        to.meta.title = `Submission: ${to.params.owner}/${to.params.name}`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `${to.params.owner}/${to.params.name}`

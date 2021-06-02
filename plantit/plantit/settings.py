@@ -108,7 +108,7 @@ CHANNEL_LAYERS = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    'plantit.runs.authentication.RunTokenAuthentication',
+    'plantit.submissions.authentication.SubmissionTokenAuthentication',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -119,7 +119,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'front_end', 'dist'),
-            os.path.join(BASE_DIR, 'templates')  # This is temporary until cyverse login is implemented
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -176,7 +175,7 @@ USE_TZ = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'plantit.runs.authentication.RunTokenAuthentication',
+        'plantit.submissions.authentication.SubmissionTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
 }

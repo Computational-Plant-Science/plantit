@@ -1,23 +1,23 @@
 from rest_framework import authentication
 from rest_framework import exceptions
 
-from plantit.runs.models import Run
+from plantit.submissions.models import Submission
 
 
-class RunTokenAuthentication(authentication.TokenAuthentication):
+class SubmissionTokenAuthentication(authentication.TokenAuthentication):
     keyword = 'Token'
     model = None
 
     def get_model(self):
         if self.model is not None:
             return self.model
-        return Run
+        return Submission
 
     def authenticate_credentials(self, key):
         model = self.get_model()
         try:
-            run = model.objects.get(token=key)
+            sub = model.objects.get(token=key)
         except model.DoesNotExist:
             raise exceptions.AuthenticationFailed('Invalid token.')
 
-        return run.user, run
+        return sub.user, sub

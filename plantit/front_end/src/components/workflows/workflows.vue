@@ -182,7 +182,7 @@
                     description="Type the name of the GitHub repository you'd like to connect."
                 >
                     <b-form-input
-                        v-model="workflowName"
+                        v-model="name"
                         :state="!workflowInvalid"
                         type="text"
                         placeholder="Enter a repository name"
@@ -200,16 +200,16 @@
                 <div
                     class="text-center"
                     v-else-if="
-                        workflowSearchResult === null && workflowName !== ''
+                        searchResult === null && name !== ''
                     "
                 >
                     <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Repository <b>{{ workflowName }}</b> not found.
+                        Repository <b>{{ name }}</b> not found.
                     </p>
                 </div>
                 <div
                     class="text-left"
-                    v-else-if="workflowSearchResult !== null"
+                    v-else-if="searchResult !== null"
                 >
                     <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Repository Details
@@ -220,22 +220,22 @@
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
-                            :href="workflowSearchResult.repo.html_url"
+                            :href="searchResult.repo.html_url"
                             ><i class="fab fa-github fa-fw mr-1"></i
-                            >{{ workflowSearchResult.repo.full_name }}</b-link
+                            >{{ searchResult.repo.full_name }}</b-link
                         >
                         <br />
-                        {{ workflowSearchResult.repo.description }}
-                        <br />
-                        Last updated:
-                        {{ prettify(workflowSearchResult.repo.updated_at) }}
-                        <br />
-                        Language: {{ workflowSearchResult.repo.language }}
-                        <br />
-                        Stargazers:
-                        {{ workflowSearchResult.repo.stargazers_count }}
+                      {{ searchResult.repo.description }}
+                      <br />
+                      Last updated:
+                      {{ prettify(searchResult.repo.updated_at) }}
+                      <br />
+                      Language: {{ searchResult.repo.language }}
+                      <br />
+                      Stargazers:
+                      {{ searchResult.repo.stargazers_count }}
                     </p>
-                    <div v-if="workflowSearchResult.validation.is_valid">
+                    <div v-if="searchResult.validation.is_valid">
                         <h5
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -254,8 +254,8 @@
                                 </b-col>
                                 <b-col cols="10">
                                     <b>{{
-                                        workflowSearchResult.config.image
-                                    }}</b>
+                                        searchResult.config.image
+                                      }}</b>
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -263,11 +263,11 @@
                                     <small>GPU</small>
                                 </b-col>
                                 <b-col cols="10">
-                                    {{
-                                        workflowSearchResult.config.gpu
-                                            ? 'Yes'
-                                            : 'No'
-                                    }}
+                                  {{
+                                    searchResult.config.gpu
+                                        ? 'Yes'
+                                        : 'No'
+                                  }}
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -275,11 +275,11 @@
                                     <small>Mount</small>
                                 </b-col>
                                 <b-col cols="10">
-                                    {{
-                                        workflowSearchResult.config.mount
-                                            ? workflowSearchResult.config.mount
-                                            : 'None'
-                                    }}
+                                  {{
+                                    searchResult.config.mount
+                                        ? searchResult.config.mount
+                                        : 'None'
+                                  }}
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -288,11 +288,11 @@
                                 </b-col>
                                 <b-col cols="10">
                                     <b>{{
-                                        workflowSearchResult.config.params
-                                            ? workflowSearchResult.config.params
-                                                  .length
+                                        searchResult.config.params
+                                            ? searchResult.config.params
+                                                .length
                                             : 'None'
-                                    }}</b>
+                                      }}</b>
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -302,16 +302,16 @@
                                 <b-col cols="10">
                                     <b
                                         ><code>{{
-                                            ' ' +
-                                                workflowSearchResult.config
-                                                    .commands
-                                        }}</code></b
+                                        ' ' +
+                                        searchResult.config
+                                            .commands
+                                      }}</code></b
                                     >
                                 </b-col>
                             </b-row>
                             <b-row
                                 v-if="
-                                    workflowSearchResult.config.input !==
+                                    searchResult.config.input !==
                                         undefined
                                 "
                             >
@@ -322,27 +322,27 @@
                                     <b
                                         ><code
                                             >[working directory]/input/{{
-                                                workflowSearchResult.config
-                                                    .input.filetypes
-                                                    ? '[' +
-                                                      (workflowSearchResult
-                                                          .config.input
-                                                          .filetypes
-                                                          ? '*.' +
-                                                            workflowSearchResult.config.input.filetypes.join(
-                                                                ', *.'
-                                                            )
-                                                          : []) +
-                                                      ']'
-                                                    : ''
-                                            }}</code
+                                        searchResult.config
+                                            .input.filetypes
+                                            ? '[' +
+                                            (searchResult
+                                                .config.input
+                                                .filetypes
+                                                ? '*.' +
+                                                searchResult.config.input.filetypes.join(
+                                                    ', *.'
+                                                )
+                                                : []) +
+                                            ']'
+                                            : ''
+                                      }}</code
                                         ></b
                                     >
                                 </b-col>
                             </b-row>
                             <b-row
                                 v-if="
-                                    workflowSearchResult.config.output !==
+                                    searchResult.config.output !==
                                         undefined
                                 "
                             >
@@ -353,60 +353,60 @@
                                     <b
                                         ><code
                                             >[working directory]/{{
-                                                workflowSearchResult.config
-                                                    .output.path
-                                                    ? workflowSearchResult
-                                                          .config.output.path +
-                                                      '/'
-                                                    : ''
-                                            }}{{
-                                                workflowSearchResult.config
-                                                    .output.include
-                                                    ? '[' +
-                                                      (workflowSearchResult
-                                                          .config.output.exclude
-                                                          ? '+ '
-                                                          : '') +
-                                                      (workflowSearchResult
-                                                          .config.output.include
-                                                          .patterns
-                                                          ? '*.' +
-                                                            workflowSearchResult.config.output.include.patterns.join(
-                                                                ', *.'
-                                                            )
-                                                          : []) +
-                                                      (workflowSearchResult
-                                                          .config.output.include
-                                                          .names
-                                                          ? ', ' +
-                                                            workflowSearchResult.config.output.include.names.join(
-                                                                ', '
-                                                            )
-                                                          : [])
-                                                    : ''
-                                            }}{{
-                                                workflowSearchResult.config
-                                                    .output.exclude
-                                                    ? ' - ' +
-                                                      (workflowSearchResult
-                                                          .config.output.exclude
-                                                          .patterns
-                                                          ? '*.' +
-                                                            workflowSearchResult.config.output.exclude.patterns.join(
-                                                                ', *.'
-                                                            )
-                                                          : []) +
-                                                      (workflowSearchResult
-                                                          .config.output.exclude
-                                                          .names
-                                                          ? ', ' +
-                                                            workflowSearchResult.config.output.exclude.names.join(
-                                                                ', '
-                                                            )
-                                                          : [])
-                                                    : '' + ']'
-                                            }}
-                                        </code></b
+                                        searchResult.config
+                                            .output.path
+                                            ? searchResult
+                                                .config.output.path +
+                                            '/'
+                                            : ''
+                                      }}{{
+                                        searchResult.config
+                                            .output.include
+                                            ? '[' +
+                                            (searchResult
+                                                .config.output.exclude
+                                                ? '+ '
+                                                : '') +
+                                            (searchResult
+                                                .config.output.include
+                                                .patterns
+                                                ? '*.' +
+                                                searchResult.config.output.include.patterns.join(
+                                                    ', *.'
+                                                )
+                                                : []) +
+                                            (searchResult
+                                                .config.output.include
+                                                .names
+                                                ? ', ' +
+                                                searchResult.config.output.include.names.join(
+                                                    ', '
+                                                )
+                                                : [])
+                                            : ''
+                                      }}{{
+                                        searchResult.config
+                                            .output.exclude
+                                            ? ' - ' +
+                                            (searchResult
+                                                .config.output.exclude
+                                                .patterns
+                                                ? '*.' +
+                                                searchResult.config.output.exclude.patterns.join(
+                                                    ', *.'
+                                                )
+                                                : []) +
+                                            (searchResult
+                                                .config.output.exclude
+                                                .names
+                                                ? ', ' +
+                                                searchResult.config.output.exclude.names.join(
+                                                    ', '
+                                                )
+                                                : [])
+                                            : '' + ']'
+                                      }}
+                                    </code></b
                                     >
                                 </b-col>
                             </b-row>
@@ -419,7 +419,7 @@
                         </h5>
                         <b-list-group class="mb-2">
                             <b-list-group-item
-                                v-for="error in workflowSearchResult.validation
+                                v-for="error in searchResult.validation
                                     .errors"
                                 v-bind:key="error"
                                 :class="
@@ -462,8 +462,9 @@ export default {
     data: function() {
         return {
             login: false,
-            workflowName: '',
-            workflowSearchResult: null,
+            name: '',
+            searchText: '',
+            searchResult: null,
             workflowExists: false,
             publicContext: false,
             togglingContext: false,
@@ -471,15 +472,6 @@ export default {
             isLoading: false,
             isAsync: false
         };
-    },
-    async mounted() {
-        // await Promise.all([
-        //     this.$store.dispatch(
-        //         'workflows/loadPersonal',
-        //         this.profile.githubProfile.login
-        //     ),
-        //     this.$store.dispatch('workflows/loadPublic')
-        // ]);
     },
     watch: {
         // TODO get rid of this, it's hacky
@@ -490,7 +482,7 @@ export default {
         // eslint-disable-next-line no-unused-vars
         items: function(value, _) {
             if (this.isAsync) {
-                this.workflowSearchResult = value;
+                this.searchResult = value;
                 this.isLoading = false;
             }
         }
@@ -510,16 +502,16 @@ export default {
             this.isLoading = true;
             return axios
                 .get(
-                    `/apis/v1/workflows/${this.profile.githubProfile.login}/${this.workflowName}/search/`
+                    `/apis/v1/workflows/${this.profile.githubProfile.login}/${this.name}/search/`
                 )
                 .then(response => {
-                    this.workflowSearchResult = response.data;
+                    this.searchResult = response.data;
                     this.isLoading = false;
-                    this.$emit('input', this.workflowName);
+                    this.$emit('input', this.name);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.workflowSearchResult = null;
+                    this.searchResult = null;
                     this.isLoading = false;
                     if (error.response.status === 500) throw error;
                 });
@@ -536,8 +528,8 @@ export default {
         async connectWorkflow() {
             await axios({
                 method: 'post',
-                url: `/apis/v1/workflows/${this.workflowSearchResult.repo.owner.login}/${this.workflowSearchResult.repo.name}/connect/`,
-                data: this.workflowSearchResult,
+                url: `/apis/v1/workflows/${this.searchResult.repo.owner.login}/${this.searchResult.repo.name}/connect/`,
+                data: this.searchResult,
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(response => {
@@ -547,13 +539,13 @@ export default {
                             this.profile.githubProfile.login
                         );
                     else {
-                        this.alertMessage = `Failed to connect ${this.workflowSearchResult.repo.owner.login}/${this.workflowSearchResult.repo.name}`;
+                        this.alertMessage = `Failed to connect ${this.searchResult.repo.owner.login}/${this.searchResult.repo.name}`;
                         this.alertEnabled = true;
                     }
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to connect ${this.workflowSearchResult.repo.owner.login}/${this.workflowSearchResult.repo.name}`;
+                    this.alertMessage = `Failed to connect ${this.searchResult.repo.owner.login}/${this.searchResult.repo.name}`;
                     this.alertEnabled = true;
                     throw error;
                 });
@@ -563,11 +555,11 @@ export default {
             if (left.config.name > right.config.name) return 1;
             return 0;
         },
-        refreshWorkflows() {
+        async refreshWorkflows() {
             if (this.publicContext)
-                this.$store.dispatch('workflows/loadPublic');
+                await this.$store.dispatch('workflows/loadPublic');
             else
-                this.$store.dispatch(
+                await this.$store.dispatch(
                     'workflows/loadPersonal',
                     this.profile.githubProfile.login
                 );
@@ -585,9 +577,9 @@ export default {
             return this.$route.name === 'workflows';
         },
         getWorkflows() {
-            return this.publicContext
+            return (this.publicContext
                 ? this.publicWorkflows
-                : this.personalWorkflows;
+                : this.personalWorkflows).filter(workflow => workflow.config.name.includes(this.searchText));
         },
         workflowsLoading() {
             return this.publicContext
@@ -596,8 +588,8 @@ export default {
         },
         workflowInvalid() {
             return (
-                this.workflowSearchResult === null ||
-                !this.workflowSearchResult.validation.is_valid
+                this.searchResult === null ||
+                !this.searchResult.validation.is_valid
             );
         }
     }

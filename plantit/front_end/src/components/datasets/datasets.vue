@@ -330,10 +330,10 @@ export default {
     },
     async created() {
         await Promise.all([
-            // this.$store.dispatch('datasets/loadPublicDatasets'),
-            // this.$store.dispatch('datasets/loadPersonalDatasets'),
-            // this.$store.dispatch('datasets/loadSharedDatasets'),
-            // this.$store.dispatch('datasets/loadSharingDatasets')
+            // this.$store.dispatch('datasets/loadPublic'),
+            // this.$store.dispatch('datasets/loadPersonal'),
+            // this.$store.dispatch('datasets/loadShared'),
+            // this.$store.dispatch('datasets/loadSharing')
         ]);
     },
     computed: {
@@ -396,22 +396,22 @@ export default {
         },
         async refreshDatasets() {
             if (this.publicContext)
-                await this.$store.dispatch('datasets/loadPublicDatasets');
+                await this.$store.dispatch('datasets/loadPublic');
             else
                 switch (this.activeTab) {
                     case 0:
                         await this.$store.dispatch(
-                            'datasets/loadPersonalDatasets'
+                            'datasets/loadPersonal'
                         );
                         return;
                     case 1:
                         await this.$store.dispatch(
-                            'datasets/loadSharedDatasets'
+                            'datasets/loadShared'
                         );
                         return;
                     case 2:
                         await this.$store.dispatch(
-                            'datasets/loadSharingDatasets'
+                            'datasets/loadSharing'
                         );
                         return;
                 }
@@ -428,7 +428,7 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(() => {
-                    this.loadSharingDatasets();
+                    this.loadSharing();
                     // this.alertMessage = `Unshared dataset ${
                     //     this.internalLoaded
                     //         ? this.internalNode.path

@@ -1,24 +1,24 @@
 <template>
     <div>
         <b-container class="p-2 vl" fluid>
-            <b-row align-h="center" v-if="runsLoading">
+            <b-row align-h="center" v-if="submissionsLoading">
                 <b-spinner
                     type="grow"
                     label="Loading..."
                     variant="secondary"
                 ></b-spinner>
             </b-row>
-            <b-row align-content="center" v-else-if="runNotFound">
+            <b-row align-content="center" v-else-if="notFound">
                 <b-col class="text-center">
                     <p class="text-danger">
                         <i class="fas fa-exclamation-circle fa-3x fa-fw"></i>
                         <br />
                         <br />
-                        This run does not exist.
+                        This submission does not exist.
                     </p>
                 </b-col>
             </b-row>
-            <b-row v-else-if="getRun.cleaned_up" align-content="center">
+            <b-row v-else-if="getSubmission.cleaned_up" align-content="center">
                 <b-col>
                     <p
                         :class="
@@ -30,13 +30,13 @@
                         <i class="fas fa-broom fa-3x fa-fw"></i>
                         <br />
                         <br />
-                        This run has been cleaned up.
+                        This submission has been cleaned up.
                     </p>
                 </b-col>
             </b-row>
             <b-row v-else>
                 <b-col>
-                    <b-row align-h="center" v-if="runsLoading">
+                    <b-row align-h="center" v-if="submissionsLoading">
                         <b-spinner
                             type="grow"
                             label="Loading..."
@@ -71,7 +71,7 @@
                                     dismissible
                                     @dismissed="showFailedToCancelAlert = false"
                                 >
-                                    Failed to cancel run {{ getRun.name }}.
+                                  Failed to cancel submission {{ getSubmission.name }}.
                                 </b-alert>
                             </b-col>
                         </b-row>
@@ -84,12 +84,12 @@
                                             : 'text-dark'
                                     "
                                 >
-                                    {{ getRun.name }}
+                                  {{ getSubmission.name }}
                                 </h3></b-col
                             ><b-col class="m-0 ml-1 p-0">
                                 <h5>
                                     <b-badge
-                                        v-for="tag in getRun.tags"
+                                        v-for="tag in getSubmission.tags"
                                         v-bind:key="tag"
                                         class="mr-2"
                                         variant="secondary"
@@ -110,7 +110,7 @@
                                     <b-spinner
                                         class="mb-1 mr-1"
                                         small
-                                        v-if="!getRun.is_complete"
+                                        v-if="!getSubmission.is_complete"
                                         :variant="
                                             profile.darkMode ? 'light' : 'dark'
                                         "
@@ -118,29 +118,29 @@
                                     </b-spinner>
                                     <b-badge
                                         :variant="
-                                            getRun.is_failure ||
-                                            getRun.is_timeout
+                                            getSubmission.is_failure ||
+                                            getSubmission.is_timeout
                                                 ? 'danger'
-                                                : getRun.is_success
+                                                : getSubmission.is_success
                                                 ? 'success'
-                                                : getRun.is_cancelled
+                                                : getSubmission.is_cancelled
                                                 ? 'secondary'
                                                 : 'warning'
                                         "
-                                        >{{ getRun.job_status }}</b-badge
+                                        >{{ getSubmission.job_status }}</b-badge
                                     >
                                     <small> on </small>
-                                    <b class="mr-0">{{ getRun.agent }}</b>
+                                    <b class="mr-0">{{ getSubmission.agent }}</b>
                                 </h5>
                             </b-col>
                             <b-col
-                                v-if="getRun.is_complete && getRun.can_restart"
+                                v-if="getSubmission.is_complete && getSubmission.can_restart"
                                 md="auto"
                                 class="m-0 mb-2"
                                 align-self="start"
                             >
                                 <b-button
-                                    :disabled="resubmitted"
+                                    :disabled="restarted"
                                     :variant="
                                         profile.darkMode
                                             ? 'outline-light'
@@ -148,14 +148,14 @@
                                     "
                                     size="sm"
                                     v-b-tooltip.hover
-                                    :title="'Restart this run'"
-                                    @click="onRestart"
+                                    :title="'Restart this submission'"
+                                    @click="restart"
                                 >
                                     <i class="fas fa-level-up-alt"></i>
                                     Restart
                                     <b-spinner
                                         small
-                                        v-if="resubmitted"
+                                        v-if="restarted"
                                         label="Loading..."
                                         :variant="
                                             profile.darkMode ? 'light' : 'dark'
@@ -165,13 +165,13 @@
                                 </b-button>
                             </b-col>
                             <b-col
-                                v-if="!getRun.is_complete"
+                                v-if="!getSubmission.is_complete"
                                 md="auto"
                                 class="m-0 mb-2"
                                 align-self="start"
                             >
                                 <b-button
-                                    :disabled="cancelled"
+                                    :disabled="canceled"
                                     :variant="
                                         profile.darkMode
                                             ? 'outline-light'
@@ -180,12 +180,12 @@
                                     size="sm"
                                     v-b-tooltip.hover
                                     title="Cancel Run"
-                                    @click="onCancel"
+                                    @click="cancel"
                                 >
                                     <i class="fas fa-times"></i>
                                     Cancel<b-spinner
                                         small
-                                        v-if="cancelled"
+                                        v-if="canceled"
                                         label="Loading..."
                                         :variant="
                                             profile.darkMode ? 'light' : 'dark'
@@ -200,8 +200,8 @@
                                 align-self="start"
                             >
                                 <b-button
-                                    v-if="getRun.is_complete"
-                                    :disabled="runsLoading"
+                                    v-if="getSubmission.is_complete"
+                                    :disabled="submissionsLoading"
                                     :variant="
                                         profile.darkMode
                                             ? 'outline-light'
@@ -210,13 +210,13 @@
                                     size="sm"
                                     v-b-tooltip.hover
                                     title="Refresh Run"
-                                    @click="refreshRun"
+                                    @click="refresh"
                                 >
                                     <i class="fas fa-redo"></i>
                                     Refresh
                                     <b-spinner
                                         small
-                                        v-if="runsLoading"
+                                        v-if="submissionsLoading"
                                         label="Loading..."
                                         :variant="
                                             profile.darkMode ? 'light' : 'dark'
@@ -226,7 +226,7 @@
                                 </b-button>
                             </b-col>
                             <b-col
-                                v-if="getRun.is_complete"
+                                v-if="getSubmission.is_complete"
                                 md="auto"
                                 class="m-0 mb-2"
                                 align-self="start"
@@ -272,14 +272,14 @@
                                 <b-row class="m-0 p-0 mt-1">
                                     <b-col class="m-0 p-0">
                                         <small>
-                                            Created
-                                            {{ prettify(getRun.created) }}
+                                          Created
+                                          {{ prettify(getSubmission.created) }}
                                         </small>
                                     </b-col>
                                     <b-col class="m-0 p-0" md="auto">
                                         <small>
-                                            Last updated
-                                            {{ prettify(getRun.updated) }}
+                                          Last updated
+                                          {{ prettify(getSubmission.updated) }}
                                         </small>
                                     </b-col>
                                 </b-row>
@@ -295,7 +295,7 @@
                                             <div>
                                                 <b-row
                                                     align-h="center"
-                                                    v-if="runsLoading"
+                                                    v-if="submissionsLoading"
                                                 >
                                                     <b-spinner
                                                         class="mt-3"
@@ -307,7 +307,7 @@
                                                 <b-row class="m-0">
                                                     <b-col
                                                         v-if="
-                                                            getRun
+                                                            getSubmission
                                                                 .submission_logs
                                                                 .length > 0
                                                         "
@@ -333,8 +333,8 @@
                                         <div
                                             class="m-3"
                                             v-if="
-                                                getRun.is_complete &&
-                                                    getRun.output_files !==
+                                                getSubmission.is_complete &&
+                                                    getSubmission.output_files !==
                                                         undefined
                                             "
                                         >
@@ -347,13 +347,13 @@
                                                     <span
                                                         v-if="
                                                             !loadingOutputFiles &&
-                                                                getRun.output_files !==
+                                                                getSubmission.output_files !==
                                                                     undefined
                                                         "
                                                         >{{
-                                                            getRun.output_files
-                                                                .length
-                                                        }}</span
+                                                        getSubmission.output_files
+                                                            .length
+                                                      }}</span
                                                     >
                                                     result(s)
                                                     <br />
@@ -369,77 +369,77 @@
                                                                     : 'theme-light'
                                                             "
                                                             >{{
-                                                                getWorkflow
-                                                                    .config
-                                                                    .output.path
-                                                                    ? getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .path +
-                                                                      '/'
-                                                                    : ''
-                                                            }}{{
-                                                                (getWorkflow
-                                                                    .config
-                                                                    .output
-                                                                    .include
-                                                                    ? (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .exclude
-                                                                          ? '+ '
-                                                                          : '') +
-                                                                      (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .include
-                                                                          .patterns
-                                                                          ? '*.' +
-                                                                            getWorkflow.config.output.include.patterns.join(
-                                                                                ', *.'
-                                                                            )
-                                                                          : []) +
-                                                                      (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .include
-                                                                          .names
-                                                                          ? ', ' +
-                                                                            getWorkflow.config.output.include.names.join(
-                                                                                ', '
-                                                                            )
-                                                                          : [])
-                                                                    : '') +
-                                                                    `, ${getRun.name}.zip`
-                                                            }}{{
-                                                                getWorkflow
-                                                                    .config
-                                                                    .output
-                                                                    .exclude
-                                                                    ? ' - ' +
-                                                                      (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .exclude
-                                                                          .patterns
-                                                                          ? '*.' +
-                                                                            getWorkflow.config.output.exclude.patterns.join(
-                                                                                ', *.'
-                                                                            )
-                                                                          : []) +
-                                                                      (getWorkflow
-                                                                          .config
-                                                                          .output
-                                                                          .exclude
-                                                                          .names
-                                                                          ? ', ' +
-                                                                            getWorkflow.config.output.exclude.names.join(
-                                                                                ', '
-                                                                            )
-                                                                          : [])
-                                                                    : ''
-                                                            }}
-                                                        </code></b
+                                                        getWorkflow
+                                                            .config
+                                                            .output.path
+                                                            ? getWorkflow
+                                                                .config
+                                                                .output
+                                                                .path +
+                                                            '/'
+                                                            : ''
+                                                      }}{{
+                                                        (getWorkflow
+                                                            .config
+                                                            .output
+                                                            .include
+                                                            ? (getWorkflow
+                                                                .config
+                                                                .output
+                                                                .exclude
+                                                            ? '+ '
+                                                            : '') +
+                                                            (getWorkflow
+                                                                .config
+                                                                .output
+                                                                .include
+                                                                .patterns
+                                                                ? '*.' +
+                                                                getWorkflow.config.output.include.patterns.join(
+                                                                    ', *.'
+                                                                )
+                                                                : []) +
+                                                            (getWorkflow
+                                                                .config
+                                                                .output
+                                                                .include
+                                                                .names
+                                                                ? ', ' +
+                                                                getWorkflow.config.output.include.names.join(
+                                                                    ', '
+                                                                )
+                                                                : [])
+                                                            : '') +
+                                                        `, ${getSubmission.name}.zip`
+                                                      }}{{
+                                                        getWorkflow
+                                                            .config
+                                                            .output
+                                                            .exclude
+                                                            ? ' - ' +
+                                                            (getWorkflow
+                                                                .config
+                                                                .output
+                                                                .exclude
+                                                                .patterns
+                                                                ? '*.' +
+                                                                getWorkflow.config.output.exclude.patterns.join(
+                                                                    ', *.'
+                                                                )
+                                                                : []) +
+                                                            (getWorkflow
+                                                                .config
+                                                                .output
+                                                                .exclude
+                                                                .names
+                                                                ? ', ' +
+                                                                getWorkflow.config.output.exclude.names.join(
+                                                                    ', '
+                                                                )
+                                                                : [])
+                                                            : ''
+                                                      }}
+                                                    </code></b
                                                     >
                                                 </b-col>
                                                 <b-col
@@ -448,11 +448,11 @@
                                                 >
                                                     <b-dropdown
                                                         :disabled="
-                                                            getRun.output_files !==
+                                                            getSubmission.output_files !==
                                                                 undefined &&
-                                                                getRun.output_files !==
+                                                                getSubmission.output_files !==
                                                                     null &&
-                                                                getRun
+                                                                getSubmission
                                                                     .output_files
                                                                     .length ===
                                                                     0
@@ -503,11 +503,11 @@
                                                     align-self="end"
                                                     ><b-dropdown
                                                         :disabled="
-                                                            getRun.output_files !==
+                                                            getSubmission.output_files !==
                                                                 undefined &&
-                                                                getRun.output_files !==
+                                                                getSubmission.output_files !==
                                                                     null &&
-                                                                getRun
+                                                                getSubmission
                                                                     .output_files
                                                                     .length ===
                                                                     0
@@ -573,7 +573,7 @@
                                                         class="mt-3"
                                                         size="md"
                                                         :total-rows="
-                                                            getRun.output_files
+                                                            getSubmission.output_files
                                                                 .length
                                                         "
                                                         :per-page="
@@ -779,7 +779,7 @@
                                                                     class="m-0 p-0"
                                                                     v-if="
                                                                         !file.exists &&
-                                                                            !getRun.is_complete
+                                                                            !getSubmission.is_complete
                                                                     "
                                                                     type="grow"
                                                                     small
@@ -788,7 +788,7 @@
                                                                 <i
                                                                     v-else-if="
                                                                         !file.exists &&
-                                                                            getRun.is_complete
+                                                                            getSubmission.is_complete
                                                                     "
                                                                     class="far fa-times-circle text-danger fa-fw"
                                                                 ></i>
@@ -881,7 +881,7 @@
                                                                     "
                                                                     fluid-grow
                                                                     :style="
-                                                                        getRun.result_previews_loaded ||
+                                                                        getSubmission.result_previews_loaded ||
                                                                         noPreview(
                                                                             file
                                                                         )
@@ -944,7 +944,7 @@
                                                         @sliding-start="
                                                             slide =>
                                                                 getTextFile(
-                                                                    getRun
+                                                                    getSubmission
                                                                         .output_files[
                                                                         slide
                                                                     ]
@@ -953,7 +953,7 @@
                                                         @sliding-end="
                                                             slide =>
                                                                 renderPreview(
-                                                                    getRun
+                                                                    getSubmission
                                                                         .output_files[
                                                                         slide
                                                                     ]
@@ -961,7 +961,7 @@
                                                         "
                                                     >
                                                         <b-carousel-slide
-                                                            v-for="file in getRun.output_files"
+                                                            v-for="file in getSubmission.output_files"
                                                             v-bind:key="
                                                                 file.name
                                                             "
@@ -1287,7 +1287,7 @@
             </b-row>
         </b-container>
         <b-modal
-            id="delete"
+            id="remove"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
             close
@@ -1298,8 +1298,8 @@
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
             ok-variant="outline-danger"
-            title="Delete this run?"
-            @ok="onDelete"
+            title="Delete this submission?"
+            @ok="remove"
         >
             <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
                 This cannot be undone.
@@ -1360,7 +1360,7 @@ import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export default {
-    name: 'run',
+    name: 'submission',
     components: {
         WorkflowBlurb
     },
@@ -1371,21 +1371,16 @@ export default {
             currentCarouselSlide: 0,
             viewMode: 'List',
             resultSearchText: '',
+            // action flags
             downloading: false,
-            resubmitted: false,
-            cancelled: false,
-            // run status constants
-            PENDING: 'PENDING',
-            STARTED: 'STARTED',
-            SUCCESS: 'SUCCESS',
-            FAILURE: 'FAILURE',
-            REVOKED: 'REVOKED',
+            restarted: false,
+            canceled: false,
             // user data
             userData: null,
             // walltime
             walltimeTotal: null,
             runtimeUpdateInterval: null,
-            // output files
+            // result files
             loadingOutputFiles: false,
             outputFilePage: 1,
             outputPageSize: 10,
@@ -1413,18 +1408,18 @@ export default {
         thumbnailPath(file) {
             if (this.noPreview(file))
                 return require('../../assets/no_preview_thumbnail.png');
-            else if (!this.getRun.result_previews_loaded)
+            else if (!this.getSubmission.result_previews_loaded)
                 return require('../../assets/PlantITLoading.gif');
             else return this.thumbnailFor(file.path);
         },
         thumbnailFor(path) {
-            let i = this.getRun.output_files.findIndex(f => f.path === path);
+            let i = this.getSubmission.output_files.findIndex(f => f.path === path);
             if (
                 this.viewMode === 'Grid' &&
                 i >= (this.outputFilePage - 1) * this.outputPageSize &&
                 i <= this.outputFilePage * this.outputPageSize
             )
-                return `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
+                return `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
             else return null;
         },
         prettifyShort: function(date) {
@@ -1515,7 +1510,7 @@ export default {
             const loader = new PLYLoader();
             var comp = {};
             loader.load(
-                `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/3d_model/?path=${f.name}`,
+                `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/3d_model/?path=${f.name}`,
                 function(geometry) {
                     geometry.computeVertexNormals();
 
@@ -1651,20 +1646,20 @@ export default {
         setViewMode(mode) {
             this.viewMode = mode;
         },
-        refreshRun() {
-            this.$store.dispatch('runs/refresh', {
+        refresh() {
+            this.$store.dispatch('submissions/refresh', {
                 owner: this.$router.currentRoute.params.owner,
                 name: this.$router.currentRoute.params.name
             });
         },
-        onCancel() {
-            this.cancelled = true;
+        cancel() {
+            this.canceled = true;
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`
+                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`
                 )
                 .then(response => {
-                    this.cancelled = false;
+                    this.canceled = false;
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
@@ -1673,23 +1668,23 @@ export default {
                     }
                 })
                 .catch(error => {
-                    this.cancelled = false;
+                    this.canceled = false;
                     Sentry.captureException(error);
                     return error;
                 });
         },
-        onDelete() {
+        remove() {
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/delete/`
+                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/delete/`
                 )
                 .then(response => {
                     if (response.status === 200 && response.data.deleted) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('runs/loadAll');
+                        this.$store.dispatch('submissions/loadAll');
                         router.push({
-                            name: 'runs'
+                            name: 'submissions'
                         });
                     } else {
                         this.showFailedToDeleteAlert = true;
@@ -1701,16 +1696,16 @@ export default {
                 });
         },
         showDeletePrompt() {
-            this.$bvModal.show('delete');
+            this.$bvModal.show('remove');
         },
-        onRestart() {
-            this.resubmitted = true;
+        restart() {
+            this.restarted = true;
             let config = this.recentlyRunWorkflows[this.workflowKey]; // retrieve workflow config
 
-            // resubmit run
+            // resubmit
             axios({
                 method: 'post',
-                url: `/apis/v1/runs/`,
+                url: `/apis/v1/submissions/`,
                 data: {
                     repo: this.getWorkflow.repo,
                     config: config,
@@ -1720,17 +1715,18 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(response => {
-                    this.resubmitted = false;
+                    this.restarted = false;
                     router.push({
-                        name: 'run',
+                        name: 'submission',
                         params: {
+                            owner: response.data.owner,
                             name: response.data.name
                         }
                     });
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    this.resubmitted = false;
+                    this.restarted = false;
                     throw error;
                 });
         },
@@ -1757,7 +1753,7 @@ export default {
         },
         viewFile(file) {
             this.thumbnailName = file;
-            this.thumbnailUrl = `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${file}`;
+            this.thumbnailUrl = `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${file}`;
             this.thumbnailTitle = file;
             this.$bvModal.show('thumbnail');
         },
@@ -1765,7 +1761,7 @@ export default {
             this.downloading = true;
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/output/${file}/`,
+                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/output/${file}/`,
                     { responseType: 'blob' }
                 )
                 .then(response => {
@@ -1792,7 +1788,7 @@ export default {
         downloadSubmissionLogs() {
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/submission_logs/`
+                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/submission_logs/`
                 )
                 .then(response => {
                     if (response && response.status === 404) {
@@ -1817,7 +1813,7 @@ export default {
         downloadContainerLogs() {
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/container_logs/`
+                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/container_logs/`
                 )
                 .then(response => {
                     if (response && response.status === 404) {
@@ -1844,7 +1840,7 @@ export default {
             this.textContent = [];
             axios
                 .get(
-                    `/apis/v1/runs/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/file_text/?path=${file.path}`
+                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/file_text/?path=${file.path}`
                 )
                 .then(response => {
                     if (response.status === 200) {
@@ -1858,7 +1854,7 @@ export default {
         }
     },
     async mounted() {
-        // await this.$store.dispatch('runs/refresh', {
+        // await this.$store.dispatch('submissions/refresh', {
         //     owner: this.$router.currentRoute.params.owner,
         //     name: this.$router.currentRoute.params.name
         // });
@@ -1866,28 +1862,28 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflow', 'recentlyRunWorkflows']),
-        ...mapGetters('runs', ['searchRun', 'runs', 'runsLoading']),
+        ...mapGetters('submissions', ['submission', 'submissions', 'submissionsLoading']),
         filteredResults() {
-            return this.getRun.output_files
+            return this.getSubmission.output_files
                 .slice(
                     (this.outputFilePage - 1) * this.outputPageSize,
                     this.outputFilePage * this.outputPageSize
                 )
-                .filter(f => f.name.includes(this.resultSearchText));
+                .filter(file => file.name.includes(this.resultSearchText));
         },
         workflowKey() {
             return `${this.getWorkflow.repo.owner.login}/${this.getWorkflow.repo.name}`;
         },
-        getRun() {
-            let run = this.searchRun(
+        getSubmission() {
+            let submission = this.submission(
                 this.$router.currentRoute.params.owner,
                 this.$router.currentRoute.params.name
             );
-            if (run !== undefined && run !== null) return run;
+            if (submission !== undefined && submission !== null) return submission;
             return null;
         },
         submissionLogs() {
-            let all = this.getRun.submission_logs.slice();
+            let all = this.getSubmission.submission_logs.slice();
             var firstI = all.findIndex(l => l.includes('PENDING'));
             if (firstI === -1)
                 firstI = all.findIndex(l => l.includes('RUNNING'));
@@ -1898,18 +1894,18 @@ export default {
             all.reverse();
             if (lastI === -1) return all;
             if (lastI === all.length - 1) return all;
-            else if (this.getRun.is_complete)
+            else if (this.getSubmission.is_complete)
                 all.splice(firstI, lastI - firstI + 1);
             else all.splice(firstI, lastI - firstI + 1, all[lastI]);
             return all;
         },
-        runNotFound() {
-            return this.getRun === null && !this.runsLoading;
+        notFound() {
+            return this.getSubmission === null && !this.submissionsLoading;
         },
         getWorkflow() {
             return this.workflow(
-                this.getRun.workflow_owner,
-                this.getRun.workflow_name
+                this.getSubmission.workflow_owner,
+                this.getSubmission.workflow_name
             );
         },
         submissionLogFileName() {
@@ -1918,12 +1914,12 @@ export default {
         containerLogFileName() {
             return `${
                 this.$router.currentRoute.params.name
-            }.${this.getRun.agent.toLowerCase()}.log`;
+            }.${this.getSubmission.agent.toLowerCase()}.log`;
         }
     },
     watch: {
         // async $route() {
-        //     await this.$store.dispatch('runs/refresh', this.getRun);
+        //     await this.$store.dispatch('submissions/refresh', this.getRun);
         //     window.location.reload(false);
         //     // this.$forceUpdate();
         // },
@@ -1933,20 +1929,20 @@ export default {
         viewMode() {
             if (
                 this.data !== null &&
-                this.getRun.output_files.some(f => f.name.endsWith('ply'))
+                this.getSubmission.output_files.some(f => f.name.endsWith('ply'))
             ) {
                 this.unrenderPreview();
                 if (this.viewMode === 'Carousel')
                     if (this.currentCarouselSlide === 0)
-                        this.renderPreview(this.getRun.output_files[0]);
+                        this.renderPreview(this.getSubmission.output_files[0]);
             }
 
             if (
                 this.viewMode === 'Carousel' &&
                 this.textContent.length === 0 &&
-                this.getRun.output_files.length > 0
+                this.getSubmission.output_files.length > 0
             )
-                this.getTextFile(this.getRun.output_files[0]);
+                this.getTextFile(this.getSubmission.output_files[0]);
         }
     }
 };

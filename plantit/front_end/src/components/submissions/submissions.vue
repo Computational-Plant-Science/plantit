@@ -20,24 +20,24 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            Your Runs
+                            Your Submissions
                         </h2></b-col
                     >
                     <b-col md="auto" class="ml-0" align-self="center"
                         ><b-button
-                            :disabled="runsLoading"
+                            :disabled="submissionsLoading"
                             :variant="
                                 profile.darkMode ? 'outline-light' : 'white'
                             "
                             size="md"
                             v-b-tooltip.hover
-                            title="Refresh runs"
-                            @click="refreshRuns"
+                            title="Refresh submissions"
+                            @click="refresh"
                             class="ml-0 mt-0 mr-0"
                         >
                             <b-spinner
                                 small
-                                v-if="runsLoading"
+                                v-if="submissionsLoading"
                                 label="Refreshing..."
                                 :variant="profile.darkMode ? 'light' : 'dark'"
                                 class="mr-1"
@@ -47,7 +47,7 @@
                         ></b-col
                     >
                 </b-row>
-                <b-row v-if="runsLoading" class="mt-2">
+                <b-row v-if="submissionsLoading" class="mt-2">
                     <b-col class="text-center">
                         <b-spinner
                             type="grow"
@@ -78,7 +78,7 @@
                                 pill
                                 class="ml-1 mr-1 mb-1"
                                 variant="warning"
-                                >{{ runningRuns.length }}</b-badge
+                                >{{ submissionsRunning.length }}</b-badge
                             >
                         </template>
                         <b-row class="pl-0 pr-0"
@@ -89,9 +89,9 @@
                                             ? 'text-light'
                                             : 'text-dark'
                                     "
-                                    v-if="runningRuns.length === 0"
+                                    v-if="submissionsRunning.length === 0"
                                 >
-                                    No workflows are running right now.
+                                    No submissions running right now.
                                 </p>
                                 <div v-else>
                                     <b-input-group size="sm" style="bottom: 4px"
@@ -107,15 +107,15 @@
                                             "
                                             size="lg"
                                             type="search"
-                                            v-model="runSearchText"
+                                            v-model="searchText"
                                         ></b-form-input>
                                     </b-input-group>
                                     <b-list-group class="text-left m-0 p-0">
                                         <b-list-group-item
                                             variant="default"
                                             style="box-shadow: -2px 2px 2px #adb5bd"
-                                            v-for="run in filteredRunningRuns"
-                                            v-bind:key="run.name"
+                                            v-for="submission in filteredRunning"
+                                            v-bind:key="submission.name"
                                             :class="
                                                 profile.darkMode
                                                     ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
@@ -124,16 +124,18 @@
                                         >
                                             <b-img
                                                 v-if="
-                                                    run.workflow_image_url !==
+                                                    submission.workflow_image_url !==
                                                         undefined &&
-                                                        run.workflow_image_url !==
+                                                        submission.workflow_image_url !==
                                                             null
                                                 "
                                                 rounded
                                                 class="card-img-right"
                                                 style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                 right
-                                                :src="run.workflow_image_url"
+                                                :src="
+                                                    submission.workflow_image_url
+                                                "
                                             ></b-img>
                                             <b-link
                                                 :class="
@@ -142,24 +144,26 @@
                                                         : 'text-dark'
                                                 "
                                                 :to="{
-                                                    name: 'run',
+                                                    name: 'submission',
                                                     params: {
-                                                        owner: run.owner,
-                                                        name: run.name
+                                                        owner: submission.owner,
+                                                        name: submission.name
                                                     }
                                                 }"
                                                 replace
-                                                >{{ run.name }}</b-link
+                                                >{{ submission.name }}</b-link
                                             >
                                             <br />
                                             <div
                                                 v-if="
-                                                    run.tags !== undefined &&
-                                                        run.tags.length > 0
+                                                    submission.tags !==
+                                                        undefined &&
+                                                        submission.tags.length >
+                                                            0
                                                 "
                                             >
                                                 <b-badge
-                                                    v-for="tag in run.tags"
+                                                    v-for="tag in submission.tags"
                                                     v-bind:key="tag"
                                                     class="mr-1"
                                                     variant="secondary"
@@ -170,7 +174,7 @@
                                             <b-spinner
                                                 class="mb-1 mr-1"
                                                 style="width: 0.7rem; height: 0.7rem;"
-                                                v-if="!run.is_complete"
+                                                v-if="!submission.is_complete"
                                                 :variant="
                                                     profile.darkMode
                                                         ? 'light'
@@ -178,35 +182,39 @@
                                                 "
                                             >
                                             </b-spinner>
-                                            <small v-if="!run.is_complete"
+                                            <small
+                                                v-if="!submission.is_complete"
                                                 >Running</small
                                             >
                                             <b-badge
                                                 :variant="
-                                                    run.is_failure ||
-                                                    run.is_timeout
+                                                    submission.is_failure ||
+                                                    submission.is_timeout
                                                         ? 'danger'
-                                                        : run.is_cancelled
+                                                        : submission.is_cancelled
                                                         ? 'secondary'
                                                         : 'success'
                                                 "
                                                 v-else
-                                                >{{ run.job_status }}</b-badge
+                                                >{{
+                                                    submission.job_status
+                                                }}</b-badge
                                             >
                                             <small> on </small>
                                             <b-badge
                                                 class="ml-0 mr-0"
                                                 variant="secondary"
-                                                >{{ run.agent }}</b-badge
+                                                >{{ submission.agent }}</b-badge
                                             ><small>
                                                 {{
-                                                    prettify(run.updated)
+                                                    prettify(submission.updated)
                                                 }}</small
                                             >
                                             <br />
                                             <small
                                                 v-if="
-                                                    run.workflow_name !== null
+                                                    submission.workflow_name !==
+                                                        null
                                                 "
                                                 class="mr-1"
                                                 ><a
@@ -216,13 +224,15 @@
                                                             : 'text-dark'
                                                     "
                                                     :href="
-                                                        `https://github.com/${run.workflow_owner}/${run.workflow_name}`
+                                                        `https://github.com/${submission.workflow_owner}/${submission.workflow_name}`
                                                     "
                                                     ><i
                                                         class="fab fa-github fa-fw"
                                                     ></i>
-                                                    {{ run.workflow_owner }}/{{
-                                                        run.workflow_name
+                                                    {{
+                                                        submission.workflow_owner
+                                                    }}/{{
+                                                        submission.workflow_name
                                                     }}</a
                                                 >
                                             </small>
@@ -248,18 +258,18 @@
                                 pill
                                 class="ml-1 mr-1 mb-1"
                                 variant="success"
-                                >{{ succeededRuns.length }}</b-badge
+                                >{{ submissionsSucceeded.length }}</b-badge
                             >
                             <b-badge
                                 pill
                                 class="ml-1 mr-1 mb-1"
                                 variant="danger"
-                                >{{ failedRuns.length }}</b-badge
+                                >{{ submissionsFailed.length }}</b-badge
                             >
                         </template>
                         <b-row>
                             <b-col
-                                v-if="runsLoading"
+                                v-if="submissionsLoading"
                                 class="m-0 pl-0 pr-0 text-center"
                             >
                                 <b-spinner
@@ -269,7 +279,8 @@
                             ></b-col>
                             <b-col
                                 v-if="
-                                    !runsLoading && completedRuns.length === 0
+                                    !submissionsLoading &&
+                                        submissionsCompleted.length === 0
                                 "
                                 class="m-0 pl-0 pr-0"
                             >
@@ -280,7 +291,7 @@
                                             : 'text-dark'
                                     "
                                 >
-                                    You haven't run any workflows.
+                                    No workflow submissions.
                                 </p>
                             </b-col>
                             <b-col v-else class="m-0 pl-0 pr-0 text-center"
@@ -297,21 +308,23 @@
                                         "
                                         size="lg"
                                         type="search"
-                                        v-model="runSearchText"
+                                        v-model="searchText"
                                     ></b-form-input> </b-input-group
                             ></b-col>
                         </b-row>
                         <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                             ><b-col
-                                v-if="!runsLoading && completedRuns.length > 0"
+                                v-if="
+                                    !submissionsLoading && submissionsCompleted.length > 0
+                                "
                                 class="m-0 pl-0 pr-0 text-center"
                             >
                                 <b-list-group class="text-left m-0 p-0">
                                     <b-list-group-item
                                         variant="default"
                                         style="box-shadow: -2px 2px 2px #adb5bd"
-                                        v-for="run in filteredCompletedRuns"
-                                        v-bind:key="run.name"
+                                        v-for="submission in filteredCompleted"
+                                        v-bind:key="submission.name"
                                         :class="
                                             profile.darkMode
                                                 ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
@@ -322,9 +335,9 @@
                                             ><b-col>
                                                 <b-img
                                                     v-if="
-                                                        run.workflow_image_url !==
+                                                        submission.workflow_image_url !==
                                                             undefined &&
-                                                            run.workflow_image_url !==
+                                                            submission.workflow_image_url !==
                                                                 null
                                                     "
                                                     rounded
@@ -332,7 +345,7 @@
                                                     style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                     right
                                                     :src="
-                                                        run.workflow_image_url
+                                                        submission.workflow_image_url
                                                     "
                                                 ></b-img>
                                                 <b-link
@@ -342,14 +355,18 @@
                                                             : 'text-dark'
                                                     "
                                                     :to="{
-                                                        name: 'run',
+                                                        name: 'submission',
                                                         params: {
-                                                            owner: run.owner,
-                                                            name: run.name
+                                                            owner:
+                                                                submission.owner,
+                                                            name:
+                                                                submission.name
                                                         }
                                                     }"
                                                     replace
-                                                    >{{ run.name }}</b-link
+                                                    >{{
+                                                        submission.name
+                                                    }}</b-link
                                                 >
                                             </b-col>
                                         </b-row>
@@ -357,13 +374,14 @@
                                             ><b-col>
                                                 <div
                                                     v-if="
-                                                        run.tags !==
+                                                        submission.tags !==
                                                             undefined &&
-                                                            run.tags.length > 0
+                                                            submission.tags
+                                                                .length > 0
                                                     "
                                                 >
                                                     <b-badge
-                                                        v-for="tag in run.tags"
+                                                        v-for="tag in submission.tags"
                                                         v-bind:key="tag"
                                                         class="mr-1"
                                                         variant="secondary"
@@ -371,25 +389,29 @@
                                                     </b-badge>
                                                     <br
                                                         v-if="
-                                                            run.tags.length > 0
+                                                            submission.tags
+                                                                .length > 0
                                                         "
                                                     />
                                                 </div>
-                                                <small v-if="!run.is_complete"
+                                                <small
+                                                    v-if="
+                                                        !submission.is_complete
+                                                    "
                                                     >Running</small
                                                 >
                                                 <b-badge
                                                     :variant="
-                                                        run.is_failure ||
-                                                        run.is_timeout
+                                                        submission.is_failure ||
+                                                        submission.is_timeout
                                                             ? 'danger'
-                                                            : run.is_cancelled
+                                                            : submission.is_cancelled
                                                             ? 'secondary'
                                                             : 'success'
                                                     "
                                                     v-else
                                                     >{{
-                                                        run.job_status
+                                                        submission.job_status
                                                     }}</b-badge
                                                 >
                                                 <small>
@@ -398,10 +420,14 @@
                                                 <b-badge
                                                     class="ml-0 mr-0"
                                                     variant="secondary"
-                                                    >{{ run.agent }}</b-badge
+                                                    >{{
+                                                        submission.agent
+                                                    }}</b-badge
                                                 ><small>
                                                     {{
-                                                        prettify(run.updated)
+                                                        prettify(
+                                                            submission.updated
+                                                        )
                                                     }}</small
                                                 >
                                             </b-col>
@@ -416,29 +442,33 @@
                                                                 : 'text-dark'
                                                         "
                                                         :href="
-                                                            `https://github.com/${run.workflow_owner}/${run.workflow_name}`
+                                                            `https://github.com/${submission.workflow_owner}/${submission.workflow_name}`
                                                         "
                                                         ><i
                                                             class="fab fa-github fa-fw"
                                                         ></i>
                                                         {{
-                                                            run.workflow_owner
+                                                            submission.workflow_owner
                                                         }}/{{
-                                                            run.workflow_name
+                                                            submission.workflow_name
                                                         }}</a
                                                     >
                                                 </small>
                                             </b-col>
                                             <b-col md="auto">
                                                 <b-button
-                                                    v-if="run.is_complete"
+                                                    v-if="
+                                                        submission.is_complete
+                                                    "
                                                     variant="outline-danger"
                                                     size="sm"
                                                     v-b-tooltip.hover
                                                     title="Delete Run"
                                                     class="text-right"
                                                     @click="
-                                                        showDeleteRunPrompt(run)
+                                                        showRemovePrompt(
+                                                            submission
+                                                        )
                                                     "
                                                 >
                                                     <i class="fas fa-trash"></i>
@@ -469,10 +499,10 @@ import router from '@/router';
 import * as Sentry from '@sentry/browser';
 
 export default {
-    name: 'runs',
+    name: 'submissions',
     data: function() {
         return {
-            runSearchText: ''
+            searchText: ''
         };
     },
     methods: {
@@ -481,26 +511,29 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        async refreshRuns() {
-            await this.$store.dispatch('runs/loadAll');
+        showRemovePrompt(submission) {
+            this.$bvModal.show('remove ' + submission.name);
         },
-        showDeleteRunPrompt(run) {
-            this.$bvModal.show('delete ' + run.name);
+        async refresh() {
+            await this.$store.dispatch('submissions/loadAll');
         },
-        deleteRun(run) {
-            axios
-                .get(`/apis/v1/runs/${run.owner}/${run.name}/delete/`)
+        async remove(submission) {
+            await axios
+                .get(
+                    `/apis/v1/submissions/${submission.owner}/${submission.name}/delete/`
+                )
                 .then(response => {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('runs/loadAll');
+                        this.$store.dispatch('submissions/loadAll');
                         if (
-                            this.$router.currentRoute.name === 'run' &&
-                            run.name === this.$router.currentRoute.params.name
+                            this.$router.currentRoute.name === 'submission' &&
+                            submission.name ===
+                                this.$router.currentRoute.params.name
                         )
                             router.push({
-                                name: 'runs'
+                                name: 'submissions'
                             });
                     } else {
                         this.showFailedToCancelAlert = true;
@@ -512,43 +545,35 @@ export default {
                 });
         }
     },
-    async mounted() {
-        // await Promise.all([this.$store.dispatch('runs/loadAll')]);
-    },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
-        ...mapGetters('runs', ['runs', 'runsLoading']),
+        ...mapGetters('submissions', [
+            'submissions',
+            'submissionsLoading',
+            'submissionsRunning',
+            'submissionsCompleted',
+            'submissionsSucceeded',
+            'submissionsFailed'
+        ]),
         isRootPath() {
-            return this.$route.name === 'runs';
+            return this.$route.name === 'submissions';
         },
-        runningRuns() {
-            return this.runs.filter(r => !r.is_complete);
-        },
-        completedRuns() {
-            return this.runs.filter(r => r.is_complete);
-        },
-        succeededRuns() {
-            return this.completedRuns.filter(r => r.is_success);
-        },
-        failedRuns() {
-            return this.completedRuns.filter(r => r.is_failure);
-        },
-        filteredRunningRuns() {
-            return this.runningRuns.filter(
-                r =>
-                    (r.workflow_name !== null &&
-                        r.workflow_name.includes(this.runSearchText)) ||
-                    (r.name !== null && r.name.includes(this.runSearchText)) ||
-                    r.tags.some(t => t.includes(this.runSearchText))
+        filteredRunning() {
+            return this.submissionsRunning.filter(
+                sub =>
+                    (sub.workflow_name !== null &&
+                        sub.workflow_name.includes(this.searchText)) ||
+                    (sub.name !== null && sub.name.includes(this.searchText)) ||
+                    sub.tags.some(tag => tag.includes(this.searchText))
             );
         },
-        filteredCompletedRuns() {
-            return this.completedRuns.filter(
-                r =>
-                    (r.workflow_name !== null &&
-                        r.workflow_name.includes(this.runSearchText)) ||
-                    (r.name !== null && r.name.includes(this.runSearchText)) ||
-                    r.tags.some(t => t.includes(this.runSearchText))
+        filteredCompleted() {
+            return this.submissionsCompleted.filter(
+                sub =>
+                    (sub.workflow_name !== null &&
+                        sub.workflow_name.includes(this.searchText)) ||
+                    (sub.name !== null && sub.name.includes(this.searchText)) ||
+                    sub.tags.some(tag => tag.includes(this.searchText))
             );
         }
     }

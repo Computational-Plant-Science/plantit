@@ -5,12 +5,11 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponseNotAllowed, HttpResponse
-from django.utils import timezone
 from rest_framework.decorators import api_view
 
 from plantit.github import get_repo_readme, get_repo
 from plantit.redis import RedisClient
-from plantit.runs.tasks import refresh_all_workflows, refresh_personal_workflows
+from plantit.tasks import refresh_all_workflows, refresh_personal_workflows
 from plantit.users.models import Profile
 from plantit.workflows.models import Workflow
 

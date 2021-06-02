@@ -9,6 +9,12 @@ from django_celery_beat.models import PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
 
 
+class AgentExecutor(models.TextChoices):
+    LOCAL = 'local', gettext_lazy('Local')
+    SLURM = 'slurm', gettext_lazy('SLURM')
+    PBS = 'pbs', gettext_lazy('PBS')
+
+
 class Agent(models.Model):
     name = models.CharField(max_length=50)
     guid = models.CharField(max_length=50, null=False, blank=False)
@@ -37,15 +43,10 @@ class Agent(models.Model):
     job_array = models.BooleanField(default=False)  # https://github.com/Computational-Plant-Science/plantit/issues/98
     launcher = models.BooleanField(default=False)   # https://github.com/TACC/launcher
 
-    class Executor(models.TextChoices):
-        LOCAL = 'local', gettext_lazy('Local')
-        SLURM = 'slurm', gettext_lazy('SLURM')
-        PBS = 'pbs', gettext_lazy('PBS')
-
     executor = models.CharField(
         max_length=10,
-        choices=Executor.choices,
-        default=Executor.LOCAL)
+        choices=AgentExecutor.choices,
+        default=AgentExecutor.LOCAL)
 
     def __str__(self):
         return self.name
@@ -60,7 +61,7 @@ class AgentRole(Enum):
 class AgentAccessPolicy(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     agent = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.CASCADE)
-    role = EnumChoiceField(AgentRole, default=AgentRole.run)
+    role = EnumChoiceField(AgentRole, default=AgentRole.guest)
 
 
 class AgentAccessRequest(models.Model):

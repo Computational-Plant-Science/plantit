@@ -23,11 +23,11 @@ from django.utils import timezone
 
 from plantit import settings
 from plantit.docker import parse_image_components, image_exists
-from plantit.options import FileInput, Parameter, FilesInput, DirectoryInput, RunOptions, BindMount
+from plantit.options import FileInput, Parameter, FilesInput, DirectoryInput, SubmissionOptions, BindMount
 from plantit.redis import RedisClient
-from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole
+from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor
 from plantit.agents.utils import map_agent
-from plantit.runs.models import Run, DelayedRunTask, RepeatingRunTask
+from plantit.submissions.models import Submission, DelayedSubmissionTask, RepeatingSubmissionTask, SubmissionStatus, JobQueueSubmission
 from plantit.ssh import SSH, execute_command
 from plantit.utils import parse_bind_mount, format_bind_mount
 from plantit.github import get_repo_config
@@ -90,7 +90,7 @@ def parse_eta(data: dict) -> (datetime, int):
     return eta, seconds
 
 
-def parse_run_config(config: dict) -> (List[str], RunOptions):
+def parse_submission_config(config: dict) -> (List[str], SubmissionOptions):
     errors = []
     image = None
     if not isinstance(config['image'], str):
@@ -135,7 +135,7 @@ def parse_run_config(config: dict) -> (List[str], RunOptions):
 
     bind_mounts = None
     if 'bind_mounts' in config:
-        if not all (mount_point != '' for mount_point in config['bind_mounts']):
+        if not all(mount_point != '' for mount_point in config['bind_mounts']):
             errors.append('Every mount point must be non-empty')
         else:
             bind_mounts = [parse_bind_mount(work_dir, mount_point) for mount_point in config['bind_mounts']]
@@ -182,7 +182,8 @@ def parse_run_config(config: dict) -> (List[str], RunOptions):
     jobqueue = None
     if 'jobqueue' in config:
         jobqueue = config['jobqueue']
-        if not ('slurm' in jobqueue or 'yarn' in jobqueue or 'pbs' in jobqueue or 'moab' in jobqueue or 'sge' in jobqueue or 'lsf' in jobqueue or 'oar' in jobqueue or 'kube' in jobqueue):
+        if not (
+                'slurm' in jobqueue or 'yarn' in jobqueue or 'pbs' in jobqueue or 'moab' in jobqueue or 'sge' in jobqueue or 'lsf' in jobqueue or 'oar' in jobqueue or 'kube' in jobqueue):
             raise ValueError(f"Unsupported jobqueue configuration: {jobqueue}")
 
         if 'queue' in jobqueue:
@@ -205,7 +206,7 @@ def parse_run_config(config: dict) -> (List[str], RunOptions):
         if 'header_skip' in jobqueue and not all(extra is str for extra in jobqueue['header_skip']):
             errors.append('Section \'jobqueue\'.\'header_skip\' must be a list of str')
 
-    return errors, RunOptions(
+    return errors, SubmissionOptions(
         workdir=work_dir,
         image=image,
         command=command,
@@ -219,7 +220,7 @@ def parse_run_config(config: dict) -> (List[str], RunOptions):
         gpu=gpu)
 
 
-def prep_run_command(
+def prep_command(
         work_dir: str,
         image: str,
         command: str,
@@ -260,7 +261,7 @@ def prep_run_command(
     return cmd
 
 
-def create_run(username: str, agent_name: str, workflow: dict, name: str = None) -> Run:
+def create_submission(username: str, agent_name: str, workflow: dict, name: str = None) -> Submission:
     now = timezone.now()
     user = User.objects.get(username=username)
     agent = Agent.objects.get(name=agent_name)
@@ -268,40 +269,53 @@ def create_run(username: str, agent_name: str, workflow: dict, name: str = None)
     repo_owner = workflow['repo']['name']
     repo_config = get_repo_config(repo_name, repo_owner, user.profile.github_token)
     guid = str(uuid.uuid4())
-    run = Run.objects.create(
-        guid=guid,
-        name=guid if name is None else name,
-        user=user,
-        workflow_owner=repo_name,
-        workflow_name=repo_owner,
-        agent=agent,
-        job_status='CREATED',
-        created=now,
-        updated=now,
-        token=binascii.hexlify(os.urandom(20)).decode())
+
+    if agent.executor == AgentExecutor.LOCAL:
+        sub = Submission.objects.create(guid=guid,
+                                        name=guid if name is None else name,
+                                        user=user,
+                                        workflow_owner=repo_name,
+                                        workflow_name=repo_owner,
+                                        agent=agent,
+                                        status=SubmissionStatus.CREATED,
+                                        created=now,
+                                        updated=now,
+                                        token=binascii.hexlify(os.urandom(20)).decode())
+    else:
+        sub = JobQueueSubmission.objects.create(guid=guid,
+                                                name=guid if name is None else name,
+                                                user=user,
+                                                workflow_owner=repo_name,
+                                                workflow_name=repo_owner,
+                                                agent=agent,
+                                                status=SubmissionStatus.CREATED,
+                                                created=now,
+                                                updated=now,
+                                                token=binascii.hexlify(os.urandom(20)).decode())
 
     if 'logo' in repo_config:
-        run.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{repo_config['logo']}"
+        sub.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{repo_config['logo']}"
 
     # add tags
     for tag in workflow['config']['tags']:
-        run.tags.add(tag)
+        sub.tags.add(tag)
 
     # guid for working directory name
-    run.workdir = f"{run.guid}/"
-    run.save()
-    return run
+    sub.workdir = f"{sub.guid}/"
+    sub.save()
+
+    return sub
 
 
-def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None):
-    # update flow config before uploading
-    workflow['config']['workdir'] = join(run.agent.workdir, run.guid)
-    workflow['config']['log_file'] = f"{run.guid}.{run.agent.name.lower()}.log"
+def upload_submission(workflow: dict, submission: Submission, ssh: SSH, input_files: List[str] = None):
+    # update config before uploading
+    workflow['config']['workdir'] = join(submission.agent.workdir, submission.guid)
+    workflow['config']['log_file'] = f"{submission.guid}.{submission.agent.name.lower()}.log"
     if 'output' in workflow['config'] and 'from' in workflow['config']['output']:
         if workflow['config']['output']['from'] is not None and workflow['config']['output']['from'] != '':
-            workflow['config']['output']['from'] = join(run.agent.workdir, run.workdir, workflow['config']['output']['from'])
+            workflow['config']['output']['from'] = join(submission.agent.workdir, submission.workdir, workflow['config']['output']['from'])
 
-    # if flow has outputs, make sure we don't push configuration or job scripts
+    # if we have outputs, make sure we don't push configuration or job scripts
     if 'output' in workflow['config']:
         workflow['config']['output']['exclude']['names'] = [
             "flow.yaml",
@@ -309,24 +323,24 @@ def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None
             "template_slurm_run.sh"]
 
     resources = None if 'resources' not in workflow['config']['agent'] else workflow['config']['agent']['resources']
-    callback_url = settings.API_URL + 'runs/' + run.guid + '/status/'
-    work_dir = join(run.agent.workdir, run.workdir)
-    new_flow = map_old_workflow_config_to_new(workflow, run, resources)  # TODO update flow UI page
-    launcher = run.agent.launcher  # whether to use TACC launcher
+    callback_url = settings.API_URL + 'runs/' + submission.guid + '/status/'
+    work_dir = join(submission.agent.workdir, submission.workdir)
+    new_flow = map_old_workflow_config_to_new(workflow, submission, resources)  # TODO update flow UI page
+    launcher = submission.agent.launcher  # whether to use TACC launcher
 
-    parse_errors, run_options = parse_run_config(new_flow)
+    parse_errors, sub_options = parse_submission_config(new_flow)
     if len(parse_errors) > 0:
-        raise ValueError(f"Failed to parse run options: {' '.join(parse_errors)}")
+        raise ValueError(f"Failed to parse submission options: {' '.join(parse_errors)}")
 
     # create working directory
-    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=run.agent.workdir, allow_stderr=True)
+    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=submission.agent.workdir, allow_stderr=True)
 
     # upload flow config and job script
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
 
         # TODO refactor to allow multiple schedulers
-        sandbox = run.agent.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
+        sandbox = submission.agent.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
         template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
         template_name = template.split('/')[-1]
 
@@ -344,8 +358,8 @@ def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None
 
             if not sandbox:
                 # we're on a SLURM cluster, so add resource requests
-                nodes = min(len(input_files), run.agent.max_nodes) if input_files is not None and not run.agent.job_array else 1
-                gpu = run.agent.gpu and ('gpu' in workflow['config'] and workflow['config']['gpu'])
+                nodes = min(len(input_files), submission.agent.max_nodes) if input_files is not None and not submission.agent.job_array else 1
+                gpu = submission.agent.gpu and ('gpu' in workflow['config'] and workflow['config']['gpu'])
 
                 if 'cores' in resources:
                     cores = int(resources['cores'])
@@ -361,30 +375,30 @@ def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None
                         adjusted_time = time * (len(input_files) / nodes)
                     else:
                         adjusted_time = time
-                    hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), run.agent.max_nodes)}"
+                    hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), submission.agent.max_nodes)}"
                     if len(hours) == 1:
                         hours = f"0{hours}"
                     adjusted_time_str = f"{hours}:00:00"
 
-                    run.job_requested_walltime = adjusted_time_str
-                    run.save()
+                    submission.job_requested_walltime = adjusted_time_str
+                    submission.save()
                     msg = f"Using adjusted walltime {adjusted_time_str}"
-                    update_run_status(run, msg)
+                    update_submission_status(submission, msg)
                     logger.info(msg)
 
                     script.write(f"#SBATCH --time={adjusted_time_str}\n")
-                if 'mem' in resources and (run.agent.header_skip is None or '--mem' not in str(run.agent.header_skip)):
+                if 'mem' in resources and (submission.agent.header_skip is None or '--mem' not in str(submission.agent.header_skip)):
                     mem = resources['mem']
                     script.write(f"#SBATCH --mem={resources['mem']}\n")
-                if run.agent.queue is not None and run.agent.queue != '':
-                    queue = run.agent.gpu_queue if gpu else run.agent.queue
+                if submission.agent.queue is not None and submission.agent.queue != '':
+                    queue = submission.agent.gpu_queue if gpu else submission.agent.queue
                     script.write(f"#SBATCH --partition={queue}\n")
-                if run.agent.project is not None and run.agent.project != '':
-                    script.write(f"#SBATCH -A {run.agent.project}\n")
+                if submission.agent.project is not None and submission.agent.project != '':
+                    script.write(f"#SBATCH -A {submission.agent.project}\n")
                 if gpu:
                     script.write(f"#SBATCH --gres=gpu:1\n")
 
-                if input_files is not None and run.agent.job_array:
+                if input_files is not None and submission.agent.job_array:
                     script.write(f"#SBATCH --array=1-{len(input_files)}\n")
                 if input_files is not None:
                     script.write(f"#SBATCH -N {nodes}\n")
@@ -394,12 +408,12 @@ def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None
                     script.write("#SBATCH --ntasks=1\n")
 
                 script.write("#SBATCH --mail-type=END,FAIL\n")
-                script.write(f"#SBATCH --mail-user={run.user.email}\n")
+                script.write(f"#SBATCH --mail-user={submission.user.email}\n")
                 script.write("#SBATCH --output=plantit.%j.out\n")
                 script.write("#SBATCH --error=plantit.%j.err\n")
 
             # add precommands
-            script.write(run.agent.pre_commands + '\n')
+            script.write(submission.agent.pre_commands + '\n')
 
             # pull singularity container in advance
             # script.write(f"singularity pull {run_options.image}\n")
@@ -407,7 +421,7 @@ def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None
             # if we have inputs, add pull command
             if 'input' in workflow['config']:
                 input = workflow['config']['input']
-                sftp.mkdir(join(run.agent.workdir, run.workdir, 'input'))
+                sftp.mkdir(join(submission.agent.workdir, submission.workdir, 'input'))
 
                 # allow for both spellings of JPG
                 patterns = [pattern.lower() for pattern in input['patterns']]
@@ -417,12 +431,12 @@ def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None
                     patterns.append("jpg")
 
                 pull_commands = f"plantit terrain pull \"{input['from']}\"" \
-                                f" -p \"{join(run.agent.workdir, run.workdir, 'input')}\"" \
+                                f" -p \"{join(submission.agent.workdir, submission.workdir, 'input')}\"" \
                                 f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
-                                f""f" --terrain_token {run.user.profile.cyverse_token}"
+                                f""f" --terrain_token {submission.user.profile.cyverse_token}"
 
-                if run.agent.callbacks:
-                    pull_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
+                if submission.agent.callbacks:
+                    pull_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{submission.token}'"
                 pull_commands += "\n"
 
                 logger.info(f"Using pull command: {pull_commands}")
@@ -438,69 +452,69 @@ def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None
                     if workflow['config']['input']['kind'] == 'files' and input_files is not None:
                         for file in input_files:
                             file_name = file.rpartition('/')[2]
-                            run_options.input = FileInput(file_name)
-                            command = prep_run_command(
-                                work_dir=run_options.workdir,
-                                image=run_options.image,
-                                command=run_options.command,
-                                parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                    Parameter(key='INPUT', value=join(run.agent.workdir, run.workdir, 'input', file_name))],
-                                bind_mounts=run_options.bind_mounts,
+                            sub_options.input = FileInput(file_name)
+                            command = prep_command(
+                                work_dir=sub_options.workdir,
+                                image=sub_options.image,
+                                command=sub_options.command,
+                                parameters=(sub_options.parameters if sub_options.parameters is not None else []) + [
+                                    Parameter(key='INPUT', value=join(submission.agent.workdir, submission.workdir, 'input', file_name))],
+                                bind_mounts=sub_options.bind_mounts,
                                 docker_username=docker_username,
                                 docker_password=docker_password,
-                                no_cache=run_options.no_cache,
-                                gpu=run_options.gpu)
+                                no_cache=sub_options.no_cache,
+                                gpu=sub_options.gpu)
                             launcher_script.write(f"{command}\n")
                     elif workflow['config']['input']['kind'] == 'directory':
-                        command = prep_run_command(
-                            work_dir=run_options.workdir,
-                            image=run_options.image,
-                            command=run_options.command,
-                            parameters=(run_options.parameters if run_options.parameters is not None else []) + [
-                                Parameter(key='INPUT', value=join(run.agent.workdir, run.workdir, 'input'))],
-                            bind_mounts=run_options.bind_mounts,
+                        command = prep_command(
+                            work_dir=sub_options.workdir,
+                            image=sub_options.image,
+                            command=sub_options.command,
+                            parameters=(sub_options.parameters if sub_options.parameters is not None else []) + [
+                                Parameter(key='INPUT', value=join(submission.agent.workdir, submission.workdir, 'input'))],
+                            bind_mounts=sub_options.bind_mounts,
                             docker_username=docker_username,
                             docker_password=docker_password,
-                            no_cache=run_options.no_cache,
-                            gpu=run_options.gpu)
+                            no_cache=sub_options.no_cache,
+                            gpu=sub_options.gpu)
                         launcher_script.write(f"{command}\n")
                     elif workflow['config']['input']['kind'] == 'file':
-                        command = prep_run_command(
-                            work_dir=run_options.workdir,
-                            image=run_options.image,
-                            command=run_options.command,
-                            parameters=(run_options.parameters if run_options.parameters is not None else []) + [
+                        command = prep_command(
+                            work_dir=sub_options.workdir,
+                            image=sub_options.image,
+                            command=sub_options.command,
+                            parameters=(sub_options.parameters if sub_options.parameters is not None else []) + [
                                 Parameter(key='INPUT', value=new_flow['input']['file']['path'])],
-                            bind_mounts=run_options.bind_mounts,
+                            bind_mounts=sub_options.bind_mounts,
                             docker_username=docker_username,
                             docker_password=docker_password,
-                            no_cache=run_options.no_cache,
-                            gpu=run_options.gpu)
+                            no_cache=sub_options.no_cache,
+                            gpu=sub_options.gpu)
                         launcher_script.write(f"{command}\n")
 
-                script.write(f"export LAUNCHER_WORKDIR={join(run.agent.workdir, run.workdir)}\n")
+                script.write(f"export LAUNCHER_WORKDIR={join(submission.agent.workdir, submission.workdir)}\n")
                 script.write(f"export LAUNCHER_JOB_FILE=launch\n")
                 script.write("$LAUNCHER_DIR/paramrun\n")
             # otherwise use the CLI
             else:
-                run_commands = f"plantit run flow.yaml"
-                if run.agent.job_array and input_files is not None:
-                    run_commands += f" --slurm_job_array"
+                cli_cmd = f"plantit run flow.yaml"
+                if submission.agent.job_array and input_files is not None:
+                    cli_cmd += f" --slurm_job_array"
 
                 if docker_username is not None and docker_password is not None:
-                    run_commands += f" --docker_username {docker_username} --docker_password {docker_password}"
+                    cli_cmd += f" --docker_username {docker_username} --docker_password {docker_password}"
 
-                if run.agent.callbacks:
-                    run_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
+                if submission.agent.callbacks:
+                    cli_cmd += f""f" --plantit_url '{callback_url}' --plantit_token '{submission.token}'"
 
-                run_commands += "\n"
-                logger.info(f"Using CLI run command: {run_commands}")
-                script.write(run_commands)
+                cli_cmd += "\n"
+                logger.info(f"Using CLI invocation: {cli_cmd}")
+                script.write(cli_cmd)
 
             # add zip command
             output = workflow['config']['output']
-            zip_commands = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {run.guid}"
-            log_files = [f"{run.guid}.{run.agent.name.lower()}.log"]
+            zip_commands = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {submission.guid}"
+            log_files = [f"{submission.guid}.{submission.agent.name.lower()}.log"]
             zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
             if 'include' in output:
                 if 'patterns' in output['include']:
@@ -513,7 +527,7 @@ def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None
                     zip_commands = f"{zip_commands} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
             zip_commands += '\n'
             script.write(zip_commands)
-            logger.info(f"Using zip command: {zip_commands}")
+            logger.info(f"Zipping enabled: {zip_commands}")
 
             # add push command if we have a destination
             # if 'to' in output and output['to'] is not None:
@@ -541,25 +555,25 @@ def upload_run(workflow: dict, run: Run, ssh: SSH, input_files: List[str] = None
             #     logger.info(f"Using push command: {push_commands}")
 
 
-def submit_run_via_ssh(run: Run, ssh: SSH, file_count: int = None):
+def submit_via_ssh(submission: Submission, ssh: SSH, file_count: int = None):
     # TODO refactor to allow multiple schedulers
-    sandbox = run.agent.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
+    sandbox = submission.agent.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
     template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
     template_name = template.split('/')[-1]
 
-    if run.is_sandbox:
+    if submission.is_sandbox:
         execute_command(
             ssh_client=ssh,
-            pre_command='; '.join(str(run.agent.pre_commands).splitlines()) if run.agent.pre_commands else ':',
+            pre_command='; '.join(str(submission.agent.pre_commands).splitlines()) if submission.agent.pre_commands else ':',
             command=f"chmod +x {template_name} && ./{template_name}",
-            directory=join(run.agent.workdir, run.workdir),
+            directory=join(submission.agent.workdir, submission.workdir),
             allow_stderr=True)
 
         # get container logs
-        work_dir = join(run.agent.workdir, run.workdir)
-        ssh_client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
-        container_log_file = get_run_container_log_file_name(run)
-        container_log_path = get_run_container_log_file_path(run)
+        work_dir = join(submission.agent.workdir, submission.workdir)
+        ssh_client = SSH(submission.agent.hostname, submission.agent.port, submission.agent.username)
+        container_log_file = get_container_log_file_name(submission)
+        container_log_path = get_container_log_file_path(submission)
 
         with ssh_client:
             with ssh_client.client.open_sftp() as sftp:
@@ -569,7 +583,7 @@ def submit_run_via_ssh(run: Run, ssh: SSH, file_count: int = None):
                 if not stdout.read().decode().strip() == 'exists':
                     container_logs = []
                 else:
-                    with open(get_run_container_log_file_path(run), 'a+') as log_file:
+                    with open(get_container_log_file_path(submission), 'a+') as log_file:
                         sftp.chdir(work_dir)
                         sftp.get(container_log_file, log_file.name)
 
@@ -586,73 +600,73 @@ def submit_run_via_ssh(run: Run, ssh: SSH, file_count: int = None):
         command = f"sbatch {template_name}"
         output_lines = execute_command(
             ssh_client=ssh,
-            pre_command='; '.join(str(run.agent.pre_commands).splitlines()) if run.agent.pre_commands else ':',
+            pre_command='; '.join(str(submission.agent.pre_commands).splitlines()) if submission.agent.pre_commands else ':',
             # if the scheduler prohibits nested job submissions, we need to run the CLI from a login node
             command=command,
-            directory=join(run.agent.workdir, run.workdir),
+            directory=join(submission.agent.workdir, submission.workdir),
             allow_stderr=True)
         job_id = parse_job_id(output_lines[-1])
-        run.job_id = job_id
-        run.updated = timezone.now()
-        run.save()
+        submission.job_id = job_id
+        submission.updated = timezone.now()
+        submission.save()
 
 
-def update_run_status(run: Run, description: str):
-    log_path = join(environ.get('RUNS_LOGS'), f"{run.guid}.plantit.log")
+def update_submission_status(submission: Submission, description: str):
+    log_path = join(environ.get('RUNS_LOGS'), f"{submission.guid}.plantit.log")
     with open(log_path, 'a') as log:
         log.write(f"{description}\n")
 
-    async_to_sync(get_channel_layer().group_send)(f"runs-{run.user.username}", {
+    async_to_sync(get_channel_layer().group_send)(f"runs-{submission.user.username}", {
         'type': 'update_status',
-        'run': map_run(run),
+        'run': map_submission(submission),
     })
 
 
-def cancel_run(run: Run):
-    ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
+def cancel_submission(submission: Submission):
+    ssh = SSH(submission.agent.hostname, submission.agent.port, submission.agent.username)
     with ssh:
-        if run.job_id is None or not any([run.job_id in r for r in execute_command(
+        if submission.job_id is None or not any([submission.job_id in r for r in execute_command(
                 ssh_client=ssh,
                 pre_command=':',
-                command=f"squeue -u {run.agent.username}",
-                directory=join(run.agent.workdir, run.workdir))]):
+                command=f"squeue -u {submission.agent.username}",
+                directory=join(submission.agent.workdir, submission.workdir))]):
             # run doesn't exist, so no need to cancel
             return
 
         execute_command(
             ssh_client=ssh,
             pre_command=':',
-            command=f"scancel {run.job_id}",
-            directory=join(run.agent.workdir, run.workdir))
+            command=f"scancel {submission.job_id}",
+            directory=join(submission.agent.workdir, submission.workdir))
 
 
-def get_run_submission_log_file_path(run: Run):
-    return join(os.environ.get('RUNS_LOGS'), f"{run.guid}.plantit.log")
+def get_submission_log_file_path(submission: Submission):
+    return join(os.environ.get('RUNS_LOGS'), f"{submission.guid}.plantit.log")
 
 
-def get_run_container_log_file_name(run: Run):
-    if run.agent.launcher:
-        return f"plantit.{run.job_id}.out"
+def get_container_log_file_name(submission: Submission):
+    if submission.agent.launcher:
+        return f"plantit.{submission.job_id}.out"
     else:
-        return f"{run.guid}.{run.agent.name.lower()}.log"
+        return f"{submission.guid}.{submission.agent.name.lower()}.log"
 
 
-def get_run_container_log_file_path(run: Run):
-    return join(os.environ.get('RUNS_LOGS'), get_run_container_log_file_name(run))
+def get_container_log_file_path(submission: Submission):
+    return join(os.environ.get('RUNS_LOGS'), get_container_log_file_name(submission))
 
 
-def get_run_job_walltime(run: Run) -> (str, str):
-    ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
+def get_job_walltime(submission: Submission) -> (str, str):
+    ssh = SSH(submission.agent.hostname, submission.agent.port, submission.agent.username)
     with ssh:
         lines = execute_command(
             ssh_client=ssh,
             pre_command=":",
-            command=f"squeue --user={run.agent.username}",
-            directory=join(run.agent.workdir, run.workdir),
+            command=f"squeue --user={submission.agent.username}",
+            directory=join(submission.agent.workdir, submission.workdir),
             allow_stderr=True)
 
         try:
-            job_line = next(l for l in lines if run.job_id in l)
+            job_line = next(l for l in lines if submission.job_id in l)
             job_split = job_line.split()
             job_walltime = job_split[-3]
             return job_walltime
@@ -660,37 +674,37 @@ def get_run_job_walltime(run: Run) -> (str, str):
             return None
 
 
-def get_run_job_status(run: Run) -> str:
-    ssh = SSH(run.agent.hostname, run.agent.port, run.agent.username)
+def get_job_status(submission: Submission) -> str:
+    ssh = SSH(submission.agent.hostname, submission.agent.port, submission.agent.username)
     with ssh:
         lines = execute_command(
             ssh_client=ssh,
             pre_command=':',
-            command=f"sacct -j {run.job_id}",
-            directory=join(run.agent.workdir, run.workdir),
+            command=f"sacct -j {submission.job_id}",
+            directory=join(submission.agent.workdir, submission.workdir),
             allow_stderr=True)
 
-        job_line = next(l for l in lines if run.job_id in l)
+        job_line = next(l for l in lines if submission.job_id in l)
         job_split = job_line.split()
         job_status = job_split[5].replace('+', '')
         return job_status
     pass
 
 
-def get_run_results(run: Run, workflow: dict):
+def get_result_files(submission: Submission, workflow: dict):
     included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
         'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
-    included_by_name.append(f"{run.guid}.zip")  # zip file
-    if not run.agent.launcher:
-        included_by_name.append(f"{run.guid}.{run.agent.name.lower()}.log")
-    if run.job_id is not None and run.job_id != '':
-        included_by_name.append(f"plantit.{run.job_id}.out")
-        included_by_name.append(f"plantit.{run.job_id}.err")
+    included_by_name.append(f"{submission.guid}.zip")  # zip file
+    if not submission.agent.launcher:
+        included_by_name.append(f"{submission.guid}.{submission.agent.name.lower()}.log")
+    if submission.job_id is not None and submission.job_id != '':
+        included_by_name.append(f"plantit.{submission.job_id}.out")
+        included_by_name.append(f"plantit.{submission.job_id}.err")
     included_by_pattern = (
         workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
 
-    client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
-    work_dir = join(run.agent.workdir, run.workdir)
+    client = SSH(submission.agent.hostname, submission.agent.port, submission.agent.username)
+    work_dir = join(submission.agent.workdir, submission.workdir)
     outputs = []
     seen = []
 
@@ -719,8 +733,8 @@ def get_run_results(run: Run, workflow: dict):
     return outputs
 
 
-def map_run(run: Run):
-    submission_log_file = get_run_submission_log_file_path(run)
+def map_submission(submission: Submission):
+    submission_log_file = get_submission_log_file_path(submission)
 
     if Path(submission_log_file).is_file():
         with open(submission_log_file, 'r') as log:
@@ -729,43 +743,45 @@ def map_run(run: Run):
         submission_logs = []
 
     try:
-        AgentAccessPolicy.objects.get(user=run.user, agent=run.agent, role__in=[AgentRole.own, AgentRole.run])
+        AgentAccessPolicy.objects.get(user=submission.user, agent=submission.agent, role__in=[AgentRole.own, AgentRole.run])
         can_restart = True
     except:
         can_restart = False
 
-    results = RedisClient.get().get(f"results/{run.guid}")
+    results = RedisClient.get().get(f"results/{submission.guid}")
 
-    return {
+    sub = {
         'can_restart': can_restart,
-        'guid': run.guid,
-        'owner': run.user.username,
-        'name': run.name,
-        'job_id': run.job_id,
-        'job_status': run.job_status,
-        'job_walltime': run.job_elapsed_walltime,
-        'work_dir': run.workdir,
+        'guid': submission.guid,
+        'owner': submission.user.username,
+        'name': submission.name,
+        'work_dir': submission.workdir,
         'submission_logs': submission_logs,
-        'agent': run.agent.name,
-        'created': run.created.isoformat(),
-        'updated': run.updated.isoformat(),
-        'completed': run.completed.isoformat() if run.completed is not None else None,
-        'workflow_owner': run.workflow_owner,
-        'workflow_name': run.workflow_name,
-        'tags': [str(tag) for tag in run.tags.all()],
-        'is_complete': run.is_complete,
-        'is_success': run.is_success,
-        'is_failure': run.is_failure,
-        'is_cancelled': run.is_cancelled,
-        'is_timeout': run.is_timeout,
-        'workflow_image_url': run.workflow_image_url,
-        'result_previews_loaded': run.previews_loaded,
-        'cleaned_up': run.cleaned_up,
+        'agent': submission.agent.name,
+        'created': submission.created.isoformat(),
+        'updated': submission.updated.isoformat(),
+        'completed': submission.completed.isoformat() if submission.completed is not None else None,
+        'workflow_owner': submission.workflow_owner,
+        'workflow_name': submission.workflow_name,
+        'tags': [str(tag) for tag in submission.tags.all()],
+        'is_complete': submission.is_complete,
+        'is_success': submission.is_success,
+        'is_failure': submission.is_failure,
+        'is_cancelled': submission.is_cancelled,
+        'is_timeout': submission.is_timeout,
+        'workflow_image_url': submission.workflow_image_url,
+        'result_previews_loaded': submission.previews_loaded,
+        'cleaned_up': submission.cleaned_up,
         'output_files': json.loads(results) if results is not None else []
     }
 
+    if isinstance(submission, JobQueueSubmission):
+        sub['job_id'] = submission.job_id
+        sub['job_status'] = submission.job_status
+        sub['job_walltime'] = submission.job_elapsed_walltime,
 
-def map_delayed_run_task(task: DelayedRunTask):
+
+def map_delayed_submission_task(task: DelayedSubmissionTask):
     return {
         'agent': map_agent(task.agent),
         'name': task.name,
@@ -778,7 +794,7 @@ def map_delayed_run_task(task: DelayedRunTask):
     }
 
 
-def map_repeating_run_task(task: RepeatingRunTask):
+def map_repeating_submission_task(task: RepeatingSubmissionTask):
     return {
         'agent': map_agent(task.agent),
         'name': task.name,
@@ -790,23 +806,3 @@ def map_repeating_run_task(task: RepeatingRunTask):
         'enabled': task.enabled,
         'last_run': task.last_run_at
     }
-
-
-def get_3d_model(request, guid):
-    path = request.GET.get('path')
-    file = path.rpartition('/')[2]
-
-    try:
-        run = Run.objects.get(guid=guid)
-    except:
-        return HttpResponseNotFound()
-
-    client = SSH(run.agent.hostname, run.agent.port, run.agent.username)
-    work_dir = join(run.agent.workdir, run.workdir)
-
-    with tempfile.NamedTemporaryFile() as temp_file:
-        with client:
-            with client.client.open_sftp() as sftp:
-                sftp.chdir(work_dir)
-                sftp.get(file, temp_file.name)
-        return HttpResponse(temp_file, content_type="applications/octet-stream")

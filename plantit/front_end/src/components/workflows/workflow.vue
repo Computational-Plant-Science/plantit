@@ -2945,9 +2945,9 @@ export default {
 
         if ('input' in this.getWorkflow.config)
             await Promise.all([
-                this.$store.dispatch('datasets/loadPersonalDatasets'),
-                this.$store.dispatch('datasets/loadPublicDatasets'),
-                this.$store.dispatch('datasets/loadSharedDatasets')
+                this.$store.dispatch('datasets/loadPersonal'),
+                this.$store.dispatch('datasets/loadPublic'),
+                this.$store.dispatch('datasets/loadShared')
             ]);
 
         // if (this.workflowKey in this.recentlyRunWorkflows) {
@@ -3337,7 +3337,7 @@ export default {
                 agent['resources'] = this.getWorkflow.config.resources;
             let config = {
                 name: this.getWorkflow.config.name,
-                run_name: this.runName,
+                submission_name: this.runName,
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
                 agent: agent,

@@ -33,7 +33,7 @@ export const notifications = {
                 .then(response => {
                     var ids = [];
                     var notifications = Array.prototype.slice.call(
-                        response.data
+                        response.data.notifications
                     );
 
                     // filter unique?
@@ -68,6 +68,8 @@ export const notifications = {
             return state.notifications.find(n => id === n.id);
         },
         notifications: state => state.notifications === undefined ? [] : state.notifications,
+        notificationsRead: state => state.notifications.filter(n => n.read),
+        notificationsUnread: state => state.notifications.filter(n => !n.read),
         notificationsLoading: state => state.loading,
     }
 };

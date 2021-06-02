@@ -50,7 +50,7 @@
                                             class="text-dark fas fa-camera-retro fa-stack-1x"
                                             style="opacity: 0.4;"
                                         ></i> </span
-                                    >phenotyping automation.</span
+                                    >phenotyping automation</span
                                 >
                             </h4>
                         </div>
@@ -79,9 +79,9 @@
                             ><h5 class="text-white">workflows</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
-                            ><h1 v-if="runCount >= 0" class="text-success">
-                                {{ runCount }}
-                            </h1>
+                            ><h1 v-if="submissionCount >= 0" class="text-success">
+                          {{ submissionCount }}
+                        </h1>
                             <b-spinner
                                 v-else
                                 type="grow"
@@ -117,14 +117,14 @@
                                 <h4 class="text-success">
                                     Tame your data
                                 </h4>
-                                Store, share, and collaborate in the cloud
-                                <br />
                                 Upload, annotate, and publish with
                                 <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
                                     >CyVerse</b-link
-                                ><!--, or plug in cloud stores like
+                                >
+                                <br />
+                                Store, share, and collaborate in the cloud<!--, or plug in cloud stores like
                             <b-link
                                 class="text-white"
                                 href="https://aws.amazon.com/s3/"
@@ -176,16 +176,9 @@
                                 class="ml-4 mr-4 text-white text-right"
                             >
                                 <h4 class="text-success">
-                                    Hack agriculture, together
+                                    Hack plant science, together
                                 </h4>
-                                Join the open source plant science ecosystem on
-                                <b-link
-                                    class="text-white"
-                                    href="https://www.github.com/"
-                                    >Github</b-link
-                                >
-                                <br />
-                                Build with
+                                Develop with
                                 <b-link
                                     class="text-white"
                                     href="https://www.docker.com/"
@@ -198,6 +191,13 @@
                                     >Singularity</b-link
                                 >
                                 and deploy anywhere
+                                <br />
+                                Build or benefit from the open source ecosystem on
+                                <b-link
+                                    class="text-white"
+                                    href="https://www.github.com/"
+                                    >Github</b-link
+                                >
                             </b-card-text>
                         </b-card>
                     </b-col>
@@ -223,7 +223,7 @@
                                 <h4 class="text-success">
                                     No code, no problem
                                 </h4>
-                                Reproducible workflows in the browser, no
+                                High-throughput phenotyping in the browser, no
                                 programming required
                                 <br />
                                 Click
@@ -233,7 +233,7 @@
                                     disabled
                                     variant="success"
                                     >Submit</b-badge
-                                >&mdash; grab coffee &mdash; get notified when
+                                >&mdash; forget about it &mdash; get notified when
                                 results are ready
                             </b-card-text>
                         </b-card>
@@ -274,7 +274,7 @@ export default {
         return {
             userCount: -1,
             workflowCount: -1,
-            runCount: -1
+            submissionCount: -1
         };
     },
     methods: {
@@ -284,7 +284,7 @@ export default {
                 .then(response => {
                     this.userCount = response.data.users;
                     this.workflowCount = response.data.workflows;
-                    this.runCount = response.data.runs;
+                    this.submissionCount = response.data.submissions;
                 })
                 .catch(error => {
                     Sentry.captureException(error);

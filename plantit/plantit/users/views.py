@@ -20,7 +20,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from plantit.redis import RedisClient
-from plantit.runs.tasks import aggregate_user_statistics
+from plantit.tasks import aggregate_user_statistics
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
@@ -138,7 +138,7 @@ class IDPViewSet(viewsets.ViewSet):
         user.profile.save()
         user.save()
 
-        return redirect(f"/user/{user.username}/")
+        return redirect(f"/dashboard/")
 
 
 class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):

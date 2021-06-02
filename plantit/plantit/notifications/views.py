@@ -26,7 +26,7 @@ def get_by_user(request, owner):
         list(DirectoryPolicyNotification.objects.filter(user=user)),
         list(TargetPolicyNotification.objects.filter(user=user))))
     notifications = notifications[start:(start + count)]
-    return JsonResponse([map_notification(n) for n in notifications], safe=False)
+    return JsonResponse({'notifications': [map_notification(n) for n in notifications]})
 
 
 @api_view(['POST'])

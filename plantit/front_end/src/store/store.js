@@ -7,7 +7,7 @@ import { user } from '@/store/user';
 import { users } from '@/store/users';
 import { agents } from '@/store/agents';
 import { workflows } from '@/store/workflows';
-import { runs } from '@/store/runs';
+import { submissions } from '@/store/submissions';
 import { datasets } from '@/store/datasets';
 import { notifications } from '@/store/notifications';
 
@@ -31,7 +31,7 @@ const store = new Vuex.Store({
         agents,
         datasets,
         workflows,
-        runs,
+        submissions,
         notifications
     }
 });

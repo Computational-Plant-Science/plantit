@@ -47,7 +47,7 @@ export const agents = {
         async loadPublic({ commit }) {
             commit('setPublicLoading', true);
             await axios
-                .get('/apis/v1/agents/get_by_query/?public=True')
+                .get('/apis/v1/agents/?public=True')
                 .then(response => {
                     commit('setPublic', response.data.agents);
                     commit('setPublicLoading', false);
@@ -61,7 +61,7 @@ export const agents = {
         async loadPersonal({ commit }, owner) {
             commit('setPersonalLoading', true);
             await axios
-                .get(`/apis/v1/agents/get_by_query/?owner=${owner}`)
+                .get(`/apis/v1/agents/?owner=${owner}`)
                 .then(response => {
                     commit('setPersonal', response.data.agents);
                     commit('setPersonalLoading', false);

@@ -1,25 +1,16 @@
-import json
 import os
-from os import environ
-from datetime import timedelta, datetime
 
-from celery import Celery, shared_task
+from celery import Celery
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'plantit.settings')
 
-app = Celery(
-    'plantit',
-    # broker='amqp://rabbitmq',
-    broker='redis://redis',
-    # backend=f"db+postgresql://{environ.get('SQL_USER')}:{environ.get('SQL_PASSWORD')}@{environ.get('SQL_HOST')}")
-    backend='redis://redis')
+app = Celery('plantit', broker='redis://redis', backend='redis://redis')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
 # - namespace='CELERY' means all celery-related configuration keys
 #   should have a `CELERY_` prefix.
 app.config_from_object('django.conf:settings', namespace='CELERY')
-
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()

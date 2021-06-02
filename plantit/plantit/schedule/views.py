@@ -7,8 +7,8 @@ from rest_framework.decorators import api_view
 
 from plantit.agents.models import Agent, AgentTask
 from plantit.agents.utils import map_agent_task
-from plantit.runs.models import DelayedRunTask
-from plantit.runs.utils import map_delayed_run_task
+from plantit.submissions.models import DelayedSubmissionTask
+from plantit.submissions.utils import map_delayed_submission_task
 
 
 @api_view(['GET', 'POST'])
@@ -43,7 +43,7 @@ def search_or_add_agent_task(request):
             name=task_name,
             command=task_command,
             description=task_description,
-            task='plantit.runs.tasks.execute_agent_command',
+            task='plantit.tasks.execute_agent_command',
             args=json.dumps([agent.name, task_command]))
 
         return JsonResponse({
@@ -96,13 +96,13 @@ def search_or_add_delayed_task(request):
         day_of_week=task_delay[2],
         day_of_month=task_delay[3],
         month_of_year=task_delay[4])
-    task, created = DelayedRunTask.objects.get_or_create(
+    task, created = DelayedSubmissionTask.objects.get_or_create(
         crontab=schedule,
         name=task_name,
         command=task_command,
         description=task_description,
-        task='plantit.runs.tasks.execute_agent_command',
-        args=json.dumps([agent.name, task_command]))
+        task='plantit.tasks.execute_agent_command',
+        args=json.dumps([task_command]))
 
     return JsonResponse({
         'task': map_agent_task(task),
@@ -114,12 +114,12 @@ def search_or_add_delayed_task(request):
 @login_required
 def get_or_delete_delayed_task(request, name):
     try:
-        task = DelayedRunTask.objects.get(name=name)
+        task = DelayedSubmissionTask.objects.get(name=name)
     except:
         return HttpResponseNotFound()
 
     if request.method == 'GET':
-        return JsonResponse(map_delayed_run_task(task))
+        return JsonResponse(map_delayed_submission_task(task))
     elif request.method == 'DELETE':
         task.delete()
         return JsonResponse({'deleted': True})
@@ -131,7 +131,7 @@ def get_or_delete_delayed_task(request, name):
 @login_required
 def toggle_delayed_task(request, name):
     try:
-        task = DelayedRunTask.objects.get(name=name)
+        task = DelayedSubmissionTask.objects.get(name=name)
     except:
         return HttpResponseNotFound()
 

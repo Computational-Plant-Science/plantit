@@ -4,8 +4,6 @@ import * as Sentry from '@sentry/browser';
 export const datasets = {
     namespaced: true,
     state: () => ({
-        opened: null,
-        openedSocket: null,
         public: [],
         publicLoading: true,
         personal: [],
@@ -16,24 +14,22 @@ export const datasets = {
         sharingLoading: true
     }),
     mutations: {
-        openSocket(state, guid) {
-            let ws_protocol =
-                location.protocol === 'https:' ? 'wss://' : 'ws://';
-            state.openedSocket = new WebSocket(
-                `${ws_protocol}${window.location.host}/ws/sessions/${guid}/`
-            );
-            state.openedSocket.onmessage = function(event) {
-                let data = JSON.parse(event.data);
-                state.opened = data.session;
-            };
-        },
-        closeSocket(state) {
-            state.openedSocket.close();
-            state.openedSocket = null;
-        },
-        setOpened(state, dataset) {
-            state.opened = dataset;
-        },
+        // TODO use this as a reference to move other websocket stuff into Vuex
+        // openSocket(state, guid) {
+        //     let ws_protocol =
+        //         location.protocol === 'https:' ? 'wss://' : 'ws://';
+        //     state.openedSocket = new WebSocket(
+        //         `${ws_protocol}${window.location.host}/ws/sessions/${guid}/`
+        //     );
+        //     state.openedSocket.onmessage = function(event) {
+        //         let data = JSON.parse(event.data);
+        //         state.opened = data.session;
+        //     };
+        // },
+        // closeSocket(state) {
+        //     state.openedSocket.close();
+        //     state.openedSocket = null;
+        // },
         setPublic(state, datasets) {
             state.public = datasets;
         },
@@ -60,7 +56,7 @@ export const datasets = {
         }
     },
     actions: {
-        async loadPersonalDatasets({ commit, rootState }) {
+        async loadPersonal({ commit, rootState }) {
             commit('setPersonalLoading', true);
             return axios
                 .get(
@@ -81,7 +77,7 @@ export const datasets = {
                     throw error;
                 });
         },
-        async loadPublicDatasets({ commit, rootState }) {
+        async loadPublic({ commit, rootState }) {
             commit('setPublicLoading', true);
             return axios
                 .get(
@@ -102,7 +98,7 @@ export const datasets = {
                     throw error;
                 });
         },
-        async loadSharedDatasets({ commit, rootState }) {
+        async loadShared({ commit, rootState }) {
             commit('setSharedLoading', true);
             return axios
                 .get(
@@ -123,7 +119,7 @@ export const datasets = {
                     throw error;
                 });
         },
-        async loadSharingDatasets({ commit, rootState }) {
+        async loadSharing({ commit, rootState }) {
             commit('setSharingLoading', true);
             return axios
                 .get('/apis/v1/datasets/sharing/', {
@@ -132,7 +128,7 @@ export const datasets = {
                     }
                 })
                 .then(response => {
-                    commit('setSharing', response.data);
+                    commit('setSharing', response.data.datasets);
                     commit('setSharingLoading', false);
                 })
                 .catch(error => {
@@ -141,66 +137,6 @@ export const datasets = {
                     throw error;
                 });
         },
-        async loadOpened({ commit }) {
-            commit('setLoading', true);
-            await axios
-                .get(`/apis/v1/datasets/opened/`)
-                .then(response => {
-                    commit('setOpened', response.data.session);
-                    if (response.data.session !== null)
-                        commit('openSocket', response.data.session.guid);
-                    commit('setLoading', false);
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    commit('setOpened', null);
-                    commit('setLoading', false);
-                    throw error;
-                });
-        },
-        updateOpened({ commit }, session) {
-            commit('setOpened', session);
-            commit('setLoading', false);
-        },
-        async open({ commit }, payload) {
-            commit('setLoading', true);
-            let data = {
-                resource: payload.resource.name,
-                path: payload.path
-            };
-
-            axios({
-                method: 'post',
-                url: `/apis/v1/datasets/open/`,
-                data: data,
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(async response => {
-                    commit('setOpened', response.data.session);
-                    commit('openSocket', response.data.session.guid);
-                    commit('setLoading', false);
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    commit('setLoading', false);
-                    throw error;
-                });
-        },
-        async close({ commit }) {
-            commit('setLoading', true);
-            await axios
-                .get(`/apis/v1/datasets/close/`)
-                .then(() => {
-                    commit('setOpened', null);
-                    commit('closeSocket');
-                    commit('setLoading', false);
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    commit('setLoading', false);
-                    throw error;
-                });
-        }
     },
     getters: {
         personalDatasets: state => state.personal,
@@ -211,7 +147,5 @@ export const datasets = {
         publicDatasetsLoading: state => state.publicLoading,
         sharedDatasetsLoading: state => state.sharedLoading,
         sharingDatasetsLoading: state => state.sharingLoading,
-        openedDataset: state => state.opened,
-        openedDatasetLoading: state => state.loading
     }
 };

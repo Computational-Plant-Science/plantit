@@ -9,7 +9,7 @@
             class="m-0 p-0"
             style="background-color: transparent;"
         >
-            <navigation v-if="$route.path !== '/'"></navigation>
+            <navigation v-if="!isRootPath"></navigation>
             <router-view
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             ></router-view>
@@ -26,7 +26,12 @@ export default {
     components: {
         navigation
     },
-    computed: mapGetters('user', ['profile'])
+    computed: {
+        ...mapGetters('user', ['profile']),
+        isRootPath() {
+            return this.$route.path === '/';
+        }
+    }
 };
 </script>
 

@@ -1,7 +1,7 @@
 <template>
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
-        <br/>
-        <br/>
+        <br />
+        <br />
         <div v-if="profileLoading">
             <b-row>
                 <b-col class="text-center">
@@ -12,6 +12,56 @@
                     ></b-spinner>
                 </b-col>
             </b-row>
+        </div>
+        <div
+            v-else-if="
+                profile.loggedIn
+                    ? profile.githubProfile === null ||
+                      profile.githubProfile === undefined
+                    : false
+            "
+        >
+            <b-row align-v="center"
+                ><b-col class="text-center" align-self="center"
+                    ><i class="fas fa-exclamation-circle fa-fw fa-3x"></i><br />
+                    <h3 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Almost there!
+                    </h3>
+                    <br />
+                    To use
+                    <b
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        style="text-decoration: underline;"
+                    >
+                        plant<small
+                            class="mb-3 mr-1 text-success"
+                            style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                            >IT</small
+                        >
+                    </b>
+                    you'll need a <i class="fab fa-github fa-fw fa-1x"></i
+                    ><b-img
+                        class="m-0"
+                        rounded
+                        style="max-height: 1.2rem;"
+                        :src="
+                            profile.darkMode
+                                ? require('../assets/logos/github_white.png')
+                                : require('../assets/logos/github_black.png')
+                        "
+                    ></b-img>
+                    account.<br />If you already have one, click the button
+                    below (or in the navigation bar) to log in.<br /><br /><b-button
+                        class="mt-1 text-left"
+                        variant="success"
+                        size="md"
+                        href="/apis/v1/idp/github_request_identity/"
+                    >
+                        <i class="fab fa-github"></i>
+                        Log in to GitHub
+                    </b-button></b-col
+                ></b-row
+            >
         </div>
         <div v-else>
             <b-row
@@ -24,7 +74,7 @@
                             v-for="crumb in crumbs"
                             :key="crumb.text"
                             :to="crumb.href"
-                            :disabled="crumb.text === 'runs'"
+                            :disabled="crumb.text === 'submissions'"
                             class="m-0"
                         >
                             <h5
@@ -34,7 +84,10 @@
                                         : 'text-dark'
                                 "
                             >
-                              <i v-if="crumb.text !== 'Dashboard'" class="fas fa-seedling fa-fw fa-1x"></i>
+                                <i
+                                    v-if="crumb.text !== 'Dashboard'"
+                                    class="fas fa-seedling fa-fw fa-1x"
+                                ></i>
                                 {{ crumb.text }}
                             </h5>
                         </b-breadcrumb-item>
@@ -71,8 +124,8 @@
                         class="m-1 text-left"
                         block
                         :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/dashboard/runs/"
-                        ><i class="fas fa-terminal fa-fw"></i> Runs</b-button
+                        to="/dashboard/submissions/"
+                        ><i class="fas fa-terminal fa-fw"></i> Submissions</b-button
                     ></b-col
                 ><b-col
                     ><router-view
@@ -103,8 +156,8 @@
                                 >
                                     Usage right now
                                 </h5>
-                                <b>{{ runningRuns.length }}</b>
-                                running workflows
+                                <b>{{ submissionsRunning.length }}</b>
+                                running
                                 <div v-if="profile.stats !== null">
                                     <hr
                                         class="mt-2 mb-2"
@@ -119,8 +172,8 @@
                                     >
                                         Cumulative usage
                                     </h5>
-                                    <b>{{ profile.stats.total_runs }}</b>
-                                    workflows run
+                                    <b>{{ profile.stats.total_submissions }}</b>
+                                    submissions completed
                                     <br />
                                     <b>{{ profile.stats.total_time }}</b>
                                     working minutes
@@ -272,18 +325,20 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
-        ...mapGetters('runs', ['runsLoading', 'runs']),
+        ...mapGetters('submissions', [
+            'submissions',
+            'submissionsLoading',
+            'submissionsRunning',
+            'submissionsCompleted'
+        ]),
         ...mapGetters('notifications', ['notifications']),
-        ...mapGetters('workflows', ['personalWorkflows', 'personalWorkflowsLoading']),
+        ...mapGetters('workflows', [
+            'personalWorkflows',
+            'personalWorkflowsLoading'
+        ]),
         ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
         isRootPath() {
             return this.$route.name === 'dashboard';
-        },
-        runningRuns() {
-            return this.runs.filter(r => !r.is_complete);
-        },
-        completedRuns() {
-            return this.runs.filter(r => r.is_complete);
         }
     }
 };
