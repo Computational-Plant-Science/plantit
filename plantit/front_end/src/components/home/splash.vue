@@ -172,8 +172,8 @@ export default {
 
 #background
     background-image: url('../../assets/frontpage/index_bg.png')
-    background-blend-mode: overlay
-    background-color: hsla(0, 0%, 100%, 0)
+    background-blend-mode: normal
+    background-color: hsla(0%, 0%, 100%, 1)
     background-repeat: no-repeat
     background-position: center
     background-size: cover
