@@ -175,7 +175,7 @@
                             v-else
                             style="max-width: 7rem;position: absolute;right: 20px;top: 20px;"
                             right
-                            class="card-img-left fas fa-server fa-2x fa-fw"
+                            class="card-img-left fas fa-robot fa-2x fa-fw"
                         ></i>
                     </b-card>
                 </b-card-group>

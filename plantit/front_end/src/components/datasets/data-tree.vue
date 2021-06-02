@@ -234,7 +234,7 @@
                                         : 'text-dark'
                                 "
                                 to="/agents"
-                                ><i class="fas fa-server fa-1x fa-fw"></i>
+                                ><i class="fas fa-robot fa-1x fa-fw"></i>
                                 Agents</b-link
                             >
                             to request guest access to public servers, clusters, and supercomputers.</b-dropdown-text

@@ -117,13 +117,13 @@
                         block
                         :variant="profile.darkMode ? 'dark' : 'light'"
                         to="/dashboard/agents/"
-                        ><i class="fas fa-server fa-fw"></i> Agents</b-button
+                        ><i class="fas fa-robot fa-fw"></i> Agents</b-button
                     ><b-button
                         class="m-1 text-left"
                         block
                         :variant="profile.darkMode ? 'dark' : 'light'"
                         to="/dashboard/submissions/"
-                        ><i class="fas fa-terminal fa-fw"></i> Submissions</b-button
+                        ><i class="fas fa-tasks fa-fw"></i> Submissions</b-button
                     ></b-col
                 ><b-col
                     ><router-view

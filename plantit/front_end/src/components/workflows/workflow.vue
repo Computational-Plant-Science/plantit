@@ -1851,11 +1851,11 @@
                                                                                     selectedAgent.name !==
                                                                                         ''
                                                                                 "
-                                                                                class="fas fa-server fa-fw text-success"
+                                                                                class="fas fa-robot fa-fw text-success"
                                                                             ></i>
                                                                             <i
                                                                                 v-else
-                                                                                class="fas fa-server fa-fw"
+                                                                                class="fas fa-robot fa-fw"
                                                                             ></i>
                                                                             Agent
                                                                         </h4>

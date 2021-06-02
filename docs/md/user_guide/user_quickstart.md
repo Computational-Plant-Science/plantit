@@ -13,7 +13,7 @@
 PlantIT has a few fundamental abstractions:
 
 - <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow**
-- <i class="fas fa-terminal fa-1x fa-fw"></i> **Submission**
+- <i class="fas fa-tasks fa-1x fa-fw"></i> **Submission**
 
 ##### Workflow
 
@@ -21,4 +21,4 @@ A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is an executable, packa
 
 ##### Submission
 
-A <i class="fas fa-terminal fa-1x fa-fw"></i> **Submission** is a single instance of a workflow.
+A <i class="fas fa-tasks fa-1x fa-fw"></i> **Submission** is a single instance of a workflow.
