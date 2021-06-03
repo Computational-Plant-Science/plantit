@@ -20,7 +20,7 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            Your Tasks
+                  <i class="fas fa-tasks fa-fw"></i> Tasks
                         </h2></b-col
                     >
                     <b-col md="auto" class="ml-0" align-self="center"

@@ -20,7 +20,7 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            {{ publicContext ? 'Public' : 'Your' }} Agents
+                            <i class="fas fa-robot fa-fw"></i> {{ publicContext ? 'Public' : 'Your' }} Agents
                         </h2></b-col
                     >
                     <b-col

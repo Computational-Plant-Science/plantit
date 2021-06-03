@@ -63,19 +63,19 @@ class Task(models.Model):
 
     @property
     def is_success(self):
-        return self.status == 'SUCCESS'
+        return self.status == TaskStatus.SUCCESS
 
     @property
     def is_failure(self):
-        return self.status == 'FAILURE'
+        return self.status == TaskStatus.FAILURE
 
     @property
     def is_timeout(self):
-        return self.status == 'TIMEOUT'
+        return self.status == TaskStatus.TIMEOUT
 
     @property
     def is_cancelled(self):
-        return self.status == 'CANCELED'
+        return self.status == TaskStatus.CANCELED
 
     @property
     def is_complete(self):

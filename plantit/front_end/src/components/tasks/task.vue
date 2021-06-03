@@ -84,7 +84,7 @@
                                             : 'text-dark'
                                     "
                                 >
-                                    {{ getTask.name }}
+                                    <i class="fas fa-tasks fa-fw"></i> {{ getTask.name }}
                                 </h3></b-col
                             ><b-col class="m-0 ml-1 p-0">
                                 <h5>
@@ -127,7 +127,7 @@
                                                 ? 'secondary'
                                                 : 'warning'
                                         "
-                                        >{{ getTask.job_status }}</b-badge
+                                        >{{ getTask.status.toUpperCase() }}</b-badge
                                     >
                                     <small> on </small>
                                     <b class="mr-0">{{ getTask.agent }}</b>

@@ -243,7 +243,7 @@ let router = new Router({
                     children: [
                         {
                             path: ':owner/:name',
-                            name: 'Task',
+                            name: 'task',
                             props: true,
                             component: task,
                             meta: {

@@ -272,26 +272,26 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
 
     if agent.executor == AgentExecutor.LOCAL:
         task = Task.objects.create(guid=guid,
-                                  name=guid if name is None else name,
-                                  user=user,
-                                  workflow_owner=repo_name,
-                                  workflow_name=repo_owner,
-                                  agent=agent,
-                                  status=TaskStatus.CREATED,
-                                  created=now,
-                                  updated=now,
-                                  token=binascii.hexlify(os.urandom(20)).decode())
+                                   name=guid if name is None else name,
+                                   user=user,
+                                   workflow_owner=repo_name,
+                                   workflow_name=repo_owner,
+                                   agent=agent,
+                                   status=TaskStatus.CREATED,
+                                   created=now,
+                                   updated=now,
+                                   token=binascii.hexlify(os.urandom(20)).decode())
     else:
         task = JobQueueTask.objects.create(guid=guid,
-                                          name=guid if name is None else name,
-                                          user=user,
-                                          workflow_owner=repo_name,
-                                          workflow_name=repo_owner,
-                                          agent=agent,
-                                          status=TaskStatus.CREATED,
-                                          created=now,
-                                          updated=now,
-                                          token=binascii.hexlify(os.urandom(20)).decode())
+                                           name=guid if name is None else name,
+                                           user=user,
+                                           workflow_owner=repo_name,
+                                           workflow_name=repo_owner,
+                                           agent=agent,
+                                           status=TaskStatus.CREATED,
+                                           created=now,
+                                           updated=now,
+                                           token=binascii.hexlify(os.urandom(20)).decode())
 
     if 'logo' in repo_config:
         task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{repo_config['logo']}"
@@ -756,6 +756,7 @@ def map_task(task: Task):
     t = {
         'can_restart': can_restart,
         'guid': task.guid,
+        'status': task.status,
         'owner': task.user.username,
         'name': task.name,
         'work_dir': task.workdir,
@@ -781,7 +782,9 @@ def map_task(task: Task):
     if isinstance(task, JobQueueTask):
         t['job_id'] = task.job_id
         t['job_status'] = task.job_status
-        t['job_walltime'] = task.job_elapsed_walltime,
+        t['job_walltime'] = task.job_elapsed_walltime
+
+    return t
 
 
 def map_delayed_task(task: DelayedTask):

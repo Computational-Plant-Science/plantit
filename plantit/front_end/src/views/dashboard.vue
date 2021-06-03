@@ -84,7 +84,7 @@
                             >
                                 <i
                                     v-if="crumb.text !== 'Dashboard'"
-                                    class="fas fa-seedling fa-fw fa-1x"
+                                    class="fas fa-caret-right fa-fw fa-1x"
                                 ></i>
                                 {{ crumb.text }}
                             </h5>

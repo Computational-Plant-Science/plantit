@@ -20,7 +20,7 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            {{ publicContext ? 'Public' : 'Your' }} Workflows
+                            <i class="fas fa-stream fa-fw"></i> {{ publicContext ? 'Public' : 'Your' }} Workflows
                         </h2></b-col
                     ><b-col md="auto" align-self="center"
                         ><small

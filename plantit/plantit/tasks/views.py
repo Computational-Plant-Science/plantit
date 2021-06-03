@@ -81,29 +81,29 @@ def get_all_or_create(request):
 @api_view(['GET'])
 @login_required
 def get_by_owner(request, owner):
-    params = request.query_params
-    page = params.get('page') if 'page' in params else -1
+    # params = request.query_params
+    # page = params.get('page') if 'page' in params else -1
 
     try:
         user = User.objects.get(username=owner)
     except:
         return HttpResponseNotFound()
 
-    tasks = Task.objects.filter(user=user)
+    tasks = list(Task.objects.filter(user=user))
 
-    if 'running' in params and params.get('running') == 'True':
-        tasks = [t for t in tasks.filter(completed__isnull=True).order_by('-created') if not t.is_complete]
-    elif 'running' in params and params.get('running') == 'False':
-        tasks = [t for t in tasks if t.is_complete]
-        if page > -1:
-            start = int(page) * 20
-            count = start + 20
-            tasks = tasks[start:(start + count)]
-    else:
-        if page > -1:
-            start = int(page) * 20
-            count = start + 20
-            tasks = tasks[start:(start + count)]
+    # if 'running' in params and params.get('running') == 'True':
+    #     tasks = [t for t in tasks.filter(completed__isnull=True).order_by('-created') if not t.is_complete]
+    # elif 'running' in params and params.get('running') == 'False':
+    #     tasks = [t for t in tasks if t.is_complete]
+    #     if page > -1:
+    #         start = int(page) * 20
+    #         count = start + 20
+    #         tasks = tasks[start:(start + count)]
+    # else:
+    #     if page > -1:
+    #         start = int(page) * 20
+    #         count = start + 20
+    #         tasks = tasks[start:(start + count)]
 
     return JsonResponse({'tasks': [map_task(t) for t in tasks]})
 

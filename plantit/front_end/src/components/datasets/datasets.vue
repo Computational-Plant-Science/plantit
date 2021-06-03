@@ -9,7 +9,7 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            {{ publicContext ? 'Public' : 'Your' }} Datasets
+          <i class="fas fa-database fa-fw"></i> {{ publicContext ? 'Public' : 'Your' }} Datasets
                         </h2></b-col
                     ><b-col md="auto" align-self="center"
                         ><small>powered by</small

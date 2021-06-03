@@ -114,12 +114,6 @@
                                     right
                                     :src="getAgent.logo"
                                 ></b-img>
-                                <i
-                                    v-else
-                                    style="max-width: 7rem;position: absolute;right: 20px;top: 20px;"
-                                    right
-                                    class="card-img-left fas fa-robot fa-2x fa-fw"
-                                ></i>
                                 <b-row no-gutters>
                                     <b-col>
                                         <b-row>
@@ -131,7 +125,7 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    {{ getAgent.name }}
+                                                    <i class="fas fa-robot fa-fw"></i> {{ getAgent.name }}
                                                 </h2>
                                                 <b-badge
                                                     v-if="getAgent.role === 'guest'"

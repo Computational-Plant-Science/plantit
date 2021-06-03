@@ -117,7 +117,7 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    {{
+                                                    <i class="fas fa-stream fa-fw"></i> {{
                                                         getWorkflow.config.name
                                                     }}
                                                 </h2> </b-col
