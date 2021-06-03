@@ -1,15 +1,6 @@
 <template>
-    <div
-        class="w-100 h-100 p-2"
-        :style="
-            profile.darkMode
-                ? 'background-color: #616163'
-                : 'background-color: white' + '; min-height: 100%'
-        "
-    >
-        <br />
-        <br />
-        <b-container class="p-3 vl" fluid>
+    <div>
+        <b-container class="vl" fluid>
             <b-row
                 no-gutters
                 v-if="
@@ -457,7 +448,7 @@
                                     <b-row
                                         v-if="
                                             !agentLoading &&
-                                                getAgent.policies.length === 1
+                                                getAgent.policies.length < 2
                                         "
                                         ><b-col
                                             ><small
@@ -765,7 +756,6 @@ export default {
         return {
             authenticationUsername: '',
             authenticationPassword: '',
-            agentLoading: false,
             statusChecking: false,
             alertEnabled: false,
             alertMessage: '',
@@ -779,14 +769,10 @@ export default {
             sessionSocket: null
         };
     },
-    mounted() {
-        this.loadTarget();
-    },
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['recentlyRunWorkflows']),
-        ...mapGetters('datasets', ['openedDatasetLoading', 'openedDataset']),
-        ...mapGetters('agents', ['agent']),
+        ...mapGetters('agents', ['agent', 'personalAgentsLoading', 'publicAgentsLoading']),
         getAgent() {
             return this.agent(this.$router.currentRoute.params.name);
         },
@@ -1019,23 +1005,6 @@ export default {
         prettifyDuration: function(dur) {
             moment.relativeTimeThreshold('m', 1);
             return moment.duration(dur, 'seconds').humanize(true);
-        },
-        loadTarget: function() {
-            this.agentLoading = true;
-            return axios
-                .get(
-                    `/apis/v1/agents/get_by_name/?name=${this.$route.params.name}`
-                )
-                .then(response => {
-                    this.getAgent = response.data;
-                    this.singularityCacheCleaning =
-                        response.data.singularity_cache_clean_enabled;
-                    this.agentLoading = false;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
         },
         checkStatus: function() {
             this.statusChecking = true;

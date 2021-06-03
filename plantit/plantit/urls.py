@@ -7,7 +7,7 @@ from .auth.views import login_view, logout_view
 from .datasets.consumers import DatasetSessionConsumer
 from .miappe.views import *
 from .notifications.consumers import NotificationConsumer
-from .submissions.consumers import SubmissionConsumer
+from .tasks.consumers import TaskConsumer
 from .users.views import UsersViewSet, IDPViewSet
 from .workflows.consumers import WorkflowConsumer
 
@@ -33,14 +33,14 @@ urlpatterns = [
                   url('agents/', include("plantit.agents.urls")),
                   url('datasets/', include("plantit.datasets.urls")),
                   url('workflows/', include("plantit.workflows.urls")),
-                  url('submissions/', include("plantit.submissions.urls")),
+                  url('tasks/', include("plantit.tasks.urls")),
                   url('stats/', include("plantit.stats.urls")),
                   url('notifications/', include("plantit.notifications.urls")),
               ] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
 websocket_urlpatterns = [
     path(r'ws/workflows/<owner>/', WorkflowConsumer.as_asgi()),
-    path(r'ws/submissions/<username>/', SubmissionConsumer.as_asgi()),
+    path(r'ws/tasks/<username>/', TaskConsumer.as_asgi()),
     path(r'ws/notifications/<username>/', NotificationConsumer.as_asgi()),
     path(r'ws/sessions/<guid>/', DatasetSessionConsumer.as_asgi())
 ]

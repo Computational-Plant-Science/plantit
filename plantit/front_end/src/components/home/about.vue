@@ -79,8 +79,8 @@
                             ><h5 class="text-white">workflows</h5>
                         </b-col>
                         <b-col align-self="end" class="text-right mr-0"
-                            ><h1 v-if="submissionCount >= 0" class="text-success">
-                          {{ submissionCount }}
+                            ><h1 v-if="taskCount >= 0" class="text-success">
+                          {{ taskCount }}
                         </h1>
                             <b-spinner
                                 v-else
@@ -274,7 +274,7 @@ export default {
         return {
             userCount: -1,
             workflowCount: -1,
-            submissionCount: -1
+            taskCount: -1
         };
     },
     methods: {
@@ -284,7 +284,7 @@ export default {
                 .then(response => {
                     this.userCount = response.data.users;
                     this.workflowCount = response.data.workflows;
-                    this.submissionCount = response.data.submissions;
+                    this.taskCount = response.data.tasks;
                 })
                 .catch(error => {
                     Sentry.captureException(error);

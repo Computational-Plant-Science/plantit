@@ -20,24 +20,24 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            Your Submissions
+                            Your Tasks
                         </h2></b-col
                     >
                     <b-col md="auto" class="ml-0" align-self="center"
                         ><b-button
-                            :disabled="submissionsLoading"
+                            :disabled="tasksLoading"
                             :variant="
                                 profile.darkMode ? 'outline-light' : 'white'
                             "
                             size="md"
                             v-b-tooltip.hover
-                            title="Refresh submissions"
+                            title="Refresh tasks"
                             @click="refresh"
                             class="ml-0 mt-0 mr-0"
                         >
                             <b-spinner
                                 small
-                                v-if="submissionsLoading"
+                                v-if="tasksLoading"
                                 label="Refreshing..."
                                 :variant="profile.darkMode ? 'light' : 'dark'"
                                 class="mr-1"
@@ -47,7 +47,7 @@
                         ></b-col
                     >
                 </b-row>
-                <b-row v-if="submissionsLoading" class="mt-2">
+                <b-row v-if="tasksLoading" class="mt-2">
                     <b-col class="text-center">
                         <b-spinner
                             type="grow"
@@ -78,7 +78,7 @@
                                 pill
                                 class="ml-1 mr-1 mb-1"
                                 variant="warning"
-                                >{{ submissionsRunning.length }}</b-badge
+                                >{{ tasksRunning.length }}</b-badge
                             >
                         </template>
                         <b-row class="pl-0 pr-0"
@@ -89,9 +89,9 @@
                                             ? 'text-light'
                                             : 'text-dark'
                                     "
-                                    v-if="submissionsRunning.length === 0"
+                                    v-if="tasksRunning.length === 0"
                                 >
-                                    No submissions running right now.
+                                    No tasks running right now.
                                 </p>
                                 <div v-else>
                                     <b-input-group size="sm" style="bottom: 4px"
@@ -114,8 +114,8 @@
                                         <b-list-group-item
                                             variant="default"
                                             style="box-shadow: -2px 2px 2px #adb5bd"
-                                            v-for="submission in filteredRunning"
-                                            v-bind:key="submission.name"
+                                            v-for="task in filteredRunning"
+                                            v-bind:key="task.name"
                                             :class="
                                                 profile.darkMode
                                                     ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
@@ -124,9 +124,9 @@
                                         >
                                             <b-img
                                                 v-if="
-                                                    submission.workflow_image_url !==
+                                                    task.workflow_image_url !==
                                                         undefined &&
-                                                        submission.workflow_image_url !==
+                                                        task.workflow_image_url !==
                                                             null
                                                 "
                                                 rounded
@@ -134,7 +134,7 @@
                                                 style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                 right
                                                 :src="
-                                                    submission.workflow_image_url
+                                                    task.workflow_image_url
                                                 "
                                             ></b-img>
                                             <b-link
@@ -144,26 +144,26 @@
                                                         : 'text-dark'
                                                 "
                                                 :to="{
-                                                    name: 'submission',
+                                                    name: 'task',
                                                     params: {
-                                                        owner: submission.owner,
-                                                        name: submission.name
+                                                        owner: task.owner,
+                                                        name: task.name
                                                     }
                                                 }"
                                                 replace
-                                                >{{ submission.name }}</b-link
+                                                >{{ task.name }}</b-link
                                             >
                                             <br />
                                             <div
                                                 v-if="
-                                                    submission.tags !==
+                                                    task.tags !==
                                                         undefined &&
-                                                        submission.tags.length >
+                                                        task.tags.length >
                                                             0
                                                 "
                                             >
                                                 <b-badge
-                                                    v-for="tag in submission.tags"
+                                                    v-for="tag in task.tags"
                                                     v-bind:key="tag"
                                                     class="mr-1"
                                                     variant="secondary"
@@ -174,7 +174,7 @@
                                             <b-spinner
                                                 class="mb-1 mr-1"
                                                 style="width: 0.7rem; height: 0.7rem;"
-                                                v-if="!submission.is_complete"
+                                                v-if="!task.is_complete"
                                                 :variant="
                                                     profile.darkMode
                                                         ? 'light'
@@ -183,37 +183,37 @@
                                             >
                                             </b-spinner>
                                             <small
-                                                v-if="!submission.is_complete"
+                                                v-if="!task.is_complete"
                                                 >Running</small
                                             >
                                             <b-badge
                                                 :variant="
-                                                    submission.is_failure ||
-                                                    submission.is_timeout
+                                                    task.is_failure ||
+                                                    task.is_timeout
                                                         ? 'danger'
-                                                        : submission.is_cancelled
+                                                        : task.is_cancelled
                                                         ? 'secondary'
                                                         : 'success'
                                                 "
                                                 v-else
                                                 >{{
-                                                    submission.job_status
+                                                    task.job_status
                                                 }}</b-badge
                                             >
                                             <small> on </small>
                                             <b-badge
                                                 class="ml-0 mr-0"
                                                 variant="secondary"
-                                                >{{ submission.agent }}</b-badge
+                                                >{{ task.agent }}</b-badge
                                             ><small>
                                                 {{
-                                                    prettify(submission.updated)
+                                                    prettify(task.updated)
                                                 }}</small
                                             >
                                             <br />
                                             <small
                                                 v-if="
-                                                    submission.workflow_name !==
+                                                    task.workflow_name !==
                                                         null
                                                 "
                                                 class="mr-1"
@@ -224,15 +224,15 @@
                                                             : 'text-dark'
                                                     "
                                                     :href="
-                                                        `https://github.com/${submission.workflow_owner}/${submission.workflow_name}`
+                                                        `https://github.com/${task.workflow_owner}/${task.workflow_name}`
                                                     "
                                                     ><i
                                                         class="fab fa-github fa-fw"
                                                     ></i>
                                                     {{
-                                                        submission.workflow_owner
+                                                        task.workflow_owner
                                                     }}/{{
-                                                        submission.workflow_name
+                                                        task.workflow_name
                                                     }}</a
                                                 >
                                             </small>
@@ -258,18 +258,18 @@
                                 pill
                                 class="ml-1 mr-1 mb-1"
                                 variant="success"
-                                >{{ submissionsSucceeded.length }}</b-badge
+                                >{{ tasksSucceeded.length }}</b-badge
                             >
                             <b-badge
                                 pill
                                 class="ml-1 mr-1 mb-1"
                                 variant="danger"
-                                >{{ submissionsFailed.length }}</b-badge
+                                >{{ tasksFailed.length }}</b-badge
                             >
                         </template>
                         <b-row>
                             <b-col
-                                v-if="submissionsLoading"
+                                v-if="tasksLoading"
                                 class="m-0 pl-0 pr-0 text-center"
                             >
                                 <b-spinner
@@ -279,8 +279,8 @@
                             ></b-col>
                             <b-col
                                 v-if="
-                                    !submissionsLoading &&
-                                        submissionsCompleted.length === 0
+                                    !tasksLoading &&
+                                        tasksCompleted.length === 0
                                 "
                                 class="m-0 pl-0 pr-0"
                             >
@@ -291,7 +291,7 @@
                                             : 'text-dark'
                                     "
                                 >
-                                    No workflow submissions.
+                                    No workflow tasks.
                                 </p>
                             </b-col>
                             <b-col v-else class="m-0 pl-0 pr-0 text-center"
@@ -315,7 +315,7 @@
                         <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                             ><b-col
                                 v-if="
-                                    !submissionsLoading && submissionsCompleted.length > 0
+                                    !tasksLoading && tasksCompleted.length > 0
                                 "
                                 class="m-0 pl-0 pr-0 text-center"
                             >
@@ -323,8 +323,8 @@
                                     <b-list-group-item
                                         variant="default"
                                         style="box-shadow: -2px 2px 2px #adb5bd"
-                                        v-for="submission in filteredCompleted"
-                                        v-bind:key="submission.name"
+                                        v-for="task in filteredCompleted"
+                                        v-bind:key="task.name"
                                         :class="
                                             profile.darkMode
                                                 ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
@@ -335,9 +335,9 @@
                                             ><b-col>
                                                 <b-img
                                                     v-if="
-                                                        submission.workflow_image_url !==
+                                                        task.workflow_image_url !==
                                                             undefined &&
-                                                            submission.workflow_image_url !==
+                                                            task.workflow_image_url !==
                                                                 null
                                                     "
                                                     rounded
@@ -345,7 +345,7 @@
                                                     style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                     right
                                                     :src="
-                                                        submission.workflow_image_url
+                                                        task.workflow_image_url
                                                     "
                                                 ></b-img>
                                                 <b-link
@@ -355,17 +355,17 @@
                                                             : 'text-dark'
                                                     "
                                                     :to="{
-                                                        name: 'submission',
+                                                        name: 'task',
                                                         params: {
                                                             owner:
-                                                                submission.owner,
+                                                                task.owner,
                                                             name:
-                                                                submission.name
+                                                                task.name
                                                         }
                                                     }"
                                                     replace
                                                     >{{
-                                                        submission.name
+                                                        task.name
                                                     }}</b-link
                                                 >
                                             </b-col>
@@ -374,14 +374,14 @@
                                             ><b-col>
                                                 <div
                                                     v-if="
-                                                        submission.tags !==
+                                                        task.tags !==
                                                             undefined &&
-                                                            submission.tags
+                                                            task.tags
                                                                 .length > 0
                                                     "
                                                 >
                                                     <b-badge
-                                                        v-for="tag in submission.tags"
+                                                        v-for="tag in task.tags"
                                                         v-bind:key="tag"
                                                         class="mr-1"
                                                         variant="secondary"
@@ -389,29 +389,29 @@
                                                     </b-badge>
                                                     <br
                                                         v-if="
-                                                            submission.tags
+                                                            task.tags
                                                                 .length > 0
                                                         "
                                                     />
                                                 </div>
                                                 <small
                                                     v-if="
-                                                        !submission.is_complete
+                                                        !task.is_complete
                                                     "
                                                     >Running</small
                                                 >
                                                 <b-badge
                                                     :variant="
-                                                        submission.is_failure ||
-                                                        submission.is_timeout
+                                                        task.is_failure ||
+                                                        task.is_timeout
                                                             ? 'danger'
-                                                            : submission.is_cancelled
+                                                            : task.is_cancelled
                                                             ? 'secondary'
                                                             : 'success'
                                                     "
                                                     v-else
                                                     >{{
-                                                        submission.job_status
+                                                        task.job_status
                                                     }}</b-badge
                                                 >
                                                 <small>
@@ -421,12 +421,12 @@
                                                     class="ml-0 mr-0"
                                                     variant="secondary"
                                                     >{{
-                                                        submission.agent
+                                                        task.agent
                                                     }}</b-badge
                                                 ><small>
                                                     {{
                                                         prettify(
-                                                            submission.updated
+                                                            task.updated
                                                         )
                                                     }}</small
                                                 >
@@ -442,15 +442,15 @@
                                                                 : 'text-dark'
                                                         "
                                                         :href="
-                                                            `https://github.com/${submission.workflow_owner}/${submission.workflow_name}`
+                                                            `https://github.com/${task.workflow_owner}/${task.workflow_name}`
                                                         "
                                                         ><i
                                                             class="fab fa-github fa-fw"
                                                         ></i>
                                                         {{
-                                                            submission.workflow_owner
+                                                            task.workflow_owner
                                                         }}/{{
-                                                            submission.workflow_name
+                                                            task.workflow_name
                                                         }}</a
                                                     >
                                                 </small>
@@ -458,7 +458,7 @@
                                             <b-col md="auto">
                                                 <b-button
                                                     v-if="
-                                                        submission.is_complete
+                                                        task.is_complete
                                                     "
                                                     variant="outline-danger"
                                                     size="sm"
@@ -467,7 +467,7 @@
                                                     class="text-right"
                                                     @click="
                                                         showRemovePrompt(
-                                                            submission
+                                                            task
                                                         )
                                                     "
                                                 >
@@ -499,7 +499,7 @@ import router from '@/router';
 import * as Sentry from '@sentry/browser';
 
 export default {
-    name: 'submissions',
+    name: 'tasks',
     data: function() {
         return {
             searchText: ''
@@ -511,29 +511,29 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        showRemovePrompt(submission) {
-            this.$bvModal.show('remove ' + submission.name);
+        showRemovePrompt(task) {
+            this.$bvModal.show('remove ' + task.name);
         },
         async refresh() {
-            await this.$store.dispatch('submissions/loadAll');
+            await this.$store.dispatch('tasks/loadAll');
         },
-        async remove(submission) {
+        async remove(task) {
             await axios
                 .get(
-                    `/apis/v1/submissions/${submission.owner}/${submission.name}/delete/`
+                    `/apis/v1/tasks/${task.owner}/${task.name}/delete/`
                 )
                 .then(response => {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('submissions/loadAll');
+                        this.$store.dispatch('tasks/loadAll');
                         if (
-                            this.$router.currentRoute.name === 'submission' &&
-                            submission.name ===
+                            this.$router.currentRoute.name === 'task' &&
+                            task.name ===
                                 this.$router.currentRoute.params.name
                         )
                             router.push({
-                                name: 'submissions'
+                                name: 'tasks'
                             });
                     } else {
                         this.showFailedToCancelAlert = true;
@@ -547,19 +547,19 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
-        ...mapGetters('submissions', [
-            'submissions',
-            'submissionsLoading',
-            'submissionsRunning',
-            'submissionsCompleted',
-            'submissionsSucceeded',
-            'submissionsFailed'
+        ...mapGetters('tasks', [
+            'tasks',
+            'tasksLoading',
+            'tasksRunning',
+            'tasksCompleted',
+            'tasksSucceeded',
+            'tasksFailed'
         ]),
         isRootPath() {
-            return this.$route.name === 'submissions';
+            return this.$route.name === 'tasks';
         },
         filteredRunning() {
-            return this.submissionsRunning.filter(
+            return this.tasksRunning.filter(
                 sub =>
                     (sub.workflow_name !== null &&
                         sub.workflow_name.includes(this.searchText)) ||
@@ -568,7 +568,7 @@ export default {
             );
         },
         filteredCompleted() {
-            return this.submissionsCompleted.filter(
+            return this.tasksCompleted.filter(
                 sub =>
                     (sub.workflow_name !== null &&
                         sub.workflow_name.includes(this.searchText)) ||

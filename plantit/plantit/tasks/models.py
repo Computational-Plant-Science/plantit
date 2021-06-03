@@ -12,7 +12,7 @@ from taggit.managers import TaggableManager
 from plantit.agents.models import Agent
 
 
-class SubmissionStatus(models.TextChoices):
+class TaskStatus(models.TextChoices):
     CREATED = 'created', gettext_lazy('Created')
     RUNNING = 'running', gettext_lazy('Running')
     SUCCESS = 'success', gettext_lazy('Success')
@@ -21,7 +21,7 @@ class SubmissionStatus(models.TextChoices):
     CANCELED = 'canceled', gettext_lazy('Canceled')
 
 
-class Submission(models.Model):
+class Task(models.Model):
     class Meta:
         ordering = ['-created']
 
@@ -45,8 +45,8 @@ class Submission(models.Model):
 
     status = models.CharField(
         max_length=8,
-        choices=SubmissionStatus.choices,
-        default=SubmissionStatus.CREATED)
+        choices=TaskStatus.choices,
+        default=TaskStatus.CREATED)
 
     def __str__(self):
         opts = self._meta
@@ -82,7 +82,7 @@ class Submission(models.Model):
         return self.is_success or self.is_failure or self.is_timeout or self.is_cancelled
 
 
-class JobQueueSubmission(Submission):
+class JobQueueTask(Task):
     job_id = models.CharField(max_length=7, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
     job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
@@ -113,7 +113,7 @@ class JobQueueSubmission(Submission):
         return self.job_status == 'TIMEOUT'
 
 
-class DelayedSubmissionTask(PeriodicTask):
+class DelayedTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)
@@ -121,7 +121,7 @@ class DelayedSubmissionTask(PeriodicTask):
     eta = models.DateTimeField(null=False, blank=False)
 
 
-class RepeatingSubmissionTask(PeriodicTask):
+class RepeatingTask(PeriodicTask):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     resource = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True)
     workflow_owner = models.CharField(max_length=280, null=True, blank=True)

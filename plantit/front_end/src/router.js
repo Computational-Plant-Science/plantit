@@ -5,12 +5,12 @@ import about from './views/about.vue';
 import dashboard from './views/dashboard.vue';
 import users from './components/users/users.vue';
 import user from './components/users/user.vue';
-import workflows from './components/workflows/workflows.vue';
-import workflow from './components/workflows/workflow.vue';
+import tasks from './components/tasks/tasks.vue';
+import task from './components/tasks/task.vue';
 import agents from './components/agents/agents.vue';
 import agent from './components/agents/agent.vue';
-import submissions from './components/submissions/submissions.vue';
-import submission from './components/submissions/submission.vue';
+import workflows from './components/workflows/workflows.vue';
+import workflow from './components/workflows/workflow.vue';
 import datasets from './components/datasets/datasets.vue';
 import dataset from './components/datasets/dataset.vue';
 import store from './store/store.js';
@@ -223,19 +223,19 @@ let router = new Router({
                     ]
                 },
                 {
-                    path: 'submissions',
-                    name: 'submissions',
-                    component: submissions,
+                    path: 'tasks',
+                    name: 'tasks',
+                    component: tasks,
                     meta: {
-                        title: 'Submissions',
+                        title: 'Tasks',
                         crumb: [
                             {
                                 text: 'Dashboard',
                                 href: '/dashboard'
                             },
                             {
-                                text: 'Submissions',
-                                href: '/dashboard/submissions'
+                                text: 'Tasks',
+                                href: '/dashboard/tasks'
                             }
                         ],
                         requiresAuth: true
@@ -243,19 +243,19 @@ let router = new Router({
                     children: [
                         {
                             path: ':owner/:name',
-                            name: 'Submission',
+                            name: 'Task',
                             props: true,
-                            component: submission,
+                            component: task,
                             meta: {
-                                title: 'Submission',
+                                title: 'Task',
                                 crumb: [
                                     {
                                         text: 'Dashboard',
                                         href: '/dashboard'
                                     },
                                     {
-                                        text: 'Submissions',
-                                        href: '/dashboard/submissions'
+                                        text: 'Tasks',
+                                        href: '/dashboard/tasks'
                                     }
                                 ],
                                 requiresAuth: true
@@ -297,8 +297,8 @@ router.beforeEach(async (to, from, next) => {
             text: `${to.params.owner}/${to.params.name}`
         });
     }
-    if (to.name === 'submission') {
-        to.meta.title = `Submission: ${to.params.owner}/${to.params.name}`;
+    if (to.name === 'task') {
+        to.meta.title = `Task: ${to.params.owner}/${to.params.name}`;
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `${to.params.owner}/${to.params.name}`

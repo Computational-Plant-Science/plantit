@@ -20,7 +20,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from plantit.redis import RedisClient
-from plantit.tasks import aggregate_user_statistics
+from plantit.celery_tasks import aggregate_user_statistics
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer

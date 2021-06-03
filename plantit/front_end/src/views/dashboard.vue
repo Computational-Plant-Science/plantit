@@ -48,7 +48,7 @@
                                 : require('../assets/logos/github_black.png')
                         "
                     ></b-img>
-                    account.<br />If you already have one, click the button
+                    account.<br />Once you have one, click the button
                     below (or in the navigation bar) to log in.<br /><br /><b-button
                         class="mt-1 text-left"
                         variant="success"
@@ -72,7 +72,7 @@
                             v-for="crumb in crumbs"
                             :key="crumb.text"
                             :to="crumb.href"
-                            :disabled="crumb.text === 'submissions'"
+                            :disabled="crumb.text === 'tasks'"
                             class="m-0"
                         >
                             <h5
@@ -122,8 +122,8 @@
                         class="m-1 text-left"
                         block
                         :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/dashboard/submissions/"
-                        ><i class="fas fa-tasks fa-fw"></i> Submissions</b-button
+                        to="/dashboard/tasks/"
+                        ><i class="fas fa-tasks fa-fw"></i> Tasks</b-button
                     ></b-col
                 ><b-col
                     ><router-view
@@ -154,7 +154,7 @@
                                 >
                                     Usage right now
                                 </h5>
-                                <b>{{ submissionsRunning.length }}</b>
+                                <b>{{ tasksRunning.length }}</b>
                                 running
                                 <div v-if="profile.stats !== null">
                                     <hr
@@ -170,8 +170,8 @@
                                     >
                                         Cumulative usage
                                     </h5>
-                                    <b>{{ profile.stats.total_submissions }}</b>
-                                    submissions completed
+                                    <b>{{ profile.stats.total_tasks }}</b>
+                                    tasks completed
                                     <br />
                                     <b>{{ profile.stats.total_time }}</b>
                                     working minutes
@@ -323,11 +323,11 @@ export default {
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
-        ...mapGetters('submissions', [
-            'submissions',
-            'submissionsLoading',
-            'submissionsRunning',
-            'submissionsCompleted'
+        ...mapGetters('tasks', [
+            'tasks',
+            'tasksLoading',
+            'tasksRunning',
+            'tasksCompleted'
         ]),
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', [

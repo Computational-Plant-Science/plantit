@@ -108,7 +108,7 @@ CHANNEL_LAYERS = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    'plantit.submissions.authentication.SubmissionTokenAuthentication',
+    'plantit.tasks.authentication.TaskTokenAuthentication',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -175,7 +175,7 @@ USE_TZ = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'plantit.submissions.authentication.SubmissionTokenAuthentication',
+        'plantit.tasks.authentication.TaskTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
 }

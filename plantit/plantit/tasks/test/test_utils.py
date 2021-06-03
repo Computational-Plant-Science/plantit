@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from plantit.submissions.ssh import SSH
+from plantit.tasks.ssh import SSH
 from plantit.ssh import execute_command
 
 

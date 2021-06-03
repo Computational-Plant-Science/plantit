@@ -16,11 +16,11 @@ from rest_framework.decorators import api_view
 from plantit import settings
 from plantit.agents.models import Agent
 from plantit.redis import RedisClient
-from plantit.submissions.models import Submission, DelayedSubmissionTask, RepeatingSubmissionTask, SubmissionStatus
-from plantit.tasks import submit_workflow
-from plantit.submissions.utils import update_submission_status, map_submission, get_submission_log_file_path, create_submission, parse_eta, \
-    map_delayed_submission_task, \
-    map_repeating_submission_task, cancel_submission
+from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
+from plantit.tasks.utils import log_task_status, map_task, get_task_log_file_path, create_task, parse_eta, \
+    map_delayed_task, \
+    map_repeating_task, cancel_task, push_task_event
+from plantit.celery_tasks import submit_task
 from plantit.ssh import SSH
 
 
@@ -31,18 +31,18 @@ def get_all_or_create(request):
     workflow = request.data
 
     if request.method == 'GET':
-        submissions = Submission.objects.all()
-        return JsonResponse({'submissions': [map_submission(sub) for sub in submissions]})
+        tasks = Task.objects.all()
+        return JsonResponse({'tasks': [map_task(sub) for sub in tasks]})
     elif request.method == 'POST':
         agent = Agent.objects.get(name=workflow['config']['agent']['name'])
         if request.data['type'] == 'Now':
-            submission = create_submission(user.username, agent.name, workflow, workflow['config'].get('submission_name', None))
-            submit_workflow.delay(submission.guid, workflow)
-            return JsonResponse({'name': submission.name, 'owner': submission.user.username})
+            task = create_task(user.username, agent.name, workflow, workflow['config'].get('task_name', None))
+            submit_task.delay(task.guid, workflow)
+            return JsonResponse({'name': task.name, 'owner': task.user.username})
         elif request.data['type'] == 'After':
             eta, seconds = parse_eta(workflow)
             schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-            task, created = DelayedSubmissionTask.objects.get_or_create(
+            task, created = DelayedTask.objects.get_or_create(
                 user=user,
                 interval=schedule,
                 agent=agent,
@@ -51,16 +51,16 @@ def get_all_or_create(request):
                 workflow_owner=workflow['repo']['owner']['login'],
                 workflow_name=workflow['repo']['name'],
                 name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
-                task='plantit.tasks.create_and_submit_workflow',
+                task='plantit.celery_tasks.create_and_submit_task',
                 args=json.dumps([user.username, agent.name, workflow]))
             return JsonResponse({
                 'created': created,
-                'task': map_delayed_submission_task(task)
+                'task': map_delayed_task(task)
             })
         elif request.data['type'] == 'Every':
             eta, seconds = parse_eta(workflow)
             schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-            task, created = RepeatingSubmissionTask.objects.get_or_create(
+            task, created = RepeatingTask.objects.get_or_create(
                 user=user,
                 interval=schedule,
                 agent=agent,
@@ -68,14 +68,14 @@ def get_all_or_create(request):
                 workflow_owner=workflow['repo']['owner']['login'],
                 workflow_name=workflow['repo']['name'],
                 name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} repeating",
-                task='plantit.tasks.create_and_submit_workflow',
+                task='plantit.celery_tasks.create_and_submit_task',
                 args=json.dumps([user.username, agent.name, workflow]))
             return JsonResponse({
                 'created': created,
-                'task': map_repeating_submission_task(task)
+                'task': map_repeating_task(task)
             })
         else:
-            raise ValueError(f"Unsupported submission type (expected: Now, Later, or Periodically)")
+            raise ValueError(f"Unsupported task type (expected: Now, Later, or Periodically)")
 
 
 @api_view(['GET'])
@@ -89,23 +89,23 @@ def get_by_owner(request, owner):
     except:
         return HttpResponseNotFound()
 
-    submissions = Submission.objects.filter(user=user)
+    tasks = Task.objects.filter(user=user)
 
     if 'running' in params and params.get('running') == 'True':
-        submissions = [sub for sub in submissions.filter(completed__isnull=True).order_by('-created') if not sub.is_complete]
+        tasks = [t for t in tasks.filter(completed__isnull=True).order_by('-created') if not t.is_complete]
     elif 'running' in params and params.get('running') == 'False':
-        submissions = [sub for sub in submissions if sub.is_complete]
+        tasks = [t for t in tasks if t.is_complete]
         if page > -1:
             start = int(page) * 20
             count = start + 20
-            submissions = submissions[start:(start + count)]
+            tasks = tasks[start:(start + count)]
     else:
         if page > -1:
             start = int(page) * 20
             count = start + 20
-            submissions = submissions[start:(start + count)]
+            tasks = tasks[start:(start + count)]
 
-    return JsonResponse({'submissions': [map_submission(sub) for sub in submissions]})
+    return JsonResponse({'tasks': [map_task(t) for t in tasks]})
 
 
 @api_view(['GET'])
@@ -113,9 +113,9 @@ def get_by_owner(request, owner):
 def get_by_owner_and_name(request, owner, name):
     try:
         user = User.objects.get(username=owner)
-        submission = Submission.objects.get(user=user, name=name)
-        return JsonResponse(map_submission(submission))
-    except Submission.DoesNotExist:
+        task = Task.objects.get(user=user, name=name)
+        return JsonResponse(map_task(task))
+    except Task.DoesNotExist:
         return HttpResponseNotFound()
 
 
@@ -127,12 +127,12 @@ def get_thumbnail(request, owner, name):
 
     try:
         user = User.objects.get(username=owner)
-        submission = Submission.objects.get(user=user, name=name)
+        task = Task.objects.get(user=user, name=name)
     except:
         return HttpResponseNotFound()
 
     redis = RedisClient.get()
-    preview = redis.get(f"previews/{user.username}/{submission.name}/{file}")
+    preview = redis.get(f"previews/{user.username}/{task.name}/{file}")
 
     if preview is None or preview == b'EMPTY':
         with open(settings.NO_PREVIEW_THUMBNAIL, 'rb') as thumbnail:
@@ -172,12 +172,12 @@ def get_3d_model(request, guid):
     file = path.rpartition('/')[2]
 
     try:
-        submission = Submission.objects.get(guid=guid)
+        task = Task.objects.get(guid=guid)
     except:
         return HttpResponseNotFound()
 
-    client = SSH(submission.agent.hostname, submission.agent.port, submission.agent.username)
-    work_dir = join(submission.agent.workdir, submission.workdir)
+    client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    work_dir = join(task.agent.workdir, task.workdir)
 
     with tempfile.NamedTemporaryFile() as temp_file:
         with client:
@@ -192,12 +192,12 @@ def get_3d_model(request, guid):
 def get_output_file(request, owner, name, file):
     try:
         user = User.objects.get(username=owner)
-        submission = Submission.objects.get(user=user, name=name)
-    except Submission.DoesNotExist:
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(submission.agent.hostname, submission.agent.port, submission.agent.username)
-    work_dir = join(submission.agent.workdir, submission.workdir)
+    client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    work_dir = join(task.agent.workdir, task.workdir)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -217,14 +217,14 @@ def get_output_file(request, owner, name, file):
 
 @api_view(['GET'])
 @login_required
-def get_submission_logs(request, owner, name):
+def get_task_logs(request, owner, name):
     try:
         user = User.objects.get(username=owner)
-        submission = Submission.objects.get(user=user, name=name)
-    except Submission.DoesNotExist:
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = get_submission_log_file_path(submission)
+    log_path = get_task_log_file_path(task)
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
@@ -233,17 +233,17 @@ def get_submission_logs(request, owner, name):
 def get_container_logs(request, owner, name):
     try:
         user = User.objects.get(username=owner)
-        submission = Submission.objects.get(user=user, name=name)
-    except Submission.DoesNotExist:
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(submission.agent.hostname, submission.agent.port, submission.agent.username)
-    work_dir = join(submission.agent.workdir, submission.workdir)
+    client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    work_dir = join(task.agent.workdir, task.workdir)
 
-    if submission.agent.launcher:
-        log_file = f"plantit.{submission.job_id}.out"
+    if task.agent.launcher:
+        log_file = f"plantit.{task.job_id}.out"
     else:
-        log_file = f"{user.username}.{submission.name}.{submission.agent.name.lower()}.log"
+        log_file = f"{user.username}.{task.name}.{task.agent.name.lower()}.log"
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -267,12 +267,12 @@ def get_file_text(request, owner, name):
     file = request.GET.get('path')
     try:
         user = User.objects.get(username=owner)
-        submission = Submission.objects.get(user=user, name=name)
-    except Submission.DoesNotExist:
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(submission.agent.hostname, submission.agent.port, submission.agent.username)
-    work_dir = join(submission.agent.workdir, submission.workdir)
+    client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    work_dir = join(task.agent.workdir, task.workdir)
 
     with client:
         with client.client.open_sftp() as sftp:
@@ -291,74 +291,30 @@ def get_file_text(request, owner, name):
 
 @api_view(['GET'])
 @login_required
-def remove_delayed(request):
-    task_name = request.GET.get('name', None)
-    if task_name is None:
-        return HttpResponseNotFound()
-
-    try:
-        task = DelayedSubmissionTask.objects.get(name=task_name)
-    except:
-        return HttpResponseNotFound()
-
-    task.delete()
-    return JsonResponse({'deleted': True})
-
-
-@api_view(['GET'])
-@login_required
-def toggle_repeating(request, owner, workflow_name):
-    task_name = request.GET.get('name', None)
-    if task_name is None:
-        return HttpResponseNotFound()
-
-    task = RepeatingSubmissionTask.objects.get(name=task_name)
-    task.enabled = not task.enabled
-    task.save()
-    return JsonResponse(map_repeating_submission_task(task))
-
-
-@api_view(['GET'])
-@login_required
-def remove_repeating(request, owner, workflow_name):
-    task_name = request.GET.get('name', None)
-    if task_name is None:
-        return HttpResponseNotFound()
-
-    try:
-        task = RepeatingSubmissionTask.objects.get(name=task_name)
-    except:
-        return HttpResponseNotFound()
-
-    task.delete()
-    return JsonResponse({'deleted': True})
-
-
-@api_view(['GET'])
-@login_required
 def cancel(request, owner, name):
     try:
         user = User.objects.get(username=owner)
-        submission = Submission.objects.get(user=user, name=name)
+        task = Task.objects.get(user=user, name=name)
     except:
         return HttpResponseNotFound()
 
-    if submission.is_complete:
-        return HttpResponse(f"User {owner}'s submission {name} already completed")
+    if task.is_complete:
+        return HttpResponse(f"User {owner}'s task {name} already completed")
 
-    if submission.is_sandbox:
-        AsyncResult(submission.celery_task_id).revoke()  # cancel the Celery task
+    if task.is_sandbox:
+        AsyncResult(task.celery_task_id).revoke()  # cancel the Celery task
     else:
-        cancel_submission(submission)  # cancel the scheduler job
+        cancel_task(task)  # cancel the scheduler job
 
     now = timezone.now()
-    submission.status = SubmissionStatus.CANCELED
-    submission.updated = now
-    submission.completed = now
-    submission.save()
+    task.status = TaskStatus.CANCELED
+    task.updated = now
+    task.completed = now
+    task.save()
 
-    msg = f"Cancelled user {owner}'s submission {name}"
-    update_submission_status(submission, msg)
+    msg = f"Cancelled user {owner}'s task {name}"
+    log_task_status(task, msg)
+    push_task_event(task)
     return JsonResponse({'canceled': True})
 
 
@@ -366,13 +322,12 @@ def cancel(request, owner, name):
 @login_required
 def delete(request, owner, name):
     try:
-        user = User.objects.get(username=owner)
-        submission = Submission.objects.get(user=user, name=name)
+        task = Task.objects.get(user=User.objects.get(username=owner), name=name)
     except:
         return HttpResponseNotFound()
 
     try:
-        submission.delete()
+        task.delete()
         return JsonResponse({'deleted': True})
     except:
         return JsonResponse({'deleted': False})
@@ -382,9 +337,9 @@ def delete(request, owner, name):
 @login_required
 def exists(request, owner, name):
     try:
-        Submission.objects.get(user=User.objects.get(username=owner), name=name)
+        Task.objects.get(user=User.objects.get(username=owner), name=name)
         return JsonResponse({'exists': True})
-    except Submission.DoesNotExist:
+    except Task.DoesNotExist:
         return JsonResponse({'exists': True})
 
 
@@ -394,24 +349,25 @@ def exists(request, owner, name):
 def status(request, owner, name):
     try:
         user = User.objects.get(username=owner)
-        submission = Submission.objects.get(user=user, name=name)
-    except Submission.DoesNotExist:
+        task = Task.objects.get(user=user, name=name)
+    except Task.DoesNotExist:
         return HttpResponseNotFound()
 
     for chunk in request.data['description'].split('<br>'):
-        submission.status = SubmissionStatus.RUNNING
+        task.status = TaskStatus.RUNNING
         for line in chunk.split('\n'):
             if 'FATAL' in line or int(request.data['state']) == 0:  # catch singularity build failures etc
-                submission.status = SubmissionStatus.FAILURE
+                task.status = TaskStatus.FAILURE
             elif int(request.data['state']) == 6:  # catch completion
-                submission.status = SubmissionStatus.SUCCESS
+                task.status = TaskStatus.SUCCESS
 
-            submission.updated = timezone.now()
-            submission.save()
-            update_submission_status(submission, line)
+            task.updated = timezone.now()
+            task.save()
+            log_task_status(task, line)
+            push_task_event(task)
 
-        submission.updated = timezone.now()
-        submission.save()
+        task.updated = timezone.now()
+        task.save()
 
     return HttpResponse(status=200)
 
@@ -423,8 +379,8 @@ def search(request, owner, workflow_name, page):
         user = User.objects.get(username=owner)
         start = int(page) * 20
         count = start + 20
-        submissions = Submission.objects.filter(user=user, workflow_name=workflow_name).order_by('-created')[start:(start + count)]
-        return JsonResponse([map_submission(sub) for sub in submissions], safe=False)
+        tasks = Task.objects.filter(user=user, workflow_name=workflow_name).order_by('-created')[start:(start + count)]
+        return JsonResponse([map_task(t) for t in tasks], safe=False)
     except:
         return HttpResponseNotFound()
 
@@ -434,12 +390,12 @@ def search(request, owner, workflow_name, page):
 def search_delayed(request, owner, workflow_name):
     user = User.objects.get(username=owner)
     try:
-        tasks = DelayedSubmissionTask.objects.filter(user=user)
+        tasks = DelayedTask.objects.filter(user=user)
     except:
         return HttpResponseNotFound()
 
-    tasks = [task for task in tasks if task.workflow_name == workflow_name]
-    return JsonResponse([map_delayed_submission_task(task) for task in tasks], safe=False)
+    tasks = [t for t in tasks if t.workflow_name == workflow_name]
+    return JsonResponse([map_delayed_task(t) for t in tasks], safe=False)
 
 
 @api_view(['GET'])
@@ -447,9 +403,9 @@ def search_delayed(request, owner, workflow_name):
 def search_repeating(request, owner, workflow_name):
     user = User.objects.get(username=owner)
     try:
-        tasks = RepeatingSubmissionTask.objects.filter(user=user)
+        tasks = RepeatingTask.objects.filter(user=user)
     except:
         return HttpResponseNotFound()
 
-    tasks = [task for task in tasks if task.workflow_name == workflow_name]
-    return JsonResponse([map_repeating_submission_task(task) for task in tasks], safe=False)
+    tasks = [t for t in tasks if t.workflow_name == workflow_name]
+    return JsonResponse([map_repeating_task(t) for t in tasks], safe=False)

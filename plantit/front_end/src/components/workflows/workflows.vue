@@ -199,18 +199,13 @@
                 </div>
                 <div
                     class="text-center"
-                    v-else-if="
-                        searchResult === null && name !== ''
-                    "
+                    v-else-if="searchResult === null && name !== ''"
                 >
                     <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Repository <b>{{ name }}</b> not found.
                     </p>
                 </div>
-                <div
-                    class="text-left"
-                    v-else-if="searchResult !== null"
-                >
+                <div class="text-left" v-else-if="searchResult !== null">
                     <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Repository Details
                     </h5>
@@ -225,15 +220,15 @@
                             >{{ searchResult.repo.full_name }}</b-link
                         >
                         <br />
-                      {{ searchResult.repo.description }}
-                      <br />
-                      Last updated:
-                      {{ prettify(searchResult.repo.updated_at) }}
-                      <br />
-                      Language: {{ searchResult.repo.language }}
-                      <br />
-                      Stargazers:
-                      {{ searchResult.repo.stargazers_count }}
+                        {{ searchResult.repo.description }}
+                        <br />
+                        Last updated:
+                        {{ prettify(searchResult.repo.updated_at) }}
+                        <br />
+                        Language: {{ searchResult.repo.language }}
+                        <br />
+                        Stargazers:
+                        {{ searchResult.repo.stargazers_count }}
                     </p>
                     <div v-if="searchResult.validation.is_valid">
                         <h5
@@ -253,9 +248,7 @@
                                     <small>Image</small>
                                 </b-col>
                                 <b-col cols="10">
-                                    <b>{{
-                                        searchResult.config.image
-                                      }}</b>
+                                    <b>{{ searchResult.config.image }}</b>
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -263,11 +256,7 @@
                                     <small>GPU</small>
                                 </b-col>
                                 <b-col cols="10">
-                                  {{
-                                    searchResult.config.gpu
-                                        ? 'Yes'
-                                        : 'No'
-                                  }}
+                                    {{ searchResult.config.gpu ? 'Yes' : 'No' }}
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -275,11 +264,11 @@
                                     <small>Mount</small>
                                 </b-col>
                                 <b-col cols="10">
-                                  {{
-                                    searchResult.config.mount
-                                        ? searchResult.config.mount
-                                        : 'None'
-                                  }}
+                                    {{
+                                        searchResult.config.mount
+                                            ? searchResult.config.mount
+                                            : 'None'
+                                    }}
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -289,10 +278,9 @@
                                 <b-col cols="10">
                                     <b>{{
                                         searchResult.config.params
-                                            ? searchResult.config.params
-                                                .length
+                                            ? searchResult.config.params.length
                                             : 'None'
-                                      }}</b>
+                                    }}</b>
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -302,18 +290,13 @@
                                 <b-col cols="10">
                                     <b
                                         ><code>{{
-                                        ' ' +
-                                        searchResult.config
-                                            .commands
-                                      }}</code></b
+                                            ' ' + searchResult.config.commands
+                                        }}</code></b
                                     >
                                 </b-col>
                             </b-row>
                             <b-row
-                                v-if="
-                                    searchResult.config.input !==
-                                        undefined
-                                "
+                                v-if="searchResult.config.input !== undefined"
                             >
                                 <b-col>
                                     <small>Input</small>
@@ -322,29 +305,25 @@
                                     <b
                                         ><code
                                             >[working directory]/input/{{
-                                        searchResult.config
-                                            .input.filetypes
-                                            ? '[' +
-                                            (searchResult
-                                                .config.input
-                                                .filetypes
-                                                ? '*.' +
-                                                searchResult.config.input.filetypes.join(
-                                                    ', *.'
-                                                )
-                                                : []) +
-                                            ']'
-                                            : ''
-                                      }}</code
+                                                searchResult.config.input
+                                                    .filetypes
+                                                    ? '[' +
+                                                      (searchResult.config.input
+                                                          .filetypes
+                                                          ? '*.' +
+                                                            searchResult.config.input.filetypes.join(
+                                                                ', *.'
+                                                            )
+                                                          : []) +
+                                                      ']'
+                                                    : ''
+                                            }}</code
                                         ></b
                                     >
                                 </b-col>
                             </b-row>
                             <b-row
-                                v-if="
-                                    searchResult.config.output !==
-                                        undefined
-                                "
+                                v-if="searchResult.config.output !== undefined"
                             >
                                 <b-col>
                                     <small>Output</small>
@@ -353,60 +332,56 @@
                                     <b
                                         ><code
                                             >[working directory]/{{
-                                        searchResult.config
-                                            .output.path
-                                            ? searchResult
-                                                .config.output.path +
-                                            '/'
-                                            : ''
-                                      }}{{
-                                        searchResult.config
-                                            .output.include
-                                            ? '[' +
-                                            (searchResult
-                                                .config.output.exclude
-                                                ? '+ '
-                                                : '') +
-                                            (searchResult
-                                                .config.output.include
-                                                .patterns
-                                                ? '*.' +
-                                                searchResult.config.output.include.patterns.join(
-                                                    ', *.'
-                                                )
-                                                : []) +
-                                            (searchResult
-                                                .config.output.include
-                                                .names
-                                                ? ', ' +
-                                                searchResult.config.output.include.names.join(
-                                                    ', '
-                                                )
-                                                : [])
-                                            : ''
-                                      }}{{
-                                        searchResult.config
-                                            .output.exclude
-                                            ? ' - ' +
-                                            (searchResult
-                                                .config.output.exclude
-                                                .patterns
-                                                ? '*.' +
-                                                searchResult.config.output.exclude.patterns.join(
-                                                    ', *.'
-                                                )
-                                                : []) +
-                                            (searchResult
-                                                .config.output.exclude
-                                                .names
-                                                ? ', ' +
-                                                searchResult.config.output.exclude.names.join(
-                                                    ', '
-                                                )
-                                                : [])
-                                            : '' + ']'
-                                      }}
-                                    </code></b
+                                                searchResult.config.output.path
+                                                    ? searchResult.config.output
+                                                          .path + '/'
+                                                    : ''
+                                            }}{{
+                                                searchResult.config.output
+                                                    .include
+                                                    ? '[' +
+                                                      (searchResult.config
+                                                          .output.exclude
+                                                          ? '+ '
+                                                          : '') +
+                                                      (searchResult.config
+                                                          .output.include
+                                                          .patterns
+                                                          ? '*.' +
+                                                            searchResult.config.output.include.patterns.join(
+                                                                ', *.'
+                                                            )
+                                                          : []) +
+                                                      (searchResult.config
+                                                          .output.include.names
+                                                          ? ', ' +
+                                                            searchResult.config.output.include.names.join(
+                                                                ', '
+                                                            )
+                                                          : [])
+                                                    : ''
+                                            }}{{
+                                                searchResult.config.output
+                                                    .exclude
+                                                    ? ' - ' +
+                                                      (searchResult.config
+                                                          .output.exclude
+                                                          .patterns
+                                                          ? '*.' +
+                                                            searchResult.config.output.exclude.patterns.join(
+                                                                ', *.'
+                                                            )
+                                                          : []) +
+                                                      (searchResult.config
+                                                          .output.exclude.names
+                                                          ? ', ' +
+                                                            searchResult.config.output.exclude.names.join(
+                                                                ', '
+                                                            )
+                                                          : [])
+                                                    : '' + ']'
+                                            }}
+                                        </code></b
                                     >
                                 </b-col>
                             </b-row>
@@ -419,8 +394,7 @@
                         </h5>
                         <b-list-group class="mb-2">
                             <b-list-group-item
-                                v-for="error in searchResult.validation
-                                    .errors"
+                                v-for="error in searchResult.validation.errors"
                                 v-bind:key="error"
                                 :class="
                                     profile.darkMode
@@ -453,6 +427,7 @@ import { mapGetters } from 'vuex';
 import * as Sentry from '@sentry/browser';
 import axios from 'axios';
 import moment from 'moment';
+import { guid } from '@/utils';
 
 export default {
     name: 'workflows',
@@ -533,14 +508,23 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(response => {
-                    if (response.status === 200 && response.data.connected)
+                    if (response.status === 200 && response.data.connected) {
                         this.$store.dispatch(
                             'workflows/loadPersonal',
                             this.profile.githubProfile.login
                         );
-                    else {
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Added workflow ${this.searchResult.repo.name}`,
+                            guid: guid().toString()
+                        });
+                    } else {
                         this.alertMessage = `Failed to connect ${this.searchResult.repo.owner.login}/${this.searchResult.repo.name}`;
-                        this.alertEnabled = true;
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to add workflow ${this.searchResult.repo.name}`,
+                            guid: guid().toString()
+                        });
                     }
                 })
                 .catch(error => {
@@ -579,7 +563,10 @@ export default {
         getWorkflows() {
             return (this.publicContext
                 ? this.publicWorkflows
-                : this.personalWorkflows).filter(workflow => workflow.config.name.includes(this.searchText));
+                : this.personalWorkflows
+            ).filter(workflow =>
+                workflow.config.name.includes(this.searchText)
+            );
         },
         workflowsLoading() {
             return this.publicContext

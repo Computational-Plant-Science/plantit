@@ -1,9 +1,9 @@
 from os.path import join
 
-from plantit.submissions.models import Submission
+from plantit.tasks.models import Task
 
 
-def map_old_workflow_config_to_new(old: dict, run: Submission, resources: dict) -> dict:
+def map_old_workflow_config_to_new(old: dict, run: Task, resources: dict) -> dict:
     new_config = {
         'image': old['config']['image'],
         'command': old['config']['commands'],

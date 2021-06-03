@@ -42,8 +42,8 @@
                                         undefined
                                 "
                                 variant="danger"
-                                >This flow's configuration is invalid. It cannot
-                                be run in this state.
+                                >This workflow's configuration is invalid. It cannot
+                                be used in this state.
                                 <b-link
                                     :href="
                                         'https://github.com/' +
@@ -237,11 +237,11 @@
                                                     }}</b></small
                                                 ></b-col
                                             >
-                                            <b-col md="auto" class="mr-0 ml-0"
+                                            <!--<b-col md="auto" class="mr-0 ml-0"
                                                 ><small
                                                     >Runs: <b>0</b></small
                                                 ></b-col
-                                            >
+                                            >-->
                                         </b-row>
                                         <b-tabs
                                             v-model="activeTab"
@@ -758,7 +758,7 @@
                                                                         requests
                                                                         and can
                                                                         only be
-                                                                        run on
+                                                                        submitted to
                                                                         agents
                                                                         configured
                                                                         for the
@@ -951,10 +951,10 @@
                                                                                     : 'text-dark'
                                                                             "
                                                                         >
-                                                                            {{
-                                                                                runName
-                                                                            }}
-                                                                            <i
+                                                                      {{
+                                                                        taskName
+                                                                      }}
+                                                                      <i
                                                                                 v-if="
                                                                                     nameValid
                                                                                 "
@@ -963,7 +963,7 @@
                                                                             <span
                                                                                 class="text-danger"
                                                                                 v-if="
-                                                                                    runNameExists
+                                                                                    taskNameExists
                                                                                 "
                                                                                 >Duplicate
                                                                                 name</span
@@ -990,7 +990,7 @@
                                                                             name
                                                                             for
                                                                             this
-                                                                            run.
+                                                                            task.
                                                                         </b>
                                                                     </b-col>
                                                                 </b-row>
@@ -1000,7 +1000,7 @@
                                                                     <b-col>
                                                                         <b-form-input
                                                                             v-model="
-                                                                                runName
+                                                                                taskName
                                                                             "
                                                                             placeholder="Type a name..."
                                                                         ></b-form-input>
@@ -1089,7 +1089,7 @@
                                                                             tags
                                                                             to
                                                                             this
-                                                                            run.
+                                                                            task.
                                                                         </b>
                                                                     </b-col>
                                                                 </b-row>
@@ -1246,7 +1246,7 @@
                                                                             parameters
                                                                             for
                                                                             this
-                                                                            run.
+                                                                            task.
                                                                         </b>
                                                                     </b-col>
                                                                 </b-row>
@@ -1899,7 +1899,7 @@
                                                                         an agent
                                                                         to
                                                                         submit
-                                                                        this run
+                                                                        this task
                                                                         to.
                                                                     </b>
                                                                     <b-tabs
@@ -2363,7 +2363,7 @@
                                                             ></b-spinner> </b-button></b-col
                                                 ></b-row>
                                             </b-tab>
-                                            <b-tab
+                                            <!--<b-tab
                                                 title="Runs"
                                                 :title-link-class="
                                                     profile.darkMode
@@ -2377,7 +2377,7 @@
                                                 "
                                             >
                                                 <b-row>
-                                                    <!--<b-row
+                                                    <b-row
                         ><b-col align-self="end"
                             ><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
                                 Delayed Runs
@@ -2389,7 +2389,7 @@
                             ><b-col
                                 ><small
                                     >You haven't scheduled any delayed
-                                    {{ flow.config.name }} runs.</small
+                                    {{ flow.config.name }} tasks.</small
                                 ></b-col
                             ></b-row
                         >
@@ -2436,8 +2436,8 @@
                                                     class="mt-2 mb-2"
                                                     style="border-color: gray"
                                                 />
-                    -->
-                                                    <!--<b-row
+
+                                                    <b-row
                                                             ><b-col
                                                                 align-self="end"
                                                                 ><h5
@@ -2472,7 +2472,7 @@
                                                                                 .config
                                                                                 .name
                                                                         }}
-                                                                        runs.</small
+                                                                        tasks.</small
                                                                     ></b-col
                                                                 ></b-row
                                                             >
@@ -2550,9 +2550,9 @@
                                                                 </b-row>
                                                             </b-list-group-item>
                                                         </b-list-group>
-                                                    </b-col>-->
+                                                    </b-col>
                                                     <b-col>
-                                                        <!--<b-row
+                                                        <b-row
                                                             ><b-col
                                                                 align-self="end"
                                                                 ><h5
@@ -2577,13 +2577,13 @@
                                 Create
                             </b-button></b-col
                         ></b-row
-                                                        >-->
+                                                        >
                                                         <b-list-group
                                                             class="text-left m-0 p-0"
                                                         >
                                                             <b-row
                                                                 v-if="
-                                                                    runHistory.length ===
+                                                                    taskHistory.length ===
                                                                         0
                                                                 "
                                                                 ><b-col
@@ -2603,27 +2603,16 @@
                                                             <b-list-group-item
                                                                 variant="default"
                                                                 style="box-shadow: -2px 2px 2px #adb5bd"
-                                                                v-for="run in runHistory"
+                                                                v-for="task in taskHistory"
                                                                 v-bind:key="
-                                                                    run.guid
+                                                                    task.guid
                                                                 "
                                                                 :class="
                                                                     profile.darkMode
                                                                         ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                                                         : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                                                                 "
-                                                            >
-                                                                <!--<b-img
-                                        v-if="
-                                            run.flow_image_url !== undefined &&
-                                                run.flow_image_url !== null
-                                        "
-                                        rounded
-                                        class="card-img-right"
-                                        style="max-width: 4rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
-                                        right
-                                        :src="run.flow_image_url"
-                                    ></b-img>-->
+                                                           >
                                                                 <b-link
                                                                     :class="
                                                                         profile.darkMode
@@ -2632,21 +2621,21 @@
                                                                     "
                                                                     :to="{
                                                                         name:
-                                                                            'run',
+                                                                            'task',
                                                                         params: {
                                                                             owner:
-                                                                                run.owner,
+                                                                                task.owner,
                                                                             name:
-                                                                                run.name
+                                                                                task.name
                                                                         }
                                                                     }"
                                                                     >{{
-                                                                        run.name
+                                                                        task.name
                                                                     }}</b-link
                                                                 >
                                                                 <br />
                                                                 <b-badge
-                                                                    v-for="tag in run.tags"
+                                                                    v-for="tag in task.tags"
                                                                     v-bind:key="
                                                                         tag
                                                                     "
@@ -2656,29 +2645,29 @@
                                                                 </b-badge>
                                                                 <br
                                                                     v-if="
-                                                                        run.tags
+                                                                        task.tags
                                                                             .length >
                                                                             0
                                                                     "
                                                                 />
                                                                 <small
                                                                     v-if="
-                                                                        !run.is_complete
+                                                                        !task.is_complete
                                                                     "
                                                                     >Running</small
                                                                 >
                                                                 <b-badge
                                                                     :variant="
-                                                                        run.is_failure ||
-                                                                        run.is_timeout
+                                                                        task.is_failure ||
+                                                                        task.is_timeout
                                                                             ? 'danger'
-                                                                            : run.is_cancelled
+                                                                            : task.is_cancelled
                                                                             ? 'secondary'
                                                                             : 'success'
                                                                     "
                                                                     v-else
                                                                     >{{
-                                                                        run.job_status
+                                                                        task.job_status
                                                                     }}</b-badge
                                                                 >
                                                                 <small>
@@ -2688,43 +2677,26 @@
                                                                     class="ml-0 mr-0"
                                                                     variant="secondary"
                                                                     >{{
-                                                                        run.agent
+                                                                        task.agent
                                                                     }}</b-badge
                                                                 ><small
                                                                     v-if="
-                                                                        run.job_status ===
+                                                                        task.job_status ===
                                                                             'Scheduled'
                                                                     "
                                                                 ></small
                                                                 ><small v-else>
                                                                     {{
                                                                         prettify(
-                                                                            run.updated
+                                                                            task.updated
                                                                         )
                                                                     }}</small
                                                                 >
-                                                                <!--<br />
-                                    <small class="mr-1"
-                                        ><a
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                            :href="
-                                                `https://github.com/${run.flow_owner}/${run.flow_name}`
-                                            "
-                                            ><i class="fab fa-github fa-fw"></i>
-                                            {{ run.flow_owner }}/{{
-                                                run.flow_name
-                                            }}</a
-                                        >
-                                    </small>-->
                                                             </b-list-group-item>
                                                         </b-list-group></b-col
                                                     ></b-row
                                                 ></b-tab
-                                            ></b-tabs
+                                            >--></b-tabs
                                         >
                                     </b-col>
                                 </b-row>
@@ -2813,7 +2785,7 @@ export default {
             delayUnits: 'Minutes',
             // delayedRuns: [],
             // repeatingRuns: [],
-            runName: '',
+            taskName: '',
             tags: [],
             tagOptions: [],
             params: [],
@@ -2964,20 +2936,16 @@ export default {
         // onNameChange() {
         //     return axios
         //         .get(
-        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/${this.runName}/exists/`
+        //             `/apis/v1/tasks/${this.profile.djangoProfile.username}/${this.taskName}/exists/`
         //         )
         //         .then(response => {
-        //             this.runNameExists = response.exists;
+        //             this.taskNameExists = response.exists;
         //         })
         //         .catch(error => {
         //             Sentry.captureException(error);
         //             throw error;
         //         });
         // },
-        presetPath(path) {
-            this.input.from = path;
-            this.loadSelectedDataset(path);
-        },
         async loadSelectedDataset(path) {
             this.selectedDatasetLoading = true;
             return await axios
@@ -3029,75 +2997,17 @@ export default {
                     throw error;
                 });
         },
-        async getWorkflowReadme() {
-            return axios
-                .get(
-                    `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/readme/`
-                )
-                .then(response => {
-                    return response.data.readme;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    throw error;
-                });
-        },
-        // deleteDelayed(task) {
+        // async getWorkflowReadme() {
         //     return axios
         //         .get(
-        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/remove_delayed/${this.name}/?name=${task.name}`
-        //         )
-        //         .then(() => {
-        //             this.loadDelayedRuns();
-        //             this.statusAlertMessage = `Deleted delayed run`;
-        //             this.showStatusAlert = true;
-        //         })
-        //         .catch(error => {
-        //             Sentry.captureException(error);
-        //             this.statusAlertMessage = `Failed to delete delayed run`;
-        //             this.showStatusAlert = true;
-        //             throw error;
-        //         });
-        // },
-        // deleteRepeating(task) {
-        //     return axios
-        //         .get(
-        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/remove_repeating/${this.name}/?name=${task.name}`
-        //         )
-        //         .then(() => {
-        //             this.loadRepeatingRuns();
-        //             this.statusAlertMessage = `Deleted periodic run`;
-        //             this.showStatusAlert = true;
-        //         })
-        //         .catch(error => {
-        //             Sentry.captureException(error);
-        //             this.statusAlertMessage = `Failed to delete periodic run`;
-        //             this.showStatusAlert = true;
-        //             throw error;
-        //         });
-        // },
-        // toggleRepeating: function(task) {
-        //     axios
-        //         .get(
-        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/toggle_repeating/${this.name}/?name=${task.name}`
+        //             `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/readme/`
         //         )
         //         .then(response => {
-        //             this.statusAlertMessage = `${
-        //                 response.data.enabled ? 'Enabled' : 'Disabled'
-        //             } periodic run (every ${
-        //                 response.data.interval.every
-        //             } ${response.data.interval.period.toLowerCase()} on ${
-        //                 response.data.agent.name
-        //             })`;
-        //             this.showStatusAlert = true;
+        //             return response.data.readme;
         //         })
         //         .catch(error => {
         //             Sentry.captureException(error);
-        //             if (error.response.status === 500) {
-        //                 this.statusAlertMessage = `Failed to disable repeating run ${task.name}`;
-        //                 this.showStatusAlert = true;
-        //                 throw error;
-        //             }
+        //             throw error;
         //         });
         // },
         parseCronTime(time) {
@@ -3113,71 +3023,6 @@ export default {
             this.tags.push(tag);
             this.tagOptions.push(tag);
         },
-        // async loadRuns() {
-        //     await axios
-        //         .get(
-        //             `/apis/v1/runs/search/${this.profile.djangoProfile.username}/${this.name}/0/`,
-        //             {
-        //                 headers: {
-        //                     Authorization: 'Bearer ' + this.githubToken
-        //                 }
-        //             }
-        //         )
-        //         .then(response => {
-        //             this.runHistory = response.data;
-        //         })
-        //         .catch(error => {
-        //             if (error.status_code === 401) {
-        //                 this.login = true;
-        //             } else {
-        //                 throw error;
-        //             }
-        //         });
-        // },
-        // async loadDelayedRuns() {
-        //     await axios
-        //         .get(
-        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/get_delayed_by_user_and_workflow/${this.name}/`,
-        //             {
-        //                 headers: {
-        //                     Authorization: 'Bearer ' + this.githubToken
-        //                 }
-        //             }
-        //         )
-        //         .then(response => {
-        //             this.delayedRuns = response.data.filter(
-        //                 t => t.last_run === null
-        //             );
-        //         })
-        //         .catch(error => {
-        //             if (error.status_code === 401) {
-        //                 this.login = true;
-        //             } else {
-        //                 throw error;
-        //             }
-        //         });
-        // },
-        // async loadRepeatingRuns() {
-        //     await axios
-        //         .get(
-        //             `/apis/v1/runs/${this.profile.djangoProfile.username}/get_repeating_by_user_and_workflow/${this.name}/`,
-        //             {
-        //                 headers: {
-        //                     Authorization: 'Bearer ' + this.githubToken
-        //                 }
-        //             }
-        //         )
-        //         .then(response => {
-        //             this.repeatingRuns = response.data;
-        //         })
-        //         .catch(error => {
-        //             if (error.status_code === 401) {
-        //                 this.login = true;
-        //             } else {
-        //                 throw error;
-        //             }
-        //         });
-        // },
         mapParam(param) {
             if (param.type === 'string')
                 return {
@@ -3325,19 +3170,19 @@ export default {
                 !this.getWorkflow.config.resources &&
                 this.selectedAgent.name !== 'Sandbox'
             ) {
-                alert('This flow can only run in the Sandbox.');
+                alert('This workflow can only be submitted to the Sandbox.');
                 return;
             }
 
-            // prepare run definition
+            // prepare configuration
             this.params['config'] = {};
-            this.params['config']['api_url'] = '/apis/v1/runs/status/';
+            this.params['config']['api_url'] = '/apis/v1/tasks/status/';
             let agent = this.selectedAgent;
             if (this.getWorkflow.config.resources)
                 agent['resources'] = this.getWorkflow.config.resources;
             let config = {
                 name: this.getWorkflow.config.name,
-                submission_name: this.runName,
+                task_name: this.taskName,
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
                 agent: agent,
@@ -3381,16 +3226,16 @@ export default {
 
             this.submitted = true;
             if (this.submitType === 'Now')
-                // submit run immediately
+                // submit immediately
                 await axios({
                     method: 'post',
-                    url: `/apis/v1/runs/`,
+                    url: `/apis/v1/tasks/`,
                     data: data,
                     headers: { 'Content-Type': 'application/json' }
                 })
                     .then(response => {
                         router.push({
-                            name: 'run',
+                            name: 'task',
                             params: {
                                 owner: this.profile.djangoProfile.username,
                                 name: response.data.name
@@ -3402,10 +3247,10 @@ export default {
                         throw error;
                     });
             else if (this.submitType === 'After')
-                // schedule run after delay
+                // schedule after delay
                 await axios({
                     method: 'post',
-                    url: `/apis/v1/runs/`,
+                    url: `/apis/v1/tasks/`,
                     data: {
                         repo: this.getWorkflow.repo,
                         config: config,
@@ -3418,21 +3263,21 @@ export default {
                     .then(response => {
                         this.statusAlertMessage =
                             response.status === 200 && response.data.created
-                                ? `Scheduled run ${this.$router.currentRoute.params.name} on ${config.agent.name}`
-                                : `Failed to schedule run ${this.$router.currentRoute.params.name} on ${config.agent.name}`;
+                                ? `Scheduled task ${this.$router.currentRoute.params.name} on ${config.agent.name}`
+                                : `Failed to schedule task ${this.$router.currentRoute.params.name} on ${config.agent.name}`;
                         this.showStatusAlert = true;
                     })
                     .catch(error => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedAgent.name}`;
+                        this.statusAlertMessage = `Failed to schedule task ${this.createTaskForm.name} on ${this.selectedAgent.name}`;
                         this.showStatusAlert = true;
                         throw error;
                     });
             else if (this.submitType === 'Every')
-                // schedule run periodically
+                // schedule periodically
                 await axios({
                     method: 'post',
-                    url: `/apis/v1/runs/`,
+                    url: `/apis/v1/tasks/`,
                     data: {
                         repo: this.getWorkflow.repo,
                         config: config,
@@ -3446,13 +3291,13 @@ export default {
                         this.loadRepeatingRuns();
                         this.statusAlertMessage =
                             response.status === 200 && response.data.created
-                                ? `Scheduled repeating run ${this.$router.currentRoute.params.name} on ${config.agent.name}`
-                                : `Failed to schedule repeating run ${this.$router.currentRoute.params.name} on ${config.agent.name}`;
+                                ? `Scheduled repeating task ${this.$router.currentRoute.params.name} on ${config.agent.name}`
+                                : `Failed to schedule repeating task ${this.$router.currentRoute.params.name} on ${config.agent.name}`;
                         this.showStatusAlert = true;
                     })
                     .catch(error => {
                         Sentry.captureException(error);
-                        this.statusAlertMessage = `Failed to schedule run ${this.createTaskForm.name} on ${this.selectedAgent.name}`;
+                        this.statusAlertMessage = `Failed to schedule task ${this.createTaskForm.name} on ${this.selectedAgent.name}`;
                         this.showStatusAlert = true;
                         throw error;
                     });
@@ -3466,7 +3311,7 @@ export default {
             'personalWorkflowsLoading',
             'recentlyRunWorkflows'
         ]),
-        ...mapGetters('runs', ['runs', 'searchRuns', 'runsLoading']),
+        ...mapGetters('tasks', ['tasks', 'tasksByOwner', 'task', 'tasksLoading']),
         ...mapGetters('agents', [
             'publicAgentsLoading',
             'publicAgents',
@@ -3483,8 +3328,8 @@ export default {
             'sharedDatasetsLoading',
             'sharingDatasetsLoading'
         ]),
-        runHistory() {
-            return this.$store.getters['runs/searchRuns'](
+        taskHistory() {
+            return this.$store.getters['tasks/tasksByOwner'](
                 this.profile.djangoProfile.username
             );
         },
@@ -3514,12 +3359,12 @@ export default {
         inputFiletypeSelected: function() {
             return this.inputSelectedPatterns.some(pattern => pattern !== '');
         },
-        runNameExists() {
-            return this.runs.some(r => r.name === this.runName);
+        taskNameExists() {
+            return this.tasks.some(r => r.name === this.taskName);
         },
         nameValid() {
             return (
-                this.runName !== '' && !this.runNameExists // && !this.runNameExists
+                this.taskName !== '' && !this.taskNameExists // && !this.taskNameExists
             );
         },
         paramsValid: function() {

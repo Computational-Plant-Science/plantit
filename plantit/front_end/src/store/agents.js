@@ -8,7 +8,7 @@ export const agents = {
         public: [],
         publicLoading: true,
         personal: [],
-        personalLoading: true,
+        personalLoading: true
     }),
     mutations: {
         setPublic(state, datasets) {
@@ -72,11 +72,11 @@ export const agents = {
                     throw error;
                 });
         },
-        async load({ commit }, guid) {
+        async load({ commit }, name) {
             commit('setPersonalLoading', true);
             commit('setPublicLoading', true);
             await axios
-                .get(`/apis/v1/agents/${guid}/`, {
+                .get(`/apis/v1/agents/${name}/`, {
                     headers: {
                         Authorization: 'Bearer ' + this.githubToken
                     }
@@ -93,18 +93,15 @@ export const agents = {
                     throw error;
                 });
         },
-        async refresh({ commit }, payload) {
+        async refresh({ commit }, name) {
             commit('setPersonalLoading', true);
             commit('setPublicLoading', true);
             await axios
-                .get(
-                    `/apis/v1/agents/${payload.owner}/${payload.name}/refresh/`,
-                    {
-                        headers: {
-                            Authorization: 'Bearer ' + this.githubToken
-                        }
+                .get(`/apis/v1/agents/${payload.name}/refresh/`, {
+                    headers: {
+                        Authorization: 'Bearer ' + this.githubToken
                     }
-                )
+                })
                 .then(response => {
                     commit('update', response.data);
                     commit('setPersonalLoading', false);
@@ -125,14 +122,16 @@ export const agents = {
         }
     },
     getters: {
-        agent: state => guid => {
-            let found = state.public.find(agent => guid === agent.guid);
+        agent: state => name => {
+            var found = state.public.find(agent => name === agent.name);
+            if (found !== undefined) return found;
+            found = state.personal.find(agent => name === agent.name);
             if (found !== undefined) return found;
             return null;
         },
         publicAgents: state => state.public,
         publicAgentsLoading: state => state.publicLoading,
         personalAgents: state => state.personal,
-        personalAgentsLoading: state => state.personalLoading,
+        personalAgentsLoading: state => state.personalLoading
     }
 };

@@ -1,7 +1,7 @@
 <template>
     <div>
         <b-container class="p-2 vl" fluid>
-            <b-row align-h="center" v-if="submissionsLoading">
+            <b-row align-h="center" v-if="tasksLoading">
                 <b-spinner
                     type="grow"
                     label="Loading..."
@@ -14,11 +14,11 @@
                         <i class="fas fa-exclamation-circle fa-3x fa-fw"></i>
                         <br />
                         <br />
-                        This submission does not exist.
+                        This task does not exist.
                     </p>
                 </b-col>
             </b-row>
-            <b-row v-else-if="getSubmission.cleaned_up" align-content="center">
+            <b-row v-else-if="getTask.cleaned_up" align-content="center">
                 <b-col>
                     <p
                         :class="
@@ -30,13 +30,13 @@
                         <i class="fas fa-broom fa-3x fa-fw"></i>
                         <br />
                         <br />
-                        This submission has been cleaned up.
+                        This task has been cleaned up.
                     </p>
                 </b-col>
             </b-row>
             <b-row v-else>
                 <b-col>
-                    <b-row align-h="center" v-if="submissionsLoading">
+                    <b-row align-h="center" v-if="tasksLoading">
                         <b-spinner
                             type="grow"
                             label="Loading..."
@@ -71,7 +71,7 @@
                                     dismissible
                                     @dismissed="showFailedToCancelAlert = false"
                                 >
-                                  Failed to cancel submission {{ getSubmission.name }}.
+                                    Failed to cancel task {{ getTask.name }}.
                                 </b-alert>
                             </b-col>
                         </b-row>
@@ -84,12 +84,12 @@
                                             : 'text-dark'
                                     "
                                 >
-                                  {{ getSubmission.name }}
+                                    {{ getTask.name }}
                                 </h3></b-col
                             ><b-col class="m-0 ml-1 p-0">
                                 <h5>
                                     <b-badge
-                                        v-for="tag in getSubmission.tags"
+                                        v-for="tag in getTask.tags"
                                         v-bind:key="tag"
                                         class="mr-2"
                                         variant="secondary"
@@ -110,7 +110,7 @@
                                     <b-spinner
                                         class="mb-1 mr-1"
                                         small
-                                        v-if="!getSubmission.is_complete"
+                                        v-if="!getTask.is_complete"
                                         :variant="
                                             profile.darkMode ? 'light' : 'dark'
                                         "
@@ -118,23 +118,25 @@
                                     </b-spinner>
                                     <b-badge
                                         :variant="
-                                            getSubmission.is_failure ||
-                                            getSubmission.is_timeout
+                                            getTask.is_failure ||
+                                            getTask.is_timeout
                                                 ? 'danger'
-                                                : getSubmission.is_success
+                                                : getTask.is_success
                                                 ? 'success'
-                                                : getSubmission.is_cancelled
+                                                : getTask.is_cancelled
                                                 ? 'secondary'
                                                 : 'warning'
                                         "
-                                        >{{ getSubmission.job_status }}</b-badge
+                                        >{{ getTask.job_status }}</b-badge
                                     >
                                     <small> on </small>
-                                    <b class="mr-0">{{ getSubmission.agent }}</b>
+                                    <b class="mr-0">{{ getTask.agent }}</b>
                                 </h5>
                             </b-col>
                             <b-col
-                                v-if="getSubmission.is_complete && getSubmission.can_restart"
+                                v-if="
+                                    getTask.is_complete && getTask.can_restart
+                                "
                                 md="auto"
                                 class="m-0 mb-2"
                                 align-self="start"
@@ -148,7 +150,7 @@
                                     "
                                     size="sm"
                                     v-b-tooltip.hover
-                                    :title="'Restart this submission'"
+                                    :title="'Restart this task'"
                                     @click="restart"
                                 >
                                     <i class="fas fa-level-up-alt"></i>
@@ -165,7 +167,7 @@
                                 </b-button>
                             </b-col>
                             <b-col
-                                v-if="!getSubmission.is_complete"
+                                v-if="!getTask.is_complete"
                                 md="auto"
                                 class="m-0 mb-2"
                                 align-self="start"
@@ -200,8 +202,8 @@
                                 align-self="start"
                             >
                                 <b-button
-                                    v-if="getSubmission.is_complete"
-                                    :disabled="submissionsLoading"
+                                    v-if="getTask.is_complete"
+                                    :disabled="tasksLoading"
                                     :variant="
                                         profile.darkMode
                                             ? 'outline-light'
@@ -216,7 +218,7 @@
                                     Refresh
                                     <b-spinner
                                         small
-                                        v-if="submissionsLoading"
+                                        v-if="tasksLoading"
                                         label="Loading..."
                                         :variant="
                                             profile.darkMode ? 'light' : 'dark'
@@ -226,7 +228,7 @@
                                 </b-button>
                             </b-col>
                             <b-col
-                                v-if="getSubmission.is_complete"
+                                v-if="getTask.is_complete"
                                 md="auto"
                                 class="m-0 mb-2"
                                 align-self="start"
@@ -272,14 +274,14 @@
                                 <b-row class="m-0 p-0 mt-1">
                                     <b-col class="m-0 p-0">
                                         <small>
-                                          Created
-                                          {{ prettify(getSubmission.created) }}
+                                            Created
+                                            {{ prettify(getTask.created) }}
                                         </small>
                                     </b-col>
                                     <b-col class="m-0 p-0" md="auto">
                                         <small>
-                                          Last updated
-                                          {{ prettify(getSubmission.updated) }}
+                                            Last updated
+                                            {{ prettify(getTask.updated) }}
                                         </small>
                                     </b-col>
                                 </b-row>
@@ -295,7 +297,7 @@
                                             <div>
                                                 <b-row
                                                     align-h="center"
-                                                    v-if="submissionsLoading"
+                                                    v-if="tasksLoading"
                                                 >
                                                     <b-spinner
                                                         class="mt-3"
@@ -307,15 +309,14 @@
                                                 <b-row class="m-0">
                                                     <b-col
                                                         v-if="
-                                                            getSubmission
-                                                                .submission_logs
+                                                            getTask.task_logs
                                                                 .length > 0
                                                         "
                                                         class="m-0 p-0 pl-3 pr-3 pt-1"
                                                         style="white-space: pre-line;"
                                                     >
                                                         <span
-                                                            v-for="log in submissionLogs"
+                                                            v-for="log in taskLogs"
                                                             v-bind:key="log"
                                                             v-show="
                                                                 log !==
@@ -333,8 +334,8 @@
                                         <div
                                             class="m-3"
                                             v-if="
-                                                getSubmission.is_complete &&
-                                                    getSubmission.output_files !==
+                                                getTask.is_complete &&
+                                                    getTask.output_files !==
                                                         undefined
                                             "
                                         >
@@ -347,13 +348,13 @@
                                                     <span
                                                         v-if="
                                                             !loadingOutputFiles &&
-                                                                getSubmission.output_files !==
+                                                                getTask.output_files !==
                                                                     undefined
                                                         "
                                                         >{{
-                                                        getSubmission.output_files
-                                                            .length
-                                                      }}</span
+                                                            getTask.output_files
+                                                                .length
+                                                        }}</span
                                                     >
                                                     result(s)
                                                     <br />
@@ -369,77 +370,77 @@
                                                                     : 'theme-light'
                                                             "
                                                             >{{
-                                                        getWorkflow
-                                                            .config
-                                                            .output.path
-                                                            ? getWorkflow
-                                                                .config
-                                                                .output
-                                                                .path +
-                                                            '/'
-                                                            : ''
-                                                      }}{{
-                                                        (getWorkflow
-                                                            .config
-                                                            .output
-                                                            .include
-                                                            ? (getWorkflow
-                                                                .config
-                                                                .output
-                                                                .exclude
-                                                            ? '+ '
-                                                            : '') +
-                                                            (getWorkflow
-                                                                .config
-                                                                .output
-                                                                .include
-                                                                .patterns
-                                                                ? '*.' +
-                                                                getWorkflow.config.output.include.patterns.join(
-                                                                    ', *.'
-                                                                )
-                                                                : []) +
-                                                            (getWorkflow
-                                                                .config
-                                                                .output
-                                                                .include
-                                                                .names
-                                                                ? ', ' +
-                                                                getWorkflow.config.output.include.names.join(
-                                                                    ', '
-                                                                )
-                                                                : [])
-                                                            : '') +
-                                                        `, ${getSubmission.name}.zip`
-                                                      }}{{
-                                                        getWorkflow
-                                                            .config
-                                                            .output
-                                                            .exclude
-                                                            ? ' - ' +
-                                                            (getWorkflow
-                                                                .config
-                                                                .output
-                                                                .exclude
-                                                                .patterns
-                                                                ? '*.' +
-                                                                getWorkflow.config.output.exclude.patterns.join(
-                                                                    ', *.'
-                                                                )
-                                                                : []) +
-                                                            (getWorkflow
-                                                                .config
-                                                                .output
-                                                                .exclude
-                                                                .names
-                                                                ? ', ' +
-                                                                getWorkflow.config.output.exclude.names.join(
-                                                                    ', '
-                                                                )
-                                                                : [])
-                                                            : ''
-                                                      }}
-                                                    </code></b
+                                                                getWorkflow
+                                                                    .config
+                                                                    .output.path
+                                                                    ? getWorkflow
+                                                                          .config
+                                                                          .output
+                                                                          .path +
+                                                                      '/'
+                                                                    : ''
+                                                            }}{{
+                                                                (getWorkflow
+                                                                    .config
+                                                                    .output
+                                                                    .include
+                                                                    ? (getWorkflow
+                                                                          .config
+                                                                          .output
+                                                                          .exclude
+                                                                          ? '+ '
+                                                                          : '') +
+                                                                      (getWorkflow
+                                                                          .config
+                                                                          .output
+                                                                          .include
+                                                                          .patterns
+                                                                          ? '*.' +
+                                                                            getWorkflow.config.output.include.patterns.join(
+                                                                                ', *.'
+                                                                            )
+                                                                          : []) +
+                                                                      (getWorkflow
+                                                                          .config
+                                                                          .output
+                                                                          .include
+                                                                          .names
+                                                                          ? ', ' +
+                                                                            getWorkflow.config.output.include.names.join(
+                                                                                ', '
+                                                                            )
+                                                                          : [])
+                                                                    : '') +
+                                                                    `, ${getTask.name}.zip`
+                                                            }}{{
+                                                                getWorkflow
+                                                                    .config
+                                                                    .output
+                                                                    .exclude
+                                                                    ? ' - ' +
+                                                                      (getWorkflow
+                                                                          .config
+                                                                          .output
+                                                                          .exclude
+                                                                          .patterns
+                                                                          ? '*.' +
+                                                                            getWorkflow.config.output.exclude.patterns.join(
+                                                                                ', *.'
+                                                                            )
+                                                                          : []) +
+                                                                      (getWorkflow
+                                                                          .config
+                                                                          .output
+                                                                          .exclude
+                                                                          .names
+                                                                          ? ', ' +
+                                                                            getWorkflow.config.output.exclude.names.join(
+                                                                                ', '
+                                                                            )
+                                                                          : [])
+                                                                    : ''
+                                                            }}
+                                                        </code></b
                                                     >
                                                 </b-col>
                                                 <b-col
@@ -448,11 +449,11 @@
                                                 >
                                                     <b-dropdown
                                                         :disabled="
-                                                            getSubmission.output_files !==
+                                                            getTask.output_files !==
                                                                 undefined &&
-                                                                getSubmission.output_files !==
+                                                                getTask.output_files !==
                                                                     null &&
-                                                                getSubmission
+                                                                getTask
                                                                     .output_files
                                                                     .length ===
                                                                     0
@@ -503,11 +504,11 @@
                                                     align-self="end"
                                                     ><b-dropdown
                                                         :disabled="
-                                                            getSubmission.output_files !==
+                                                            getTask.output_files !==
                                                                 undefined &&
-                                                                getSubmission.output_files !==
+                                                                getTask.output_files !==
                                                                     null &&
-                                                                getSubmission
+                                                                getTask
                                                                     .output_files
                                                                     .length ===
                                                                     0
@@ -573,7 +574,7 @@
                                                         class="mt-3"
                                                         size="md"
                                                         :total-rows="
-                                                            getSubmission.output_files
+                                                            getTask.output_files
                                                                 .length
                                                         "
                                                         :per-page="
@@ -779,7 +780,7 @@
                                                                     class="m-0 p-0"
                                                                     v-if="
                                                                         !file.exists &&
-                                                                            !getSubmission.is_complete
+                                                                            !getTask.is_complete
                                                                     "
                                                                     type="grow"
                                                                     small
@@ -788,7 +789,7 @@
                                                                 <i
                                                                     v-else-if="
                                                                         !file.exists &&
-                                                                            getSubmission.is_complete
+                                                                            getTask.is_complete
                                                                     "
                                                                     class="far fa-times-circle text-danger fa-fw"
                                                                 ></i>
@@ -881,7 +882,7 @@
                                                                     "
                                                                     fluid-grow
                                                                     :style="
-                                                                        getSubmission.result_previews_loaded ||
+                                                                        getTask.result_previews_loaded ||
                                                                         noPreview(
                                                                             file
                                                                         )
@@ -944,7 +945,7 @@
                                                         @sliding-start="
                                                             slide =>
                                                                 getTextFile(
-                                                                    getSubmission
+                                                                    getTask
                                                                         .output_files[
                                                                         slide
                                                                     ]
@@ -953,7 +954,7 @@
                                                         @sliding-end="
                                                             slide =>
                                                                 renderPreview(
-                                                                    getSubmission
+                                                                    getTask
                                                                         .output_files[
                                                                         slide
                                                                     ]
@@ -961,7 +962,7 @@
                                                         "
                                                     >
                                                         <b-carousel-slide
-                                                            v-for="file in getSubmission.output_files"
+                                                            v-for="file in getTask.output_files"
                                                             v-bind:key="
                                                                 file.name
                                                             "
@@ -1298,7 +1299,7 @@
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
             ok-variant="outline-danger"
-            title="Delete this submission?"
+            title="Delete this task?"
             @ok="remove"
         >
             <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
@@ -1360,7 +1361,7 @@ import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export default {
-    name: 'submission',
+    name: 'task',
     components: {
         WorkflowBlurb
     },
@@ -1408,18 +1409,18 @@ export default {
         thumbnailPath(file) {
             if (this.noPreview(file))
                 return require('../../assets/no_preview_thumbnail.png');
-            else if (!this.getSubmission.result_previews_loaded)
+            else if (!this.getTask.result_previews_loaded)
                 return require('../../assets/PlantITLoading.gif');
             else return this.thumbnailFor(file.path);
         },
         thumbnailFor(path) {
-            let i = this.getSubmission.output_files.findIndex(f => f.path === path);
+            let i = this.getTask.output_files.findIndex(f => f.path === path);
             if (
                 this.viewMode === 'Grid' &&
                 i >= (this.outputFilePage - 1) * this.outputPageSize &&
                 i <= this.outputFilePage * this.outputPageSize
             )
-                return `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
+                return `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${path}`;
             else return null;
         },
         prettifyShort: function(date) {
@@ -1510,7 +1511,7 @@ export default {
             const loader = new PLYLoader();
             var comp = {};
             loader.load(
-                `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/3d_model/?path=${f.name}`,
+                `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/3d_model/?path=${f.name}`,
                 function(geometry) {
                     geometry.computeVertexNormals();
 
@@ -1647,7 +1648,7 @@ export default {
             this.viewMode = mode;
         },
         refresh() {
-            this.$store.dispatch('submissions/refresh', {
+            this.$store.dispatch('tasks/refresh', {
                 owner: this.$router.currentRoute.params.owner,
                 name: this.$router.currentRoute.params.name
             });
@@ -1656,7 +1657,7 @@ export default {
             this.canceled = true;
             axios
                 .get(
-                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`
                 )
                 .then(response => {
                     this.canceled = false;
@@ -1676,15 +1677,15 @@ export default {
         remove() {
             axios
                 .get(
-                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/delete/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/delete/`
                 )
                 .then(response => {
                     if (response.status === 200 && response.data.deleted) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('submissions/loadAll');
+                        this.$store.dispatch('tasks/loadAll');
                         router.push({
-                            name: 'submissions'
+                            name: 'tasks'
                         });
                     } else {
                         this.showFailedToDeleteAlert = true;
@@ -1705,7 +1706,7 @@ export default {
             // resubmit
             axios({
                 method: 'post',
-                url: `/apis/v1/submissions/`,
+                url: `/apis/v1/tasks/`,
                 data: {
                     repo: this.getWorkflow.repo,
                     config: config,
@@ -1717,7 +1718,7 @@ export default {
                 .then(response => {
                     this.restarted = false;
                     router.push({
-                        name: 'submission',
+                        name: 'task',
                         params: {
                             owner: response.data.owner,
                             name: response.data.name
@@ -1753,7 +1754,7 @@ export default {
         },
         viewFile(file) {
             this.thumbnailName = file;
-            this.thumbnailUrl = `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${file}`;
+            this.thumbnailUrl = `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/thumbnail/?path=${file}`;
             this.thumbnailTitle = file;
             this.$bvModal.show('thumbnail');
         },
@@ -1761,7 +1762,7 @@ export default {
             this.downloading = true;
             axios
                 .get(
-                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/output/${file}/`,
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/output/${file}/`,
                     { responseType: 'blob' }
                 )
                 .then(response => {
@@ -1785,10 +1786,10 @@ export default {
                     return error;
                 });
         },
-        downloadSubmissionLogs() {
+        downloadTaskLogs() {
             axios
                 .get(
-                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/submission_logs/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/task_logs/`
                 )
                 .then(response => {
                     if (response && response.status === 404) {
@@ -1800,7 +1801,7 @@ export default {
                     );
                     let link = document.createElement('a');
                     link.href = url;
-                    link.setAttribute('download', this.submissionLogFileName);
+                    link.setAttribute('download', this.taskLogFileName);
                     link.click();
                     window.URL.revokeObjectURL(url);
                     this.downloading = false;
@@ -1813,7 +1814,7 @@ export default {
         downloadContainerLogs() {
             axios
                 .get(
-                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/container_logs/`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/container_logs/`
                 )
                 .then(response => {
                     if (response && response.status === 404) {
@@ -1840,7 +1841,7 @@ export default {
             this.textContent = [];
             axios
                 .get(
-                    `/apis/v1/submissions/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/file_text/?path=${file.path}`
+                    `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/file_text/?path=${file.path}`
                 )
                 .then(response => {
                     if (response.status === 200) {
@@ -1854,7 +1855,7 @@ export default {
         }
     },
     async mounted() {
-        // await this.$store.dispatch('submissions/refresh', {
+        // await this.$store.dispatch('tasks/refresh', {
         //     owner: this.$router.currentRoute.params.owner,
         //     name: this.$router.currentRoute.params.name
         // });
@@ -1862,9 +1863,9 @@ export default {
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['workflow', 'recentlyRunWorkflows']),
-        ...mapGetters('submissions', ['submission', 'submissions', 'submissionsLoading']),
+        ...mapGetters('tasks', ['task', 'tasks', 'tasksLoading']),
         filteredResults() {
-            return this.getSubmission.output_files
+            return this.getTask.output_files
                 .slice(
                     (this.outputFilePage - 1) * this.outputPageSize,
                     this.outputFilePage * this.outputPageSize
@@ -1874,16 +1875,16 @@ export default {
         workflowKey() {
             return `${this.getWorkflow.repo.owner.login}/${this.getWorkflow.repo.name}`;
         },
-        getSubmission() {
-            let submission = this.submission(
+        getTask() {
+            let task = this.task(
                 this.$router.currentRoute.params.owner,
                 this.$router.currentRoute.params.name
             );
-            if (submission !== undefined && submission !== null) return submission;
+            if (task !== undefined && task !== null) return task;
             return null;
         },
-        submissionLogs() {
-            let all = this.getSubmission.submission_logs.slice();
+        taskLogs() {
+            let all = this.getTask.task_logs.slice();
             var firstI = all.findIndex(l => l.includes('PENDING'));
             if (firstI === -1)
                 firstI = all.findIndex(l => l.includes('RUNNING'));
@@ -1894,32 +1895,32 @@ export default {
             all.reverse();
             if (lastI === -1) return all;
             if (lastI === all.length - 1) return all;
-            else if (this.getSubmission.is_complete)
+            else if (this.getTask.is_complete)
                 all.splice(firstI, lastI - firstI + 1);
             else all.splice(firstI, lastI - firstI + 1, all[lastI]);
             return all;
         },
         notFound() {
-            return this.getSubmission === null && !this.submissionsLoading;
+            return this.getTask === null && !this.tasksLoading;
         },
         getWorkflow() {
             return this.workflow(
-                this.getSubmission.workflow_owner,
-                this.getSubmission.workflow_name
+                this.getTask.workflow_owner,
+                this.getTask.workflow_name
             );
         },
-        submissionLogFileName() {
+        taskLogFileName() {
             return `${this.$router.currentRoute.params.name}.plantit.log`;
         },
         containerLogFileName() {
             return `${
                 this.$router.currentRoute.params.name
-            }.${this.getSubmission.agent.toLowerCase()}.log`;
+            }.${this.getTask.agent.toLowerCase()}.log`;
         }
     },
     watch: {
         // async $route() {
-        //     await this.$store.dispatch('submissions/refresh', this.getRun);
+        //     await this.$store.dispatch('tasks/refresh', this.getRun);
         //     window.location.reload(false);
         //     // this.$forceUpdate();
         // },
@@ -1929,20 +1930,20 @@ export default {
         viewMode() {
             if (
                 this.data !== null &&
-                this.getSubmission.output_files.some(f => f.name.endsWith('ply'))
+                this.getTask.output_files.some(f => f.name.endsWith('ply'))
             ) {
                 this.unrenderPreview();
                 if (this.viewMode === 'Carousel')
                     if (this.currentCarouselSlide === 0)
-                        this.renderPreview(this.getSubmission.output_files[0]);
+                        this.renderPreview(this.getTask.output_files[0]);
             }
 
             if (
                 this.viewMode === 'Carousel' &&
                 this.textContent.length === 0 &&
-                this.getSubmission.output_files.length > 0
+                this.getTask.output_files.length > 0
             )
-                this.getTextFile(this.getSubmission.output_files[0]);
+                this.getTextFile(this.getTask.output_files[0]);
         }
     }
 };

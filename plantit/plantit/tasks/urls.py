@@ -14,13 +14,11 @@ urlpatterns = [
     path(r'<owner>/<name>/file_text/', views.get_file_text),
     path(r'<owner>/<name>/thumbnail/', views.get_thumbnail),
     path(r'<owner>/<name>/3d_model/', views.get_3d_model),
-    path(r'<owner>/<name>/submission_logs/', views.get_submission_logs),
+    path(r'<owner>/<name>/task_logs/', views.get_task_logs),
     path(r'<owner>/<name>/container_logs/', views.get_container_logs),
     path(r'search/<owner>/<workflow_name>/<page>/', views.search),
-    path(r'search_delayed/<owner>/<workflow_name>/', views.search_delayed),
-    path(r'search_repeating/<owner>/<workflow_name>/', views.search_repeating),
 ]
 
 websocket_urlpatterns = [
-    path(r'ws/runs/<username>/', consumers.SubmissionConsumer.as_asgi())
+    path(r'ws/runs/<username>/', consumers.TaskConsumer.as_asgi())
 ]
