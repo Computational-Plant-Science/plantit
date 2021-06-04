@@ -660,7 +660,18 @@ export default {
                     max_time: this.agentMaxTime,
                     public: this.agentPublic,
                     logo: this.agentLogo,
-                    executor: this.agentExecutor
+                    executor: this.agentExecutor,
+                    max_walltime: this.agentMaxWalltime,
+                    max_mem: this.agentMaxMem,
+                    max_cores: this.agentMaxCores,
+                    max_nodes: this.agentMaxNodes,
+                    queue: this.agentQueue,
+                    project: this.agentProject,
+                    header_skip: this.agentHeaderSkip,
+                    // gpu: this.agentGPU,
+                    // gpu_queue: this.agentGPUQueue,
+                    job_array: this.agentJobArray,
+                    launcher: this.agentLauncher
                 }
             };
 

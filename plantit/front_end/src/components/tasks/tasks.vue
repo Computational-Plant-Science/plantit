@@ -197,7 +197,7 @@
                                                 "
                                                 v-else
                                                 >{{
-                                                    task.job_status
+                                                    task.status
                                                 }}</b-badge
                                             >
                                             <small> on </small>
@@ -411,7 +411,7 @@
                                                     "
                                                     v-else
                                                     >{{
-                                                        task.job_status
+                                                        task.status
                                                     }}</b-badge
                                                 >
                                                 <small>

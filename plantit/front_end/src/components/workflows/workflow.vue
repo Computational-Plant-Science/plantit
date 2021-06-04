@@ -3390,7 +3390,7 @@ export default {
                     this.getWorkflow.config.input.path !== undefined &&
                     this.input.from !== '' &&
                     this.input.kind !== '' &&
-                    this.inputFiletypeSelected
+                    this.inputFiletypeSelected && this.selectedDataset !== null
                 );
             return true;
         },

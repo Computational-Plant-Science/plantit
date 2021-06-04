@@ -41,21 +41,16 @@ def list_personal(request, owner):
         except:
             return HttpResponseNotFound()
 
-    redis = RedisClient.get()
-    # updated = redis.get(f"workflows_updated/{owner}")
-    # if updated is None:
-    #     logger.info(f"Updating workflow cache for {owner}")
-    #     refresh_personal_workflows.delay(owner=owner)
-    #     redis.set(f"workflows_updated/{owner}", datetime.now().timestamp())
-    # else:
-    #     seconds_since_refresh = (datetime.now() - datetime.fromtimestamp(float(updated)))
-    #     if seconds_since_refresh.total_seconds() > (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60):
-    #         logger.info(f"Updating workflow cache for {owner}")
-    #         refresh_personal_workflows.delay(owner=owner)
-    #         redis.set(f"workflows_updated/{owner}", timezone.now().timestamp())
-
+    # TODO debounce this- shouldn't allow refresh e.g. multiple times a second, max every few seconds is probably ideal
     refresh_personal_workflows.delay(owner=owner)
+
+    redis = RedisClient.get()
     workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
+
+    name = request.GET.get('name', None)
+    if name is not None:
+        workflows = [workflow for workflow in workflows if name in workflow['config']['name']]
+
     return JsonResponse({'workflows': workflows})
 
 

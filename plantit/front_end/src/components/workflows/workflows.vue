@@ -20,7 +20,8 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            <i class="fas fa-stream fa-fw"></i> {{ publicContext ? 'Public' : 'Your' }} Workflows
+                            <i class="fas fa-stream fa-fw"></i>
+                            {{ contextPublic ? 'Public' : 'Your' }} Workflows
                         </h2></b-col
                     ><b-col md="auto" align-self="center"
                         ><small
@@ -42,7 +43,7 @@
                         md="auto"
                         class="ml-0"
                         align-self="center"
-                        v-if="!publicContext"
+                        v-if="!contextPublic"
                         ><b-button
                             :disabled="workflowsLoading"
                             :variant="
@@ -98,12 +99,12 @@
                             class="ml-0 mt-0 mr-0"
                             @click="toggleContext"
                             :title="
-                                publicContext
+                                contextPublic
                                     ? 'View your workflows'
                                     : 'View public workflows'
                             "
                             v-b-tooltip:hover
-                            ><span v-if="publicContext"
+                            ><span v-if="contextPublic"
                                 ><i class="fas fa-user"></i> Yours</span
                             ><span v-else
                                 ><i class="fas fa-users"></i> Public</span
@@ -143,7 +144,7 @@
                 </b-card-group>
                 <b-row v-else
                     ><b-col class="text-danger">{{
-                        publicContext
+                        contextPublic
                             ? 'No workflows have been published by the community yet.'
                             : "You haven't connected any workflows yet."
                     }}</b-col></b-row
@@ -167,7 +168,7 @@
                 :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
                 title="Connect Workflow"
                 @ok="connectWorkflow"
-                :ok-disabled="workflowInvalid"
+                :ok-disabled="searchResultInvalid"
                 ok-title="Connect"
             >
                 <div class="text-left">
@@ -178,19 +179,22 @@
                         root.
                     </p>
                 </div>
+                <b-alert variant="danger" :show="searchResultAlreadyConnected"
+                    >This workflow is already connected!</b-alert
+                >
                 <b-form-group
                     description="Type the name of the GitHub repository you'd like to connect."
                 >
                     <b-form-input
-                        v-model="name"
-                        :state="!workflowInvalid"
+                        v-model="searchName"
+                        :state="!searchResultInvalid"
                         type="text"
                         placeholder="Enter a repository name"
                         required
                         @input="onWorkflowNameChange"
                     ></b-form-input>
                 </b-form-group>
-                <div class="text-center" v-if="isLoading">
+                <div class="text-center" v-if="searching">
                     <b-spinner
                         type="grow"
                         label="Loading..."
@@ -218,7 +222,9 @@
                             :href="searchResult.repo.html_url"
                             ><i class="fab fa-github fa-fw mr-1"></i
                             >{{ searchResult.repo.full_name }}</b-link
-                        >
+                        ><i class="far fa-star fa-fw ml-2 mr-1">{{
+                            searchResult.repo.stargazers_count
+                        }}</i>
                         <br />
                         {{ searchResult.repo.description }}
                         <br />
@@ -226,9 +232,6 @@
                         {{ prettify(searchResult.repo.updated_at) }}
                         <br />
                         Language: {{ searchResult.repo.language }}
-                        <br />
-                        Stargazers:
-                        {{ searchResult.repo.stargazers_count }}
                     </p>
                     <div v-if="searchResult.validation.is_valid">
                         <h5
@@ -396,11 +399,7 @@
                             <b-list-group-item
                                 v-for="error in searchResult.validation.errors"
                                 v-bind:key="error"
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
+                                :variant="profile.darkMode ? 'dark' : 'light'"
                                 >{{ error }}</b-list-group-item
                             >
                         </b-list-group>
@@ -425,6 +424,7 @@
 import blurb from '@/components/workflows/workflow-blurb.vue';
 import { mapGetters } from 'vuex';
 import * as Sentry from '@sentry/browser';
+import debounce from 'lodash/debounce';
 import axios from 'axios';
 import moment from 'moment';
 import { guid } from '@/utils';
@@ -438,28 +438,18 @@ export default {
         return {
             login: false,
             name: '',
-            searchText: '',
-            searchResult: null,
-            workflowExists: false,
-            publicContext: false,
-            togglingContext: false,
-            isOpen: false,
-            isLoading: false,
-            isAsync: false
+            contextPublic: false,
+            contextToggling: false,
+            searching: false,
+            searchName: '',
+            searchResult: null
         };
     },
     watch: {
         // TODO get rid of this, it's hacky
         // eslint-disable-next-line no-unused-vars
-        publicContext: function(_) {
+        contextPublic: function(_) {
             this.refreshWorkflows();
-        },
-        // eslint-disable-next-line no-unused-vars
-        items: function(value, _) {
-            if (this.isAsync) {
-                this.searchResult = value;
-                this.isLoading = false;
-            }
         }
     },
     methods: {
@@ -469,34 +459,28 @@ export default {
             )})`;
         },
         toggleContext() {
-            this.togglingContext = true;
-            this.publicContext = !this.publicContext;
-            this.togglingContext = false;
+            this.contextToggling = true;
+            this.contextPublic = !this.contextPublic;
+            this.contextToggling = false;
         },
-        onWorkflowNameChange() {
-            this.isLoading = true;
+        onWorkflowNameChange: debounce(function() {
+            this.searching = true;
             return axios
                 .get(
-                    `/apis/v1/workflows/${this.profile.githubProfile.login}/${this.name}/search/`
+                    `/apis/v1/workflows/${this.profile.githubProfile.login}/${this.searchName}/search/`
                 )
                 .then(response => {
                     this.searchResult = response.data;
-                    this.isLoading = false;
-                    this.$emit('input', this.name);
+                    this.searching = false;
+                    this.$emit('input', this.searchName);
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     this.searchResult = null;
-                    this.isLoading = false;
+                    this.searching = false;
                     if (error.response.status === 500) throw error;
                 });
-        },
-        handleClickOutside(event) {
-            if (!this.$el.contains(event.target)) {
-                this.arrowCounter = -1;
-                this.isOpen = false;
-            }
-        },
+        }, 500),
         showConnectWorkflowModal() {
             this.$bvModal.show('connectWorkflow');
         },
@@ -540,7 +524,7 @@ export default {
             return 0;
         },
         async refreshWorkflows() {
-            if (this.publicContext)
+            if (this.contextPublic)
                 await this.$store.dispatch('workflows/loadPublic');
             else
                 await this.$store.dispatch(
@@ -561,22 +545,38 @@ export default {
             return this.$route.name === 'workflows';
         },
         getWorkflows() {
-            return (this.publicContext
+            return (this.contextPublic
                 ? this.publicWorkflows
                 : this.personalWorkflows
             ).filter(workflow =>
-                workflow.config.name.includes(this.searchText)
+                workflow.config.name.includes(this.searchName)
             );
         },
         workflowsLoading() {
-            return this.publicContext
+            return this.contextPublic
                 ? this.publicWorkflowsLoading
                 : this.personalWorkflowsLoading;
         },
-        workflowInvalid() {
+        searchResultAlreadyConnected() {
+            return (
+                this.searchResult !== null &&
+                (this.personalWorkflows.some(
+                    wf => wf.config.name === this.searchResult.config.name
+                ) ||
+                    this.publicWorkflows.some(
+                        wf =>
+                            wf.config.name === this.searchResult.config.name &&
+                            wf.repo.owner.login ===
+                                this.searchResult.repo.owner.login
+                    ))
+            );
+        },
+        searchResultInvalid() {
             return (
                 this.searchResult === null ||
-                !this.searchResult.validation.is_valid
+                (this.searchResult.validation !== null &&
+                    !this.searchResult.validation.is_valid) ||
+                this.searchResultAlreadyConnected
             );
         }
     }
