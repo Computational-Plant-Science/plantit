@@ -331,10 +331,9 @@ export default {
         ]),
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', [
-            'personalWorkflows',
+            'connectedWorkflows',
             'personalWorkflowsLoading'
         ]),
-        ...mapGetters('datasets', ['openedDataset', 'openedDatasetLoading']),
         isRootPath() {
             return this.$route.name === 'dashboard';
         }

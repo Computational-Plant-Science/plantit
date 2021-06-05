@@ -201,12 +201,23 @@ def list_connectable_repos_by_owner(owner: str, token: str) -> List[dict]:
             "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
         })
     response_json = response.json()
-    workflows = [{
-        'repo': item['repository'],
-        'config': get_repo_config(item['repository']['owner']['login'], item['repository']['name'], token),
-        # 'get_readme': get_repo_readme(item['repository']['owner']['login'], item['repository']['name'], token)
-    } for item in response_json['items']] if 'items' in response_json else []
-    return [workflow for workflow in workflows]
+    workflows = []
+    for item in (response_json['items'] if 'items' in response_json else []):
+        repo = item['repository']
+        config = get_repo_config(item['repository']['owner']['login'], item['repository']['name'], token)
+        # readme = get_repo_readme(item['repository']['owner']['login'], item['repository']['name'], token)
+        validation = validate_repo_config(config, token)
+        workflows.append({
+            'repo': repo,
+            'config': config,
+            # 'readme': readme,
+            'validation': {
+                'is_valid': validation[0],
+                'errors': validation[1]
+            }
+        })
+
+    return workflows
 
 
 async def list_connectable_repos_by_owners(owners: List[str], token: str) -> List[dict]:

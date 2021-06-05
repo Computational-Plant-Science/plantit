@@ -2984,7 +2984,7 @@ export default {
             })
                 .then(response => {
                     if (response.status === 200) {
-                        this.$store.dispatch('workflows/loadPersonal/loadAll');
+                        this.$store.dispatch('workflows/refreshPersonal');
                         router.push({
                             name: 'workflows'
                         });

@@ -2,37 +2,51 @@ import json
 import logging
 from datetime import datetime
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponseNotAllowed, HttpResponse
 from rest_framework.decorators import api_view
 
-from plantit.github import get_repo_readme, get_repo
+from plantit.github import get_repo_readme, get_repo, list_connectable_repos_by_owner
 from plantit.redis import RedisClient
 from plantit.celery_tasks import refresh_all_workflows, refresh_personal_workflows
 from plantit.users.models import Profile
 from plantit.workflows.models import Workflow
+from plantit.workflows.utils import map_workflow, rescan_public_workflows, rescan_personal_workflows
 
 logger = logging.getLogger(__name__)
 
 
+@api_view(['GET'])
 @login_required
 def list_public(request):
     redis = RedisClient.get()
-    updated = redis.get('public_workflows_updated')
 
-    if updated is None:
-        refresh_all_workflows.delay(token=request.user.profile.github_token)
-    else:
-        seconds_since_refresh = (datetime.now() - datetime.fromtimestamp(float(updated)))
-        if seconds_since_refresh.total_seconds() > (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60):
-            refresh_all_workflows.delay(token=request.user.profile.github_token)
+    debounce = request.GET.get('debounce', None)
+    if debounce is None or debounce == 'True':  # only invalidate and refresh the cache if it's old
+        updated = redis.get('public_workflows_updated')
+        if updated is None:
+            # refresh_all_workflows.delay(token=request.user.profile.github_token)
+            rescan_public_workflows(request.user.profile.github_token)
+        else:
+            age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+            if age.total_seconds() > (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60):
+                logger.info(f"Public workflow cache age is {age}, refreshing")
+                # refresh_all_workflows.delay(token=request.user.profile.github_token)
+                rescan_public_workflows(request.user.profile.github_token)
+            else:
+                logger.info(f"Public workflow cache age is {age}, still fresh")
+    else:  # force inval/refresh
+        rescan_public_workflows(request.user.profile.github_token)
 
     workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')]
     workflows = [workflow for workflow in workflows if workflow['public']]
     return JsonResponse({'workflows': workflows})
 
 
+@api_view(['GET'])
 @login_required
 def list_personal(request, owner):
     if owner != request.user.profile.github_username:
@@ -41,19 +55,28 @@ def list_personal(request, owner):
         except:
             return HttpResponseNotFound()
 
-    # TODO debounce this- shouldn't allow refresh e.g. multiple times a second, max every few seconds is probably ideal
-    refresh_personal_workflows.delay(owner=owner)
-
     redis = RedisClient.get()
-    workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
 
-    name = request.GET.get('name', None)
-    if name is not None:
-        workflows = [workflow for workflow in workflows if name in workflow['config']['name']]
+    debounce = request.GET.get('debounce', None)
+    if debounce is None or debounce == 'True':  # only invalidate and refresh the cache if it's stale
+        updated = redis.get(f"workflows_updated/{owner}")
+        if updated is None:
+            # refresh_personal_workflows.delay(owner=owner)
+            rescan_personal_workflows(owner)
+        else:
+            age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+            if age.total_seconds() > (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60):
+                logger.info(f"{owner}'s workflow cache age is {age}, refreshing")
+                rescan_personal_workflows(owner)
+            else:
+                logger.info(f"{owner}'s workflow cache age is {age}, still fresh")
+    else:  # force inval/refresh
+        rescan_personal_workflows(owner)
 
-    return JsonResponse({'workflows': workflows})
+    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
+@api_view(['GET'])
 @login_required
 def get(request, owner, name):
     redis = RedisClient.get()
@@ -61,12 +84,14 @@ def get(request, owner, name):
     return HttpResponseNotFound() if workflow is None else JsonResponse(json.loads(workflow))
 
 
+@api_view(['GET'])
 @login_required
 def search(request, owner, name):
     repo = get_repo(owner, name, request.user.profile.github_token)
     return HttpResponseNotFound() if repo is None else JsonResponse(repo)
 
 
+@api_view(['GET'])
 @login_required
 def refresh(request, owner, name):
     try:
@@ -81,6 +106,7 @@ def refresh(request, owner, name):
     return JsonResponse(repo)
 
 
+@api_view(['GET'])
 @login_required
 def readme(request, owner, name):
     return JsonResponse({'readme': get_repo_readme(name, owner, request.user.profile.github_token)})
@@ -95,6 +121,11 @@ def connect(request, owner, name):
     redis = RedisClient.get()
     redis.set(f"workflows/{owner}/{name}", json.dumps(request.data))
     workflow, created = Workflow.objects.get_or_create(user=request.user, repo_owner=owner, repo_name=name, public=False)
+    if created:
+        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
+            'type': 'update_workflow',
+            'workflow': map_workflow(workflow, request.user.profile.github_token)
+        })
 
     if created:
         logger.info(f"Connected repository {owner}/{name} as {request.data['config']['name']} for {request.user.username}")

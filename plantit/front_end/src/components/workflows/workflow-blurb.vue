@@ -4,6 +4,7 @@
             <b-col cols="10">
                 <h2>
                     <b-link
+                        :disabled="!linkable"
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
                         variant="outline-dark"
                         v-b-tooltip.hover
@@ -46,15 +47,16 @@
                     </b-link>
                 </small>
                 <br />
-                <small>{{ workflow.repo.description }}</small>
+                <small :class="profile.darkMode ? 'text-light' : 'text-dark'">{{ workflow.repo.description }}</small>
                 <br />
             </b-col>
             <b-col cols="1"></b-col>
         </b-row>
         <b-img
+            v-if="workflow.config.logo !== undefined"
             rounded
             class="card-img-right"
-            style="max-width: 6rem;opacity: 0.8;position: absolute;right: -25px;top: -15px;z-index:1;"
+            style="max-width: 6rem;position: absolute;right: -15px;top: -15px;z-index:1;"
             right
             :src="
                 `https://raw.githubusercontent.com/${workflow.repo.owner.login}/${workflow.repo.name}/master/${workflow.config.logo}`
@@ -72,6 +74,10 @@ export default {
         workflow: {
             type: Object,
             required: true
+        },
+        linkable: {
+          type: Boolean,
+          required: true
         }
     },
     methods: {

@@ -171,12 +171,6 @@
                             right
                             :src="agent.logo"
                         ></b-img>
-                        <i
-                            v-else
-                            style="max-width: 7rem;position: absolute;right: 20px;top: 20px;"
-                            right
-                            class="card-img-left fas fa-robot fa-2x fa-fw"
-                        ></i>
                     </b-card>
                 </b-card-group>
                 <b-row v-else
@@ -563,10 +557,10 @@ export default {
         publicContext: function(_) {
             this.refreshAgents();
         },
-        items: function(value, _) {
-            this.agentNameExists = value;
-            this.agentNameLoading = false;
-        }
+        // items: function(value, _) {
+        //     this.agentNameExists = value;
+        //     this.agentNameLoading = false;
+        // }
     },
     methods: {
         prettify: function(date) {

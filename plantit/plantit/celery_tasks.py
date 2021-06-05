@@ -8,9 +8,7 @@ from os import environ
 from os.path import join
 
 import cv2
-from asgiref.sync import async_to_sync
 from celery.utils.log import get_task_logger
-from channels.layers import get_channel_layer
 from czifile import czifile
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -32,6 +30,7 @@ from plantit.terrain import list_dir
 from plantit.sns import SnsClient
 from plantit.github import get_repo
 from plantit.workflows.models import Workflow
+from plantit.workflows.utils import rescan_personal_workflows, rescan_public_workflows
 
 logger = get_task_logger(__name__)
 
@@ -561,53 +560,9 @@ def aggregate_user_statistics(username: str):
 
 @app.task()
 def refresh_personal_workflows(owner: str):
-    try:
-        user = User.objects.get(profile__github_username=owner)
-    except:
-        logger.warning(f"User {owner} does not exist")
-        return
-
-    redis = RedisClient.get()
-    deleted = 0
-    for key in redis.scan_iter(match=f"workflows/{owner}/*"):
-        repo = json.loads(redis.get(key))
-        deleted += 1
-        redis.delete(key)
-        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
-            'type': 'remove_workflow',
-            'workflow': repo
-        })
-
-    logger.info(f"Cleaned {deleted} stale workflow(s) from {owner}'s cache ")
-
-    workflows = Workflow.objects.filter(user=user)
-    for workflow in workflows:
-        repo = get_repo(workflow.repo_owner, workflow.repo_name, user.profile.github_token)
-        repo['public'] = workflow.public
-        redis.set(f"workflows/{owner}/{workflow.repo_name}", json.dumps(repo))
-        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
-            'type': 'update_workflow',
-            'workflow': repo
-        })
-
-    logger.info(f"Wrote {len(workflows)} workflow(s) to {owner}'s cache")
+    rescan_personal_workflows(owner)
 
 
 @app.task()
 def refresh_all_workflows(token: str):
-    redis = RedisClient.get()
-    public = Workflow.objects.filter(public=True)
-    private = Workflow.objects.filter(public=False)
-
-    for workflow in public:
-        repo = get_repo(workflow.repo_owner, workflow.repo_name, token)
-        repo['public'] = True
-        redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
-
-    for workflow in private:
-        repo = get_repo(workflow.repo_owner, workflow.repo_name, token)
-        repo['public'] = False
-        redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
-
-    logger.info(f"Refreshed public workflows ({len(public)})")
-    redis.set(f"public_workflows_updated", timezone.now().timestamp())
+    rescan_public_workflows(token)

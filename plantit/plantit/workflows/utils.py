@@ -1,6 +1,19 @@
+import json
+import logging
 from os.path import join
+from typing import List
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+from plantit.github import get_repo, list_connectable_repos_by_owner
+from plantit.redis import RedisClient
 from plantit.tasks.models import Task
+from plantit.workflows.models import Workflow
+
+logger = logging.getLogger(__name__)
 
 
 def map_old_workflow_config_to_new(old: dict, run: Task, resources: dict) -> dict:
@@ -90,3 +103,101 @@ def map_old_workflow_config_to_new(old: dict, run: Task, resources: dict) -> dic
                 print(f"No GPU support on {run.agent.name}")
 
     return new_config
+
+
+def map_workflow(workflow: Workflow, token: str) -> dict:
+    repo = get_repo(
+        workflow.repo_owner,
+        workflow.repo_name,
+        token)
+    return {
+        'config': repo['config'],
+        'repo': repo['repo'],
+        'validation': repo['validation'],
+        'public': workflow.public,
+        'connected': True
+    }
+
+
+def populate_workflow_cache(owner: str, workflows: List[dict]):
+    redis = RedisClient.get()
+    for workflow in workflows:
+        redis.set(f"workflows/{owner}/{workflow['repo']['name']}", json.dumps(workflow))
+        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
+            'type': 'update_workflow',
+            'workflow': workflow
+        })
+
+    redis.set(f"workflows_updated/{owner}", timezone.now().timestamp())
+
+
+def clean_workflow_cache(owner: str):
+    redis = RedisClient.get()
+    deleted = 0
+    keys = list(redis.scan_iter(match=f"workflows/{owner}/*"))
+    for key in keys:
+        repo = json.loads(redis.get(key))
+        deleted += 1
+        redis.delete(key)
+        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
+            'type': 'remove_workflow',
+            'workflow': repo
+        })
+
+    return len(keys)
+
+
+def rescan_personal_workflows(owner: str):
+    try:
+        user = User.objects.get(profile__github_username=owner)
+    except:
+        logger.warning(f"User {owner} does not exist")
+        return
+
+    cleaned = clean_workflow_cache(owner)
+    logger.info(f"Cleaned {cleaned} stale workflow(s) from {owner}'s cache ")
+
+    both = []
+    connectable = list_connectable_repos_by_owner(owner, user.profile.github_token)
+    connected = [map_workflow(workflow, user.profile.github_token) for workflow in list(Workflow.objects.filter(user=user))]
+
+    for able in connectable:
+        if not any(['name' in ed['config'] and 'name' in able['config'] and ed['config']['name'] == able['config']['name'] for ed in connected]):
+            able['public'] = False
+            able['connected'] = False
+            both.append(able)
+
+    missing = 0
+    for ed in connected:
+        name = ed['config']['name']
+        if not any(['name' in able['config'] and able['config']['name'] == name for able in connectable]):
+            missing += 1
+            logger.warning(f"Configuration file missing for {owner}'s workflow {name}")
+            ed['validation'] = {
+                'is_valid': False,
+                'errors': ["Configuration file missing"]
+            }
+        both.append(ed)
+
+    populate_workflow_cache(owner, both)
+    logger.info(
+        f"Found {len(connected)} connected workflow(s), {len(connectable) - len(connected)} connectable, wrote {len(both)} to {owner}'s cache" + "" if missing == 0 else f"({missing} with missing configuration files)")
+
+
+def rescan_public_workflows(token: str):
+    redis = RedisClient.get()
+    public = Workflow.objects.filter(public=True)
+    private = Workflow.objects.filter(public=False)
+
+    for workflow in public:
+        repo = get_repo(workflow.repo_owner, workflow.repo_name, token)
+        repo['public'] = True
+        redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
+
+    for workflow in private:
+        repo = get_repo(workflow.repo_owner, workflow.repo_name, token)
+        repo['public'] = False
+        redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
+
+    logger.info(f"Refreshed public workflows ({len(public)})")
+    redis.set(f"public_workflows_updated", timezone.now().timestamp())

@@ -9,7 +9,7 @@ export const workflows = {
         publicLoading: true,
         personal: [],
         personalLoading: true,
-        recentlyRun: {}
+        recentlyRun: {},
     }),
     mutations: {
         setPublic(state, workflows) {
@@ -82,6 +82,34 @@ export const workflows = {
             commit('setPersonalLoading', true);
             await axios
                 .get(`/apis/v1/workflows/${owner}/`)
+                .then(response => {
+                    commit('setPersonal', response.data.workflows);
+                    commit('setPersonalLoading', false);
+                })
+                .catch(error => {
+                    commit('setPersonalLoading', false);
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
+        async refreshPublic({ commit }) {
+            commit('setPublicLoading', true);
+            await axios
+                .get('/apis/v1/workflows/?debounce=False')
+                .then(response => {
+                    commit('setPublic', response.data.workflows);
+                    commit('setPublicLoading', false);
+                })
+                .catch(error => {
+                    commit('setPublicLoading', false);
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
+        async refreshPersonal({ commit }, owner) {
+            commit('setPersonalLoading', true);
+            await axios
+                .get(`/apis/v1/workflows/${owner}/?debounce=False`)
                 .then(response => {
                     commit('setPersonal', response.data.workflows);
                     commit('setPersonalLoading', false);
@@ -166,7 +194,8 @@ export const workflows = {
         },
         publicWorkflows: state => state.public,
         publicWorkflowsLoading: state => state.publicLoading,
-        personalWorkflows: state => state.personal,
+        connectedWorkflows: state => state.personal.filter(repo => repo.connected),
+        connectableWorkflows: state => state.personal.filter(repo => !repo.connected),
         personalWorkflowsLoading: state => state.personalLoading,
         recentlyRunWorkflows: state => state.recentlyRun
     }

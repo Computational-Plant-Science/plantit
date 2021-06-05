@@ -266,7 +266,7 @@
                                         class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
                                     >
                                         <WorkflowBlurb
-                                            :showPublic="false"
+                                            :linkable="true"
                                             :workflow="getWorkflow"
                                         ></WorkflowBlurb>
                                     </b-card-body>

@@ -14,6 +14,7 @@ import VueMarkdown from 'vue-markdown';
 import AsyncComputed from 'vue-async-computed'
 import * as Sentry from '@sentry/browser';
 import * as Integrations from '@sentry/integrations';
+import JsonViewer from 'vue-json-viewer'
 // import Keycloak from 'keycloak-js';
 
 Axios.defaults.xsrfCookieName = 'csrftoken';
@@ -23,6 +24,7 @@ Vue.config.productionTip = false;
 
 Vue.use(VueMarkdown);
 Vue.use(AsyncComputed);
+Vue.use(JsonViewer);
 
 Vue.use(
     new VueSocketIO({

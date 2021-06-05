@@ -1041,16 +1041,10 @@ export default {
         await Promise.all([
             this.$store.dispatch('tasks/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
-            this.$store.dispatch(
-                'workflows/loadPersonal',
-                this.profile.githubProfile.login
-            ),
             this.$store.dispatch('workflows/loadPublic'),
-            this.$store.dispatch(
-                'agents/loadPersonal',
-                this.profile.djangoProfile.username
-            ),
+            this.$store.dispatch('workflows/loadPersonal', this.profile.githubProfile.login),
             this.$store.dispatch('agents/loadPublic'),
+            this.$store.dispatch('agents/loadPersonal', this.profile.djangoProfile.username),
             this.$store.dispatch('datasets/loadPublic'),
             this.$store.dispatch('datasets/loadPersonal'),
             this.$store.dispatch('datasets/loadShared'),
