@@ -112,7 +112,10 @@
                         ></b-col
                     ></b-row
                 >
-                <b-row v-if="workflowsLoading" class="mt-2">
+                <b-row
+                    v-if="workflowsLoading || connectingWorkflow"
+                    class="mt-2"
+                >
                     <b-col class="text-center">
                         <b-spinner
                             type="grow"
@@ -169,6 +172,7 @@
                     ><b-row v-if="workflowToConnectSelected"
                         ><b-col md="auto"
                             ><b-button
+                                :disabled="connectingWorkflow"
                                 variant="outline-danger"
                                 @click="unselectWorkflowToConnect"
                                 ><i class="fas fa-arrow-left fa-fw"></i><br />Go
@@ -178,7 +182,19 @@
                             ><b-button
                                 variant="success"
                                 @click="connectWorkflow"
-                                ><i class="fas fa-check fa-fw"></i
+                                ><i
+                                    v-if="!connectingWorkflow"
+                                    class="fas fa-check fa-fw"
+                                ></i
+                                ><b-spinner
+                                    small
+                                    v-else
+                                    label="Connecting..."
+                                    :variant="
+                                        profile.darkMode ? 'light' : 'dark'
+                                    "
+                                    class="mr-1"
+                                ></b-spinner
                                 ><br />Connect</b-button
                             ></b-col
                         ></b-row
@@ -205,7 +221,7 @@
                         variant="secondary"
                     ></b-spinner>
                 </div>-->
-                <b-row class="mb-2"
+                <b-row class="mb-2" v-if="!workflowToConnectSelected"
                     ><b-col
                         ><h4
                             :class="
@@ -214,7 +230,7 @@
                         >
                             Connect a workflow
                         </h4></b-col
-                    ><b-col md="auto" v-if="!workflowToConnectSelected"
+                    ><b-col md="auto"
                         ><b-button
                             :disabled="personalWorkflowsLoading"
                             :variant="
@@ -289,27 +305,33 @@
                     </p>
                 </div>
                 <div v-else>
-                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                    Select the <i class="fab fa-github fa-fw"></i>GitHub
-                    repository containing your workflow.
-                </p>
-                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                    To connect a repository you must have a file named
-                    <code>plantit.yaml</code> in the project root. If you don't
-                    see your repo listed here, click
-                    <b-badge
-                        :variant="profile.darkMode ? 'dark' : 'outline-light'"
-                        ><i class="fas fa-redo mr-1"></i> Rescan
-                        Workflows</b-badge
-                    >
-                    to run a fresh scan for <code>plantit.yaml</code> files.
-                </p>
-                    <b-row
-                        class="mb-1"
-                        ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Select the <i class="fab fa-github fa-fw"></i>GitHub
+                        repository containing your workflow.
+                    </p>
+                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        To connect a repository you must have a configuration
+                        file named
+                        <code>plantit.yaml</code> in the project root. If you
+                        don't see your repo listed here, click
+                        <b-badge
+                            :variant="
+                                profile.darkMode ? 'dark' : 'outline-light'
+                            "
+                            ><i class="fas fa-redo mr-1"></i> Rescan
+                            Workflows</b-badge
+                        >
+                        to run a fresh scan for repositories with configuration
+                        files.
+                    </p>
+                    <b-row class="mb-1"
+                        ><b-col
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             ><small
-                                >{{ connectableWorkflows.length }} unconnected workflow(s)
-                                found</small
+                                >{{ connectableWorkflows.length }} unconnected
+                                workflow(s) found</small
                             ></b-col
                         ></b-row
                     >
@@ -326,7 +348,7 @@
                         v-bind:key="workflow.config.name"
                         no-body
                         ><b-card-body class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
-                            ><b-row
+                            ><!--<b-row
                                 ><b-col
                                     ><h4
                                         v-if="
@@ -367,8 +389,15 @@
                                         >Select</b-button
                                     ></b-col
                                 ></b-row
+                            >-->
+                            <blurb
+                                :workflow="workflow"
+                                :linkable="false"
+                            ></blurb>
+                            <div
+                                v-if="workflow.validation.is_valid"
+                                class="mt-1"
                             >
-                            <div v-if="workflow.validation.is_valid">
                                 <p
                                     :class="
                                         profile.darkMode
@@ -538,6 +567,21 @@
                                         </b-col>
                                     </b-row>
                                 </p>
+                                <b-row>
+                                    <b-col
+                                        ><b-button
+                                            block
+                                            variant="success"
+                                            v-if="workflow.validation.is_valid"
+                                            @click="
+                                                selectWorkflowToConnect(
+                                                    workflow
+                                                )
+                                            "
+                                            >Select</b-button
+                                        ></b-col
+                                    >
+                                </b-row>
                             </div>
                             <div v-else>
                                 <p
@@ -574,7 +618,9 @@
                                     copyable
                                     boxed
                                     sort
-                                    :theme="profile.darkMode ? 'darkjson' : 'light'"
+                                    :theme="
+                                        profile.darkMode ? 'darkjson' : 'light'
+                                    "
                                 ></json-viewer>
                             </div>
                         </b-card-body>
@@ -632,16 +678,20 @@ export default {
             name: '',
             contextPublic: false,
             contextToggling: false,
-            workflowToConnect: null
+            workflowToConnect: null,
+            connectingWorkflow: false
         };
     },
     watch: {
         // TODO get rid of this, it's hacky
         // eslint-disable-next-line no-unused-vars
         contextPublic: function(_) {
-            this.refreshWorkflows();
+            // this.$store.dispatch()
         },
         connectedWorkflows: function() {
+            // noop
+        },
+        publicWorkflows: function() {
             // noop
         }
     },
@@ -678,6 +728,7 @@ export default {
             this.$bvModal.show('connectWorkflow');
         },
         async connectWorkflow() {
+            this.connectingWorkflow = true;
             await axios({
                 method: 'post',
                 url: `/apis/v1/workflows/${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}/connect/`,
@@ -685,25 +736,30 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(response => {
-                    if (response.status === 200 && response.data.connected) {
+                    if (response.status === 200) {
+                        this.$bvModal.hide('connectWorkflow');
                         this.$store.dispatch(
-                            'workflows/refreshPersonal',
-                            this.profile.githubProfile.login
+                            'workflows/setPersonal',
+                            response.data.workflows
                         );
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
-                            message: `Added workflow ${this.workflowToConnect.repo.name}`,
+                            message: `Connected ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`,
                             guid: guid().toString()
                         });
-                        this.$bvModal.hide('connectWorkflow');
+                        this.workflowToConnect = null;
+                        this.connectingWorkflow = false;
                     } else {
-                        this.alertMessage = `Failed to connect ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`;
+                        let message = `Failed to connect ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`;
+                        this.alertMessage = message;
                         this.$store.dispatch('alerts/add', {
                             variant: 'danger',
-                            message: `Failed to add workflow ${this.searchResult.repo.name}`,
+                            message: message,
                             guid: guid().toString()
                         });
                         this.$bvModal.hide('connectWorkflow');
+                        this.workflowToConnect = null;
+                        this.connectingWorkflow = false;
                     }
                 })
                 .catch(error => {
@@ -742,7 +798,7 @@ export default {
             'publicWorkflows',
             'publicWorkflowsLoading',
             'connectedWorkflows',
-            'connectableWorkflows',
+            'connectableWorkflows'
         ]),
         isRootPath() {
             return this.$route.name === 'workflows';

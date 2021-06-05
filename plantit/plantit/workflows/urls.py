@@ -9,6 +9,7 @@ urlpatterns = [
     path(r'<owner>/<name>/search/', views.search),
     path(r'<owner>/<name>/refresh/', views.refresh),
     path(r'<owner>/<name>/readme/', views.readme),
+    path(r'<owner>/<name>/public/', views.toggle_public),
     path(r'<owner>/<name>/connect/', views.connect),
     path(r'<owner>/<name>/disconnect/', views.disconnect),
 ]

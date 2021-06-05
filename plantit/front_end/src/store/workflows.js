@@ -47,19 +47,11 @@ export const workflows = {
             if (j === -1) state.personal.unshift(workflow);
             else Vue.set(state.personal, j, workflow);
         },
-        remove(state, workflow) {
-            let i = state.public.findIndex(
-                wf =>
-                    wf.repo.owner.login === workflow.repo.owner.login &&
-                    wf.repo.name === workflow.repo.name
-            );
+        remove(state, owner, name) {
+            let i = state.public.findIndex(wf => wf.repo.owner.login === owner && wf.repo.name === name);
             if (i > -1) state.public.splice(i, 1);
 
-            let j = state.personal.findIndex(
-                wf =>
-                    wf.repo.owner.login === workflow.repo.owner.login &&
-                    wf.repo.name === workflow.repo.name
-            );
+            let j = state.personal.findIndex(wf => wf.repo.owner.login === owner && wf.repo.name === name);
             if (j > -1) state.personal.splice(j, 1);
         }
     },
@@ -91,6 +83,9 @@ export const workflows = {
                     Sentry.captureException(error);
                     throw error;
                 });
+        },
+        async setPersonal({ commit }, workflows) {
+            commit('setPersonal', workflows);
         },
         async refreshPublic({ commit }) {
             commit('setPublicLoading', true);
@@ -171,8 +166,12 @@ export const workflows = {
         addOrUpdate({ commit }, workflow) {
             commit('addOrUpdate', workflow);
         },
+        disconnect({commit}, workflow) {
+            workflow.connected = false;
+            commit('addOrUpdate', workflow);
+        },
         remove({ commit }, workflow) {
-            commit('remove', workflow);
+            commit('remove', workflow.repo.owner.login, workflow.repo.name);
         },
         setRecentlyRun({ commit }, workflow) {
             commit('setRecentlyRun', workflow);

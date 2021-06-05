@@ -115,24 +115,36 @@ def readme(request, owner, name):
 @api_view(['POST'])
 @login_required
 def connect(request, owner, name):
+    # only a workflow's owner is allowed to connect it
     if owner != request.user.profile.github_username:
         return HttpResponseNotAllowed()
 
     redis = RedisClient.get()
+    request.data['connected'] = True
     redis.set(f"workflows/{owner}/{name}", json.dumps(request.data))
-    workflow, created = Workflow.objects.get_or_create(user=request.user, repo_owner=owner, repo_name=name, public=False)
-    if created:
-        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
-            'type': 'update_workflow',
-            'workflow': map_workflow(workflow, request.user.profile.github_token)
-        })
+    Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, public=False)
+    logger.info(f"Connected repository {owner}/{name} as {request.data['config']['name']}")
+    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
-    if created:
-        logger.info(f"Connected repository {owner}/{name} as {request.data['config']['name']} for {request.user.username}")
-        return JsonResponse({'connected': True})
-    else:
-        logger.info(f"Repository {owner}/{name} already connected as {request.data['config']['name']} for {request.user.username}")
-        return JsonResponse({'connected': False})
+
+@api_view(['POST'])
+@login_required
+def toggle_public(request, owner, name):
+    # only a workflow's owner is allowed to connect it
+    if owner != request.user.profile.github_username:
+        return HttpResponseNotAllowed()
+
+    try:
+        workflow = Workflow.objects.get(user=request.user, repo_owner=owner, repo_name=name)
+    except:
+        return HttpResponseNotFound()
+
+    redis = RedisClient.get()
+    workflow.public = not workflow.public
+    workflow.save()
+    redis.set(f"workflows/{owner}/{name}", json.dumps(map_workflow(workflow, request.user.profile.github_token)))
+    logger.info(f"Repository {owner}/{name} is now {'public' if workflow.public else 'private'}")
+    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
 @api_view(['DELETE'])
@@ -147,7 +159,10 @@ def disconnect(request, owner, name):
         return HttpResponseNotFound()
 
     workflow.delete()
-
     redis = RedisClient.get()
-    redis.delete(f"workflows/{owner}/{name}")
-    return HttpResponse()
+    cached = json.loads(redis.get(f"workflows/{owner}/{name}"))
+    cached['public'] = False
+    cached['connected'] = False
+    redis.set(f"workflows/{owner}/{name}", json.dumps(cached))
+    logger.info(f"Disconnected repository {owner}/{name}")
+    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})

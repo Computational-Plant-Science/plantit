@@ -42,8 +42,8 @@
                                         undefined
                                 "
                                 variant="danger"
-                                >This workflow's configuration is invalid. It cannot
-                                be used in this state.
+                                >This workflow's configuration is invalid. It
+                                cannot be used in this state.
                                 <b-link
                                     :href="
                                         'https://github.com/' +
@@ -117,7 +117,10 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    <i class="fas fa-stream fa-fw"></i> {{
+                                                    <i
+                                                        class="fas fa-stream fa-fw"
+                                                    ></i>
+                                                    {{
                                                         getWorkflow.config.name
                                                     }}
                                                 </h2> </b-col
@@ -155,7 +158,9 @@
                                                 align-self="center"
                                                 md="auto"
                                                 ><b-button
-                                                    @click="disconnectWorkflow"
+                                                    @click="
+                                                        showDisconnectWorkflowModal
+                                                    "
                                                     size="sm"
                                                     variant="outline-danger"
                                                     ><i
@@ -167,7 +172,47 @@
                                         </b-row>
                                         <b-row class="mb-3">
                                             <b-col md="auto" class="mr-0 ml-0">
+                                                <div v-if="ownsWorkflow">
+                                                    <b-button
+                                                        size="sm"
+                                                        @click="togglePublic"
+                                                        :variant="
+                                                            getWorkflow.public
+                                                                ? 'success'
+                                                                : 'warning'
+                                                        "
+                                                    >
+                                                        <b-spinner
+                                                            small
+                                                            v-if="
+                                                                togglingPublic
+                                                            "
+                                                            label="Loading..."
+                                                            :variant="
+                                                                profile.darkMode
+                                                                    ? 'light'
+                                                                    : 'dark'
+                                                            "
+                                                            class="mr-1"
+                                                        ></b-spinner>
+                                                        <span
+                                                            v-if="
+                                                                getWorkflow.public
+                                                            "
+                                                            ><i
+                                                                class="fas fa-unlock fa-fw"
+                                                            ></i>
+                                                            Public</span
+                                                        ><span v-else
+                                                            ><i
+                                                                class="fas fa-lock fa-fw"
+                                                            ></i>
+                                                            Private</span
+                                                        ></b-button
+                                                    >
+                                                </div>
                                                 <b-badge
+                                                    v-else
                                                     class="mr-1"
                                                     :variant="
                                                         getWorkflow.public
@@ -758,7 +803,8 @@
                                                                         requests
                                                                         and can
                                                                         only be
-                                                                        submitted to
+                                                                        submitted
+                                                                        to
                                                                         agents
                                                                         configured
                                                                         for the
@@ -951,10 +997,10 @@
                                                                                     : 'text-dark'
                                                                             "
                                                                         >
-                                                                      {{
-                                                                        taskName
-                                                                      }}
-                                                                      <i
+                                                                            {{
+                                                                                taskName
+                                                                            }}
+                                                                            <i
                                                                                 v-if="
                                                                                     nameValid
                                                                                 "
@@ -1899,8 +1945,8 @@
                                                                         an agent
                                                                         to
                                                                         submit
-                                                                        this task
-                                                                        to.
+                                                                        this
+                                                                        task to.
                                                                     </b>
                                                                     <b-tabs
                                                                         class="mt-2"
@@ -2734,6 +2780,27 @@
                     required
                 ></b-form-input>
             </b-modal>
+            <b-modal
+                id="disconnect"
+                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+                centered
+                close
+                :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+                :title="`Disconnect ${this.getWorkflow.config.name}?`"
+                @ok="disconnectWorkflow"
+                ok-variant="danger"
+            >
+                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                    You {{ getWorkflow.public ? 'and others' : '' }} will no
+                    longer be able to run this workflow. You can always
+                    reconnect it later.
+                </p>
+            </b-modal>
         </b-container>
     </div>
 </template>
@@ -2748,6 +2815,7 @@ import Multiselect from 'vue-multiselect';
 import moment from 'moment';
 import cronstrue from 'cronstrue';
 import VueMarkdown from 'vue-markdown';
+import { guid } from '@/utils';
 
 String.prototype.capitalize = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
@@ -2770,6 +2838,7 @@ export default {
     },
     data: function() {
         return {
+            togglingPublic: false,
             selectedDataset: null,
             selectedDatasetLoading: false,
             activeTab: 0,
@@ -2933,19 +3002,51 @@ export default {
         // }
     },
     methods: {
-        // onNameChange() {
-        //     return axios
-        //         .get(
-        //             `/apis/v1/tasks/${this.profile.djangoProfile.username}/${this.taskName}/exists/`
-        //         )
-        //         .then(response => {
-        //             this.taskNameExists = response.exists;
-        //         })
-        //         .catch(error => {
-        //             Sentry.captureException(error);
-        //             throw error;
-        //         });
-        // },
+        async togglePublic() {
+            if (!this.ownsWorkflow) return;
+            this.togglingPublic = true;
+            await axios({
+                method: 'post',
+                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/public/`,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'workflows/setPersonal',
+                            response.data.workflows
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Made ${
+                                this.$router.currentRoute.params.owner
+                            }/${this.$router.currentRoute.params.name} ${
+                                response.data.workflows.find(wf => wf.config.name === this.getWorkflow.config.name).public ? 'public' : 'private'
+                            }`,
+                            guid: guid().toString()
+                        });
+                        this.togglingPublic = false;
+                    } else {
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to make ${
+                                this.$router.currentRoute.params.owner
+                            }/${this.$router.currentRoute.params.name} ${
+                                this.getWorkflow.public ? 'private' : 'public'
+                            }`,
+                            guid: guid().toString()
+                        });
+                        this.togglingPublic = false;
+                    }
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
+        showDisconnectWorkflowModal() {
+            this.$bvModal.show('disconnect');
+        },
         async loadSelectedDataset(path) {
             this.selectedDatasetLoading = true;
             return await axios
@@ -2984,12 +3085,24 @@ export default {
             })
                 .then(response => {
                     if (response.status === 200) {
-                        this.$store.dispatch('workflows/refreshPersonal');
+                        this.$store.dispatch(
+                            'workflows/setPersonal',
+                            response.data.workflows
+                        );
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Disconnected ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`,
+                            guid: guid().toString()
+                        });
                         router.push({
                             name: 'workflows'
                         });
                     } else {
-                        // this.showFailedToCancelAlert = true;
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to disconnect ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`,
+                            guid: guid().toString()
+                        });
                     }
                 })
                 .catch(error => {
@@ -3303,6 +3416,11 @@ export default {
                     });
         }
     },
+    watch: {
+        personalWorkflows: function() {
+            // noop
+        }
+    },
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', [
@@ -3311,7 +3429,12 @@ export default {
             'personalWorkflowsLoading',
             'recentlyRunWorkflows'
         ]),
-        ...mapGetters('tasks', ['tasks', 'tasksByOwner', 'task', 'tasksLoading']),
+        ...mapGetters('tasks', [
+            'tasks',
+            'tasksByOwner',
+            'task',
+            'tasksLoading'
+        ]),
         ...mapGetters('agents', [
             'publicAgentsLoading',
             'publicAgents',
@@ -3343,6 +3466,12 @@ export default {
         },
         getWorkflow() {
             return this.workflow(this.owner, this.name);
+        },
+        ownsWorkflow() {
+            return (
+                this.getWorkflow.repo.owner.login ===
+                this.profile.githubProfile.login
+            );
         },
         workflowLoading() {
             return this.publicWorkflowsLoading || this.personalWorkflowsLoading;
@@ -3390,7 +3519,8 @@ export default {
                     this.getWorkflow.config.input.path !== undefined &&
                     this.input.from !== '' &&
                     this.input.kind !== '' &&
-                    this.inputFiletypeSelected && this.selectedDataset !== null
+                    this.inputFiletypeSelected &&
+                    this.selectedDataset !== null
                 );
             return true;
         },
