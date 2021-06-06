@@ -112,7 +112,6 @@
                                     </b-input-group>
                                     <b-list-group class="text-left m-0 p-0">
                                         <b-list-group-item
-                                            variant="default"
                                             style="box-shadow: -2px 2px 2px #adb5bd"
                                             v-for="task in filteredRunning"
                                             v-bind:key="task.name"
@@ -312,7 +311,7 @@
                                     ></b-form-input> </b-input-group
                             ></b-col>
                         </b-row>
-                        <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
+                        <b-row class="mt-1 mb-1 pl-0 pr-0" align-v="center"
                             ><b-col
                                 v-if="
                                     !tasksLoading && tasksCompleted.length > 0

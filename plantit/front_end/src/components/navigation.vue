@@ -97,8 +97,7 @@
                                         v-if="
                                             task.workflow_image_url !==
                                                 undefined &&
-                                                task.workflow_image_url !==
-                                                    null
+                                                task.workflow_image_url !== null
                                         "
                                         rounded
                                         class="card-img-right"
@@ -143,8 +142,7 @@
                                     >
                                     <b-badge
                                         :variant="
-                                            task.is_failure ||
-                                            task.is_timeout
+                                            task.is_failure || task.is_timeout
                                                 ? 'danger'
                                                 : task.is_cancelled
                                                 ? 'secondary'
@@ -159,9 +157,7 @@
                                         variant="secondary"
                                         >{{ task.agent }}</b-badge
                                     ><small>
-                                        {{
-                                            prettify(task.updated)
-                                        }}</small
+                                        {{ prettify(task.updated) }}</small
                                     >
                                     <br />
                                     <small
@@ -206,10 +202,7 @@
 
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col
-                            v-if="
-                                !tasksLoading &&
-                                    tasksCompleted.length > 0
-                            "
+                            v-if="!tasksLoading && tasksCompleted.length > 0"
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <b-list-group class="text-left m-0 p-0">
@@ -237,9 +230,7 @@
                                                 class="card-img-right"
                                                 style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                 right
-                                                :src="
-                                                    task.workflow_image_url
-                                                "
+                                                :src="task.workflow_image_url"
                                             ></b-img>
                                             <b-link
                                                 :class="
@@ -263,10 +254,8 @@
                                         ><b-col>
                                             <div
                                                 v-if="
-                                                    task.tags !==
-                                                        undefined &&
-                                                        task.tags.length >
-                                                            0
+                                                    task.tags !== undefined &&
+                                                        task.tags.length > 0
                                                 "
                                             >
                                                 <b-badge
@@ -277,14 +266,10 @@
                                                     >{{ tag }}
                                                 </b-badge>
                                                 <br
-                                                    v-if="
-                                                        task.tags.length >
-                                                            0
-                                                    "
+                                                    v-if="task.tags.length > 0"
                                                 />
                                             </div>
-                                            <small
-                                                v-if="!task.is_complete"
+                                            <small v-if="!task.is_complete"
                                                 >Running</small
                                             >
                                             <b-badge
@@ -297,9 +282,7 @@
                                                         : 'success'
                                                 "
                                                 v-else
-                                                >{{
-                                                    task.job_status
-                                                }}</b-badge
+                                                >{{ task.job_status }}</b-badge
                                             >
                                             <small> on </small>
                                             <b-badge
@@ -328,9 +311,7 @@
                                                     ><i
                                                         class="fab fa-github fa-fw"
                                                     ></i>
-                                                    {{
-                                                        task.workflow_owner
-                                                    }}/{{
+                                                    {{ task.workflow_owner }}/{{
                                                         task.workflow_name
                                                     }}</a
                                                 >
@@ -344,9 +325,7 @@
                                                 v-b-tooltip.hover
                                                 title="Delete Run"
                                                 class="text-right"
-                                                @click="
-                                                    showDeletePrompt(task)
-                                                "
+                                                @click="showDeletePrompt(task)"
                                             >
                                                 <i class="fas fa-trash"></i>
                                                 Delete
@@ -354,7 +333,7 @@
                                         </b-col></b-row
                                     >
                                     <b-modal
-                                        :id="'delete ' + task.name"
+                                        :id="'remove ' + task.name"
                                         :title-class="
                                             profile.darkMode
                                                 ? 'text-white'
@@ -407,10 +386,7 @@
                             ></b-spinner
                         ></b-col>
                         <b-col
-                            v-if="
-                                !tasksLoading &&
-                                    tasksCompleted.length === 0
-                            "
+                            v-if="!tasksLoading && tasksCompleted.length === 0"
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <p
@@ -650,9 +626,7 @@
                                         : 'crumb-light'
                                 "
                             >
-                                Your Tasks ({{
-                                    tasksRunning.length
-                                }}
+                                Your Tasks ({{ tasksRunning.length }}
                                 in progress)
                             </h2>
                         </b-breadcrumb-item>
@@ -920,7 +894,8 @@
                 :variant="alert.variant"
                 dismissible
                 @dismissed="removeAlert(alert)"
-            ><b>{{ alert.message }}</b> {{ prettifyShort(alert.time) }}</b-alert
+                ><b>{{ alert.message }}</b>
+                {{ prettifyShort(alert.time) }}</b-alert
             >
         </div>
         <b-toast
@@ -945,18 +920,12 @@
             >
             <small>
                 <b v-if="!taskToasted.is_complete">Running</b>
-                <b class="ml-0 mr-0" v-else>{{
-                    taskToasted.job_status
-                }}</b>
+                <b class="ml-0 mr-0" v-else>{{ taskToasted.job_status }}</b>
                 on
                 <b>{{ taskToasted.agent }}</b>
                 {{ prettifyShort(taskToasted.updated) }}
                 <br />
-                {{
-                    taskToasted.task_logs[
-                        taskToasted.task_logs.length - 1
-                    ]
-                }}
+                {{ taskToasted.task_logs[taskToasted.task_logs.length - 1] }}
             </small>
         </b-toast>
     </div>
@@ -1014,24 +983,16 @@ export default {
             return this.tasksRunning.filter(
                 sub =>
                     (sub.workflow_name !== null &&
-                        sub.workflow_name.includes(
-                            this.taskSearchText
-                        )) ||
-                    sub.tags.some(tag =>
-                        tag.includes(this.taskSearchText)
-                    )
+                        sub.workflow_name.includes(this.taskSearchText)) ||
+                    sub.tags.some(tag => tag.includes(this.taskSearchText))
             );
         },
         filteredCompletedTasks() {
             return this.tasksCompleted.filter(
                 sub =>
                     (sub.workflow_name !== null &&
-                        sub.workflow_name.includes(
-                            this.taskSearchText
-                        )) ||
-                    sub.tags.some(tag =>
-                        tag.includes(this.taskSearchText)
-                    )
+                        sub.workflow_name.includes(this.taskSearchText)) ||
+                    sub.tags.some(tag => tag.includes(this.taskSearchText))
             );
         }
     },
@@ -1042,9 +1003,15 @@ export default {
             this.$store.dispatch('tasks/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
             this.$store.dispatch('workflows/loadPublic'),
-            this.$store.dispatch('workflows/loadPersonal', this.profile.githubProfile.login),
+            this.$store.dispatch(
+                'workflows/loadPersonal',
+                this.profile.githubProfile.login
+            ),
             this.$store.dispatch('agents/loadPublic'),
-            this.$store.dispatch('agents/loadPersonal', this.profile.djangoProfile.username),
+            this.$store.dispatch(
+                'agents/loadPersonal',
+                this.profile.djangoProfile.username
+            ),
             this.$store.dispatch('datasets/loadPublic'),
             this.$store.dispatch('datasets/loadPersonal'),
             this.$store.dispatch('datasets/loadShared'),
@@ -1127,9 +1094,7 @@ export default {
         },
         removeTask(task) {
             axios
-                .get(
-                    `/apis/v1/tasks/${task.owner}/${task.name}/delete/`
-                )
+                .get(`/apis/v1/tasks/${task.owner}/${task.name}/delete/`)
                 .then(response => {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
@@ -1137,8 +1102,7 @@ export default {
                         this.$store.dispatch('tasks/loadAll');
                         if (
                             this.$router.currentRoute.name === 'task' &&
-                            task.name ===
-                                this.$router.currentRoute.params.name
+                            task.name === this.$router.currentRoute.params.name
                         )
                             router.push({
                                 name: 'user',
@@ -1157,7 +1121,7 @@ export default {
                 });
         },
         showDeletePrompt(task) {
-            this.$bvModal.show('delete ' + task.name);
+            this.$bvModal.show('remove ' + task.name);
         },
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');
