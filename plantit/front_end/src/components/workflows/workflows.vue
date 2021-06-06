@@ -745,7 +745,8 @@ export default {
                         this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Connected ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
+                            time: moment().format()
                         });
                         this.workflowToConnect = null;
                         this.connectingWorkflow = false;
@@ -755,7 +756,8 @@ export default {
                         this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: message,
-                            guid: guid().toString()
+                            guid: guid().toString(),
+                            time: moment().format()
                         });
                         this.$bvModal.hide('connectWorkflow');
                         this.workflowToConnect = null;

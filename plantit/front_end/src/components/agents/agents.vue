@@ -683,7 +683,8 @@ export default {
                     this.$store.dispatch('alerts/add', {
                         variant: 'success',
                         message: `Added agent ${response.data.agent.name}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
+                        time: moment().format()
                     });
                     this.resetAgentInfo();
                     this.addingAgent = false;
@@ -693,7 +694,8 @@ export default {
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to add agent ${this.agentName}`,
-                        guid: guid().toString()
+                        guid: guid().toString(),
+                        time: moment().format()
                     });
                     this.addingAgent = false;
                     // TODO probably an auth error: display info and allow user to edit info and retry connection

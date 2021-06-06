@@ -920,7 +920,7 @@
                 :variant="alert.variant"
                 dismissible
                 @dismissed="removeAlert(alert)"
-                >{{ alert.message }}</b-alert
+            ><b>{{ alert.message }}</b> {{ prettifyShort(alert.time) }}</b-alert
             >
         </div>
         <b-toast

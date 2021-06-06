@@ -72,6 +72,9 @@ export const agents = {
                     throw error;
                 });
         },
+        async setPersonal({ commit }, agents) {
+            commit('setPersonal', agents);
+        },
         async load({ commit }, name) {
             commit('setPersonalLoading', true);
             commit('setPublicLoading', true);

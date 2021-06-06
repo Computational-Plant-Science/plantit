@@ -81,7 +81,7 @@
                         ><b-spinner
                             type="grow"
                             label="Loading..."
-                            variant="success"
+                            variant="secondary"
                         ></b-spinner
                     ></b-col>
                 </b-row>
@@ -125,16 +125,23 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    <i class="fas fa-robot fa-fw"></i> {{ getAgent.name }}
+                                                    <i
+                                                        class="fas fa-robot fa-fw"
+                                                    ></i>
+                                                    {{ getAgent.name }}
                                                 </h2>
                                                 <b-badge
-                                                    v-if="getAgent.role === 'guest'"
+                                                    v-if="
+                                                        getAgent.role ===
+                                                            'guest'
+                                                    "
                                                     variant="warning"
                                                     >Guest</b-badge
                                                 >
                                                 <b-badge
                                                     v-else-if="
-                                                        getAgent.role === 'admin'
+                                                        getAgent.role ===
+                                                            'admin'
                                                     "
                                                     variant="success"
                                                     >Owner</b-badge
@@ -163,7 +170,9 @@
                                                     </b-col>
                                                     <b-col cols="9">
                                                         <b class="ml-3">
-                                                            {{ getAgent.executor }}
+                                                            {{
+                                                                getAgent.executor
+                                                            }}
                                                         </b>
                                                     </b-col>
                                                 </b-row>
@@ -176,7 +185,9 @@
                                                     </b-col>
                                                     <b-col cols="9">
                                                         <b class="ml-3">
-                                                            {{ getAgent.workdir }}
+                                                            {{
+                                                                getAgent.workdir
+                                                            }}
                                                         </b>
                                                     </b-col>
                                                 </b-row>
@@ -209,7 +220,9 @@
                                                 <b>{{ getAgent.max_cores }}</b>
                                                 <small> cores</small>
                                                 <br />
-                                                <b>{{ getAgent.max_processes }}</b>
+                                                <b>{{
+                                                    getAgent.max_processes
+                                                }}</b>
                                                 <small> processes</small>
                                                 <br />
                                                 <span
@@ -266,7 +279,7 @@
                                         <hr />
                                         <b-row>
                                             <b-col
-                                                v-if="getAgent.role === 'admin'"
+                                                v-if="ownsAgent"
                                                 class="mr-0"
                                                 md="auto"
                                                 align-self="end"
@@ -339,7 +352,8 @@
                                                     v-b-tooltip.hover
                                                     title="Check Connection Status"
                                                     :disabled="
-                                                        getAgent.role === 'none' ||
+                                                        getAgent.role ===
+                                                            'none' ||
                                                             statusChecking
                                                     "
                                                     @click="checkStatus"
@@ -423,7 +437,11 @@
                             </div>
                         </b-card>
                         <br />
-                        <div v-if="getAgent.policies && getAgent.role === 'admin'">
+                        <div
+                            v-if="
+                                getAgent.policies && getAgent.role === 'admin'
+                            "
+                        >
                             <b-row no-gutters>
                                 <b-col align-self="end"
                                     ><h5
@@ -703,7 +721,7 @@
                 </b-form-group>
             </b-form>
         </b-modal>
-        <b-modal
+        <!--<b-modal
             id="authenticate"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
@@ -729,7 +747,7 @@
                 placeholder="Your password"
                 required
             ></b-form-input>
-        </b-modal>
+        </b-modal>-->
     </div>
 </template>
 
@@ -740,6 +758,7 @@ import { mapGetters } from 'vuex';
 import moment from 'moment';
 import VueCronEditorBuefy from 'vue-cron-editor-buefy';
 import parser from 'cron-parser';
+import { guid } from '@/utils';
 
 export default {
     name: 'agent',
@@ -760,13 +779,27 @@ export default {
                 once: '',
                 time: ''
             },
-            sessionSocket: null
+            sessionSocket: null,
+            togglingPublic: false
         };
     },
     computed: {
         ...mapGetters('user', ['profile']),
         ...mapGetters('workflows', ['recentlyRunWorkflows']),
-        ...mapGetters('agents', ['agent', 'personalAgentsLoading', 'publicAgentsLoading']),
+        ...mapGetters('agents', [
+            'agent',
+            'personalAgentsLoading',
+            'publicAgentsLoading'
+        ]),
+        agentLoading() {
+            return this.publicAgentsLoading || this.personalAgentsLoading;
+        },
+        ownsAgent() {
+            return (
+                this.getAgent.user !== undefined &&
+                this.getAgent.user === this.profile.djangoProfile.username
+            );
+        },
         getAgent() {
             return this.agent(this.$router.currentRoute.params.name);
         },
@@ -794,38 +827,8 @@ export default {
         }
     },
     methods: {
-        tryOpenDataset() {
-            if (this.mustAuthenticate) this.showAuthenticateModal();
-            else this.openDataset();
-        },
-        showAuthenticateModal() {
-            this.$bvModal.show('authenticate');
-        },
-        // openDataset() {
-        //     this.$store.dispatch('updateSessionLoading', true);
-        //     let data = { getAgent: this.getAgent.name };
-        //     if (this.mustAuthenticate)
-        //         data['auth'] = {
-        //             username: this.authenticationUsername,
-        //             password: this.authenticationPassword
-        //         };
-
-        //     axios({
-        //         method: 'post',
-        //         url: `/apis/v1/datasets/open/`,
-        //         data: data,
-        //         headers: { 'Content-Type': 'application/json' }
-        //     })
-        //         .then(async response => {
-        //             await this.$store.dispatch(
-        //                 'updateDatasetSession',
-        //                 response.data.session
-        //             );
-        //         })
-        //         .catch(error => {
-        //             Sentry.captureException(error);
-        //             throw error;
-        //         });
+        // showAuthenticateModal() {
+        //     this.$bvModal.show('authenticate');
         // },
         revokeAccess(user) {
             axios
@@ -890,25 +893,50 @@ export default {
                     }
                 });
         },
-        togglePublic() {
-            axios
-                .get(
-                    `/apis/v1/agents/toggle_public/?name=${this.$route.params.name}`
-                )
-                .then(response => {
-                    this.getAgent.public = response.data.public;
-                    this.alertMessage = `${this.$route.params.name} is now ${
-                        this.getAgent.public ? 'public' : 'private'
-                    }`;
-                    this.alertEnabled = true;
+        async togglePublic() {
+            if (!this.ownsAgent) return;
+            this.togglingPublic = true;
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/public/`,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'agents/setPersonal',
+                            response.data.agents
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Made ${
+                                this.$router.currentRoute.params.name
+                            } ${
+                                response.data.agents.find(
+                                    agent => agent.name === this.getAgent.name
+                                ).public
+                                    ? 'public'
+                                    : 'private'
+                            }`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                        this.togglingPublic = false;
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to make ${
+                                this.$router.currentRoute.params.name
+                            } ${this.getAgent.public ? 'private' : 'public'}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                        this.togglingPublic = false;
+                    }
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    if (error.response.status === 500) {
-                        this.alertMessage = `Failed to toggle ${this.$route.params.name} visibility`;
-                        this.alertEnabled = true;
-                        throw error;
-                    }
+                    throw error;
                 });
         },
         cronTime(task) {
@@ -996,25 +1024,35 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        prettifyDuration: function(dur) {
-            moment.relativeTimeThreshold('m', 1);
-            return moment.duration(dur, 'seconds').humanize(true);
-        },
-        checkStatus: function() {
+        async checkStatus() {
             this.statusChecking = true;
-            return axios
-                .get(`/apis/v1/agents/status/?name=${this.$route.params.name}`)
-                .then(response => {
-                    this.alertMessage = response.data.healthy
-                        ? `Connection to ${this.getAgent.name} succeeded`
-                        : `Failed to connect to ${this.getAgent.name}`;
-                    this.alertEnabled = true;
+            await axios
+                .get(`/apis/v1/agents/${this.$route.params.name}/health/`)
+                .then(async response => {
+                    if (response.status === 200 && response.data.healthy)
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Connection to ${this.getAgent.name} succeeded`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                    else
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to connect to ${this.getAgent.name}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
                     this.statusChecking = false;
                 })
-                .catch(error => {
+                .catch(async error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to connect to ${this.getAgent.name}`;
-                    this.alertEnabled = true;
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to connect to ${this.getAgent.name}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
                     this.statusChecking = false;
                     throw error;
                 });

@@ -261,32 +261,12 @@ def toggle_public(request, name):
     agent.public = not agent.public
     agent.save()
 
-    return JsonResponse({'public': agent.public})
-
-
-@api_view(['POST'])
-@login_required
-def toggle_public(request, owner, name):
-    # only a workflow's owner is allowed to connect it
-    if owner != request.user.profile.github_username:
-        return HttpResponseForbidden()
-
-    try:
-        workflow = Workflow.objects.get(user=request.user, repo_owner=owner, repo_name=name)
-    except:
-        return HttpResponseNotFound()
-
-    redis = RedisClient.get()
-    workflow.public = not workflow.public
-    workflow.save()
-    redis.set(f"workflows/{owner}/{name}", json.dumps(map_workflow(workflow, request.user.profile.github_token)))
-    logger.info(f"Repository {owner}/{name} is now {'public' if workflow.public else 'private'}")
-    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
+    return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})
 
 
 @api_view(['GET'])
 @login_required
-def get_status(request, name):
+def healthcheck(request, name):
     try:
         agent = Agent.objects.get(name=name)
     except:
@@ -308,7 +288,7 @@ def get_status(request, name):
 
 @api_view(['GET'])
 @login_required
-def get_users(request, name):
+def get_access_policies(request, name):
     try:
         agent = Agent.objects.get(name=name)
     except:

@@ -3034,7 +3034,8 @@ export default {
                                     ? 'public'
                                     : 'private'
                             }`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
+                            time: moment().format()
                         });
                         this.togglingPublic = false;
                     } else {
@@ -3045,7 +3046,8 @@ export default {
                             }/${this.$router.currentRoute.params.name} ${
                                 this.getWorkflow.public ? 'private' : 'public'
                             }`,
-                            guid: guid().toString()
+                            guid: guid().toString(),
+                            time: moment().format()
                         });
                         this.togglingPublic = false;
                     }
