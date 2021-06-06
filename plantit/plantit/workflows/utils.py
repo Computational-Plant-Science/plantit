@@ -1,10 +1,10 @@
 import json
 import logging
+from datetime import datetime
 from os.path import join
 from typing import List
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 
@@ -105,7 +105,7 @@ def map_old_workflow_config_to_new(old: dict, run: Task, resources: dict) -> dic
     return new_config
 
 
-def map_workflow(workflow: Workflow, token: str) -> dict:
+def bind_workflow(workflow: Workflow, token: str) -> dict:
     repo = get_repo(
         workflow.repo_owner,
         workflow.repo_name,
@@ -119,47 +119,20 @@ def map_workflow(workflow: Workflow, token: str) -> dict:
     }
 
 
-def populate_workflow_cache(owner: str, workflows: List[dict]):
-    redis = RedisClient.get()
-    for workflow in workflows:
-        redis.set(f"workflows/{owner}/{workflow['repo']['name']}", json.dumps(workflow))
-        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
-            'type': 'update_workflow',
-            'workflow': workflow
-        })
-
-    redis.set(f"workflows_updated/{owner}", timezone.now().timestamp())
-
-
-def clean_workflow_cache(owner: str):
-    redis = RedisClient.get()
-    deleted = 0
-    keys = list(redis.scan_iter(match=f"workflows/{owner}/*"))
-    for key in keys:
-        repo = json.loads(redis.get(key))
-        deleted += 1
-        redis.delete(key)
-        async_to_sync(get_channel_layer().group_send)(f"workflows-{owner}", {
-            'type': 'remove_workflow',
-            'workflow': repo
-        })
-
-    return len(keys)
-
-
-def rescan_personal_workflows(owner: str):
+def repopulate_personal_workflow_cache(owner: str):
     try:
         user = User.objects.get(profile__github_username=owner)
     except:
         logger.warning(f"User {owner} does not exist")
         return
 
-    cleaned = clean_workflow_cache(owner)
+    cleaned = empty_personal_workflow_cache(owner)
     logger.info(f"Cleaned {cleaned} stale workflow(s) from {owner}'s cache ")
 
+    # TODO config gets pulled twice for connected workflows, fix that
     both = []
     connectable = list_connectable_repos_by_owner(owner, user.profile.github_token)
-    connected = [map_workflow(workflow, user.profile.github_token) for workflow in list(Workflow.objects.filter(user=user))]
+    connected = [bind_workflow(workflow, user.profile.github_token) for workflow in list(Workflow.objects.filter(user=user))]
 
     for able in connectable:
         if not any(['name' in ed['config'] and 'name' in able['config'] and ed['config']['name'] == able['config']['name'] for ed in connected]):
@@ -179,12 +152,13 @@ def rescan_personal_workflows(owner: str):
             }
         both.append(ed)
 
-    populate_workflow_cache(owner, both)
-    logger.info(
-        f"Found {len(connected)} connected workflow(s), {len(connectable) - len(connected)} connectable, wrote {len(both)} to {owner}'s cache" + "" if missing == 0 else f"({missing} with missing configuration files)")
+    redis = RedisClient.get()
+    for workflow in both: redis.set(f"workflows/{owner}/{workflow['repo']['name']}", json.dumps(workflow))
+    redis.set(f"workflows_updated/{owner}", timezone.now().timestamp())
+    logger.info(f"{owner}'s workflow scan found {len(connected)} connected, {len(connectable) - len(connected)} connectable, wrote {len(both)} total to cache" + "" if missing == 0 else f"({missing} with missing configuration files)")
 
 
-def rescan_public_workflows(token: str):
+def repopulate_public_workflow_cache(token: str):
     redis = RedisClient.get()
     public = Workflow.objects.filter(public=True)
     private = Workflow.objects.filter(public=False)
@@ -199,5 +173,78 @@ def rescan_public_workflows(token: str):
         repo['public'] = False
         redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
 
-    logger.info(f"Refreshed public workflows ({len(public)})")
+    logger.info(f"Public workflow scan found and wrote {len(public)} to cache")
     redis.set(f"public_workflows_updated", timezone.now().timestamp())
+
+
+def empty_personal_workflow_cache(owner: str):
+    redis = RedisClient.get()
+    keys = list(redis.scan_iter(match=f"workflows/{owner}/*"))
+    cleaned = len(keys)
+    for key in keys:
+        redis.delete(key)
+
+    logger.info(f"Emptied {cleaned} workflows from GitHub user {owner}'s cache")
+    return len(keys)
+
+
+def get_public_workflows(token: str, invalidate: bool = False) -> List[dict]:
+    redis = RedisClient.get()
+    updated = redis.get('public_workflows_updated')
+
+    # scan if the cache is empty or if invalidation is requested
+    if updated is None or len(list(redis.scan_iter(match=f"workflows/*"))) == 0 or invalidate:
+        repopulate_public_workflow_cache(token)
+    else:
+        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+        age_secs = age.total_seconds()
+        max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
+
+        # otherwise only scan if the cache is stale
+        if age_secs > max_secs:
+            logger.info(f"Public workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), refreshing")
+            repopulate_public_workflow_cache(token)
+
+    workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')]
+    return [workflow for workflow in workflows if workflow['public']]
+
+
+def get_personal_workflows(owner: str, invalidate: bool = False) -> List[dict]:
+    redis = RedisClient.get()
+    updated = redis.get(f"workflows_updated/{owner}")
+
+    # scan if the cache is empty or if invalidation is requested
+    if updated is None or len(list(redis.scan_iter(match=f"workflows/{owner}/*"))) == 0 or invalidate:
+        repopulate_personal_workflow_cache(owner)
+    else:
+        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+        age_secs = age.total_seconds()
+        max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
+
+        # otherwise only scan if the cache is stale
+        if age_secs > max_secs:
+            logger.info(f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), refreshing")
+            repopulate_personal_workflow_cache(owner)
+
+    return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
+
+
+def get_workflow(owner: str, name: str, token: str, invalidate: bool = False) -> dict:
+    redis = RedisClient.get()
+    updated = redis.get(f"workflows_updated/{owner}")
+    workflow = redis.get(f"workflows/{owner}/{name}")
+
+    if updated is None or workflow is None or invalidate:
+        try:
+            workflow = Workflow.objects.get(repo_owner=owner, repo_name=name)
+        except:
+            logger.warning(f"Workflow {owner}/{name} not found")
+            return
+
+        workflow = bind_workflow(workflow, token)
+        redis.set(f"workflows/{owner}/{name}", json.dumps(workflow))
+        # repopulate_personal_workflow_cache(owner)
+
+    # workflow = redis.get(f"workflows/{owner}/{name}")
+    # return None if workflow is None else json.loads(workflow)
+    return workflow

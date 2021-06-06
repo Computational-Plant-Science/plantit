@@ -125,6 +125,70 @@
                                                     }}
                                                 </h2> </b-col
                                             ><b-col
+                                                md="auto"
+                                                align-self="center"
+                                                class="m-0"
+                                                ><b-button
+                                                    v-if="ownsWorkflow"
+                                                    size="sm"
+                                                    @click="togglePublic"
+                                                    :variant="
+                                                        getWorkflow.public
+                                                            ? 'success'
+                                                            : 'warning'
+                                                    "
+                                                >
+                                                    <b-spinner
+                                                        small
+                                                        v-if="togglingPublic"
+                                                        label="Loading..."
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'light'
+                                                                : 'dark'
+                                                        "
+                                                        class="mr-1"
+                                                    ></b-spinner>
+                                                    <span
+                                                        v-if="
+                                                            getWorkflow.public
+                                                        "
+                                                        ><i
+                                                            class="fas fa-unlock fa-fw"
+                                                        ></i>
+                                                        Public</span
+                                                    ><span v-else
+                                                        ><i
+                                                            class="fas fa-lock fa-fw"
+                                                        ></i>
+                                                        Private</span
+                                                    ></b-button
+                                                >
+                                                <b-badge
+                                                    v-else
+                                                    class="mr-1"
+                                                    :variant="
+                                                        getWorkflow.public
+                                                            ? 'success'
+                                                            : 'warning'
+                                                    "
+                                                    ><span
+                                                        v-if="
+                                                            getWorkflow.public
+                                                        "
+                                                        ><i
+                                                            class="fas fa-unlock fa-fw"
+                                                        ></i>
+                                                        Public</span
+                                                    ><span v-else
+                                                        ><i
+                                                            class="fas fa-lock fa-fw"
+                                                        ></i>
+                                                        Private</span
+                                                    ></b-badge
+                                                ></b-col
+                                            >
+                                            <b-col
                                                 class="m-0"
                                                 align-self="center"
                                                 md="auto"
@@ -170,70 +234,9 @@
                                                 ></b-col
                                             >
                                         </b-row>
-                                        <b-row class="mb-3">
+                                        <b-row>
                                             <b-col md="auto" class="mr-0 ml-0">
-                                                <div v-if="ownsWorkflow">
-                                                    <b-button
-                                                        size="sm"
-                                                        @click="togglePublic"
-                                                        :variant="
-                                                            getWorkflow.public
-                                                                ? 'success'
-                                                                : 'warning'
-                                                        "
-                                                    >
-                                                        <b-spinner
-                                                            small
-                                                            v-if="
-                                                                togglingPublic
-                                                            "
-                                                            label="Loading..."
-                                                            :variant="
-                                                                profile.darkMode
-                                                                    ? 'light'
-                                                                    : 'dark'
-                                                            "
-                                                            class="mr-1"
-                                                        ></b-spinner>
-                                                        <span
-                                                            v-if="
-                                                                getWorkflow.public
-                                                            "
-                                                            ><i
-                                                                class="fas fa-unlock fa-fw"
-                                                            ></i>
-                                                            Public</span
-                                                        ><span v-else
-                                                            ><i
-                                                                class="fas fa-lock fa-fw"
-                                                            ></i>
-                                                            Private</span
-                                                        ></b-button
-                                                    >
-                                                </div>
                                                 <b-badge
-                                                    v-else
-                                                    class="mr-1"
-                                                    :variant="
-                                                        getWorkflow.public
-                                                            ? 'success'
-                                                            : 'warning'
-                                                    "
-                                                    ><span
-                                                        v-if="
-                                                            getWorkflow.public
-                                                        "
-                                                        ><i
-                                                            class="fas fa-unlock fa-fw"
-                                                        ></i>
-                                                        Public</span
-                                                    ><span v-else
-                                                        ><i
-                                                            class="fas fa-lock fa-fw"
-                                                        ></i>
-                                                        Private</span
-                                                    ></b-badge
-                                                ><b-badge
                                                     v-for="topic in getWorkflow
                                                         .repo.topics"
                                                     v-bind:key="topic"
@@ -242,6 +245,8 @@
                                                     >{{ topic }}</b-badge
                                                 >
                                             </b-col>
+                                        </b-row>
+                                        <b-row class="mb-1">
                                             <b-col md="auto" class="mr-0 ml-0">
                                                 <small>
                                                     <b-link
@@ -3021,13 +3026,19 @@ export default {
                             message: `Made ${
                                 this.$router.currentRoute.params.owner
                             }/${this.$router.currentRoute.params.name} ${
-                                response.data.workflows.find(wf => wf.config.name === this.getWorkflow.config.name).public ? 'public' : 'private'
+                                response.data.workflows.find(
+                                    wf =>
+                                        wf.config.name ===
+                                        this.getWorkflow.config.name
+                                ).public
+                                    ? 'public'
+                                    : 'private'
                             }`,
                             guid: guid().toString()
                         });
                         this.togglingPublic = false;
                     } else {
-                        this.$store.dispatch('alerts/add', {
+                        await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Failed to make ${
                                 this.$router.currentRoute.params.owner

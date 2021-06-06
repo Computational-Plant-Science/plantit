@@ -30,7 +30,7 @@ from plantit.terrain import list_dir
 from plantit.sns import SnsClient
 from plantit.github import get_repo
 from plantit.workflows.models import Workflow
-from plantit.workflows.utils import rescan_personal_workflows, rescan_public_workflows
+from plantit.workflows.utils import repopulate_personal_workflow_cache, repopulate_public_workflow_cache
 
 logger = get_task_logger(__name__)
 
@@ -560,9 +560,9 @@ def aggregate_user_statistics(username: str):
 
 @app.task()
 def refresh_personal_workflows(owner: str):
-    rescan_personal_workflows(owner)
+    repopulate_personal_workflow_cache(owner)
 
 
 @app.task()
 def refresh_all_workflows(token: str):
-    rescan_public_workflows(token)
+    repopulate_public_workflow_cache(token)

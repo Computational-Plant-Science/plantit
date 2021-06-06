@@ -250,18 +250,38 @@ def revoke_access(request, name):
 @api_view(['POST'])
 @login_required
 def toggle_public(request, name):
-    if name is None:
-        return HttpResponseNotFound()
-
     try:
         agent = Agent.objects.get(name=name)
     except:
         return HttpResponseNotFound()
 
+    if agent.user is not None and agent.user.username != request.user.username:
+        return HttpResponseForbidden()
+
     agent.public = not agent.public
     agent.save()
 
     return JsonResponse({'public': agent.public})
+
+
+@api_view(['POST'])
+@login_required
+def toggle_public(request, owner, name):
+    # only a workflow's owner is allowed to connect it
+    if owner != request.user.profile.github_username:
+        return HttpResponseForbidden()
+
+    try:
+        workflow = Workflow.objects.get(user=request.user, repo_owner=owner, repo_name=name)
+    except:
+        return HttpResponseNotFound()
+
+    redis = RedisClient.get()
+    workflow.public = not workflow.public
+    workflow.save()
+    redis.set(f"workflows/{owner}/{name}", json.dumps(map_workflow(workflow, request.user.profile.github_token)))
+    logger.info(f"Repository {owner}/{name} is now {'public' if workflow.public else 'private'}")
+    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
 @api_view(['GET'])

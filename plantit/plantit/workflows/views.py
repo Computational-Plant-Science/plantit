@@ -1,20 +1,15 @@
 import json
 import logging
-from datetime import datetime
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponseNotAllowed, HttpResponse
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
 from rest_framework.decorators import api_view
 
-from plantit.github import get_repo_readme, get_repo, list_connectable_repos_by_owner
+from plantit.github import get_repo_readme, get_repo
 from plantit.redis import RedisClient
-from plantit.celery_tasks import refresh_all_workflows, refresh_personal_workflows
 from plantit.users.models import Profile
 from plantit.workflows.models import Workflow
-from plantit.workflows.utils import map_workflow, rescan_public_workflows, rescan_personal_workflows
+from plantit.workflows.utils import bind_workflow, get_personal_workflows, get_public_workflows, get_workflow
 
 logger = logging.getLogger(__name__)
 
@@ -22,27 +17,8 @@ logger = logging.getLogger(__name__)
 @api_view(['GET'])
 @login_required
 def list_public(request):
-    redis = RedisClient.get()
-
-    debounce = request.GET.get('debounce', None)
-    if debounce is None or debounce == 'True':  # only invalidate and refresh the cache if it's old
-        updated = redis.get('public_workflows_updated')
-        if updated is None:
-            # refresh_all_workflows.delay(token=request.user.profile.github_token)
-            rescan_public_workflows(request.user.profile.github_token)
-        else:
-            age = (datetime.now() - datetime.fromtimestamp(float(updated)))
-            if age.total_seconds() > (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60):
-                logger.info(f"Public workflow cache age is {age}, refreshing")
-                # refresh_all_workflows.delay(token=request.user.profile.github_token)
-                rescan_public_workflows(request.user.profile.github_token)
-            else:
-                logger.info(f"Public workflow cache age is {age}, still fresh")
-    else:  # force inval/refresh
-        rescan_public_workflows(request.user.profile.github_token)
-
-    workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')]
-    workflows = [workflow for workflow in workflows if workflow['public']]
+    invalidate = request.GET.get('invalidate', False)
+    workflows = get_public_workflows(token=request.user.profile.github_token, invalidate=bool(invalidate))
     return JsonResponse({'workflows': workflows})
 
 
@@ -55,33 +31,17 @@ def list_personal(request, owner):
         except:
             return HttpResponseNotFound()
 
-    redis = RedisClient.get()
-
-    debounce = request.GET.get('debounce', None)
-    if debounce is None or debounce == 'True':  # only invalidate and refresh the cache if it's stale
-        updated = redis.get(f"workflows_updated/{owner}")
-        if updated is None:
-            # refresh_personal_workflows.delay(owner=owner)
-            rescan_personal_workflows(owner)
-        else:
-            age = (datetime.now() - datetime.fromtimestamp(float(updated)))
-            if age.total_seconds() > (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60):
-                logger.info(f"{owner}'s workflow cache age is {age}, refreshing")
-                rescan_personal_workflows(owner)
-            else:
-                logger.info(f"{owner}'s workflow cache age is {age}, still fresh")
-    else:  # force inval/refresh
-        rescan_personal_workflows(owner)
-
-    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
+    invalidate = request.GET.get('invalidate', False)
+    workflows = get_personal_workflows(owner=owner, invalidate=bool(invalidate))
+    return JsonResponse({'workflows': workflows})
 
 
 @api_view(['GET'])
 @login_required
 def get(request, owner, name):
-    redis = RedisClient.get()
-    workflow = redis.get(f"workflows/{owner}/{name}")
-    return HttpResponseNotFound() if workflow is None else JsonResponse(json.loads(workflow))
+    invalidate = request.GET.get('invalidate', False)
+    workflow = get_workflow(owner=owner, name=name, token=request.user.profile.github_token, invalidate=bool(invalidate))
+    return HttpResponseNotFound() if workflow is None else JsonResponse(workflow)
 
 
 @api_view(['GET'])
@@ -100,10 +60,10 @@ def refresh(request, owner, name):
         return HttpResponseNotFound()
 
     redis = RedisClient.get()
-    repo = get_repo(workflow.repo_owner, workflow.repo_name, request.user.profile.github_token)
-    repo['public'] = workflow.public
-    redis.set(f"workflows/{owner}/{name}", json.dumps(repo))
-    return JsonResponse(repo)
+    workflow = bind_workflow(workflow, request.user.profile.github_token)
+    redis.set(f"workflows/{owner}/{name}", json.dumps(workflow))
+    logger.info(f"Refreshed workflow {owner}/{name}")
+    return JsonResponse(workflow)
 
 
 @api_view(['GET'])
@@ -115,24 +75,22 @@ def readme(request, owner, name):
 @api_view(['POST'])
 @login_required
 def connect(request, owner, name):
-    # only a workflow's owner is allowed to connect it
     if owner != request.user.profile.github_username:
-        return HttpResponseNotAllowed()
+        return HttpResponseForbidden()
 
     redis = RedisClient.get()
     request.data['connected'] = True
     redis.set(f"workflows/{owner}/{name}", json.dumps(request.data))
     Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, public=False)
-    logger.info(f"Connected repository {owner}/{name} as {request.data['config']['name']}")
+    logger.info(f"Connected workflow {owner}/{name} as {request.data['config']['name']}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
 @api_view(['POST'])
 @login_required
 def toggle_public(request, owner, name):
-    # only a workflow's owner is allowed to connect it
     if owner != request.user.profile.github_username:
-        return HttpResponseNotAllowed()
+        return HttpResponseForbidden()
 
     try:
         workflow = Workflow.objects.get(user=request.user, repo_owner=owner, repo_name=name)
@@ -142,8 +100,8 @@ def toggle_public(request, owner, name):
     redis = RedisClient.get()
     workflow.public = not workflow.public
     workflow.save()
-    redis.set(f"workflows/{owner}/{name}", json.dumps(map_workflow(workflow, request.user.profile.github_token)))
-    logger.info(f"Repository {owner}/{name} is now {'public' if workflow.public else 'private'}")
+    redis.set(f"workflows/{owner}/{name}", json.dumps(bind_workflow(workflow, request.user.profile.github_token)))
+    logger.info(f"Workflow {owner}/{name} is now {'public' if workflow.public else 'private'}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
@@ -151,7 +109,7 @@ def toggle_public(request, owner, name):
 @login_required
 def disconnect(request, owner, name):
     if owner != request.user.profile.github_username:
-        return HttpResponseNotAllowed()
+        return HttpResponseForbidden()
 
     try:
         workflow = Workflow.objects.get(user=request.user, repo_owner=owner, repo_name=name)
@@ -164,5 +122,5 @@ def disconnect(request, owner, name):
     cached['public'] = False
     cached['connected'] = False
     redis.set(f"workflows/{owner}/{name}", json.dumps(cached))
-    logger.info(f"Disconnected repository {owner}/{name}")
+    logger.info(f"Disconnected workflow {owner}/{name}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})

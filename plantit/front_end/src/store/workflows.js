@@ -9,7 +9,7 @@ export const workflows = {
         publicLoading: true,
         personal: [],
         personalLoading: true,
-        recentlyRun: {},
+        recentlyRun: {}
     }),
     mutations: {
         setPublic(state, workflows) {
@@ -48,10 +48,14 @@ export const workflows = {
             else Vue.set(state.personal, j, workflow);
         },
         remove(state, owner, name) {
-            let i = state.public.findIndex(wf => wf.repo.owner.login === owner && wf.repo.name === name);
+            let i = state.public.findIndex(
+                wf => wf.repo.owner.login === owner && wf.repo.name === name
+            );
             if (i > -1) state.public.splice(i, 1);
 
-            let j = state.personal.findIndex(wf => wf.repo.owner.login === owner && wf.repo.name === name);
+            let j = state.personal.findIndex(
+                wf => wf.repo.owner.login === owner && wf.repo.name === name
+            );
             if (j > -1) state.personal.splice(j, 1);
         }
     },
@@ -90,7 +94,7 @@ export const workflows = {
         async refreshPublic({ commit }) {
             commit('setPublicLoading', true);
             await axios
-                .get('/apis/v1/workflows/?debounce=False')
+                .get('/apis/v1/workflows/?invalidate=True')
                 .then(response => {
                     commit('setPublic', response.data.workflows);
                     commit('setPublicLoading', false);
@@ -104,7 +108,7 @@ export const workflows = {
         async refreshPersonal({ commit }, owner) {
             commit('setPersonalLoading', true);
             await axios
-                .get(`/apis/v1/workflows/${owner}/?debounce=False`)
+                .get(`/apis/v1/workflows/${owner}/?invalidate=True`)
                 .then(response => {
                     commit('setPersonal', response.data.workflows);
                     commit('setPersonalLoading', false);
@@ -166,7 +170,7 @@ export const workflows = {
         addOrUpdate({ commit }, workflow) {
             commit('addOrUpdate', workflow);
         },
-        disconnect({commit}, workflow) {
+        disconnect({ commit }, workflow) {
             workflow.connected = false;
             commit('addOrUpdate', workflow);
         },
@@ -193,8 +197,17 @@ export const workflows = {
         },
         publicWorkflows: state => state.public,
         publicWorkflowsLoading: state => state.publicLoading,
-        connectedWorkflows: state => state.personal.filter(repo => repo.connected),
-        connectableWorkflows: state => state.personal.filter(repo => !repo.connected),
+        connectedWorkflows: state =>
+            state.personal.filter(repo => repo.connected),
+        connectableWorkflows: state =>
+            state.personal
+                .filter(repo => !repo.connected)
+                .sort(function(l, r) {
+                    if (l.validation['is_valid'] && r.validation['is_valid'])
+                        return 0;
+                    else if (l.validation['is_valid']) return -1;
+                    else return 1;
+                }),
         personalWorkflowsLoading: state => state.personalLoading,
         recentlyRunWorkflows: state => state.recentlyRun
     }
