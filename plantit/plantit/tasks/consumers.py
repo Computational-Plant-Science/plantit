@@ -20,5 +20,5 @@ class TaskConsumer(WebsocketConsumer):
 
     def task_event(self, event):
         task = event['task']
-        self.logger.info(f"Sending websocket update for task {task['name']} with status {task['status']}")
+        self.logger.info(f"Sending websocket update for task {task['name']} (status {task['status']})")
         self.send(text_data=json.dumps({'task': task}))

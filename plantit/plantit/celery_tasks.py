@@ -264,12 +264,13 @@ def cleanup_task(guid: str):
     logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
     ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
     with ssh:
-        execute_command(
-            ssh_client=ssh,
-            pre_command=task.agent.pre_commands,
-            command=f"rm -r {join(task.agent.workdir, task.workdir)}",
-            directory=task.agent.workdir,
-            allow_stderr=True)
+        for line in execute_command(
+                ssh_client=ssh,
+                pre_command=task.agent.pre_commands,
+                command=f"rm -r {join(task.agent.workdir, task.workdir)}",
+                directory=task.agent.workdir,
+                allow_stderr=True):
+            logger.info(line)
 
     task.cleaned_up = True
     task.save()
@@ -426,12 +427,13 @@ def clean_agent_singularity_cache(agent_name: str):
 
     ssh = SSH(agent.hostname, agent.port, agent.username)
     with ssh:
-        execute_command(
-            ssh_client=ssh,
-            pre_command=agent.pre_commands,
-            command="singularity cache clean",
-            directory=agent.workdir,
-            allow_stderr=True)
+        for line in execute_command(
+                ssh_client=ssh,
+                pre_command=agent.pre_commands,
+                command="singularity cache clean",
+                directory=agent.workdir,
+                allow_stderr=True):
+            logger.info(line)
 
 
 @app.task()
@@ -444,12 +446,13 @@ def execute_agent_command(agent_name: str, command: str, pre_command: str = None
 
     ssh = SSH(agent.hostname, agent.port, agent.username)
     with ssh:
-        lines = execute_command(
-            ssh_client=ssh,
-            pre_command=agent.pre_commands + '' if pre_command is None else f"&& {pre_command}",
-            command=command,
-            directory=agent.workdir,
-            allow_stderr=True)
+        for line in execute_command(
+                ssh_client=ssh,
+                pre_command=agent.pre_commands + '' if pre_command is None else f"&& {pre_command}",
+                command=command,
+                directory=agent.workdir,
+                allow_stderr=True):
+            logger.info(line)
 
 
 @app.task()
@@ -463,24 +466,25 @@ def open_dataset_session(guid: str):
             update_dataset_session(session, [f"Creating working directory {session.workdir}"])
             logger.info(msg)
 
-            execute_command(
-                ssh_client=ssh,
-                pre_command=':',
-                command=f"mkdir {session.guid}/",
-                directory=session.agent.workdir)
+            for line in execute_command(
+                    ssh_client=ssh,
+                    pre_command=':',
+                    command=f"mkdir {session.guid}/",
+                    directory=session.agent.workdir):
+                logger.info(line)
 
             msg = f"Transferring files from {session.path} to {session.agent.name}"
             update_dataset_session(session, [msg])
             logger.info(msg)
 
             command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_access_token}\n"
-            lines = execute_command(
-                ssh_client=ssh,
-                pre_command=session.agent.pre_commands,
-                command=command,
-                directory=session.workdir,
-                allow_stderr=True)
-            update_dataset_session(session, lines)
+            for line in execute_command(
+                    ssh_client=ssh,
+                    pre_command=session.agent.pre_commands,
+                    command=command,
+                    directory=session.workdir,
+                    allow_stderr=True):
+                update_dataset_session(session, [line])
 
             session.opening = False
             session.save()
@@ -512,13 +516,13 @@ def save_dataset_session(guid: str, only_modified: bool):
             for file in session.modified:
                 command += f" --include_name {file}"
 
-            lines = execute_command(
-                ssh_client=ssh,
-                pre_command=session.agent.pre_commands,
-                command=command,
-                directory=session.workdir,
-                allow_stderr=True)
-            update_dataset_session(session, lines)
+            for line in execute_command(
+                    ssh_client=ssh,
+                    pre_command=session.agent.pre_commands,
+                    command=command,
+                    directory=session.workdir,
+                    allow_stderr=True):
+                update_dataset_session(session, [line])
     except:
         msg = f"Failed to open session: {traceback.format_exc()}."
         logger.error(msg)
@@ -560,8 +564,8 @@ def aggregate_user_statistics(username: str):
 
 
 @app.task()
-def refresh_personal_workflows(username: str):
-    repopulate_personal_workflow_cache(username)
+def refresh_personal_workflows(owner: str):
+    repopulate_personal_workflow_cache(owner)
 
 
 @app.task()

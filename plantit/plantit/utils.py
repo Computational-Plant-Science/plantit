@@ -1,7 +1,7 @@
 import re
 from random import choice
 
-from plantit.options import BindMount
+from plantit.popos import BindMount
 
 
 def parse_bind_mount(workdir: str, bind_mount: str) -> BindMount:

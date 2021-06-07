@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, consumers
+from . import views
 
 urlpatterns = [
     path(r'', views.list_public),
@@ -12,8 +12,4 @@ urlpatterns = [
     path(r'<owner>/<name>/public/', views.toggle_public),
     path(r'<owner>/<name>/connect/', views.connect),
     path(r'<owner>/<name>/disconnect/', views.disconnect),
-]
-
-websocket_urlpatterns = [
-    path(r'ws/workflows/<owner>/', consumers.WorkflowConsumer.as_asgi())
 ]

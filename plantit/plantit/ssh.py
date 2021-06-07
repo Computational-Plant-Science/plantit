@@ -1,9 +1,12 @@
+import logging
 from typing import List
 
 import paramiko
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from plantit.utils import clean_html
+
+logger = logging.getLogger(__name__)
 
 
 class SSH:
@@ -13,6 +16,7 @@ class SSH:
         self.port = port
         self.username = username
         self.password = password
+        self.logger = logging.getLogger(__name__)
 
     def __enter__(self):
         client = paramiko.SSHClient()
@@ -40,22 +44,25 @@ def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: 
     output = []
     errors = []
 
-    print(f"Executing command on '{ssh_client.host}': {full_command}")
+    logger.info(f"Executing command on '{ssh_client.host}': {full_command}")
     stdin, stdout, stderr = ssh_client.client.exec_command(full_command, get_pty=True)
     stdin.close()
 
     for line in iter(lambda: stdout.readline(2048), ""):
         clean = clean_html(line)
-        output.append(clean)
-        print(f"Received stdout from '{ssh_client.host}': '{clean}'")
+        logger.info(f"Received stdout from '{ssh_client.host}': '{clean}'")
+        yield clean
+
     for line in iter(lambda: stderr.readline(2048), ""):
         clean = clean_html(line)
-        if 'WARNING' not in clean:  # Dask occasionally returns messages like 'distributed.worker - WARNING - Heartbeat to scheduler failed'
-            errors.append(clean)
-            print(f"Received stderr from '{ssh_client.host}': '{clean}'")
+
+        # Dask occasionally returns messages like 'distributed.worker - WARNING - Heartbeat to scheduler failed'
+        if 'WARNING' not in clean: errors.append(clean)
+
+        logger.warning(f"Received stderr from '{ssh_client.host}': '{clean}'")
+        yield clean
+
     if stdout.channel.recv_exit_status() != 0:
         raise Exception(f"Received non-zero exit status from '{ssh_client.host}'")
     elif not allow_stderr and len(errors) > 0:
         raise Exception(f"Received stderr: {errors}")
-
-    return output

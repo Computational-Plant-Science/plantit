@@ -66,7 +66,7 @@
                             >Connect</b-button
                         ></b-col
                     >
-                    <b-col md="auto" class="ml-0" align-self="center"
+                    <b-col md="auto" class="ml-0" align-self="center" v-if="!publicContext"
                         ><b-button
                             :disabled="workflowsLoading"
                             :variant="

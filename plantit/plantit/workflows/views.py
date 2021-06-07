@@ -1,6 +1,7 @@
 import json
 import logging
 
+from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
 from rest_framework.decorators import api_view
@@ -13,18 +14,22 @@ from plantit.workflows.utils import bind_workflow, get_personal_workflows, get_p
 
 logger = logging.getLogger(__name__)
 
+# TODO: when this (https://code.djangoproject.com/ticket/31949) gets merged, remove the sync_to_async/async_to_sync hack
 
-@api_view(['GET'])
+
+@sync_to_async
 @login_required
-def list_public(request):
+@async_to_sync
+async def list_public(request):
     invalidate = request.GET.get('invalidate', False)
-    workflows = get_public_workflows(token=request.user.profile.github_token, invalidate=bool(invalidate))
+    workflows = await get_public_workflows(invalidate=bool(invalidate))
     return JsonResponse({'workflows': workflows})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
-def list_personal(request, owner):
+@async_to_sync
+async def list_personal(request, owner):
     if owner != request.user.profile.github_username:
         try:
             Profile.objects.get(github_username=owner)
@@ -32,48 +37,54 @@ def list_personal(request, owner):
             return HttpResponseNotFound()
 
     invalidate = request.GET.get('invalidate', False)
-    workflows = get_personal_workflows(owner=owner, invalidate=bool(invalidate))
+    workflows = await get_personal_workflows(owner=owner, invalidate=bool(invalidate))
     return JsonResponse({'workflows': workflows})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
-def get(request, owner, name):
+@async_to_sync
+async def get(request, owner, name):
     invalidate = request.GET.get('invalidate', False)
-    workflow = get_workflow(owner=owner, name=name, token=request.user.profile.github_token, invalidate=bool(invalidate))
+    workflow = await get_workflow(owner=owner, name=name, token=request.user.profile.github_token, invalidate=bool(invalidate))
     return HttpResponseNotFound() if workflow is None else JsonResponse(workflow)
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
-def search(request, owner, name):
-    repo = get_repo(owner, name, request.user.profile.github_token)
+@async_to_sync
+async def search(request, owner, name):
+    repo = await get_repo(owner, name, request.user.profile.github_token)
     return HttpResponseNotFound() if repo is None else JsonResponse(repo)
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
-def refresh(request, owner, name):
+@async_to_sync
+async def refresh(request, owner, name):
     try:
         workflow = Workflow.objects.get(repo_owner=owner, repo_name=name)
     except:
         return HttpResponseNotFound()
 
     redis = RedisClient.get()
-    workflow = bind_workflow(workflow, request.user.profile.github_token)
-    redis.set(f"workflows/{owner}/{name}", json.dumps(workflow))
+    bound = await bind_workflow(workflow, request.user.profile.github_token)
+    redis.set(f"workflows/{owner}/{name}", json.dumps(bound))
     logger.info(f"Refreshed workflow {owner}/{name}")
-    return JsonResponse(workflow)
+    return JsonResponse(bound)
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def readme(request, owner, name):
-    return JsonResponse({'readme': get_repo_readme(name, owner, request.user.profile.github_token)})
+    rm = get_repo_readme(name, owner, request.user.profile.github_token)
+    return JsonResponse({'readme': rm})
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def connect(request, owner, name):
     if owner != request.user.profile.github_username:
         return HttpResponseForbidden()
@@ -86,9 +97,10 @@ def connect(request, owner, name):
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
-def toggle_public(request, owner, name):
+@async_to_sync
+async def toggle_public(request, owner, name):
     if owner != request.user.profile.github_username:
         return HttpResponseForbidden()
 
@@ -100,13 +112,15 @@ def toggle_public(request, owner, name):
     redis = RedisClient.get()
     workflow.public = not workflow.public
     workflow.save()
-    redis.set(f"workflows/{owner}/{name}", json.dumps(bind_workflow(workflow, request.user.profile.github_token)))
+    bound = await bind_workflow(workflow, request.user.profile.github_token)
+    redis.set(f"workflows/{owner}/{name}", json.dumps(bound))
     logger.info(f"Workflow {owner}/{name} is now {'public' if workflow.public else 'private'}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
-@api_view(['DELETE'])
+@sync_to_async
 @login_required
+@async_to_sync
 def disconnect(request, owner, name):
     if owner != request.user.profile.github_username:
         return HttpResponseForbidden()

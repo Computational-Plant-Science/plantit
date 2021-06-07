@@ -4,12 +4,10 @@ from django.urls import path
 from rest_framework import routers
 
 from .auth.views import login_view, logout_view
-from .datasets.consumers import DatasetSessionConsumer
 from .miappe.views import *
 from .notifications.consumers import NotificationConsumer
 from .tasks.consumers import TaskConsumer
 from .users.views import UsersViewSet, IDPViewSet
-from .workflows.consumers import WorkflowConsumer
 
 router = routers.DefaultRouter()
 router.register('users', UsersViewSet)
@@ -39,8 +37,6 @@ urlpatterns = [
               ] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
 websocket_urlpatterns = [
-    path(r'ws/workflows/<owner>/', WorkflowConsumer.as_asgi()),
     path(r'ws/tasks/<username>/', TaskConsumer.as_asgi()),
     path(r'ws/notifications/<username>/', NotificationConsumer.as_asgi()),
-    path(r'ws/sessions/<guid>/', DatasetSessionConsumer.as_asgi())
 ]

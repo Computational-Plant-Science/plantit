@@ -1,16 +1,17 @@
 from itertools import chain
 
+from asgiref.sync import sync_to_async, async_to_sync
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, JsonResponse
-from rest_framework.decorators import api_view
 
 from plantit.notifications.models import TargetPolicyNotification, DirectoryPolicyNotification
 from plantit.notifications.utils import map_notification
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_by_user(request, owner):
     params = request.query_params
     page = params.get('page') if 'page' in params else 0
@@ -29,15 +30,17 @@ def get_by_user(request, owner):
     return JsonResponse({'notifications': [map_notification(n) for n in notifications]})
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def mark_many_read(request, owner):
     # TODO
     pass
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def mark_read(request, owner):
     user = request.user
     guid = request.data['notification']['id']

@@ -311,7 +311,7 @@
                                                         : 'theme-light m-0 p-3'
                                                 "
                                             >
-                                                <b-row>
+                                                <b-row class="mb-3">
                                                     <b-col>
                                                         <h5
                                                             :class="
@@ -322,609 +322,590 @@
                                                         >
                                                             Description
                                                         </h5>
-                                                        <b-row>
-                                                            <b-col>
-                                                                {{
-                                                                    getWorkflow
-                                                                        .repo
-                                                                        .description
-                                                                }}
-                                                            </b-col>
-                                                        </b-row>
-                                                        <hr
-                                                            class="mt-2 mb-2"
-                                                            style="border-color: gray"
-                                                        />
-                                                        <div
-                                                            v-if="
-                                                                getWorkflow
-                                                                    .config
-                                                                    .author !==
-                                                                    undefined &&
-                                                                    getWorkflow
-                                                                        .config
-                                                                        .author !==
-                                                                        null
+                                                        {{
+                                                            getWorkflow.repo
+                                                                .description
+                                                        }}
+                                                    </b-col>
+                                                </b-row>
+                                                <b-row
+                                                    class="mb-3"
+                                                    v-if="
+                                                        getWorkflow.config
+                                                            .author !==
+                                                            undefined &&
+                                                            getWorkflow.config
+                                                                .author !== null
+                                                    "
+                                                >
+                                                    <b-col>
+                                                        <h5
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'text-light'
+                                                                    : 'text-dark'
                                                             "
                                                         >
-                                                            <h5
-                                                                :class="
-                                                                    profile.darkMode
-                                                                        ? 'text-light'
-                                                                        : 'text-dark'
-                                                                "
-                                                            >
-                                                                Author(s)
-                                                            </h5>
-                                                            <b-row>
-                                                                <b-col>
-                                                                    <b-row
-                                                                        v-if="
-                                                                            getWorkflow
-                                                                                .config
-                                                                                .author !==
-                                                                                undefined
-                                                                        "
-                                                                    >
-                                                                        <b-col>
-                                                                            <span
-                                                                                v-if="
-                                                                                    typeof getWorkflow
-                                                                                        .config
-                                                                                        .author ===
-                                                                                        'string' ||
-                                                                                        (Array.isArray(
-                                                                                            getWorkflow
-                                                                                                .config
-                                                                                                .author
-                                                                                        ) &&
-                                                                                            getWorkflow
-                                                                                                .config
-                                                                                                .author
-                                                                                                .length ===
-                                                                                                1)
-                                                                                "
-                                                                                :class="
+                                                            Author(s)
+                                                        </h5>
+                                                        <b-row>
+                                                            <b-col>
+                                                                <b-row
+                                                                    v-if="
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .author !==
+                                                                            undefined
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <span
+                                                                            v-if="
+                                                                                typeof getWorkflow
+                                                                                    .config
+                                                                                    .author ===
+                                                                                    'string' ||
+                                                                                    (Array.isArray(
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .author
+                                                                                    ) &&
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .author
+                                                                                            .length ===
+                                                                                            1)
+                                                                            "
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-light'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                            >{{
+                                                                                getWorkflow
+                                                                                    .config
+                                                                                    .author
+                                                                            }}</span
+                                                                        >
+                                                                        <b-list-group
+                                                                            v-else
+                                                                        >
+                                                                            <b-list-group-item
+                                                                                :variant="
                                                                                     profile.darkMode
-                                                                                        ? 'text-light'
-                                                                                        : 'text-dark'
+                                                                                        ? 'dark'
+                                                                                        : 'light'
+                                                                                "
+                                                                                v-for="author in getWorkflow
+                                                                                    .config
+                                                                                    .author"
+                                                                                v-bind:key="
+                                                                                    author
                                                                                 "
                                                                                 >{{
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .author
-                                                                                }}</span
+                                                                                    author
+                                                                                }}</b-list-group-item
                                                                             >
-                                                                            <b-list-group
-                                                                                v-else
-                                                                            >
-                                                                                <b-list-group-item
-                                                                                    :variant="
-                                                                                        profile.darkMode
-                                                                                            ? 'dark'
-                                                                                            : 'light'
-                                                                                    "
-                                                                                    v-for="author in getWorkflow
-                                                                                        .config
-                                                                                        .author"
-                                                                                    v-bind:key="
-                                                                                        author
+                                                                        </b-list-group>
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </b-col>
+                                                        </b-row>
+                                                    </b-col>
+                                                </b-row>
+                                                <b-row
+                                                    class="mb-3"
+                                                    v-if="
+                                                        getWorkflow.config
+                                                            .doi !==
+                                                            undefined &&
+                                                            getWorkflow.config
+                                                                .doi !== null
+                                                    "
+                                                    ><b-col>
+                                                        <br />
+                                                        <h5
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'text-light'
+                                                                    : 'text-dark'
+                                                            "
+                                                        >
+                                                            Publications/DOIs
+                                                        </h5>
+                                                        <b-row>
+                                                            <b-col>
+                                                                <b-row
+                                                                    v-if="
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .doi !==
+                                                                            undefined
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <b-link
+                                                                            v-if="
+                                                                                typeof getWorkflow
+                                                                                    .config
+                                                                                    .doi ===
+                                                                                    'string' ||
+                                                                                    (Array.isArray(
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .doi
+                                                                                    ) &&
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .doi
+                                                                                            .length ===
+                                                                                            1)
+                                                                            "
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-light'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                            :href="
+                                                                                `https://doi.org/${getWorkflow.config.doi}`
+                                                                            "
+                                                                            >{{
+                                                                                getWorkflow
+                                                                                    .config
+                                                                                    .doi
+                                                                            }}</b-link
+                                                                        >
+                                                                        <b-list-group
+                                                                            v-else
+                                                                        >
+                                                                            <b-list-group-item
+                                                                                :variant="
+                                                                                    profile.darkMode
+                                                                                        ? 'dark'
+                                                                                        : 'light'
+                                                                                "
+                                                                                v-for="doi in getWorkflow
+                                                                                    .config
+                                                                                    .doi"
+                                                                                v-bind:key="
+                                                                                    doi
+                                                                                "
+                                                                                ><b-link
+                                                                                    class="
+                                                        text-dark
+                                                    "
+                                                                                    :href="
+                                                                                        `https://doi.org/${doi}`
                                                                                     "
                                                                                     >{{
-                                                                                        author
-                                                                                    }}</b-list-group-item
-                                                                                >
-                                                                            </b-list-group>
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                </b-col>
-                                                            </b-row>
-                                                        </div>
-                                                        <div
-                                                            v-if="
-                                                                getWorkflow
-                                                                    .config
-                                                                    .doi !==
-                                                                    undefined &&
-                                                                    getWorkflow
+                                                                                        doi
+                                                                                    }}</b-link
+                                                                                ></b-list-group-item
+                                                                            >
+                                                                        </b-list-group>
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </b-col>
+                                                        </b-row>
+                                                    </b-col>
+                                                </b-row>
+                                                <b-row class="mb-3">
+                                                    <b-col>
+                                                        <h5
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'text-light'
+                                                                    : 'text-dark'
+                                                            "
+                                                        >
+                                                            Configuration
+                                                        </h5>
+                                                        <b-row>
+                                                            <b-col>
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <small
+                                                                            >Image</small
+                                                                        >
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        cols="10"
+                                                                    >
+                                                                        <b>{{
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .image
+                                                                        }}</b>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <small
+                                                                            >GPU</small
+                                                                        >
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        cols="10"
+                                                                    >
+                                                                        {{
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .gpu
+                                                                                ? 'Yes'
+                                                                                : 'No'
+                                                                        }}
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <small
+                                                                            >Mount</small
+                                                                        >
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        cols="10"
+                                                                    >
+                                                                        {{
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .mount
+                                                                                ? getWorkflow
+                                                                                      .config
+                                                                                      .mount
+                                                                                : 'None'
+                                                                        }}
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <small
+                                                                            >Parameters</small
+                                                                        >
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        cols="10"
+                                                                    >
+                                                                        <b>{{
+                                                                            getWorkflow
+                                                                                .config
+                                                                                .params
+                                                                                ? getWorkflow
+                                                                                      .config
+                                                                                      .params
+                                                                                      .length
+                                                                                : 'None'
+                                                                        }}</b>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <small
+                                                                            >Command</small
+                                                                        >
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        cols="10"
+                                                                    >
+                                                                        <b
+                                                                            ><code
+                                                                                >{{
+                                                                                    ' ' +
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .commands
+                                                                                }}</code
+                                                                            ></b
+                                                                        >
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    v-if="
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .input !==
+                                                                            undefined
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <small
+                                                                            >Input</small
+                                                                        >
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        cols="10"
+                                                                    >
+                                                                        <b
+                                                                            ><code
+                                                                                >[working
+                                                                                directory]/input/{{
+                                                                                    getWorkflow
+                                                                                        .config
+                                                                                        .input
+                                                                                        .filetypes
+                                                                                        ? '[' +
+                                                                                          (getWorkflow
+                                                                                              .config
+                                                                                              .input
+                                                                                              .filetypes
+                                                                                              ? '*.' +
+                                                                                                getWorkflow.config.input.filetypes.join(
+                                                                                                    ', *.'
+                                                                                                )
+                                                                                              : []) +
+                                                                                          ']'
+                                                                                        : ''
+                                                                                }}</code
+                                                                            ></b
+                                                                        >
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    v-if="
+                                                                        getWorkflow
+                                                                            .config
+                                                                            .output !==
+                                                                            undefined
+                                                                    "
+                                                                >
+                                                                    <b-col>
+                                                                        <small
+                                                                            >Output</small
+                                                                        >
+                                                                    </b-col>
+                                                                    <b-col
+                                                                        cols="10"
+                                                                    >
+                                                                        <b
+                                                                            ><code
+                                                                                >[working
+                                                                                directory]/{{
+                                                                                    getWorkflow
+                                                                                        .config
+                                                                                        .output
+                                                                                        .path
+                                                                                        ? getWorkflow
+                                                                                              .config
+                                                                                              .output
+                                                                                              .path +
+                                                                                          '/'
+                                                                                        : ''
+                                                                                }}{{
+                                                                                    getWorkflow
+                                                                                        .config
+                                                                                        .output
+                                                                                        .include
+                                                                                        ? '[' +
+                                                                                          (getWorkflow
+                                                                                              .config
+                                                                                              .output
+                                                                                              .exclude
+                                                                                              ? '+ '
+                                                                                              : '') +
+                                                                                          (getWorkflow
+                                                                                              .config
+                                                                                              .output
+                                                                                              .include
+                                                                                              .patterns
+                                                                                              ? '*.' +
+                                                                                                getWorkflow.config.output.include.patterns.join(
+                                                                                                    ', *.'
+                                                                                                )
+                                                                                              : []) +
+                                                                                          (getWorkflow
+                                                                                              .config
+                                                                                              .output
+                                                                                              .include
+                                                                                              .names
+                                                                                              ? ', ' +
+                                                                                                getWorkflow.config.output.include.names.join(
+                                                                                                    ', '
+                                                                                                )
+                                                                                              : [])
+                                                                                        : ''
+                                                                                }}{{
+                                                                                    getWorkflow
+                                                                                        .config
+                                                                                        .output
+                                                                                        .exclude
+                                                                                        ? ' - ' +
+                                                                                          (getWorkflow
+                                                                                              .config
+                                                                                              .output
+                                                                                              .exclude
+                                                                                              .patterns
+                                                                                              ? '*.' +
+                                                                                                getWorkflow.config.output.exclude.patterns.join(
+                                                                                                    ', *.'
+                                                                                                )
+                                                                                              : []) +
+                                                                                          (getWorkflow
+                                                                                              .config
+                                                                                              .output
+                                                                                              .exclude
+                                                                                              .names
+                                                                                              ? ', ' +
+                                                                                                getWorkflow.config.output.exclude.names.join(
+                                                                                                    ', '
+                                                                                                )
+                                                                                              : [])
+                                                                                        : '' +
+                                                                                          ']'
+                                                                                }}
+                                                                            </code></b
+                                                                        >
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </b-col>
+                                                        </b-row>
+                                                    </b-col>
+                                                </b-row>
+                                                <b-row class="mb-3">
+                                                    <b-col>
+                                                        <h5
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'text-light'
+                                                                    : 'text-dark'
+                                                            "
+                                                        >
+                                                            Resource Requests
+                                                        </h5>
+                                                        <b-row>
+                                                            <b-col
+                                                                align-self="end"
+                                                                md="auto"
+                                                                class="text-right"
+                                                                v-if="
+                                                                    !getWorkflow
                                                                         .config
-                                                                        .doi !==
-                                                                        null
+                                                                        .resources
+                                                                "
+                                                            >
+                                                                <b-alert
+                                                                    show
+                                                                    variant="warning"
+                                                                    >This
+                                                                    workflow
+                                                                    does not
+                                                                    specify
+                                                                    resource
+                                                                    requests and
+                                                                    can only be
+                                                                    submitted to
+                                                                    agents
+                                                                    configured
+                                                                    for the
+                                                                    <b>Local</b>
+                                                                    executor.</b-alert
+                                                                >
+                                                            </b-col>
+                                                            <b-col
+                                                                align-self="end"
+                                                                class="text-left"
+                                                                v-else
+                                                            >
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <b
+                                                                            ><code
+                                                                                >{{
+                                                                                    ' ' +
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .resources
+                                                                                            .time
+                                                                                }}</code
+                                                                            ></b
+                                                                        >
+                                                                        <small>
+                                                                            time</small
+                                                                        >
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <b
+                                                                            ><code
+                                                                                >{{
+                                                                                    ' ' +
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .resources
+                                                                                            .mem
+                                                                                }}</code
+                                                                            ></b
+                                                                        >
+                                                                        <small>
+                                                                            memory</small
+                                                                        >
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <b
+                                                                            ><code
+                                                                                >{{
+                                                                                    ' ' +
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .resources
+                                                                                            .processes
+                                                                                }}</code
+                                                                            ></b
+                                                                        >
+                                                                        <small>
+                                                                            process(es)</small
+                                                                        >
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <b
+                                                                            ><code
+                                                                                >{{
+                                                                                    ' ' +
+                                                                                        getWorkflow
+                                                                                            .config
+                                                                                            .resources
+                                                                                            .cores
+                                                                                }}</code
+                                                                            ></b
+                                                                        >
+                                                                        <small>
+                                                                            core(s)</small
+                                                                        >
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </b-col>
+                                                        </b-row>
+                                                    </b-col>
+                                                </b-row>
+                                                <b-row
+                                                    class="mb-3"
+                                                    v-if="
+                                                        getWorkflow.readme !==
+                                                            undefined &&
+                                                            getWorkflow.readme !==
+                                                                null
+                                                    "
+                                                    ><b-col>
+                                                        <div
+                                                            :class="
+                                                                profile.darkMode
+                                                                    ? 'theme-container-get_readme m-0 p-3'
+                                                                    : 'theme-container-light m-0 p-3'
                                                             "
                                                         >
                                                             <br />
-                                                            <h5
-                                                                :class="
-                                                                    profile.darkMode
-                                                                        ? 'text-light'
-                                                                        : 'text-dark'
-                                                                "
-                                                            >
-                                                                Publications/DOIs
-                                                            </h5>
-                                                            <b-row>
-                                                                <b-col>
-                                                                    <b-row
-                                                                        v-if="
-                                                                            getWorkflow
-                                                                                .config
-                                                                                .doi !==
-                                                                                undefined
-                                                                        "
-                                                                    >
-                                                                        <b-col>
-                                                                            <b-link
-                                                                                v-if="
-                                                                                    typeof getWorkflow
-                                                                                        .config
-                                                                                        .doi ===
-                                                                                        'string' ||
-                                                                                        (Array.isArray(
-                                                                                            getWorkflow
-                                                                                                .config
-                                                                                                .doi
-                                                                                        ) &&
-                                                                                            getWorkflow
-                                                                                                .config
-                                                                                                .doi
-                                                                                                .length ===
-                                                                                                1)
-                                                                                "
-                                                                                :class="
-                                                                                    profile.darkMode
-                                                                                        ? 'text-light'
-                                                                                        : 'text-dark'
-                                                                                "
-                                                                                :href="
-                                                                                    `https://doi.org/${getWorkflow.config.doi}`
-                                                                                "
-                                                                                >{{
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .doi
-                                                                                }}</b-link
-                                                                            >
-                                                                            <b-list-group
-                                                                                v-else
-                                                                            >
-                                                                                <b-list-group-item
-                                                                                    :variant="
-                                                                                        profile.darkMode
-                                                                                            ? 'dark'
-                                                                                            : 'light'
-                                                                                    "
-                                                                                    v-for="doi in getWorkflow
-                                                                                        .config
-                                                                                        .doi"
-                                                                                    v-bind:key="
-                                                                                        doi
-                                                                                    "
-                                                                                    ><b-link
-                                                                                        class="
-                                                        text-dark
-                                                    "
-                                                                                        :href="
-                                                                                            `https://doi.org/${doi}`
-                                                                                        "
-                                                                                        >{{
-                                                                                            doi
-                                                                                        }}</b-link
-                                                                                    ></b-list-group-item
-                                                                                >
-                                                                            </b-list-group>
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                </b-col>
-                                                            </b-row>
-                                                        </div>
-                                                        <hr
-                                                            class="mt-2 mb-2"
-                                                            style="border-color: gray"
-                                                        />
-                                                        <div>
-                                                            <h5
-                                                                :class="
-                                                                    profile.darkMode
-                                                                        ? 'text-light'
-                                                                        : 'text-dark'
-                                                                "
-                                                            >
-                                                                Configuration
-                                                            </h5>
-                                                            <b-row>
-                                                                <b-col>
-                                                                    <b-row>
-                                                                        <b-col>
-                                                                            <small
-                                                                                >Image</small
-                                                                            >
-                                                                        </b-col>
-                                                                        <b-col
-                                                                            cols="10"
-                                                                        >
-                                                                            <b
-                                                                                >{{
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .image
-                                                                                }}</b
-                                                                            >
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                    <b-row>
-                                                                        <b-col>
-                                                                            <small
-                                                                                >GPU</small
-                                                                            >
-                                                                        </b-col>
-                                                                        <b-col
-                                                                            cols="10"
-                                                                        >
-                                                                            {{
-                                                                                getWorkflow
-                                                                                    .config
-                                                                                    .gpu
-                                                                                    ? 'Yes'
-                                                                                    : 'No'
-                                                                            }}
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                    <b-row>
-                                                                        <b-col>
-                                                                            <small
-                                                                                >Mount</small
-                                                                            >
-                                                                        </b-col>
-                                                                        <b-col
-                                                                            cols="10"
-                                                                        >
-                                                                            {{
-                                                                                getWorkflow
-                                                                                    .config
-                                                                                    .mount
-                                                                                    ? getWorkflow
-                                                                                          .config
-                                                                                          .mount
-                                                                                    : 'None'
-                                                                            }}
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                    <b-row>
-                                                                        <b-col>
-                                                                            <small
-                                                                                >Parameters</small
-                                                                            >
-                                                                        </b-col>
-                                                                        <b-col
-                                                                            cols="10"
-                                                                        >
-                                                                            <b
-                                                                                >{{
-                                                                                    getWorkflow
-                                                                                        .config
-                                                                                        .params
-                                                                                        ? getWorkflow
-                                                                                              .config
-                                                                                              .params
-                                                                                              .length
-                                                                                        : 'None'
-                                                                                }}</b
-                                                                            >
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                    <b-row>
-                                                                        <b-col>
-                                                                            <small
-                                                                                >Command</small
-                                                                            >
-                                                                        </b-col>
-                                                                        <b-col
-                                                                            cols="10"
-                                                                        >
-                                                                            <b
-                                                                                ><code
-                                                                                    >{{
-                                                                                        ' ' +
-                                                                                            getWorkflow
-                                                                                                .config
-                                                                                                .commands
-                                                                                    }}</code
-                                                                                ></b
-                                                                            >
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                    <b-row
-                                                                        v-if="
-                                                                            getWorkflow
-                                                                                .config
-                                                                                .input !==
-                                                                                undefined
-                                                                        "
-                                                                    >
-                                                                        <b-col>
-                                                                            <small
-                                                                                >Input</small
-                                                                            >
-                                                                        </b-col>
-                                                                        <b-col
-                                                                            cols="10"
-                                                                        >
-                                                                            <b
-                                                                                ><code
-                                                                                    >[working
-                                                                                    directory]/input/{{
-                                                                                        getWorkflow
-                                                                                            .config
-                                                                                            .input
-                                                                                            .filetypes
-                                                                                            ? '[' +
-                                                                                              (getWorkflow
-                                                                                                  .config
-                                                                                                  .input
-                                                                                                  .filetypes
-                                                                                                  ? '*.' +
-                                                                                                    getWorkflow.config.input.filetypes.join(
-                                                                                                        ', *.'
-                                                                                                    )
-                                                                                                  : []) +
-                                                                                              ']'
-                                                                                            : ''
-                                                                                    }}</code
-                                                                                ></b
-                                                                            >
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                    <b-row
-                                                                        v-if="
-                                                                            getWorkflow
-                                                                                .config
-                                                                                .output !==
-                                                                                undefined
-                                                                        "
-                                                                    >
-                                                                        <b-col>
-                                                                            <small
-                                                                                >Output</small
-                                                                            >
-                                                                        </b-col>
-                                                                        <b-col
-                                                                            cols="10"
-                                                                        >
-                                                                            <b
-                                                                                ><code
-                                                                                    >[working
-                                                                                    directory]/{{
-                                                                                        getWorkflow
-                                                                                            .config
-                                                                                            .output
-                                                                                            .path
-                                                                                            ? getWorkflow
-                                                                                                  .config
-                                                                                                  .output
-                                                                                                  .path +
-                                                                                              '/'
-                                                                                            : ''
-                                                                                    }}{{
-                                                                                        getWorkflow
-                                                                                            .config
-                                                                                            .output
-                                                                                            .include
-                                                                                            ? '[' +
-                                                                                              (getWorkflow
-                                                                                                  .config
-                                                                                                  .output
-                                                                                                  .exclude
-                                                                                                  ? '+ '
-                                                                                                  : '') +
-                                                                                              (getWorkflow
-                                                                                                  .config
-                                                                                                  .output
-                                                                                                  .include
-                                                                                                  .patterns
-                                                                                                  ? '*.' +
-                                                                                                    getWorkflow.config.output.include.patterns.join(
-                                                                                                        ', *.'
-                                                                                                    )
-                                                                                                  : []) +
-                                                                                              (getWorkflow
-                                                                                                  .config
-                                                                                                  .output
-                                                                                                  .include
-                                                                                                  .names
-                                                                                                  ? ', ' +
-                                                                                                    getWorkflow.config.output.include.names.join(
-                                                                                                        ', '
-                                                                                                    )
-                                                                                                  : [])
-                                                                                            : ''
-                                                                                    }}{{
-                                                                                        getWorkflow
-                                                                                            .config
-                                                                                            .output
-                                                                                            .exclude
-                                                                                            ? ' - ' +
-                                                                                              (getWorkflow
-                                                                                                  .config
-                                                                                                  .output
-                                                                                                  .exclude
-                                                                                                  .patterns
-                                                                                                  ? '*.' +
-                                                                                                    getWorkflow.config.output.exclude.patterns.join(
-                                                                                                        ', *.'
-                                                                                                    )
-                                                                                                  : []) +
-                                                                                              (getWorkflow
-                                                                                                  .config
-                                                                                                  .output
-                                                                                                  .exclude
-                                                                                                  .names
-                                                                                                  ? ', ' +
-                                                                                                    getWorkflow.config.output.exclude.names.join(
-                                                                                                        ', '
-                                                                                                    )
-                                                                                                  : [])
-                                                                                            : '' +
-                                                                                              ']'
-                                                                                    }}
-                                                                                </code></b
-                                                                            >
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                </b-col>
-                                                            </b-row>
-                                                            <hr
-                                                                class="mt-2 mb-2"
-                                                                style="border-color: gray"
-                                                            />
-                                                            <h5
-                                                                :class="
-                                                                    profile.darkMode
-                                                                        ? 'text-light'
-                                                                        : 'text-dark'
-                                                                "
-                                                            >
-                                                                Resource
-                                                                Requests
-                                                            </h5>
                                                             <b-row>
                                                                 <b-col
-                                                                    align-self="end"
-                                                                    md="auto"
-                                                                    class="text-right"
-                                                                    v-if="
-                                                                        !getWorkflow
-                                                                            .config
-                                                                            .resources
-                                                                    "
+                                                                    ><vue-markdown
+                                                                        >{{
+                                                                            getWorkflow.readme
+                                                                        }}</vue-markdown
+                                                                    ></b-col
                                                                 >
-                                                                    <b-alert
-                                                                        show
-                                                                        variant="warning"
-                                                                        >This
-                                                                        workflow
-                                                                        does not
-                                                                        specify
-                                                                        resource
-                                                                        requests
-                                                                        and can
-                                                                        only be
-                                                                        submitted
-                                                                        to
-                                                                        agents
-                                                                        configured
-                                                                        for the
-                                                                        <b
-                                                                            >Local</b
-                                                                        >
-                                                                        executor.</b-alert
-                                                                    >
-                                                                </b-col>
-                                                                <b-col
-                                                                    align-self="end"
-                                                                    class="text-left"
-                                                                    v-else
-                                                                >
-                                                                    <b-row>
-                                                                        <b-col>
-                                                                            <b
-                                                                                ><code
-                                                                                    >{{
-                                                                                        ' ' +
-                                                                                            getWorkflow
-                                                                                                .config
-                                                                                                .resources
-                                                                                                .time
-                                                                                    }}</code
-                                                                                ></b
-                                                                            >
-                                                                            <small>
-                                                                                time</small
-                                                                            >
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                    <b-row>
-                                                                        <b-col>
-                                                                            <b
-                                                                                ><code
-                                                                                    >{{
-                                                                                        ' ' +
-                                                                                            getWorkflow
-                                                                                                .config
-                                                                                                .resources
-                                                                                                .mem
-                                                                                    }}</code
-                                                                                ></b
-                                                                            >
-                                                                            <small>
-                                                                                memory</small
-                                                                            >
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                    <b-row>
-                                                                        <b-col>
-                                                                            <b
-                                                                                ><code
-                                                                                    >{{
-                                                                                        ' ' +
-                                                                                            getWorkflow
-                                                                                                .config
-                                                                                                .resources
-                                                                                                .processes
-                                                                                    }}</code
-                                                                                ></b
-                                                                            >
-                                                                            <small>
-                                                                                process(es)</small
-                                                                            >
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                    <b-row>
-                                                                        <b-col>
-                                                                            <b
-                                                                                ><code
-                                                                                    >{{
-                                                                                        ' ' +
-                                                                                            getWorkflow
-                                                                                                .config
-                                                                                                .resources
-                                                                                                .cores
-                                                                                    }}</code
-                                                                                ></b
-                                                                            >
-                                                                            <small>
-                                                                                core(s)</small
-                                                                            >
-                                                                        </b-col>
-                                                                    </b-row>
-                                                                </b-col>
                                                             </b-row>
-                                                        </div>
-                                                        <div
-                                                            v-if="
-                                                                getWorkflow.readme !==
-                                                                    undefined &&
-                                                                    getWorkflow.readme !==
-                                                                        null
-                                                            "
-                                                        >
-                                                            <div
-                                                                :class="
-                                                                    profile.darkMode
-                                                                        ? 'theme-container-get_readme m-0 p-3'
-                                                                        : 'theme-container-light m-0 p-3'
-                                                                "
-                                                            >
-                                                                <br />
-                                                                <b-row>
-                                                                    <b-col
-                                                                        ><vue-markdown
-                                                                            >{{
-                                                                                getWorkflow.readme
-                                                                            }}</vue-markdown
-                                                                        ></b-col
-                                                                    >
-                                                                </b-row>
-                                                            </div>
                                                         </div>
                                                     </b-col>
                                                 </b-row>
@@ -2886,7 +2867,7 @@ export default {
             },
             selectedAgent: {
                 name: ''
-            },
+            }
         };
     },
     async mounted() {
@@ -3275,7 +3256,10 @@ export default {
                     headers: { 'Content-Type': 'application/json' }
                 })
                     .then(async response => {
-                        await this.$store.dispatch('tasks/setAll', response.data.tasks);
+                        await this.$store.dispatch(
+                            'tasks/setAll',
+                            response.data.tasks
+                        );
                         router.push({
                             name: 'task',
                             params: {

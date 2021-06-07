@@ -1,9 +1,9 @@
 import binascii
 import fileinput
 import json
+import logging
 import os
 import sys
-import tempfile
 import uuid
 from datetime import timedelta, datetime
 from math import ceil
@@ -14,26 +14,24 @@ from typing import List
 
 import yaml
 from asgiref.sync import async_to_sync
-from celery.utils.log import get_task_logger
 from channels.layers import get_channel_layer
 from dateutil import parser
 from django.contrib.auth.models import User
-from django.http import HttpResponseNotFound, HttpResponse
 from django.utils import timezone
 
 from plantit import settings
-from plantit.docker import parse_image_components, image_exists
-from plantit.options import FileInput, Parameter, FilesInput, DirectoryInput, TaskOptions, BindMount
-from plantit.redis import RedisClient
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor
 from plantit.agents.utils import map_agent
-from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
-from plantit.ssh import SSH, execute_command
-from plantit.utils import parse_bind_mount, format_bind_mount
+from plantit.docker import parse_image_components, image_exists
 from plantit.github import get_repo_config
+from plantit.popos import FileInput, Parameter, FilesInput, DirectoryInput, TaskOptions, BindMount
+from plantit.redis import RedisClient
+from plantit.ssh import SSH, execute_command
+from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
+from plantit.utils import parse_bind_mount, format_bind_mount
 from plantit.workflows.utils import map_old_workflow_config_to_new
 
-logger = get_task_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def stat_logs(id: str):
@@ -572,31 +570,29 @@ def submit_via_ssh(task: Task, ssh: SSH, file_count: int = None):
 
         # get container logs
         work_dir = join(task.agent.workdir, task.workdir)
-        ssh_client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
         container_log_file = get_container_log_file_name(task)
         container_log_path = get_container_log_file_path(task)
 
-        with ssh_client:
-            with ssh_client.client.open_sftp() as sftp:
-                cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
-                stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
+        with ssh.client.open_sftp() as sftp:
+            cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
+            stdin, stdout, stderr = ssh.client.exec_command(cmd)
 
-                if not stdout.read().decode().strip() == 'exists':
-                    container_logs = []
-                else:
-                    with open(get_container_log_file_path(task), 'a+') as log_file:
-                        sftp.chdir(work_dir)
-                        sftp.get(container_log_file, log_file.name)
+            if not stdout.read().decode().strip() == 'exists':
+                container_logs = []
+            else:
+                with open(get_container_log_file_path(task), 'a+') as log_file:
+                    sftp.chdir(work_dir)
+                    sftp.get(container_log_file, log_file.name)
 
-                    # obfuscate Docker auth info before returning logs to the user
-                    docker_username = environ.get('DOCKER_USERNAME', None)
-                    docker_password = environ.get('DOCKER_PASSWORD', None)
-                    for line in fileinput.input([container_log_path], inplace=True):
-                        if docker_username in line.strip():
-                            line = line.strip().replace(docker_username, '*' * 7, 1)
-                        if docker_password in line.strip():
-                            line = line.strip().replace(docker_password, '*' * 7)
-                        sys.stdout.write(line)
+                # obfuscate Docker auth info before returning logs to the user
+                docker_username = environ.get('DOCKER_USERNAME', None)
+                docker_password = environ.get('DOCKER_PASSWORD', None)
+                for line in fileinput.input([container_log_path], inplace=True):
+                    if docker_username in line.strip():
+                        line = line.strip().replace(docker_username, '*' * 7, 1)
+                    if docker_password in line.strip():
+                        line = line.strip().replace(docker_password, '*' * 7)
+                    sys.stdout.write(line)
     else:
         command = f"sbatch {template_name}"
         output_lines = execute_command(
@@ -628,13 +624,17 @@ def push_task_event(task: Task):
 def cancel_task(task: Task):
     ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
     with ssh:
-        if task.job_id is None or not any([task.job_id in r for r in execute_command(
+        lines = []
+        for line in execute_command(
                 ssh_client=ssh,
                 pre_command=':',
                 command=f"squeue -u {task.agent.username}",
-                directory=join(task.agent.workdir, task.workdir))]):
-            # run doesn't exist, so no need to cancel
-            return
+                directory=join(task.agent.workdir, task.workdir)):
+            logger.info(line)
+            lines.append(line)
+
+        if task.job_id is None or not any([task.job_id in r for r in lines]):
+            return  # run doesn't exist, so no need to cancel
 
         execute_command(
             ssh_client=ssh,

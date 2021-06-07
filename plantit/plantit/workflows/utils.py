@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from datetime import datetime
@@ -105,8 +106,8 @@ def map_old_workflow_config_to_new(old: dict, run: Task, resources: dict) -> dic
     return new_config
 
 
-def bind_workflow(workflow: Workflow, token: str) -> dict:
-    repo = get_repo(
+async def bind_workflow(workflow: Workflow, token: str) -> dict:
+    repo = await get_repo(
         workflow.repo_owner,
         workflow.repo_name,
         token)
@@ -119,20 +120,21 @@ def bind_workflow(workflow: Workflow, token: str) -> dict:
     }
 
 
-def repopulate_personal_workflow_cache(owner: str):
+async def repopulate_personal_workflow_cache(owner: str):
     try:
         user = User.objects.get(profile__github_username=owner)
     except:
         logger.warning(f"User {owner} does not exist")
         return
 
-    cleaned = empty_personal_workflow_cache(owner)
-    logger.info(f"Cleaned {cleaned} stale workflow(s) from {owner}'s cache ")
+    empty_personal_workflow_cache(owner)
 
-    # TODO config gets pulled twice for connected workflows, fix that
+    owned = list(Workflow.objects.filter(user=user))
+    bind = asyncio.gather(*[bind_workflow(workflow, user.profile.github_token) for workflow in owned])
+    results = await asyncio.gather(*[bind, list_connectable_repos_by_owner(owner, user.profile.github_token)])
+    connected = results[0]
+    connectable = results[1]
     both = []
-    connectable = list_connectable_repos_by_owner(owner, user.profile.github_token)
-    connected = [bind_workflow(workflow, user.profile.github_token) for workflow in list(Workflow.objects.filter(user=user))]
 
     for able in connectable:
         if not any(['name' in ed['config'] and 'name' in able['config'] and ed['config']['name'] == able['config']['name'] for ed in connected]):
@@ -141,7 +143,7 @@ def repopulate_personal_workflow_cache(owner: str):
             both.append(able)
 
     missing = 0
-    for ed in connected:
+    for ed in [c for c in connected if c['repo']['owner']['login'] == owner]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
         name = ed['config']['name']
         if not any(['name' in able['config'] and able['config']['name'] == name for able in connectable]):
             missing += 1
@@ -155,96 +157,80 @@ def repopulate_personal_workflow_cache(owner: str):
     redis = RedisClient.get()
     for workflow in both: redis.set(f"workflows/{owner}/{workflow['repo']['name']}", json.dumps(workflow))
     redis.set(f"workflows_updated/{owner}", timezone.now().timestamp())
-    logger.info(f"{owner}'s workflow scan found {len(connected)} connected, {len(connectable) - len(connected)} connectable, wrote {len(both)} total to cache" + "" if missing == 0 else f"({missing} with missing configuration files)")
+    logger.info(f"Added {len(connected)} connected, {len(connectable) - len(connected)} connectable, {len(both)} total to {owner}'s workflow cache" + ("" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
-def repopulate_public_workflow_cache(token: str):
+async def repopulate_public_workflow_cache():
     redis = RedisClient.get()
-    public = Workflow.objects.filter(public=True)
-    private = Workflow.objects.filter(public=False)
+    users = [workflow.user for workflow in list(Workflow.objects.filter(public=True))]  # only include users with public workflows
 
-    for workflow in public:
-        repo = get_repo(workflow.repo_owner, workflow.repo_name, token)
-        repo['public'] = True
-        redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
+    for user in users:
+        empty_personal_workflow_cache(user.profile.github_username)
+        await repopulate_personal_workflow_cache(user.profile.github_username)
 
-    for workflow in private:
-        repo = get_repo(workflow.repo_owner, workflow.repo_name, token)
-        repo['public'] = False
-        redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(repo))
-
-    logger.info(f"Public workflow scan found and wrote {len(public)} to cache")
     redis.set(f"public_workflows_updated", timezone.now().timestamp())
+
+
+async def get_public_workflows(invalidate: bool = False) -> List[dict]:
+    redis = RedisClient.get()
+    updated = redis.get('public_workflows_updated')
+
+    # repopulate if empty or invalidation requested
+    if updated is None or len(list(redis.scan_iter(match=f"workflows/*"))) == 0 or invalidate:
+        await repopulate_public_workflow_cache()
+    else:
+        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+        age_secs = age.total_seconds()
+        max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
+
+        # otherwise only if stale
+        if age_secs > max_secs:
+            logger.info(f"Public workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
+            await repopulate_public_workflow_cache()
+
+    workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')]
+    return [workflow for workflow in workflows if workflow['public']]
+
+
+async def get_personal_workflows(owner: str, invalidate: bool = False) -> List[dict]:
+    redis = RedisClient.get()
+    updated = redis.get(f"workflows_updated/{owner}")
+
+    # repopulate if empty or invalidation requested
+    if updated is None or len(list(redis.scan_iter(match=f"workflows/{owner}/*"))) == 0 or invalidate:
+        await repopulate_personal_workflow_cache(owner)
+    else:
+        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+        age_secs = age.total_seconds()
+        max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
+
+        # otherwise only if stale
+        if age_secs > max_secs:
+            logger.info(f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
+            await repopulate_personal_workflow_cache(owner)
+
+    return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
+
+
+async def get_workflow(owner: str, name: str, token: str, invalidate: bool = False) -> dict:
+    redis = RedisClient.get()
+    updated = redis.get(f"workflows_updated/{owner}")
+    workflow = redis.get(f"workflows/{owner}/{name}")
+
+    if updated is None or workflow is None or invalidate:
+        try: workflow = Workflow.objects.get(repo_owner=owner, repo_name=name)
+        except: raise ValueError(f"Workflow {owner}/{name} not found")
+
+        workflow = await bind_workflow(workflow, token)
+        redis.set(f"workflows/{owner}/{name}", json.dumps(workflow))
+
+    return workflow
 
 
 def empty_personal_workflow_cache(owner: str):
     redis = RedisClient.get()
     keys = list(redis.scan_iter(match=f"workflows/{owner}/*"))
     cleaned = len(keys)
-    for key in keys:
-        redis.delete(key)
-
+    for key in keys: redis.delete(key)
     logger.info(f"Emptied {cleaned} workflows from GitHub user {owner}'s cache")
-    return len(keys)
-
-
-def get_public_workflows(token: str, invalidate: bool = False) -> List[dict]:
-    redis = RedisClient.get()
-    updated = redis.get('public_workflows_updated')
-
-    # scan if the cache is empty or if invalidation is requested
-    if updated is None or len(list(redis.scan_iter(match=f"workflows/*"))) == 0 or invalidate:
-        repopulate_public_workflow_cache(token)
-    else:
-        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
-        age_secs = age.total_seconds()
-        max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
-
-        # otherwise only scan if the cache is stale
-        if age_secs > max_secs:
-            logger.info(f"Public workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), refreshing")
-            repopulate_public_workflow_cache(token)
-
-    workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')]
-    return [workflow for workflow in workflows if workflow['public']]
-
-
-def get_personal_workflows(owner: str, invalidate: bool = False) -> List[dict]:
-    redis = RedisClient.get()
-    updated = redis.get(f"workflows_updated/{owner}")
-
-    # scan if the cache is empty or if invalidation is requested
-    if updated is None or len(list(redis.scan_iter(match=f"workflows/{owner}/*"))) == 0 or invalidate:
-        repopulate_personal_workflow_cache(owner)
-    else:
-        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
-        age_secs = age.total_seconds()
-        max_secs = (int(settings.WORKFLOWS_REFRESH_MINUTES) * 60)
-
-        # otherwise only scan if the cache is stale
-        if age_secs > max_secs:
-            logger.info(f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), refreshing")
-            repopulate_personal_workflow_cache(owner)
-
-    return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
-
-
-def get_workflow(owner: str, name: str, token: str, invalidate: bool = False) -> dict:
-    redis = RedisClient.get()
-    updated = redis.get(f"workflows_updated/{owner}")
-    workflow = redis.get(f"workflows/{owner}/{name}")
-
-    if updated is None or workflow is None or invalidate:
-        try:
-            workflow = Workflow.objects.get(repo_owner=owner, repo_name=name)
-        except:
-            logger.warning(f"Workflow {owner}/{name} not found")
-            return
-
-        workflow = bind_workflow(workflow, token)
-        redis.set(f"workflows/{owner}/{name}", json.dumps(workflow))
-        # repopulate_personal_workflow_cache(owner)
-
-    # workflow = redis.get(f"workflows/{owner}/{name}")
-    # return None if workflow is None else json.loads(workflow)
-    return workflow
+    return cleaned

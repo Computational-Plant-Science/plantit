@@ -4,6 +4,7 @@ import tempfile
 from os.path import join
 from pathlib import Path
 
+from asgiref.sync import sync_to_async, async_to_sync
 from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -11,21 +12,21 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileRe
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django_celery_beat.models import IntervalSchedule
-from rest_framework.decorators import api_view
 
 from plantit import settings
 from plantit.agents.models import Agent
+from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
+from plantit.ssh import SSH
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.tasks.utils import log_task_status, map_task, get_task_log_file_path, create_task, parse_eta, \
     map_delayed_task, \
     map_repeating_task, cancel_task, push_task_event
-from plantit.celery_tasks import submit_task
-from plantit.ssh import SSH
 
 
-@api_view(['GET', 'POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_all_or_create(request):
     user = request.user
     workflow = request.data
@@ -80,8 +81,9 @@ def get_all_or_create(request):
             raise ValueError(f"Unsupported task type (expected: Now, Later, or Periodically)")
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_by_owner(request, owner):
     # params = request.query_params
     # page = params.get('page') if 'page' in params else -1
@@ -110,8 +112,9 @@ def get_by_owner(request, owner):
     return JsonResponse({'tasks': [map_task(t) for t in tasks]})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_by_owner_and_name(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -121,8 +124,9 @@ def get_by_owner_and_name(request, owner, name):
         return HttpResponseNotFound()
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_thumbnail(request, owner, name):
     path = request.GET.get('path')
     file = path.rpartition('/')[2]
@@ -167,8 +171,9 @@ def get_thumbnail(request, owner, name):
             return HttpResponse(thumbnail, content_type="image/png")
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_3d_model(request, guid):
     path = request.GET.get('path')
     file = path.rpartition('/')[2]
@@ -189,8 +194,9 @@ def get_3d_model(request, guid):
         return HttpResponse(temp_file, content_type="applications/octet-stream")
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_output_file(request, owner, name, file):
     try:
         user = User.objects.get(username=owner)
@@ -217,8 +223,9 @@ def get_output_file(request, owner, name, file):
                 return FileResponse(open(tf.name, 'rb'))
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_task_logs(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -230,8 +237,9 @@ def get_task_logs(request, owner, name):
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_container_logs(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -263,8 +271,9 @@ def get_container_logs(request, owner, name):
                 return FileResponse(open(tf.name, 'rb'))
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_file_text(request, owner, name):
     file = request.GET.get('path')
     try:
@@ -291,8 +300,9 @@ def get_file_text(request, owner, name):
             return JsonResponse({'text': stdout.readlines()})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def cancel(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -320,8 +330,9 @@ def cancel(request, owner, name):
     return JsonResponse({'canceled': True})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def delete(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -335,8 +346,9 @@ def delete(request, owner, name):
     return JsonResponse({'tasks': [map_task(t) for t in tasks]})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def exists(request, owner, name):
     try:
         Task.objects.get(user=User.objects.get(username=owner), name=name)
@@ -345,9 +357,10 @@ def exists(request, owner, name):
         return JsonResponse({'exists': True})
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
 @csrf_exempt
+@async_to_sync
 def status(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -374,8 +387,9 @@ def status(request, owner, name):
     return HttpResponse(status=200)
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def search(request, owner, workflow_name, page):
     try:
         user = User.objects.get(username=owner)
@@ -387,8 +401,9 @@ def search(request, owner, workflow_name, page):
         return HttpResponseNotFound()
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def search_delayed(request, owner, workflow_name):
     user = User.objects.get(username=owner)
     try:
@@ -400,8 +415,9 @@ def search_delayed(request, owner, workflow_name):
     return JsonResponse([map_delayed_task(t) for t in tasks], safe=False)
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def search_repeating(request, owner, workflow_name):
     user = User.objects.get(username=owner)
     try:

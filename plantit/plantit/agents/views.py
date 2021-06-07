@@ -2,13 +2,12 @@ import logging
 import uuid
 from datetime import timedelta
 
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.utils import timezone
-from rest_framework.decorators import api_view
 
 from plantit.ssh import SSH, execute_command
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAccessRequest, AgentAuthentication
@@ -18,8 +17,9 @@ from plantit.notifications.models import TargetPolicyNotification
 logger = logging.getLogger(__name__)
 
 
-@api_view(['GET', 'POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def search_or_add(request):
     if request.method == 'GET':
         agents = Agent.objects.all()
@@ -100,8 +100,9 @@ def search_or_add(request):
         return JsonResponse({'created': created, 'agent': map_agent(agent)})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_by_name(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -126,8 +127,9 @@ def get_by_name(request, name):
     return JsonResponse(map_agent(agent, role, list(policies), access_requests))
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def exists(request, name):
     try:
         Agent.objects.get(name=name)
@@ -136,8 +138,9 @@ def exists(request, name):
         return JsonResponse({'exists': False})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def host_exists(request, host):
     try:
         Agent.objects.get(hostname=host)
@@ -146,8 +149,9 @@ def host_exists(request, host):
         return JsonResponse({'exists': False})
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def request_access(request, name):
     if name is None:
         return HttpResponseNotFound()
@@ -163,8 +167,9 @@ def request_access(request, name):
     })
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def grant_access(request, name):
     user_name = request.data['user']
     if name is None or user_name is None:
@@ -207,8 +212,9 @@ def grant_access(request, name):
     return JsonResponse({'granted': created})
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def revoke_access(request, name):
     user_name = request.data['user']
     if name is None or user_name is None:
@@ -249,8 +255,9 @@ def revoke_access(request, name):
     return HttpResponse()
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def toggle_public(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -266,8 +273,9 @@ def toggle_public(request, name):
     return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})
 
 
-@api_view(['POST'])
+@sync_to_async
 @login_required
+@async_to_sync
 def healthcheck(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -279,23 +287,22 @@ def healthcheck(request, name):
             try:
                 username = request.data['auth']['username']
                 password = request.data['auth']['password']
-            except:
-                return HttpResponseNotAllowed()
-
+            except: return HttpResponseNotAllowed()
             ssh = SSH(host=agent.hostname, port=22, username=username, password=password)
-        else:
-            ssh = SSH(agent.hostname, agent.port, agent.username)
+        else: ssh = SSH(agent.hostname, agent.port, agent.username)
 
         with ssh:
-            lines = execute_command(ssh_client=ssh, pre_command=':', command=f"pwd", directory=agent.workdir)
-            logger.info(f"Agent {agent.name} healthcheck succeeded with output:\n{lines}")
+            for line in execute_command(ssh_client=ssh, pre_command=':', command=f"pwd", directory=agent.workdir): logger.info(line)
+            logger.info(f"Agent {agent.name} healthcheck succeeded")
             return JsonResponse({'healthy': True})
     except:
+        logger.info(f"Agent {agent.name} healthcheck failed")
         return JsonResponse({'healthy': False})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_access_policies(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -305,8 +312,9 @@ def get_access_policies(request, name):
     return JsonResponse({'policies': list(AgentAccessPolicy.objects.filter(agent=agent))})
 
 
-@api_view(['GET'])
+@sync_to_async
 @login_required
+@async_to_sync
 def get_keypair(request, name):
     try:
         agent = Agent.objects.get(name=name)
