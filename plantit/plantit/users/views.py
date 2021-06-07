@@ -72,11 +72,11 @@ class IDPViewSet(viewsets.ViewSet):
         content = response.json()
         if 'access_token' not in content:
             return HttpResponseBadRequest("Missing param on token response: 'access_token'")
-        if 'refresh_cyverse_tokens' not in content:
-            return HttpResponseBadRequest("Missing param on token response: 'refresh_cyverse_tokens'")
+        if 'refresh_all_user_cyverse_tokens' not in content:
+            return HttpResponseBadRequest("Missing param on token response: 'refresh_all_user_cyverse_tokens'")
 
         access_token = content['access_token']
-        refresh_token = content['refresh_cyverse_tokens']
+        refresh_token = content['refresh_all_user_cyverse_tokens']
         decoded_access_token = jwt.decode(access_token, options={
             'verify_signature': False,
             'verify_aud': False,

@@ -20,7 +20,8 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            <i class="fas fa-robot fa-fw"></i> {{ publicContext ? 'Public' : 'Your' }} Agents
+                            <i class="fas fa-robot fa-fw"></i>
+                            {{ publicContext ? 'Public' : 'Your' }} Agents
                         </h2></b-col
                     >
                     <b-col
@@ -499,8 +500,8 @@ export default {
             ],
             agentAuthentication: 'Password',
             agentAuthenticationOptions: [
-              { value: 'Password', text: 'Password' },
-                { value: 'Password', text: 'Key' },
+                { value: 'Password', text: 'Password' },
+                { value: 'Password', text: 'Key' }
             ],
             agentQueue: '',
             agentProject: '',
@@ -573,7 +574,7 @@ export default {
         // eslint-disable-next-line no-unused-vars
         publicContext: function(_) {
             this.refreshAgents();
-        },
+        }
         // items: function(value, _) {
         //     this.agentNameExists = value;
         //     this.agentNameLoading = false;
@@ -694,30 +695,31 @@ export default {
                 data: data,
                 headers: { 'Content-Type': 'application/json' }
             })
-                .then(response => {
-                    this.$store.dispatch(
-                        'agents/addOrUpdate',
-                        response.data.agent
-                    );
-                    this.$store.dispatch('alerts/add', {
-                        variant: 'success',
-                        message: `Added agent ${response.data.agent.name}`,
-                        guid: guid().toString(),
-                        time: moment().format()
-                    });
+                .then(async response => {
+                    await Promise.all([
+                        this.$store.dispatch(
+                            'agents/addOrUpdate',
+                            response.data.agent
+                        ),
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Added agent ${response.data.agent.name}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        })
+                    ]);
                     this.resetAgentInfo();
                     this.addingAgent = false;
                 })
-                .catch(error => {
+                .catch(async error => {
                     Sentry.captureException(error);
-                    this.$store.dispatch('alerts/add', {
+                    await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to add agent ${this.agentName}`,
                         guid: guid().toString(),
                         time: moment().format()
                     });
                     this.addingAgent = false;
-                    // TODO probably an auth error: display info and allow user to edit info and retry connection
                     throw error;
                 });
         },

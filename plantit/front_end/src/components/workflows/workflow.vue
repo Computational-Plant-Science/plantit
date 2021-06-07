@@ -2884,111 +2884,13 @@ export default {
                     names: []
                 }
             },
-            includedFile: '',
-            excludedFile: '',
-            includedPattern: '',
-            excludedPattern: '',
-            output_include_fields: [
-                {
-                    key: 'name',
-                    label: 'Included File Names'
-                },
-                {
-                    key: 'actions',
-                    label: 'Actions'
-                }
-            ],
-            output_include_pattern_fields: [
-                {
-                    key: 'name',
-                    label: 'Included File Patterns'
-                },
-                {
-                    key: 'actions',
-                    label: 'Actions'
-                }
-            ],
-            output_exclude_fields: [
-                {
-                    key: 'name',
-                    label: 'Excluded File Names'
-                },
-                {
-                    key: 'actions',
-                    label: 'Actions'
-                }
-            ],
-            output_exclude_pattern_fields: [
-                {
-                    key: 'name',
-                    label: 'Excluded File Patterns'
-                },
-                {
-                    key: 'actions',
-                    label: 'Actions'
-                }
-            ],
             selectedAgent: {
                 name: ''
             },
-            agentFields: [
-                {
-                    key: 'name',
-                    label: ''
-                },
-                {
-                    key: 'description',
-                    label: 'Description'
-                },
-                {
-                    key: 'max_cores',
-                    label: 'Max Cores'
-                },
-                {
-                    key: 'max_processes',
-                    label: 'Max Processes'
-                },
-                {
-                    key: 'max_mem',
-                    label: 'Max Memory'
-                },
-                {
-                    key: 'gpu',
-                    label: 'GPU'
-                }
-            ],
-            fields: [
-                {
-                    key: 'name',
-                    label: 'Name'
-                },
-                {
-                    key: 'value',
-                    label: 'Value'
-                }
-            ]
         };
     },
     async mounted() {
-        await Promise.all([
-            // this.$store.dispatch('users/loadAll'),
-            // this.$store.dispatch('workflows/load', {
-            //     owner: this.$router.currentRoute.params.owner,
-            //     name: this.$router.currentRoute.params.name
-            // }),
-            // this.$store.dispatch('datasets/l')
-            // this.$store.dispatch(
-            //     'agents/loadPersonal',
-            //     this.profile.djangoProfile.username
-            // ),
-            // this.$store.dispatch('agents/loadPublic')
-            // this.loadRuns()
-            // this.loadDelayedRuns(),
-            // this.loadRepeatingRuns()
-        ]);
-
         this.populateComponents();
-
         if ('input' in this.getWorkflow.config)
             await Promise.all([
                 this.$store.dispatch('datasets/loadPersonal'),
@@ -3017,26 +2919,28 @@ export default {
             })
                 .then(async response => {
                     if (response.status === 200) {
-                        await this.$store.dispatch(
-                            'workflows/setPersonal',
-                            response.data.workflows
-                        );
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Made ${
-                                this.$router.currentRoute.params.owner
-                            }/${this.$router.currentRoute.params.name} ${
-                                response.data.workflows.find(
-                                    wf =>
-                                        wf.config.name ===
-                                        this.getWorkflow.config.name
-                                ).public
-                                    ? 'public'
-                                    : 'private'
-                            }`,
-                            guid: guid().toString(),
-                            time: moment().format()
-                        });
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'workflows/setPersonal',
+                                response.data.workflows
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Made ${
+                                    this.$router.currentRoute.params.owner
+                                }/${this.$router.currentRoute.params.name} ${
+                                    response.data.workflows.find(
+                                        wf =>
+                                            wf.config.name ===
+                                            this.getWorkflow.config.name
+                                    ).public
+                                        ? 'public'
+                                        : 'private'
+                                }`,
+                                guid: guid().toString(),
+                                time: moment().format()
+                            })
+                        ]);
                         this.togglingPublic = false;
                     } else {
                         await this.$store.dispatch('alerts/add', {
@@ -3052,8 +2956,19 @@ export default {
                         this.togglingPublic = false;
                     }
                 })
-                .catch(error => {
+                .catch(async error => {
                     Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to make ${
+                            this.$router.currentRoute.params.owner
+                        }/${this.$router.currentRoute.params.name} ${
+                            this.getWorkflow.public ? 'private' : 'public'
+                        }`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
+                    this.togglingPublic = false;
                     throw error;
                 });
         },

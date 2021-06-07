@@ -735,27 +735,27 @@ export default {
                 data: this.workflowToConnect,
                 headers: { 'Content-Type': 'application/json' }
             })
-                .then(response => {
+                .then(async response => {
                     if (response.status === 200) {
                         this.$bvModal.hide('connectWorkflow');
-                        this.$store.dispatch(
-                            'workflows/setPersonal',
-                            response.data.workflows
-                        );
-                        this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Connected ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`,
-                            guid: guid().toString(),
-                            time: moment().format()
-                        });
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'workflows/setPersonal',
+                                response.data.workflows
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Connected ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`,
+                                guid: guid().toString(),
+                                time: moment().format()
+                            })
+                        ]);
                         this.workflowToConnect = null;
                         this.connectingWorkflow = false;
                     } else {
-                        let message = `Failed to connect ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`;
-                        this.alertMessage = message;
-                        this.$store.dispatch('alerts/add', {
+                        await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
-                            message: message,
+                            message: `Failed to connect ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`,
                             guid: guid().toString(),
                             time: moment().format()
                         });
@@ -764,10 +764,16 @@ export default {
                         this.connectingWorkflow = false;
                     }
                 })
-                .catch(error => {
+                .catch(async error => {
                     Sentry.captureException(error);
-                    this.alertMessage = `Failed to connect ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`;
-                    this.alertEnabled = true;
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to connect ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
+                    this.workflowToConnect = null;
+                    this.connectingWorkflow = false;
                     throw error;
                 });
         },

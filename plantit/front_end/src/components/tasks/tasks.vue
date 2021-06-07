@@ -20,7 +20,7 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                  <i class="fas fa-tasks fa-fw"></i> Your Tasks
+                            <i class="fas fa-tasks fa-fw"></i> Your Tasks
                         </h2></b-col
                     >
                     <b-col md="auto" class="ml-0" align-self="center"
@@ -132,9 +132,7 @@
                                                 class="card-img-right"
                                                 style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                 right
-                                                :src="
-                                                    task.workflow_image_url
-                                                "
+                                                :src="task.workflow_image_url"
                                             ></b-img>
                                             <b-link
                                                 :class="
@@ -155,10 +153,8 @@
                                             <br />
                                             <div
                                                 v-if="
-                                                    task.tags !==
-                                                        undefined &&
-                                                        task.tags.length >
-                                                            0
+                                                    task.tags !== undefined &&
+                                                        task.tags.length > 0
                                                 "
                                             >
                                                 <b-badge
@@ -181,8 +177,7 @@
                                                 "
                                             >
                                             </b-spinner>
-                                            <small
-                                                v-if="!task.is_complete"
+                                            <small v-if="!task.is_complete"
                                                 >Running</small
                                             >
                                             <b-badge
@@ -195,9 +190,7 @@
                                                         : 'success'
                                                 "
                                                 v-else
-                                                >{{
-                                                    task.status
-                                                }}</b-badge
+                                                >{{ task.status }}</b-badge
                                             >
                                             <small> on </small>
                                             <b-badge
@@ -212,8 +205,7 @@
                                             <br />
                                             <small
                                                 v-if="
-                                                    task.workflow_name !==
-                                                        null
+                                                    task.workflow_name !== null
                                                 "
                                                 class="mr-1"
                                                 ><a
@@ -228,9 +220,7 @@
                                                     ><i
                                                         class="fab fa-github fa-fw"
                                                     ></i>
-                                                    {{
-                                                        task.workflow_owner
-                                                    }}/{{
+                                                    {{ task.workflow_owner }}/{{
                                                         task.workflow_name
                                                     }}</a
                                                 >
@@ -278,8 +268,7 @@
                             ></b-col>
                             <b-col
                                 v-if="
-                                    !tasksLoading &&
-                                        tasksCompleted.length === 0
+                                    !tasksLoading && tasksCompleted.length === 0
                                 "
                                 class="m-0 pl-0 pr-0"
                             >
@@ -356,16 +345,12 @@
                                                     :to="{
                                                         name: 'task',
                                                         params: {
-                                                            owner:
-                                                                task.owner,
-                                                            name:
-                                                                task.name
+                                                            owner: task.owner,
+                                                            name: task.name
                                                         }
                                                     }"
                                                     replace
-                                                    >{{
-                                                        task.name
-                                                    }}</b-link
+                                                    >{{ task.name }}</b-link
                                                 >
                                             </b-col>
                                         </b-row>
@@ -375,8 +360,7 @@
                                                     v-if="
                                                         task.tags !==
                                                             undefined &&
-                                                            task.tags
-                                                                .length > 0
+                                                            task.tags.length > 0
                                                     "
                                                 >
                                                     <b-badge
@@ -388,15 +372,11 @@
                                                     </b-badge>
                                                     <br
                                                         v-if="
-                                                            task.tags
-                                                                .length > 0
+                                                            task.tags.length > 0
                                                         "
                                                     />
                                                 </div>
-                                                <small
-                                                    v-if="
-                                                        !task.is_complete
-                                                    "
+                                                <small v-if="!task.is_complete"
                                                     >Running</small
                                                 >
                                                 <b-badge
@@ -409,9 +389,7 @@
                                                             : 'success'
                                                     "
                                                     v-else
-                                                    >{{
-                                                        task.status
-                                                    }}</b-badge
+                                                    >{{ task.status }}</b-badge
                                                 >
                                                 <small>
                                                     on
@@ -419,14 +397,10 @@
                                                 <b-badge
                                                     class="ml-0 mr-0"
                                                     variant="secondary"
-                                                    >{{
-                                                        task.agent
-                                                    }}</b-badge
+                                                    >{{ task.agent }}</b-badge
                                                 ><small>
                                                     {{
-                                                        prettify(
-                                                            task.updated
-                                                        )
+                                                        prettify(task.updated)
                                                     }}</small
                                                 >
                                             </b-col>
@@ -456,18 +430,14 @@
                                             </b-col>
                                             <b-col md="auto">
                                                 <b-button
-                                                    v-if="
-                                                        task.is_complete
-                                                    "
+                                                    v-if="task.is_complete"
                                                     variant="outline-danger"
                                                     size="sm"
                                                     v-b-tooltip.hover
                                                     title="Delete Run"
                                                     class="text-right"
                                                     @click="
-                                                        showRemovePrompt(
-                                                            task
-                                                        )
+                                                        showRemovePrompt(task)
                                                     "
                                                 >
                                                     <i class="fas fa-trash"></i>
@@ -496,6 +466,7 @@ import moment from 'moment';
 import axios from 'axios';
 import router from '@/router';
 import * as Sentry from '@sentry/browser';
+import { guid } from '@/utils';
 
 export default {
     name: 'tasks',
@@ -518,28 +489,45 @@ export default {
         },
         async remove(task) {
             await axios
-                .get(
-                    `/apis/v1/tasks/${task.owner}/${task.name}/delete/`
-                )
-                .then(response => {
+                .get(`/apis/v1/tasks/${task.owner}/${task.name}/delete/`)
+                .then(async response => {
                     if (response.status === 200) {
-                        this.showCanceledAlert = true;
-                        this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('tasks/loadAll');
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'tasks/setAll',
+                                response.data.tasks
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Deleted task ${task.name}`,
+                                guid: guid().toString(),
+                                time: moment().format()
+                            })
+                        ]);
                         if (
                             this.$router.currentRoute.name === 'task' &&
-                            task.name ===
-                                this.$router.currentRoute.params.name
+                            task.name === this.$router.currentRoute.params.name
                         )
                             router.push({
                                 name: 'tasks'
                             });
                     } else {
-                        this.showFailedToCancelAlert = true;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to delete ${task.name}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
                     }
                 })
-                .catch(error => {
+                .catch(async error => {
                     Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to delete task`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
                     return error;
                 });
         }

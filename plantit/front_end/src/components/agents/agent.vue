@@ -363,7 +363,9 @@
                                                     ></i>
                                                     Check Status<b-spinner
                                                         small
-                                                        v-if="checkingConnection"
+                                                        v-if="
+                                                            checkingConnection
+                                                        "
                                                         label="Loading..."
                                                         :variant="
                                                             profile.darkMode
@@ -903,24 +905,27 @@ export default {
             })
                 .then(async response => {
                     if (response.status === 200) {
-                        await this.$store.dispatch(
-                            'agents/setPersonal',
-                            response.data.agents
-                        );
-                        await this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Made ${
-                                this.$router.currentRoute.params.name
-                            } ${
-                                response.data.agents.find(
-                                    agent => agent.name === this.getAgent.name
-                                ).public
-                                    ? 'public'
-                                    : 'private'
-                            }`,
-                            guid: guid().toString(),
-                            time: moment().format()
-                        });
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'agents/setPersonal',
+                                response.data.agents
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Made ${
+                                    this.$router.currentRoute.params.name
+                                } ${
+                                    response.data.agents.find(
+                                        agent =>
+                                            agent.name === this.getAgent.name
+                                    ).public
+                                        ? 'public'
+                                        : 'private'
+                                }`,
+                                guid: guid().toString(),
+                                time: moment().format()
+                            })
+                        ]);
                         this.togglingPublic = false;
                     } else {
                         await this.$store.dispatch('alerts/add', {
@@ -934,8 +939,16 @@ export default {
                         this.togglingPublic = false;
                     }
                 })
-                .catch(error => {
+                .catch(async error => {
                     Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to make ${
+                            this.$router.currentRoute.params.name
+                        } ${this.getAgent.public ? 'private' : 'public'}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
                     throw error;
                 });
         },

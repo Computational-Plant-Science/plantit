@@ -22,6 +22,9 @@ export const tasks = {
         }
     },
     actions: {
+        setAll({commit}, tasks) {
+            commit('setAll', tasks);
+        },
         async loadAll({ commit, rootState }) {
             commit('setLoading', true);
             await Promise.all([

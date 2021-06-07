@@ -4,12 +4,12 @@ import json
 import sys
 import tempfile
 import traceback
-from multiprocessing import Pool, cpu_count
 from os import environ
 from os.path import join
 
 import cv2
 from celery.utils.log import get_task_logger
+from celery import group
 from czifile import czifile
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -560,8 +560,8 @@ def aggregate_user_statistics(username: str):
 
 
 @app.task()
-def refresh_personal_workflows(owner: str):
-    repopulate_personal_workflow_cache(owner)
+def refresh_personal_workflows(username: str):
+    repopulate_personal_workflow_cache(username)
 
 
 @app.task()
@@ -570,13 +570,21 @@ def refresh_all_workflows(token: str):
 
 
 @app.task()
-def refresh_cyverse_tokens():
+def refresh_user_cyverse_tokens(username: str):
+    try:
+        user = User.objects.get(username=username)
+    except:
+        logger.warning(f"User {username} not found")
+        return
+
+    refresh_cyverse_tokens(user)
+
+
+@app.task()
+def refresh_all_user_cyverse_tokens():
     tasks = Task.objects.filter(status=TaskStatus.RUNNING)
     users = [task.user for task in list(tasks)]
-
-    with Pool(cpu_count()) as pool:
-        pool.map(refresh_cyverse_tokens, users)
-
+    group([refresh_user_cyverse_tokens.s(user.username) for user in users])()
     logger.info(f"Refreshed CyVerse tokens for {len(users)} user(s)")
 
 
@@ -587,4 +595,4 @@ def setup_periodic_tasks(sender, **kwargs):
     logger.info("Scheduling periodic tasks")
 
     # refresh CyVerse auth tokens for all users with running tasks (in case outputs need to get pushed on completion)
-    sender.add_periodic_task(10.0, refresh_cyverse_tokens.s(), name='refresh CyVerse tokens')
+    sender.add_periodic_task(10.0, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')

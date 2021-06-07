@@ -322,15 +322,15 @@ def cancel(request, owner, name):
 @login_required
 def delete(request, owner, name):
     try:
-        task = Task.objects.get(user=User.objects.get(username=owner), name=name)
+        user = User.objects.get(username=owner)
+        task = Task.objects.get(user=user, name=name)
     except:
         return HttpResponseNotFound()
 
-    try:
-        task.delete()
-        return JsonResponse({'deleted': True})
-    except:
-        return JsonResponse({'deleted': False})
+    task.delete()
+    tasks = list(Task.objects.filter(user=user))
+
+    return JsonResponse({'tasks': [map_task(t) for t in tasks]})
 
 
 @api_view(['GET'])
