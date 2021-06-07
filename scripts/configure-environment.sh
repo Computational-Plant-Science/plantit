@@ -103,6 +103,7 @@ CYVERSE_CLIENT_ID=$cyverse_client_id
 CYVERSE_CLIENT_SECRET=$cyverse_secret
 CYVERSE_USERNAME=$cyverse_username
 CYVERSE_PASSWORD=$cyverse_password
+CYVERSE_TOKEN_REFRESH_MINUTES=60
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=$secret_key

@@ -584,6 +584,11 @@ def refresh_user_cyverse_tokens(username: str):
 def refresh_all_user_cyverse_tokens():
     tasks = Task.objects.filter(status=TaskStatus.RUNNING)
     users = [task.user for task in list(tasks)]
+
+    if len(users) == 0:
+        logger.info(f"No users with running tasks, not refreshing CyVerse tokens")
+        return
+
     group([refresh_user_cyverse_tokens.s(user.username) for user in users])()
     logger.info(f"Refreshed CyVerse tokens for {len(users)} user(s)")
 
@@ -595,4 +600,4 @@ def setup_periodic_tasks(sender, **kwargs):
     logger.info("Scheduling periodic tasks")
 
     # refresh CyVerse auth tokens for all users with running tasks (in case outputs need to get pushed on completion)
-    sender.add_periodic_task(10.0, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')
+    sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')

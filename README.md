@@ -140,6 +140,7 @@ CYVERSE_CLIENT_ID=<your cyverse client id>
 CYVERSE_CLIENT_SECRET=<your cyverse client secret>
 CVVERSE_USERNAME=<your cyverse username>
 CYVERSE_PASSWORD=<your cyverse password>
+CYVERSE_TOKEN_REFRESH_MINUTES=60
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=<your django secret key>

@@ -997,6 +997,8 @@ export default {
         }
     },
     created: async function() {
+        if (this.profile.djangoProfile === null) this.logOut();
+
         this.crumbs = this.$route.meta.crumb;
 
         await Promise.all([
@@ -1012,10 +1014,18 @@ export default {
                 'agents/loadPersonal',
                 this.profile.djangoProfile.username
             ),
-            this.$store.dispatch('datasets/loadPublic'),
-            this.$store.dispatch('datasets/loadPersonal'),
-            this.$store.dispatch('datasets/loadShared'),
-            this.$store.dispatch('datasets/loadSharing')
+            this.$store
+                .dispatch('datasets/loadPublic')
+                .catch(error => this.logOutIfForbidden(error)),
+            this.$store
+                .dispatch('datasets/loadPersonal')
+                .catch(error => this.logOutIfForbidden(error)),
+            this.$store
+                .dispatch('datasets/loadShared')
+                .catch(error => this.logOutIfForbidden(error)),
+            this.$store
+                .dispatch('datasets/loadSharing')
+                .catch(error => this.logOutIfForbidden(error))
         ]);
 
         // TODO move websockets to vuex
@@ -1125,6 +1135,9 @@ export default {
         },
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');
+        },
+        logOutIfForbidden(error) {
+          alert(error);
         },
         logOut() {
             sessionStorage.clear();
