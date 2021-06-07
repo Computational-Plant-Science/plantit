@@ -30,7 +30,7 @@ def shared(request):  # directories shared with the current user
 
     urls = [f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={policy.path}" for policy in policies]
     headers = {
-        "Authorization": f"Bearer {guest.profile.cyverse_token}",
+        "Authorization": f"Bearer {guest.profile.cyverse_access_token}",
     }
     with httpx.Client(headers=headers) as client:
         responses = [client.get(url).json() for url in urls]
@@ -78,7 +78,7 @@ def share(request):
 
     response = requests.post("https://de.cyverse.org/terrain/secured/share",
                              data=json.dumps(request.data),
-                             headers={"Authorization": f"Bearer {owner.profile.cyverse_token}", "Content-Type": 'application/json;charset=utf-8'})
+                             headers={"Authorization": f"Bearer {owner.profile.cyverse_access_token}", "Content-Type": 'application/json;charset=utf-8'})
     response.raise_for_status()
 
     return JsonResponse({'policies': policies})
@@ -132,7 +132,7 @@ def unshare(request):
                                      'paths': [path]
                                  }]
                              }),
-                             headers={"Authorization": f"Bearer {owner.profile.cyverse_token}", "Content-Type": 'application/json;charset=utf-8'})
+                             headers={"Authorization": f"Bearer {owner.profile.cyverse_access_token}", "Content-Type": 'application/json;charset=utf-8'})
     response.raise_for_status()
     policy.delete()
 

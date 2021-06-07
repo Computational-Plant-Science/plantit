@@ -1,6 +1,13 @@
+import logging
+import subprocess
 from typing import List
 
+from django.conf import settings
+from pathlib import Path
+
 from plantit.agents.models import Agent, AgentRole, AgentAccessPolicy, AgentTask, AgentAccessRequest
+
+logger = logging.getLogger(__name__)
 
 
 def map_agent_task(task: AgentTask):
@@ -69,3 +76,32 @@ def map_agent(
 
 def run_workdir_clean_task_name(agent: str, run_id: str):
     return f"Clean {agent} run {run_id} working directory"
+
+
+def create_keypair(owner: str, overwrite: bool = False) -> str:
+    """
+    Creates an RSA-protected SSH keypair and returns the public key.
+
+    Args:
+        owner: The user (CyVerse/Django username) to create a keypair for.
+        overwrite: Whether to overwrite an existing keypair.
+
+    Returns: The path to the newly created public key.
+    """
+    keys_path = Path(settings.AGENT_KEYS)
+    keys_path.mkdir(exist_ok=True)
+    key_path = Path(f"{keys_path.absolute()}/{owner}")
+
+    if key_path.is_file():
+        if overwrite:
+            logger.info(f"Keypair for {owner} already exists, overwriting")
+            key_path.unlink()
+        else:
+            logger.info(f"Keypair for {owner} already exists, aborting")
+            return None
+
+    subprocess.run(f"ssh-keygen -b 2048 -t rsa -f {key_path} -N \"\"")
+    logger.info(f"Created keypair for {owner}")
+
+    with open(key_path, 'r') as key:
+        return key.readlines()[0]

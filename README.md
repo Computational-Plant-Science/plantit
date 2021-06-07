@@ -159,6 +159,7 @@ USERS_CACHE=/code/users.json
 USERS_REFRESH_MINUTES=60
 USERS_STATS_REFRESH_MINUTES=10
 MORE_USERS=/code/more_users.json
+AGENT_KEYS=/code/agent_keys
 WORKFLOWS_CACHE=/code/workflows.json
 WORKFLOWS_REFRESH_MINUTES=60
 SESSIONS_LOGS=/code/sessions

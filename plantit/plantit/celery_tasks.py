@@ -4,6 +4,7 @@ import json
 import sys
 import tempfile
 import traceback
+from multiprocessing import Pool, cpu_count
 from os import environ
 from os.path import join
 
@@ -29,7 +30,7 @@ from plantit.ssh import SSH, execute_command
 from plantit.terrain import list_dir
 from plantit.sns import SnsClient
 from plantit.github import get_repo
-from plantit.workflows.models import Workflow
+from plantit.users.utils import refresh_cyverse_tokens
 from plantit.workflows.utils import repopulate_personal_workflow_cache, repopulate_public_workflow_cache
 
 logger = get_task_logger(__name__)
@@ -70,7 +71,7 @@ def submit_task(guid: str, workflow):
 
         with ssh_client:
             if 'input' in workflow['config'] and workflow['config']['input']['kind'] == 'files':
-                input_files = list_dir(workflow['config']['input']['from'], task.user.profile.cyverse_token)
+                input_files = list_dir(workflow['config']['input']['from'], task.user.profile.cyverse_access_token)
                 msg = f"Found {len(input_files)} input files"
                 log_task_status(task, msg)
                 push_task_event(task)
@@ -472,7 +473,7 @@ def open_dataset_session(guid: str):
             update_dataset_session(session, [msg])
             logger.info(msg)
 
-            command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_token}\n"
+            command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_access_token}\n"
             lines = execute_command(
                 ssh_client=ssh,
                 pre_command=session.agent.pre_commands,
@@ -507,7 +508,7 @@ def save_dataset_session(guid: str, only_modified: bool):
             update_dataset_session(session, [msg])
             logger.info(msg)
 
-            command = f"plantit terrain push {session.path} --terrain_token {session.user.profile.cyverse_token}"
+            command = f"plantit terrain push {session.path} --terrain_token {session.user.profile.cyverse_access_token}"
             for file in session.modified:
                 command += f" --include_name {file}"
 
@@ -566,3 +567,24 @@ def refresh_personal_workflows(owner: str):
 @app.task()
 def refresh_all_workflows(token: str):
     repopulate_public_workflow_cache(token)
+
+
+@app.task()
+def refresh_cyverse_tokens():
+    tasks = Task.objects.filter(status=TaskStatus.RUNNING)
+    users = [task.user for task in list(tasks)]
+
+    with Pool(cpu_count()) as pool:
+        pool.map(refresh_cyverse_tokens, users)
+
+    logger.info(f"Refreshed CyVerse tokens for {len(users)} user(s)")
+
+
+# see https://stackoverflow.com/a/41119054/6514033
+# `@app.on_after_finalize.connect` is necessary for some reason instead of `@app.on_after_configure.connect`
+@app.on_after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):
+    logger.info("Scheduling periodic tasks")
+
+    # refresh CyVerse auth tokens for all users with running tasks (in case outputs need to get pushed on completion)
+    sender.add_periodic_task(10.0, refresh_cyverse_tokens.s(), name='refresh CyVerse tokens')

@@ -6,13 +6,13 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.utils import timezone
 from rest_framework.decorators import api_view
 
 from plantit.ssh import SSH, execute_command
-from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAccessRequest
-from plantit.agents.utils import map_agent
+from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAccessRequest, AgentAuthentication
+from plantit.agents.utils import map_agent, create_keypair
 from plantit.notifications.models import TargetPolicyNotification
 
 logger = logging.getLogger(__name__)
@@ -43,22 +43,23 @@ def search_or_add(request):
         return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in agents]})
     elif request.method == 'POST':
         # make sure we can authenticate
-        ssh = SSH(
-            host=request.data['config']['hostname'],
-            port=22,
-            username=request.data['auth']['username'],
-            password=request.data['auth']['password'])
-        with ssh:
-            execute_command(
-                ssh_client=ssh,
-                pre_command=request.data['config']['pre_commands'],
-                command='pwd',
-                directory=request.data['config']['workdir'],
-                allow_stderr=False)
+        # ssh = SSH(
+        #     host=request.data['config']['hostname'],
+        #     port=22,
+        #     username=request.data['auth']['username'],
+        #     password=request.data['auth']['password'])
+        # with ssh:
+        #     execute_command(
+        #         ssh_client=ssh,
+        #         pre_command=request.data['config']['pre_commands'],
+        #         command='pwd',
+        #         directory=request.data['config']['workdir'],
+        #         allow_stderr=False)
 
         config = request.data['config']
         guid = str(uuid.uuid4())
         name = config['name'] if 'name' in config else None
+        authentication = str(config['authentication']).lower()
         executor = str(config['executor']).lower()
         agent, created = Agent.objects.get_or_create(
             name=guid if name is None else name,
@@ -75,7 +76,8 @@ def search_or_add(request):
             public=bool(config['public']),
             logo=config['logo'],
             callbacks=False,
-            executor=executor)
+            executor=executor,
+            authentication=authentication)
 
         if created:
             if executor != 'local':
@@ -264,7 +266,7 @@ def toggle_public(request, name):
     return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 @login_required
 def healthcheck(request, name):
     try:
@@ -273,14 +275,20 @@ def healthcheck(request, name):
         return HttpResponseNotFound()
 
     try:
-        ssh = SSH(agent.hostname, agent.port, agent.username)
+        if agent.authentication == AgentAuthentication.PASSWORD:
+            try:
+                username = request.data['auth']['username']
+                password = request.data['auth']['password']
+            except:
+                return HttpResponseNotAllowed()
+
+            ssh = SSH(host=agent.hostname, port=22, username=username, password=password)
+        else:
+            ssh = SSH(agent.hostname, agent.port, agent.username)
+
         with ssh:
-            lines = execute_command(
-                ssh_client=ssh,
-                pre_command=':',
-                command=f"pwd",
-                directory=agent.workdir)
-            print(lines)
+            lines = execute_command(ssh_client=ssh, pre_command=':', command=f"pwd", directory=agent.workdir)
+            logger.info(f"Agent {agent.name} healthcheck succeeded with output:\n{lines}")
             return JsonResponse({'healthy': True})
     except:
         return JsonResponse({'healthy': False})
@@ -295,3 +303,19 @@ def get_access_policies(request, name):
         return HttpResponseNotFound()
 
     return JsonResponse({'policies': list(AgentAccessPolicy.objects.filter(agent=agent))})
+
+
+@api_view(['GET'])
+@login_required
+def get_keypair(request, name):
+    try:
+        agent = Agent.objects.get(name=name)
+    except:
+        return HttpResponseNotFound()
+
+    if agent.user is not None and agent.user.username != request.user.username:
+        return HttpResponseForbidden()
+
+    overwrite = request.GET.get('invalidate', False)
+    public_key = create_keypair(owner=request.user.username, overwrite=overwrite)
+    return JsonResponse({'public_key': public_key})

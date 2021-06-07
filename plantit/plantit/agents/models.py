@@ -15,6 +15,11 @@ class AgentExecutor(models.TextChoices):
     PBS = 'pbs', gettext_lazy('PBS')
 
 
+class AgentAuthentication(models.TextChoices):
+    PASSWORD = 'password', gettext_lazy('Password')
+    KEY = 'key', gettext_lazy('Key')
+
+
 class Agent(models.Model):
     name = models.CharField(max_length=50)
     guid = models.CharField(max_length=50, null=False, blank=False)
@@ -42,11 +47,8 @@ class Agent(models.Model):
     callbacks = models.BooleanField(default=True)
     job_array = models.BooleanField(default=False)  # https://github.com/Computational-Plant-Science/plantit/issues/98
     launcher = models.BooleanField(default=False)   # https://github.com/TACC/launcher
-
-    executor = models.CharField(
-        max_length=10,
-        choices=AgentExecutor.choices,
-        default=AgentExecutor.LOCAL)
+    executor = models.CharField(max_length=10, choices=AgentExecutor.choices, default=AgentExecutor.LOCAL)
+    authentication = models.CharField(max_length=10, choices=AgentAuthentication.choices, default=AgentAuthentication.PASSWORD)
 
     def __str__(self):
         return self.name

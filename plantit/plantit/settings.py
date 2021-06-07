@@ -13,6 +13,7 @@ assert 'USERS_CACHE' in os.environ, f"{missing_variable}: USERS_CACHE"
 assert 'USERS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: USERS_REFRESH_MINUTES"
 assert 'USERS_STATS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: USERS_STATS_REFRESH_MINUTES"
 assert 'MORE_USERS' in os.environ, f"{missing_variable}: MORE_USERS"
+assert 'AGENT_KEYS' in os.environ, f"{missing_variable}: AGENT_KEYS"
 assert 'WORKFLOWS_CACHE' in os.environ, f"{missing_variable}: WORKFLOWS_CACHE"
 assert 'WORKFLOWS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: WORKFLOWS_REFRESH_MINUTES"
 assert 'SESSIONS_LOGS' in os.environ, f"{missing_variable}: SESSION_LOGS"
@@ -40,6 +41,7 @@ USERS_CACHE = os.environ.get('USERS_CACHE')
 USERS_REFRESH_MINUTES = os.environ.get('USERS_REFRESH_MINUTES')
 USERS_STATS_REFRESH_MINUTES = os.environ.get('USERS_STATS_REFRESH_MINUTES')
 MORE_USERS = os.environ.get('MORE_USERS')
+AGENT_KEYS = os.environ.get('AGENT_KEYS')
 WORKFLOWS_CACHE = os.environ.get('WORKFLOWS_CACHE')
 WORKFLOWS_REFRESH_MINUTES = os.environ.get('WORKFLOWS_REFRESH_MINUTES')
 SESSIONS_LOGS = os.environ.get('SESSIONS_LOGS')
@@ -58,6 +60,9 @@ GITHUB_REDIRECT_URI = os.environ.get('GITHUB_REDIRECT_URI')
 GITHUB_USERNAME = os.environ.get('GITHUB_USERNAME')
 GITHUB_KEY = os.environ.get('GITHUB_KEY')
 GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
+
+# Celery timezone
+timezone = 'US/Eastern'
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "assets/"

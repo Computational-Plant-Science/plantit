@@ -1,5 +1,4 @@
 import json
-import json
 import logging
 import os
 from urllib.parse import parse_qs
@@ -19,8 +18,8 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from plantit.redis import RedisClient
 from plantit.celery_tasks import aggregate_user_statistics
+from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
@@ -67,17 +66,25 @@ class IDPViewSet(viewsets.ViewSet):
 
         if response.status_code == 400:
             return HttpResponse('Unauthorized for KeyCloak token endpoint', status=401)
-
-        if response.status_code != 200:
+        elif response.status_code != 200:
             return HttpResponse('Bad response from KeyCloak token endpoint', status=500)
 
         content = response.json()
-
         if 'access_token' not in content:
             return HttpResponseBadRequest("Missing param on token response: 'access_token'")
+        if 'refresh_cyverse_tokens' not in content:
+            return HttpResponseBadRequest("Missing param on token response: 'refresh_cyverse_tokens'")
 
-        token = content['access_token']
-        decoded = jwt.decode(token, options={
+        access_token = content['access_token']
+        refresh_token = content['refresh_cyverse_tokens']
+        decoded_access_token = jwt.decode(access_token, options={
+            'verify_signature': False,
+            'verify_aud': False,
+            'verify_iat': False,
+            'verify_exp': False,
+            'verify_iss': False
+        })
+        decoded_refresh_token = jwt.decode(refresh_token, options={
             'verify_signature': False,
             'verify_aud': False,
             'verify_iat': False,
@@ -85,22 +92,20 @@ class IDPViewSet(viewsets.ViewSet):
             'verify_iss': False
         })
 
-        user, _ = User.objects.get_or_create(username=decoded['preferred_username'])
+        user, _ = User.objects.get_or_create(username=decoded_access_token['preferred_username'])
 
-        user.first_name = decoded['given_name']
-        user.last_name = decoded['family_name']
-        user.email = decoded['email']
+        user.first_name = decoded_access_token['given_name']
+        user.last_name = decoded_access_token['family_name']
+        user.email = decoded_access_token['email']
         user.save()
 
         profile, _ = Profile.objects.get_or_create(user=user)
-        profile.cyverse_token = token
-
+        profile.cyverse_access_token = access_token
+        profile.cyverse_refresh_token = refresh_token
         profile.save()
         user.save()
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-
-        # return redirect(f"/user/{user.username}/")
         return redirect(f"/dashboard/")
 
     @action(methods=['get'], detail=False)
@@ -239,12 +244,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'dark_mode': user.profile.dark_mode,
                 'push_notifications': user.profile.push_notification_status,
                 'github_token': user.profile.github_token,
-                'cyverse_token': user.profile.cyverse_token
+                'cyverse_token': user.profile.cyverse_access_token
             },
             'stats': None if stats is None else json.loads(stats)
         }
 
-        if request.user.profile.cyverse_token != '':
+        if request.user.profile.cyverse_access_token != '':
             response['cyverse_profile'] = get_cyverse_profile(request.user)
         if request.user.profile.github_token != '' and user.profile.github_username != '':
             response['github_profile'] = get_github_profile(request.user)
@@ -283,12 +288,12 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         }
 
         if request.user.username == user.username:
-            response['django_profile']['cyverse_token'] = user.profile.cyverse_token
+            response['django_profile']['cyverse_token'] = user.profile.cyverse_access_token
 
-        if request.user.profile.cyverse_token != '':
+        if request.user.profile.cyverse_access_token != '':
             cyverse_response = requests.get(
                 f"https://de.cyverse.org/terrain/secured/user-info?username={user.username}",
-                headers={'Authorization': f"Bearer {request.user.profile.cyverse_token}"})
+                headers={'Authorization': f"Bearer {request.user.profile.cyverse_access_token}"})
             if cyverse_response.status_code == 401:
                 response['cyverse_profile'] = 'expired token'
             else:

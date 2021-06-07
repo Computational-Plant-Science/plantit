@@ -434,7 +434,7 @@ def upload_task(workflow: dict, task: Task, ssh: SSH, input_files: List[str] = N
                 pull_commands = f"plantit terrain pull \"{input['from']}\"" \
                                 f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
                                 f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
-                                f""f" --terrain_token {task.user.profile.cyverse_token}"
+                                f""f" --terrain_token {task.user.profile.cyverse_access_token}"
 
                 if task.agent.callbacks:
                     pull_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"

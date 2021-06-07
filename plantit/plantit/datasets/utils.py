@@ -1,3 +1,4 @@
+import logging
 from os import environ
 from os.path import join
 from pathlib import Path
@@ -7,6 +8,8 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from plantit.datasets.models import DatasetAccessPolicy, DatasetSession
+
+logger = logging.getLogger(__name__)
 
 
 def map_dataset_policy(policy: DatasetAccessPolicy):

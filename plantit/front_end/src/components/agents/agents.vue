@@ -280,6 +280,18 @@
                 ></b-form-textarea>
             </b-form-group>
             <b-form-group
+                label="Authentication"
+                description="Select an authentication strategy."
+            >
+                <b-form-select
+                    v-model="agentAuthentication"
+                    :options="agentAuthenticationOptions"
+                    type="text"
+                    placeholder="Select an authentication strategy"
+                    required
+                ></b-form-select
+            ></b-form-group>
+            <b-form-group
                 label="Working directory"
                 description="Working directory within which to run user workflows."
             >
@@ -485,6 +497,11 @@ export default {
                 { value: 'SLURM', text: 'SLURM' },
                 { value: 'PBS', text: 'PBS' }
             ],
+            agentAuthentication: 'Password',
+            agentAuthenticationOptions: [
+              { value: 'Password', text: 'Password' },
+                { value: 'Password', text: 'Key' },
+            ],
             agentQueue: '',
             agentProject: '',
             agentMaxWalltime: 0,
@@ -612,7 +629,8 @@ export default {
             this.agentMaxTime = 0;
             this.agentPublic = false;
             this.agentLogo = '';
-            this.executor = 'Local';
+            this.agentExecutor = 'Local';
+            this.agentAuthentication = 'Password';
             this.agentProject = '';
             this.agentQueue = '';
             this.agentMaxCores = 0;
@@ -655,6 +673,7 @@ export default {
                     public: this.agentPublic,
                     logo: this.agentLogo,
                     executor: this.agentExecutor,
+                    authentication: this.agentAuthentication,
                     max_walltime: this.agentMaxWalltime,
                     max_mem: this.agentMaxMem,
                     max_cores: this.agentMaxCores,

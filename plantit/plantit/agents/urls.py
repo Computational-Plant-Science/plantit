@@ -13,4 +13,5 @@ urlpatterns = [
     path(r'<name>/request/', views.request_access),
     path(r'<name>/revoke/', views.revoke_access),
     path(r'<name>/grant/', views.grant_access),
+    path(r'<name>/keypair/', views.get_keypair)
 ]

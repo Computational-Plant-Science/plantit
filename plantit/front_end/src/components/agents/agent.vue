@@ -354,16 +354,16 @@
                                                     :disabled="
                                                         getAgent.role ===
                                                             'none' ||
-                                                            statusChecking
+                                                            checkingConnection
                                                     "
-                                                    @click="checkStatus"
+                                                    @click="checkConnection"
                                                 >
                                                     <i
                                                         class="fas fa-network-wired fa-fw"
                                                     ></i>
                                                     Check Status<b-spinner
                                                         small
-                                                        v-if="statusChecking"
+                                                        v-if="checkingConnection"
                                                         label="Loading..."
                                                         :variant="
                                                             profile.darkMode
@@ -721,7 +721,7 @@
                 </b-form-group>
             </b-form>
         </b-modal>
-        <!--<b-modal
+        <b-modal
             id="authenticate"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
             centered
@@ -732,8 +732,8 @@
             :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="'Authenticate with ' + this.getAgent.name"
-            @ok="openDataset"
+            :title="'Authenticate with ' + this.agentName"
+            @ok="connectAgent"
         >
             <b-form-input
                 v-model="authenticationUsername"
@@ -747,7 +747,7 @@
                 placeholder="Your password"
                 required
             ></b-form-input>
-        </b-modal>-->
+        </b-modal>
     </div>
 </template>
 
@@ -769,7 +769,7 @@ export default {
         return {
             authenticationUsername: '',
             authenticationPassword: '',
-            statusChecking: false,
+            checkingConnection: false,
             alertEnabled: false,
             alertMessage: '',
             createTaskForm: {
@@ -827,9 +827,9 @@ export default {
         }
     },
     methods: {
-        // showAuthenticateModal() {
-        //     this.$bvModal.show('authenticate');
-        // },
+        showAuthenticateModal() {
+            this.$bvModal.show('authenticate');
+        },
         revokeAccess(user) {
             axios
                 .get(
@@ -960,13 +960,13 @@ export default {
                     this.loadTarget();
                     this.alertMessage = `Deleted task ${task.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
-                    this.statusChecking = false;
+                    this.checkingConnection = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     this.alertMessage = `Failed to delete ${task.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
-                    this.statusChecking = false;
+                    this.checkingConnection = false;
                     throw error;
                 });
         },
@@ -998,7 +998,7 @@ export default {
                             ? `Task ${this.createTaskForm.name} already exists on ${this.getAgent.name}`
                             : `Failed to create task ${this.createTaskForm.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
-                    this.statusChecking = false;
+                    this.checkingConnection = false;
                     this.$bvModal.hide('createTask');
                     this.loadTarget();
                 })
@@ -1006,7 +1006,7 @@ export default {
                     Sentry.captureException(error);
                     this.alertMessage = `Failed to create task ${this.createTaskForm.name} on ${this.getAgent.name}`;
                     this.alertEnabled = true;
-                    this.statusChecking = false;
+                    this.checkingConnection = false;
                     this.$bvModal.hide('createTask');
                     throw error;
                 });
@@ -1024,10 +1024,23 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
-        async checkStatus() {
-            this.statusChecking = true;
-            await axios
-                .get(`/apis/v1/agents/${this.$route.params.name}/health/`)
+        async checkConnection() {
+            this.checkingConnection = true;
+            let data =
+                this.getAgent.authentication === 'Password'
+                    ? {
+                          auth: {
+                              username: this.authenticationUsername,
+                              password: this.authenticationPassword
+                          }
+                      }
+                    : {};
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$route.params.name}/health/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
                 .then(async response => {
                     if (response.status === 200 && response.data.healthy)
                         await this.$store.dispatch('alerts/add', {
@@ -1043,7 +1056,7 @@ export default {
                             guid: guid().toString(),
                             time: moment().format()
                         });
-                    this.statusChecking = false;
+                    this.checkingConnection = false;
                 })
                 .catch(async error => {
                     Sentry.captureException(error);
@@ -1053,7 +1066,7 @@ export default {
                         guid: guid().toString(),
                         time: moment().format()
                     });
-                    this.statusChecking = false;
+                    this.checkingConnection = false;
                     throw error;
                 });
         },
