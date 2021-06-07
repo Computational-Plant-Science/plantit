@@ -38,7 +38,9 @@ def get_all_or_create(request):
         if request.data['type'] == 'Now':
             task = create_task(user.username, agent.name, workflow, workflow['config'].get('task_name', None))
             submit_task.delay(task.guid, workflow)
-            return JsonResponse({'name': task.name, 'owner': task.user.username})
+            tasks = list(Task.objects.filter(user=user))
+            return JsonResponse({'tasks': [map_task(t) for t in tasks]})
+            # return JsonResponse({'name': task.name, 'owner': task.user.username})
         elif request.data['type'] == 'After':
             eta, seconds = parse_eta(workflow)
             schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)

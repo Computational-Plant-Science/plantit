@@ -1919,14 +1919,17 @@ export default {
         }
     },
     watch: {
-        // async $route() {
-        //     await this.$store.dispatch('tasks/refresh', this.getRun);
-        //     window.location.reload(false);
-        //     // this.$forceUpdate();
-        // },
-        // '$route.params.name'() {
-        //     // need to watch for route change to prompt reload
-        // },
+        async $route() {
+            // await this.$store.dispatch('tasks/refresh', this.getRun);
+            window.location.reload(false);
+            // this.$forceUpdate();
+        },
+        '$route.params.owner'() {
+            // need to watch for route change to prompt reload
+        },
+        '$route.params.name'() {
+            // need to watch for route change to prompt reload
+        },
         viewMode() {
             if (
                 this.data !== null &&

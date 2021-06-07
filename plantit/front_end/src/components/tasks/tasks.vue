@@ -110,7 +110,7 @@
                                             v-model="searchText"
                                         ></b-form-input>
                                     </b-input-group>
-                                    <b-list-group class="text-left m-0 p-0">
+                                    <b-list-group class="text-left m-0 p-0 mt-1">
                                         <b-list-group-item
                                             style="box-shadow: -2px 2px 2px #adb5bd"
                                             v-for="task in filteredRunning"

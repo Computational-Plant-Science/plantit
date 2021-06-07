@@ -43,7 +43,7 @@ def refresh_tokens(username: str, refresh_token: str) -> (str, str):
         'client_id': environ.get('CYVERSE_CLIENT_ID'),
         'refresh_token': refresh_token,
         'redirect_uri': environ.get('CYVERSE_REDIRECT_URL')},
-                             auth=HTTPBasicAuth(username, environ.get('CYVERSE_CLIENT_SECRET')))
+                             auth=HTTPBasicAuth(username, environ.get('CYVERSE_CLIENT_SERET')))
 
     if response.status_code == 400:
         raise ValueError('Unauthorized for KeyCloak token endpoint')

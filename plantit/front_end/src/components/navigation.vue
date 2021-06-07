@@ -137,19 +137,27 @@
                                         </b-badge>
                                         <br />
                                     </div>
-                                    <small v-if="!task.is_complete"
-                                        >Running</small
+                                    <b-spinner
+                                        class="mr-1"
+                                        small
+                                        v-if="!task.is_complete"
+                                        :variant="
+                                            profile.darkMode ? 'light' : 'dark'
+                                        "
                                     >
+                                    </b-spinner>
                                     <b-badge
                                         :variant="
-                                            task.is_failure || task.is_timeout
+                                            task.is_failure ||
+                                            task.is_timeout
                                                 ? 'danger'
+                                                : task.is_success
+                                                ? 'success'
                                                 : task.is_cancelled
                                                 ? 'secondary'
-                                                : 'success'
+                                                : 'warning'
                                         "
-                                        v-else
-                                        >{{ task.job_status }}</b-badge
+                                        >{{ task.status.toUpperCase() }}</b-badge
                                     >
                                     <small> on </small>
                                     <b-badge
@@ -269,21 +277,19 @@
                                                     v-if="task.tags.length > 0"
                                                 />
                                             </div>
-                                            <small v-if="!task.is_complete"
-                                                >Running</small
-                                            >
-                                            <b-badge
-                                                :variant="
-                                                    task.is_failure ||
-                                                    task.is_timeout
-                                                        ? 'danger'
-                                                        : task.is_cancelled
-                                                        ? 'secondary'
-                                                        : 'success'
-                                                "
-                                                v-else
-                                                >{{ task.job_status }}</b-badge
-                                            >
+                                           <b-badge
+                                        :variant="
+                                            task.is_failure ||
+                                            task.is_timeout
+                                                ? 'danger'
+                                                : task.is_success
+                                                ? 'success'
+                                                : task.is_cancelled
+                                                ? 'secondary'
+                                                : 'warning'
+                                        "
+                                        >{{ task.status.toUpperCase() }}</b-badge
+                                    >
                                             <small> on </small>
                                             <b-badge
                                                 class="ml-0 mr-0"

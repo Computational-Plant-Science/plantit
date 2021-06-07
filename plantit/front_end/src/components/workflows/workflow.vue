@@ -96,13 +96,13 @@
                                             `https://raw.githubusercontent.com/${getWorkflow.repo.owner.login}/${getWorkflow.repo.name}/master/${getWorkflow.config.logo}`
                                         "
                                     ></b-img>
-                                    <b-img
+                                    <!--<b-img
                                         v-else
                                         class="card-img-right"
                                         style="max-width: 7rem;position: absolute;right: 20px;top: 20px;z-index:1"
                                         right
                                         :src="require('../../assets/logo.png')"
-                                    ></b-img>
+                                    ></b-img>-->
                                     <b-col>
                                         <b-row>
                                             <b-col
@@ -3274,12 +3274,13 @@ export default {
                     data: data,
                     headers: { 'Content-Type': 'application/json' }
                 })
-                    .then(response => {
+                    .then(async response => {
+                        await this.$store.dispatch('tasks/setAll', response.data.tasks);
                         router.push({
                             name: 'task',
                             params: {
                                 owner: this.profile.djangoProfile.username,
-                                name: response.data.name
+                                name: this.taskName
                             }
                         });
                     })
