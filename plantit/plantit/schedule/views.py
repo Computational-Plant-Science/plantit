@@ -3,7 +3,6 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseNotFound, JsonResponse, HttpResponseNotAllowed
 from django_celery_beat.models import CrontabSchedule
-from rest_framework.decorators import api_view
 
 from plantit.agents.models import Agent, AgentTask
 from plantit.agents.utils import map_agent_task
@@ -11,17 +10,17 @@ from plantit.tasks.models import DelayedTask
 from plantit.tasks.utils import map_delayed_task
 
 
-@api_view(['GET', 'POST'])
 @login_required
 def search_or_add_agent_task(request):
     if request.method == 'GET':
         pass
     elif request.method == 'POST':
-        task_name = request.data['name']
-        task_description = request.data['description']
-        task_command = request.data['command']
-        task_delay = request.data['delay'].split()
-        agent_name = request.data['agent_name']
+        body = json.loads(request.body.decode('utf-8'))
+        task_name = body['name']
+        task_description = body['description']
+        task_command = body['command']
+        task_delay = body['delay'].split()
+        agent_name = body['agent_name']
 
         try:
             agent = Agent.objects.get(name=agent_name)
@@ -52,7 +51,6 @@ def search_or_add_agent_task(request):
         })
 
 
-@api_view(['GET', 'DELETE'])
 @login_required
 def get_or_delete_agent_task(request, name):
     try:
@@ -69,7 +67,6 @@ def get_or_delete_agent_task(request, name):
         return HttpResponseNotAllowed(['GET', 'DELETE'])
 
 
-@api_view(['POST'])
 @login_required
 def toggle_agent_task(request, name):
     try:
@@ -82,13 +79,13 @@ def toggle_agent_task(request, name):
     return JsonResponse({'enabled': task.enabled})
 
 
-@api_view(['GET', 'POST'])
 @login_required
 def search_or_add_delayed_task(request):
-    task_name = request.data['name']
-    task_description = request.data['description']
-    task_command = request.data['command']
-    task_delay = request.data['delay'].split()
+    body = json.loads(request.body.decode('utf-8'))
+    task_name = body['name']
+    task_description = body['description']
+    task_command = body['command']
+    task_delay = body['delay'].split()
 
     schedule, _ = CrontabSchedule.objects.get_or_create(
         minute=task_delay[0],
@@ -110,7 +107,6 @@ def search_or_add_delayed_task(request):
     })
 
 
-@api_view(['GET', 'DELETE'])
 @login_required
 def get_or_delete_delayed_task(request, name):
     try:
@@ -127,7 +123,6 @@ def get_or_delete_delayed_task(request, name):
         return HttpResponseNotAllowed(['GET', 'DELETE'])
 
 
-@api_view(['POST'])
 @login_required
 def toggle_delayed_task(request, name):
     try:

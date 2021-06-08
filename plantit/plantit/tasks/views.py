@@ -11,7 +11,6 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from django_celery_beat.models import IntervalSchedule
 
 from plantit import settings
 from plantit.agents.models import Agent
@@ -19,71 +18,68 @@ from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
 from plantit.ssh import SSH
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
-from plantit.tasks.utils import log_task_status, map_task, get_task_log_file_path, create_task, parse_eta, \
-    map_delayed_task, \
+from plantit.tasks.utils import log_task_status, map_task, get_task_log_file_path, create_task, map_delayed_task, \
     map_repeating_task, cancel_task, push_task_event
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_all_or_create(request):
     user = request.user
-    workflow = request.data
+    workflow = json.loads(request.body.decode('utf-8'))
 
     if request.method == 'GET':
         tasks = Task.objects.all()
         return JsonResponse({'tasks': [map_task(sub) for sub in tasks]})
     elif request.method == 'POST':
-        agent = Agent.objects.get(name=workflow['config']['agent']['name'])
-        if request.data['type'] == 'Now':
+        agent_name = workflow['config']['agent']['name']
+        agent = Agent.objects.get(name=agent_name)
+        if workflow['type'] == 'Now':
             task = create_task(user.username, agent.name, workflow, workflow['config'].get('task_name', None))
             submit_task.delay(task.guid, workflow)
             tasks = list(Task.objects.filter(user=user))
             return JsonResponse({'tasks': [map_task(t) for t in tasks]})
-            # return JsonResponse({'name': task.name, 'owner': task.user.username})
-        elif request.data['type'] == 'After':
-            eta, seconds = parse_eta(workflow)
-            schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-            task, created = DelayedTask.objects.get_or_create(
-                user=user,
-                interval=schedule,
-                agent=agent,
-                eta=eta,
-                one_off=True,
-                workflow_owner=workflow['repo']['owner']['login'],
-                workflow_name=workflow['repo']['name'],
-                name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
-                task='plantit.celery_tasks.create_and_submit_task',
-                args=json.dumps([user.username, agent.name, workflow]))
-            return JsonResponse({
-                'created': created,
-                'task': map_delayed_task(task)
-            })
-        elif request.data['type'] == 'Every':
-            eta, seconds = parse_eta(workflow)
-            schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
-            task, created = RepeatingTask.objects.get_or_create(
-                user=user,
-                interval=schedule,
-                agent=agent,
-                eta=eta,
-                workflow_owner=workflow['repo']['owner']['login'],
-                workflow_name=workflow['repo']['name'],
-                name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} repeating",
-                task='plantit.celery_tasks.create_and_submit_task',
-                args=json.dumps([user.username, agent.name, workflow]))
-            return JsonResponse({
-                'created': created,
-                'task': map_repeating_task(task)
-            })
+
+        # TODO refactor delayed/repeating task logic, maybe move to `create_task`
+        # elif workflow['type'] == 'After':
+        #     eta, seconds = parse_eta(workflow)
+        #     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
+        #     task, created = DelayedTask.objects.get_or_create(
+        #         user=user,
+        #         interval=schedule,
+        #         agent=agent,
+        #         eta=eta,
+        #         one_off=True,
+        #         workflow_owner=workflow['repo']['owner']['login'],
+        #         workflow_name=workflow['repo']['name'],
+        #         name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} once",
+        #         task='plantit.celery_tasks.create_and_submit_task',
+        #         args=json.dumps([user.username, agent.name, workflow]))
+        #     return JsonResponse({
+        #         'created': created,
+        #         'task': map_delayed_task(task)
+        #     })
+        # elif workflow['type'] == 'Every':
+        #     eta, seconds = parse_eta(workflow)
+        #     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
+        #     task, created = RepeatingTask.objects.get_or_create(
+        #         user=user,
+        #         interval=schedule,
+        #         agent=agent,
+        #         eta=eta,
+        #         workflow_owner=workflow['repo']['owner']['login'],
+        #         workflow_name=workflow['repo']['name'],
+        #         name=f"User {user.username} workflow {workflow['repo']['name']} agent {agent.name} {schedule} repeating",
+        #         task='plantit.celery_tasks.create_and_submit_task',
+        #         args=json.dumps([user.username, agent.name, workflow]))
+        #     return JsonResponse({
+        #         'created': created,
+        #         'task': map_repeating_task(task)
+        #     })
         else:
             raise ValueError(f"Unsupported task type (expected: Now, Later, or Periodically)")
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_by_owner(request, owner):
     # params = request.query_params
     # page = params.get('page') if 'page' in params else -1
@@ -95,6 +91,7 @@ def get_by_owner(request, owner):
 
     tasks = list(Task.objects.filter(user=user))
 
+    # TODO we still eventually need paging
     # if 'running' in params and params.get('running') == 'True':
     #     tasks = [t for t in tasks.filter(completed__isnull=True).order_by('-created') if not t.is_complete]
     # elif 'running' in params and params.get('running') == 'False':
@@ -112,9 +109,7 @@ def get_by_owner(request, owner):
     return JsonResponse({'tasks': [map_task(t) for t in tasks]})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_by_owner_and_name(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -124,9 +119,7 @@ def get_by_owner_and_name(request, owner, name):
         return HttpResponseNotFound()
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_thumbnail(request, owner, name):
     path = request.GET.get('path')
     file = path.rpartition('/')[2]
@@ -171,9 +164,7 @@ def get_thumbnail(request, owner, name):
             return HttpResponse(thumbnail, content_type="image/png")
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_3d_model(request, guid):
     path = request.GET.get('path')
     file = path.rpartition('/')[2]
@@ -183,20 +174,18 @@ def get_3d_model(request, guid):
     except:
         return HttpResponseNotFound()
 
-    client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
-    work_dir = join(task.agent.workdir, task.workdir)
+    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    workdir = join(task.agent.workdir, task.workdir)
 
     with tempfile.NamedTemporaryFile() as temp_file:
-        with client:
-            with client.client.open_sftp() as sftp:
-                sftp.chdir(work_dir)
+        with ssh:
+            with ssh.client.open_sftp() as sftp:
+                sftp.chdir(workdir)
                 sftp.get(file, temp_file.name)
         return HttpResponse(temp_file, content_type="applications/octet-stream")
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_output_file(request, owner, name, file):
     try:
         user = User.objects.get(username=owner)
@@ -204,28 +193,26 @@ def get_output_file(request, owner, name, file):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
-    work_dir = join(task.agent.workdir, task.workdir)
+    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    workdir = join(task.agent.workdir, task.workdir)
 
-    with client:
-        with client.client.open_sftp() as sftp:
-            file_path = join(work_dir, file)
+    with ssh:
+        with ssh.client.open_sftp() as sftp:
+            file_path = join(workdir, file)
             print(f"Downloading {file_path}")
 
-            stdin, stdout, stderr = client.client.exec_command(
+            stdin, stdout, stderr = ssh.client.exec_command(
                 'test -e {0} && echo exists'.format(file_path))
             if not stdout.read().decode().strip() == 'exists':
                 return HttpResponseNotFound()
 
             with tempfile.NamedTemporaryFile() as tf:
-                sftp.chdir(work_dir)
+                sftp.chdir(workdir)
                 sftp.get(file, tf.name)
                 return FileResponse(open(tf.name, 'rb'))
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_task_logs(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -237,9 +224,7 @@ def get_task_logs(request, owner, name):
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_container_logs(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -247,18 +232,14 @@ def get_container_logs(request, owner, name):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
-    work_dir = join(task.agent.workdir, task.workdir)
+    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    workdir = join(task.agent.workdir, task.workdir)
+    log_file = f"plantit.{task.job_id}.out" if task.agent.launcher else f"{user.username}.{task.name}.{task.agent.name.lower()}.log"
 
-    if task.agent.launcher:
-        log_file = f"plantit.{task.job_id}.out"
-    else:
-        log_file = f"{user.username}.{task.name}.{task.agent.name.lower()}.log"
-
-    with client:
-        with client.client.open_sftp() as sftp:
-            stdin, stdout, stderr = client.client.exec_command(
-                'test -e {0} && echo exists'.format(join(work_dir, log_file)))
+    with ssh:
+        with ssh.client.open_sftp() as sftp:
+            stdin, stdout, stderr = ssh.client.exec_command(
+                'test -e {0} && echo exists'.format(join(workdir, log_file)))
             errs = stderr.read()
             if errs:
                 raise Exception(f"Failed to check existence of {log_file}: {errs}")
@@ -266,14 +247,12 @@ def get_container_logs(request, owner, name):
                 return HttpResponseNotFound()
 
             with tempfile.NamedTemporaryFile() as tf:
-                sftp.chdir(work_dir)
+                sftp.chdir(workdir)
                 sftp.get(log_file, tf.name)
                 return FileResponse(open(tf.name, 'rb'))
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_file_text(request, owner, name):
     file = request.GET.get('path')
     try:
@@ -282,13 +261,13 @@ def get_file_text(request, owner, name):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
-    work_dir = join(task.agent.workdir, task.workdir)
+    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    workdir = join(task.agent.workdir, task.workdir)
 
-    with client:
-        with client.client.open_sftp() as sftp:
-            path = join(work_dir, file)
-            stdin, stdout, stderr = client.client.exec_command(
+    with ssh:
+        with ssh.client.open_sftp() as sftp:
+            path = join(workdir, file)
+            stdin, stdout, stderr = ssh.client.exec_command(
                 'test -e {0} && echo exists'.format(path))
             errs = stderr.read()
             if errs:
@@ -296,13 +275,11 @@ def get_file_text(request, owner, name):
             if not stdout.read().decode().strip() == 'exists':
                 return HttpResponseNotFound()
 
-            stdin, stdout, stderr = client.client.exec_command(f"cat {path}")
+            stdin, stdout, stderr = ssh.client.exec_command(f"cat {path}")
             return JsonResponse({'text': stdout.readlines()})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def cancel(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -330,9 +307,7 @@ def cancel(request, owner, name):
     return JsonResponse({'canceled': True})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def delete(request, owner, name):
     try:
         user = User.objects.get(username=owner)
@@ -346,9 +321,7 @@ def delete(request, owner, name):
     return JsonResponse({'tasks': [map_task(t) for t in tasks]})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def exists(request, owner, name):
     try:
         Task.objects.get(user=User.objects.get(username=owner), name=name)
@@ -361,35 +334,35 @@ def exists(request, owner, name):
 @login_required
 @csrf_exempt
 @async_to_sync
-def status(request, owner, name):
+async def status(request, owner, name):
     try:
-        user = User.objects.get(username=owner)
-        task = Task.objects.get(user=user, name=name)
+        user = await sync_to_async(User.objects.get)(username=owner)
+        task = await sync_to_async(Task.objects.get)(user=user, name=name)
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    for chunk in request.data['description'].split('<br>'):
+    body = json.loads(request.body.decode('utf-8'))
+
+    for chunk in body['description'].split('<br>'):
         task.status = TaskStatus.RUNNING
         for line in chunk.split('\n'):
-            if 'FATAL' in line or int(request.data['state']) == 0:  # catch singularity build failures etc
+            if 'FATAL' in line or int(body['state']) == 0:  # catch singularity build failures etc
                 task.status = TaskStatus.FAILURE
-            elif int(request.data['state']) == 6:  # catch completion
+            elif int(body['state']) == 6:  # catch completion
                 task.status = TaskStatus.SUCCESS
 
             task.updated = timezone.now()
-            task.save()
+            await sync_to_async(task.save)()
             log_task_status(task, line)
-            push_task_event(task)
+            await push_task_event(task)
 
         task.updated = timezone.now()
-        task.save()
+        await sync_to_async(task.save)()
 
     return HttpResponse(status=200)
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def search(request, owner, workflow_name, page):
     try:
         user = User.objects.get(username=owner)
@@ -401,9 +374,7 @@ def search(request, owner, workflow_name, page):
         return HttpResponseNotFound()
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def search_delayed(request, owner, workflow_name):
     user = User.objects.get(username=owner)
     try:
@@ -415,9 +386,7 @@ def search_delayed(request, owner, workflow_name):
     return JsonResponse([map_delayed_task(t) for t in tasks], safe=False)
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def search_repeating(request, owner, workflow_name):
     user = User.objects.get(username=owner)
     try:

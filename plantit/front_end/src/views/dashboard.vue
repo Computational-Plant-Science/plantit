@@ -1,7 +1,7 @@
 <template>
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
         <div v-if="profileLoading">
-            <b-row>
+            <b-row align-v="center">
                 <b-col class="text-center">
                     <b-spinner
                         type="grow"
@@ -21,23 +21,12 @@
         >
             <b-row align-v="center"
                 ><b-col class="text-center" align-self="center"
-                    ><i class="fas fa-exclamation-circle fa-fw fa-3x"></i><br />
+                    ><i class="fas fa-exclamation-circle fa-fw fa-3x text-success"></i><br />
                     <h3 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Almost there!
                     </h3>
                     <br />
-                    To use
-                    <b
-                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                        style="text-decoration: underline;"
-                    >
-                        plant<small
-                            class="mb-3 mr-1 text-success"
-                            style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
-                            >IT</small
-                        >
-                    </b>
-                    you'll need a <i class="fab fa-github fa-fw fa-1x"></i
+                    We need to link your <i class="fab fa-github fa-fw fa-1x"></i
                     ><b-img
                         class="m-0"
                         rounded
@@ -48,7 +37,7 @@
                                 : require('../assets/logos/github_black.png')
                         "
                     ></b-img>
-                    account.<br />Once you have one, click the button
+                    account.<br />Click the button
                     below (or in the navigation bar) to log in.<br /><br /><b-button
                         class="mt-1 text-left"
                         variant="success"

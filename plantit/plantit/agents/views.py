@@ -1,3 +1,4 @@
+import json
 import logging
 import uuid
 from datetime import timedelta
@@ -17,9 +18,7 @@ from plantit.notifications.models import TargetPolicyNotification
 logger = logging.getLogger(__name__)
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def search_or_add(request):
     if request.method == 'GET':
         agents = Agent.objects.all()
@@ -28,13 +27,10 @@ def search_or_add(request):
         agent_owner = request.GET.get('owner')
 
         if public is not None and bool(public):
-            logger.info(f"Filtering agents by {'public' if bool(public) else 'private'} visibility")
             agents = agents.filter(public=bool(public))
         if agent_name is not None and type(agent_name) is str:
-            logger.info(f"Filtering agents by name: {agent_name}")
             agents = agents.filter(name=agent_name)
         if agent_owner is not None and type(agent_owner) is str:
-            logger.info(f"Filtering agents by owner: {agent_owner}")
             try:
                 agents = agents.filter(user=User.objects.get(username=agent_owner))
             except:
@@ -42,21 +38,23 @@ def search_or_add(request):
 
         return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in agents]})
     elif request.method == 'POST':
+        body = json.loads(request.body.decode('utf-8'))
         # make sure we can authenticate
         # ssh = SSH(
-        #     host=request.data['config']['hostname'],
+        #     host=body['config']['hostname'],
         #     port=22,
-        #     username=request.data['auth']['username'],
-        #     password=request.data['auth']['password'])
+        #     username=body['auth']['username'],
+        #     password=body['auth']['password'])
         # with ssh:
         #     execute_command(
         #         ssh_client=ssh,
-        #         pre_command=request.data['config']['pre_commands'],
+        #         pre_command=body['config']['pre_commands'],
         #         command='pwd',
-        #         directory=request.data['config']['workdir'],
+        #         directory=body['config']['workdir'],
         #         allow_stderr=False)
 
-        config = request.data['config']
+        body = json.loads(request.body.decode('utf-8'))
+        config = body['config']
         guid = str(uuid.uuid4())
         name = config['name'] if 'name' in config else None
         authentication = str(config['authentication']).lower()
@@ -100,9 +98,7 @@ def search_or_add(request):
         return JsonResponse({'created': created, 'agent': map_agent(agent)})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_by_name(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -127,9 +123,7 @@ def get_by_name(request, name):
     return JsonResponse(map_agent(agent, role, list(policies), access_requests))
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def exists(request, name):
     try:
         Agent.objects.get(name=name)
@@ -138,9 +132,7 @@ def exists(request, name):
         return JsonResponse({'exists': False})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def host_exists(request, host):
     try:
         Agent.objects.get(hostname=host)
@@ -149,9 +141,7 @@ def host_exists(request, host):
         return JsonResponse({'exists': False})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def request_access(request, name):
     if name is None:
         return HttpResponseNotFound()
@@ -170,31 +160,33 @@ def request_access(request, name):
 @sync_to_async
 @login_required
 @async_to_sync
-def grant_access(request, name):
-    user_name = request.data['user']
+async def grant_access(request, name):
+    body = json.loads(request.body.decode('utf-8'))
+    user_name = body['user']
     if name is None or user_name is None:
         return HttpResponseNotFound()
 
     try:
-        agent = Agent.objects.get(name=name)
-        user = User.objects.get(owner=user_name)
+        agent = await sync_to_async(Agent.objects.get)(name=name)
+        user = await sync_to_async(User.objects.get)(owner=user_name)
     except:
         return HttpResponseNotFound()
 
     if agent.user is not None and agent.user.username != request.user.username:
         return HttpResponseForbidden()
 
-    policy, created = AgentAccessPolicy.objects.get_or_create(user=user, agent=agent, role=AgentRole.run)
-    access_request = AgentAccessRequest.objects.get(user=user, agent=agent)
-    access_request.delete()
+    policy, created = await sync_to_async(AgentAccessPolicy.objects.get_or_create)(user=user, agent=agent, role=AgentRole.run)
+    access_request = await sync_to_async(AgentAccessRequest.objects.get)(user=user, agent=agent)
+    await sync_to_async(access_request.delete)()
 
-    notification = TargetPolicyNotification.objects.create(
+    notification = await sync_to_async(TargetPolicyNotification.objects.create)(
         guid=str(uuid.uuid4()),
         user=user,
         created=timezone.now(),
         policy=policy,
         message=f"You were granted access to {policy.agent.name}")
-    async_to_sync(get_channel_layer().group_send)(f"notifications-{user.username}", {
+
+    await get_channel_layer().group_send(f"notifications-{user.username}", {
         'type': 'push_notification',
         'notification': {
             'id': notification.guid,
@@ -212,31 +204,31 @@ def grant_access(request, name):
     return JsonResponse({'granted': created})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
-def revoke_access(request, name):
-    user_name = request.data['user']
+async def revoke_access(request, name):
+    body = json.loads(request.body.decode('utf-8'))
+    user_name = body['user']
     if name is None or user_name is None:
         return HttpResponseNotFound()
 
     try:
-        agent = Agent.objects.get(name=name)
-        user = User.objects.get(owner=user_name)
-        policy = AgentAccessPolicy.objects.get(user=user, agent=agent)
+        agent = await sync_to_async(Agent.objects.get)(name=name)
+        user = await sync_to_async(User.objects.get)(owner=user_name)
+        policy = await sync_to_async(AgentAccessPolicy.objects.get)(user=user, agent=agent)
     except:
         return HttpResponseNotFound()
 
     if agent.user is not None and agent.user.username != request.user.username:
         return HttpResponseForbidden()
 
-    notification = TargetPolicyNotification.objects.create(
+    notification = await sync_to_async(TargetPolicyNotification.objects.create)(
         guid=str(uuid.uuid4()),
         user=user,
         created=timezone.now(),
         policy=policy,
         message=f"Your access to {policy.agent.name} was revoked")
-    async_to_sync(get_channel_layer().group_send)(f"notifications-{user.username}", {
+
+    await get_channel_layer().group_send(f"notifications-{user.username}", {
         'type': 'push_notification',
         'notification': {
             'id': notification.guid,
@@ -251,13 +243,11 @@ def revoke_access(request, name):
         }
     })
 
-    policy.delete()
+    await sync_to_async(policy.delete)()
     return HttpResponse()
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def toggle_public(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -273,20 +263,20 @@ def toggle_public(request, name):
     return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def healthcheck(request, name):
     try:
         agent = Agent.objects.get(name=name)
     except:
         return HttpResponseNotFound()
 
+    body = json.loads(request.body.decode('utf-8'))
+
     try:
         if agent.authentication == AgentAuthentication.PASSWORD:
             try:
-                username = request.data['auth']['username']
-                password = request.data['auth']['password']
+                username = body['auth']['username']
+                password = body['auth']['password']
             except: return HttpResponseNotAllowed()
             ssh = SSH(host=agent.hostname, port=22, username=username, password=password)
         else: ssh = SSH(agent.hostname, agent.port, agent.username)
@@ -300,9 +290,7 @@ def healthcheck(request, name):
         return JsonResponse({'healthy': False})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_access_policies(request, name):
     try:
         agent = Agent.objects.get(name=name)
@@ -312,9 +300,7 @@ def get_access_policies(request, name):
     return JsonResponse({'policies': list(AgentAccessPolicy.objects.filter(agent=agent))})
 
 
-@sync_to_async
 @login_required
-@async_to_sync
 def get_keypair(request, name):
     try:
         agent = Agent.objects.get(name=name)

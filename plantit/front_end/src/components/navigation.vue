@@ -148,8 +148,7 @@
                                     </b-spinner>
                                     <b-badge
                                         :variant="
-                                            task.is_failure ||
-                                            task.is_timeout
+                                            task.is_failure || task.is_timeout
                                                 ? 'danger'
                                                 : task.is_success
                                                 ? 'success'
@@ -157,7 +156,9 @@
                                                 ? 'secondary'
                                                 : 'warning'
                                         "
-                                        >{{ task.status.toUpperCase() }}</b-badge
+                                        >{{
+                                            task.status.toUpperCase()
+                                        }}</b-badge
                                     >
                                     <small> on </small>
                                     <b-badge
@@ -277,19 +278,21 @@
                                                     v-if="task.tags.length > 0"
                                                 />
                                             </div>
-                                           <b-badge
-                                        :variant="
-                                            task.is_failure ||
-                                            task.is_timeout
-                                                ? 'danger'
-                                                : task.is_success
-                                                ? 'success'
-                                                : task.is_cancelled
-                                                ? 'secondary'
-                                                : 'warning'
-                                        "
-                                        >{{ task.status.toUpperCase() }}</b-badge
-                                    >
+                                            <b-badge
+                                                :variant="
+                                                    task.is_failure ||
+                                                    task.is_timeout
+                                                        ? 'danger'
+                                                        : task.is_success
+                                                        ? 'success'
+                                                        : task.is_cancelled
+                                                        ? 'secondary'
+                                                        : 'warning'
+                                                "
+                                                >{{
+                                                    task.status.toUpperCase()
+                                                }}</b-badge
+                                            >
                                             <small> on </small>
                                             <b-badge
                                                 class="ml-0 mr-0"
@@ -943,6 +946,7 @@ import moment from 'moment';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
+import store from "@/store/store";
 
 export default {
     name: 'Navigation',
@@ -1003,10 +1007,10 @@ export default {
         }
     },
     created: async function() {
-        if (this.profile.djangoProfile === null) this.logOut();
-
         this.crumbs = this.$route.meta.crumb;
 
+        // user profile must be loaded before everything else to make sure we have tokens/profile properties
+        await store.dispatch('user/loadProfile');
         await Promise.all([
             this.$store.dispatch('tasks/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
@@ -1020,36 +1024,21 @@ export default {
                 'agents/loadPersonal',
                 this.profile.djangoProfile.username
             ),
-            this.$store
-                .dispatch('datasets/loadPublic')
-                .catch(error => this.logOutIfForbidden(error)),
-            this.$store
-                .dispatch('datasets/loadPersonal')
-                .catch(error => this.logOutIfForbidden(error)),
-            this.$store
-                .dispatch('datasets/loadShared')
-                .catch(error => this.logOutIfForbidden(error)),
-            this.$store
-                .dispatch('datasets/loadSharing')
-                .catch(error => this.logOutIfForbidden(error))
+            this.$store.dispatch('datasets/loadPublic'),
+            this.$store.dispatch('datasets/loadPersonal'),
+            this.$store.dispatch('datasets/loadShared'),
+            this.$store.dispatch('datasets/loadSharing')
         ]);
 
         // TODO move websockets to vuex
         let wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-
-        this.workflowSocket = new WebSocket(
-            `${wsProtocol}${window.location.host}/ws/workflows/${this.profile.githubProfile.login}/`
-        );
-        this.workflowSocket.onmessage = this.handleWorkflowEvent;
-
         this.taskSocket = new WebSocket(
             `${wsProtocol}${window.location.host}/ws/tasks/${this.profile.djangoProfile.username}/`
         );
-        this.taskSocket.onmessage = this.handleTaskEvent;
-
         this.notificationSocket = new WebSocket(
             `${wsProtocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
         );
+        this.taskSocket.onmessage = this.handleTaskEvent;
         this.notificationSocket.onmessage = this.handleNotificationEvent;
     },
     watch: {
@@ -1086,15 +1075,6 @@ export default {
                     Sentry.captureException(error);
                     return error;
                 });
-        },
-        async handleWorkflowEvent(event) {
-            let data = JSON.parse(event.data);
-            let operation = data.operation;
-            let workflow = data.workflow;
-            if (operation === 'update')
-                await this.$store.dispatch('workflows/addOrUpdate', workflow);
-            else if (operation === 'remove')
-                await this.$store.dispatch('workflows/remove', workflow);
         },
         async handleTaskEvent(event) {
             let data = JSON.parse(event.data);
@@ -1141,9 +1121,6 @@ export default {
         },
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');
-        },
-        logOutIfForbidden(error) {
-          alert(error);
         },
         logOut() {
             sessionStorage.clear();

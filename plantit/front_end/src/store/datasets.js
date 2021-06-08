@@ -73,7 +73,11 @@ export const datasets = {
                 })
                 .catch(error => {
                     Sentry.captureException(error);
-                    commit('setPersonalLoading', true);
+                    commit('setPersonalLoading', false);
+                    if (error.response.status === 403) {
+                        sessionStorage.clear();
+                        window.location.replace('/apis/v1/idp/cyverse_logout/');
+                    }
                     throw error;
                 });
         },
@@ -136,7 +140,7 @@ export const datasets = {
                     commit('setSharingLoading', true);
                     throw error;
                 });
-        },
+        }
     },
     getters: {
         personalDatasets: state => state.personal,
@@ -146,6 +150,6 @@ export const datasets = {
         personalDatasetsLoading: state => state.personalLoading,
         publicDatasetsLoading: state => state.publicLoading,
         sharedDatasetsLoading: state => state.sharedLoading,
-        sharingDatasetsLoading: state => state.sharingLoading,
+        sharingDatasetsLoading: state => state.sharingLoading
     }
 };

@@ -1,9 +1,11 @@
 import logging
 
 import requests
+from asgiref.sync import sync_to_async
 from django.contrib.auth.models import User
 
-from plantit.terrain import refresh_tokens, get_profile
+import plantit.terrain as terrain
+import plantit.github as github
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +40,13 @@ def list_users(queryset, github_token):
     return users
 
 
+@sync_to_async
+def get_django_profile(user: User):
+    return user.profile
+
+
 def get_cyverse_profile(user: User) -> dict:
-    profile = get_profile(user.username, user.profile.cyverse_access_token)
+    profile = terrain.get_profile(user.username, user.profile.cyverse_access_token)
     altered = False
     if profile['first_name'] != user.first_name: user.first_name = profile['first_name']
     if profile['last_name'] != user.last_name: user.last_name = profile['last_name']
@@ -49,19 +56,13 @@ def get_cyverse_profile(user: User) -> dict:
 
 
 def refresh_cyverse_tokens(user: User):
-    access_token, refresh_token = refresh_tokens(username=user.username, refresh_token=user.profile.cyverse_refresh_token)
+    access_token, refresh_token = terrain.refresh_tokens(username=user.username, refresh_token=user.profile.cyverse_refresh_token)
     user.profile.cyverse_access_token = access_token
     user.profile.cyverse_refresh_token = refresh_token
     user.profile.save()
     user.save()
 
 
-def get_github_profile(user: User):
-    response = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
-                                   headers={'Authorization':
-                                                f"Bearer {user.profile.github_token}"})
-    if response.status_code == 200:
-        return response.json()
-    else:
-        logger.warning(f"Bad response from GitHub for user {user.profile.github_username}: {response.status_code}")
-        return None
+async def get_github_profile(user: User):
+    profile = await get_django_profile(user)
+    return await github.get_profile(profile.github_username, profile.github_token)

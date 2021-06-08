@@ -37,7 +37,7 @@ export const user = {
             state.profile.githubProfile = profile;
         },
         setStats(state, stats) {
-            state.profile.stats = stats  ;
+            state.profile.stats = stats;
         },
         setProfileLoading(state, loading) {
             state.profileLoading = loading;
@@ -59,7 +59,10 @@ export const user = {
             await axios
                 .get('/apis/v1/users/toggle_push_notifications/')
                 .then(response => {
-                    commit('setPushNotifications', response.data['push_notifications']);
+                    commit(
+                        'setPushNotifications',
+                        response.data['push_notifications']
+                    );
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -104,13 +107,17 @@ export const user = {
                     if (now > decoded.exp) commit('setLoggedIn', false);
                     else commit('setLoggedIn', true);
 
-
                     commit('setProfileLoading', false);
                 })
                 .catch(error => {
                     commit('setProfileLoading', false);
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
+                    else if (error.response.status === 401) {
+                        // if we get a 401, log the user out
+                        sessionStorage.clear();
+                        window.location.replace('/apis/v1/idp/cyverse_logout/');
+                    }
                 });
         }
     },

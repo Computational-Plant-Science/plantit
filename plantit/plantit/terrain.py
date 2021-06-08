@@ -10,6 +10,8 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 
 logger = logging.getLogger(__name__)
 
+# TODO use asyncx
+
 
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
@@ -21,8 +23,8 @@ def get_profile(username: str, access_token: str) -> dict:
     response = requests.get(
         f"https://de.cyverse.org/terrain/secured/user-info?username={username}",
         headers={'Authorization': f"Bearer {access_token}"})
-    if response.status_code == 401:
-        raise ValueError('Expired token')
+    if response.status_code == 401 or response.status_code == 403:
+        raise ValueError('Invalid token')
     else:
         content = response.json()
         if username in content:

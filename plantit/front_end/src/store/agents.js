@@ -100,7 +100,7 @@ export const agents = {
             commit('setPersonalLoading', true);
             commit('setPublicLoading', true);
             await axios
-                .get(`/apis/v1/agents/${payload.name}/refresh/`, {
+                .get(`/apis/v1/agents/${name}/refresh/`, {
                     headers: {
                         Authorization: 'Bearer ' + this.githubToken
                     }

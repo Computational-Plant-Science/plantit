@@ -81,7 +81,9 @@
                                     Slack
                                 </b-button>
                             </b-nav-item>-->
-                            <b-nav-item
+
+
+                            <!--<b-nav-item
                                 v-if="profile.loggedIn"
                                 title="Enter PlantIT"
                                 class="m-0 p-0"
@@ -108,11 +110,11 @@
                                     ></i>
                                     Enter
                                 </b-button>
-                            </b-nav-item>
+                            </b-nav-item> -->
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <b-row class="m-0 p-0" v-if="!profile.loggedIn">
+                <b-row class="m-0 p-0">
                     <b-col class="m-0 p-0">
                         <b-button
                             variant="white"
@@ -151,7 +153,7 @@ export default {
     computed: mapGetters('user', ['profile']),
     created: function() {
         this.crumbs = this.$route.meta.crumb;
-        this.$store.dispatch('user/loadProfile');
+        // this.$store.dispatch('user/loadProfile');
     }
 };
 </script>

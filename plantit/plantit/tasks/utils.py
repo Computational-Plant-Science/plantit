@@ -260,13 +260,17 @@ def prep_command(
 
 
 def create_task(username: str, agent_name: str, workflow: dict, name: str = None) -> Task:
-    now = timezone.now()
-    user = User.objects.get(username=username)
-    agent = Agent.objects.get(name=agent_name)
+    redis = RedisClient.get()
     repo_name = workflow['repo']['owner']['login']
     repo_owner = workflow['repo']['name']
-    repo_config = get_repo_config(repo_name, repo_owner, user.profile.github_token)
+    repo_config = redis.get(f"workflows/{repo_owner}/{repo_name}")
+    if repo_config is None:
+        raise ValueError(f"Workflow {repo_owner}/{repo_name} not found")
+
+    agent = Agent.objects.get(name=agent_name)
+    user = User.objects.get(username=username)
     guid = str(uuid.uuid4())
+    now = timezone.now()
 
     if agent.executor == AgentExecutor.LOCAL:
         task = Task.objects.create(guid=guid,
@@ -291,17 +295,14 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
                                            updated=now,
                                            token=binascii.hexlify(os.urandom(20)).decode())
 
-    if 'logo' in repo_config:
-        task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{repo_config['logo']}"
+    # add repo logo
+    if 'logo' in repo_config['config']:
+        logo_path = repo_config['config']['logo']
+        task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{logo_path}"
 
-    # add tags
-    for tag in workflow['config']['tags']:
-        task.tags.add(tag)
-
-    # guid for working directory name
-    task.workdir = f"{task.guid}/"
+    for tag in workflow['config']['tags']: task.tags.add(tag)     # add task tags
+    task.workdir = f"{task.guid}/"                              # use GUID for working directory name
     task.save()
-
     return task
 
 
@@ -614,8 +615,8 @@ def log_task_status(task: Task, description: str):
         log.write(f"{description}\n")
 
 
-def push_task_event(task: Task):
-    async_to_sync(get_channel_layer().group_send)(f"runs-{task.user.username}", {
+async def push_task_event(task: Task):
+    await get_channel_layer().group_send(f"runs-{task.user.username}", {
         'type': 'task_event',
         'run': map_task(task),
     })

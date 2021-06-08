@@ -18,12 +18,14 @@ from plantit.notifications.models import DirectoryPolicyNotification
 
 
 @login_required
-async def sharing(request):  # directories the current user is sharing
+def sharing(request):  # directories the current user is sharing
     policies = DatasetAccessPolicy.objects.filter(owner=request.user)
     return JsonResponse({'datasets': [map_dataset_policy(policy) for policy in policies]})
 
 
+@sync_to_async
 @login_required
+@async_to_sync
 async def shared(request):  # directories shared with the current user
     policies = await sync_to_async(list)(DatasetAccessPolicy.objects.filter(guest=request.user))
     urls = [f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={policy.path}" for policy in policies]
@@ -41,7 +43,8 @@ async def shared(request):  # directories shared with the current user
 @async_to_sync
 async def share(request):
     owner = request.user
-    guests = request.data['sharing']
+    body = json.loads(request.body.decode('utf-8'))
+    guests = body['sharing']
     policies = []
 
     for guest in guests:
@@ -64,6 +67,7 @@ async def share(request):
             created=timezone.now(),
             policy=policy,
             message=f"{owner.username} shared directory {policy.path} with you")
+
         await get_channel_layer().group_send(f"notifications-{user.username}", {
             'type': 'push_notification',
             'notification': {
@@ -80,7 +84,7 @@ async def share(request):
         "Authorization": f"Bearer {request.user.profile.cyverse_access_token}",
     }
     async with httpx.AsyncClient(headers=headers) as client:
-        response = client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(request.data))
+        response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(body))
         response.raise_for_status()
 
     return JsonResponse({'policies': policies})
@@ -91,9 +95,10 @@ async def share(request):
 @async_to_sync
 async def unshare(request):
     owner = request.user
-    guest_username = request.data['user']
-    path = request.data['path']
-    role_str = str(request.data['role'])
+    body = json.loads(request.body.decode('utf-8'))
+    guest_username = body['user']
+    path = body['path']
+    role_str = str(body['role'])
 
     if role_str.lower() != 'read' and role_str.lower() != 'write':
         return HttpResponseBadRequest(f"Unsupported role {role_str} (allowed: read, write)")
@@ -101,21 +106,22 @@ async def unshare(request):
         role = DatasetRole.read if role_str.lower() == 'read' else DatasetRole.write
 
     try:
-        guest = User.objects.get(owner=guest_username)
+        guest = await sync_to_async(User.objects.get)(owner=guest_username)
     except:
         return HttpResponseNotFound()
 
     try:
-        policy = DatasetAccessPolicy.objects.get(owner=owner, guest=guest, role=role, path=path)
+        policy = await sync_to_async(DatasetAccessPolicy.objects.get)(owner=owner, guest=guest, role=role, path=path)
     except:
         return HttpResponseNotFound()
 
-    notification = DirectoryPolicyNotification.objects.create(
+    notification = await sync_to_async(DirectoryPolicyNotification.objects.create)(
         guid=str(uuid.uuid4()),
         user=guest,
         created=timezone.now(),
         policy=policy,
         message=f"{owner.username} revoked your access to directory {policy.path}")
+
     await get_channel_layer().group_send(f"notifications-{guest.username}", {
         'type': 'push_notification',
         'notification': {
@@ -133,8 +139,8 @@ async def unshare(request):
         "Content-Type": 'application/json;charset=utf-8'
     }
     async with httpx.AsyncClient(headers=headers) as client:
-        response = client.post("https://de.cyverse.org/terrain/secured/unshare", data=json.dumps({'unshare': [{'user': path, 'paths': [path]}]}))
+        response = await client.post("https://de.cyverse.org/terrain/secured/unshare", data=json.dumps({'unshare': [{'user': path, 'paths': [path]}]}))
         response.raise_for_status()
 
-    policy.delete()
+    await sync_to_async(policy.delete)()
     return JsonResponse({'unshared': True})

@@ -5,13 +5,15 @@ from datetime import datetime
 from os.path import join
 from typing import List
 
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from plantit.github import get_repo, list_connectable_repos_by_owner
+from plantit.github import list_connectable_repos_by_owner, get_repo_bundle
 from plantit.redis import RedisClient
 from plantit.tasks.models import Task
+from plantit.users.utils import get_django_profile
 from plantit.workflows.models import Workflow
 
 logger = logging.getLogger(__name__)
@@ -106,32 +108,46 @@ def map_old_workflow_config_to_new(old: dict, run: Task, resources: dict) -> dic
     return new_config
 
 
-async def bind_workflow(workflow: Workflow, token: str) -> dict:
-    repo = await get_repo(
+@sync_to_async
+def filter_workflows(user: User = None, public: bool = None):
+    workflows = Workflow.objects.all()
+    if user is not None: workflows = workflows.filter(user=user)
+    if public is not None: workflows = workflows.filter(public=public)
+    return list(workflows)
+
+
+@sync_to_async
+def get_workflow_user(workflow: Workflow):
+    return workflow.user
+
+
+async def bind_workflow_bundle(workflow: Workflow, token: str) -> dict:
+    bundle = await get_repo_bundle(
         workflow.repo_owner,
         workflow.repo_name,
         token)
     return {
-        'config': repo['config'],
-        'repo': repo['repo'],
-        'validation': repo['validation'],
+        'config': bundle['config'],
+        'repo': bundle['repo'],
+        'validation': bundle['validation'],
         'public': workflow.public,
         'connected': True
     }
 
 
-async def repopulate_personal_workflow_cache(owner: str):
+async def repopulate_personal_workflow_bundle_cache(owner: str):
     try:
-        user = User.objects.get(profile__github_username=owner)
+        user = await sync_to_async(User.objects.get)(profile__github_username=owner)
     except:
         logger.warning(f"User {owner} does not exist")
         return
 
-    empty_personal_workflow_cache(owner)
+    empty_personal_workflow_bundle_cache(owner)
 
-    owned = list(Workflow.objects.filter(user=user))
-    bind = asyncio.gather(*[bind_workflow(workflow, user.profile.github_token) for workflow in owned])
-    results = await asyncio.gather(*[bind, list_connectable_repos_by_owner(owner, user.profile.github_token)])
+    profile = await get_django_profile(user)
+    owned = await filter_workflows(user=user)
+    bind = asyncio.gather(*[bind_workflow_bundle(workflow, profile.github_token) for workflow in owned])
+    results = await asyncio.gather(*[bind, list_connectable_repos_by_owner(owner, profile.github_token)])
     connected = results[0]
     connectable = results[1]
     both = []
@@ -160,24 +176,26 @@ async def repopulate_personal_workflow_cache(owner: str):
     logger.info(f"Added {len(connected)} connected, {len(connectable) - len(connected)} connectable, {len(both)} total to {owner}'s workflow cache" + ("" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
-async def repopulate_public_workflow_cache():
+async def repopulate_public_workflow_bundle_cache():
     redis = RedisClient.get()
-    users = [workflow.user for workflow in list(Workflow.objects.filter(public=True))]  # only include users with public workflows
+    public_workflows = await filter_workflows(public=True)
+    users = [await get_workflow_user(workflow) for workflow in public_workflows]
 
     for user in users:
-        empty_personal_workflow_cache(user.profile.github_username)
-        await repopulate_personal_workflow_cache(user.profile.github_username)
+        profile = await get_django_profile(user)
+        empty_personal_workflow_bundle_cache(profile.github_username)
+        await repopulate_personal_workflow_bundle_cache(profile.github_username)
 
     redis.set(f"public_workflows_updated", timezone.now().timestamp())
 
 
-async def get_public_workflows(invalidate: bool = False) -> List[dict]:
+async def get_public_workflow_bundles(invalidate: bool = False) -> List[dict]:
     redis = RedisClient.get()
     updated = redis.get('public_workflows_updated')
 
     # repopulate if empty or invalidation requested
     if updated is None or len(list(redis.scan_iter(match=f"workflows/*"))) == 0 or invalidate:
-        await repopulate_public_workflow_cache()
+        await repopulate_public_workflow_bundle_cache()
     else:
         age = (datetime.now() - datetime.fromtimestamp(float(updated)))
         age_secs = age.total_seconds()
@@ -186,19 +204,19 @@ async def get_public_workflows(invalidate: bool = False) -> List[dict]:
         # otherwise only if stale
         if age_secs > max_secs:
             logger.info(f"Public workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
-            await repopulate_public_workflow_cache()
+            await repopulate_public_workflow_bundle_cache()
 
     workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflows/*')]
     return [workflow for workflow in workflows if workflow['public']]
 
 
-async def get_personal_workflows(owner: str, invalidate: bool = False) -> List[dict]:
+async def get_personal_workflow_bundles(owner: str, invalidate: bool = False) -> List[dict]:
     redis = RedisClient.get()
     updated = redis.get(f"workflows_updated/{owner}")
 
     # repopulate if empty or invalidation requested
     if updated is None or len(list(redis.scan_iter(match=f"workflows/{owner}/*"))) == 0 or invalidate:
-        await repopulate_personal_workflow_cache(owner)
+        await repopulate_personal_workflow_bundle_cache(owner)
     else:
         age = (datetime.now() - datetime.fromtimestamp(float(updated)))
         age_secs = age.total_seconds()
@@ -207,27 +225,27 @@ async def get_personal_workflows(owner: str, invalidate: bool = False) -> List[d
         # otherwise only if stale
         if age_secs > max_secs:
             logger.info(f"GitHub user {owner}'s workflow cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
-            await repopulate_personal_workflow_cache(owner)
+            await repopulate_personal_workflow_bundle_cache(owner)
 
     return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]
 
 
-async def get_workflow(owner: str, name: str, token: str, invalidate: bool = False) -> dict:
+async def get_workflow_bundle(owner: str, name: str, token: str, invalidate: bool = False) -> dict:
     redis = RedisClient.get()
     updated = redis.get(f"workflows_updated/{owner}")
     workflow = redis.get(f"workflows/{owner}/{name}")
 
     if updated is None or workflow is None or invalidate:
-        try: workflow = Workflow.objects.get(repo_owner=owner, repo_name=name)
+        try: workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name)
         except: raise ValueError(f"Workflow {owner}/{name} not found")
 
-        workflow = await bind_workflow(workflow, token)
+        workflow = await bind_workflow_bundle(workflow, token)
         redis.set(f"workflows/{owner}/{name}", json.dumps(workflow))
 
     return workflow
 
 
-def empty_personal_workflow_cache(owner: str):
+def empty_personal_workflow_bundle_cache(owner: str):
     redis = RedisClient.get()
     keys = list(redis.scan_iter(match=f"workflows/{owner}/*"))
     cleaned = len(keys)

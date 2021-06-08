@@ -31,7 +31,7 @@ from plantit.terrain import list_dir
 from plantit.sns import SnsClient
 from plantit.github import get_repo
 from plantit.users.utils import refresh_cyverse_tokens
-from plantit.workflows.utils import repopulate_personal_workflow_cache, repopulate_public_workflow_cache
+from plantit.workflows.utils import repopulate_personal_workflow_bundle_cache, repopulate_public_workflow_bundle_cache
 
 logger = get_task_logger(__name__)
 
@@ -565,12 +565,12 @@ def aggregate_user_statistics(username: str):
 
 @app.task()
 def refresh_personal_workflows(owner: str):
-    repopulate_personal_workflow_cache(owner)
+    repopulate_personal_workflow_bundle_cache(owner)
 
 
 @app.task()
 def refresh_all_workflows(token: str):
-    repopulate_public_workflow_cache(token)
+    repopulate_public_workflow_bundle_cache(token)
 
 
 @app.task()

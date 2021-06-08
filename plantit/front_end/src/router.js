@@ -287,7 +287,6 @@ let router = new Router({
 
 router.beforeEach(async (to, from, next) => {
     if (to.name === 'dashboard') {
-        await store.dispatch('user/loadProfile'); // refresh user profile
         to.meta.title = 'Dashboard';
     }
     if (to.name === 'workflow') {

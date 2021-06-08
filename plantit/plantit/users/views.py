@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -6,12 +7,12 @@ from urllib.parse import urlencode
 
 import jwt
 import requests
+from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
-from django.utils import timezone
 from github import Github
 from requests.auth import HTTPBasicAuth
 from rest_framework import viewsets, mixins
@@ -217,18 +218,18 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         redis = RedisClient.get()
         stats_last_aggregated = user.profile.stats_last_aggregated
 
-        if stats_last_aggregated is None:
-            self.logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
-            aggregate_user_statistics.delay(user.username)
-            stats = None
-        else:
+        # if stats_last_aggregated is None:
+        #     self.logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
+        #     aggregate_user_statistics.delay(user.username)
+        #     stats = None
+        # else:
 
-            stats = redis.get(f"stats/{user.username}")
-            stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
-            if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
-                self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
-                aggregate_user_statistics.delay(user.username)
-                stats = None
+        #     stats = redis.get(f"stats/{user.username}")
+        #     stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
+        #     if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
+        #         self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
+        #         aggregate_user_statistics.delay(user.username)
+        #         stats = None
 
         if user.profile.push_notification_status == 'pending':
             user.profile.push_notification_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
@@ -246,13 +247,21 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'github_token': user.profile.github_token,
                 'cyverse_token': user.profile.cyverse_access_token
             },
-            'stats': None if stats is None else json.loads(stats)
+            'stats': None
+            # 'stats': None if stats is None else json.loads(stats)
         }
 
         if request.user.profile.cyverse_access_token != '':
-            response['cyverse_profile'] = get_cyverse_profile(request.user)
+            try:
+                response['cyverse_profile'] = get_cyverse_profile(request.user)
+            except ValueError:
+                # if the CyVerse request fails, log the user out
+                logout(request)
+                return redirect("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/logout?redirect_uri=https"
+                                "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
+
         if request.user.profile.github_token != '' and user.profile.github_username != '':
-            response['github_profile'] = get_github_profile(request.user)
+            response['github_profile'] = async_to_sync(get_github_profile)(request.user)
 
         return JsonResponse(response)
 

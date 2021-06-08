@@ -140,30 +140,35 @@ def validate_repo_config(config: dict, token: str) -> (bool, List[str]):
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
+async def get_profile(owner: str, token: str) -> dict:
+    headers = {'Authorization': f"Bearer {token}"}
+    async with httpx.AsyncClient(headers=headers) as client:
+        response = await client.get(f"https://api.github.com/users/{owner}")
+        if response.status_code == 200: return response.json()
+        else: raise ValueError(f"Bad response from GitHub for user {owner}: {response.status_code}")
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
 async def get_repo(owner: str, name: str, token: str) -> dict:
-    tasks = [get_repo(owner, name, token), get_repo_config(owner, name, token)]
-    responses = await asyncio.gather(*tasks, return_exceptions=True)
-    repo = responses[0].json()
-    config = responses[1].json()
-    valid = validate_repo_config(config, token)
-    if isinstance(valid, bool):
-        return {
-            'repo': repo,
-            'config': config,
-            'validation': {
-                'is_valid': True,
-                'errors': []
-            }
-        }
-    else:
-        return {
-            'repo': repo,
-            'config': config,
-            'validation': {
-                'is_valid': valid[0],
-                'errors': valid[1]
-            }
-        }
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+    }
+    async with httpx.AsyncClient(headers=headers) as client:
+        response = await client.get(
+            f"https://api.github.com/repos/{owner}/{name}",
+            headers={
+                "Authorization": f"token {token}",
+                "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
+            })
+        repo = response.json()
+        if 'message' in repo and repo['message'] == 'Not Found': raise ValueError(f"Repo {owner}/{name} not found")
+        return repo
 
 
 @retry(
@@ -195,28 +200,6 @@ def get_repo_readme(owner: str, name: str, token: str) -> str:
     retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
         RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
         Timeout) | retry_if_exception_type(HTTPError)))
-async def get_repo(owner: str, name: str, token: str) -> dict:
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-    }
-    async with httpx.AsyncClient(headers=headers) as client:
-        repo = await client.get(
-            f"https://api.github.com/repos/{owner}/{name}",
-            headers={
-                "Authorization": f"token {token}",
-                "Accept": "application/vnd.github.mercy-preview+json"  # so repo topics will be returned
-            }).json()
-        if 'message' in repo and repo['message'] == 'Not Found': raise ValueError(f"Repo {owner}/{name} not found")
-        return repo
-
-
-@retry(
-    wait=wait_exponential(multiplier=1, min=4, max=10),
-    stop=stop_after_attempt(3),
-    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
-        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
-        Timeout) | retry_if_exception_type(HTTPError)))
 async def get_repo_config(owner: str, name: str, token: str) -> dict:
     headers = {
         "Authorization": f"token {token}",
@@ -227,9 +210,36 @@ async def get_repo_config(owner: str, name: str, token: str) -> dict:
         #     f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml") if token == '' \
         #     else requests.get(f"https://api.github.com/repos/{owner}/{name}/contents/plantit.yaml",
         #                       headers={"Authorization": f"token {token}"})
-        config = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/master/plantit.yaml").text
+        response = await client.get(f"https://raw.githubusercontent.com/{owner}/{name}/master/plantit.yaml")
+        config = response.text
         # config = await client.get(response.json()['download_url']).text
         return yaml.load(config)
+
+
+async def get_repo_bundle(owner: str, name: str, token: str) -> dict:
+    tasks = [get_repo(owner, name, token), get_repo_config(owner, name, token)]
+    responses = await asyncio.gather(*tasks, return_exceptions=True)
+    repo = responses[0]
+    config = responses[1]
+    valid = validate_repo_config(config, token)
+    if isinstance(valid, bool):
+        return {
+            'repo': repo,
+            'config': config,
+            'validation': {
+                'is_valid': True,
+                'errors': []
+            }
+        }
+    else:
+        return {
+            'repo': repo,
+            'config': config,
+            'validation': {
+                'is_valid': valid[0],
+                'errors': valid[1]
+            }
+        }
 
 
 @retry(
