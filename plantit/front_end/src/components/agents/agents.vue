@@ -234,16 +234,18 @@
             ok-title="Connect"
         >
             <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                Your agent must be reachable by password-authenticated SSH on
-                port 22. You will be prompted for your username and password
-                after this form is submitted. If you elect to make this agent
-                public, other users will receive an authentication prompt prior
-                to submitting workflows.
-            </p>
+                Your agent must be reachable by SSH on
+                port 22.</p>
             <b-alert variant="danger" :show="agentNameExists"
                 >This name is already in use. Please pick another.</b-alert
             >
-            <b-form-group label="Name" description="A name for this agent.">
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >A name for this agent.</span
+                    ></template
+                >
                 <b-form-input
                     :state="agentName !== '' && !agentNameExists"
                     v-model="agentName"
@@ -256,10 +258,13 @@
             <b-alert variant="danger" :show="agentHostExists"
                 >This host is already in use.</b-alert
             >
-            <b-form-group
-                label="Host"
-                description="This agent's FQDN or IP address."
-            >
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >This agent's FQDN or IP address.</span
+                    ></template
+                >
                 <b-form-input
                     :state="agentHost !== '' && !agentHostExists"
                     v-model="agentHost"
@@ -269,10 +274,13 @@
                     @input="onAgentHostChange"
                 ></b-form-input>
             </b-form-group>
-            <b-form-group
-                label="Description"
-                description="A plain-text description of this agent."
-            >
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >A plain-text description of this agent.</span
+                    ></template
+                >
                 <b-form-textarea
                     :state="agentDescription !== ''"
                     v-model="agentDescription"
@@ -280,10 +288,13 @@
                     required
                 ></b-form-textarea>
             </b-form-group>
-            <b-form-group
-                label="Authentication"
-                description="Select an authentication strategy."
-            >
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Select an authentication strategy.</span
+                    ></template
+                >
                 <b-form-select
                     v-model="agentAuthentication"
                     :options="agentAuthenticationOptions"
@@ -292,10 +303,14 @@
                     required
                 ></b-form-select
             ></b-form-group>
-            <b-form-group
-                label="Working directory"
-                description="Working directory within which to run user workflows."
-            >
+            <b-form-group>
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Working directory within which to run user
+                        workflows.</span
+                    ></template
+                >
                 <b-form-input
                     :state="agentWorkdir !== ''"
                     v-model="agentWorkdir"
@@ -305,9 +320,13 @@
                 ></b-form-input>
             </b-form-group>
             <b-form-group
-                label="Pre-commands"
-                description="Commands to run before user commands (e.g., loading modules, setting environment variables). Frequently useful but not required."
             >
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Commands to run before user commands (e.g., loading modules, setting environment variables). Frequently useful but not required.</span
+                    ></template
+                >
                 <b-form-textarea
                     v-model="agentPrecommands"
                     type="text"
@@ -317,8 +336,11 @@
                 ></b-form-textarea>
             </b-form-group>
             <b-form-group
-                label="Maximum runtime (minutes)"
-                description="Maximum runtime (in minutes) permitted before the workflow is aborted."
+                ><template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Maximum runtime (in minutes) permitted before the workflow is aborted.</span
+                    ></template
                 ><b-form-spinbutton
                     v-model="agentMaxTime"
                     value="10"
@@ -327,9 +349,13 @@
                 ></b-form-spinbutton
             ></b-form-group>
             <b-form-group
-                label="Executor"
-                description="Select an executor to orchestrate workflows."
             >
+              <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Select an executor to orchestrate workflows.</span
+                    ></template
+                >
                 <b-form-select
                     v-model="agentExecutor"
                     :options="agentExecutorOptions"
@@ -340,7 +366,11 @@
             ></b-form-group>
             <b-form-group
                 v-if="isSLURM(agentExecutor)"
-                description="Should this SLURM agent use job arrays for parallelization instead of Dask?"
+                ><template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Should this SLURM agent use job arrays for parallelization instead of Dask?</span
+                    ></template
                 ><b-form-checkbox
                     :class="profile.darkMode ? 'text-light' : 'text-dark'"
                     v-model="agentJobArray"
@@ -350,8 +380,13 @@
             </b-form-group>
             <b-form-group
                 v-if="isSLURM(agentExecutor)"
-                description="Should this SLURM agent use the TACC launcher instead of Dask?"
             >
+                <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Should this SLURM agent use the TACC launcher instead of Dask?</span
+                    ></template
+                >
                 <b-form-checkbox
                     :class="profile.darkMode ? 'text-light' : 'text-dark'"
                     v-model="agentLauncher"
@@ -362,9 +397,13 @@
             </b-form-group>
             <b-form-group
                 v-if="isJobQueue(agentExecutor)"
-                label="Queue"
-                description="Enter a scheduler queue name to use."
             >
+              <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Enter a scheduler queue name to use.</span
+                    ></template
+                >
                 <b-form-input
                     v-model="agentQueue"
                     :state="agentQueue !== ''"
@@ -375,9 +414,13 @@
             ></b-form-group>
             <b-form-group
                 v-if="isJobQueue(agentExecutor)"
-                label="Project"
-                description="Enter a project name or allocation number (optional on some schedulers)."
             >
+              <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Enter a project name or allocation number (optional on some schedulers).</span
+                    ></template
+                >
                 <b-form-input
                     v-model="agentProject"
                     type="text"
@@ -387,8 +430,11 @@
             ></b-form-group>
             <b-form-group
                 v-if="isJobQueue(agentExecutor)"
-                label="Maximum walltime (minutes)"
-                description="Maximum walltime (in minutes) workflows can request from the agent scheduler."
+                ><template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Maximum walltime (in minutes) workflows can request from the agent scheduler.</span
+                    ></template
                 ><b-form-spinbutton
                     v-model="agentMaxWalltime"
                     value="10"
@@ -399,7 +445,11 @@
             <b-form-group
                 v-if="isJobQueue(agentExecutor)"
                 label="Maximum processes"
-                description="Maximum number of processes workflows can request from the agent scheduler."
+                ><template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Maximum number of processes workflows can request from the agent scheduler.</span
+                    ></template
                 ><b-form-spinbutton
                     v-model="agentMaxProcesses"
                     value="1"
@@ -409,9 +459,14 @@
             ></b-form-group>
             <b-form-group
                 v-if="isJobQueue(agentExecutor)"
-                label="Maximum cores"
-                description="Maximum number of cores workflows can request from the agent scheduler."
-                ><b-form-spinbutton
+                >
+              <template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Maximum number of cores workflows can request from the agent scheduler.</span
+                    ></template
+                >
+              <b-form-spinbutton
                     v-model="agentMaxCores"
                     value="1"
                     min="1"
@@ -420,8 +475,11 @@
             ></b-form-group>
             <b-form-group
                 v-if="isJobQueue(agentExecutor)"
-                label="Maximum nodes"
-                description="Maximum number of nodes workflows can request from the agent scheduler."
+                ><template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Maximum number of nodes workflows can request from the agent scheduler.</span
+                    ></template
                 ><b-form-spinbutton
                     v-model="agentMaxNodes"
                     value="1"
@@ -431,8 +489,11 @@
             ></b-form-group>
             <b-form-group
                 v-if="isJobQueue(agentExecutor)"
-                label="Maximum memory"
-                description="Maximum memory (in GB) workflows can request from the agent scheduler."
+                ><template #description
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >Maximum memory (in GB) workflows can request from the agent scheduler.</span
+                    ></template
                 ><b-form-spinbutton
                     v-model="agentMaxMem"
                     value="1"
