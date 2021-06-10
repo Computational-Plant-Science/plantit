@@ -24,7 +24,7 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.users.utils import list_users, get_cyverse_profile, get_github_profile
+from plantit.users.utils import list_users, get_cyverse_profile, get_github_profile, get_or_create_keypair
 from plantit.utils import get_csrf_token
 
 
@@ -320,3 +320,9 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                                                         f"Bearer {request.user.profile.github_token}"})
             response['github_profile'] = github_response.json()
         return JsonResponse(response)
+
+    @action(detail=False, methods=['get'])
+    def get_key(self, request):
+        overwrite = request.GET.get('overwrite', False)
+        public_key = get_or_create_keypair(owner=request.user.username, overwrite=overwrite)
+        return JsonResponse({'public_key': public_key})

@@ -14,6 +14,5 @@ urlpatterns = [
     path(r'<name>/request/', views.request_access),
     path(r'<name>/revoke/', views.revoke_access),
     path(r'<name>/grant/', views.grant_access),
-    path(r'<name>/key/', views.get_or_create_keypair),
     path(r'<name>/auth/', views.set_authentication_strategy)
 ]

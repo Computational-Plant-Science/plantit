@@ -179,7 +179,7 @@
                         ><span class="text-danger">{{
                             publicContext
                                 ? 'No public agents available.'
-                                : "You haven't configured any agent bindings yet."
+                                : "You haven't created any agent bindings yet."
                         }}</span>
                         <br />
                         <span v-if="!publicContext">
@@ -194,8 +194,8 @@
                                 ><i class="fas fa-users fa-1x fa-fw"></i>
                                 Public</b-link
                             >
-                            agents to request guest access to a cluster or
-                            supercomputer, or
+                            agents to use an existing cluster or supercomputer,
+                            or
                             <b-link
                                 :class="
                                     profile.darkMode
@@ -230,6 +230,7 @@
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
             title="Bind a new agent"
             @ok="showAuthenticateModal"
+            @close="resetAgentInfo"
             :ok-disabled="!agentValid"
             ok-title="Bind"
             hide-header
@@ -300,7 +301,8 @@
                                 block
                                 variant="success"
                                 @click="changeAgentBindingStage('connection')"
-                                >Next: Connect</b-button
+                                ><i class="fas fa-arrow-right fa-fw fa-1x"></i>
+                                Next: Connection</b-button
                             ></b-col
                         >
                     </b-row>
@@ -364,22 +366,75 @@
                             type="text"
                             placeholder="Select an authentication strategy"
                             required
+                            @change="handleAuthenticationChange"
                         ></b-form-select></b-form-group
-                    ><b-row v-if="agentConnectionChecked">
-                        <b-col
-                            ><h5>
-                                <i class="fas fa-check fa-fw mr-1"></i
-                                >Connection to {{ agentName }} succeeded!
-                            </h5>
+                    ><b-row v-if="agentConnectionValid" class="text-center"
+                        ><b-col><h5>
+                            <i class="fas fa-check fa-fw mr-1 text-success"></i>Connection to
+                            {{ agentName }} succeeded!
+                        </h5></b-col></b-row
+                    >
+                <b-row
+                        v-if="
+                            agentAuthentication === 'key' &&
+                                !agentConnectionValid
+                        "
+                        style="word-wrap: break-word;"
+                        class="mb-2"
+                    >
+                        <b-col>
+                            <b-spinner
+                                small
+                                v-if="gettingKey"
+                                label="Loading..."
+                                :variant="profile.darkMode ? 'light' : 'dark'"
+                                class="ml-2 mb-1"
+                            ></b-spinner>
+                            <div v-else-if="publicKey !== ''">
+                                <span
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                >
+                                    Here is your public key. Place it in the
+                                    <code>~/.ssh/authorized_keys</code> file on
+                                    your agent, then click
+                                    <b-badge
+                                        size="sm"
+                                        class="m-0 p-1 mr-1"
+                                        disabled
+                                        variant="success"
+                                        ><i class="fas fa-wave-square fa-fw fa-1x"></i>
+                                        Check Connection</b-badge
+                                    > to make sure your agent is reachable.
+                                </span>
+                                <b-form-textarea
+                                    plaintext
+                                    :value="publicKey"
+                                    max-rows="15"
+                                    class="p-1"
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                ></b-form-textarea></div></b-col
+                    ></b-row>
+                    <b-row>
+                        <b-col>
                             <b-button
                                 block
-                                variant="success"
-                                @click="changeAgentBindingStage('executor')"
-                                >Next: Configure Executor</b-button
+                                :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
+                                @click="changeAgentBindingStage('details')"
+                                ><i class="fas fa-arrow-left fa-fw fa-1x"></i>
+                                Back: Details</b-button
                             ></b-col
-                        > </b-row
-                    ><b-row v-else>
-                        <b-col>
+                        >
+                      <b-col v-if="!gettingKey && !agentConnectionValid">
                             <b-button
                                 block
                                 variant="success"
@@ -393,11 +448,24 @@
                                     "
                                     class="mr-1"
                                 ></b-spinner
-                                ><i v-else class="fas fa-plug mr-1"></i>Check
-                                Connection</b-button
+                                ><i
+                                    v-else
+                                    class="fas fa-wave-square fa-fw fa-1x"
+                                ></i>
+                                Check Connection</b-button
                             ></b-col
-                        ></b-row
-                    ></b-col
+                        >
+                      <b-col v-if="agentConnectionValid">
+                            <b-button
+                                block
+                                variant="success"
+                                @click="changeAgentBindingStage('executor')"
+                                ><i class="fas fa-arrow-right fa-fw fa-1x"></i>
+                                Next: Executor</b-button
+                            ></b-col
+                        >
+                    </b-row>
+                    </b-col
                 ></b-row
             >
             <b-row v-if="agentBindingStage === 'executor'"
@@ -769,10 +837,10 @@ export default {
                 { value: 'SLURM', text: 'SLURM' },
                 { value: 'PBS', text: 'PBS' }
             ],
-            agentAuthentication: 'Password',
+            agentAuthentication: 'password',
             agentAuthenticationOptions: [
-                { value: 'Password', text: 'Password' },
-                { value: 'Key', text: 'Key' }
+                { value: 'password', text: 'Password' },
+                { value: 'key', text: 'Key' }
             ],
             agentQueue: '',
             agentProject: '',
@@ -793,7 +861,10 @@ export default {
             publicContext: false,
             togglingContext: false,
             bindingAgent: false,
-            checkingConnection: false
+            checkingConnection: false,
+            // public key
+            publicKey: '',
+            gettingKey: false
         };
     },
     async mounted() {
@@ -861,6 +932,43 @@ export default {
         // }
     },
     methods: {
+        handleAuthenticationChange() {
+            if (this.agentAuthentication === 'key') {
+                this.getKey();
+            }
+        },
+        async getKey() {
+            this.gettingKey = true;
+            await axios
+                .get(`/apis/v1/users/get_key/`)
+                .then(async response => {
+                    if (response.status === 200) {
+                        this.publicKey = response.data.public_key;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Retrieved public key`,
+                            guid: guid().toString()
+                        });
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to retrieve public key`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.gettingKey = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to retrieve public key`,
+                        guid: guid().toString()
+                    });
+                    this.gettingKey = false;
+                    throw error;
+                });
+        },
         submitAuthentication() {
             if (this.agentBindingStage === 'details') return;
             else if (this.agentBindingStage === 'connection')
@@ -868,21 +976,19 @@ export default {
             else if (!this.agentExecutorValid) this.checkAgentExecutor();
             else this.bindAgent();
         },
-        checkAgentExecutor() {
-
-        },
+        checkAgentExecutor() {},
         changeAgentBindingStage(stage) {
             this.agentBindingStage = stage;
         },
         preCheckAgentConnection() {
-            if (this.agentAuthentication === 'Password')
+            if (this.agentAuthentication === 'password')
                 this.$bvModal.show('authenticate');
             else this.checkAgentConnection();
         },
         async checkAgentConnection() {
             this.checkingConnection = true;
             let data =
-                this.agentAuthentication === 'Password'
+                this.agentAuthentication === 'password'
                     ? {
                           hostname: this.agentHost,
                           username: this.authenticationUsername,
@@ -894,7 +1000,7 @@ export default {
                       };
             await axios({
                 method: 'post',
-                url: `/apis/v1/agents/check/`,
+                url: `/apis/v1/agents/${this.agentName}/check/`,
                 data: data,
                 headers: { 'Content-Type': 'application/json' }
             })
@@ -963,7 +1069,7 @@ export default {
             this.agentPublic = false;
             this.agentLogo = '';
             this.agentExecutor = 'Local';
-            this.agentAuthentication = 'Password';
+            this.agentAuthentication = 'password';
             this.agentProject = '';
             this.agentQueue = '';
             this.agentMaxCores = 0;
@@ -973,6 +1079,7 @@ export default {
             this.agentMaxWalltime = 0;
             this.agentJobArray = false;
             this.agentLauncher = false;
+            this.agentBindingStage = 'details';
         },
         refreshAgents() {
             if (this.publicContext) this.$store.dispatch('agents/loadPublic');
@@ -1028,28 +1135,27 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(async response => {
-                  if (response.status == 200) {
-                    await Promise.all([
-                      this.$store.dispatch(
-                          'agents/addOrUpdate',
-                          response.data.agent
-                      ),
-                      this.$store.dispatch('alerts/add', {
-                        variant: 'success',
-                        message: `Created binding for agent ${response.data.agent.name}`,
-                        guid: guid().toString(),
-                        time: moment().format()
-                      })
-                    ]);
-                  }
-                  else {
-                   await this.$store.dispatch('alerts/add', {
-                        variant: 'danger',
-                        message: `Failed to bind agent ${this.agentName}`,
-                        guid: guid().toString(),
-                        time: moment().format()
-                    });
-                  }
+                    if (response.status == 200) {
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'agents/addOrUpdate',
+                                response.data.agent
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Created binding for agent ${response.data.agent.name}`,
+                                guid: guid().toString(),
+                                time: moment().format()
+                            })
+                        ]);
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to bind agent ${this.agentName}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                    }
                     this.resetAgentInfo();
                     this.bindingAgent = false;
                 })

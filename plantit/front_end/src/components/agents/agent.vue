@@ -134,7 +134,7 @@
                                                         getAgent.role ===
                                                             'guest'
                                                     "
-                                                    variant="warning"
+                                                    variant="info"
                                                     >Guest</b-badge
                                                 >
                                                 <b-badge
@@ -142,7 +142,7 @@
                                                         getAgent.role ===
                                                             'admin'
                                                     "
-                                                    variant="success"
+                                                    variant="warning"
                                                     >Owner</b-badge
                                                 >
                                                 <br />
@@ -284,9 +284,27 @@
                                                 align-self="end"
                                                 ><b-form-checkbox
                                                     v-model="getAgent.public"
+                                                    :disabled="
+                                                        getAgent.authentication ===
+                                                            'key'
+                                                    "
                                                     button
                                                     class="mr-0"
                                                     size="sm"
+                                                    v-b-tooltip.hover
+                                                    :title="
+                                                        getAgent.authentication ===
+                                                            'key' &&
+                                                        !getAgent.public
+                                                            ? `To make ${getAgent.name} public you must enable Password authentication`
+                                                            : `Make ${
+                                                                  getAgent.name
+                                                              } ${
+                                                                  getAgent.public
+                                                                      ? 'private'
+                                                                      : 'public'
+                                                              }`
+                                                    "
                                                     button-variant="warning"
                                                     @change="togglePublic"
                                                 >
@@ -352,10 +370,23 @@
                                                     "
                                                     size="sm"
                                                     v-b-tooltip.hover
-                                                    title="Get Public Key"
+                                                    title="Get your public key"
                                                     @click="getKey"
                                                 >
-                                                    <i
+                                              <b-spinner
+                                                        small
+                                                        v-if="
+                                                            gettingKey
+                                                        "
+                                                        label="Loading..."
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'light'
+                                                                : 'dark'
+                                                        "
+                                                        class="ml-2 mb-1"
+                                                    ></b-spinner>
+                                                    <i v-else
                                                         class="fas fa-key fa-fw"
                                                     ></i>
                                                     Get Key
@@ -367,9 +398,14 @@
                                                 align-self="end"
                                                 md="auto"
                                                 ><b-dropdown
+                                                    :disabled="getAgent.public"
                                                     v-b-tooltip.hover
                                                     size="sm"
-                                                    title="Configure Authentication Strategy"
+                                                    :title="
+                                                        getAgent.public
+                                                            ? `To select a different authentication strategy you must make ${getAgent.name} private`
+                                                            : 'Select an authentication strategy'
+                                                    "
                                                     :variant="
                                                         profile.darkMode
                                                             ? 'outline-light'
@@ -400,7 +436,7 @@
                                                         :variant="
                                                             profile.darkMode
                                                                 ? 'outline-light'
-                                                                : 'white'
+                                                                : 'dark'
                                                         "
                                                         :active="
                                                             getAgent.authentication ===
@@ -435,7 +471,7 @@
                                                         :variant="
                                                             profile.darkMode
                                                                 ? 'outline-light'
-                                                                : 'white'
+                                                                : 'dark'
                                                         "
                                                         @click="
                                                             setAuthStrategy(
@@ -467,7 +503,10 @@
                                                     "
                                                     size="sm"
                                                     v-b-tooltip.hover
-                                                    title="Check Connection Status"
+                                                    :title="
+                                                        'Verify that PlantIT can connect to ' +
+                                                            getAgent.name
+                                                    "
                                                     :disabled="
                                                         getAgent.role ===
                                                             'none' ||
@@ -476,9 +515,9 @@
                                                     @click="preCheckConnection"
                                                 >
                                                     <i
-                                                        class="fas fa-network-wired fa-fw"
+                                                        class="fas fa-wave-square fa-fw"
                                                     ></i>
-                                                    Check Status<b-spinner
+                                                    Check Connection<b-spinner
                                                         small
                                                         v-if="
                                                             checkingConnection
@@ -828,23 +867,26 @@
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
             :title="`Public key for ${this.getAgent.name}`"
+            ok-only
             @ok="hideKeyModal"
-            ok-variant="danger"
+            ok-variant="success"
         >
-            <b-row style="word-wrap: break-word;"
-                ><b-col>
+            <b-row
+                ><b-col style="word-wrap: break-word;">
                     <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Here is your public key.
                         <!--<span class="text-danger">You will not be able to view the key again.</span> -->Place
                         it in the <code>~/.ssh/authorized_keys</code> file on
                         your agent.
                     </p>
-                    <small
+                    <b-form-textarea
+                        plaintext
+                        :value="publicKey"
+                        max-rows="15"
+                        class="p-1"
                         :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >{{ publicKey }}</small
-                    >
-                </b-col></b-row
-            >
+                    ></b-form-textarea> </b-col
+            ></b-row>
         </b-modal>
         <b-modal
             id="unbind"
@@ -974,7 +1016,8 @@ export default {
             },
             sessionSocket: null,
             togglingPublic: false,
-            publicKey: ''
+            publicKey: '',
+            gettingKey: false
         };
     },
     computed: {
@@ -1022,32 +1065,35 @@ export default {
     },
     methods: {
         async getKey() {
+            this.gettingKey = true;
             await axios
-                .get(`/apis/v1/agents/${this.getAgent.name}/key/`)
+                .get(`/apis/v1/users/get_key/`)
                 .then(async response => {
                     if (response.status === 200) {
                         this.publicKey = response.data.public_key;
                         this.showKeyModal();
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
-                            message: `Retrieved public key for agent ${this.$router.currentRoute.params.name}`,
+                            message: `Retrieved public key`,
                             guid: guid().toString()
                         });
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
-                            message: `Failed to retrieve public key for agent ${this.$router.currentRoute.params.name}`,
+                            message: `Failed to retrieve public key`,
                             guid: guid().toString()
                         });
                     }
+                    this.gettingKey = false;
                 })
                 .catch(error => {
                     Sentry.captureException(error);
                     this.$store.dispatch('alerts/add', {
                         variant: 'danger',
-                        message: `Failed to retrieve public key for agent ${this.$router.currentRoute.params.name}`,
+                        message: `Failed to retrieve public key`,
                         guid: guid().toString()
                     });
+                    this.gettingKey = false;
                     throw error;
                 });
         },

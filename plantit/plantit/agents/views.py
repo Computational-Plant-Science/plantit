@@ -13,7 +13,8 @@ from django.utils import timezone
 
 from plantit.ssh import SSH, execute_command
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAccessRequest, AgentAuthentication
-from plantit.agents.utils import map_agent, create_keypair, get_private_key_path
+from plantit.agents.utils import map_agent
+from plantit.users.utils import get_or_create_keypair, get_private_key_path
 from plantit.notifications.models import TargetPolicyNotification
 
 logger = logging.getLogger(__name__)
@@ -283,19 +284,6 @@ def get_access_policies(request, name):
         return HttpResponseNotFound()
 
     return JsonResponse({'policies': list(AgentAccessPolicy.objects.filter(agent=agent))})
-
-
-@login_required
-def get_or_create_keypair(request, name):
-    try: agent = Agent.objects.get(name=name)
-    except: return HttpResponseNotFound()
-
-    if agent.user is not None and agent.user.username != request.user.username:
-        return HttpResponseForbidden()
-
-    overwrite = request.GET.get('overwrite', False)
-    public_key = create_keypair(owner=request.user.username, overwrite=overwrite)
-    return JsonResponse({'public_key': public_key})
 
 
 @login_required
