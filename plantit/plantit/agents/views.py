@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 import uuid
 from datetime import timedelta
 
@@ -7,52 +8,33 @@ from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed, HttpResponseBadRequest
 from django.utils import timezone
 
 from plantit.ssh import SSH, execute_command
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAccessRequest, AgentAuthentication
-from plantit.agents.utils import map_agent, create_keypair
+from plantit.agents.utils import map_agent, create_keypair, get_private_key_path
 from plantit.notifications.models import TargetPolicyNotification
 
 logger = logging.getLogger(__name__)
 
 
 @login_required
-def search_or_add(request):
+def list_or_bind(request):
     if request.method == 'GET':
         agents = Agent.objects.all()
         public = request.GET.get('public')
         agent_name = request.GET.get('name')
         agent_owner = request.GET.get('owner')
 
-        if public is not None and bool(public):
-            agents = agents.filter(public=bool(public))
-        if agent_name is not None and type(agent_name) is str:
-            agents = agents.filter(name=agent_name)
+        if public is not None and bool(public): agents = agents.filter(public=bool(public))
+        if agent_name is not None and type(agent_name) is str: agents = agents.filter(name=agent_name)
         if agent_owner is not None and type(agent_owner) is str:
-            try:
-                agents = agents.filter(user=User.objects.get(username=agent_owner))
-            except:
-                return HttpResponseNotFound()
+            try: agents = agents.filter(user=User.objects.get(username=agent_owner))
+            except: return HttpResponseNotFound()
 
         return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in agents]})
     elif request.method == 'POST':
-        body = json.loads(request.body.decode('utf-8'))
-        # make sure we can authenticate
-        # ssh = SSH(
-        #     host=body['config']['hostname'],
-        #     port=22,
-        #     username=body['auth']['username'],
-        #     password=body['auth']['password'])
-        # with ssh:
-        #     execute_command(
-        #         ssh_client=ssh,
-        #         pre_command=body['config']['pre_commands'],
-        #         command='pwd',
-        #         directory=body['config']['workdir'],
-        #         allow_stderr=False)
-
         body = json.loads(request.body.decode('utf-8'))
         config = body['config']
         guid = str(uuid.uuid4())
@@ -99,28 +81,27 @@ def search_or_add(request):
 
 
 @login_required
-def get_by_name(request, name):
-    try:
-        agent = Agent.objects.get(name=name)
-    except:
-        return HttpResponseNotFound()
+def get_or_unbind(request, name):
+    try: agent = Agent.objects.get(name=name)
+    except: return HttpResponseNotFound()
 
-    policies = AgentAccessPolicy.objects.filter(agent=agent)
+    if request.method == 'GET':
+        policies = AgentAccessPolicy.objects.filter(agent=agent)
+        try: access_requests = AgentAccessRequest.objects.filter(agent=agent)
+        except: access_requests = None
 
-    try:
-        access_requests = AgentAccessRequest.objects.filter(agent=agent)
-    except:
-        access_requests = None
+        if agent not in [policy.agent for policy in policies]:
+            return JsonResponse(map_agent(agent, AgentRole.none, None, access_requests))
 
-    if agent not in [policy.agent for policy in policies]:
-        return JsonResponse(map_agent(agent, AgentRole.none, None, access_requests))
+        try: role = AgentAccessPolicy.objects.get(user=request.user, agent=agent).role
+        except: role = AgentRole.none
+        return JsonResponse(map_agent(agent, role, list(policies), access_requests))
+    elif request.method == 'DELETE':
+        agent.delete()
+        logger.info(f"Removed binding for agent {name}")
+        agents = Agent.objects.filter(user=request.user)
+        return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in agents]})
 
-    try:
-        role = AgentAccessPolicy.objects.get(user=request.user, agent=agent).role
-    except:
-        role = AgentRole.none
-
-    return JsonResponse(map_agent(agent, role, list(policies), access_requests))
 
 
 @login_required
@@ -259,6 +240,7 @@ def toggle_public(request, name):
 
     agent.public = not agent.public
     agent.save()
+    logger.info(f"Agent {name} is now {'public' if agent.public else 'private'}")
 
     return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})
 
@@ -275,18 +257,21 @@ def healthcheck(request, name):
     try:
         if agent.authentication == AgentAuthentication.PASSWORD:
             try:
-                username = body['auth']['username']
                 password = body['auth']['password']
-            except: return HttpResponseNotAllowed()
-            ssh = SSH(host=agent.hostname, port=22, username=username, password=password)
-        else: ssh = SSH(agent.hostname, agent.port, agent.username)
+            except:
+                return HttpResponseNotAllowed()
+            ssh = SSH(host=agent.hostname, port=22, username=agent.username, password=password)
+        else:
+            logger.info(str(get_private_key_path(request.user.username)))
+            ssh = SSH(host=agent.hostname, port=22, username=agent.username, pkey=str(get_private_key_path(request.user.username)))
 
         with ssh:
+            logger.info(f"Checking agent {agent.name}'s health")
             for line in execute_command(ssh_client=ssh, pre_command=':', command=f"pwd", directory=agent.workdir): logger.info(line)
             logger.info(f"Agent {agent.name} healthcheck succeeded")
             return JsonResponse({'healthy': True})
     except:
-        logger.info(f"Agent {agent.name} healthcheck failed")
+        logger.warning(f"Agent {agent.name} healthcheck failed:\n{traceback.format_exc()}")
         return JsonResponse({'healthy': False})
 
 
@@ -301,15 +286,53 @@ def get_access_policies(request, name):
 
 
 @login_required
-def get_keypair(request, name):
-    try:
-        agent = Agent.objects.get(name=name)
-    except:
-        return HttpResponseNotFound()
+def get_or_create_keypair(request, name):
+    try: agent = Agent.objects.get(name=name)
+    except: return HttpResponseNotFound()
 
     if agent.user is not None and agent.user.username != request.user.username:
         return HttpResponseForbidden()
 
-    overwrite = request.GET.get('invalidate', False)
+    overwrite = request.GET.get('overwrite', False)
     public_key = create_keypair(owner=request.user.username, overwrite=overwrite)
     return JsonResponse({'public_key': public_key})
+
+
+@login_required
+def check_connection(request):
+    body = json.loads(request.body.decode('utf-8'))
+    try:
+        hostname = body['hostname']
+        username = body['username']
+    except:
+        return HttpResponseBadRequest()
+
+    if 'password' in body:
+        ssh = SSH(hostname, port=22, username=username, password=body['password'])
+    else:
+        ssh = SSH(hostname, port=22, username=username, pkey=str(get_private_key_path(request.user.username)))
+
+    with ssh:
+        try:
+            for line in execute_command(ssh_client=ssh, pre_command=':', command='pwd', directory=None, allow_stderr=False): logger.info(line)
+            return JsonResponse({'success': True})
+        except:
+            return JsonResponse({'success': False})
+
+
+@login_required
+def set_authentication_strategy(request, name):
+    body = json.loads(request.body.decode('utf-8'))
+    try:
+        strategy = body['strategy']
+        authentication = AgentAuthentication.PASSWORD if strategy == 'password' else AgentAuthentication.KEY
+    except: return HttpResponseBadRequest()
+
+    try: agent = Agent.objects.get(name=name)
+    except: return HttpResponseNotFound()
+
+    agent.authentication = authentication
+    agent.save()
+    logger.info(f"Agent {name} is now using {authentication} authentication")
+
+    return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})

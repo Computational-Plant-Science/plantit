@@ -164,19 +164,6 @@ export const workflows = {
                     throw error;
                 });
         },
-        add({ commit }, workflow) {
-            commit('add', workflow);
-        },
-        addOrUpdate({ commit }, workflow) {
-            commit('addOrUpdate', workflow);
-        },
-        disconnect({ commit }, workflow) {
-            workflow.connected = false;
-            commit('addOrUpdate', workflow);
-        },
-        remove({ commit }, workflow) {
-            commit('remove', workflow.repo.owner.login, workflow.repo.name);
-        },
         setRecentlyRun({ commit }, workflow) {
             commit('setRecentlyRun', workflow);
         }
@@ -197,11 +184,11 @@ export const workflows = {
         },
         publicWorkflows: state => state.public,
         publicWorkflowsLoading: state => state.publicLoading,
-        connectedWorkflows: state =>
-            state.personal.filter(repo => repo.connected),
-        connectableWorkflows: state =>
+        boundWorkflows: state =>
+            state.personal.filter(workflow => workflow.bound),
+        bindableWorkflows: state =>
             state.personal
-                .filter(repo => !repo.connected)
+                .filter(workflow => !workflow.bound)
                 .sort(function(l, r) {
                     if (l.validation['is_valid'] && r.validation['is_valid'])
                         return 0;

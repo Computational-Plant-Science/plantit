@@ -320,7 +320,7 @@ export default {
         ]),
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', [
-            'connectedWorkflows',
+            'boundWorkflows',
             'personalWorkflowsLoading'
         ]),
         isRootPath() {

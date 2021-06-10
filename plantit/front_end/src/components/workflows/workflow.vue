@@ -223,14 +223,14 @@
                                                 md="auto"
                                                 ><b-button
                                                     @click="
-                                                        showDisconnectWorkflowModal
+                                                        showUnbindWorkflowModal
                                                     "
                                                     size="sm"
                                                     variant="outline-danger"
                                                     ><i
                                                         class="fas fa-times-circle fa-fw fa-1x"
                                                     ></i>
-                                                    Disconnect</b-button
+                                                    Unbind</b-button
                                                 ></b-col
                                             >
                                         </b-row>
@@ -2767,7 +2767,7 @@
                 ></b-form-input>
             </b-modal>
             <b-modal
-                id="disconnect"
+                id="unbind"
                 :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
                 centered
                 close
@@ -2777,14 +2777,14 @@
                 :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
                 :header-border-variant="profile.darkMode ? 'dark' : 'white'"
                 :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :title="`Disconnect ${this.getWorkflow.config.name}?`"
-                @ok="disconnectWorkflow"
+                :title="`Unbind ${this.getWorkflow.config.name}?`"
+                @ok="unbindWorkflow"
                 ok-variant="danger"
             >
                 <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
                     You {{ getWorkflow.public ? 'and others' : '' }} will no
-                    longer be able to run this workflow. You can always
-                    reconnect it later.
+                    longer be able to use this workflow (although you can
+                    re-bind it anytime).
                 </p>
             </b-modal>
         </b-container>
@@ -2953,8 +2953,8 @@ export default {
                     throw error;
                 });
         },
-        showDisconnectWorkflowModal() {
-            this.$bvModal.show('disconnect');
+        showUnbindWorkflowModal() {
+            this.$bvModal.show('unbind');
         },
         async loadSelectedDataset(path) {
             this.selectedDatasetLoading = true;
@@ -2985,37 +2985,43 @@ export default {
                 name: this.$router.currentRoute.params.name
             });
         },
-        async disconnectWorkflow() {
+        async unbindWorkflow() {
             await axios({
                 method: 'delete',
-                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/disconnect/`,
-                data: this.workflowSearchResult,
+                url: `/apis/v1/workflows/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/unbind/`,
                 headers: { 'Content-Type': 'application/json' }
             })
-                .then(response => {
+                .then(async response => {
                     if (response.status === 200) {
-                        this.$store.dispatch(
-                            'workflows/setPersonal',
-                            response.data.workflows
-                        );
-                        this.$store.dispatch('alerts/add', {
-                            variant: 'success',
-                            message: `Disconnected ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`,
-                            guid: guid().toString()
-                        });
-                        router.push({
+                        await Promise.all([
+                            this.$store.dispatch(
+                                'workflows/setPersonal',
+                                response.data.workflows
+                            ),
+                            this.$store.dispatch('alerts/add', {
+                                variant: 'success',
+                                message: `Removed binding for workflow ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`,
+                                guid: guid().toString()
+                            })
+                        ]);
+                        await router.push({
                             name: 'workflows'
                         });
                     } else {
-                        this.$store.dispatch('alerts/add', {
+                        await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
-                            message: `Failed to disconnect ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`,
+                            message: `Failed to remove binding for workflow ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`,
                             guid: guid().toString()
                         });
                     }
                 })
                 .catch(error => {
                     Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to remove binding for workflow ${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}`,
+                        guid: guid().toString()
+                    });
                     throw error;
                 });
         },

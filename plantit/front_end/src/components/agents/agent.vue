@@ -97,7 +97,6 @@
                                 profile.darkMode ? 'dark' : 'white'
                             "
                             :text-variant="profile.darkMode ? 'white' : 'dark'"
-                            class="overflow-hidden"
                         >
                             <div
                                 :class="
@@ -162,7 +161,7 @@
                                                             : 'text-dark'
                                                     "
                                                 >
-                                                    Scheduler Configuration
+                                                    Executor Configuration
                                                 </h5>
                                                 <b-row>
                                                     <b-col>
@@ -335,7 +334,125 @@
                                                     Request Guest Access
                                                 </b-button></b-col
                                             >
-                                            <b-col></b-col>
+                                            <b-col
+                                                v-if="
+                                                    getAgent.role === 'admin' &&
+                                                        getAgent.authentication ===
+                                                            'key'
+                                                "
+                                                class="m-0"
+                                                align-self="end"
+                                                md="auto"
+                                                ><b-button
+                                                    class="ml-0"
+                                                    :variant="
+                                                        profile.darkMode
+                                                            ? 'outline-light'
+                                                            : 'white'
+                                                    "
+                                                    size="sm"
+                                                    v-b-tooltip.hover
+                                                    title="Get Public Key"
+                                                    @click="getKey"
+                                                >
+                                                    <i
+                                                        class="fas fa-key fa-fw"
+                                                    ></i>
+                                                    Get Key
+                                                </b-button></b-col
+                                            >
+                                            <b-col
+                                                v-if="getAgent.role === 'admin'"
+                                                class="m-0"
+                                                align-self="end"
+                                                md="auto"
+                                                ><b-dropdown
+                                                    v-b-tooltip.hover
+                                                    size="sm"
+                                                    title="Configure Authentication Strategy"
+                                                    :variant="
+                                                        profile.darkMode
+                                                            ? 'outline-light'
+                                                            : 'white'
+                                                    "
+                                                    ><template #button-content
+                                                        ><span
+                                                            v-if="
+                                                                getAgent.authentication ===
+                                                                    'password'
+                                                            "
+                                                            ><i
+                                                                class="fas fa-pen fa-fw fa-1x"
+                                                            ></i>
+                                                            Password</span
+                                                        ><span v-else
+                                                            ><i
+                                                                class="fas fa-key fa-fw fa-1x"
+                                                            ></i>
+                                                            Key</span
+                                                        >
+                                                        Authentication</template
+                                                    ><b-dropdown-text
+                                                        >Select an
+                                                        authentication
+                                                        strategy.</b-dropdown-text
+                                                    ><b-dropdown-item-button
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        :active="
+                                                            getAgent.authentication ===
+                                                                'password'
+                                                        "
+                                                        :disabled="
+                                                            getAgent.authentication ===
+                                                                'password'
+                                                        "
+                                                        @click="
+                                                            setAuthStrategy(
+                                                                'password'
+                                                            )
+                                                        "
+                                                        ><template #default
+                                                            ><span
+                                                                ><i
+                                                                    class="fas fa-pen fa-fw fa-1x"
+                                                                ></i>
+                                                                Password</span
+                                                            ></template
+                                                        ></b-dropdown-item-button
+                                                    ><b-dropdown-item-button
+                                                        :active="
+                                                            getAgent.authentication ===
+                                                                'key'
+                                                        "
+                                                        :disabled="
+                                                            getAgent.authentication ===
+                                                                'key'
+                                                        "
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        @click="
+                                                            setAuthStrategy(
+                                                                'key'
+                                                            )
+                                                        "
+                                                        ><template #default
+                                                            ><span
+                                                                ><i
+                                                                    class="fas fa-key fa-fw fa-1x"
+                                                                ></i>
+                                                                Key</span
+                                                            ></template
+                                                        ></b-dropdown-item-button
+                                                    ></b-dropdown
+                                                ></b-col
+                                            >
                                             <b-col
                                                 v-if="getAgent.role !== 'none'"
                                                 class="ml-0"
@@ -356,7 +473,7 @@
                                                             'none' ||
                                                             checkingConnection
                                                     "
-                                                    @click="checkConnection"
+                                                    @click="preCheckConnection"
                                                 >
                                                     <i
                                                         class="fas fa-network-wired fa-fw"
@@ -375,6 +492,29 @@
                                                         class="ml-2 mb-1"
                                                     ></b-spinner> </b-button
                                             ></b-col>
+                                            <b-col></b-col>
+                                            <b-col
+                                                v-if="getAgent.role === 'admin'"
+                                                class="m-0"
+                                                align-self="end"
+                                                md="auto"
+                                                ><b-button
+                                                    @click="
+                                                        showUnbindAgentModal
+                                                    "
+                                                    v-b-tooltip.hover
+                                                    :title="
+                                                        'Unbind ' +
+                                                            getAgent.name
+                                                    "
+                                                    size="sm"
+                                                    variant="outline-danger"
+                                                    ><i
+                                                        class="fas fa-times-circle fa-fw fa-1x"
+                                                    ></i>
+                                                    Unbind</b-button
+                                                ></b-col
+                                            >
                                             <b-col
                                                 v-if="
                                                     getAgent.role === 'none' &&
@@ -588,7 +728,7 @@
                             >
                         </div>
                     </b-col>
-                    <b-col md="auto">
+                    <!--<b-col md="auto">
                         <b-row
                             ><b-col align-self="end"
                                 ><h5
@@ -672,10 +812,60 @@
                                 >
                             </b-row>
                         </div>
-                    </b-col>
+                    </b-col>-->
                 </b-row>
             </div>
         </b-container>
+        <b-modal
+            id="key"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :title="`Public key for ${this.getAgent.name}`"
+            @ok="hideKeyModal"
+            ok-variant="danger"
+        >
+            <b-row style="word-wrap: break-word;"
+                ><b-col>
+                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Here is your public key.
+                        <!--<span class="text-danger">You will not be able to view the key again.</span> -->Place
+                        it in the <code>~/.ssh/authorized_keys</code> file on
+                        your agent.
+                    </p>
+                    <small
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >{{ publicKey }}</small
+                    >
+                </b-col></b-row
+            >
+        </b-modal>
+        <b-modal
+            id="unbind"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :title="`Unbind ${this.getAgent.name}?`"
+            @ok="unbindAgent"
+            ok-variant="danger"
+        >
+            <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                You {{ getAgent.public ? 'and others' : '' }} will no longer be
+                able to use this agent (although you can re-bind it anytime).
+            </p>
+        </b-modal>
         <b-modal
             centered
             id="createTask"
@@ -734,8 +924,8 @@
             :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
             :header-border-variant="profile.darkMode ? 'dark' : 'white'"
             :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            :title="'Authenticate with ' + this.agentName"
-            @ok="connectAgent"
+            :title="'Authenticate with ' + getAgent.name"
+            @ok="submitAuthentication"
         >
             <b-form-input
                 v-model="authenticationUsername"
@@ -761,6 +951,7 @@ import moment from 'moment';
 import VueCronEditorBuefy from 'vue-cron-editor-buefy';
 import parser from 'cron-parser';
 import { guid } from '@/utils';
+import router from '@/router';
 
 export default {
     name: 'agent',
@@ -782,7 +973,8 @@ export default {
                 time: ''
             },
             sessionSocket: null,
-            togglingPublic: false
+            togglingPublic: false,
+            publicKey: ''
         };
     },
     computed: {
@@ -829,6 +1021,126 @@ export default {
         }
     },
     methods: {
+        async getKey() {
+            await axios
+                .get(`/apis/v1/agents/${this.getAgent.name}/key/`)
+                .then(async response => {
+                    if (response.status === 200) {
+                        this.publicKey = response.data.public_key;
+                        this.showKeyModal();
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Retrieved public key for agent ${this.$router.currentRoute.params.name}`,
+                            guid: guid().toString()
+                        });
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to retrieve public key for agent ${this.$router.currentRoute.params.name}`,
+                            guid: guid().toString()
+                        });
+                    }
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to retrieve public key for agent ${this.$router.currentRoute.params.name}`,
+                        guid: guid().toString()
+                    });
+                    throw error;
+                });
+        },
+        async setAuthStrategy(strategy) {
+            let data = {
+                strategy: strategy
+            };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/auth/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'agents/setPersonal',
+                            response.data.agents
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Configured agent ${this.$router.currentRoute.params.name} for ${this.getAgent.authentication} authentication`,
+                            guid: guid().toString()
+                        });
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to set authentication strategy for agent ${this.$router.currentRoute.params.name}`,
+                            guid: guid().toString()
+                        });
+                    }
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to set authentication strategy for agent ${this.$router.currentRoute.params.name}`,
+                        guid: guid().toString()
+                    });
+                    throw error;
+                });
+        },
+        submitAuthentication() {
+            this.checkConnection();
+        },
+        async unbindAgent() {
+            await axios({
+                method: 'delete',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/`,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        this.$store.dispatch(
+                            'agents/setPersonal',
+                            response.data.agents
+                        );
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Removed binding for agent ${this.$router.currentRoute.params.name}`,
+                            guid: guid().toString()
+                        });
+                        router.push({
+                            name: 'agents'
+                        });
+                    } else {
+                        this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to remove binding for agent ${this.$router.currentRoute.params.name}`,
+                            guid: guid().toString()
+                        });
+                    }
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to remove binding for agent ${this.$router.currentRoute.params.name}`,
+                        guid: guid().toString()
+                    });
+                    throw error;
+                });
+        },
+        showKeyModal() {
+            this.$bvModal.show('key');
+        },
+        hideKeyModal() {
+            this.$bvModal.hide('key');
+            this.publicKey = '';
+        },
+        showUnbindAgentModal() {
+            this.$bvModal.show('unbind');
+        },
         showAuthenticateModal() {
             this.$bvModal.show('authenticate');
         },
@@ -1037,10 +1349,15 @@ export default {
                 'MMMM Do YYYY, h:mm a'
             )})`;
         },
+        preCheckConnection() {
+            if (this.getAgent.authentication === 'password') {
+                this.$bvModal.show('authenticate');
+            } else this.checkConnection();
+        },
         async checkConnection() {
             this.checkingConnection = true;
             let data =
-                this.getAgent.authentication === 'Password'
+                this.getAgent.authentication === 'password'
                     ? {
                           auth: {
                               username: this.authenticationUsername,

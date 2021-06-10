@@ -10,12 +10,13 @@ logger = logging.getLogger(__name__)
 
 
 class SSH:
-    def __init__(self, host: str, port: int, username: str, password: str = None):
+    def __init__(self, host: str, port: int, username: str, password: str = None, pkey: str = None):
         self.client = None
         self.host = host
         self.port = port
         self.username = username
         self.password = password
+        self.pkey = pkey
         self.logger = logging.getLogger(__name__)
 
     def __enter__(self):
@@ -23,11 +24,14 @@ class SSH:
         client.load_host_keys('../config/ssh/known_hosts')
         client.set_missing_host_key_policy(paramiko.RejectPolicy())
 
-        if self.password:
+        if self.password is not None:
             client.connect(self.host, self.port, self.username, self.password)
+        elif self.pkey is not None:
+            # key = paramiko.RSAKey.from_private_key_file('../config/ssh/id_rsa')
+            key = paramiko.RSAKey.from_private_key_file(self.pkey)
+            client.connect(hostname=self.host, port=self.port, username=self.username, pkey=key)
         else:
-            key = paramiko.RSAKey.from_private_key_file('../config/ssh/id_rsa')
-            client.connect(self.host, self.port, self.username, pkey=key)
+            raise ValueError(f"No authentication strategy provided")
 
         self.client = client
 
@@ -39,8 +43,9 @@ class SSH:
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=retry_if_exception_type())
-def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: str, allow_stderr: bool = False) -> List[str]:
-    full_command = f"{pre_command} && cd {directory} && {command}" if directory else command
+def execute_command(ssh_client: SSH, pre_command: str, command: str, directory: str = None, allow_stderr: bool = False) -> List[str]:
+    full_command = f"{pre_command} && {command}"
+    if directory is not None: full_command = f"cd {directory} && {full_command}"
     output = []
     errors = []
 

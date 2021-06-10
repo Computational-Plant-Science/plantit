@@ -131,7 +131,7 @@ async def bind_workflow_bundle(workflow: Workflow, token: str) -> dict:
         'repo': bundle['repo'],
         'validation': bundle['validation'],
         'public': workflow.public,
-        'connected': True
+        'bound': True
     }
 
 
@@ -148,32 +148,32 @@ async def repopulate_personal_workflow_bundle_cache(owner: str):
     owned = await filter_workflows(user=user)
     bind = asyncio.gather(*[bind_workflow_bundle(workflow, profile.github_token) for workflow in owned])
     results = await asyncio.gather(*[bind, list_connectable_repos_by_owner(owner, profile.github_token)])
-    connected = results[0]
-    connectable = results[1]
+    bound = results[0]
+    bindable = results[1]
     both = []
 
-    for able in connectable:
-        if not any(['name' in ed['config'] and 'name' in able['config'] and ed['config']['name'] == able['config']['name'] for ed in connected]):
-            able['public'] = False
-            able['connected'] = False
-            both.append(able)
+    for ba in bindable:
+        if not any(['name' in ed['config'] and 'name' in ba['config'] and ed['config']['name'] == ba['config']['name'] for ed in bound]):
+            ba['public'] = False
+            ba['bound'] = False
+            both.append(ba)
 
     missing = 0
-    for ed in [c for c in connected if c['repo']['owner']['login'] == owner]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
-        name = ed['config']['name']
-        if not any(['name' in able['config'] and able['config']['name'] == name for able in connectable]):
+    for bo in [b for b in bound if b['repo']['owner']['login'] == owner]:  # omit manually added workflows (e.g., owned by a GitHub Organization)
+        name = bo['config']['name']
+        if not any(['name' in ba['config'] and ba['config']['name'] == name for ba in bindable]):
             missing += 1
             logger.warning(f"Configuration file missing for {owner}'s workflow {name}")
-            ed['validation'] = {
+            bo['validation'] = {
                 'is_valid': False,
                 'errors': ["Configuration file missing"]
             }
-        both.append(ed)
+        both.append(bo)
 
     redis = RedisClient.get()
     for workflow in both: redis.set(f"workflows/{owner}/{workflow['repo']['name']}", json.dumps(workflow))
     redis.set(f"workflows_updated/{owner}", timezone.now().timestamp())
-    logger.info(f"Added {len(connected)} connected, {len(connectable) - len(connected)} connectable, {len(both)} total to {owner}'s workflow cache" + ("" if missing == 0 else f"({missing} with missing configuration files)"))
+    logger.info(f"Added {len(bound)} bound, {len(bindable) - len(bound)} bindable, {len(both)} total to {owner}'s workflow cache" + ("" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
 async def repopulate_public_workflow_bundle_cache():

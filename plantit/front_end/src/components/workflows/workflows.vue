@@ -51,19 +51,19 @@
                             "
                             size="md"
                             v-b-tooltip.hover
-                            title="Connect a new workflow"
-                            @click="showConnectWorkflowModal"
+                            title="Bind a new workflow"
+                            @click="showBindWorkflowModal"
                             class="ml-0 mt-0 mr-0"
                         >
                             <b-spinner
                                 small
                                 v-if="workflowsLoading"
-                                label="Connecting..."
+                                label="Binding..."
                                 :variant="profile.darkMode ? 'light' : 'dark'"
                                 class="mr-1"
                             ></b-spinner
                             ><i v-else class="fas fa-plug mr-1"></i
-                            >Connect</b-button
+                            >Bind</b-button
                         ></b-col
                     >
                     <b-col md="auto" class="ml-0" align-self="center" v-if="!publicContext"
@@ -113,7 +113,7 @@
                     ></b-row
                 >
                 <b-row
-                    v-if="workflowsLoading || connectingWorkflow"
+                    v-if="workflowsLoading || bindingWorkflow"
                     class="mt-2"
                 >
                     <b-col class="text-center">
@@ -149,7 +149,7 @@
                     ><b-col class="text-danger">{{
                         contextPublic
                             ? 'No workflows have been published by the community yet.'
-                            : "You haven't connected any workflows yet."
+                            : "You haven't created any workflow bindings yet."
                     }}</b-col></b-row
                 >
             </div>
@@ -169,33 +169,33 @@
                 hide-header-close
             >
                 <template #modal-footer
-                    ><b-row v-if="workflowToConnectSelected"
+                    ><b-row v-if="bindingSelected"
                         ><b-col md="auto"
                             ><b-button
-                                :disabled="connectingWorkflow"
+                                :disabled="bindingWorkflow"
                                 variant="outline-danger"
-                                @click="unselectWorkflowToConnect"
+                                @click="unselectBinding"
                                 ><i class="fas fa-arrow-left fa-fw"></i><br />Go
                                 Back</b-button
                             ></b-col
                         ><b-col
                             ><b-button
                                 variant="success"
-                                @click="connectWorkflow"
+                                @click="bindWorkflow"
                                 ><i
-                                    v-if="!connectingWorkflow"
+                                    v-if="!bindingWorkflow"
                                     class="fas fa-check fa-fw"
                                 ></i
                                 ><b-spinner
                                     small
                                     v-else
-                                    label="Connecting..."
+                                    label="Binding..."
                                     :variant="
                                         profile.darkMode ? 'light' : 'dark'
                                     "
                                     class="mr-1"
                                 ></b-spinner
-                                ><br />Connect</b-button
+                                ><br />Bind</b-button
                             ></b-col
                         ></b-row
                     ><b-row v-else></b-row
@@ -221,14 +221,14 @@
                         variant="secondary"
                     ></b-spinner>
                 </div>-->
-                <b-row class="mb-2" v-if="!workflowToConnectSelected"
+                <b-row class="mb-2" v-if="!bindingSelected"
                     ><b-col
                         ><h4
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            Connect a workflow
+                            Bind a workflow
                         </h4></b-col
                     ><b-col md="auto"
                         ><b-button
@@ -265,7 +265,7 @@
                         </b-col>
                     </b-row>
                 </div>
-                <div v-else-if="workflowToConnectSelected">
+                <div v-else-if="bindingSelected">
                     <!--<b-row
                         ><b-col class="text-center"
                             ><span v-if="workflowToConnectSelected"
@@ -280,14 +280,14 @@
                         <b-col
                             ><blurb
                                 :linkable="false"
-                                :workflow="workflowToConnect"
+                                :workflow="binding"
                             ></blurb
                         ></b-col>
                     </b-row>
                 </div>
                 <div
                     class="text-center"
-                    v-else-if="connectableWorkflows.length === 0"
+                    v-else-if="bindableWorkflows.length === 0"
                 >
                     <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <!--Repository <b>{{ name }}</b> not found.-->
@@ -330,8 +330,7 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                             ><small
-                                >{{ connectableWorkflows.length }} unconnected
-                                workflow(s) found</small
+                                >{{ bindableWorkflows.length }} workflow(s) found</small
                             ></b-col
                         ></b-row
                     >
@@ -344,7 +343,7 @@
                         "
                         :text-variant="profile.darkMode ? 'white' : 'dark'"
                         class="overflow-hidden"
-                        v-for="workflow in connectableWorkflows"
+                        v-for="workflow in bindableWorkflows"
                         v-bind:key="workflow.config.name"
                         no-body
                         ><b-card-body class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
@@ -574,7 +573,7 @@
                                             variant="success"
                                             v-if="workflow.validation.is_valid"
                                             @click="
-                                                selectWorkflowToConnect(
+                                                selectBinding(
                                                     workflow
                                                 )
                                             "
@@ -676,10 +675,10 @@ export default {
         return {
             login: false,
             name: '',
+            binding: null,
+            bindingWorkflow: false,
             contextPublic: false,
             contextToggling: false,
-            workflowToConnect: null,
-            connectingWorkflow: false
         };
     },
     watch: {
@@ -688,7 +687,7 @@ export default {
         contextPublic: function(_) {
             // this.$store.dispatch()
         },
-        connectedWorkflows: function() {
+        boundWorkflows: function() {
             // noop
         },
         publicWorkflows: function() {
@@ -724,20 +723,20 @@ export default {
         //             if (error.response.status === 500) throw error;
         //         });
         // }, 500),
-        showConnectWorkflowModal() {
-            this.$bvModal.show('connectWorkflow');
+        showBindWorkflowModal() {
+            this.$bvModal.show('bindWorkflow');
         },
-        async connectWorkflow() {
-            this.connectingWorkflow = true;
+        async bindWorkflow() {
+            this.bindingWorkflow = true;
             await axios({
                 method: 'post',
-                url: `/apis/v1/workflows/${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}/connect/`,
-                data: this.workflowToConnect,
+                url: `/apis/v1/workflows/${this.binding.repo.owner.login}/${this.binding.repo.name}/bind/`,
+                data: this.binding,
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(async response => {
                     if (response.status === 200) {
-                        this.$bvModal.hide('connectWorkflow');
+                        this.$bvModal.hide('bindWorkflow');
                         await Promise.all([
                             this.$store.dispatch(
                                 'workflows/setPersonal',
@@ -745,35 +744,35 @@ export default {
                             ),
                             this.$store.dispatch('alerts/add', {
                                 variant: 'success',
-                                message: `Connected ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`,
+                                message: `Created binding for workflow ${this.binding.repo.owner.login}/${this.binding.repo.name}`,
                                 guid: guid().toString(),
                                 time: moment().format()
                             })
                         ]);
-                        this.workflowToConnect = null;
-                        this.connectingWorkflow = false;
+                        this.binding = null;
+                        this.bindingWorkflow = false;
                     } else {
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
-                            message: `Failed to connect ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`,
+                            message: `Failed to bind workflow ${this.binding.repo.owner.login}/${this.binding.repo.name}`,
                             guid: guid().toString(),
                             time: moment().format()
                         });
-                        this.$bvModal.hide('connectWorkflow');
-                        this.workflowToConnect = null;
-                        this.connectingWorkflow = false;
+                        this.$bvModal.hide('bindWorkflow');
+                        this.binding = null;
+                        this.bindingWorkflow = false;
                     }
                 })
                 .catch(async error => {
                     Sentry.captureException(error);
                     await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
-                        message: `Failed to connect ${this.workflowToConnect.repo.owner.login}/${this.workflowToConnect.repo.name}`,
+                        message: `Failed to connect ${this.binding.repo.owner.login}/${this.binding.repo.name}`,
                         guid: guid().toString(),
                         time: moment().format()
                     });
-                    this.workflowToConnect = null;
-                    this.connectingWorkflow = false;
+                    this.binding = null;
+                    this.bindingWorkflow = false;
                     throw error;
                 });
         },
@@ -791,22 +790,22 @@ export default {
                     this.profile.githubProfile.login
                 );
         },
-        selectWorkflowToConnect(workflow) {
-            this.workflowToConnect = workflow;
+        selectBinding(workflow) {
+            this.binding = workflow;
         },
-        unselectWorkflowToConnect() {
-            this.workflowToConnect = null;
+        unselectBinding() {
+            this.binding = null;
         }
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),
         ...mapGetters('workflows', [
-            'connectedWorkflows',
+            'boundWorkflows',
             'personalWorkflowsLoading',
             'publicWorkflows',
             'publicWorkflowsLoading',
-            'connectedWorkflows',
-            'connectableWorkflows'
+            'boundWorkflows',
+            'bindableWorkflows'
         ]),
         isRootPath() {
             return this.$route.name === 'workflows';
@@ -814,7 +813,7 @@ export default {
         getWorkflows() {
             return this.contextPublic
                 ? this.publicWorkflows
-                : this.connectedWorkflows;
+                : this.boundWorkflows;
             // return (this.contextPublic
             //     ? this.publicWorkflows
             //     : this.personalWorkflows
@@ -827,8 +826,8 @@ export default {
                 ? this.publicWorkflowsLoading
                 : this.personalWorkflowsLoading;
         },
-        workflowToConnectSelected() {
-            return this.workflowToConnect !== null;
+        bindingSelected() {
+            return this.binding !== null;
         }
     }
 };

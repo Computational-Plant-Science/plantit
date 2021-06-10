@@ -83,20 +83,6 @@ def readme(request, owner, name):
     return JsonResponse({'readme': rm})
 
 
-@login_required
-def connect(request, owner, name):
-    if owner != request.user.profile.github_username:
-        return HttpResponseForbidden()
-
-    redis = RedisClient.get()
-    body = json.loads(request.body.decode('utf-8'))
-    body['connected'] = True
-    redis.set(f"workflows/{owner}/{name}", json.dumps(body))
-    Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, public=False)
-    logger.info(f"Connected workflow {owner}/{name} as {body['config']['name']}")
-    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
-
-
 @sync_to_async
 @login_required
 @async_to_sync
@@ -119,7 +105,21 @@ async def toggle_public(request, owner, name):
 
 
 @login_required
-def disconnect(request, owner, name):
+def bind(request, owner, name):
+    if owner != request.user.profile.github_username:
+        return HttpResponseForbidden()
+
+    redis = RedisClient.get()
+    body = json.loads(request.body.decode('utf-8'))
+    body['bound'] = True
+    redis.set(f"workflows/{owner}/{name}", json.dumps(body))
+    Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, public=False)
+    logger.info(f"Created binding for workflow {owner}/{name} as {body['config']['name']}")
+    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
+
+
+@login_required
+def unbind(request, owner, name):
     if owner != request.user.profile.github_username:
         return HttpResponseForbidden()
 
@@ -132,7 +132,7 @@ def disconnect(request, owner, name):
     redis = RedisClient.get()
     cached = json.loads(redis.get(f"workflows/{owner}/{name}"))
     cached['public'] = False
-    cached['connected'] = False
+    cached['bound'] = False
     redis.set(f"workflows/{owner}/{name}", json.dumps(cached))
-    logger.info(f"Disconnected workflow {owner}/{name}")
+    logger.info(f"Removed binding for workflow {owner}/{name}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
