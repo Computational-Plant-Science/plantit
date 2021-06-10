@@ -22,9 +22,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from plantit.celery_tasks import aggregate_user_statistics
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
+from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.users.utils import list_users, get_cyverse_profile, get_github_profile, get_or_create_keypair
+from plantit.users.utils import list_users, get_cyverse_profile, get_github_profile, get_or_create_keypair, get_private_key_path
 from plantit.utils import get_csrf_token
 
 
@@ -326,3 +327,50 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         overwrite = request.GET.get('overwrite', False)
         public_key = get_or_create_keypair(owner=request.user.username, overwrite=overwrite)
         return JsonResponse({'public_key': public_key})
+
+    @action(detail=False, methods=['post'])
+    def check_connection(self, request):
+        try:
+            hostname = request.data['hostname']
+            username = request.data['username']
+        except:
+            return HttpResponseBadRequest()
+
+        if 'password' in request.data:
+            ssh = SSH(hostname, port=22, username=username, password=request.data['password'])
+        else:
+            pkey = str(get_private_key_path(request.user.username))
+            self.logger.info(pkey)
+            ssh = SSH(hostname, port=22, username=username, pkey=pkey)
+
+        with ssh:
+            try:
+                for line in execute_command(ssh_client=ssh, pre_command=':', command='pwd', directory=None, allow_stderr=False):
+                    self.logger.info(line)
+                return JsonResponse({'success': True})
+            except:
+                return JsonResponse({'success': False})
+
+    @action(detail=False, methods=['post'])
+    def check_executor(self, request):
+        try:
+            hostname = request.data['hostname']
+            username = request.data['username']
+            precommand = request.data['precommand']
+            # executor = request.data['executor']
+            workdir = request.data['workdir']
+        except:
+            return HttpResponseBadRequest()
+
+        if 'password' in request.data:
+            ssh = SSH(hostname, port=22, username=username, password=request.data['password'])
+        else:
+            ssh = SSH(hostname, port=22, username=username, pkey=str(get_private_key_path(request.user.username)))
+
+        with ssh:
+            try:
+                for line in execute_command(ssh_client=ssh, pre_command=precommand, command='plantit ping', directory=workdir, allow_stderr=False):
+                    self.logger.info(line)
+                return JsonResponse({'success': True})
+            except:
+                return JsonResponse({'success': False})

@@ -234,6 +234,7 @@
             :ok-disabled="!agentValid"
             ok-title="Bind"
             hide-header
+            hide-footer
             hide-header-close
         >
             <b-row v-if="agentBindingStage === 'details'"
@@ -323,64 +324,109 @@
                             </h4></b-col
                         >
                     </b-row>
-                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Your agent must be reachable by SSH on port 22.
-                    </p>
-                    <b-alert variant="danger" :show="agentHostExists"
-                        >This host is already in use.</b-alert
-                    >
-                    <b-form-group>
-                        <template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >This agent's FQDN or IP address.</span
-                            ></template
-                        >
-                        <b-form-input
-                            :state="agentHost !== '' && !agentHostExists"
-                            v-model="agentHost"
-                            type="text"
-                            placeholder="Enter a host or IP address"
-                            required
-                            @input="onAgentHostChange"
-                        ></b-form-input>
-                    </b-form-group>
-                    <b-form-group>
-                        <template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Select an authentication strategy.</span
-                            ></template
-                        >
-                        <b-form-select
-                            v-model="agentAuthentication"
-                            :options="agentAuthenticationOptions"
-                            type="text"
-                            placeholder="Select an authentication strategy"
-                            required
-                            @change="handleAuthenticationChange"
-                        ></b-form-select></b-form-group
-                    ><b-row v-if="agentConnectionValid" class="text-center"
-                        ><b-col><h5>
-                            <i class="fas fa-check fa-fw mr-1 text-success"></i>Connection to
-                            {{ agentName }} succeeded!
-                        </h5></b-col></b-row
-                    >
-                <b-row
+                    <b-row v-if="agentConnectionValid !== true">
+                        <b-col>
+                            <b-row
+                                ><b-col>
+                                    <p
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        Your agent must be reachable by SSH on
+                                        port 22.
+                                    </p>
+                                </b-col></b-row
+                            >
+                            <b-row
+                                ><b-col>
+                                    <b-alert
+                                        variant="danger"
+                                        :show="agentHostExists"
+                                        >This host is already in use.</b-alert
+                                    >
+                                    <b-form-group>
+                                        <template #description
+                                            ><span
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                >This agent's FQDN or IP
+                                                address.</span
+                                            ></template
+                                        >
+                                        <b-form-input
+                                            :state="agentHostValid"
+                                            v-model="agentHost"
+                                            type="text"
+                                            placeholder="Enter a host or IP address"
+                                            required
+                                            @input="onAgentHostChange"
+                                        ></b-form-input>
+                                    </b-form-group> </b-col
+                            ></b-row>
+                            <b-row
+                                ><b-col>
+                                    <b-form-group>
+                                        <template #description
+                                            ><span
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                >Your username on this
+                                                agent.</span
+                                            ></template
+                                        >
+                                        <b-form-input
+                                            :state="agentUsernameValid"
+                                            v-model="agentUsername"
+                                            type="text"
+                                            placeholder="Enter a username"
+                                            required
+                                        ></b-form-input>
+                                    </b-form-group> </b-col
+                            ></b-row>
+                            <b-row
+                                ><b-col>
+                                    <b-form-group>
+                                        <template #description
+                                            ><span
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                >Select an authentication
+                                                strategy.</span
+                                            ></template
+                                        >
+                                        <b-form-select
+                                            v-model="agentAuthentication"
+                                            :options="
+                                                agentAuthenticationOptions
+                                            "
+                                            type="text"
+                                            placeholder="Select an authentication strategy"
+                                            required
+                                            @change="handleAuthenticationChange"
+                                        ></b-form-select
+                                    ></b-form-group> </b-col
+                            ></b-row>
+                        </b-col>
+                    </b-row>
+                    <b-row
                         v-if="
                             agentAuthentication === 'key' &&
                                 !agentConnectionValid
                         "
                         style="word-wrap: break-word;"
-                        class="mb-2"
+                        class="mb-3 p-1"
                     >
                         <b-col>
                             <b-spinner
@@ -398,7 +444,8 @@
                                             : 'text-dark'
                                     "
                                 >
-                                    Here is your public key. Place it in the
+                                    <h5>Here is your public key.</h5>
+                                    Copy it into the
                                     <code>~/.ssh/authorized_keys</code> file on
                                     your agent, then click
                                     <b-badge
@@ -406,9 +453,12 @@
                                         class="m-0 p-1 mr-1"
                                         disabled
                                         variant="success"
-                                        ><i class="fas fa-wave-square fa-fw fa-1x"></i>
+                                        ><i
+                                            class="fas fa-wave-square fa-fw fa-1x"
+                                        ></i>
                                         Check Connection</b-badge
-                                    > to make sure your agent is reachable.
+                                    >
+                                    to make sure your agent is reachable.
                                 </span>
                                 <b-form-textarea
                                     plaintext
@@ -422,27 +472,64 @@
                                     "
                                 ></b-form-textarea></div></b-col
                     ></b-row>
+                    <b-row class="text-center mb-3 p-1"
+                        ><b-col v-if="agentConnectionValid === true"
+                            ><h5>
+                                <i
+                                    class="fas fa-check fa-fw mr-1 text-success"
+                                ></i
+                                >Connection to {{ agentName }} succeeded!
+                            </h5>
+                            <b-button
+                                @click="resetAgentConnection"
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
+                                ><i class="fas fa-redo fa-fw fa-1x"></i> Select
+                                another authentication strategy</b-button
+                            ></b-col
+                        ><b-col v-else-if="agentConnectionValid === false"
+                            ><h5>
+                                <i
+                                    class="fas fa-times-circle fa-fw mr-1 text-danger"
+                                ></i
+                                >Connection to {{ agentName }} failed
+                            </h5>
+                            <small
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                                v-if="agentAuthentication === 'key'"
+                                >Are you sure you've copied your key to the
+                                agent?</small
+                            ><br /></b-col
+                    ></b-row>
                     <b-row>
                         <b-col>
                             <b-button
                                 block
                                 :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
                                 @click="changeAgentBindingStage('details')"
                                 ><i class="fas fa-arrow-left fa-fw fa-1x"></i>
                                 Back: Details</b-button
                             ></b-col
                         >
-                      <b-col v-if="!gettingKey && !agentConnectionValid">
+                        <b-col v-if="!gettingKey && !agentConnectionValid">
                             <b-button
+                                :disabled="
+                                    !(agentHostValid && agentUsernameValid) || checkingConnection
+                                "
                                 block
                                 variant="success"
                                 @click="preCheckAgentConnection"
                                 ><b-spinner
                                     small
                                     v-if="checkingConnection"
-                                    label="Connecting..."
+                                    label="Checking connection..."
                                     :variant="
                                         profile.darkMode ? 'light' : 'dark'
                                     "
@@ -455,7 +542,7 @@
                                 Check Connection</b-button
                             ></b-col
                         >
-                      <b-col v-if="agentConnectionValid">
+                        <b-col v-if="agentConnectionValid">
                             <b-button
                                 block
                                 variant="success"
@@ -465,9 +552,8 @@
                             ></b-col
                         >
                     </b-row>
-                    </b-col
-                ></b-row
-            >
+                </b-col>
+            </b-row>
             <b-row v-if="agentBindingStage === 'executor'"
                 ><b-col>
                     <b-row class="mb-2"
@@ -483,260 +569,351 @@
                             </h4></b-col
                         >
                     </b-row>
-                    <b-form-group>
-                        <template #description
-                            ><span
+                    <b-row v-if="agentExecutorValid !== true"
+                        ><b-col>
+                            <b-form-group>
+                                <template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Directory in which to run user
+                                        workflows.</span
+                                    ></template
+                                >
+                                <b-form-input
+                                    :state="agentWorkdir !== ''"
+                                    v-model="agentWorkdir"
+                                    type="text"
+                                    placeholder="Enter a working directory path"
+                                    required
+                                ></b-form-input>
+                            </b-form-group>
+                            <b-form-group>
+                                <template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Commands to run before user commands
+                                        (e.g., loading modules, setting
+                                        environment variables). Frequently
+                                        useful but not required.</span
+                                    ></template
+                                >
+                                <b-form-textarea
+                                    v-model="agentPrecommands"
+                                    type="text"
+                                    rows="3"
+                                    :placeholder="agentPrecommands"
+                                    required
+                                ></b-form-textarea>
+                            </b-form-group>
+                            <b-form-group
+                                ><template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Maximum runtime (in minutes) permitted
+                                        before the workflow is aborted.</span
+                                    ></template
+                                ><b-form-spinbutton
+                                    v-model="agentMaxTime"
+                                    value="10"
+                                    min="1"
+                                    max="1440"
+                                ></b-form-spinbutton
+                            ></b-form-group>
+                            <b-form-group>
+                                <template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Select an executor to orchestrate
+                                        workflows.</span
+                                    ></template
+                                >
+                                <b-form-select
+                                    v-model="agentExecutor"
+                                    :options="agentExecutorOptions"
+                                    type="text"
+                                    placeholder="Select an executor"
+                                    required
+                                ></b-form-select
+                            ></b-form-group>
+                            <b-form-group v-if="isSLURM(agentExecutor)"
+                                ><template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Should this SLURM agent use job arrays
+                                        for parallelization instead of
+                                        Dask?</span
+                                    ></template
+                                ><b-form-checkbox
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    v-model="agentJobArray"
+                                >
+                                    Enable job arrays
+                                </b-form-checkbox>
+                            </b-form-group>
+                            <b-form-group v-if="isSLURM(agentExecutor)">
+                                <template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Should this SLURM agent use the TACC
+                                        launcher instead of Dask?</span
+                                    ></template
+                                >
+                                <b-form-checkbox
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    v-model="agentLauncher"
+                                >
+                                    Enable TACC launcher parameter sweep utility
+                                    (for Dask-incompatible hosts)
+                                </b-form-checkbox>
+                            </b-form-group>
+                            <b-form-group v-if="isJobQueue(agentExecutor)">
+                                <template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Enter a scheduler queue to use.</span
+                                    ></template
+                                >
+                                <b-form-input
+                                    v-model="agentQueue"
+                                    :state="agentQueue !== ''"
+                                    type="text"
+                                    placeholder="Enter a queue name"
+                                    required
+                                ></b-form-input
+                            ></b-form-group>
+                            <b-form-group v-if="isJobQueue(agentExecutor)">
+                                <template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Enter a project name or allocation
+                                        number (optional on some
+                                        schedulers).</span
+                                    ></template
+                                >
+                                <b-form-input
+                                    v-model="agentProject"
+                                    type="text"
+                                    placeholder="Enter a project name"
+                                    required
+                                ></b-form-input
+                            ></b-form-group>
+                            <b-form-group v-if="isJobQueue(agentExecutor)"
+                                ><template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Maximum walltime (in minutes) workflows
+                                        can request from the agent
+                                        scheduler.</span
+                                    ></template
+                                ><b-form-spinbutton
+                                    v-model="agentMaxWalltime"
+                                    value="10"
+                                    min="1"
+                                    max="1440"
+                                ></b-form-spinbutton
+                            ></b-form-group>
+                            <b-form-group
+                                v-if="isJobQueue(agentExecutor)"
+                                label="Maximum processes"
+                                ><template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Maximum number of processes workflows
+                                        can request from the agent
+                                        scheduler.</span
+                                    ></template
+                                ><b-form-spinbutton
+                                    v-model="agentMaxProcesses"
+                                    value="1"
+                                    min="1"
+                                    max="100"
+                                ></b-form-spinbutton
+                            ></b-form-group>
+                            <b-form-group v-if="isJobQueue(agentExecutor)">
+                                <template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Maximum number of cores workflows can
+                                        request from the agent scheduler.</span
+                                    ></template
+                                >
+                                <b-form-spinbutton
+                                    v-model="agentMaxCores"
+                                    value="1"
+                                    min="1"
+                                    max="1000"
+                                ></b-form-spinbutton
+                            ></b-form-group>
+                            <b-form-group v-if="isJobQueue(agentExecutor)"
+                                ><template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Maximum number of nodes workflows can
+                                        request from the agent scheduler.</span
+                                    ></template
+                                ><b-form-spinbutton
+                                    v-model="agentMaxNodes"
+                                    value="1"
+                                    min="1"
+                                    max="1000"
+                                ></b-form-spinbutton
+                            ></b-form-group>
+                            <b-form-group v-if="isJobQueue(agentExecutor)"
+                                ><template #description
+                                    ><span
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        >Maximum memory (in GB) workflows can
+                                        request from the agent scheduler.</span
+                                    ></template
+                                ><b-form-spinbutton
+                                    v-model="agentMaxMem"
+                                    value="1"
+                                    min="1"
+                                    max="1000"
+                                ></b-form-spinbutton
+                            ></b-form-group> </b-col
+                    ></b-row>
+                    <b-row class="text-center mb-3 p-1"
+                        ><b-col v-if="agentExecutorValid === true"
+                            ><h5>
+                                <i
+                                    class="fas fa-check fa-fw mr-1 text-success"
+                                ></i
+                                >Executor configured on {{ agentName }}!
+                            </h5>
+                            <b-button
+                                @click="resetAgentExecutor"
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
+                                ><i class="fas fa-redo fa-fw fa-1x"></i>
+                                Reconfigure executor</b-button
+                            ></b-col
+                        ><b-col v-else-if="agentExecutorValid === false"
+                            ><h5>
+                                <i
+                                    class="fas fa-times-circle fa-fw mr-1 text-danger"
+                                ></i
+                                >Executor check failed on {{ agentName }}
+                            </h5>
+                            <small
                                 :class="
                                     profile.darkMode
                                         ? 'text-light'
                                         : 'text-dark'
                                 "
-                                >Working directory within which to run user
-                                workflows.</span
-                            ></template
+                                v-if="agentAuthentication === 'key'"
+                                >Are you sure you've installed the
+                                <b-link
+                                    href="https://github.com/Computational-Plant-Science/plantit-cli"
+                                    >PlantIT CLI</b-link
+                                >?</small
+                            ><br /></b-col
+                    ></b-row>
+                    <b-row>
+                        <b-col>
+                            <b-button
+                                block
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
+                                @click="changeAgentBindingStage('connection')"
+                                ><i class="fas fa-arrow-left fa-fw fa-1x"></i>
+                                Back: Connection</b-button
+                            ></b-col
                         >
-                        <b-form-input
-                            :state="agentWorkdir !== ''"
-                            v-model="agentWorkdir"
-                            type="text"
-                            placeholder="Enter a directory path"
-                            required
-                        ></b-form-input>
-                    </b-form-group>
-                    <b-form-group>
-                        <template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Commands to run before user commands (e.g.,
-                                loading modules, setting environment variables).
-                                Frequently useful but not required.</span
-                            ></template
+                        <b-col v-if="agentExecutorValid !== true">
+                            <b-button
+                                :disabled="!agentWorkdirValid || checkingExecutor"
+                                block
+                                variant="success"
+                                @click="preCheckAgentExecutor"
+                                ><b-spinner
+                                    small
+                                    v-if="checkingExecutor"
+                                    label="Checking executor..."
+                                    :variant="
+                                        profile.darkMode ? 'light' : 'dark'
+                                    "
+                                    class="mr-1"
+                                ></b-spinner
+                                ><i
+                                    v-else
+                                    class="fas fa-terminal fa-fw fa-1x"
+                                ></i>
+                                Check Executor</b-button
+                            ></b-col
                         >
-                        <b-form-textarea
-                            v-model="agentPrecommands"
-                            type="text"
-                            rows="3"
-                            placeholder="Enter pre-commands"
-                            required
-                        ></b-form-textarea>
-                    </b-form-group>
-                    <b-form-group
-                        ><template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Maximum runtime (in minutes) permitted before
-                                the workflow is aborted.</span
-                            ></template
-                        ><b-form-spinbutton
-                            v-model="agentMaxTime"
-                            value="10"
-                            min="1"
-                            max="1440"
-                        ></b-form-spinbutton
-                    ></b-form-group>
-                    <b-form-group>
-                        <template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Select an executor to orchestrate
-                                workflows.</span
-                            ></template
+                        <b-col v-if="agentExecutorValid">
+                            <b-button block variant="success" @click="bindAgent"
+                                ><i class="fas fa-plug fa-fw fa-1x"></i> Bind
+                                {{ agentName }}</b-button
+                            ></b-col
                         >
-                        <b-form-select
-                            v-model="agentExecutor"
-                            :options="agentExecutorOptions"
-                            type="text"
-                            placeholder="Select an executor"
-                            required
-                        ></b-form-select
-                    ></b-form-group>
-                    <b-form-group v-if="isSLURM(agentExecutor)"
-                        ><template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Should this SLURM agent use job arrays for
-                                parallelization instead of Dask?</span
-                            ></template
-                        ><b-form-checkbox
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            v-model="agentJobArray"
-                        >
-                            Enable job arrays
-                        </b-form-checkbox>
-                    </b-form-group>
-                    <b-form-group v-if="isSLURM(agentExecutor)">
-                        <template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Should this SLURM agent use the TACC launcher
-                                instead of Dask?</span
-                            ></template
-                        >
-                        <b-form-checkbox
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            v-model="agentLauncher"
-                        >
-                            Enable TACC launcher parameter sweep utility (for
-                            Dask-incompatible hosts)
-                        </b-form-checkbox>
-                    </b-form-group>
-                    <b-form-group v-if="isJobQueue(agentExecutor)">
-                        <template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Enter a scheduler queue name to use.</span
-                            ></template
-                        >
-                        <b-form-input
-                            v-model="agentQueue"
-                            :state="agentQueue !== ''"
-                            type="text"
-                            placeholder="Enter a queue name"
-                            required
-                        ></b-form-input
-                    ></b-form-group>
-                    <b-form-group v-if="isJobQueue(agentExecutor)">
-                        <template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Enter a project name or allocation number
-                                (optional on some schedulers).</span
-                            ></template
-                        >
-                        <b-form-input
-                            v-model="agentProject"
-                            type="text"
-                            placeholder="Enter a project name"
-                            required
-                        ></b-form-input
-                    ></b-form-group>
-                    <b-form-group v-if="isJobQueue(agentExecutor)"
-                        ><template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Maximum walltime (in minutes) workflows can
-                                request from the agent scheduler.</span
-                            ></template
-                        ><b-form-spinbutton
-                            v-model="agentMaxWalltime"
-                            value="10"
-                            min="1"
-                            max="1440"
-                        ></b-form-spinbutton
-                    ></b-form-group>
-                    <b-form-group
-                        v-if="isJobQueue(agentExecutor)"
-                        label="Maximum processes"
-                        ><template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Maximum number of processes workflows can
-                                request from the agent scheduler.</span
-                            ></template
-                        ><b-form-spinbutton
-                            v-model="agentMaxProcesses"
-                            value="1"
-                            min="1"
-                            max="100"
-                        ></b-form-spinbutton
-                    ></b-form-group>
-                    <b-form-group v-if="isJobQueue(agentExecutor)">
-                        <template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Maximum number of cores workflows can request
-                                from the agent scheduler.</span
-                            ></template
-                        >
-                        <b-form-spinbutton
-                            v-model="agentMaxCores"
-                            value="1"
-                            min="1"
-                            max="1000"
-                        ></b-form-spinbutton
-                    ></b-form-group>
-                    <b-form-group v-if="isJobQueue(agentExecutor)"
-                        ><template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Maximum number of nodes workflows can request
-                                from the agent scheduler.</span
-                            ></template
-                        ><b-form-spinbutton
-                            v-model="agentMaxNodes"
-                            value="1"
-                            min="1"
-                            max="1000"
-                        ></b-form-spinbutton
-                    ></b-form-group>
-                    <b-form-group v-if="isJobQueue(agentExecutor)"
-                        ><template #description
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                >Maximum memory (in GB) workflows can request
-                                from the agent scheduler.</span
-                            ></template
-                        ><b-form-spinbutton
-                            v-model="agentMaxMem"
-                            value="1"
-                            min="1"
-                            max="1000"
-                        ></b-form-spinbutton
-                    ></b-form-group> </b-col
-            ></b-row>
-            <template #modal-footer
+                    </b-row></b-col
+                ></b-row
+            >
+            <!--<template #modal-footer
                 ><b-row v-if="agentValid"
                     ><b-col md="auto"
                         ><b-button
@@ -771,7 +948,7 @@
                         ></b-col
                     ></b-row
                 ><b-row v-else></b-row
-            ></template>
+            ></template>-->
         </b-modal>
         <b-modal
             v-if="isRootPath"
@@ -788,12 +965,12 @@
             :title="'Authenticate with ' + this.agentName"
             @ok="submitAuthentication"
         >
-            <b-form-input
+            <!--<b-form-input
                 v-model="authenticationUsername"
                 type="text"
                 placeholder="Your username"
                 required
-            ></b-form-input>
+            ></b-form-input>-->
             <b-form-input
                 v-model="authenticationPassword"
                 type="password"
@@ -827,10 +1004,12 @@ export default {
             agentHostLoading: false,
             agentHostExists: false,
             agentHost: '',
+            agentUsername: '',
             agentDescription: '',
             agentWorkdir: '',
-            agentPrecommands: '',
-            agentMaxTime: 0,
+            agentPrecommands:
+                'export LC_ALL=en_US.utf8 && export LANG=en_US.utf8',
+            agentMaxTime: 60,
             agentExecutor: 'Local',
             agentExecutorOptions: [
                 { value: 'Local', text: 'Local' },
@@ -844,11 +1023,11 @@ export default {
             ],
             agentQueue: '',
             agentProject: '',
-            agentMaxWalltime: 0,
-            agentMaxMem: 0,
-            agentMaxCores: 0,
-            agentMaxProcesses: 0,
-            agentMaxNodes: 0,
+            agentMaxWalltime: 60,
+            agentMaxMem: 1,
+            agentMaxCores: 1,
+            agentMaxProcesses: 1,
+            agentMaxNodes: 1,
             agentHeaderSkip: '',
             agentLauncher: false,
             agentJobArray: false,
@@ -862,6 +1041,7 @@ export default {
             togglingContext: false,
             bindingAgent: false,
             checkingConnection: false,
+            checkingExecutor: false,
             // public key
             publicKey: '',
             gettingKey: false
@@ -901,7 +1081,17 @@ export default {
         agentDescriptionValid() {
             return this.agentDescription !== '';
         },
+        agentHostValid() {
+            return this.agentHost !== '';
+        },
+        agentUsernameValid() {
+            return this.agentUsername !== '';
+        },
+        agentWorkdirValid() {
+            return this.agentWorkdir !== '';
+        },
         agentValid() {
+            // TODO refactor to use above computed props
             return !(
                 this.agentName === '' ||
                 this.agentDescription === '' ||
@@ -932,6 +1122,12 @@ export default {
         // }
     },
     methods: {
+        resetAgentConnection() {
+            this.agentConnectionValid = null;
+        },
+        resetAgentExecutor() {
+            this.agentExecutorValid = null;
+        },
         handleAuthenticationChange() {
             if (this.agentAuthentication === 'key') {
                 this.getKey();
@@ -976,7 +1172,58 @@ export default {
             else if (!this.agentExecutorValid) this.checkAgentExecutor();
             else this.bindAgent();
         },
-        checkAgentExecutor() {},
+        async checkAgentExecutor() {
+            this.checkingExecutor = true;
+            var data = {
+                hostname: this.agentHost,
+                username: this.agentUsername,
+                precommand: this.agentPrecommands,
+                // executor: this.agentExecutor,
+                workdir: this.agentWorkdir
+            };
+
+            if (this.agentAuthentication === 'password')
+                data['password'] = this.authenticationPassword;
+
+            await axios({
+                method: 'post',
+                url: `/apis/v1/users/check_executor/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200 && response.data.success) {
+                        this.agentExecutorValid = true;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Executor check succeeded on ${this.agentName}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                    } else {
+                        this.agentExecutorValid = false;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Executor check failed on ${this.agentName}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
+                    }
+                    this.checkingExecutor = false;
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Executor check failed on ${this.agentName}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
+                    this.agentExecutorValid = false;
+                    this.checkingExecutor = false;
+                    throw error;
+                });
+        },
         changeAgentBindingStage(stage) {
             this.agentBindingStage = stage;
         },
@@ -985,35 +1232,58 @@ export default {
                 this.$bvModal.show('authenticate');
             else this.checkAgentConnection();
         },
+        preCheckAgentExecutor() {
+            if (this.agentAuthentication === 'password')
+                this.$bvModal.show('authenticate');
+            else this.checkAgentExecutor();
+        },
         async checkAgentConnection() {
             this.checkingConnection = true;
             let data =
                 this.agentAuthentication === 'password'
                     ? {
                           hostname: this.agentHost,
-                          username: this.authenticationUsername,
+                          username: this.agentUsername,
                           password: this.authenticationPassword
                       }
                     : {
                           hostname: this.agentHost,
-                          username: this.authenticationUsername
+                          username: this.agentUsername
                       };
             await axios({
                 method: 'post',
-                url: `/apis/v1/agents/${this.agentName}/check/`,
+                url: `/apis/v1/users/check_connection/`,
                 data: data,
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(async response => {
                     if (response.status === 200 && response.data.success) {
                         this.agentConnectionValid = true;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Connection to ${this.agentName} succeeded`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
                     } else {
                         this.agentConnectionValid = false;
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to connect to ${this.agentName}`,
+                            guid: guid().toString(),
+                            time: moment().format()
+                        });
                     }
                     this.checkingConnection = false;
                 })
                 .catch(async error => {
                     Sentry.captureException(error);
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to connect to ${this.agentName}`,
+                        guid: guid().toString(),
+                        time: moment().format()
+                    });
                     this.agentConnectionValid = false;
                     this.checkingConnection = false;
                     throw error;
@@ -1080,6 +1350,8 @@ export default {
             this.agentJobArray = false;
             this.agentLauncher = false;
             this.agentBindingStage = 'details';
+            this.agentConnectionValid = null;
+            this.agentExecutorValid = null;
         },
         refreshAgents() {
             if (this.publicContext) this.$store.dispatch('agents/loadPublic');
@@ -1095,11 +1367,14 @@ export default {
         showBindAgentModal() {
             this.$bvModal.show('bindAgent');
         },
+        hideBindAgentModal() {
+            this.$bvModal.hide('bindAgent');
+        },
         async bindAgent() {
             this.bindingAgent = true;
             let data = {
                 auth: {
-                    username: this.authenticationUsername,
+                    username: this.agentUsername,
                     password: this.authenticationPassword
                 },
                 config: {
@@ -1135,7 +1410,7 @@ export default {
                 headers: { 'Content-Type': 'application/json' }
             })
                 .then(async response => {
-                    if (response.status == 200) {
+                    if (response.status === 200) {
                         await Promise.all([
                             this.$store.dispatch(
                                 'agents/addOrUpdate',
@@ -1157,6 +1432,7 @@ export default {
                         });
                     }
                     this.resetAgentInfo();
+                    this.hideBindAgentModal();
                     this.bindingAgent = false;
                 })
                 .catch(async error => {
@@ -1167,6 +1443,7 @@ export default {
                         guid: guid().toString(),
                         time: moment().format()
                     });
+                    this.hideBindAgentModal();
                     this.bindingAgent = false;
                     throw error;
                 });

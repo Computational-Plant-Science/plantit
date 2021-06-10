@@ -37,6 +37,7 @@ def list_or_bind(request):
         return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in agents]})
     elif request.method == 'POST':
         body = json.loads(request.body.decode('utf-8'))
+        auth = body['auth']
         config = body['config']
         guid = str(uuid.uuid4())
         name = config['name'] if 'name' in config else None
@@ -48,7 +49,7 @@ def list_or_bind(request):
             user=request.user,
             description=config['description'],
             workdir=config['workdir'],
-            username=request.user.username,
+            username=auth['username'],
             port=22,
             hostname=config['hostname'],
             pre_commands=config['pre_commands'],
@@ -248,20 +249,18 @@ def toggle_public(request, name):
 
 @login_required
 def healthcheck(request, name):
-    try:
-        agent = Agent.objects.get(name=name)
-    except:
-        return HttpResponseNotFound()
+    try: agent = Agent.objects.get(name=name)
+    except: return HttpResponseNotFound()
 
     body = json.loads(request.body.decode('utf-8'))
 
     try:
         if agent.authentication == AgentAuthentication.PASSWORD:
             try:
+                username = body['auth']['username']
                 password = body['auth']['password']
-            except:
-                return HttpResponseNotAllowed()
-            ssh = SSH(host=agent.hostname, port=22, username=agent.username, password=password)
+            except: return HttpResponseBadRequest()
+            ssh = SSH(host=agent.hostname, port=22, username=username, password=password)
         else:
             logger.info(str(get_private_key_path(request.user.username)))
             ssh = SSH(host=agent.hostname, port=22, username=agent.username, pkey=str(get_private_key_path(request.user.username)))
@@ -284,28 +283,6 @@ def get_access_policies(request, name):
         return HttpResponseNotFound()
 
     return JsonResponse({'policies': list(AgentAccessPolicy.objects.filter(agent=agent))})
-
-
-@login_required
-def check_connection(request):
-    body = json.loads(request.body.decode('utf-8'))
-    try:
-        hostname = body['hostname']
-        username = body['username']
-    except:
-        return HttpResponseBadRequest()
-
-    if 'password' in body:
-        ssh = SSH(hostname, port=22, username=username, password=body['password'])
-    else:
-        ssh = SSH(hostname, port=22, username=username, pkey=str(get_private_key_path(request.user.username)))
-
-    with ssh:
-        try:
-            for line in execute_command(ssh_client=ssh, pre_command=':', command='pwd', directory=None, allow_stderr=False): logger.info(line)
-            return JsonResponse({'success': True})
-        except:
-            return JsonResponse({'success': False})
 
 
 @login_required

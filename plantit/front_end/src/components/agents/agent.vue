@@ -1410,7 +1410,11 @@ export default {
                               password: this.authenticationPassword
                           }
                       }
-                    : {};
+                    : {
+              auth: {
+                username: this.authenticationUsername
+              }
+                    };
             await axios({
                 method: 'post',
                 url: `/apis/v1/agents/${this.$route.params.name}/health/`,
