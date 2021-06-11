@@ -90,7 +90,7 @@
                             ></b-spinner>
                         </b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
-                            ><h5 class="text-white">jobs</h5>
+                            ><h5 class="text-white">tasks</h5>
                         </b-col>
                     </b-row>
                 </b-container>

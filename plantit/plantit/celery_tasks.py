@@ -6,6 +6,7 @@ import tempfile
 import traceback
 from os import environ
 from os.path import join
+from typing import List
 
 import cv2
 from celery.utils.log import get_task_logger
@@ -21,7 +22,7 @@ from plantit.celery import app
 from plantit.datasets.models import DatasetSession
 from plantit.datasets.utils import update_dataset_session
 from plantit.redis import RedisClient
-from plantit.agents.models import Agent
+from plantit.agents.models import Agent, AgentAuthentication
 from plantit.tasks.models import Task, TaskStatus
 from plantit.tasks.utils import log_task_status, push_task_event, remove_logs, create_task, \
     get_container_log_file_name, get_container_log_file_path, get_result_files, get_job_walltime, get_job_status, submit_via_ssh, \
@@ -30,7 +31,7 @@ from plantit.ssh import SSH, execute_command
 from plantit.terrain import list_dir
 from plantit.sns import SnsClient
 from plantit.github import get_repo
-from plantit.users.utils import refresh_cyverse_tokens
+from plantit.users.utils import refresh_cyverse_tokens, get_private_key_path
 from plantit.workflows.utils import repopulate_personal_workflow_bundle_cache, repopulate_public_workflow_bundle_cache
 
 logger = get_task_logger(__name__)
@@ -42,8 +43,41 @@ def create_and_submit_task(username: str, agent_name: str, workflow: dict):
     submit_task.s(task.guid, workflow).apply_async()
 
 
+def get_ssh_client(task: Task) -> SSH:
+    if task.agent.authentication == AgentAuthentication.PASSWORD:
+        auth = task.workflow['auth']
+        msg = f"Using password authentication (username: {auth['username']})"
+        logger.info(msg)
+        log_task_status(task, msg)
+        push_task_event(task)
+        client = SSH(host=task.agent.hostname, port=task.agent.port, username=auth['username'], password=auth['password'])
+    else:
+        msg = f"Using key authentication (username: {task.agent.username})"
+        logger.info(msg)
+        log_task_status(task, msg)
+        push_task_event(task)
+        client = SSH(host=task.agent.hostname, port=task.agent.port, username=task.agent.username,
+                         pkey=str(get_private_key_path(task.agent.user.username)))
+
+    return client
+
+
+def list_input_files(task: Task) -> List[str]:
+    config = task.workflow['config']
+    if 'input' in config and config['input']['kind'] == 'files':
+        input_files = list_dir(config['input']['from'], task.user.profile.cyverse_access_token)
+        msg = f"Found {len(input_files)} input files"
+        log_task_status(task, msg)
+        push_task_event(task)
+        logger.info(msg)
+    else:
+        input_files = None
+
+    return input_files
+
+
 @app.task(track_started=True)
-def submit_task(guid: str, workflow):
+def submit_task(guid: str):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -60,30 +94,16 @@ def submit_task(guid: str, workflow):
     logger.info(msg)
 
     try:
-        if 'auth' in workflow:
-            msg = f"Authenticating with username {workflow['auth']['username']}"
-            log_task_status(task, msg)
-            push_task_event(task)
-            logger.info(msg)
-            ssh_client = SSH(task.agent.hostname, task.agent.port, workflow['auth']['username'], workflow['auth']['password'])
-        else:
-            ssh_client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
-
+        ssh_client = get_ssh_client(task)
+        config = task.workflow['config']
         with ssh_client:
-            if 'input' in workflow['config'] and workflow['config']['input']['kind'] == 'files':
-                input_files = list_dir(workflow['config']['input']['from'], task.user.profile.cyverse_access_token)
-                msg = f"Found {len(input_files)} input files"
-                log_task_status(task, msg)
-                push_task_event(task)
-                logger.info(msg)
-            else:
-                input_files = None
+            input_files = list_input_files(task)
 
             msg = f"Creating working directory {join(task.agent.workdir, task.guid)} and uploading files"
             log_task_status(task, msg)
             push_task_event(task)
             logger.info(msg)
-            upload_task(workflow, task, ssh_client, input_files)
+            upload_task(task, ssh_client, input_files)
 
             msg = 'Running script' if task.is_sandbox else 'Submitting script to scheduler'
             log_task_status(task, msg)

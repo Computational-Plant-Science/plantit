@@ -272,59 +272,63 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
     guid = str(uuid.uuid4())
     now = timezone.now()
 
-    if agent.executor == AgentExecutor.LOCAL:
-        task = Task.objects.create(guid=guid,
-                                   name=guid if name is None else name,
-                                   user=user,
-                                   workflow_owner=repo_name,
-                                   workflow_name=repo_owner,
-                                   agent=agent,
-                                   status=TaskStatus.CREATED,
-                                   created=now,
-                                   updated=now,
-                                   token=binascii.hexlify(os.urandom(20)).decode())
-    else:
-        task = JobQueueTask.objects.create(guid=guid,
-                                           name=guid if name is None else name,
-                                           user=user,
-                                           workflow_owner=repo_name,
-                                           workflow_name=repo_owner,
-                                           agent=agent,
-                                           status=TaskStatus.CREATED,
-                                           created=now,
-                                           updated=now,
-                                           token=binascii.hexlify(os.urandom(20)).decode())
+    task = JobQueueTask.objects.create(
+        guid=guid,
+        name=guid if name is None else name,
+        user=user,
+        workflow=workflow,
+        workflow_owner=repo_name,
+        workflow_name=repo_owner,
+        agent=agent,
+        status=TaskStatus.CREATED,
+        created=now,
+        updated=now,
+        token=binascii.hexlify(
+            os.urandom(
+                20)).decode()) \
+        if agent.executor != AgentExecutor.LOCAL else \
+        Task.objects.create(
+            guid=guid,
+            name=guid if name is None else name,
+            user=user,
+            workflow=workflow,
+            workflow_owner=repo_name,
+            workflow_name=repo_owner,
+            agent=agent,
+            status=TaskStatus.CREATED,
+            created=now,
+            updated=now,
+            token=binascii.hexlify(os.urandom(20)).decode())
 
     # add repo logo
     if 'logo' in repo_config['config']:
         logo_path = repo_config['config']['logo']
         task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{logo_path}"
 
-    for tag in workflow['config']['tags']: task.tags.add(tag)     # add task tags
-    task.workdir = f"{task.guid}/"                              # use GUID for working directory name
+    for tag in workflow['config']['tags']: task.tags.add(tag)  # add task tags
+    task.workdir = f"{task.guid}/"  # use GUID for working directory name
     task.save()
     return task
 
 
-def upload_task(workflow: dict, task: Task, ssh: SSH, input_files: List[str] = None):
+def upload_task(task: Task, ssh: SSH, input_files: List[str] = None):
     # update config before uploading
-    workflow['config']['workdir'] = join(task.agent.workdir, task.guid)
-    workflow['config']['log_file'] = f"{task.guid}.{task.agent.name.lower()}.log"
-    if 'output' in workflow['config'] and 'from' in workflow['config']['output']:
-        if workflow['config']['output']['from'] is not None and workflow['config']['output']['from'] != '':
-            workflow['config']['output']['from'] = join(task.agent.workdir, task.workdir, workflow['config']['output']['from'])
+    config = task.workflow['config']
+    config['workdir'] = join(task.agent.workdir, task.guid)
+    config['log_file'] = f"{task.guid}.{task.agent.name.lower()}.log"
+    if 'output' in config and 'from' in config['output']:
+        if config['output']['from'] is not None and config['output']['from'] != '':
+            config['output']['from'] = join(task.agent.workdir, task.workdir, config['output']['from'])
 
     # if we have outputs, make sure we don't push configuration or job scripts
-    if 'output' in workflow['config']:
-        workflow['config']['output']['exclude']['names'] = [
+    if 'output' in config:
+        config['output']['exclude']['names'] = [
             "flow.yaml",
             "template_local_run.sh",
             "template_slurm_run.sh"]
 
-    resources = None if 'resources' not in workflow['config']['agent'] else workflow['config']['agent']['resources']
-    callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
-    work_dir = join(task.agent.workdir, task.workdir)
-    new_flow = map_old_workflow_config_to_new(workflow, task, resources)  # TODO update flow UI page
+    resources = None if 'resources' not in config['agent'] else config['agent']['resources']
+    new_flow = map_old_workflow_config_to_new(config, task, resources)
     launcher = task.agent.launcher  # whether to use TACC launcher
 
     parse_errors, sub_options = parse_task_config(new_flow)
@@ -332,9 +336,11 @@ def upload_task(workflow: dict, task: Task, ssh: SSH, input_files: List[str] = N
         raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
 
     # create working directory
+    work_dir = join(task.agent.workdir, task.workdir)
     execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=task.agent.workdir, allow_stderr=True)
 
     # upload flow config and job script
+    callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
 
@@ -358,7 +364,7 @@ def upload_task(workflow: dict, task: Task, ssh: SSH, input_files: List[str] = N
             if not sandbox:
                 # we're on a SLURM cluster, so add resource requests
                 nodes = min(len(input_files), task.agent.max_nodes) if input_files is not None and not task.agent.job_array else 1
-                gpu = task.agent.gpu and ('gpu' in workflow['config'] and workflow['config']['gpu'])
+                gpu = task.agent.gpu and ('gpu' in config and config['gpu'])
 
                 if 'cores' in resources:
                     cores = int(resources['cores'])
@@ -419,8 +425,8 @@ def upload_task(workflow: dict, task: Task, ssh: SSH, input_files: List[str] = N
             # script.write(f"singularity pull {run_options.image}\n")
 
             # if we have inputs, add pull command
-            if 'input' in workflow['config']:
-                input = workflow['config']['input']
+            if 'input' in config:
+                input = config['input']
                 sftp.mkdir(join(task.agent.workdir, task.workdir, 'input'))
 
                 # allow for both spellings of JPG
@@ -449,7 +455,7 @@ def upload_task(workflow: dict, task: Task, ssh: SSH, input_files: List[str] = N
             if launcher:
                 logger.info(f"Using TACC launcher")
                 with sftp.open('launch', 'w') as launcher_script:
-                    if workflow['config']['input']['kind'] == 'files' and input_files is not None:
+                    if config['input']['kind'] == 'files' and input_files is not None:
                         for file in input_files:
                             file_name = file.rpartition('/')[2]
                             sub_options.input = FileInput(file_name)
@@ -465,7 +471,7 @@ def upload_task(workflow: dict, task: Task, ssh: SSH, input_files: List[str] = N
                                 no_cache=sub_options.no_cache,
                                 gpu=sub_options.gpu)
                             launcher_script.write(f"{command}\n")
-                    elif workflow['config']['input']['kind'] == 'directory':
+                    elif config['input']['kind'] == 'directory':
                         command = prep_command(
                             work_dir=sub_options.workdir,
                             image=sub_options.image,
@@ -478,7 +484,7 @@ def upload_task(workflow: dict, task: Task, ssh: SSH, input_files: List[str] = N
                             no_cache=sub_options.no_cache,
                             gpu=sub_options.gpu)
                         launcher_script.write(f"{command}\n")
-                    elif workflow['config']['input']['kind'] == 'file':
+                    elif config['input']['kind'] == 'file':
                         command = prep_command(
                             work_dir=sub_options.workdir,
                             image=sub_options.image,
@@ -512,7 +518,7 @@ def upload_task(workflow: dict, task: Task, ssh: SSH, input_files: List[str] = N
                 script.write(cli_cmd)
 
             # add zip command
-            output = workflow['config']['output']
+            output = config['output']
             zip_commands = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {task.guid}"
             log_files = [f"{task.guid}.{task.agent.name.lower()}.log"]
             zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
