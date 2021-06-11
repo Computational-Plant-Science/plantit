@@ -62,7 +62,7 @@
                             </b-nav-item>
                             <b-nav-item
                                 class="m-0 p-0"
-                                title="GitHub"
+                                title="PlantIT on GitHub"
                                 href="https://github.com/Computational-Plant-Science/plantit/discussions/63"
                             >
                                 <b-button

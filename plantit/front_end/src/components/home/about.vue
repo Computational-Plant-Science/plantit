@@ -115,16 +115,19 @@
                         >
                             <b-card-text class="ml-4 mr-4">
                                 <h4 class="text-success">
-                                    Tame your data
+                                    Maximize your data's yield
                                 </h4>
-                                Upload, annotate, and publish with
-                                <b-link
+                                Upload to <b-link
                                     class="text-white"
                                     href="https://www.cyverse.org/"
                                     >CyVerse</b-link
-                                >
+                                >, annotate with <b-link
+                                    class="text-white"
+                                    href="https://www.miappe.org/"
+                                    >MIAPPE</b-link
+                                >, and publish with a click
                                 <br />
-                                Store, share, and collaborate in the cloud<!--, or plug in cloud stores like
+                                Collaborate in the cloud with provenance, metadata, and versioning<!--, or plug in cloud stores like
                             <b-link
                                 class="text-white"
                                 href="https://aws.amazon.com/s3/"
@@ -176,7 +179,7 @@
                                 class="ml-4 mr-4 text-white text-right"
                             >
                                 <h4 class="text-success">
-                                    Hack open source science
+                                    Cultivate open source science
                                 </h4>
                                 Develop with
                                 <b-link

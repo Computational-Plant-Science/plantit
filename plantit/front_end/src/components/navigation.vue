@@ -1010,6 +1010,7 @@ export default {
         this.crumbs = this.$route.meta.crumb;
 
         // user profile must be loaded before everything else to make sure we have tokens/profile properties
+      if (this.$route.name === 'about') return;
         await store.dispatch('user/loadProfile');
         await Promise.all([
             this.$store.dispatch('tasks/loadAll'),
