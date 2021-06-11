@@ -20,7 +20,7 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-                            <i class="fas fa-robot fa-fw"></i>
+                            <i class="fas fa-server fa-fw"></i>
                             {{ publicContext ? 'Public' : 'Your' }} Agents
                         </h2></b-col
                     >
@@ -148,7 +148,7 @@
                                     ><i class="fas fa-lock fa-fw"></i>
                                     Private</b-badge
                                 >
-                                <b-badge v-else variant="success" class="mr-1"
+                                <b-badge v-else variant="warning" class="mr-1"
                                     ><i class="fas fa-lock-open fa-fw"></i>
                                     Public</b-badge
                                 >
@@ -176,11 +176,16 @@
                 </b-card-group>
                 <b-row v-else
                     ><b-col
-                        ><span class="text-danger">{{
-                            publicContext
-                                ? 'No public agents available.'
-                                : "You haven't created any agent bindings yet."
-                        }}</span>
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            >{{
+                                publicContext
+                                    ? 'No public agents available.'
+                                    : "You haven't created any agent bindings yet."
+                            }}</span
+                        >
                         <br />
                         <span v-if="!publicContext">
                             View
@@ -474,7 +479,13 @@
                     ></b-row>
                     <b-row class="text-center mb-3 p-1"
                         ><b-col v-if="agentConnectionValid === true"
-                            ><h5>
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
                                 <i
                                     class="fas fa-check fa-fw mr-1 text-success"
                                 ></i
@@ -489,7 +500,11 @@
                                 another authentication strategy</b-button
                             ></b-col
                         ><b-col v-else-if="agentConnectionValid === false"
-                            ><h5>
+                            ><h5 :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                ">
                                 <i
                                     class="fas fa-times-circle fa-fw mr-1 text-danger"
                                 ></i
@@ -521,7 +536,8 @@
                         <b-col v-if="!gettingKey && !agentConnectionValid">
                             <b-button
                                 :disabled="
-                                    !(agentHostValid && agentUsernameValid) || checkingConnection
+                                    !(agentHostValid && agentUsernameValid) ||
+                                        checkingConnection
                                 "
                                 block
                                 variant="success"
@@ -530,9 +546,7 @@
                                     small
                                     v-if="checkingConnection"
                                     label="Checking connection..."
-                                    :variant="
-                                        profile.darkMode ? 'light' : 'dark'
-                                    "
+                                    variant="dark"
                                     class="mr-1"
                                 ></b-spinner
                                 ><i
@@ -835,7 +849,11 @@
                     ></b-row>
                     <b-row class="text-center mb-3 p-1"
                         ><b-col v-if="agentExecutorValid === true"
-                            ><h5>
+                            ><h5 :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                ">
                                 <i
                                     class="fas fa-check fa-fw mr-1 text-success"
                                 ></i
@@ -850,7 +868,11 @@
                                 Reconfigure executor</b-button
                             ></b-col
                         ><b-col v-else-if="agentExecutorValid === false"
-                            ><h5>
+                            ><h5 :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                ">
                                 <i
                                     class="fas fa-times-circle fa-fw mr-1 text-danger"
                                 ></i
@@ -867,9 +889,19 @@
                                 <b-link
                                     href="https://github.com/Computational-Plant-Science/plantit-cli"
                                     >PlantIT CLI</b-link
-                                >?</small
+                                >? You may also need to use pre-commands (e.g., to load modules).</small
                             ><br /></b-col
                     ></b-row>
+                    <b-row v-if="executorCheckOutput.length > 0" class="mb-3"
+                        ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                            ><span
+                                v-for="line in executorCheckOutput"
+                                v-bind:key="line"
+                                v-show="line !== undefined && line !== null"
+                                >{{ line + '\n' }}</span
+                            ></b-col
+                        ></b-row
+                    >
                     <b-row>
                         <b-col>
                             <b-button
@@ -884,7 +916,9 @@
                         >
                         <b-col v-if="agentExecutorValid !== true">
                             <b-button
-                                :disabled="!agentWorkdirValid || checkingExecutor"
+                                :disabled="
+                                    !agentWorkdirValid || checkingExecutor
+                                "
                                 block
                                 variant="success"
                                 @click="preCheckAgentExecutor"
@@ -892,9 +926,7 @@
                                     small
                                     v-if="checkingExecutor"
                                     label="Checking executor..."
-                                    :variant="
-                                        profile.darkMode ? 'light' : 'dark'
-                                    "
+                                    variant="dark"
                                     class="mr-1"
                                 ></b-spinner
                                 ><i
@@ -1044,7 +1076,9 @@ export default {
             checkingExecutor: false,
             // public key
             publicKey: '',
-            gettingKey: false
+            gettingKey: false,
+            // executor check output
+            executorCheckOutput: []
         };
     },
     async mounted() {
@@ -1194,6 +1228,7 @@ export default {
                 .then(async response => {
                     if (response.status === 200 && response.data.success) {
                         this.agentExecutorValid = true;
+                        this.executorCheckOutput = response.data.output;
                         await this.$store.dispatch('alerts/add', {
                             variant: 'success',
                             message: `Executor check succeeded on ${this.agentName}`,
@@ -1202,6 +1237,7 @@ export default {
                         });
                     } else {
                         this.agentExecutorValid = false;
+                        this.executorCheckOutput = response.data.output;
                         await this.$store.dispatch('alerts/add', {
                             variant: 'danger',
                             message: `Executor check failed on ${this.agentName}`,

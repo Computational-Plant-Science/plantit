@@ -267,7 +267,7 @@
                                 sharingDatasets === null ||
                                     sharingDatasets.length === 0
                             "
-                            ><b-col class="text-danger">
+                            ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'">
                                 You haven't shared any datasets with anyone.
                             </b-col></b-row
                         >

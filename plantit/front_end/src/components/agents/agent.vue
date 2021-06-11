@@ -125,7 +125,7 @@
                                                     "
                                                 >
                                                     <i
-                                                        class="fas fa-robot fa-fw"
+                                                        class="fas fa-server fa-fw"
                                                     ></i>
                                                     {{ getAgent.name }}
                                                 </h2>
@@ -305,7 +305,7 @@
                                                                       : 'public'
                                                               }`
                                                     "
-                                                    button-variant="warning"
+                                                    :button-variant="getAgent.public ? 'warning' : 'info'"
                                                     @change="togglePublic"
                                                 >
                                                     <i

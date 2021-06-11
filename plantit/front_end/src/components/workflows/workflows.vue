@@ -66,7 +66,11 @@
                             >Bind</b-button
                         ></b-col
                     >
-                    <b-col md="auto" class="ml-0" align-self="center" v-if="!publicContext"
+                    <b-col
+                        md="auto"
+                        class="ml-0"
+                        align-self="center"
+                        v-if="!publicContext"
                         ><b-button
                             :disabled="workflowsLoading"
                             :variant="
@@ -112,10 +116,7 @@
                         ></b-col
                     ></b-row
                 >
-                <b-row
-                    v-if="workflowsLoading || bindingWorkflow"
-                    class="mt-2"
-                >
+                <b-row v-if="workflowsLoading || bindingWorkflow" class="mt-2">
                     <b-col class="text-center">
                         <b-spinner
                             type="grow"
@@ -146,11 +147,14 @@
                     </b-card>
                 </b-card-group>
                 <b-row v-else
-                    ><b-col class="text-danger">{{
-                        contextPublic
-                            ? 'No workflows have been published by the community yet.'
-                            : "You haven't created any workflow bindings yet."
-                    }}</b-col></b-row
+                    ><b-col
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >{{
+                            contextPublic
+                                ? 'No workflows have been published by the community yet.'
+                                : "You haven't created any workflow bindings yet."
+                        }}</b-col
+                    ></b-row
                 >
             </div>
             <router-view
@@ -179,9 +183,7 @@
                                 Back</b-button
                             ></b-col
                         ><b-col
-                            ><b-button
-                                variant="success"
-                                @click="bindWorkflow"
+                            ><b-button variant="success" @click="bindWorkflow"
                                 ><i
                                     v-if="!bindingWorkflow"
                                     class="fas fa-check fa-fw"
@@ -330,7 +332,8 @@
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                             ><small
-                                >{{ bindableWorkflows.length }} workflow(s) found</small
+                                >{{ bindableWorkflows.length }} workflow(s)
+                                found</small
                             ></b-col
                         ></b-row
                     >
@@ -572,11 +575,7 @@
                                             block
                                             variant="success"
                                             v-if="workflow.validation.is_valid"
-                                            @click="
-                                                selectBinding(
-                                                    workflow
-                                                )
-                                            "
+                                            @click="selectBinding(workflow)"
                                             >Select</b-button
                                         ></b-col
                                     >
@@ -678,7 +677,7 @@ export default {
             binding: null,
             bindingWorkflow: false,
             contextPublic: false,
-            contextToggling: false,
+            contextToggling: false
         };
     },
     watch: {

@@ -246,7 +246,7 @@
                             <b-badge
                                 pill
                                 class="ml-1 mr-1 mb-1"
-                                variant="success"
+                                variant="warning"
                                 >{{ tasksSucceeded.length }}</b-badge
                             >
                             <b-badge

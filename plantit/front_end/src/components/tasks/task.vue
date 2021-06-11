@@ -316,15 +316,15 @@
                                                         style="white-space: pre-line;"
                                                     >
                                                         <span
-                                                            v-for="log in taskLogs"
-                                                            v-bind:key="log"
+                                                            v-for="line in taskLogs"
+                                                            v-bind:key="line"
                                                             v-show="
-                                                                log !==
+                                                                line !==
                                                                     undefined &&
-                                                                    log !== null
+                                                                    line !== null
                                                             "
                                                             >{{
-                                                                log + '\n'
+                                                                line + '\n'
                                                             }}</span
                                                         >
                                                     </b-col>

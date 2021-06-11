@@ -106,7 +106,7 @@
                         block
                         :variant="profile.darkMode ? 'dark' : 'light'"
                         to="/dashboard/agents/"
-                        ><i class="fas fa-robot fa-fw"></i> Agents</b-button
+                        ><i class="fas fa-server fa-fw"></i> Agents</b-button
                     ><b-button
                         class="m-1 text-left"
                         block

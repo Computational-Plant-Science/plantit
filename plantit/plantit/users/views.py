@@ -368,9 +368,17 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
             ssh = SSH(hostname, port=22, username=username, pkey=str(get_private_key_path(request.user.username)))
 
         with ssh:
+            output = []
             try:
                 for line in execute_command(ssh_client=ssh, pre_command=precommand, command='plantit ping', directory=workdir, allow_stderr=False):
+                    output.append(line)
                     self.logger.info(line)
-                return JsonResponse({'success': True})
+                return JsonResponse({
+                    'success': True,
+                    'output': output
+                })
             except:
-                return JsonResponse({'success': False})
+                return JsonResponse({
+                    'success': False,
+                    'output': output
+                })
