@@ -405,7 +405,7 @@
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
                             >
-                                No workflow tasks.
+                                No tasks have completed.
                             </p>
                         </b-col>
                     </b-row>
@@ -536,7 +536,7 @@
                                 "
                                 v-if="notificationsUnread.length === 0"
                             >
-                                No notifications to show.
+                                No unread notifications.
                             </p>
                         </b-col>
                     </b-row>
@@ -580,7 +580,7 @@
                                 "
                                 v-if="notificationsRead.length === 0"
                             >
-                                No notifications.
+                                No read notifications.
                             </p>
                         </b-col>
                     </b-row>

@@ -279,7 +279,7 @@
                                             : 'text-dark'
                                     "
                                 >
-                                    No workflow tasks.
+                                    No tasks have completed.
                                 </p>
                             </b-col>
                             <b-col v-else class="m-0 pl-0 pr-0 text-center"

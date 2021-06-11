@@ -35,6 +35,19 @@
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
                             <b-nav-item
+                                to="/about"
+                                title="About PlantIT"
+                                class="m-0 p-0"
+                            >
+                                <b-button
+                                    variant="outline-dark"
+                                >
+                                    <i class="fas fa-question-circle fa-2x"></i>
+                                    <br />
+                                    About
+                                </b-button>
+                            </b-nav-item>
+                            <b-nav-item
                                 href="https://plantit.readthedocs.io/en/latest"
                                 title="PlantIT Docs"
                                 class="m-0 p-0"
@@ -61,7 +74,7 @@
                                     Github
                                 </b-button>
                             </b-nav-item>
-                            <b-nav-item href="#" class="m-0 p-0" title="Slack">
+                            <!--<b-nav-item href="#" class="m-0 p-0" title="Slack">
                                 <b-button
                                     variant="outline-dark"
                                     title="GitHub"
@@ -70,7 +83,7 @@
                                     <br />
                                     Slack
                                 </b-button>
-                            </b-nav-item>
+                            </b-nav-item>-->
                             <!--<b-nav-item class="m-0 p-0" title="Slack">
                                 <b-button
                                     variant="outline-dark"

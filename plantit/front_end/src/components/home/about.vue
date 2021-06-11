@@ -176,7 +176,7 @@
                                 class="ml-4 mr-4 text-white text-right"
                             >
                                 <h4 class="text-success">
-                                    Hack plant science, together
+                                    Hack open source science
                                 </h4>
                                 Develop with
                                 <b-link
@@ -192,7 +192,7 @@
                                 >
                                 and deploy anywhere
                                 <br />
-                                Build or benefit from the open source ecosystem on
+                                Plug into the F/OSS plant phenotyping ecosystem on
                                 <b-link
                                     class="text-white"
                                     href="https://www.github.com/"
