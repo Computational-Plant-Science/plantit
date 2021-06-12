@@ -73,3 +73,7 @@ def map_agent(
 
 def run_workdir_clean_task_name(agent: str, run_id: str):
     return f"Clean {agent} run {run_id} working directory"
+
+
+def has_virtual_memory(agent: Agent):
+    return agent.header_skip == '--mem'

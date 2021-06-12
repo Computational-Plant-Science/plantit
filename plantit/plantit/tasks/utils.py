@@ -19,13 +19,15 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from plantit import settings
-from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor
-from plantit.agents.utils import map_agent
+from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentAuthentication
+from plantit.agents.utils import map_agent, has_virtual_memory
 from plantit.docker import parse_image_components, image_exists
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
 from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, BindMount
+from plantit.terrain import list_dir
+from plantit.users.utils import get_private_key_path
 from plantit.utils import parse_bind_mount, format_bind_mount
 from plantit.workflows.utils import map_old_workflow_config_to_new
 
@@ -106,9 +108,10 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
             "template_local_run.sh",
             "template_slurm_run.sh"]
 
-    resources = None if 'resources' not in config['agent'] else config['agent']['resources']
-    new_flow = map_old_workflow_config_to_new(config, task, resources)
+    jobqueue = None if 'jobqueue' not in config['agent'] else config['agent']['jobqueue']
+    new_flow = map_old_workflow_config_to_new(config, task, jobqueue)
     launcher = task.agent.launcher  # whether to use TACC launcher
+    if task.agent.launcher: del new_flow['jobqueue']
 
     errors = []
     image = None
@@ -240,47 +243,6 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         gpu=gpu)
 
 
-def prep_command(
-        work_dir: str,
-        image: str,
-        command: str,
-        bind_mounts: List[BindMount] = None,
-        parameters: List[Parameter] = None,
-        docker_username: str = None,
-        docker_password: str = None,
-        no_cache: bool = False,
-        gpu: bool = False) -> str:
-    cmd = f"singularity exec --home {work_dir}"
-
-    if bind_mounts is not None:
-        if len(bind_mounts) > 0:
-            cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
-        else:
-            raise ValueError(f"List expected for `bind_mounts`")
-
-    if parameters is None:
-        parameters = []
-    parameters.append(Parameter(key='WORKDIR', value=work_dir))
-    for parameter in parameters:
-        print(f"Replacing '{parameter.key.upper()}' with '{parameter.value}'")
-        command = command.replace(f"${parameter.key.upper()}", parameter.value)
-
-    if no_cache:
-        cmd += ' --disable-cache'
-
-    if gpu:
-        cmd += ' --nv'
-
-    cmd += f" {image} {command}"
-    print(f"Using command: '{cmd}'")
-
-    # we don't necessarily want to reveal Docker auth info to the end user, so print the command before adding Docker env variables
-    if docker_username is not None and docker_password is not None:
-        cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
-
-    return cmd
-
-
 def create_task(username: str, agent_name: str, workflow: dict, name: str = None) -> Task:
     redis = RedisClient.get()
     repo_name = workflow['repo']['owner']['login']
@@ -333,8 +295,12 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
     return task
 
 
-def upload_task(task: Task, ssh: SSH, input_files: List[str] = None):
-    orchestration_options = parse_orchestration_options(task)
+def configure_task_environment(task: Task, ssh: SSH):
+    msg = f"Verifying configuration"
+    log_task_status(task, msg)
+    push_task_event(task)
+    logger.info(msg)
+
     parse_errors, cli_options = parse_cli_options(task)
     if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
 
@@ -342,288 +308,318 @@ def upload_task(task: Task, ssh: SSH, input_files: List[str] = None):
     log_task_status(task, msg)
     push_task_event(task)
     logger.info(msg)
+
     work_dir = join(task.agent.workdir, task.workdir)
     execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=task.agent.workdir, allow_stderr=True)
 
+    msg = f"Uploading task definition"
+    log_task_status(task, msg)
+    push_task_event(task)
+    logger.info(msg)
+
+    work_dir = join(task.agent.workdir, task.workdir)
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
+        with sftp.open(f"{task.guid}.yaml", 'w') as cli_file: yaml.dump(cli_options, cli_file, default_flow_style=False)
+        if 'input' in cli_options: sftp.mkdir(join(work_dir, 'input'))
 
-        # TODO refactor to allow multiple schedulers
-        sandbox = task.agent.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
-        template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
-        template_name = template.split('/')[-1]
+    msg = f"Uploading task executable"
+    log_task_status(task, msg)
+    push_task_event(task)
+    logger.info(msg)
 
-        msg = f"Uploading task definition"
+    upload_task_executables(task, ssh, cli_options)
+
+
+def compose_singularity_command(
+        work_dir: str,
+        image: str,
+        command: str,
+        bind_mounts: List[BindMount] = None,
+        parameters: List[Parameter] = None,
+        no_cache: bool = False,
+        gpu: bool = False,
+        docker_username: str = None,
+        docker_password: str = None) -> str:
+    cmd = f"singularity exec --home {work_dir}"
+
+    if bind_mounts is not None:
+        if len(bind_mounts) > 0:
+            cmd += (' --bind ' + ','.join([format_bind_mount(work_dir, mount_point) for mount_point in bind_mounts]))
+        else:
+            raise ValueError(f"List expected for `bind_mounts`")
+
+    if parameters is None:
+        parameters = []
+    parameters.append(Parameter(key='WORKDIR', value=work_dir))
+    for parameter in parameters:
+        print(f"Replacing '{parameter.key.upper()}' with '{parameter.value}'")
+        command = command.replace(f"${parameter.key.upper()}", parameter.value)
+
+    if no_cache:
+        cmd += ' --disable-cache'
+
+    if gpu:
+        cmd += ' --nv'
+
+    cmd += f" {image} {command}"
+    print(f"Using command: '{cmd}'")
+
+    # we don't necessarily want to reveal Docker auth info to the end user, so print the command before adding Docker env variables
+    if docker_username is not None and docker_password is not None:
+        cmd = f"SINGULARITY_DOCKER_USERNAME={docker_username} SINGULARITY_DOCKER_PASSWORD={docker_password} " + cmd
+
+    return cmd
+
+
+def compose_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
+    nodes = min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1
+
+    if ['jobqueue'] not in 'options': return []
+    gpu = task.agent.gpu and ('gpu' in options and options['gpu'])
+    jobqueue = options['jobqueue']
+    commands = []
+
+    if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}\n")
+    if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(f"#SBATCH --mem={jobqueue['mem']}\n")
+    if 'walltime' in task.workflow['config']:
+        split_time = task.workflow['config']['walltime'].split(':')
+        hours = int(split_time[0])
+        minutes = int(split_time[1])
+        seconds = int(split_time[2])
+        walltime = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+        # adjust walltime to compensate for inputs processed in parallel [requested walltime * input files / nodes]
+        adjusted = walltime * (len(inputs) / nodes) if len(inputs) > 0 else walltime
+
+        # round up to the nearest hour
+        hours = f"{min(ceil(adjusted.total_seconds() / 60 / 60), task.agent.max_nodes)}"
+        if len(hours) == 1: hours = f"0{hours}"
+        adjusted_str = f"{hours}:00:00"
+
+        msg = f"Using adjusted walltime {adjusted_str}"
         log_task_status(task, msg)
         push_task_event(task)
         logger.info(msg)
-        with sftp.open('flow.yaml', 'w') as flow_file:
-            if task.agent.launcher: del new_flow['jobqueue']
-            yaml.dump(new_flow, flow_file, default_flow_style=False)
 
-        msg = f"Uploading task executable"
-        log_task_status(task, msg)
-        push_task_event(task)
-        logger.info(msg)
-        with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
-            print(f"Uploading {template_name}")
-            for line in template_script:
-                script.write(line)
-
-            if not sandbox:
-                # we're on a SLURM cluster, so add resource requests
-                nodes = min(len(input_files), task.agent.max_nodes) if input_files is not None and not task.agent.job_array else 1
-                gpu = task.agent.gpu and ('gpu' in config and config['gpu'])
-
-                if 'cores' in resources:
-                    cores = int(resources['cores'])
-                    script.write(f"#SBATCH --cpus-per-task={cores}\n")
-                if 'time' in resources:
-                    split_time = resources['time'].split(':')
-                    hours = int(split_time[0])
-                    minutes = int(split_time[1])
-                    seconds = int(split_time[2])
-                    time = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-                    # calculated [requested walltime * input files / nodes]
-                    if input_files is not None:
-                        adjusted_time = time * (len(input_files) / nodes)
-                    else:
-                        adjusted_time = time
-                    hours = f"{min(ceil(adjusted_time.total_seconds() / 60 / 60), task.agent.max_nodes)}"
-                    if len(hours) == 1:
-                        hours = f"0{hours}"
-                    adjusted_time_str = f"{hours}:00:00"
-
-                    task.job_requested_walltime = adjusted_time_str
-                    task.save()
-                    msg = f"Using adjusted walltime {adjusted_time_str}"
-                    log_task_status(task, msg)
-                    push_task_event(task)
-                    logger.info(msg)
-
-                    script.write(f"#SBATCH --time={adjusted_time_str}\n")
-                if 'mem' in resources and (task.agent.header_skip is None or '--mem' not in str(task.agent.header_skip)):
-                    mem = resources['mem']
-                    script.write(f"#SBATCH --mem={resources['mem']}\n")
-                if task.agent.queue is not None and task.agent.queue != '':
-                    queue = task.agent.gpu_queue if gpu else task.agent.queue
-                    script.write(f"#SBATCH --partition={queue}\n")
-                if task.agent.project is not None and task.agent.project != '':
-                    script.write(f"#SBATCH -A {task.agent.project}\n")
-                if gpu:
-                    script.write(f"#SBATCH --gres=gpu:1\n")
-
-                if input_files is not None and task.agent.job_array:
-                    script.write(f"#SBATCH --array=1-{len(input_files)}\n")
-                if input_files is not None:
-                    script.write(f"#SBATCH -N {nodes}\n")
-                    script.write(f"#SBATCH --ntasks={nodes}\n")
-                else:
-                    script.write(f"#SBATCH -N 1\n")
-                    script.write("#SBATCH --ntasks=1\n")
-
-                script.write("#SBATCH --mail-type=END,FAIL\n")
-                script.write(f"#SBATCH --mail-user={task.user.email}\n")
-                script.write("#SBATCH --output=plantit.%j.out\n")
-                script.write("#SBATCH --error=plantit.%j.err\n")
-
-            # add precommands
-            script.write(task.agent.pre_commands + '\n')
-
-            # pull singularity container in advance
-            # script.write(f"singularity pull {run_options.image}\n")
-
-            # if we have inputs, add pull command
-            if 'input' in config:
-                input = config['input']
-                sftp.mkdir(join(task.agent.workdir, task.workdir, 'input'))
-
-                # allow for both spellings of JPG
-                patterns = [pattern.lower() for pattern in input['patterns']]
-                if 'jpg' in patterns and 'jpeg' not in patterns:
-                    patterns.append("jpeg")
-                elif 'jpeg' in patterns and 'jpg' not in patterns:
-                    patterns.append("jpg")
-
-                pull_commands = f"plantit terrain pull \"{input['from']}\"" \
-                                f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
-                                f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
-                                f""f" --terrain_token {task.user.profile.cyverse_access_token}"
-
-                if task.agent.callbacks:
-                    callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
-                    pull_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
-                pull_commands += "\n"
-
-                logger.info(f"Using pull command: {pull_commands}")
-                script.write(pull_commands)
-
-            docker_username = environ.get('DOCKER_USERNAME', None)
-            docker_password = environ.get('DOCKER_PASSWORD', None)
-
-            # if this resource uses TACC's launcher, create a parameter sweep script to invoke Singularity
-            if launcher:
-                logger.info(f"Using TACC launcher")
-                with sftp.open('launch', 'w') as launcher_script:
-                    if config['input']['kind'] == 'files' and input_files is not None:
-                        for file in input_files:
-                            file_name = file.rpartition('/')[2]
-                            cli_options.input = FileInput(file_name)
-                            command = prep_command(
-                                work_dir=cli_options.workdir,
-                                image=cli_options.image,
-                                command=cli_options.command,
-                                parameters=(cli_options.parameters if cli_options.parameters is not None else []) + [
-                                    Parameter(key='INPUT', value=join(task.agent.workdir, task.workdir, 'input', file_name))],
-                                bind_mounts=cli_options.bind_mounts,
-                                docker_username=docker_username,
-                                docker_password=docker_password,
-                                no_cache=cli_options.no_cache,
-                                gpu=cli_options.gpu)
-                            launcher_script.write(f"{command}\n")
-                    elif config['input']['kind'] == 'directory':
-                        command = prep_command(
-                            work_dir=cli_options.workdir,
-                            image=cli_options.image,
-                            command=cli_options.command,
-                            parameters=(cli_options.parameters if cli_options.parameters is not None else []) + [
-                                Parameter(key='INPUT', value=join(task.agent.workdir, task.workdir, 'input'))],
-                            bind_mounts=cli_options.bind_mounts,
-                            docker_username=docker_username,
-                            docker_password=docker_password,
-                            no_cache=cli_options.no_cache,
-                            gpu=cli_options.gpu)
-                        launcher_script.write(f"{command}\n")
-                    elif config['input']['kind'] == 'file':
-                        command = prep_command(
-                            work_dir=cli_options.workdir,
-                            image=cli_options.image,
-                            command=cli_options.command,
-                            parameters=(cli_options.parameters if cli_options.parameters is not None else []) + [
-                                Parameter(key='INPUT', value=new_flow['input']['file']['path'])],
-                            bind_mounts=cli_options.bind_mounts,
-                            docker_username=docker_username,
-                            docker_password=docker_password,
-                            no_cache=cli_options.no_cache,
-                            gpu=cli_options.gpu)
-                        launcher_script.write(f"{command}\n")
-
-                script.write(f"export LAUNCHER_WORKDIR={join(task.agent.workdir, task.workdir)}\n")
-                script.write(f"export LAUNCHER_JOB_FILE=launch\n")
-                script.write("$LAUNCHER_DIR/paramrun\n")
-            # otherwise use the CLI
-            else:
-                cli_cmd = f"plantit run flow.yaml"
-                if task.agent.job_array and input_files is not None:
-                    cli_cmd += f" --slurm_job_array"
-
-                if docker_username is not None and docker_password is not None:
-                    cli_cmd += f" --docker_username {docker_username} --docker_password {docker_password}"
-
-                if task.agent.callbacks:
-                    callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
-                    cli_cmd += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
-
-                cli_cmd += "\n"
-                logger.info(f"Using CLI invocation: {cli_cmd}")
-                script.write(cli_cmd)
-
-            # add zip command
-            output = config['output']
-            zip_commands = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {task.guid}"
-            log_files = [f"{task.guid}.{task.agent.name.lower()}.log"]
-            zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in log_files])}"
-            if 'include' in output:
-                if 'patterns' in output['include']:
-                    zip_commands = f"{zip_commands} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"
-                if 'names' in output['include']:
-                    zip_commands = f"{zip_commands} {' '.join(['--include_name ' + pattern for pattern in output['include']['names']])}"
-                if 'patterns' in output['exclude']:
-                    zip_commands = f"{zip_commands} {' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])}"
-                if 'names' in output['exclude']:
-                    zip_commands = f"{zip_commands} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
-            zip_commands += '\n'
-            script.write(zip_commands)
-            logger.info(f"Zipping enabled: {zip_commands}")
-
-            # add push command if we have a destination
-            # if 'to' in output and output['to'] is not None:
-            #     push_commands = f"plantit terrain push {output['to']}" \
-            #                     f" -p {join(run.work_dir, output['from'])}" \
-            #                     f" --plantit_url '{callback_url}'"
-
-            #     if 'include' in output:
-            #         if 'patterns' in output['include']:
-            #             push_commands = push_commands + ' '.join(
-            #                 ['--include_pattern ' + pattern for pattern in output['include']['patterns']])
-            #         if 'names' in output['include']:
-            #             push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
-            #         if 'patterns' in output['exclude']:
-            #             push_commands = push_commands + ' '.join(
-            #                 ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
-            #         if 'names' in output['exclude']:
-            #             push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
-
-            #     if run.resource.callbacks:
-            #         push_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
-
-            #     push_commands += '\n'
-            #     script.write(push_commands)
-            #     logger.info(f"Using push command: {push_commands}")
-
-
-def submit_via_ssh(task: Task, ssh: SSH, file_count: int = None):
-    # TODO refactor to allow multiple schedulers
-    sandbox = task.agent.name == 'Sandbox'  # for now, we're either in the sandbox or on a SLURM cluster
-    template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
-    template_name = template.split('/')[-1]
-
-    if task.is_sandbox:
-        execute_command(
-            ssh_client=ssh,
-            pre_command='; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':',
-            command=f"chmod +x {template_name} && ./{template_name}",
-            directory=join(task.agent.workdir, task.workdir),
-            allow_stderr=True)
-
-        # get container logs
-        work_dir = join(task.agent.workdir, task.workdir)
-        container_log_file = get_container_log_file_name(task)
-        container_log_path = get_container_log_file_path(task)
-
-        with ssh.client.open_sftp() as sftp:
-            cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
-            stdin, stdout, stderr = ssh.client.exec_command(cmd)
-
-            if not stdout.read().decode().strip() == 'exists':
-                container_logs = []
-            else:
-                with open(get_container_log_file_path(task), 'a+') as log_file:
-                    sftp.chdir(work_dir)
-                    sftp.get(container_log_file, log_file.name)
-
-                # obfuscate Docker auth info before returning logs to the user
-                docker_username = environ.get('DOCKER_USERNAME', None)
-                docker_password = environ.get('DOCKER_PASSWORD', None)
-                for line in fileinput.input([container_log_path], inplace=True):
-                    if docker_username in line.strip():
-                        line = line.strip().replace(docker_username, '*' * 7, 1)
-                    if docker_password in line.strip():
-                        line = line.strip().replace(docker_password, '*' * 7)
-                    sys.stdout.write(line)
-    else:
-        command = f"sbatch {template_name}"
-        output_lines = execute_command(
-            ssh_client=ssh,
-            pre_command='; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':',
-            # if the scheduler prohibits nested job submissions, we need to run the CLI from a login node
-            command=command,
-            directory=join(task.agent.workdir, task.workdir),
-            allow_stderr=True)
-        job_id = parse_job_id(output_lines[-1])
-        task.job_id = job_id
-        task.updated = timezone.now()
+        task.job_requested_walltime = adjusted_str
         task.save()
+        commands.append(f"#SBATCH --time={adjusted_str}\n")
+    if gpu: commands.append(f"#SBATCH --gres=gpu:1\n")
+    if task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.gpu_queue if gpu else task.agent.queue}\n")
+    if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}\n")
+    if len(inputs) > 0:
+        if task.agent.job_array:
+            commands.append(f"#SBATCH --array=1-{len(inputs)}\n")
+        commands.append(f"#SBATCH -N {nodes}\n")
+        commands.append(f"#SBATCH --ntasks={nodes}\n")
+    else:
+        commands.append(f"#SBATCH -N 1\n")
+        commands.append("#SBATCH --ntasks=1\n")
+    commands.append("#SBATCH --mail-type=END,FAIL\n")
+    commands.append(f"#SBATCH --mail-user={task.user.email}\n")
+    commands.append("#SBATCH --output=plantit.%j.out\n")
+    commands.append("#SBATCH --error=plantit.%j.err\n")
+
+    newline = '\n'
+    logger.debug(f"Using resource requests: {newline.join(commands)}")
+    return commands
+
+
+def compose_pull_command(task: Task, options: PlantITCLIOptions) -> str:
+    if 'input' not in options: return ''
+    input = options['input']
+
+    # allow for both spellings of JPG
+    patterns = [pattern.lower() for pattern in input['patterns']]
+    if 'jpg' in patterns and 'jpeg' not in patterns: patterns.append("jpeg")
+    elif 'jpeg' in patterns and 'jpg' not in patterns: patterns.append("jpg")
+
+    command = f"plantit terrain pull \"{input['from']}\"" \
+              f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
+              f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
+              f""f" --terrain_token {task.user.profile.cyverse_access_token}"
+
+    if task.agent.callbacks:
+        callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
+        command += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
+
+    logger.debug(f"Using pull command: {command}")
+    return command
+
+
+def compose_run_commands(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
+    docker_username = environ.get('DOCKER_USERNAME', None)
+    docker_password = environ.get('DOCKER_PASSWORD', None)
+    commands = []
+
+    # if this resource uses TACC's launcher, create a parameter sweep script to invoke the Singularity container
+    if task.agent.launcher:
+        commands.append(f"export LAUNCHER_WORKDIR={join(task.agent.workdir, task.workdir)}\n")
+        commands.append(f"export LAUNCHER_JOB_FILE={os.environ.get('LAUNCHER_SCRIPT_NAME')}\n")
+        commands.append("$LAUNCHER_DIR/paramrun\n")
+    # otherwise use the CLI
+    else:
+        command = f"plantit run flow.yaml"
+        if task.agent.job_array and len(inputs) > 0:
+            command += f" --slurm_job_array"
+
+        if docker_username is not None and docker_password is not None:
+            command += f" --docker_username {docker_username} --docker_password {docker_password}"
+
+        if task.agent.callbacks:
+            callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
+            command += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
+
+        commands.append(command)
+
+    newline = '\n'
+    logger.debug(f"Using CLI commands: {newline.join(commands)}")
+    return commands
+
+
+def compose_zip_command(task: Task, options: PlantITCLIOptions) -> str:
+    if 'output' not in options: return ''
+    output = options['output']
+    command = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {task.guid}"
+    logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
+    command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in logs])}"
+
+    if 'include' in output:
+        if 'patterns' in output['include']:
+            command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in output['include']['patterns']])}"
+        if 'names' in output['include']:
+            command = f"{command} {' '.join(['--include_name ' + pattern for pattern in output['include']['names']])}"
+        if 'patterns' in output['exclude']:
+            command = f"{command} {' '.join(['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])}"
+        if 'names' in output['exclude']:
+            command = f"{command} {' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])}"
+
+    logger.info(f"Using zip command: {command}")
+    return command
+
+
+def compose_push_command(options: PlantITCLIOptions) -> str:
+    # TODO
+
+    # add push command if we have a destination
+    # if 'to' in output and output['to'] is not None:
+    #     push_commands = f"plantit terrain push {output['to']}" \
+    #                     f" -p {join(run.work_dir, output['from'])}" \
+    #                     f" --plantit_url '{callback_url}'"
+
+    #     if 'include' in output:
+    #         if 'patterns' in output['include']:
+    #             push_commands = push_commands + ' '.join(
+    #                 ['--include_pattern ' + pattern for pattern in output['include']['patterns']])
+    #         if 'names' in output['include']:
+    #             push_commands = push_commands + ' '.join(['--include_name ' + pattern for pattern in output['include']['names']])
+    #         if 'patterns' in output['exclude']:
+    #             push_commands = push_commands + ' '.join(
+    #                 ['--exclude_pattern ' + pattern for pattern in output['exclude']['patterns']])
+    #         if 'names' in output['exclude']:
+    #             push_commands = push_commands + ' '.join(['--exclude_name ' + pattern for pattern in output['exclude']['names']])
+
+    #     if run.resource.callbacks:
+    #         push_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{run.token}'"
+
+    #     push_commands += '\n'
+    #     script.write(push_commands)
+    #     logger.info(f"Using push command: {push_commands}")
+
+    return ''
+
+
+def compose_task_script(task: Task, options: PlantITCLIOptions, template: str) -> List[str]:
+    with open(template, 'r') as template_file:
+        template_header = [line for line in template_file]
+
+    resource_requests = [] if task.agent.executor == AgentExecutor.LOCAL else compose_resource_requests(task, options)
+    pre_commands = task.agent.pre_commands
+    pull_command = compose_pull_command(task, options)
+    run_commands = compose_run_commands(options)
+    zip_command = compose_zip_command(options)
+    push_command = compose_push_command(options)
+
+    return template_header + resource_requests + [pre_commands] + [pull_command] + run_commands + [zip_command] + [push_command]
+
+
+def compose_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]:
+    docker_username = environ.get('DOCKER_USERNAME', None)
+    docker_password = environ.get('DOCKER_PASSWORD', None)
+    lines = []
+
+    if 'input' in options:
+        if options['input']['kind'] == 'files':
+            files = list_input_files(task, options) if ('input' in options and options['input']['kind'] == 'files') else []
+            for file in files:
+                file_name = file.rpartition('/')[2]
+                command = compose_singularity_command(
+                    work_dir=options['workdir'],
+                    image=options['image'],
+                    command=options['command'],
+                    parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                    bind_mounts=options['bind_mounts'],
+                    no_cache=options['no_cache'],
+                    gpu=options['gpu'],
+                    docker_username=docker_username,
+                    docker_password=docker_password)
+                lines.append(command)
+        elif options['input']['kind'] == 'directory':
+            command = compose_singularity_command(
+                work_dir=options['workdir'],
+                image=options['image'],
+                command=options['command'],
+                parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
+                bind_mounts=options['bind_mounts'],
+                no_cache=options['no_cache'],
+                gpu=options['gpu'],
+                docker_username=docker_username,
+                docker_password=docker_password)
+            lines.append(command)
+        elif options['input']['kind'] == 'file':
+            file_name = options['input']['path'].rpartition('/')[2]
+            command = compose_singularity_command(
+                work_dir=options['workdir'],
+                image=options['image'],
+                command=options['command'],
+                parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], file_name))],
+                bind_mounts=options['bind_mounts'],
+                no_cache=options['no_cache'],
+                gpu=options['gpu'],
+                docker_username=docker_username,
+                docker_password=docker_password)
+            lines.append(command)
+    else:
+        command = compose_singularity_command(
+            work_dir=options['workdir'],
+            image=options['image'],
+            command=options['command'],
+            parameters=(options['parameters'] if 'parameters' in options else []),
+            bind_mounts=options['bind_mounts'],
+            no_cache=options['no_cache'],
+            gpu=options['gpu'],
+            docker_username=docker_username,
+            docker_password=docker_password)
+        lines.append(command)
+
+    return lines
+
+
+def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
+    with ssh.client.open_sftp() as sftp:
+        template_path = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if task.agent.executor == AgentExecutor.LOCAL else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
+        with sftp.open(f"{task.guid}.sh", 'w') as task_script:
+            task_commands = compose_task_script(task, options, template_path)
+            for line in task_commands:
+                if line != '': task_script.write(line + "\n")
+
+        # if the selected agent uses the Launcher, create a parameter sweep script too
+        if task.agent.launcher:
+            with sftp.open(os.environ.get('LAUNCHER_SCRIPT_NAME'), 'w') as launcher_script:
+                launcher_commands = compose_launcher_script(task, options)
+                for line in launcher_commands:
+                    if line != '': launcher_script.write(line + "\n")
 
 
 def log_task_status(task: Task, description: str):
@@ -674,6 +670,33 @@ def get_container_log_file_name(task: Task):
 
 def get_container_log_file_path(task: Task):
     return join(os.environ.get('RUNS_LOGS'), get_container_log_file_name(task))
+
+
+def get_container_logs(task: Task, ssh: SSH):
+    work_dir = join(task.agent.workdir, task.workdir)
+    container_log_file = get_container_log_file_name(task)
+    container_log_path = get_container_log_file_path(task)
+
+    with ssh.client.open_sftp() as sftp:
+        cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
+        stdin, stdout, stderr = ssh.client.exec_command(cmd)
+
+        if not stdout.read().decode().strip() == 'exists':
+            container_logs = []
+        else:
+            with open(get_container_log_file_path(task), 'a+') as log_file:
+                sftp.chdir(work_dir)
+                sftp.get(container_log_file, log_file.name)
+
+            # obfuscate Docker auth info before returning logs to the user
+            docker_username = environ.get('DOCKER_USERNAME', None)
+            docker_password = environ.get('DOCKER_PASSWORD', None)
+            for line in fileinput.input([container_log_path], inplace=True):
+                if docker_username in line.strip():
+                    line = line.strip().replace(docker_username, '*' * 7, 1)
+                if docker_password in line.strip():
+                    line = line.strip().replace(docker_password, '*' * 7)
+                sys.stdout.write(line)
 
 
 def get_job_walltime(task: Task) -> (str, str):
@@ -830,3 +853,25 @@ def map_repeating_task(task: RepeatingTask):
         'enabled': task.enabled,
         'last_run': task.last_run_at
     }
+
+
+def list_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
+    input_files = list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
+    msg = f"Found {len(input_files)} input file(s)"
+    log_task_status(task, msg)
+    push_task_event(task)
+    logger.info(msg)
+
+    return input_files
+
+
+def get_ssh_client(task: Task) -> SSH:
+    if task.agent.authentication == AgentAuthentication.PASSWORD:
+        auth = task.workflow['auth']
+        logger.debug(f"Using password authentication (username: {auth['username']})")
+        client = SSH(host=task.agent.hostname, port=task.agent.port, username=auth['username'], password=auth['password'])
+    else:
+        logger.debug(f"Using key authentication (username: {task.agent.username})")
+        client = SSH(host=task.agent.hostname, port=task.agent.port, username=task.agent.username, pkey=str(get_private_key_path(task.agent.user.username)))
+
+    return client

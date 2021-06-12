@@ -131,6 +131,16 @@ def validate_repo_config(config: dict, token: str) -> (bool, List[str]):
         if (type(doi) is str and doi == '') or (type(doi) is list and not all(type(d) is str for d in doi)):
             errors.append('Attribute \'doi\' must be a non-empty str or list of str')
 
+    # walltime (optional)
+    if 'walltime' in config:
+        walltime = config['walltime']
+        import re
+        pattern = re.compile("^([0-9][0-9]:[0-9][0-9]:[0-9][0-9])$")
+        if type(walltime) is not str:
+            errors.append('Attribute \'walltime\' must be a str')
+        if type(walltime) is str and not bool(pattern.match(walltime)):
+            errors.append('Attribute \'walltime\' must have format XX:XX:XX')
+
     return (True, []) if len(errors) == 0 else (False, errors)
 
 

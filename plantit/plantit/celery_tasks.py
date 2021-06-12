@@ -1,16 +1,13 @@
 import base64
-import fileinput
 import json
-import sys
 import tempfile
 import traceback
 from os import environ
 from os.path import join
-from typing import List
 
 import cv2
-from celery.utils.log import get_task_logger
 from celery import group
+from celery.utils.log import get_task_logger
 from czifile import czifile
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -18,20 +15,16 @@ from preview_generator.exception import UnsupportedMimeType
 from preview_generator.manager import PreviewManager
 
 from plantit import settings
+from plantit.agents.models import AgentExecutor
 from plantit.celery import app
-from plantit.datasets.models import DatasetSession
-from plantit.datasets.utils import update_dataset_session
+from plantit.github import get_repo
 from plantit.redis import RedisClient
-from plantit.agents.models import Agent, AgentAuthentication
+from plantit.sns import SnsClient
+from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
 from plantit.tasks.utils import log_task_status, push_task_event, remove_logs, create_task, \
-    get_container_log_file_name, get_container_log_file_path, get_result_files, get_job_walltime, get_job_status, submit_via_ssh, \
-    upload_task
-from plantit.ssh import SSH, execute_command
-from plantit.terrain import list_dir
-from plantit.sns import SnsClient
-from plantit.github import get_repo
-from plantit.users.utils import refresh_cyverse_tokens, get_private_key_path
+    get_result_files, get_job_walltime, get_job_status, configure_task_environment, get_container_logs, parse_job_id, get_ssh_client
+from plantit.users.utils import refresh_cyverse_tokens
 from plantit.workflows.utils import repopulate_personal_workflow_bundle_cache, repopulate_public_workflow_bundle_cache
 
 logger = get_task_logger(__name__)
@@ -41,39 +34,6 @@ logger = get_task_logger(__name__)
 def create_and_submit_task(username: str, agent_name: str, workflow: dict):
     task = create_task(username, agent_name, workflow)
     submit_task.s(task.guid, workflow).apply_async()
-
-
-def get_ssh_client(task: Task) -> SSH:
-    if task.agent.authentication == AgentAuthentication.PASSWORD:
-        auth = task.workflow['auth']
-        msg = f"Using password authentication (username: {auth['username']})"
-        logger.info(msg)
-        log_task_status(task, msg)
-        push_task_event(task)
-        client = SSH(host=task.agent.hostname, port=task.agent.port, username=auth['username'], password=auth['password'])
-    else:
-        msg = f"Using key authentication (username: {task.agent.username})"
-        logger.info(msg)
-        log_task_status(task, msg)
-        push_task_event(task)
-        client = SSH(host=task.agent.hostname, port=task.agent.port, username=task.agent.username,
-                         pkey=str(get_private_key_path(task.agent.user.username)))
-
-    return client
-
-
-def list_input_files(task: Task) -> List[str]:
-    config = task.workflow['config']
-    if 'input' in config and config['input']['kind'] == 'files':
-        input_files = list_dir(config['input']['from'], task.user.profile.cyverse_access_token)
-        msg = f"Found {len(input_files)} input files"
-        log_task_status(task, msg)
-        push_task_event(task)
-        logger.info(msg)
-    else:
-        input_files = None
-
-    return input_files
 
 
 @app.task(track_started=True)
@@ -88,28 +48,32 @@ def submit_task(guid: str):
     task.celery_task_id = submit_task.request.id  # set the Celery task's ID so user can cancel
     task.save()
 
-    msg = f"Deploying {task.user.username}'s task {task.name} with GUID {task.guid} to {task.agent.name}"
+    msg = f"Submitting {task.user.username}'s task {task.name} with GUID {task.guid} to {task.agent.name}"
     log_task_status(task, msg)
     push_task_event(task)
     logger.info(msg)
 
     try:
-        config = task.workflow['config']
-        inputs = list_input_files(task)
-        client = get_ssh_client(task)
+        local = task.agent.executor == AgentExecutor.LOCAL
+        ssh = get_ssh_client(task)
 
-        # TODO based on executor options (e.g., launcher, job array) call appropriate method here (instead of monolithic method to handle all cases)
+        with ssh:
+            configure_task_environment(task, ssh)
 
-        with client:
-            upload_task(task, client, inputs)
+            if local:
+                msg = f"Starting {task.user.username}'s task {task.name}"
+                log_task_status(task, msg)
+                push_task_event(task)
+                logger.info(msg)
 
-            msg = 'Running script' if task.is_sandbox else 'Submitting script to scheduler'
-            log_task_status(task, msg)
-            push_task_event(task)
-            logger.info(msg)
-            submit_via_ssh(task, client, len(inputs) if inputs is not None else None)
+                execute_command(
+                    ssh_client=ssh,
+                    pre_command='; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':',
+                    command=f"chmod +x {task.guid}.sh && ./{task.guid}.sh",
+                    directory=join(task.agent.workdir, task.workdir),
+                    allow_stderr=True)
+                get_container_logs(task, ssh)
 
-            if task.is_sandbox:
                 task.status = TaskStatus.SUCCESS
                 now = timezone.now()
                 task.updated = now
@@ -118,17 +82,39 @@ def submit_task(guid: str):
                 list_task_results.s(guid).apply_async()
 
                 cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
-                msg = f"Completed task with GUID {task.guid}, cleaning up in {cleanup_delay}m"
+                msg = f"Completed {task.user.username}'s task {task.name}, cleaning up in {cleanup_delay} minute(s)"
                 log_task_status(task, msg)
                 push_task_event(task)
                 logger.info(msg)
                 cleanup_task.s(guid).apply_async(countdown=cleanup_delay * 60)
 
                 if task.user.profile.push_notification_status == 'enabled':
-                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT run {task.guid}", msg, {})
+                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
             else:
-                delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-                poll_job_status.s(task.guid).apply_async(countdown=delay)
+                msg = f"Submitting {task.user.username}'s task {task.name}"
+                log_task_status(task, msg)
+                push_task_event(task)
+                logger.info(msg)
+
+                output_lines = execute_command(
+                    ssh_client=ssh,
+                    pre_command='; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':',
+                    command=f"sbatch {task.guid}.sh",
+                    directory=join(task.agent.workdir, task.workdir),
+                    allow_stderr=True)
+
+                job_id = parse_job_id(output_lines[-1])
+                task.job_id = job_id
+                task.updated = timezone.now()
+                task.save()
+
+                refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
+                poll_job_status.s(task.guid).apply_async(countdown=refresh_delay)
+
+                msg = f"Received scheduler job ID for {task.user.username}'s task {task.name}: {job_id}, refreshing in {refresh_delay} second(s)"
+                log_task_status(task, msg)
+                push_task_event(task)
+                logger.info(msg)
     except Exception:
         task.status = TaskStatus.FAILURE
         now = timezone.now()
@@ -136,7 +122,7 @@ def submit_task(guid: str):
         task.completed = now
         task.save()
 
-        msg = f"Failed to submit task with GUID {task.guid}: {traceback.format_exc()}."
+        msg = f"Failed to submit {task.user.username}'s task {task.name}: {traceback.format_exc()}."
         log_task_status(task, msg)
         push_task_event(task)
         logger.error(msg)
@@ -163,7 +149,7 @@ def poll_job_status(guid: str):
         cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
         if task.user.profile.push_notification_status == 'enabled':
-            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT run {task.guid}", msg, {})
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
 
     # otherwise poll the scheduler for its status
     try:
@@ -176,33 +162,8 @@ def poll_job_status(guid: str):
         task.updated = now
         task.save()
 
-        # get container logs
-        work_dir = join(task.agent.workdir, task.workdir)
-        ssh_client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
-        container_log_file = get_container_log_file_name(task)
-        container_log_path = get_container_log_file_path(task)
-
-        with ssh_client:
-            with ssh_client.client.open_sftp() as sftp:
-                cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
-                stdin, stdout, stderr = ssh_client.client.exec_command(cmd)
-
-                if not stdout.read().decode().strip() == 'exists':
-                    container_logs = []
-                else:
-                    with open(get_container_log_file_path(task), 'a+') as log_file:
-                        sftp.chdir(work_dir)
-                        sftp.get(container_log_file, log_file.name)
-
-                    # obfuscate Docker auth info before returning logs to the user
-                    docker_username = environ.get('DOCKER_USERNAME', None)
-                    docker_password = environ.get('DOCKER_PASSWORD', None)
-                    for line in fileinput.input([container_log_path], inplace=True):
-                        if docker_username in line.strip():
-                            line = line.strip().replace(docker_username, '*' * 7, 1)
-                        if docker_password in line.strip():
-                            line = line.strip().replace(docker_password, '*' * 7)
-                        sys.stdout.write(line)
+        ssh = get_ssh_client(task)
+        get_container_logs(task, ssh)
 
         if job_status == 'COMPLETED':
             task.completed = now
@@ -228,7 +189,7 @@ def poll_job_status(guid: str):
             cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
             if task.user.profile.push_notification_status == 'enabled':
-                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT run {task.guid}", msg, {})
+                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
         else:
             msg = f"Job {task.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"
             log_task_status(task, msg)
@@ -252,7 +213,7 @@ def poll_job_status(guid: str):
             cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
             if task.user.profile.push_notification_status == 'enabled':
-                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT run {task.guid}", msg, {})
+                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
     except:
         task.status = TaskStatus.FAILURE
         now = timezone.now()
@@ -266,7 +227,7 @@ def poll_job_status(guid: str):
         cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
         if task.user.profile.push_notification_status == 'enabled':
-            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT run {task.guid}", msg, {})
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
 
 
 @app.task()
@@ -280,12 +241,12 @@ def cleanup_task(guid: str):
     logger.info(f"Cleaning up task with GUID {guid} local working directory {task.agent.workdir}")
     remove_logs(task.guid, task.agent.name)
     logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
-    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    ssh = get_ssh_client(task)
     with ssh:
         for line in execute_command(
                 ssh_client=ssh,
                 pre_command=task.agent.pre_commands,
-                command=f"rm -r {join(task.agent.workdir, task.workdir)}",
+                command=f"rm -rf {join(task.agent.workdir, task.workdir)}",
                 directory=task.agent.workdir,
                 allow_stderr=True):
             logger.info(line)
@@ -307,7 +268,7 @@ def list_task_results(guid: str):
         return
 
     redis = RedisClient.get()
-    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    ssh = get_ssh_client(task)
     previews = PreviewManager(join(settings.MEDIA_ROOT, task.guid), create_folder=True)
     workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}")
 
@@ -435,120 +396,120 @@ def list_task_results(guid: str):
     push_task_event(task)
 
 
-@app.task()
-def clean_agent_singularity_cache(agent_name: str):
-    try:
-        agent = Agent.objects.get(name=agent_name)
-    except:
-        logger.warning(f"Agent {agent_name} does not exist")
-        return
-
-    ssh = SSH(agent.hostname, agent.port, agent.username)
-    with ssh:
-        for line in execute_command(
-                ssh_client=ssh,
-                pre_command=agent.pre_commands,
-                command="singularity cache clean",
-                directory=agent.workdir,
-                allow_stderr=True):
-            logger.info(line)
-
-
-@app.task()
-def execute_agent_command(agent_name: str, command: str, pre_command: str = None):
-    try:
-        agent = Agent.objects.get(name=agent_name)
-    except:
-        logger.warning(f"Agent {agent_name} does not exist")
-        return
-
-    ssh = SSH(agent.hostname, agent.port, agent.username)
-    with ssh:
-        for line in execute_command(
-                ssh_client=ssh,
-                pre_command=agent.pre_commands + '' if pre_command is None else f"&& {pre_command}",
-                command=command,
-                directory=agent.workdir,
-                allow_stderr=True):
-            logger.info(line)
+# @app.task()
+# def clean_agent_singularity_cache(agent_name: str):
+#     try:
+#         agent = Agent.objects.get(name=agent_name)
+#     except:
+#         logger.warning(f"Agent {agent_name} does not exist")
+#         return
+#
+#     ssh = SSH(agent.hostname, agent.port, agent.username)
+#     with ssh:
+#         for line in execute_command(
+#                 ssh_client=ssh,
+#                 pre_command=agent.pre_commands,
+#                 command="singularity cache clean",
+#                 directory=agent.workdir,
+#                 allow_stderr=True):
+#             logger.info(line)
 
 
-@app.task()
-def open_dataset_session(guid: str):
-    try:
-        session = DatasetSession.objects.get(guid=guid)
-        ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
-
-        with ssh:
-            msg = f"Creating working directory {session.workdir}"
-            update_dataset_session(session, [f"Creating working directory {session.workdir}"])
-            logger.info(msg)
-
-            for line in execute_command(
-                    ssh_client=ssh,
-                    pre_command=':',
-                    command=f"mkdir {session.guid}/",
-                    directory=session.agent.workdir):
-                logger.info(line)
-
-            msg = f"Transferring files from {session.path} to {session.agent.name}"
-            update_dataset_session(session, [msg])
-            logger.info(msg)
-
-            command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_access_token}\n"
-            for line in execute_command(
-                    ssh_client=ssh,
-                    pre_command=session.agent.pre_commands,
-                    command=command,
-                    directory=session.workdir,
-                    allow_stderr=True):
-                update_dataset_session(session, [line])
-
-            session.opening = False
-            session.save()
-            msg = f"Succesfully opened dataset"
-            update_dataset_session(session, [msg])
-            logger.info(msg)
-    except:
-        msg = f"Failed to open session: {traceback.format_exc()}."
-        logger.error(msg)
+# @app.task()
+# def execute_agent_command(agent_name: str, command: str, pre_command: str = None):
+#     try:
+#         agent = Agent.objects.get(name=agent_name)
+#     except:
+#         logger.warning(f"Agent {agent_name} does not exist")
+#         return
+#
+#     ssh = SSH(agent.hostname, agent.port, agent.username)
+#     with ssh:
+#         for line in execute_command(
+#                 ssh_client=ssh,
+#                 pre_command=agent.pre_commands + '' if pre_command is None else f"&& {pre_command}",
+#                 command=command,
+#                 directory=agent.workdir,
+#                 allow_stderr=True):
+#             logger.info(line)
 
 
-@app.task()
-def save_dataset_session(guid: str, only_modified: bool):
-    try:
-        session = DatasetSession.objects.get(guid=guid)
+# @app.task()
+# def open_dataset_session(guid: str):
+#     try:
+#         session = DatasetSession.objects.get(guid=guid)
+#         ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
+#
+#         with ssh:
+#             msg = f"Creating working directory {session.workdir}"
+#             update_dataset_session(session, [f"Creating working directory {session.workdir}"])
+#             logger.info(msg)
+#
+#             for line in execute_command(
+#                     ssh_client=ssh,
+#                     pre_command=':',
+#                     command=f"mkdir {session.guid}/",
+#                     directory=session.agent.workdir):
+#                 logger.info(line)
+#
+#             msg = f"Transferring files from {session.path} to {session.agent.name}"
+#             update_dataset_session(session, [msg])
+#             logger.info(msg)
+#
+#             command = f"plantit terrain pull \"{session.path}\" --terrain_token {session.user.profile.cyverse_access_token}\n"
+#             for line in execute_command(
+#                     ssh_client=ssh,
+#                     pre_command=session.agent.pre_commands,
+#                     command=command,
+#                     directory=session.workdir,
+#                     allow_stderr=True):
+#                 update_dataset_session(session, [line])
+#
+#             session.opening = False
+#             session.save()
+#             msg = f"Succesfully opened dataset"
+#             update_dataset_session(session, [msg])
+#             logger.info(msg)
+#     except:
+#         msg = f"Failed to open session: {traceback.format_exc()}."
+#         logger.error(msg)
 
-        msg = f"Saving dataset session {session.guid} on {session.agent.name}"
-        update_dataset_session(session, [msg])
-        logger.info(msg)
 
-        ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
+# @app.task()
+# def save_dataset_session(guid: str, only_modified: bool):
+#     try:
+#         session = DatasetSession.objects.get(guid=guid)
+#
+#         msg = f"Saving dataset session {session.guid} on {session.agent.name}"
+#         update_dataset_session(session, [msg])
+#         logger.info(msg)
+#
+#         ssh = SSH(session.agent.hostname, session.agent.port, session.agent.username)
+#
+#         with ssh:
+#             msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.agent.name} to {session.path}"
+#             update_dataset_session(session, [msg])
+#             logger.info(msg)
+#
+#             command = f"plantit terrain push {session.path} --terrain_token {session.user.profile.cyverse_access_token}"
+#             for file in session.modified:
+#                 command += f" --include_name {file}"
+#
+#             for line in execute_command(
+#                     ssh_client=ssh,
+#                     pre_command=session.agent.pre_commands,
+#                     command=command,
+#                     directory=session.workdir,
+#                     allow_stderr=True):
+#                 update_dataset_session(session, [line])
+#     except:
+#         msg = f"Failed to open session: {traceback.format_exc()}."
+#         logger.error(msg)
 
-        with ssh:
-            msg = f"Transferring {'modified' if only_modified else 'all'} files from {session.agent.name} to {session.path}"
-            update_dataset_session(session, [msg])
-            logger.info(msg)
 
-            command = f"plantit terrain push {session.path} --terrain_token {session.user.profile.cyverse_access_token}"
-            for file in session.modified:
-                command += f" --include_name {file}"
-
-            for line in execute_command(
-                    ssh_client=ssh,
-                    pre_command=session.agent.pre_commands,
-                    command=command,
-                    directory=session.workdir,
-                    allow_stderr=True):
-                update_dataset_session(session, [line])
-    except:
-        msg = f"Failed to open session: {traceback.format_exc()}."
-        logger.error(msg)
-
-
-@app.task()
-def close_dataset_session(guid: str):
-    pass
+# @app.task()
+# def close_dataset_session(guid: str):
+#     pass
 
 
 @app.task()

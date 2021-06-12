@@ -59,10 +59,6 @@ class Task(models.Model):
         return json.dumps(data)
 
     @property
-    def is_sandbox(self):
-        return self.agent.name is not None and self.agent.name == 'Sandbox'
-
-    @property
     def is_success(self):
         return self.status == TaskStatus.SUCCESS
 
