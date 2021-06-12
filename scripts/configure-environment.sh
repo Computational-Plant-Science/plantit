@@ -19,13 +19,6 @@ else
   github_client_id="${GITHUB_CLIENT_ID}"
 fi
 
-if [[ -z "${GITHUB_USERNAME}" ]]; then
-  github_username="some_github_username"
-  echo "Warning: GITHUB_USERNAME environment variable missing"
-else
-  github_username="${GITHUB_USERNAME}"
-fi
-
 if [[ -z "${GITHUB_SECRET}" ]]; then
   github_secret="some_github_secret"
   echo "Warning: GITHUB_SECRET environment variable missing"
@@ -134,7 +127,6 @@ SQL_USER=postgres
 SQL_PASSWORD=$sql_password
 GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
 GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/users/github_handle_temporary_code/
-GITHUB_USERNAME=$github_username
 GITHUB_KEY=$github_client_id
 GITHUB_SECRET=$github_secret
 GITHUB_CLIENT_ID=d15df2f5710e9597290f

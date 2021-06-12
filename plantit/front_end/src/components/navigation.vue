@@ -753,7 +753,7 @@
                     >
                         <b-button
                             class="mt-2 text-left"
-                            variant="success"
+                            variant="warning"
                             size="md"
                         >
                             <i class="fab fa-github"></i>

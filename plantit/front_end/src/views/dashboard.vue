@@ -21,7 +21,7 @@
         >
             <b-row align-v="center"
                 ><b-col class="text-center" align-self="center"
-                    ><i class="fas fa-exclamation-circle fa-fw fa-3x text-success"></i><br />
+                    ><i class="fas fa-exclamation-circle fa-fw fa-3x text-warning"></i><br />
                     <h3 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Almost there!
                     </h3>
@@ -40,7 +40,7 @@
                     account.<br />Click the button
                     below (or in the navigation bar) to log in.<br /><br /><b-button
                         class="mt-1 text-left"
-                        variant="success"
+                        variant="warning"
                         size="md"
                         href="/apis/v1/idp/github_request_identity/"
                     >

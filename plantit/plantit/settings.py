@@ -28,7 +28,6 @@ assert 'CYVERSE_TOKEN_REFRESH_MINUTES' in os.environ, f"{missing_variable}: CYVE
 assert 'GITHUB_AUTH_URI' in os.environ, f"{missing_variable}: GITHUB_AUTH_URI"
 assert 'GITHUB_REDIRECT_URI' in os.environ, f"{missing_variable}: GITHUB_REDIRECT_URI"
 assert 'GITHUB_KEY' in os.environ, f"{missing_variable}: GITHUB_KEY"
-assert 'GITHUB_USERNAME' in os.environ, f"{missing_variable}: GITHUB_USERNAME"
 assert 'GITHUB_SECRET' in os.environ, f"{missing_variable}: GITHUB_SECRET"
 assert 'NO_PREVIEW_THUMBNAIL' in os.environ, f"{missing_variable}: NO_PREVIEW_THUMBNAIL"
 
@@ -59,7 +58,6 @@ if not DEBUG:
 
 GITHUB_AUTH_URI = os.environ.get('GITHUB_AUTH_URI')
 GITHUB_REDIRECT_URI = os.environ.get('GITHUB_REDIRECT_URI')
-GITHUB_USERNAME = os.environ.get('GITHUB_USERNAME')
 GITHUB_KEY = os.environ.get('GITHUB_KEY')
 GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
 

@@ -76,6 +76,7 @@
                             Running
                             <b-badge
                                 pill
+                                :title="tasksRunning.length + ' running'"
                                 class="ml-1 mr-1 mb-1"
                                 variant="warning"
                                 >{{ tasksRunning.length }}</b-badge
@@ -244,12 +245,14 @@
                         <template #title>
                             Completed
                             <b-badge
+                                :title="tasksSucceeded.length + ' succeeded'"
                                 pill
                                 class="ml-1 mr-1 mb-1"
                                 variant="warning"
                                 >{{ tasksSucceeded.length }}</b-badge
                             >
                             <b-badge
+                                :title="tasksFailed.length + ' failed'"
                                 pill
                                 class="ml-1 mr-1 mb-1"
                                 variant="danger"

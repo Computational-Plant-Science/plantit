@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import List
 
 import yaml
-from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from dateutil import parser
 from django.contrib.auth.models import User
@@ -23,11 +22,10 @@ from plantit import settings
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor
 from plantit.agents.utils import map_agent
 from plantit.docker import parse_image_components, image_exists
-from plantit.github import get_repo_config
-from plantit.popos import FileInput, Parameter, FilesInput, DirectoryInput, TaskOptions, BindMount
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
+from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, BindMount
 from plantit.utils import parse_bind_mount, format_bind_mount
 from plantit.workflows.utils import map_old_workflow_config_to_new
 
@@ -88,7 +86,30 @@ def parse_eta(data: dict) -> (datetime, int):
     return eta, seconds
 
 
-def parse_task_config(config: dict) -> (List[str], TaskOptions):
+def parse_orchestration_options(task: Task) -> (List[str], PlantITCLIOptions):
+    pass
+
+
+def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
+    # update config before uploading
+    config = task.workflow['config']
+    config['workdir'] = join(task.agent.workdir, task.guid)
+    config['log_file'] = f"{task.guid}.{task.agent.name.lower()}.log"
+    if 'output' in config and 'from' in config['output']:
+        if config['output']['from'] is not None and config['output']['from'] != '':
+            config['output']['from'] = join(task.agent.workdir, task.workdir, config['output']['from'])
+
+    # if we have outputs, make sure we don't push configuration or job scripts
+    if 'output' in config:
+        config['output']['exclude']['names'] = [
+            "flow.yaml",
+            "template_local_run.sh",
+            "template_slurm_run.sh"]
+
+    resources = None if 'resources' not in config['agent'] else config['agent']['resources']
+    new_flow = map_old_workflow_config_to_new(config, task, resources)
+    launcher = task.agent.launcher  # whether to use TACC launcher
+
     errors = []
     image = None
     if not isinstance(config['image'], str):
@@ -129,7 +150,7 @@ def parse_task_config(config: dict) -> (List[str], TaskOptions):
                     for param in config['parameters']]):
             errors.append('Every parameter must have a non-empty \'key\' and \'value\'')
         else:
-            parameters = [Parameter(param['key'], param['value']) for param in config['parameters']]
+            parameters = [Parameter(key=param['key'], value=param['value']) for param in config['parameters']]
 
     bind_mounts = None
     if 'bind_mounts' in config:
@@ -143,17 +164,18 @@ def parse_task_config(config: dict) -> (List[str], TaskOptions):
         if 'file' in config['input']:
             if 'path' not in config['input']['file']:
                 errors.append('Section \'file\' must include attribute \'path\'')
-            input = FileInput(path=config['input']['file']['path'])
+            input = Input(path=config['input']['file']['path'], kind='file')
         elif 'files' in config['input']:
             if 'path' not in config['input']['files']:
                 errors.append('Section \'files\' must include attribute \'path\'')
-            input = FilesInput(
+            input = Input(
                 path=config['input']['files']['path'],
+                kind='files',
                 patterns=config['input']['files']['patterns'] if 'patterns' in config['input']['files'] else None)
         elif 'directory' in config['input']:
             if 'path' not in config['input']['directory']:
                 errors.append('Section \'directory\' must include attribute \'path\'')
-            input = DirectoryInput(path=config['input']['directory']['path'])
+            input = Input(path=config['input']['directory']['path'], kind='directory')
         else:
             errors.append('Section \'input\' must include a \'file\', \'files\', or \'directory\' section')
 
@@ -204,7 +226,7 @@ def parse_task_config(config: dict) -> (List[str], TaskOptions):
         if 'header_skip' in jobqueue and not all(extra is str for extra in jobqueue['header_skip']):
             errors.append('Section \'jobqueue\'.\'header_skip\' must be a list of str')
 
-    return errors, TaskOptions(
+    return errors, PlantITCLIOptions(
         workdir=work_dir,
         image=image,
         command=command,
@@ -312,35 +334,17 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
 
 
 def upload_task(task: Task, ssh: SSH, input_files: List[str] = None):
-    # update config before uploading
-    config = task.workflow['config']
-    config['workdir'] = join(task.agent.workdir, task.guid)
-    config['log_file'] = f"{task.guid}.{task.agent.name.lower()}.log"
-    if 'output' in config and 'from' in config['output']:
-        if config['output']['from'] is not None and config['output']['from'] != '':
-            config['output']['from'] = join(task.agent.workdir, task.workdir, config['output']['from'])
+    orchestration_options = parse_orchestration_options(task)
+    parse_errors, cli_options = parse_cli_options(task)
+    if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
 
-    # if we have outputs, make sure we don't push configuration or job scripts
-    if 'output' in config:
-        config['output']['exclude']['names'] = [
-            "flow.yaml",
-            "template_local_run.sh",
-            "template_slurm_run.sh"]
-
-    resources = None if 'resources' not in config['agent'] else config['agent']['resources']
-    new_flow = map_old_workflow_config_to_new(config, task, resources)
-    launcher = task.agent.launcher  # whether to use TACC launcher
-
-    parse_errors, sub_options = parse_task_config(new_flow)
-    if len(parse_errors) > 0:
-        raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
-
-    # create working directory
+    msg = f"Creating working directory {join(task.agent.workdir, task.guid)}"
+    log_task_status(task, msg)
+    push_task_event(task)
+    logger.info(msg)
     work_dir = join(task.agent.workdir, task.workdir)
     execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=task.agent.workdir, allow_stderr=True)
 
-    # upload flow config and job script
-    callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
 
@@ -349,13 +353,18 @@ def upload_task(task: Task, ssh: SSH, input_files: List[str] = None):
         template = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if sandbox else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
         template_name = template.split('/')[-1]
 
-        # upload flow config file
+        msg = f"Uploading task definition"
+        log_task_status(task, msg)
+        push_task_event(task)
+        logger.info(msg)
         with sftp.open('flow.yaml', 'w') as flow_file:
-            if launcher:
-                del new_flow['jobqueue']
+            if task.agent.launcher: del new_flow['jobqueue']
             yaml.dump(new_flow, flow_file, default_flow_style=False)
 
-        # compose and upload job script
+        msg = f"Uploading task executable"
+        log_task_status(task, msg)
+        push_task_event(task)
+        logger.info(msg)
         with open(template, 'r') as template_script, sftp.open(template_name, 'w') as script:
             print(f"Uploading {template_name}")
             for line in template_script:
@@ -442,6 +451,7 @@ def upload_task(task: Task, ssh: SSH, input_files: List[str] = None):
                                 f""f" --terrain_token {task.user.profile.cyverse_access_token}"
 
                 if task.agent.callbacks:
+                    callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
                     pull_commands += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
                 pull_commands += "\n"
 
@@ -458,44 +468,44 @@ def upload_task(task: Task, ssh: SSH, input_files: List[str] = None):
                     if config['input']['kind'] == 'files' and input_files is not None:
                         for file in input_files:
                             file_name = file.rpartition('/')[2]
-                            sub_options.input = FileInput(file_name)
+                            cli_options.input = FileInput(file_name)
                             command = prep_command(
-                                work_dir=sub_options.workdir,
-                                image=sub_options.image,
-                                command=sub_options.command,
-                                parameters=(sub_options.parameters if sub_options.parameters is not None else []) + [
+                                work_dir=cli_options.workdir,
+                                image=cli_options.image,
+                                command=cli_options.command,
+                                parameters=(cli_options.parameters if cli_options.parameters is not None else []) + [
                                     Parameter(key='INPUT', value=join(task.agent.workdir, task.workdir, 'input', file_name))],
-                                bind_mounts=sub_options.bind_mounts,
+                                bind_mounts=cli_options.bind_mounts,
                                 docker_username=docker_username,
                                 docker_password=docker_password,
-                                no_cache=sub_options.no_cache,
-                                gpu=sub_options.gpu)
+                                no_cache=cli_options.no_cache,
+                                gpu=cli_options.gpu)
                             launcher_script.write(f"{command}\n")
                     elif config['input']['kind'] == 'directory':
                         command = prep_command(
-                            work_dir=sub_options.workdir,
-                            image=sub_options.image,
-                            command=sub_options.command,
-                            parameters=(sub_options.parameters if sub_options.parameters is not None else []) + [
+                            work_dir=cli_options.workdir,
+                            image=cli_options.image,
+                            command=cli_options.command,
+                            parameters=(cli_options.parameters if cli_options.parameters is not None else []) + [
                                 Parameter(key='INPUT', value=join(task.agent.workdir, task.workdir, 'input'))],
-                            bind_mounts=sub_options.bind_mounts,
+                            bind_mounts=cli_options.bind_mounts,
                             docker_username=docker_username,
                             docker_password=docker_password,
-                            no_cache=sub_options.no_cache,
-                            gpu=sub_options.gpu)
+                            no_cache=cli_options.no_cache,
+                            gpu=cli_options.gpu)
                         launcher_script.write(f"{command}\n")
                     elif config['input']['kind'] == 'file':
                         command = prep_command(
-                            work_dir=sub_options.workdir,
-                            image=sub_options.image,
-                            command=sub_options.command,
-                            parameters=(sub_options.parameters if sub_options.parameters is not None else []) + [
+                            work_dir=cli_options.workdir,
+                            image=cli_options.image,
+                            command=cli_options.command,
+                            parameters=(cli_options.parameters if cli_options.parameters is not None else []) + [
                                 Parameter(key='INPUT', value=new_flow['input']['file']['path'])],
-                            bind_mounts=sub_options.bind_mounts,
+                            bind_mounts=cli_options.bind_mounts,
                             docker_username=docker_username,
                             docker_password=docker_password,
-                            no_cache=sub_options.no_cache,
-                            gpu=sub_options.gpu)
+                            no_cache=cli_options.no_cache,
+                            gpu=cli_options.gpu)
                         launcher_script.write(f"{command}\n")
 
                 script.write(f"export LAUNCHER_WORKDIR={join(task.agent.workdir, task.workdir)}\n")
@@ -511,6 +521,7 @@ def upload_task(task: Task, ssh: SSH, input_files: List[str] = None):
                     cli_cmd += f" --docker_username {docker_username} --docker_password {docker_password}"
 
                 if task.agent.callbacks:
+                    callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
                     cli_cmd += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
 
                 cli_cmd += "\n"

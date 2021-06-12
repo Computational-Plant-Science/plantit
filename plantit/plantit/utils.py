@@ -1,7 +1,7 @@
 import re
 from random import choice
 
-from plantit.popos import BindMount
+from plantit.tasks.options import BindMount
 
 
 def parse_bind_mount(workdir: str, bind_mount: str) -> BindMount:
@@ -10,7 +10,7 @@ def parse_bind_mount(workdir: str, bind_mount: str) -> BindMount:
 
 
 def format_bind_mount(workdir: str, bind_mount: BindMount) -> str:
-    return bind_mount.host_path + ':' + bind_mount.container_path if bind_mount.host_path != '' else workdir + ':' + bind_mount.container_path
+    return bind_mount['host_path'] + ':' + bind_mount['container_path'] if bind_mount['host_path'] != '' else workdir + ':' + bind_mount['container_path']
 
 
 def get_csrf_token(request) -> str:

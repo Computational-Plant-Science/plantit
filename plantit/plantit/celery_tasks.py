@@ -94,22 +94,20 @@ def submit_task(guid: str):
     logger.info(msg)
 
     try:
-        ssh_client = get_ssh_client(task)
         config = task.workflow['config']
-        with ssh_client:
-            input_files = list_input_files(task)
+        inputs = list_input_files(task)
+        client = get_ssh_client(task)
 
-            msg = f"Creating working directory {join(task.agent.workdir, task.guid)} and uploading files"
-            log_task_status(task, msg)
-            push_task_event(task)
-            logger.info(msg)
-            upload_task(task, ssh_client, input_files)
+        # TODO based on executor options (e.g., launcher, job array) call appropriate method here (instead of monolithic method to handle all cases)
+
+        with client:
+            upload_task(task, client, inputs)
 
             msg = 'Running script' if task.is_sandbox else 'Submitting script to scheduler'
             log_task_status(task, msg)
             push_task_event(task)
             logger.info(msg)
-            submit_via_ssh(task, ssh_client, len(input_files) if input_files is not None else None)
+            submit_via_ssh(task, client, len(inputs) if inputs is not None else None)
 
             if task.is_sandbox:
                 task.status = TaskStatus.SUCCESS
