@@ -131,11 +131,23 @@
                                                 ><b-button
                                                     v-if="ownsWorkflow"
                                                     size="sm"
+                                                    :disabled="togglingPublic"
                                                     @click="togglePublic"
+                                                    v-b-tooltip:hover
+                                                    :title="
+                                                        `Make ${
+                                                            getWorkflow.config
+                                                                .name
+                                                        } ${
+                                                            getWorkflow.public
+                                                                ? 'private'
+                                                                : 'public'
+                                                        }`
+                                                    "
                                                     :variant="
                                                         getWorkflow.public
-                                                            ? 'success'
-                                                            : 'warning'
+                                                            ? 'warning'
+                                                            : 'info'
                                                     "
                                                 >
                                                     <b-spinner
@@ -169,8 +181,8 @@
                                                     class="mr-1"
                                                     :variant="
                                                         getWorkflow.public
-                                                            ? 'success'
-                                                            : 'warning'
+                                                            ? 'warning'
+                                                            : 'info'
                                                     "
                                                     ><span
                                                         v-if="
@@ -201,7 +213,9 @@
                                                             : 'white'
                                                     "
                                                     v-b-tooltip.hover
-                                                    title="Refresh"
+                                                    :title="
+                                                        `Refresh ${getWorkflow.config.name}'s configuration`
+                                                    "
                                                     @click="refreshWorkflow"
                                                 >
                                                     <i class="fas fa-redo"></i>
@@ -218,6 +232,7 @@
                                                         class="ml-2 mb-1"
                                                     ></b-spinner> </b-button></b-col
                                             ><b-col
+                                                v-if="ownsWorkflow"
                                                 class="m-0"
                                                 align-self="center"
                                                 md="auto"
@@ -225,6 +240,10 @@
                                                     @click="
                                                         showUnbindWorkflowModal
                                                     "
+                                                    :title="
+                                                        `Unbind ${getWorkflow.config.name}`
+                                                    "
+                                                    v-b-tooltip:hover
                                                     size="sm"
                                                     variant="outline-danger"
                                                     ><i
@@ -3338,6 +3357,9 @@ export default {
     watch: {
         personalWorkflows: function() {
             // noop
+        },
+        getWorkflow: function() {
+            // noop
         }
     },
     computed: {
@@ -3376,11 +3398,16 @@ export default {
             );
         },
         mustAuthenticate() {
-            return !this.selectedAgent.policies.some(
-                p =>
-                    p.user === this.profile.djangoProfile.username &&
-                    (p.role.toLowerCase() === 'guest' ||
-                        p.role.toLowerCase() === 'admin')
+            return !(
+                this.selectedAgent.user !== undefined &&
+                this.selectedAgent.user ===
+                    this.profile.djangoProfile.username &&
+                !this.selectedAgent.policies.some(
+                    p =>
+                        p.user === this.profile.djangoProfile.username &&
+                        (p.role.toLowerCase() === 'guest' ||
+                            p.role.toLowerCase() === 'admin')
+                )
             );
         },
         getWorkflow() {

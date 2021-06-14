@@ -6,6 +6,8 @@ from os import environ
 from os.path import join
 
 import cv2
+import numpy as np
+from asgiref.sync import async_to_sync
 from celery import group
 from celery.utils.log import get_task_logger
 from czifile import czifile
@@ -24,7 +26,8 @@ from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
 from plantit.tasks.utils import log_task_status, push_task_event, remove_logs, create_task, \
     get_result_files, get_job_walltime, get_job_status, configure_task_environment, get_container_logs, parse_job_id, get_ssh_client
-from plantit.users.utils import refresh_cyverse_tokens
+from plantit.users.utils import refresh_cyverse_tokens, get_user_statistics
+from plantit.workflows.models import Workflow
 from plantit.workflows.utils import repopulate_personal_workflow_bundle_cache, repopulate_public_workflow_bundle_cache
 
 logger = get_task_logger(__name__)
@@ -50,7 +53,7 @@ def submit_task(guid: str):
 
     msg = f"Submitting {task.user.username}'s task {task.name} with GUID {task.guid} to {task.agent.name}"
     log_task_status(task, msg)
-    push_task_event(task)
+    async_to_sync(push_task_event)(task)
     logger.info(msg)
 
     try:
@@ -63,7 +66,7 @@ def submit_task(guid: str):
             if local:
                 msg = f"Starting {task.user.username}'s task {task.name}"
                 log_task_status(task, msg)
-                push_task_event(task)
+                async_to_sync(push_task_event)(task)
                 logger.info(msg)
 
                 execute_command(
@@ -84,7 +87,7 @@ def submit_task(guid: str):
                 cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
                 msg = f"Completed {task.user.username}'s task {task.name}, cleaning up in {cleanup_delay} minute(s)"
                 log_task_status(task, msg)
-                push_task_event(task)
+                async_to_sync(push_task_event)(task)
                 logger.info(msg)
                 cleanup_task.s(guid).apply_async(countdown=cleanup_delay * 60)
 
@@ -93,7 +96,7 @@ def submit_task(guid: str):
             else:
                 msg = f"Submitting {task.user.username}'s task {task.name}"
                 log_task_status(task, msg)
-                push_task_event(task)
+                async_to_sync(push_task_event)(task)
                 logger.info(msg)
 
                 output_lines = execute_command(
@@ -113,7 +116,7 @@ def submit_task(guid: str):
 
                 msg = f"Received scheduler job ID for {task.user.username}'s task {task.name}: {job_id}, refreshing in {refresh_delay} second(s)"
                 log_task_status(task, msg)
-                push_task_event(task)
+                async_to_sync(push_task_event)(task)
                 logger.info(msg)
     except Exception:
         task.status = TaskStatus.FAILURE
@@ -124,7 +127,7 @@ def submit_task(guid: str):
 
         msg = f"Failed to submit {task.user.username}'s task {task.name}: {traceback.format_exc()}."
         log_task_status(task, msg)
-        push_task_event(task)
+        async_to_sync(push_task_event)(task)
         logger.error(msg)
 
 
@@ -145,7 +148,7 @@ def poll_job_status(guid: str):
         task.status = TaskStatus.FAILURE
         msg = f"Job {task.job_id} failed, cleaning up in {cleanup_delay}m"
         log_task_status(task, msg)
-        push_task_event(task)
+        async_to_sync(push_task_event)(task)
         cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
         if task.user.profile.push_notification_status == 'enabled':
@@ -185,7 +188,7 @@ def poll_job_status(guid: str):
             msg = f"{task.agent.executor} job {task.job_id} {job_status}" + (
                 f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             log_task_status(task, msg)
-            push_task_event(task)
+            async_to_sync(push_task_event)(task)
             cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
             if task.user.profile.push_notification_status == 'enabled':
@@ -193,7 +196,7 @@ def poll_job_status(guid: str):
         else:
             msg = f"Job {task.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"
             log_task_status(task, msg)
-            push_task_event(task)
+            async_to_sync(push_task_event)(task)
             poll_job_status.s(guid).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
@@ -205,11 +208,11 @@ def poll_job_status(guid: str):
 
             msg = f"Job {task.job_id} not found, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             log_task_status(task, msg)
-            push_task_event(task)
+            async_to_sync(push_task_event)(task)
         else:
             msg = f"Job {task.job_id} succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             log_task_status(task, msg)
-            push_task_event(task)
+            async_to_sync(push_task_event)(task)
             cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
             if task.user.profile.push_notification_status == 'enabled':
@@ -223,7 +226,7 @@ def poll_job_status(guid: str):
 
         msg = f"Job {task.job_id} encountered unexpected error (cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
         log_task_status(task, msg)
-        push_task_event(task)
+        async_to_sync(push_task_event)(task)
         cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
         if task.user.profile.push_notification_status == 'enabled':
@@ -256,7 +259,7 @@ def cleanup_task(guid: str):
 
     msg = f"Cleaned up task {task.guid}"
     log_task_status(task, msg)
-    push_task_event(task)
+    async_to_sync(push_task_event)(task)
 
 
 @app.task()
@@ -284,7 +287,7 @@ def list_task_results(guid: str):
     msg = f"Found {len(results)} result files"
     logger.info(msg)
     log_task_status(task, msg)
-    push_task_event(task)
+    async_to_sync(push_task_event)(task)
 
     for result in results:
         name = result['name']
@@ -393,7 +396,7 @@ def list_task_results(guid: str):
     task.previews_loaded = True
     task.save()
     log_task_status(task, f"Created file previews")
-    push_task_event(task)
+    async_to_sync(push_task_event)(task)
 
 
 # @app.task()
@@ -513,33 +516,15 @@ def list_task_results(guid: str):
 
 
 @app.task()
-def aggregate_user_statistics(username: str):
-    try:
-        user = User.objects.get(owner=username)
-    except:
-        logger.warning(f"User {username} does not exist")
-        return
-
-    redis = RedisClient.get()
-    logger.info(f"Aggregating usage statistics for {username}")
-
-    completed_runs = list(Task.objects.filter(user__exact=user, completed__isnull=False))
-    total_runs = Task.objects.filter(user__exact=user).count()
-    total_time = sum([(run.completed - run.created) for run in completed_runs])
-    total_results = sum([len(run.results) for run in completed_runs])
-    redis.set(f"stats/{username}", json.dumps({
-        'total_runs': total_runs,
-        'total_time': total_time,
-        'total_results': total_results
-    }))
-
-    user.profile.stats_last_aggregated = timezone.now()
-    user.profile.save()
-
-    # async_to_sync(get_channel_layer().group_send)(f"users-{user.username}", {
-    #     'type': 'task_event',
-    #     'run': map_user(user),
-    # })
+def aggregate_user_statistics():
+    users = User.objects.all()
+    for user in users:
+        logger.info(f"Aggregating usage statistics for {user.username}")
+        stats = get_user_statistics(user)
+        redis = RedisClient.get()
+        redis.set(f"stats/{user.username}", json.dumps(stats))
+        user.profile.stats_last_aggregated = timezone.now()
+        user.profile.save()
 
 
 @app.task()
@@ -584,3 +569,6 @@ def setup_periodic_tasks(sender, **kwargs):
 
     # refresh CyVerse auth tokens for all users with running tasks (in case outputs need to get pushed on completion)
     sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')
+
+    # aggregate usage stats for each user
+    sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_user_statistics.s(), name='aggregate user statistics')

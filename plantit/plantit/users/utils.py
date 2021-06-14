@@ -1,8 +1,10 @@
 import logging
 import subprocess
+from datetime import timedelta
 from os.path import join
 from pathlib import Path
 
+import numpy as np
 import requests
 from asgiref.sync import sync_to_async
 from django.conf import settings
@@ -11,6 +13,8 @@ from django.contrib.auth.models import User
 import plantit.terrain as terrain
 import plantit.github as github
 from plantit.agents.utils import logger
+from plantit.tasks.models import Task
+from plantit.workflows.models import Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -114,3 +118,22 @@ def get_public_key_path(owner: str) -> Path:
     owner_keys_path = Path(f"{keys_path.absolute()}/{owner}")
     owner_keys_path.mkdir(exist_ok=True, parents=True)
     return Path(join(owner_keys_path, f"{owner}_id_rsa.pub"))
+
+
+def get_user_statistics(user: User) -> dict:
+    all_tasks = Task.objects.filter(user=user)
+    completed_tasks = list(Task.objects.filter(user=user, completed__isnull=False))
+
+    total_tasks = all_tasks.count()
+    total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
+    total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
+    owned_workflows = len(Workflow.objects.filter(user=user))
+    used_workflows = len(np.unique([f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]))
+
+    return {
+        'total_tasks': total_tasks,
+        'total_task_seconds': total_time,
+        'total_task_results': total_results,
+        'owned_workflows': owned_workflows,
+        'used_workflows': used_workflows
+    }

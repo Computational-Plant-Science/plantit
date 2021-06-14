@@ -43,6 +43,7 @@ def refresh_tokens(username: str, refresh_token: str) -> (str, str):
     response = requests.post("https://kc.cyverse.org/auth/realms/CyVerse/protocol/openid-connect/token", data={
         'grant_type': 'refresh_token',
         'client_id': environ.get('CYVERSE_CLIENT_ID'),
+        'client_secret': environ.get('CYVERSE_CLIENT_SECRET'),
         'refresh_token': refresh_token,
         'redirect_uri': environ.get('CYVERSE_REDIRECT_URL')},
                              auth=HTTPBasicAuth(username, environ.get('CYVERSE_CLIENT_SERET')))

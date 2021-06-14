@@ -21,12 +21,16 @@
         >
             <b-row align-v="center"
                 ><b-col class="text-center" align-self="center"
-                    ><i class="fas fa-exclamation-circle fa-fw fa-3x text-warning"></i><br />
+                    ><i
+                        class="fas fa-exclamation-circle fa-fw fa-3x text-warning"
+                    ></i
+                    ><br />
                     <h3 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Almost there!
                     </h3>
                     <br />
-                    We need to link your <i class="fab fa-github fa-fw fa-1x"></i
+                    We need to link your
+                    <i class="fab fa-github fa-fw fa-1x"></i
                     ><b-img
                         class="m-0"
                         rounded
@@ -37,8 +41,8 @@
                                 : require('../assets/logos/github_black.png')
                         "
                     ></b-img>
-                    account.<br />Click the button
-                    below (or in the navigation bar) to log in.<br /><br /><b-button
+                    account.<br />Click the button below (or in the navigation
+                    bar) to log in.<br /><br /><b-button
                         class="mt-1 text-left"
                         variant="warning"
                         size="md"
@@ -133,55 +137,65 @@
                             </b-col></b-row
                         >
                         <b-row align-v="start">
-                            <b-col md="auto">
-                                <h5
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
+                            <b-col>
+                                <b-row>
+                                    <b-col md="auto">
+                                        <h5
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Tasks
+                                        </h5>
+                                        <b>{{ tasksRunning.length }}</b>
+                                        running
+                                        <br />
+                                        <b>{{ tasksCompleted.length }}</b>
+                                        completed
+                                        <br />
+                                        <b>{{ profile.stats.total_tasks }}</b>
+                                        total
+                                        <br />
+                                        <b>{{
+                                            profile.stats.total_task_results
+                                        }}</b>
+                                        results produced
+                                        <br />
+                                        <b>{{
+                                            prettifyDuration(
+                                                profile.stats.total_task_seconds
+                                            )
+                                        }}</b>
+                                        cumulative runtime
+                                    </b-col>
+                                    <b-col>
+                                        <h5
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Workflows
+                                        </h5>
+                                        <b>{{
+                                            profile.stats.owned_workflows
+                                        }}</b>
+                                        maintained
+                                        <br />
+                                        <b>{{
+                                            profile.stats.used_workflows
+                                        }}</b>
+                                        used
+                                    </b-col>
+                                </b-row>
+                                <div
+                                    v-if="
+                                        profile.stats.timeseries !== undefined
                                     "
                                 >
-                                    Usage right now
-                                </h5>
-                                <b>{{ tasksRunning.length }}</b>
-                                running
-                                <div v-if="profile.stats !== null">
-                                    <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
-                                    <h5
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-light'
-                                                : 'text-dark'
-                                        "
-                                    >
-                                        Cumulative usage
-                                    </h5>
-                                    <b>{{ profile.stats.total_tasks }}</b>
-                                    tasks completed
-                                    <br />
-                                    <b>{{ profile.stats.total_time }}</b>
-                                    working minutes
-                                    <br />
-                                    <b>{{ profile.stats.total_results }}</b>
-                                    results produced
-                                    <!--<hr />
-                                            <h5>Most used</h5>
-                                            Agent:
-                                            <b>{{ stats.most_used_cluster }}</b>
-                                            <br />
-                                            Workflow:
-                                            <b>{{ stats.most_used_dataset }}</b>
-                                            <br />Most frequent collaborator:
-                                            <b>{{
-                                                stats.most_frequent_collaborator
-                                            }}</b>-->
-                                    <hr
-                                        class="mt-2 mb-2"
-                                        style="border-color: gray"
-                                    />
                                     <h5
                                         :class="
                                             profile.darkMode
@@ -294,6 +308,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
+import moment from 'moment';
 
 export default {
     name: 'dashboard',
@@ -308,6 +323,11 @@ export default {
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
+        }
+    },
+    methods: {
+        prettifyDuration: function(dur) {
+            return moment.duration(dur, 'seconds').humanize();
         }
     },
     computed: {

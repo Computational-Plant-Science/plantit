@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import List
 
 import yaml
+from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from dateutil import parser
 from django.contrib.auth.models import User
@@ -29,7 +30,6 @@ from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, BindMount
 from plantit.terrain import list_dir
 from plantit.users.utils import get_private_key_path
 from plantit.utils import parse_bind_mount, format_bind_mount
-from plantit.workflows.utils import map_old_workflow_config_to_new
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +109,7 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
             "template_slurm_run.sh"]
 
     jobqueue = None if 'jobqueue' not in config['agent'] else config['agent']['jobqueue']
-    new_flow = map_old_workflow_config_to_new(config, task, jobqueue)
+    new_flow = map_workflow_config_to_cli_config(config, task, jobqueue)
     launcher = task.agent.launcher  # whether to use TACC launcher
     if task.agent.launcher: del new_flow['jobqueue']
 
@@ -135,12 +135,12 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         work_dir = config['workdir']
 
     command = None
-    if not isinstance(config['command'], str):
-        errors.append('Attribute \'command\' must not be a str')
-    elif config['command'] == '':
-        errors.append('Attribute \'command\' must not be empty')
+    if not isinstance(config['commands'], str):
+        errors.append('Attribute \'commands\' must not be a str')
+    elif config['commands'] == '':
+        errors.append('Attribute \'commands\' must not be empty')
     else:
-        command = config['command']
+        command = config['commands']
 
     parameters = None
     if 'parameters' in config:
@@ -244,13 +244,8 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
 
 
 def create_task(username: str, agent_name: str, workflow: dict, name: str = None) -> Task:
-    redis = RedisClient.get()
-    repo_name = workflow['repo']['owner']['login']
-    repo_owner = workflow['repo']['name']
-    repo_config = redis.get(f"workflows/{repo_owner}/{repo_name}")
-    if repo_config is None:
-        raise ValueError(f"Workflow {repo_owner}/{repo_name} not found")
-
+    repo_owner = workflow['repo']['owner']['login']
+    repo_name = workflow['repo']['name']
     agent = Agent.objects.get(name=agent_name)
     user = User.objects.get(username=username)
     guid = str(uuid.uuid4())
@@ -261,8 +256,8 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
         name=guid if name is None else name,
         user=user,
         workflow=workflow,
-        workflow_owner=repo_name,
-        workflow_name=repo_owner,
+        workflow_owner=repo_owner,
+        workflow_name=repo_name,
         agent=agent,
         status=TaskStatus.CREATED,
         created=now,
@@ -276,8 +271,8 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
             name=guid if name is None else name,
             user=user,
             workflow=workflow,
-            workflow_owner=repo_name,
-            workflow_name=repo_owner,
+            workflow_owner=repo_owner,
+            workflow_name=repo_name,
             agent=agent,
             status=TaskStatus.CREATED,
             created=now,
@@ -285,8 +280,8 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
             token=binascii.hexlify(os.urandom(20)).decode())
 
     # add repo logo
-    if 'logo' in repo_config['config']:
-        logo_path = repo_config['config']['logo']
+    if 'logo' in workflow['config']:
+        logo_path = workflow['config']['logo']
         task.workflow_image_url = f"https://raw.githubusercontent.com/{repo_name}/{repo_owner}/master/{logo_path}"
 
     for tag in workflow['config']['tags']: task.tags.add(tag)  # add task tags
@@ -298,26 +293,25 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
 def configure_task_environment(task: Task, ssh: SSH):
     msg = f"Verifying configuration"
     log_task_status(task, msg)
-    push_task_event(task)
+    async_to_sync(push_task_event)(task)
     logger.info(msg)
 
     parse_errors, cli_options = parse_cli_options(task)
     if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
 
-    msg = f"Creating working directory {join(task.agent.workdir, task.guid)}"
+    work_dir = join(task.agent.workdir, task.guid)
+    msg = f"Creating working directory {work_dir}"
     log_task_status(task, msg)
-    push_task_event(task)
+    async_to_sync(push_task_event)(task)
     logger.info(msg)
 
-    work_dir = join(task.agent.workdir, task.workdir)
-    execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}", directory=task.agent.workdir, allow_stderr=True)
+    list(execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}"))
 
     msg = f"Uploading task definition"
     log_task_status(task, msg)
-    push_task_event(task)
+    async_to_sync(push_task_event)(task)
     logger.info(msg)
 
-    work_dir = join(task.agent.workdir, task.workdir)
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
         with sftp.open(f"{task.guid}.yaml", 'w') as cli_file: yaml.dump(cli_options, cli_file, default_flow_style=False)
@@ -325,7 +319,7 @@ def configure_task_environment(task: Task, ssh: SSH):
 
     msg = f"Uploading task executable"
     log_task_status(task, msg)
-    push_task_event(task)
+    async_to_sync(push_task_event)(task)
     logger.info(msg)
 
     upload_task_executables(task, ssh, cli_options)
@@ -399,14 +393,15 @@ def compose_resource_requests(task: Task, options: PlantITCLIOptions, inputs: Li
 
         msg = f"Using adjusted walltime {adjusted_str}"
         log_task_status(task, msg)
-        push_task_event(task)
+        async_to_sync(push_task_event)(task)
         logger.info(msg)
 
         task.job_requested_walltime = adjusted_str
         task.save()
         commands.append(f"#SBATCH --time={adjusted_str}\n")
     if gpu: commands.append(f"#SBATCH --gres=gpu:1\n")
-    if task.agent.queue is not None and task.agent.queue != '': commands.append(f"#SBATCH --partition={task.agent.gpu_queue if gpu else task.agent.queue}\n")
+    if task.agent.queue is not None and task.agent.queue != '': commands.append(
+        f"#SBATCH --partition={task.agent.gpu_queue if gpu else task.agent.queue}\n")
     if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}\n")
     if len(inputs) > 0:
         if task.agent.job_array:
@@ -429,11 +424,14 @@ def compose_resource_requests(task: Task, options: PlantITCLIOptions, inputs: Li
 def compose_pull_command(task: Task, options: PlantITCLIOptions) -> str:
     if 'input' not in options: return ''
     input = options['input']
+    if input is None: return ''
 
     # allow for both spellings of JPG
     patterns = [pattern.lower() for pattern in input['patterns']]
-    if 'jpg' in patterns and 'jpeg' not in patterns: patterns.append("jpeg")
-    elif 'jpeg' in patterns and 'jpg' not in patterns: patterns.append("jpg")
+    if 'jpg' in patterns and 'jpeg' not in patterns:
+        patterns.append("jpeg")
+    elif 'jpeg' in patterns and 'jpg' not in patterns:
+        patterns.append("jpg")
 
     command = f"plantit terrain pull \"{input['from']}\"" \
               f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
@@ -481,6 +479,8 @@ def compose_run_commands(task: Task, options: PlantITCLIOptions, inputs: List[st
 def compose_zip_command(task: Task, options: PlantITCLIOptions) -> str:
     if 'output' not in options: return ''
     output = options['output']
+    if output is None: return ''
+
     command = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {task.guid}"
     logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
     command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in logs])}"
@@ -534,11 +534,15 @@ def compose_task_script(task: Task, options: PlantITCLIOptions, template: str) -
     with open(template, 'r') as template_file:
         template_header = [line for line in template_file]
 
-    resource_requests = [] if task.agent.executor == AgentExecutor.LOCAL else compose_resource_requests(task, options)
+    if 'input' in options and options['input'] is not None:
+        inputs = list_dir(options['input']['path'], task.user.profile.cyverse_token)
+    else: inputs = []
+
+    resource_requests = [] if task.agent.executor == AgentExecutor.LOCAL else compose_resource_requests(task, options, inputs)
     pre_commands = task.agent.pre_commands
     pull_command = compose_pull_command(task, options)
-    run_commands = compose_run_commands(options)
-    zip_command = compose_zip_command(options)
+    run_commands = compose_run_commands(task, options, inputs)
+    zip_command = compose_zip_command(task, options)
     push_command = compose_push_command(options)
 
     return template_header + resource_requests + [pre_commands] + [pull_command] + run_commands + [zip_command] + [push_command]
@@ -558,7 +562,8 @@ def compose_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]
                     work_dir=options['workdir'],
                     image=options['image'],
                     command=options['command'],
-                    parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
+                    parameters=(options['parameters'] if 'parameters' in options else []) + [
+                        Parameter(key='INPUT', value=join(options['workdir'], 'input', file_name))],
                     bind_mounts=options['bind_mounts'],
                     no_cache=options['no_cache'],
                     gpu=options['gpu'],
@@ -570,7 +575,8 @@ def compose_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]
                 work_dir=options['workdir'],
                 image=options['image'],
                 command=options['command'],
-                parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
+                parameters=(options['parameters'] if 'parameters' in options else []) + [
+                    Parameter(key='INPUT', value=join(options['workdir'], 'input'))],
                 bind_mounts=options['bind_mounts'],
                 no_cache=options['no_cache'],
                 gpu=options['gpu'],
@@ -583,7 +589,8 @@ def compose_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]
                 work_dir=options['workdir'],
                 image=options['image'],
                 command=options['command'],
-                parameters=(options['parameters'] if 'parameters' in options else []) + [Parameter(key='INPUT', value=join(options['workdir'], file_name))],
+                parameters=(options['parameters'] if 'parameters' in options else []) + [
+                    Parameter(key='INPUT', value=join(options['workdir'], file_name))],
                 bind_mounts=options['bind_mounts'],
                 no_cache=options['no_cache'],
                 gpu=options['gpu'],
@@ -608,7 +615,8 @@ def compose_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]
 
 def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     with ssh.client.open_sftp() as sftp:
-        template_path = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if task.agent.executor == AgentExecutor.LOCAL else environ.get('CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
+        template_path = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
+            'CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
         with sftp.open(f"{task.guid}.sh", 'w') as task_script:
             task_commands = compose_task_script(task, options, template_path)
             for line in task_commands:
@@ -628,10 +636,16 @@ def log_task_status(task: Task, description: str):
         log.write(f"{description}\n")
 
 
+@sync_to_async
+def get_task_user(task: Task):
+    return task.user
+
+
 async def push_task_event(task: Task):
-    await get_channel_layer().group_send(f"runs-{task.user.username}", {
+    user = await get_task_user(task)
+    await get_channel_layer().group_send(f"runs-{user.username}", {
         'type': 'task_event',
-        'run': map_task(task),
+        'run': await sync_to_async(map_task)(task),
     })
 
 
@@ -741,36 +755,36 @@ def get_result_files(task: Task, workflow: dict):
     included_by_name.append(f"{task.guid}.zip")  # zip file
     if not task.agent.launcher:
         included_by_name.append(f"{task.guid}.{task.agent.name.lower()}.log")
-    if task.job_id is not None and task.job_id != '':
+    if isinstance(task, JobQueueTask) and task.job_id is not None and task.job_id != '':
         included_by_name.append(f"plantit.{task.job_id}.out")
         included_by_name.append(f"plantit.{task.job_id}.err")
     included_by_pattern = (
         workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
 
-    client = SSH(task.agent.hostname, task.agent.port, task.agent.username)
-    work_dir = join(task.agent.workdir, task.workdir)
+    ssh = get_ssh_client(task)
+    workdir = join(task.agent.workdir, task.workdir)
     outputs = []
     seen = []
 
-    with client:
-        with client.client.open_sftp() as sftp:
+    with ssh:
+        with ssh.client.open_sftp() as sftp:
             for file in included_by_name:
-                file_path = join(work_dir, file)
-                stdin, stdout, stderr = client.client.exec_command(f"test -e {file_path} && echo exists")
+                file_path = join(workdir, file)
+                stdin, stdout, stderr = ssh.client.exec_command(f"test -e {file_path} && echo exists")
                 output = {
                     'name': file,
-                    'path': join(work_dir, file),
+                    'path': join(workdir, file),
                     'exists': stdout.read().decode().strip() == 'exists'
                 }
                 seen.append(output['name'])
                 outputs.append(output)
 
-            for f in sftp.listdir(work_dir):
+            for f in sftp.listdir(workdir):
                 if any(pattern in f for pattern in included_by_pattern):
                     if not any(s == f for s in seen):
                         outputs.append({
                             'name': f,
-                            'path': join(work_dir, f),
+                            'path': join(workdir, f),
                             'exists': True
                         })
 
@@ -859,7 +873,7 @@ def list_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
     input_files = list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
     msg = f"Found {len(input_files)} input file(s)"
     log_task_status(task, msg)
-    push_task_event(task)
+    async_to_sync(push_task_event)(task)
     logger.info(msg)
 
     return input_files
@@ -872,6 +886,96 @@ def get_ssh_client(task: Task) -> SSH:
         client = SSH(host=task.agent.hostname, port=task.agent.port, username=auth['username'], password=auth['password'])
     else:
         logger.debug(f"Using key authentication (username: {task.agent.username})")
-        client = SSH(host=task.agent.hostname, port=task.agent.port, username=task.agent.username, pkey=str(get_private_key_path(task.agent.user.username)))
+        client = SSH(host=task.agent.hostname, port=task.agent.port, username=task.agent.username,
+                     pkey=str(get_private_key_path(task.agent.user.username)))
 
     return client
+
+
+def map_workflow_config_to_cli_config(config: dict, task: Task, resources: dict) -> dict:
+    cli_config = {
+        'image': config['image'],
+        'command': config['commands'],
+        'workdir': config['workdir'],
+        'log_file': f"{task.guid}.{task.agent.name.lower()}.log"
+    }
+
+    del config['agent']
+
+    if 'mount' in config:
+        cli_config['bind_mounts'] = config['mount']
+
+    if 'parameters' in config:
+        old_params = config['parameters']
+        params = []
+        for p in old_params:
+            if p['type'] == 'string':
+                params.append({
+                    'key': p['name'],
+                    'value': str(p['value'])
+                })
+            elif p['type'] == 'select':
+                params.append({
+                    'key': p['name'],
+                    'value': str(p['value'])
+                })
+            elif p['type'] == 'number':
+                params.append({
+                    'key': p['name'],
+                    'value': str(p['value'])
+                })
+            elif p['type'] == 'boolean':
+                params.append({
+                    'key': p['name'],
+                    'value': str(p['value'])
+                })
+        cli_config['parameters'] = params
+
+    if 'input' in config:
+        input_kind = config['input']['kind'] if 'kind' in config['input'] else None
+        cli_config['input'] = dict()
+        if input_kind == 'directory':
+            cli_config['input']['directory'] = dict()
+            cli_config['input']['directory']['path'] = join(task.agent.workdir, task.workdir, 'input')
+            cli_config['input']['directory']['patterns'] = config['input']['patterns']
+        elif input_kind == 'files':
+            cli_config['input']['files'] = dict()
+            cli_config['input']['files']['path'] = join(task.agent.workdir, task.workdir, 'input')
+            cli_config['input']['files']['patterns'] = config['input']['patterns']
+        elif input_kind == 'file':
+            cli_config['input']['file'] = dict()
+            cli_config['input']['file']['path'] = join(task.agent.workdir, task.workdir, 'input',
+                                                       config['input']['from'].rpartition('/')[2])
+
+    sandbox = task.agent.name == 'Sandbox'
+    work_dir = join(task.agent.workdir, task.workdir)
+    if not sandbox and not task.agent.job_array:
+        cli_config['jobqueue'] = dict()
+        cli_config['jobqueue']['slurm'] = {
+            'cores': resources['cores'],
+            'processes': resources['processes'],
+            'walltime': resources['time'],
+            'local_directory': work_dir,
+            'log_directory': work_dir,
+            'env_extra': [task.agent.pre_commands]
+        }
+
+        if 'mem' in resources:
+            cli_config['jobqueue']['slurm']['memory'] = resources['mem']
+        if task.agent.queue is not None and task.agent.queue != '':
+            cli_config['jobqueue']['slurm']['queue'] = task.agent.queue
+        if task.agent.project is not None and task.agent.project != '':
+            cli_config['jobqueue']['slurm']['project'] = task.agent.project
+        if task.agent.header_skip is not None and task.agent.header_skip != '':
+            cli_config['jobqueue']['slurm']['header_skip'] = task.agent.header_skip.split(',')
+
+        if 'gpu' in config and config['gpu']:
+            if task.agent.gpu:
+                print(f"Using GPU on {task.agent.name} queue '{task.agent.gpu_queue}'")
+                cli_config['gpu'] = True
+                cli_config['jobqueue']['slurm']['job_extra'] = [f"--gres=gpu:1"]
+                cli_config['jobqueue']['slurm']['queue'] = task.agent.gpu_queue
+            else:
+                print(f"No GPU support on {task.agent.name}")
+
+    return cli_config

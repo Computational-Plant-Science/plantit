@@ -153,7 +153,12 @@
                                     Public</b-badge
                                 >
                                 <b-badge variant="warning">{{
-                                    agent.role === 'admin' ? 'Admin' : 'Guest'
+                                    agent.role === 'admin'
+                                        ? agent.user ===
+                                          profile.djangoProfile.username
+                                            ? 'Owner'
+                                            : 'Admin'
+                                        : 'Guest'
                                 }}</b-badge>
 
                                 <br />
@@ -500,11 +505,13 @@
                                 another authentication strategy</b-button
                             ></b-col
                         ><b-col v-else-if="agentConnectionValid === false"
-                            ><h5 :class="
+                            ><h5
+                                :class="
                                     profile.darkMode
                                         ? 'text-light'
                                         : 'text-dark'
-                                ">
+                                "
+                            >
                                 <i
                                     class="fas fa-times-circle fa-fw mr-1 text-danger"
                                 ></i
@@ -849,11 +856,13 @@
                     ></b-row>
                     <b-row class="text-center mb-3 p-1"
                         ><b-col v-if="agentExecutorValid === true"
-                            ><h5 :class="
+                            ><h5
+                                :class="
                                     profile.darkMode
                                         ? 'text-light'
                                         : 'text-dark'
-                                ">
+                                "
+                            >
                                 <i
                                     class="fas fa-check fa-fw mr-1 text-success"
                                 ></i
@@ -868,11 +877,13 @@
                                 Reconfigure executor</b-button
                             ></b-col
                         ><b-col v-else-if="agentExecutorValid === false"
-                            ><h5 :class="
+                            ><h5
+                                :class="
                                     profile.darkMode
                                         ? 'text-light'
                                         : 'text-dark'
-                                ">
+                                "
+                            >
                                 <i
                                     class="fas fa-times-circle fa-fw mr-1 text-danger"
                                 ></i
@@ -889,11 +900,15 @@
                                 <b-link
                                     href="https://github.com/Computational-Plant-Science/plantit-cli"
                                     >PlantIT CLI</b-link
-                                >? You may also need to use pre-commands (e.g., to load modules).</small
+                                >? You may also need to use pre-commands (e.g.,
+                                to load modules).</small
                             ><br /></b-col
                     ></b-row>
                     <b-row v-if="executorCheckOutput.length > 0" class="mb-3"
-                        ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        ><b-col
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
                             ><span
                                 v-for="line in executorCheckOutput"
                                 v-bind:key="line"

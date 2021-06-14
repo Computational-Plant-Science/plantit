@@ -35,7 +35,7 @@ def get_all_or_create(request):
         agent = Agent.objects.get(name=agent_name)
         if workflow['type'] == 'Now':
             task = create_task(user.username, agent.name, workflow, workflow['config'].get('task_name', None))
-            submit_task.delay(task.guid, workflow)
+            submit_task.delay(task.guid)
             tasks = list(Task.objects.filter(user=user))
             return JsonResponse({'tasks': [map_task(t) for t in tasks]})
 

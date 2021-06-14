@@ -70,7 +70,7 @@
                         md="auto"
                         class="ml-0"
                         align-self="center"
-                        v-if="!publicContext"
+                        v-if="!contextPublic"
                         ><b-button
                             :disabled="workflowsLoading"
                             :variant="
@@ -162,7 +162,7 @@
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             ></router-view>
             <b-modal
-                id="connectWorkflow"
+                id="bindWorkflow"
                 :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
                 centered
                 size="lg"

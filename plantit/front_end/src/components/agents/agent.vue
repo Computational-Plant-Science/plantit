@@ -370,7 +370,7 @@
                                                     "
                                                     size="sm"
                                                     v-b-tooltip.hover
-                                                    title="Get your public key"
+                                                    title="View your public key"
                                                     @click="getKey"
                                                 >
                                               <b-spinner
@@ -387,9 +387,9 @@
                                                         class="ml-2 mb-1"
                                                     ></b-spinner>
                                                     <i v-else
-                                                        class="fas fa-key fa-fw"
+                                                        class="fas fa-eye fa-fw"
                                                     ></i>
-                                                    Get Key
+                                                    View Key
                                                 </b-button></b-col
                                             >
                                             <b-col
@@ -875,8 +875,7 @@
                 ><b-col style="word-wrap: break-word;">
                     <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Here is your public key.
-                        <!--<span class="text-danger">You will not be able to view the key again.</span> -->Place
-                        it in the <code>~/.ssh/authorized_keys</code> file on
+                        Copy it into the <code>~/.ssh/authorized_keys</code> file on
                         your agent.
                     </p>
                     <b-form-textarea

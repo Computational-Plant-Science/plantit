@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+from datetime import datetime
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
@@ -13,6 +14,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect
+from django.utils import timezone
 from github import Github
 from requests.auth import HTTPBasicAuth
 from rest_framework import viewsets, mixins
@@ -25,7 +27,7 @@ from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.users.utils import list_users, get_cyverse_profile, get_github_profile, get_or_create_keypair, get_private_key_path
+from plantit.users.utils import list_users, get_cyverse_profile, get_github_profile, get_or_create_keypair, get_private_key_path, get_user_statistics
 from plantit.utils import get_csrf_token
 
 
@@ -219,18 +221,26 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         redis = RedisClient.get()
         stats_last_aggregated = user.profile.stats_last_aggregated
 
-        # if stats_last_aggregated is None:
-        #     self.logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
-        #     aggregate_user_statistics.delay(user.username)
-        #     stats = None
-        # else:
+        if stats_last_aggregated is None:
+            self.logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
+            stats = get_user_statistics(user)
+            redis = RedisClient.get()
+            redis.set(f"stats/{user.username}", json.dumps(stats))
+            user.profile.stats_last_aggregated = timezone.now()
+            user.profile.save()
+        else:
+            stats = redis.get(f"stats/{user.username}")
+            stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
 
-        #     stats = redis.get(f"stats/{user.username}")
-        #     stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
-        #     if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
-        #         self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
-        #         aggregate_user_statistics.delay(user.username)
-        #         stats = None
+            if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
+                self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
+                stats = get_user_statistics(user)
+                redis = RedisClient.get()
+                redis.set(f"stats/{user.username}", json.dumps(stats))
+                user.profile.stats_last_aggregated = timezone.now()
+                user.profile.save()
+            else:
+                stats = json.loads(stats)
 
         if user.profile.push_notification_status == 'pending':
             user.profile.push_notification_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
@@ -248,8 +258,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                 'github_token': user.profile.github_token,
                 'cyverse_token': user.profile.cyverse_access_token
             },
-            'stats': None
-            # 'stats': None if stats is None else json.loads(stats)
+            'stats': stats
         }
 
         if request.user.profile.cyverse_access_token != '':

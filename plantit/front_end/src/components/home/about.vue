@@ -60,6 +60,7 @@
                 <br />
                 <b-container>
                     <b-row>
+                        <!--
                         <b-col align-self="end" class="text-right mr-0"
                             ><h1 v-if="userCount >= 0" class="text-success">
                                 {{ userCount }}
@@ -91,7 +92,7 @@
                         </b-col>
                         <b-col align-self="end" class="text-left ml-0 pl-0"
                             ><h5 class="text-white">tasks</h5>
-                        </b-col>
+                        </b-col>-->
                     </b-row>
                 </b-container>
             </template>
