@@ -104,7 +104,7 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     # if we have outputs, make sure we don't push configuration or job scripts
     if 'output' in config:
         config['output']['exclude']['names'] = [
-            "flow.yaml",
+            f"{task.guid}.yaml",
             "template_local_run.sh",
             "template_slurm_run.sh"]
 
@@ -144,16 +144,16 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
 
     parameters = None
     if 'parameters' in config:
-        if not all(['key' in param and
-                    param['key'] is not None and
-                    param['key'] != '' and
+        if not all(['name' in param and
+                    param['name'] is not None and
+                    param['name'] != '' and
                     'value' in param and
                     param['value'] is not None and
                     param['value'] != ''
                     for param in config['parameters']]):
-            errors.append('Every parameter must have a non-empty \'key\' and \'value\'')
+            errors.append('Every parameter must have a non-empty \'name\' and \'value\'')
         else:
-            parameters = [Parameter(key=param['key'], value=param['value']) for param in config['parameters']]
+            parameters = [Parameter(key=param['name'], value=param['value']) for param in config['parameters']]
 
     bind_mounts = None
     if 'bind_mounts' in config:
@@ -314,7 +314,7 @@ def configure_task_environment(task: Task, ssh: SSH):
 
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
-        with sftp.open(f"{task.guid}.yaml", 'w') as cli_file: yaml.dump(cli_options, cli_file, default_flow_style=False)
+        with sftp.open(f"{task.guid}.yaml", 'w') as cli_file: yaml.dump(del_none(cli_options), cli_file, default_flow_style=False)
         if 'input' in cli_options: sftp.mkdir(join(work_dir, 'input'))
 
     msg = f"Uploading task executable"
@@ -439,7 +439,7 @@ def compose_pull_command(task: Task, options: PlantITCLIOptions) -> str:
               f""f" --terrain_token {task.user.profile.cyverse_access_token}"
 
     if task.agent.callbacks:
-        callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
+        callback_url = settings.API_URL + 'tasks/' + task.guid + '/status/'
         command += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
 
     logger.debug(f"Using pull command: {command}")
@@ -458,7 +458,7 @@ def compose_run_commands(task: Task, options: PlantITCLIOptions, inputs: List[st
         commands.append("$LAUNCHER_DIR/paramrun\n")
     # otherwise use the CLI
     else:
-        command = f"plantit run flow.yaml"
+        command = f"plantit run {task.guid}.yaml"
         if task.agent.job_array and len(inputs) > 0:
             command += f" --slurm_job_array"
 
@@ -466,7 +466,7 @@ def compose_run_commands(task: Task, options: PlantITCLIOptions, inputs: List[st
             command += f" --docker_username {docker_username} --docker_password {docker_password}"
 
         if task.agent.callbacks:
-            callback_url = settings.API_URL + 'runs/' + task.guid + '/status/'
+            callback_url = settings.API_URL + 'tasks/' + task.guid + '/status/'
             command += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
 
         commands.append(command)
@@ -477,11 +477,11 @@ def compose_run_commands(task: Task, options: PlantITCLIOptions, inputs: List[st
 
 
 def compose_zip_command(task: Task, options: PlantITCLIOptions) -> str:
-    if 'output' not in options: return ''
-    output = options['output']
-    if output is None: return ''
+    # if 'output' not in options: return ''
+    output = options['output'] if 'output' in options else dict()
+    # if output is None: return ''
 
-    command = f"plantit zip {output['from'] if output['from'] != '' else '.'} -o . -n {task.guid}"
+    command = f"plantit zip {output['from'] if 'from' in output != '' else '.'} -o . -n {task.guid}"
     logs = [f"{task.guid}.{task.agent.name.lower()}.log"]
     command = f"{command} {' '.join(['--include_pattern ' + pattern for pattern in logs])}"
 
@@ -615,6 +615,8 @@ def compose_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]
 
 def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
     with ssh.client.open_sftp() as sftp:
+        workdir = join(task.agent.workdir, task.workdir)
+        sftp.chdir(workdir)
         template_path = environ.get('CELERY_TEMPLATE_LOCAL_RUN_SCRIPT') if task.agent.executor == AgentExecutor.LOCAL else environ.get(
             'CELERY_TEMPLATE_SLURM_RUN_SCRIPT')
         with sftp.open(f"{task.guid}.sh", 'w') as task_script:
@@ -643,9 +645,9 @@ def get_task_user(task: Task):
 
 async def push_task_event(task: Task):
     user = await get_task_user(task)
-    await get_channel_layer().group_send(f"runs-{user.username}", {
+    await get_channel_layer().group_send(f"tasks-{user.username}", {
         'type': 'task_event',
-        'run': await sync_to_async(map_task)(task),
+        'task': await sync_to_async(map_task)(task),
     })
 
 
@@ -980,3 +982,21 @@ def map_workflow_config_to_cli_config(config: dict, task: Task, resources: dict)
                 print(f"No GPU support on {task.agent.name}")
 
     return cli_config
+
+
+def del_none(d) -> dict:
+    """
+    Delete keys with the value ``None`` in a dictionary, recursively.
+
+    This alters the input so you may wish to ``copy`` the dict first.
+
+    Referenced from https://stackoverflow.com/a/4256027.
+    """
+    # For Python 3, write `list(d.items())`; `d.items()` won’t work
+    # For Python 2, write `d.items()`; `d.iteritems()` won’t work
+    for key, value in list(d.items()):
+        if value is None:
+            del d[key]
+        elif isinstance(value, dict):
+            del_none(value)
+    return d  # For convenience

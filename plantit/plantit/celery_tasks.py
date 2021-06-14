@@ -69,12 +69,12 @@ def submit_task(guid: str):
                 async_to_sync(push_task_event)(task)
                 logger.info(msg)
 
-                execute_command(
+                list(execute_command(
                     ssh_client=ssh,
                     pre_command='; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':',
                     command=f"chmod +x {task.guid}.sh && ./{task.guid}.sh",
                     directory=join(task.agent.workdir, task.workdir),
-                    allow_stderr=True)
+                    allow_stderr=True))
                 get_container_logs(task, ssh)
 
                 task.status = TaskStatus.SUCCESS
@@ -280,18 +280,22 @@ def list_task_results(guid: str):
     else:
         workflow = json.loads(workflow)['config']
 
-    results = get_result_files(task, workflow)
+    expected = get_result_files(task, workflow)
+    found = [e for e in expected if e['exists']]
     workdir = join(task.agent.workdir, task.workdir)
-    redis.set(f"results/{task.guid}", json.dumps(results))
+    redis.set(f"results/{task.guid}", json.dumps(expected))
 
-    msg = f"Found {len(results)} result files"
+    msg = f"Expected {len(expected)} file(s), found {len(found)}"
     logger.info(msg)
     log_task_status(task, msg)
     async_to_sync(push_task_event)(task)
 
-    for result in results:
+    for result in expected:
         name = result['name']
         path = result['path']
+        exists = result['exists']
+
+        if not exists: continue
         if name.endswith('txt') or \
                 name.endswith('csv') or \
                 name.endswith('yml') or \

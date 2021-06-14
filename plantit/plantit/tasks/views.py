@@ -16,10 +16,9 @@ from plantit import settings
 from plantit.agents.models import Agent
 from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
-from plantit.ssh import SSH
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.tasks.utils import log_task_status, map_task, get_task_log_file_path, create_task, map_delayed_task, \
-    map_repeating_task, cancel_task, push_task_event
+    map_repeating_task, cancel_task, push_task_event, get_ssh_client
 
 
 @login_required
@@ -174,7 +173,7 @@ def get_3d_model(request, guid):
     except:
         return HttpResponseNotFound()
 
-    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    ssh = get_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
 
     with tempfile.NamedTemporaryFile() as temp_file:
@@ -193,7 +192,7 @@ def get_output_file(request, owner, name, file):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    ssh = get_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
 
     with ssh:
@@ -232,7 +231,7 @@ def get_container_logs(request, owner, name):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    ssh = get_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
     log_file = f"plantit.{task.job_id}.out" if task.agent.launcher else f"{user.username}.{task.name}.{task.agent.name.lower()}.log"
 
@@ -261,7 +260,7 @@ def get_file_text(request, owner, name):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+    ssh = get_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
 
     with ssh:

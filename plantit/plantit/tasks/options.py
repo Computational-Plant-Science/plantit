@@ -35,6 +35,7 @@ class PlantITCLIOptions(TypedDict, total=False):
     image: str
     command: str
     input: Input
+    output: dict
     parameters: List[Parameter]
     bind_mounts: List[BindMount]
     checksums: List[FileChecksum]

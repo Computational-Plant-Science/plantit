@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from plantit.github import list_connectable_repos_by_owner, get_repo_bundle
 from plantit.redis import RedisClient
+from plantit.tasks.utils import del_none
 from plantit.users.utils import get_django_profile
 from plantit.workflows.models import Workflow
 
@@ -80,7 +81,7 @@ async def repopulate_personal_workflow_bundle_cache(owner: str):
         both.append(bo)
 
     redis = RedisClient.get()
-    for workflow in both: redis.set(f"workflows/{owner}/{workflow['repo']['name']}", json.dumps(workflow))
+    for workflow in both: redis.set(f"workflows/{owner}/{workflow['repo']['name']}", json.dumps(del_none(workflow)))
     redis.set(f"workflows_updated/{owner}", timezone.now().timestamp())
     logger.info(f"Added {len(bound)} bound, {len(bindable) - len(bound)} bindable, {len(both)} total to {owner}'s workflow cache" + ("" if missing == 0 else f"({missing} with missing configuration files)"))
 
@@ -95,7 +96,7 @@ async def repopulate_public_workflow_bundle_cache(token: str):
             # workflow is not owned by any particular user (e.g., added by admins for shared GitHub group) so explicitly refresh the binding
             logger.info(f"Binding unclaimed workflow {workflow.repo_owner}/{workflow.repo_name}")
             bundle = await bind_workflow_bundle(workflow, token)
-            redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(bundle))
+            redis.set(f"workflows/{workflow.repo_owner}/{workflow.repo_name}", json.dumps(del_none(bundle)))
         else:
             # otherwise refresh all the workflow owner's workflows (but only once)
             if user.username in encountered_users: continue
@@ -159,7 +160,7 @@ async def get_workflow_bundle(owner: str, name: str, token: str, invalidate: boo
         except: raise ValueError(f"Workflow {owner}/{name} not found")
 
         workflow = await bind_workflow_bundle(workflow, token)
-        redis.set(f"workflows/{owner}/{name}", json.dumps(workflow))
+        redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(workflow)))
 
     return workflow
 

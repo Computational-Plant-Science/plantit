@@ -2891,7 +2891,7 @@ export default {
     },
     async mounted() {
         this.populateComponents();
-        if ('input' in this.getWorkflow.config)
+        if ('input' in this.getWorkflow.config && this.getWorkflow.config['input'] !== undefined)
             await Promise.all([
                 this.$store.dispatch('datasets/loadPersonal'),
                 this.$store.dispatch('datasets/loadPublic'),
@@ -3180,7 +3180,7 @@ export default {
                 this.selectedAgent = flowConfig.agent;
             }
 
-            if (this.input.from !== null && this.input.from !== '')
+            if (this.input !== undefined && this.input.from !== null && this.input.from !== '')
                 this.loadSelectedDataset(this.input.from);
         },
         inputSelected(node) {

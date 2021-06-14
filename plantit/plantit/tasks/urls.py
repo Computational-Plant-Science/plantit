@@ -20,5 +20,5 @@ urlpatterns = [
 ]
 
 websocket_urlpatterns = [
-    path(r'ws/runs/<username>/', consumers.TaskConsumer.as_asgi())
+    path(r'ws/tasks/<username>/', consumers.TaskConsumer.as_asgi())
 ]

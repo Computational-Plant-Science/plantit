@@ -7,6 +7,7 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidde
 
 from plantit.github import get_repo_readme, get_repo
 from plantit.redis import RedisClient
+from plantit.tasks.utils import del_none
 from plantit.users.models import Profile
 from plantit.users.utils import get_django_profile
 from plantit.workflows.models import Workflow
@@ -74,7 +75,7 @@ async def refresh(request, owner, name):
     redis = RedisClient.get()
     profile = await get_django_profile(request.user)
     bundle = await bind_workflow_bundle(workflow, profile.github_token)
-    redis.set(f"workflows/{owner}/{name}", json.dumps(bundle))
+    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
     logger.info(f"Refreshed workflow {owner}/{name}")
     return JsonResponse(bundle)
 
@@ -104,7 +105,7 @@ async def toggle_public(request, owner, name):
     workflow.public = not workflow.public
     await sync_to_async(workflow.save)()
     bundle = await bind_workflow_bundle(workflow, profile.github_token)
-    redis.set(f"workflows/{owner}/{name}", json.dumps(bundle))
+    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
     logger.info(f"Workflow {owner}/{name} is now {'public' if workflow.public else 'private'}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
@@ -117,7 +118,7 @@ def bind(request, owner, name):
     redis = RedisClient.get()
     body = json.loads(request.body.decode('utf-8'))
     body['bound'] = True
-    redis.set(f"workflows/{owner}/{name}", json.dumps(body))
+    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(body)))
     Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, public=False)
     logger.info(f"Created binding for workflow {owner}/{name} as {body['config']['name']}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
@@ -138,6 +139,6 @@ def unbind(request, owner, name):
     cached = json.loads(redis.get(f"workflows/{owner}/{name}"))
     cached['public'] = False
     cached['bound'] = False
-    redis.set(f"workflows/{owner}/{name}", json.dumps(cached))
+    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(cached)))
     logger.info(f"Removed binding for workflow {owner}/{name}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
