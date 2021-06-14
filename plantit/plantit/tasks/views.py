@@ -8,7 +8,7 @@ from asgiref.sync import sync_to_async, async_to_sync
 from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, FileResponse, HttpResponseBadRequest
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
@@ -30,14 +30,19 @@ def get_all_or_create(request):
         tasks = Task.objects.all()
         return JsonResponse({'tasks': [map_task(sub) for sub in tasks]})
     elif request.method == 'POST':
-        auth = workflow['auth']
         config = workflow['config']
         agent = Agent.objects.get(name=config['agent']['name'])
         if workflow['type'] == 'Now':
             # create the task
             task_name = config.get('task_name', None)
             task_guid = config.get('task_guid', None)
-            task = create_task(username=user.username, agent_name=agent.name, workflow=workflow, name=task_name, guid=task_guid)
+            if task_guid is None: return HttpResponseBadRequest()
+            task = create_task(
+                username=user.username,
+                agent_name=agent.name,
+                workflow=workflow,
+                name=task_name if task_name is not None and task_name != '' else task_guid,
+                guid=task_guid)
 
             # submit the task
             auth = parse_auth_options(workflow['auth'])

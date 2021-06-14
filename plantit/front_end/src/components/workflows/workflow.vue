@@ -981,13 +981,6 @@
                                                                             "
                                                                         >
                                                                             <i
-                                                                                v-if="
-                                                                                    nameValid
-                                                                                "
-                                                                                class="fas fa-pen fa-fw text-success"
-                                                                            ></i
-                                                                            ><i
-                                                                                v-else
                                                                                 class="fas fa-pen fa-fw"
                                                                             ></i>
                                                                             Name
@@ -1040,8 +1033,8 @@
                                                                             a
                                                                             name
                                                                             for
-                                                                            this
-                                                                            task.
+                                                                            your
+                                                                            task. If no name is provided, an auto-generated GUID will be used.
                                                                         </b>
                                                                     </b-col>
                                                                 </b-row>
@@ -1053,7 +1046,7 @@
                                                                             v-model="
                                                                                 taskName
                                                                             "
-                                                                            placeholder="Type a name..."
+                                                                            :placeholder="taskGuid"
                                                                         ></b-form-input>
                                                                     </b-col>
                                                                 </b-row>
@@ -1093,14 +1086,6 @@
                                                                             "
                                                                         >
                                                                             <i
-                                                                                v-if="
-                                                                                    tags.length >
-                                                                                        0
-                                                                                "
-                                                                                class="fas fa-tags fa-fw text-success"
-                                                                            ></i>
-                                                                            <i
-                                                                                v-else
                                                                                 class="fas fa-tags fa-fw"
                                                                             ></i>
                                                                             Tags
@@ -1239,18 +1224,6 @@
                                                                             "
                                                                         >
                                                                             <i
-                                                                                v-if="
-                                                                                    params &&
-                                                                                        params.every(
-                                                                                            p =>
-                                                                                                p.name !==
-                                                                                                ''
-                                                                                        )
-                                                                                "
-                                                                                class="fas fa-keyboard fa-fw text-success"
-                                                                            ></i>
-                                                                            <i
-                                                                                v-else
                                                                                 class="fas fa-keyboard fa-fw"
                                                                             ></i>
                                                                             Parameters
@@ -1456,13 +1429,6 @@
                                                                             "
                                                                         >
                                                                             <i
-                                                                                v-if="
-                                                                                    inputValid
-                                                                                "
-                                                                                class="fas fa-download fa-fw text-success"
-                                                                            ></i>
-                                                                            <i
-                                                                                v-else
                                                                                 class="fas fa-download fa-fw"
                                                                             ></i>
                                                                             Input
@@ -1898,14 +1864,6 @@
                                                                             "
                                                                         >
                                                                             <i
-                                                                                v-if="
-                                                                                    selectedAgent.name !==
-                                                                                        ''
-                                                                                "
-                                                                                class="fas fa-server fa-fw text-success"
-                                                                            ></i>
-                                                                            <i
-                                                                                v-else
                                                                                 class="fas fa-server fa-fw"
                                                                             ></i>
                                                                             Agent
@@ -2860,6 +2818,7 @@ export default {
             // delayedRuns: [],
             // repeatingRuns: [],
             taskName: '',
+            taskGuid: guid().toString(),
             tags: [],
             tagOptions: [],
             params: [],
@@ -3236,10 +3195,11 @@ export default {
             let agent = this.selectedAgent;
             if (this.getWorkflow.config.resources)
                 agent['resources'] = this.getWorkflow.config.resources;
+            let taskName = this.taskName === '' ? this.taskGuid : this.taskName
             let config = {
                 name: this.getWorkflow.config.name,
-                task_name: this.taskName,
-                task_guid: guid().toString(),
+                task_name: taskName,
+                task_guid: this.taskGuid,
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
                 agent: agent,
@@ -3280,6 +3240,10 @@ export default {
                     username: this.authenticationUsername,
                     password: this.authenticationPassword
                 };
+            else
+              data['auth'] = {
+                    username: this.selectedAgent.user,
+                };
 
             this.submitted = true;
             if (this.submitType === 'Now')
@@ -3299,7 +3263,7 @@ export default {
                             name: 'task',
                             params: {
                                 owner: this.profile.djangoProfile.username,
-                                name: this.taskName
+                                name: taskName
                             }
                         });
                     })
@@ -3449,7 +3413,7 @@ export default {
         },
         nameValid() {
             return (
-                this.taskName !== '' && !this.taskNameExists // && !this.taskNameExists
+                !this.taskNameExists // && !this.taskNameExists
             );
         },
         paramsValid: function() {

@@ -20,13 +20,13 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from plantit import settings
-from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentAuthentication
+from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor
 from plantit.agents.utils import map_agent, has_virtual_memory
 from plantit.docker import parse_image_components, image_exists
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
-from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, BindMount, TaskAuthOptions, PasswordTaskAuthOptions, KeyTaskAuthOptions
+from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, BindMount, PasswordTaskAuth, KeyTaskAuth
 from plantit.terrain import list_dir
 from plantit.users.utils import get_private_key_path
 from plantit.utils import parse_bind_mount, format_bind_mount
@@ -249,7 +249,7 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
 
     task = JobQueueTask.objects.create(
         guid=guid,
-        name=guid if name is None else name,
+        name=name,
         user=user,
         workflow=workflow,
         workflow_owner=repo_owner,
@@ -287,36 +287,28 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
 
 
 def configure_task_environment(task: Task, ssh: SSH):
-    msg = f"Verifying configuration"
-    log_task_status(task, msg)
+    log_task_status(task, [f"Verifying configuration"])
     async_to_sync(push_task_event)(task)
-    logger.info(msg)
 
     parse_errors, cli_options = parse_cli_options(task)
     if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
 
     work_dir = join(task.agent.workdir, task.guid)
-    msg = f"Creating working directory {work_dir}"
-    log_task_status(task, msg)
+    log_task_status(task, [f"Creating working directory"])
     async_to_sync(push_task_event)(task)
-    logger.info(msg)
 
     list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
 
-    msg = f"Uploading task definition"
-    log_task_status(task, msg)
+    log_task_status(task, [f"Uploading task definition"])
     async_to_sync(push_task_event)(task)
-    logger.info(msg)
 
     with ssh.client.open_sftp() as sftp:
         sftp.chdir(work_dir)
         with sftp.open(f"{task.guid}.yaml", 'w') as cli_file: yaml.dump(del_none(cli_options), cli_file, default_flow_style=False)
         if 'input' in cli_options: sftp.mkdir(join(work_dir, 'input'))
 
-    msg = f"Uploading task executable"
-    log_task_status(task, msg)
+    log_task_status(task, [f"Uploading task executable"])
     async_to_sync(push_task_event)(task)
-    logger.info(msg)
 
     upload_task_executables(task, ssh, cli_options)
 
@@ -343,8 +335,8 @@ def compose_singularity_command(
         parameters = []
     parameters.append(Parameter(key='WORKDIR', value=work_dir))
     for parameter in parameters:
-        print(f"Replacing '{parameter.key.upper()}' with '{parameter.value}'")
-        command = command.replace(f"${parameter.key.upper()}", parameter.value)
+        print(f"Replacing '{parameter['key'].upper()}' with '{parameter['value']}'")
+        command = command.replace(f"${parameter['key'].upper()}", parameter['value'])
 
     if no_cache:
         cmd += ' --disable-cache'
@@ -387,10 +379,8 @@ def compose_resource_requests(task: Task, options: PlantITCLIOptions, inputs: Li
         if len(hours) == 1: hours = f"0{hours}"
         adjusted_str = f"{hours}:00:00"
 
-        msg = f"Using adjusted walltime {adjusted_str}"
-        log_task_status(task, msg)
+        log_task_status(task, [f"Using adjusted walltime {adjusted_str}"])
         async_to_sync(push_task_event)(task)
-        logger.info(msg)
 
         task.job_requested_walltime = adjusted_str
         task.save()
@@ -413,7 +403,7 @@ def compose_resource_requests(task: Task, options: PlantITCLIOptions, inputs: Li
     commands.append("#SBATCH --error=plantit.%j.err\n")
 
     newline = '\n'
-    logger.debug(f"Using resource requests: {newline.join(commands)}")
+    logger.info(f"Using resource requests: {newline.join(commands)}")
     return commands
 
 
@@ -429,7 +419,7 @@ def compose_pull_command(task: Task, options: PlantITCLIOptions) -> str:
     elif 'jpeg' in patterns and 'jpg' not in patterns:
         patterns.append("jpg")
 
-    command = f"plantit terrain pull \"{input['from']}\"" \
+    command = f"plantit terrain pull \"{input['path']}\"" \
               f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
               f" {' '.join(['--pattern ' + pattern for pattern in patterns])}" \
               f""f" --terrain_token {task.user.profile.cyverse_access_token}"
@@ -438,7 +428,7 @@ def compose_pull_command(task: Task, options: PlantITCLIOptions) -> str:
         callback_url = settings.API_URL + 'tasks/' + task.guid + '/status/'
         command += f""f" --plantit_url '{callback_url}' --plantit_token '{task.token}'"
 
-    logger.debug(f"Using pull command: {command}")
+    logger.info(f"Using pull command: {command}")
     return command
 
 
@@ -468,7 +458,7 @@ def compose_run_commands(task: Task, options: PlantITCLIOptions, inputs: List[st
         commands.append(command)
 
     newline = '\n'
-    logger.debug(f"Using CLI commands: {newline.join(commands)}")
+    logger.info(f"Using CLI commands: {newline.join(commands)}")
     return commands
 
 
@@ -633,7 +623,7 @@ def execute_local_task(task: Task, ssh: SSH):
     command = f"chmod +x {task.guid}.sh && ./{task.guid}.sh"
     workdir = join(task.agent.workdir, task.workdir)
     lines = list(execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True))
-    log_task_status(task, [f"[remote output] {line}" for line in lines])
+    log_task_status(task, [f"[remote output] {line}" for line in lines if not line.strip()])
 
     task.status = TaskStatus.SUCCESS
     now = timezone.now()
@@ -660,7 +650,7 @@ def log_task_status(task: Task, messages: List[str]):
     log_path = join(environ.get('RUNS_LOGS'), f"{task.guid}.plantit.log")
     with open(log_path, 'a') as log:
         for message in messages:
-            logger.debug(f"[Task {task.guid} ({task.user.username}/{task.name})] {message}")
+            logger.info(f"[Task {task.guid} ({task.user.username}/{task.name})] {message}")
             log.write(f"{message}\n")
 
 
@@ -705,7 +695,7 @@ def get_task_log_file_path(task: Task):
 
 
 def get_container_log_file_name(task: Task):
-    if task.agent.launcher:
+    if isinstance(task, JobQueueTask) and task.agent.launcher:
         return f"plantit.{task.job_id}.out"
     else:
         return f"{task.guid}.{task.agent.name.lower()}.log"
@@ -720,29 +710,30 @@ def get_container_logs(task: Task, ssh: SSH):
     container_log_file = get_container_log_file_name(task)
     container_log_path = get_container_log_file_path(task)
 
-    with ssh.client.open_sftp() as sftp:
-        cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
-        stdin, stdout, stderr = ssh.client.exec_command(cmd)
+    with ssh:
+        with ssh.client.open_sftp() as sftp:
+            cmd = 'test -e {0} && echo exists'.format(join(work_dir, container_log_file))
+            stdin, stdout, stderr = ssh.client.exec_command(cmd)
 
-        if not stdout.read().decode().strip() == 'exists':
-            container_logs = []
-        else:
-            with open(get_container_log_file_path(task), 'a+') as log_file:
-                sftp.chdir(work_dir)
-                sftp.get(container_log_file, log_file.name)
+            if not stdout.read().decode().strip() == 'exists':
+                container_logs = []
+            else:
+                with open(get_container_log_file_path(task), 'a+') as log_file:
+                    sftp.chdir(work_dir)
+                    sftp.get(container_log_file, log_file.name)
 
-            # obfuscate Docker auth info before returning logs to the user
-            docker_username = environ.get('DOCKER_USERNAME', None)
-            docker_password = environ.get('DOCKER_PASSWORD', None)
-            for line in fileinput.input([container_log_path], inplace=True):
-                if docker_username in line.strip():
-                    line = line.strip().replace(docker_username, '*' * 7, 1)
-                if docker_password in line.strip():
-                    line = line.strip().replace(docker_password, '*' * 7)
-                sys.stdout.write(line)
+                # obfuscate Docker auth info before returning logs to the user
+                docker_username = environ.get('DOCKER_USERNAME', None)
+                docker_password = environ.get('DOCKER_PASSWORD', None)
+                for line in fileinput.input([container_log_path], inplace=True):
+                    if docker_username in line.strip():
+                        line = line.strip().replace(docker_username, '*' * 7, 1)
+                    if docker_password in line.strip():
+                        line = line.strip().replace(docker_password, '*' * 7)
+                    sys.stdout.write(line)
 
 
-def get_job_walltime(task: Task) -> (str, str):
+def get_job_walltime(task: JobQueueTask) -> (str, str):
     ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
     with ssh:
         lines = execute_command(
@@ -761,7 +752,7 @@ def get_job_walltime(task: Task) -> (str, str):
             return None
 
 
-def get_job_status(task: Task) -> str:
+def get_job_status(task: JobQueueTask) -> str:
     ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
     with ssh:
         lines = execute_command(
@@ -778,7 +769,7 @@ def get_job_status(task: Task) -> str:
     pass
 
 
-def get_result_files(task: Task, workflow: dict):
+def get_result_files(task: Task, workflow: dict, auth: dict):
     included_by_name = ((workflow['output']['include']['names'] if 'names' in workflow['output'][
         'include'] else [])) if 'output' in workflow else []  # [f"{run.task_id}.zip"]
     included_by_name.append(f"{task.guid}.zip")  # zip file
@@ -790,7 +781,7 @@ def get_result_files(task: Task, workflow: dict):
     included_by_pattern = (
         workflow['output']['include']['patterns'] if 'patterns' in workflow['output']['include'] else []) if 'output' in workflow else []
 
-    ssh = get_ssh_client(task)
+    ssh = get_ssh_client(task, auth)
     workdir = join(task.agent.workdir, task.workdir)
     outputs = []
     seen = []
@@ -908,14 +899,15 @@ def list_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
     return input_files
 
 
-def get_ssh_client(task: Task, auth: TaskAuthOptions) -> SSH:
-    if isinstance(auth, PasswordTaskAuthOptions):
-        logger.debug(f"Using password authentication (username: {auth.username})")
-        client = SSH(host=task.agent.hostname, port=task.agent.port, username=auth.username, password=auth.password)
-    elif isinstance(auth, KeyTaskAuthOptions):
-        logger.debug(f"Using key authentication (username: {auth.username})")
-        client = SSH(host=task.agent.hostname, port=task.agent.port, username=auth.username, pkey=auth.path)
-    else: raise ValueError(f"Unrecognized authentication strategy: {type(auth)}")
+def get_ssh_client(task: Task, auth: dict) -> SSH:
+    username = auth['username']
+    if 'password' in auth:
+        logger.info(f"Using password authentication (username: {username})")
+        client = SSH(host=task.agent.hostname, port=task.agent.port, username=username, password=auth['password'])
+    elif 'path' in auth:
+        logger.info(f"Using key authentication (username: {username})")
+        client = SSH(host=task.agent.hostname, port=task.agent.port, username=task.agent.username, pkey=auth['path'])
+    else: raise ValueError(f"Unrecognized authentication strategy")
 
     return client
 
@@ -1027,6 +1019,6 @@ def del_none(d) -> dict:
     return d  # For convenience
 
 
-def parse_auth_options(auth: dict) -> TaskAuthOptions:
-    if 'password' in auth: return PasswordTaskAuthOptions(username=auth['username'], password=auth['password'])
-    else: return KeyTaskAuthOptions(username=auth['username'], path=auth['path'])
+def parse_auth_options(auth: dict) -> dict:
+    if 'password' in auth: return PasswordTaskAuth(username=auth['username'], password=auth['password'])
+    else: return KeyTaskAuth(username=auth['username'], path=str(get_private_key_path(auth['username'])))

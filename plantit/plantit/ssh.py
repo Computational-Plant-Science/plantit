@@ -69,7 +69,7 @@ def execute_command(ssh: SSH, precommand: str, command: str, directory: str = No
 
     for line in iter(lambda: stdout.readline(2048), ""):
         clean = clean_html(line)
-        logger.info(f"Received stdout from '{ssh.host}': '{clean}'")
+        # logger.info(f"Received stdout from '{ssh.host}': '{clean}'")
         yield clean
 
     errors = []

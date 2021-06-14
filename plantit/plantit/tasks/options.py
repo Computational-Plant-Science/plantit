@@ -46,31 +46,32 @@ class PlantITCLIOptions(TypedDict, total=False):
     gpu: bool
 
 
-class TaskAuthenticationOptions(ABC):
-    def __init__(self, path: str):
-        self.__path = path
-
-    @property
-    def path(self):
-        return self.__path
+class PasswordTaskAuth(TypedDict):
+    username: str
+    password: str
 
 
-class TaskAuthOptions():
-    def __init__(self, username: str):
-        self.__username = username
-
-    @property
-    def username(self):
-        return self.__username
+class KeyTaskAuth(TypedDict):
+    username: str
+    path: str
 
 
-class PasswordTaskAuthOptions(TaskAuthOptions):
-    def __init__(self, username: str, password: str):
-        super().__init__(username)
-        self.password = password
-
-
-class KeyTaskAuthOptions(TaskAuthOptions):
-    def __init__(self, username: str, path: str):
-        super().__init__(username)
-        self.path = path
+# class TaskAuthOptions():
+#     def __init__(self, username: str):
+#         self.__username = username
+#
+#     @property
+#     def username(self):
+#         return self.__username
+#
+#
+# class PasswordTaskAuthOptions(TaskAuthOptions):
+#     def __init__(self, username: str, password: str):
+#         super().__init__(username)
+#         self.password = password
+#
+#
+# class KeyTaskAuthOptions(TaskAuthOptions):
+#     def __init__(self, username: str, path: str):
+#         super().__init__(username)
+#         self.path = path

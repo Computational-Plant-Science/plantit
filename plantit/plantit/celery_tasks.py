@@ -23,7 +23,6 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
-from plantit.tasks.options import TaskAuthOptions
 from plantit.tasks.utils import log_task_status, push_task_event, remove_logs, get_result_files, get_job_walltime, get_job_status, \
     configure_task_environment, get_container_logs, get_ssh_client, \
     submit_jobqueue_task, execute_local_task
@@ -34,7 +33,7 @@ logger = get_task_logger(__name__)
 
 
 @app.task(track_started=True)
-def submit_task(guid: str, auth: TaskAuthOptions):
+def submit_task(guid: str, auth: dict):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -96,7 +95,7 @@ def submit_task(guid: str, auth: TaskAuthOptions):
 
 
 @app.task()
-def poll_job_status(guid: str, auth: TaskAuthOptions):
+def poll_job_status(guid: str, auth: dict):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -110,13 +109,13 @@ def poll_job_status(guid: str, auth: TaskAuthOptions):
     # if the job already failed, schedule cleanup
     if task.job_status == 'FAILURE':
         task.status = TaskStatus.FAILURE
-        msg = f"Job {task.job_id} failed, cleaning up in {cleanup_delay}m"
-        log_task_status(task, msg)
+        final_message = f"Job {task.job_id} failed, cleaning up in {cleanup_delay}m"
+        log_task_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
         if task.user.profile.push_notification_status == 'enabled':
-            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
 
     # otherwise poll the scheduler for its status
     try:
@@ -129,7 +128,7 @@ def poll_job_status(guid: str, auth: TaskAuthOptions):
         task.updated = now
         task.save()
 
-        ssh = get_ssh_client(task)
+        ssh = get_ssh_client(task, auth)
         get_container_logs(task, ssh)
 
         if job_status == 'COMPLETED':
@@ -148,18 +147,16 @@ def poll_job_status(guid: str, auth: TaskAuthOptions):
         task.save()
         if task.is_complete:
             list_task_results.s(guid).apply_async()
-
-            msg = f"{task.agent.executor} job {task.job_id} {job_status}" + (
+            final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (
                 f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
-            log_task_status(task, msg)
+            log_task_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
             if task.user.profile.push_notification_status == 'enabled':
-                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
+                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
         else:
-            msg = f"Job {task.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"
-            log_task_status(task, msg)
+            log_task_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"])
             async_to_sync(push_task_event)(task)
             poll_job_status.s(guid).apply_async(countdown=refresh_delay)
     except StopIteration:
@@ -170,17 +167,16 @@ def poll_job_status(guid: str, auth: TaskAuthOptions):
             task.completed = now
             task.save()
 
-            msg = f"Job {task.job_id} not found, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
-            log_task_status(task, msg)
+            log_task_status(task, [f"Job {task.job_id} not found, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"])
             async_to_sync(push_task_event)(task)
         else:
-            msg = f"Job {task.job_id} succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
-            log_task_status(task, msg)
+            final_message = f"Job {task.job_id} succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
+            log_task_status(task, [final_message])
             async_to_sync(push_task_event)(task)
             cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
             if task.user.profile.push_notification_status == 'enabled':
-                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
+                SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
     except:
         task.status = TaskStatus.FAILURE
         now = timezone.now()
@@ -188,17 +184,17 @@ def poll_job_status(guid: str, auth: TaskAuthOptions):
         task.completed = now
         task.save()
 
-        msg = f"Job {task.job_id} encountered unexpected error (cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
-        log_task_status(task, msg)
+        final_message = f"Job {task.job_id} encountered unexpected error (cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
+        log_task_status(task, [final_message])
         async_to_sync(push_task_event)(task)
         cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
 
         if task.user.profile.push_notification_status == 'enabled':
-            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
+            SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
 
 
 @app.task()
-def cleanup_task(guid: str, auth: TaskAuthOptions):
+def cleanup_task(guid: str, auth: dict):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -213,18 +209,17 @@ def cleanup_task(guid: str, auth: TaskAuthOptions):
     ssh = get_ssh_client(task, auth)
     with ssh:
         for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
-            logger.debug(f"Received output: {line}")
+            logger.info(f"[remote output] {line}")
 
     task.cleaned_up = True
     task.save()
 
-    msg = f"Cleaned up task {task.guid}"
-    log_task_status(task, msg)
+    log_task_status(task, [f"Cleaned up task {task.guid}"])
     async_to_sync(push_task_event)(task)
 
 
 @app.task()
-def list_task_results(guid: str, auth: TaskAuthOptions):
+def list_task_results(guid: str, auth: dict):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -241,20 +236,20 @@ def list_task_results(guid: str, auth: TaskAuthOptions):
     else:
         workflow = json.loads(workflow)['config']
 
-    log_task_status(task, [f"Retrieving container logs"])
+    log_task_status(task, [f"Retrieving logs"])
     async_to_sync(push_task_event)(task)
 
     get_container_logs(task, ssh)
 
-    log_task_status(task, [f"Retrieving result files"])
+    log_task_status(task, [f"Retrieving results"])
     async_to_sync(push_task_event)(task)
 
-    expected = get_result_files(task, workflow)
+    expected = get_result_files(task, workflow, auth)
     found = [e for e in expected if e['exists']]
     workdir = join(task.agent.workdir, task.workdir)
     redis.set(f"results/{task.guid}", json.dumps(expected))
 
-    log_task_status(task, [f"Expected {len(expected)} result file(s), found {len(found)}"])
+    log_task_status(task, [f"Expected {len(expected)} result(s), found {len(found)}"])
     async_to_sync(push_task_event)(task)
 
     for result in expected:
@@ -366,7 +361,7 @@ def list_task_results(guid: str, auth: TaskAuthOptions):
 
     task.previews_loaded = True
     task.save()
-    log_task_status(task, f"Created file previews")
+    log_task_status(task, [f"Created file previews"])
     async_to_sync(push_task_event)(task)
 
 

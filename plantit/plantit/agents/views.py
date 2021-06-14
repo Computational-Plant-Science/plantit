@@ -262,7 +262,6 @@ def healthcheck(request, name):
             except: return HttpResponseBadRequest()
             ssh = SSH(host=agent.hostname, port=22, username=username, password=password)
         else:
-            logger.info(str(get_private_key_path(request.user.username)))
             ssh = SSH(host=agent.hostname, port=22, username=agent.username, pkey=str(get_private_key_path(request.user.username)))
 
         with ssh:

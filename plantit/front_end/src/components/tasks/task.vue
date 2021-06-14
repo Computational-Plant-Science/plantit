@@ -154,7 +154,7 @@
                                         `${getTask.guid} (click to copy to clipboard)`
                                     "
                                     @click="copyGUID"
-                                    ><i class="fas fa-hashtag fa-fw"></i
+                                    ><i class="fas fa-copy fa-fw"></i
                                     >GUID</b-button
                                 >
                             </b-col>
@@ -178,8 +178,8 @@
                                     :title="'Restart this task'"
                                     @click="restart"
                                 >
-                                    <i class="fas fa-level-up-alt fa-fw"></i>
-                                    Restart
+                                    <i class="fas fa-level-up-alt fa-fw"></i
+                                    >Restart
                                     <b-spinner
                                         small
                                         v-if="restarted"
@@ -1433,6 +1433,11 @@ export default {
             el.select();
             document.execCommand('copy');
             document.body.removeChild(el);
+            this.$bvToast.toast(`Copied task GUID to clipboard`, {
+                autoHideDelay: 3000,
+                appendToast: false,
+                noCloseButton: true
+            });
         },
         noPreview(file) {
             return (
