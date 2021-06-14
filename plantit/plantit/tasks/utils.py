@@ -652,23 +652,24 @@ async def push_task_event(task: Task):
 def cancel_task(task: Task):
     ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
     with ssh:
-        lines = []
-        for line in execute_command(
+        if isinstance(task, JobQueueTask):
+            lines = []
+            for line in execute_command(
+                    ssh_client=ssh,
+                    pre_command=':',
+                    command=f"squeue -u {task.agent.username}",
+                    directory=join(task.agent.workdir, task.workdir)):
+                logger.info(line)
+                lines.append(line)
+
+            if task.job_id is None or not any([task.job_id in r for r in lines]):
+                return  # run doesn't exist, so no need to cancel
+
+            execute_command(
                 ssh_client=ssh,
                 pre_command=':',
-                command=f"squeue -u {task.agent.username}",
-                directory=join(task.agent.workdir, task.workdir)):
-            logger.info(line)
-            lines.append(line)
-
-        if task.job_id is None or not any([task.job_id in r for r in lines]):
-            return  # run doesn't exist, so no need to cancel
-
-        execute_command(
-            ssh_client=ssh,
-            pre_command=':',
-            command=f"scancel {task.job_id}",
-            directory=join(task.agent.workdir, task.workdir))
+                command=f"scancel {task.job_id}",
+                directory=join(task.agent.workdir, task.workdir))
 
 
 def get_task_log_file_path(task: Task):

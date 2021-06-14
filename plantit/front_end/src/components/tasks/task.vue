@@ -84,7 +84,8 @@
                                             : 'text-dark'
                                     "
                                 >
-                                    <i class="fas fa-tasks fa-fw"></i> {{ getTask.name }}
+                                    <i class="fas fa-tasks fa-fw"></i>
+                                    {{ getTask.name }}
                                 </h3></b-col
                             ><b-col class="m-0 ml-1 p-0">
                                 <h5>
@@ -127,11 +128,35 @@
                                                 ? 'secondary'
                                                 : 'warning'
                                         "
-                                        >{{ getTask.status.toUpperCase() }}</b-badge
+                                        >{{
+                                            getTask.status.toUpperCase()
+                                        }}</b-badge
                                     >
                                     <small> on </small>
                                     <b class="mr-0">{{ getTask.agent }}</b>
                                 </h5>
+                            </b-col>
+                            <b-col
+                                md="auto"
+                                class="m-0 mb-2"
+                                align-self="start"
+                            >
+                                <b-button
+                                    :disabled="canceled"
+                                    :variant="
+                                        profile.darkMode
+                                            ? 'outline-light'
+                                            : 'white'
+                                    "
+                                    size="sm"
+                                    v-b-tooltip.hover
+                                    :title="
+                                        `${getTask.guid} (click to copy to clipboard)`
+                                    "
+                                    @click="copyGUID"
+                                    ><i class="fas fa-hashtag fa-fw"></i
+                                    >GUID</b-button
+                                >
                             </b-col>
                             <b-col
                                 v-if="
@@ -153,7 +178,7 @@
                                     :title="'Restart this task'"
                                     @click="restart"
                                 >
-                                    <i class="fas fa-level-up-alt"></i>
+                                    <i class="fas fa-level-up-alt fa-fw"></i>
                                     Restart
                                     <b-spinner
                                         small
@@ -184,7 +209,7 @@
                                     title="Cancel Run"
                                     @click="cancel"
                                 >
-                                    <i class="fas fa-times"></i>
+                                    <i class="fas fa-times fa-fw"></i>
                                     Cancel<b-spinner
                                         small
                                         v-if="canceled"
@@ -321,7 +346,8 @@
                                                             v-show="
                                                                 line !==
                                                                     undefined &&
-                                                                    line !== null
+                                                                    line !==
+                                                                        null
                                                             "
                                                             >{{
                                                                 line + '\n'
@@ -1400,6 +1426,14 @@ export default {
         };
     },
     methods: {
+        copyGUID() {
+            const el = document.createElement('textarea');
+            el.value = this.getTask.guid;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        },
         noPreview(file) {
             return (
                 this.fileIs3dModel(file.name) ||
