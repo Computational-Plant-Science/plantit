@@ -6,7 +6,6 @@ from os import environ
 from os.path import join
 
 import cv2
-import numpy as np
 from asgiref.sync import async_to_sync
 from celery import group
 from celery.utils.log import get_task_logger
@@ -24,23 +23,18 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
-from plantit.tasks.utils import log_task_status, push_task_event, remove_logs, create_task, \
-    get_result_files, get_job_walltime, get_job_status, configure_task_environment, get_container_logs, parse_job_id, get_ssh_client
+from plantit.tasks.options import TaskAuthOptions
+from plantit.tasks.utils import log_task_status, push_task_event, remove_logs, get_result_files, get_job_walltime, get_job_status, \
+    configure_task_environment, get_container_logs, get_ssh_client, \
+    submit_jobqueue_task, execute_local_task
 from plantit.users.utils import refresh_cyverse_tokens, get_user_statistics
-from plantit.workflows.models import Workflow
 from plantit.workflows.utils import repopulate_personal_workflow_bundle_cache, repopulate_public_workflow_bundle_cache
 
 logger = get_task_logger(__name__)
 
 
 @app.task(track_started=True)
-def create_and_submit_task(username: str, agent_name: str, workflow: dict):
-    task = create_task(username, agent_name, workflow)
-    submit_task.s(task.guid, workflow).apply_async()
-
-
-@app.task(track_started=True)
-def submit_task(guid: str):
+def submit_task(guid: str, auth: TaskAuthOptions):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -51,73 +45,43 @@ def submit_task(guid: str):
     task.celery_task_id = submit_task.request.id  # set the Celery task's ID so user can cancel
     task.save()
 
-    msg = f"Submitting {task.user.username}'s task {task.name} with GUID {task.guid} to {task.agent.name}"
-    log_task_status(task, msg)
+    log_task_status(task, [f"Preparing to submit to {task.agent.name}"])
     async_to_sync(push_task_event)(task)
-    logger.info(msg)
 
     try:
         local = task.agent.executor == AgentExecutor.LOCAL
-        ssh = get_ssh_client(task)
+        ssh = get_ssh_client(task, auth)
 
         with ssh:
+            log_task_status(task, [f"Configuring environment"])
+            async_to_sync(push_task_event)(task)
             configure_task_environment(task, ssh)
 
             if local:
-                msg = f"Starting {task.user.username}'s task {task.name}"
-                log_task_status(task, msg)
+                log_task_status(task, [f"Invoking script"])
                 async_to_sync(push_task_event)(task)
-                logger.info(msg)
 
-                list(execute_command(
-                    ssh_client=ssh,
-                    pre_command='; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':',
-                    command=f"chmod +x {task.guid}.sh && ./{task.guid}.sh",
-                    directory=join(task.agent.workdir, task.workdir),
-                    allow_stderr=True))
-                get_container_logs(task, ssh)
-
-                task.status = TaskStatus.SUCCESS
-                now = timezone.now()
-                task.updated = now
-                task.completed = now
-                task.save()
-                list_task_results.s(guid).apply_async()
-
+                execute_local_task(task, ssh)
+                list_task_results.s(guid, auth).apply_async()
                 cleanup_delay = int(environ.get('RUNS_CLEANUP_MINUTES'))
-                msg = f"Completed {task.user.username}'s task {task.name}, cleaning up in {cleanup_delay} minute(s)"
-                log_task_status(task, msg)
+                cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay * 60)
+
+                final_message = f"Completed, cleaning up in {cleanup_delay} minute(s)"
+                log_task_status(task, [final_message])
                 async_to_sync(push_task_event)(task)
-                logger.info(msg)
-                cleanup_task.s(guid).apply_async(countdown=cleanup_delay * 60)
 
                 if task.user.profile.push_notification_status == 'enabled':
-                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", msg, {})
+                    SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
             else:
-                msg = f"Submitting {task.user.username}'s task {task.name}"
-                log_task_status(task, msg)
+                log_task_status(task, [f"Submitting script"])
                 async_to_sync(push_task_event)(task)
-                logger.info(msg)
 
-                output_lines = execute_command(
-                    ssh_client=ssh,
-                    pre_command='; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':',
-                    command=f"sbatch {task.guid}.sh",
-                    directory=join(task.agent.workdir, task.workdir),
-                    allow_stderr=True)
-
-                job_id = parse_job_id(output_lines[-1])
-                task.job_id = job_id
-                task.updated = timezone.now()
-                task.save()
-
+                job_id = submit_jobqueue_task(task, ssh)
                 refresh_delay = int(environ.get('RUNS_REFRESH_SECONDS'))
-                poll_job_status.s(task.guid).apply_async(countdown=refresh_delay)
+                poll_job_status.s(task.guid, auth).apply_async(countdown=refresh_delay)
 
-                msg = f"Received scheduler job ID for {task.user.username}'s task {task.name}: {job_id}, refreshing in {refresh_delay} second(s)"
-                log_task_status(task, msg)
+                log_task_status(task, [f"Scheduled job (ID {job_id}), polling status in {refresh_delay} second(s)"])
                 async_to_sync(push_task_event)(task)
-                logger.info(msg)
     except Exception:
         task.status = TaskStatus.FAILURE
         now = timezone.now()
@@ -125,14 +89,14 @@ def submit_task(guid: str):
         task.completed = now
         task.save()
 
-        msg = f"Failed to submit {task.user.username}'s task {task.name}: {traceback.format_exc()}."
-        log_task_status(task, msg)
+        error = traceback.format_exc()
+        log_task_status(task, [f"Failed with error: {error}"])
+        logger.error(f"Failed to submit {task.user.username}'s task {task.name} to {task.agent.name}: {error}")
         async_to_sync(push_task_event)(task)
-        logger.error(msg)
 
 
 @app.task()
-def poll_job_status(guid: str):
+def poll_job_status(guid: str, auth: TaskAuthOptions):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -234,7 +198,7 @@ def poll_job_status(guid: str):
 
 
 @app.task()
-def cleanup_task(guid: str):
+def cleanup_task(guid: str, auth: TaskAuthOptions):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -243,16 +207,13 @@ def cleanup_task(guid: str):
 
     logger.info(f"Cleaning up task with GUID {guid} local working directory {task.agent.workdir}")
     remove_logs(task.guid, task.agent.name)
+
     logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
-    ssh = get_ssh_client(task)
+    command = f"rm -rf {join(task.agent.workdir, task.workdir)}"
+    ssh = get_ssh_client(task, auth)
     with ssh:
-        for line in execute_command(
-                ssh_client=ssh,
-                pre_command=task.agent.pre_commands,
-                command=f"rm -rf {join(task.agent.workdir, task.workdir)}",
-                directory=task.agent.workdir,
-                allow_stderr=True):
-            logger.info(line)
+        for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
+            logger.debug(f"Received output: {line}")
 
     task.cleaned_up = True
     task.save()
@@ -263,7 +224,7 @@ def cleanup_task(guid: str):
 
 
 @app.task()
-def list_task_results(guid: str):
+def list_task_results(guid: str, auth: TaskAuthOptions):
     try:
         task = Task.objects.get(guid=guid)
     except:
@@ -271,7 +232,7 @@ def list_task_results(guid: str):
         return
 
     redis = RedisClient.get()
-    ssh = get_ssh_client(task)
+    ssh = get_ssh_client(task, auth)
     previews = PreviewManager(join(settings.MEDIA_ROOT, task.guid), create_folder=True)
     workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}")
 
@@ -280,14 +241,20 @@ def list_task_results(guid: str):
     else:
         workflow = json.loads(workflow)['config']
 
+    log_task_status(task, [f"Retrieving container logs"])
+    async_to_sync(push_task_event)(task)
+
+    get_container_logs(task, ssh)
+
+    log_task_status(task, [f"Retrieving result files"])
+    async_to_sync(push_task_event)(task)
+
     expected = get_result_files(task, workflow)
     found = [e for e in expected if e['exists']]
     workdir = join(task.agent.workdir, task.workdir)
     redis.set(f"results/{task.guid}", json.dumps(expected))
 
-    msg = f"Expected {len(expected)} file(s), found {len(found)}"
-    logger.info(msg)
-    log_task_status(task, msg)
+    log_task_status(task, [f"Expected {len(expected)} result file(s), found {len(found)}"])
     async_to_sync(push_task_event)(task)
 
     for result in expected:

@@ -26,7 +26,7 @@ from plantit.docker import parse_image_components, image_exists
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
-from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, BindMount
+from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, BindMount, TaskAuthOptions, PasswordTaskAuthOptions, KeyTaskAuthOptions
 from plantit.terrain import list_dir
 from plantit.users.utils import get_private_key_path
 from plantit.utils import parse_bind_mount, format_bind_mount
@@ -86,10 +86,6 @@ def parse_eta(data: dict) -> (datetime, int):
     eta = now + timedelta(seconds=seconds)
 
     return eta, seconds
-
-
-def parse_orchestration_options(task: Task) -> (List[str], PlantITCLIOptions):
-    pass
 
 
 def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
@@ -243,12 +239,12 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         gpu=gpu)
 
 
-def create_task(username: str, agent_name: str, workflow: dict, name: str = None) -> Task:
+def create_task(username: str, agent_name: str, workflow: dict, name: str = None, guid: str = None) -> Task:
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
     agent = Agent.objects.get(name=agent_name)
     user = User.objects.get(username=username)
-    guid = str(uuid.uuid4())
+    if guid is None: guid = str(uuid.uuid4())  # if the browser client hasn't set a GUID, create one
     now = timezone.now()
 
     task = JobQueueTask.objects.create(
@@ -305,7 +301,7 @@ def configure_task_environment(task: Task, ssh: SSH):
     async_to_sync(push_task_event)(task)
     logger.info(msg)
 
-    list(execute_command(ssh_client=ssh, pre_command=':', command=f"mkdir {work_dir}"))
+    list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
 
     msg = f"Uploading task definition"
     log_task_status(task, msg)
@@ -632,10 +628,40 @@ def upload_task_executables(task: Task, ssh: SSH, options: PlantITCLIOptions):
                     if line != '': launcher_script.write(line + "\n")
 
 
-def log_task_status(task: Task, description: str):
+def execute_local_task(task: Task, ssh: SSH):
+    precommand = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
+    command = f"chmod +x {task.guid}.sh && ./{task.guid}.sh"
+    workdir = join(task.agent.workdir, task.workdir)
+    lines = list(execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True))
+    log_task_status(task, [f"[remote output] {line}" for line in lines])
+
+    task.status = TaskStatus.SUCCESS
+    now = timezone.now()
+    task.updated = now
+    task.completed = now
+    task.save()
+
+
+def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
+    precommand = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
+    command = f"sbatch {task.guid}.sh"
+    workdir = join(task.agent.workdir, task.workdir)
+    output_lines = execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True)
+
+    job_id = parse_job_id(output_lines[-1])
+    task.job_id = job_id
+    task.updated = timezone.now()
+    task.save()
+
+    return job_id
+
+
+def log_task_status(task: Task, messages: List[str]):
     log_path = join(environ.get('RUNS_LOGS'), f"{task.guid}.plantit.log")
     with open(log_path, 'a') as log:
-        log.write(f"{description}\n")
+        for message in messages:
+            logger.debug(f"[Task {task.guid} ({task.user.username}/{task.name})] {message}")
+            log.write(f"{message}\n")
 
 
 @sync_to_async
@@ -657,8 +683,8 @@ def cancel_task(task: Task):
         if isinstance(task, JobQueueTask):
             lines = []
             for line in execute_command(
-                    ssh_client=ssh,
-                    pre_command=':',
+                    ssh=ssh,
+                    precommand=':',
                     command=f"squeue -u {task.agent.username}",
                     directory=join(task.agent.workdir, task.workdir)):
                 logger.info(line)
@@ -668,8 +694,8 @@ def cancel_task(task: Task):
                 return  # run doesn't exist, so no need to cancel
 
             execute_command(
-                ssh_client=ssh,
-                pre_command=':',
+                ssh=ssh,
+                precommand=':',
                 command=f"scancel {task.job_id}",
                 directory=join(task.agent.workdir, task.workdir))
 
@@ -720,8 +746,8 @@ def get_job_walltime(task: Task) -> (str, str):
     ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
     with ssh:
         lines = execute_command(
-            ssh_client=ssh,
-            pre_command=":",
+            ssh=ssh,
+            precommand=":",
             command=f"squeue --user={task.agent.username}",
             directory=join(task.agent.workdir, task.workdir),
             allow_stderr=True)
@@ -739,8 +765,8 @@ def get_job_status(task: Task) -> str:
     ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
     with ssh:
         lines = execute_command(
-            ssh_client=ssh,
-            pre_command=':',
+            ssh=ssh,
+            precommand=':',
             command=f"sacct -j {task.job_id}",
             directory=join(task.agent.workdir, task.workdir),
             allow_stderr=True)
@@ -882,15 +908,14 @@ def list_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
     return input_files
 
 
-def get_ssh_client(task: Task) -> SSH:
-    if task.agent.authentication == AgentAuthentication.PASSWORD:
-        auth = task.workflow['auth']
-        logger.debug(f"Using password authentication (username: {auth['username']})")
-        client = SSH(host=task.agent.hostname, port=task.agent.port, username=auth['username'], password=auth['password'])
-    else:
-        logger.debug(f"Using key authentication (username: {task.agent.username})")
-        client = SSH(host=task.agent.hostname, port=task.agent.port, username=task.agent.username,
-                     pkey=str(get_private_key_path(task.agent.user.username)))
+def get_ssh_client(task: Task, auth: TaskAuthOptions) -> SSH:
+    if isinstance(auth, PasswordTaskAuthOptions):
+        logger.debug(f"Using password authentication (username: {auth.username})")
+        client = SSH(host=task.agent.hostname, port=task.agent.port, username=auth.username, password=auth.password)
+    elif isinstance(auth, KeyTaskAuthOptions):
+        logger.debug(f"Using key authentication (username: {auth.username})")
+        client = SSH(host=task.agent.hostname, port=task.agent.port, username=auth.username, pkey=auth.path)
+    else: raise ValueError(f"Unrecognized authentication strategy: {type(auth)}")
 
     return client
 
@@ -1000,3 +1025,8 @@ def del_none(d) -> dict:
         elif isinstance(value, dict):
             del_none(value)
     return d  # For convenience
+
+
+def parse_auth_options(auth: dict) -> TaskAuthOptions:
+    if 'password' in auth: return PasswordTaskAuthOptions(username=auth['username'], password=auth['password'])
+    else: return KeyTaskAuthOptions(username=auth['username'], path=auth['path'])

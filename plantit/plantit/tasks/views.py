@@ -18,7 +18,7 @@ from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
 from plantit.tasks.utils import log_task_status, map_task, get_task_log_file_path, create_task, map_delayed_task, \
-    map_repeating_task, cancel_task, push_task_event, get_ssh_client
+    map_repeating_task, cancel_task, push_task_event, get_ssh_client, parse_auth_options
 
 
 @login_required
@@ -30,11 +30,18 @@ def get_all_or_create(request):
         tasks = Task.objects.all()
         return JsonResponse({'tasks': [map_task(sub) for sub in tasks]})
     elif request.method == 'POST':
-        agent_name = workflow['config']['agent']['name']
-        agent = Agent.objects.get(name=agent_name)
+        auth = workflow['auth']
+        config = workflow['config']
+        agent = Agent.objects.get(name=config['agent']['name'])
         if workflow['type'] == 'Now':
-            task = create_task(user.username, agent.name, workflow, workflow['config'].get('task_name', None))
-            submit_task.delay(task.guid)
+            # create the task
+            task_name = config.get('task_name', None)
+            task_guid = config.get('task_guid', None)
+            task = create_task(username=user.username, agent_name=agent.name, workflow=workflow, name=task_name, guid=task_guid)
+
+            # submit the task
+            auth = parse_auth_options(workflow['auth'])
+            submit_task.delay(task.guid, auth)
             tasks = list(Task.objects.filter(user=user))
             return JsonResponse({'tasks': [map_task(t) for t in tasks]})
 

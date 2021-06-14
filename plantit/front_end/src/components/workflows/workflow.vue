@@ -2401,7 +2401,7 @@
                                                                 !canSubmit ||
                                                                     submitted
                                                             "
-                                                            @click="onTryStart"
+                                                            @click="trySubmit"
                                                             variant="success"
                                                             block
                                                         >
@@ -2891,7 +2891,10 @@ export default {
     },
     async mounted() {
         this.populateComponents();
-        if ('input' in this.getWorkflow.config && this.getWorkflow.config['input'] !== undefined)
+        if (
+            'input' in this.getWorkflow.config &&
+            this.getWorkflow.config['input'] !== undefined
+        )
             await Promise.all([
                 this.$store.dispatch('datasets/loadPersonal'),
                 this.$store.dispatch('datasets/loadPublic'),
@@ -3180,7 +3183,11 @@ export default {
                 this.selectedAgent = flowConfig.agent;
             }
 
-            if (this.input !== undefined && this.input.from !== null && this.input.from !== '')
+            if (
+                this.input !== undefined &&
+                this.input.from !== null &&
+                this.input.from !== ''
+            )
                 this.loadSelectedDataset(this.input.from);
         },
         inputSelected(node) {
@@ -3205,7 +3212,7 @@ export default {
             );
             // TODO walltime
         },
-        onTryStart() {
+        trySubmit() {
             if (this.mustAuthenticate) this.showAuthenticateModal();
             else this.onStart();
         },
@@ -3215,9 +3222,11 @@ export default {
         async onStart() {
             if (
                 !this.getWorkflow.config.resources &&
-                this.selectedAgent.name !== 'Sandbox'
+                this.selectedAgent.executor !== 'Local'
             ) {
-                alert('This workflow can only be submitted to the Sandbox.');
+                alert(
+                    'This workflow configuration lacks a section specifying job-queue scheduler resource requests. It can only be submitted to agents configured for in-process execution.'
+                );
                 return;
             }
 
@@ -3230,6 +3239,7 @@ export default {
             let config = {
                 name: this.getWorkflow.config.name,
                 task_name: this.taskName,
+                task_guid: guid().toString(),
                 image: this.getWorkflow.config.image,
                 parameters: this.params,
                 agent: agent,

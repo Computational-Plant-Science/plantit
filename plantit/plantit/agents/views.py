@@ -267,7 +267,7 @@ def healthcheck(request, name):
 
         with ssh:
             logger.info(f"Checking agent {agent.name}'s health")
-            for line in execute_command(ssh_client=ssh, pre_command=':', command=f"pwd", directory=agent.workdir): logger.info(line)
+            for line in execute_command(ssh=ssh, precommand=':', command=f"pwd", directory=agent.workdir): logger.info(line)
             logger.info(f"Agent {agent.name} healthcheck succeeded")
             return JsonResponse({'healthy': True})
     except:

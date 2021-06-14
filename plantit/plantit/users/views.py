@@ -354,7 +354,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         with ssh:
             try:
-                for line in execute_command(ssh_client=ssh, pre_command=':', command='pwd', directory=None, allow_stderr=False):
+                for line in execute_command(ssh=ssh, precommand=':', command='pwd', directory=None, allow_stderr=False):
                     self.logger.info(line)
                 return JsonResponse({'success': True})
             except:
@@ -379,7 +379,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         with ssh:
             output = []
             try:
-                for line in execute_command(ssh_client=ssh, pre_command=precommand, command='plantit ping', directory=workdir, allow_stderr=False):
+                for line in execute_command(ssh=ssh, precommand=precommand, command='plantit ping', directory=workdir, allow_stderr=False):
                     output.append(line)
                     self.logger.info(line)
                 return JsonResponse({
