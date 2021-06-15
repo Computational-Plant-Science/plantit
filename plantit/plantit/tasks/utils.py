@@ -20,14 +20,14 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from plantit import settings
+from plantit import terrain
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor
 from plantit.agents.utils import map_agent, has_virtual_memory
 from plantit.docker import parse_image_components, image_exists
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
-from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, BindMount, PasswordTaskAuth, KeyTaskAuth
-from plantit.terrain import list_dir
+from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, BindMount, PasswordTaskAuth, KeyTaskAuth, InputKind
 from plantit.users.utils import get_private_key_path
 from plantit.utils import parse_bind_mount, format_bind_mount
 
@@ -160,23 +160,21 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
 
     input = None
     if 'input' in config:
-        if 'file' in config['input']:
-            if 'path' not in config['input']['file']:
-                errors.append('Section \'file\' must include attribute \'path\'')
-            input = Input(path=config['input']['file']['path'], kind='file')
-        elif 'files' in config['input']:
-            if 'path' not in config['input']['files']:
-                errors.append('Section \'files\' must include attribute \'path\'')
-            input = Input(
-                path=config['input']['files']['path'],
-                kind='files',
-                patterns=config['input']['files']['patterns'] if 'patterns' in config['input']['files'] else None)
-        elif 'directory' in config['input']:
-            if 'path' not in config['input']['directory']:
-                errors.append('Section \'directory\' must include attribute \'path\'')
-            input = Input(path=config['input']['directory']['path'], kind='directory')
+        if 'kind' not in config['input']:
+            errors.append("Section \'input\' must include attribute \'kind\'")
+        if 'path' not in config['input']:
+            errors.append("Section \'input\' must include attribute \'path\'")
+
+        kind = config['input']['kind']
+        path = config['input']['path']
+        if kind == 'file':
+            input = Input(path=path, kind='file')
+        elif kind == 'files':
+            input = Input(path=path, kind='files', patterns=config['input']['patterns'] if 'patterns' in config['input'] else None)
+        elif kind == 'directory':
+            input = Input(path=path, kind='directory')
         else:
-            errors.append('Section \'input\' must include a \'file\', \'files\', or \'directory\' section')
+            errors.append('Section \'input.kind\' must be \'file\', \'files\', or \'directory\'')
 
     log_file = None
     if 'log_file' in config:
@@ -411,13 +409,14 @@ def compose_pull_command(task: Task, options: PlantITCLIOptions) -> str:
     if 'input' not in options: return ''
     input = options['input']
     if input is None: return ''
+    kind = input['kind']
 
-    # allow for both spellings of JPG
-    patterns = [pattern.lower() for pattern in input['patterns']]
-    if 'jpg' in patterns and 'jpeg' not in patterns:
-        patterns.append("jpeg")
-    elif 'jpeg' in patterns and 'jpg' not in patterns:
-        patterns.append("jpg")
+    if input['kind'] != InputKind.FILE and 'patterns' in input:
+        # allow for both spellings of JPG
+        patterns = [pattern.lower() for pattern in input['patterns']]
+        if 'jpg' in patterns and 'jpeg' not in patterns: patterns.append("jpeg")
+        elif 'jpeg' in patterns and 'jpg' not in patterns: patterns.append("jpg")
+    else: patterns = []
 
     command = f"plantit terrain pull \"{input['path']}\"" \
               f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
@@ -521,7 +520,12 @@ def compose_task_script(task: Task, options: PlantITCLIOptions, template: str) -
         template_header = [line for line in template_file]
 
     if 'input' in options and options['input'] is not None:
-        inputs = list_dir(options['input']['path'], task.user.profile.cyverse_token)
+        kind = options['input']['kind']
+        path = options['input']['path']
+        if kind == InputKind.FILE:
+            inputs = [terrain.get_file(path, task.user.profile.cyverse_access_token)]
+        else:
+            inputs = terrain.list_dir(path, task.user.profile.cyverse_access_token)
     else: inputs = []
 
     resource_requests = [] if task.agent.executor == AgentExecutor.LOCAL else compose_resource_requests(task, options, inputs)
@@ -890,7 +894,7 @@ def map_repeating_task(task: RepeatingTask):
 
 
 def list_input_files(task: Task, options: PlantITCLIOptions) -> List[str]:
-    input_files = list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
+    input_files = terrain.list_dir(options['input']['path'], task.user.profile.cyverse_access_token)
     msg = f"Found {len(input_files)} input file(s)"
     log_task_status(task, msg)
     async_to_sync(push_task_event)(task)

@@ -20,10 +20,10 @@ class Input(TypedDict, total=False):
     patterns: List[str]
 
 
-class InputKind(Enum):
-    FILE = 1
-    FILES = 2
-    DIRECTORY = 3
+class InputKind(str, Enum):
+    FILE = 'file'
+    FILES = 'files'
+    DIRECTORY = 'directory'
 
 
 class FileChecksum(TypedDict):

@@ -117,11 +117,11 @@ export const agents = {
                     throw error;
                 });
         },
-        add({ commit }, workflow) {
-            commit('add', workflow);
+        add({ commit }, agent) {
+            commit('add', agent);
         },
-        addOrUpdate({ commit }, workflow) {
-            commit('addOrUpdate', workflow);
+        addOrUpdate({ commit }, agent) {
+            commit('addOrUpdate', agent);
         }
     },
     getters: {

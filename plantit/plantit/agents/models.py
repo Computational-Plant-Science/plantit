@@ -8,6 +8,8 @@ from django.utils.translation import gettext_lazy
 from django_celery_beat.models import PeriodicTask
 from django_enum_choices.fields import EnumChoiceField
 
+from plantit.workflows.models import Workflow
+
 
 class AgentExecutor(models.TextChoices):
     LOCAL = 'local', gettext_lazy('Local')
@@ -49,6 +51,8 @@ class Agent(models.Model):
     launcher = models.BooleanField(default=False)   # https://github.com/TACC/launcher
     executor = models.CharField(max_length=10, choices=AgentExecutor.choices, default=AgentExecutor.LOCAL)
     authentication = models.CharField(max_length=10, choices=AgentAuthentication.choices, default=AgentAuthentication.PASSWORD)
+    workflows_authorized = models.ManyToManyField(Workflow, related_name='agents_authorized')
+    workflows_blocked = models.ManyToManyField(Workflow, related_name='agents_blocked')
 
     def __str__(self):
         return self.name

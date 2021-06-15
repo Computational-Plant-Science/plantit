@@ -1,3 +1,4 @@
+import json
 import logging
 import pprint
 from os import environ
@@ -9,6 +10,7 @@ from requests.auth import HTTPBasicAuth
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 logger = logging.getLogger(__name__)
+
 
 # TODO use asyncx
 
@@ -46,7 +48,7 @@ def refresh_tokens(username: str, refresh_token: str) -> (str, str):
         'client_secret': environ.get('CYVERSE_CLIENT_SECRET'),
         'refresh_token': refresh_token,
         'redirect_uri': environ.get('CYVERSE_REDIRECT_URL')},
-                             auth=HTTPBasicAuth(username, environ.get('CYVERSE_CLIENT_SERET')))
+                             auth=HTTPBasicAuth(username, environ.get('CYVERSE_CLIENT_SECRET')))
 
     if response.status_code == 400:
         raise ValueError('Unauthorized for KeyCloak token endpoint')
@@ -77,6 +79,27 @@ def list_dir(path: str, token: str) -> List[str]:
         content = response.json()
         files = content['files']
         return [file['path'] for file in files]
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    stop=stop_after_attempt(3),
+    retry=(retry_if_exception_type(ConnectionError) | retry_if_exception_type(
+        RequestException) | retry_if_exception_type(ReadTimeout) | retry_if_exception_type(
+        Timeout) | retry_if_exception_type(HTTPError)))
+def get_file(path: str, token: str) -> List[str]:
+    with requests.post(
+            "https://de.cyverse.org/terrain/secured/filesystem/stat",
+            data=json.dumps({'paths': [path]}),
+            headers={'Authorization': f"Bearer {token}", "Content-Type": 'application/json;charset=utf-8'}) as response:
+        if response.status_code == 500 and response.json()['error_code'] == 'ERR_DOES_NOT_EXIST':
+            raise ValueError(f"Path {path} does not exist")
+        elif response.status_code == 400:
+            pprint.pprint(response.json())
+
+        response.raise_for_status()
+        content = response.json()
+        return content['paths'][path]
 
 
 @retry(

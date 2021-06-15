@@ -58,7 +58,7 @@ export const datasets = {
     actions: {
         async loadPersonal({ commit, rootState }) {
             commit('setPersonalLoading', true);
-            return axios
+            await axios
                 .get(
                     `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/${rootState.user.profile.djangoProfile.username}/`,
                     {
@@ -83,7 +83,7 @@ export const datasets = {
         },
         async loadPublic({ commit, rootState }) {
             commit('setPublicLoading', true);
-            return axios
+            await axios
                 .get(
                     'https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/shared',
                     {
@@ -104,7 +104,7 @@ export const datasets = {
         },
         async loadShared({ commit, rootState }) {
             commit('setSharedLoading', true);
-            return axios
+            await axios
                 .get(
                     'https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=/iplant/home/',
                     {
@@ -125,7 +125,7 @@ export const datasets = {
         },
         async loadSharing({ commit, rootState }) {
             commit('setSharingLoading', true);
-            return axios
+            await axios
                 .get('/apis/v1/datasets/sharing/', {
                     headers: {
                         Authorization: `Bearer ${rootState.user.profile.djangoProfile.cyverse_token}`

@@ -1,7 +1,9 @@
+import json
 import logging
 from typing import List
 
 from plantit.agents.models import Agent, AgentRole, AgentAccessPolicy, AgentTask, AgentAccessRequest
+from plantit.redis import RedisClient
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,7 @@ def map_agent(
         policies: List[AgentAccessPolicy] = None,
         requests: List[AgentAccessRequest] = None):
     tasks = AgentTask.objects.filter(agent=agent)
+    redis = RedisClient.get()
     mapped = {
         'name': agent.name,
         'guid': agent.guid,
@@ -42,7 +45,9 @@ def map_agent(
         'gpu': agent.gpu,
         'tasks': [map_agent_task(task) for task in tasks],
         'logo': agent.logo,
-        'authentication': agent.authentication
+        'authentication': agent.authentication,
+        'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in agent.workflows_authorized.all()],
+        'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in agent.workflows_blocked.all()]
     }
 
     if agent.user is not None:

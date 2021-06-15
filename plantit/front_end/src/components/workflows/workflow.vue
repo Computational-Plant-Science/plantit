@@ -969,7 +969,7 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 60rem"
+                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                                 ><b-row
                                                                     ><b-col
@@ -1034,7 +1034,18 @@
                                                                             name
                                                                             for
                                                                             your
-                                                                            task. If no name is provided, an auto-generated GUID will be used.
+                                                                            task.
+                                                                            If
+                                                                            no
+                                                                            name
+                                                                            is
+                                                                            provided,
+                                                                            an
+                                                                            auto-generated
+                                                                            GUID
+                                                                            will
+                                                                            be
+                                                                            used.
                                                                         </b>
                                                                     </b-col>
                                                                 </b-row>
@@ -1046,7 +1057,9 @@
                                                                             v-model="
                                                                                 taskName
                                                                             "
-                                                                            :placeholder="taskGuid"
+                                                                            :placeholder="
+                                                                                taskGuid
+                                                                            "
                                                                         ></b-form-input>
                                                                     </b-col>
                                                                 </b-row>
@@ -1073,7 +1086,7 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 60rem"
+                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
@@ -1211,7 +1224,7 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 40rem"
+                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
@@ -1381,19 +1394,10 @@
                                                                             .config
                                                                             .input !==
                                                                             undefined &&
-                                                                        getWorkflow
-                                                                            .config
-                                                                            .input
-                                                                            .path !==
-                                                                            undefined &&
                                                                         input.kind !==
                                                                             undefined &&
                                                                         input.kind !==
-                                                                            null &&
-                                                                        input
-                                                                            .kind
-                                                                            .length >
-                                                                            0
+                                                                            null
                                                                 "
                                                                 :bg-variant="
                                                                     profile.darkMode
@@ -1416,7 +1420,7 @@
                                                                         ? 'white'
                                                                         : 'dark'
                                                                 "
-                                                                style="min-width: 50rem"
+                                                                style="min-width: 80rem"
                                                                 class="mb-4"
                                                             >
                                                                 <b-row>
@@ -1454,11 +1458,24 @@
                                                                                     inputValid
                                                                                 "
                                                                                 >{{
-                                                                                    selectedDataset.path
-                                                                                }}<i
+                                                                                    selectedInput.path
+                                                                                }}
+
+                                                                                <i
+                                                                                    v-if="
+                                                                                        selectedInput.type ===
+                                                                                            'file'
+                                                                                    "
+                                                                                    class="fas fa-file fa-fw"
+                                                                                ></i>
+                                                                                <i
+                                                                                    v-else
+                                                                                    class="fas fa-folder fa-fw"
+                                                                                ></i>
+                                                                                <i
                                                                                     class="fas fa-check text-success fa-fw"
-                                                                                ></i
-                                                                            ></span>
+                                                                                ></i>
+                                                                            </span>
                                                                             <i
                                                                                 v-else
                                                                                 class="fas fa-exclamation text-danger fa-fw"
@@ -1946,7 +1963,7 @@
                                                                                 align-h="center"
                                                                                 class="text-center"
                                                                                 v-else-if="
-                                                                                    personalAgents.length ===
+                                                                                    validPersonalAgents.length ===
                                                                                         0
                                                                                 "
                                                                             >
@@ -1961,7 +1978,7 @@
                                                                             >
                                                                                 <b-row
                                                                                     class="text-right"
-                                                                                    v-for="agent in personalAgents"
+                                                                                    v-for="agent in validPersonalAgents"
                                                                                     v-bind:key="
                                                                                         agent.name
                                                                                     "
@@ -2097,7 +2114,7 @@
                                                                                 align-h="center"
                                                                                 class="text-center"
                                                                                 v-else-if="
-                                                                                    publicAgents.length ===
+                                                                                    validPublicAgents.length ===
                                                                                         0
                                                                                 "
                                                                             >
@@ -2112,7 +2129,7 @@
                                                                             >
                                                                                 <b-row
                                                                                     class="text-right"
-                                                                                    v-for="agent in publicAgents"
+                                                                                    v-for="agent in validPublicAgents"
                                                                                     v-bind:key="
                                                                                         agent.name
                                                                                     "
@@ -2802,8 +2819,8 @@ export default {
     data: function() {
         return {
             togglingPublic: false,
-            selectedDataset: null,
-            selectedDatasetLoading: false,
+            selectedInput: null,
+            selectedInputLoading: false,
             activeTab: 0,
             submitted: false,
             authenticationUsername: '',
@@ -2937,26 +2954,39 @@ export default {
         showUnbindWorkflowModal() {
             this.$bvModal.show('unbind');
         },
-        async loadSelectedDataset(path) {
-            this.selectedDatasetLoading = true;
-            return await axios
-                .get(
-                    `https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path=${path}`,
-                    {
-                        headers: {
-                            Authorization:
-                                'Bearer ' +
-                                this.profile.djangoProfile.cyverse_token
-                        }
-                    }
-                )
+        async loadSelectedInput(path) {
+            this.selectedInputLoading = true;
+
+            await axios({
+                method: 'post',
+                url: `https://de.cyverse.org/terrain/secured/filesystem/stat`,
+                data: {
+                    paths: [path]
+                },
+                headers: {
+                    Authorization: `Bearer ${this.profile.djangoProfile.cyverse_token}`
+                }
+            })
                 .then(async response => {
-                    this.selectedDataset = response.data;
-                    this.selectedDatasetLoading = false;
+                    if (response.data.paths !== undefined) {
+                        this.selectedInput = response.data.paths[path];
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `This workflow's default input path ${path} does not exist`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.selectedInputLoading = false;
                 })
-                .catch(error => {
+                .catch(async error => {
                     Sentry.captureException(error);
-                    this.selectedDatasetLoading = false;
+                    await this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to load this workflow's default input path ${path}`,
+                        guid: guid().toString()
+                    });
+                    this.selectedInputLoading = false;
                     throw error;
                 });
         },
@@ -3069,7 +3099,7 @@ export default {
             if (this.getWorkflow !== null) {
                 // if a local input path is specified, set it
                 if ('input' in this.getWorkflow.config) {
-                    this.input.from =
+                    this.input.path =
                         this.getWorkflow.config.input.path !== null
                             ? this.getWorkflow.config.input.path
                             : '';
@@ -3144,14 +3174,15 @@ export default {
 
             if (
                 this.input !== undefined &&
-                this.input.from !== null &&
-                this.input.from !== ''
+                this.input.path !== undefined &&
+                this.input.path !== null &&
+                this.input.path !== ''
             )
-                this.loadSelectedDataset(this.input.from);
+                this.loadSelectedInput(this.input.path);
         },
         inputSelected(node) {
-            this.input.from = node.path;
-            this.loadSelectedDataset(node.path);
+            this.input.path = node.path;
+            this.loadSelectedInput(node.path);
         },
         outputSelected(node) {
             this.output.to = node.path;
@@ -3195,7 +3226,7 @@ export default {
             let agent = this.selectedAgent;
             if (this.getWorkflow.config.resources)
                 agent['resources'] = this.getWorkflow.config.resources;
-            let taskName = this.taskName === '' ? this.taskGuid : this.taskName
+            let taskName = this.taskName === '' ? this.taskGuid : this.taskName;
             let config = {
                 name: this.getWorkflow.config.name,
                 task_name: taskName,
@@ -3212,7 +3243,7 @@ export default {
                 config['branch'] = this.getWorkflow.config.branch;
             if (this.getWorkflow.config.mount !== null)
                 config['mount'] = this.getWorkflow.config.mount;
-            if (this.input !== undefined && this.input.from) {
+            if (this.input !== undefined && this.input.path) {
                 config.input = this.input;
                 config.input.patterns =
                     this.inputSelectedPatterns.length > 0
@@ -3241,8 +3272,8 @@ export default {
                     password: this.authenticationPassword
                 };
             else
-              data['auth'] = {
-                    username: this.selectedAgent.user,
+                data['auth'] = {
+                    username: this.selectedAgent.user
                 };
 
             this.submitted = true;
@@ -3366,6 +3397,42 @@ export default {
             'sharedDatasetsLoading',
             'sharingDatasetsLoading'
         ]),
+        validPersonalAgents() {
+            return this.personalAgents.filter(
+                a =>
+                    !a.workflows_blocked.some(
+                        wf =>
+                            wf.repo.owner.login ===
+                                this.getWorkflow.repo.owner.login &&
+                            wf.config.name === this.getWorkflow.config.name
+                    ) &&
+                    (a.workflows_authorized.length === 0 ||
+                        a.workflows_authorized.some(
+                            wf =>
+                                wf.repo.owner.login ===
+                                    this.getWorkflow.repo.owner.login &&
+                                wf.config.name === this.getWorkflow.config.name
+                        ))
+            );
+        },
+        validPublicAgents() {
+            return this.publicAgents.filter(
+                a =>
+                    !a.workflows_blocked.some(
+                        wf =>
+                            wf.repo.owner.login ===
+                                this.getWorkflow.repo.owner.login &&
+                            wf.config.name === this.getWorkflow.config.name
+                    ) &&
+                    (a.workflows_authorized.length === 0 ||
+                        a.workflows_authorized.some(
+                            wf =>
+                                wf.repo.owner.login ===
+                                    this.getWorkflow.repo.owner.login &&
+                                wf.config.name === this.getWorkflow.config.name
+                        ))
+            );
+        },
         taskHistory() {
             return this.$store.getters['tasks/tasksByOwner'](
                 this.profile.djangoProfile.username
@@ -3412,9 +3479,7 @@ export default {
             return this.tasks.some(r => r.name === this.taskName);
         },
         nameValid() {
-            return (
-                !this.taskNameExists // && !this.taskNameExists
-            );
+            return !this.taskNameExists; // && !this.taskNameExists
         },
         paramsValid: function() {
             if (
@@ -3437,10 +3502,10 @@ export default {
             )
                 return (
                     this.getWorkflow.config.input.path !== undefined &&
-                    this.input.from !== '' &&
+                    this.input.path !== '' &&
                     this.input.kind !== '' &&
                     this.inputFiletypeSelected &&
-                    this.selectedDataset !== null
+                    this.selectedInput !== null
                 );
             return true;
         },

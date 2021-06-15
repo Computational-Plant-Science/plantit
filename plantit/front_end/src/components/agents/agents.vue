@@ -1097,13 +1097,13 @@ export default {
         };
     },
     async mounted() {
-        await Promise.all([
-            this.$store.dispatch(
-                'agents/loadPersonal',
-                this.profile.djangoProfile.username
-            ),
-            this.$store.dispatch('agents/loadPublic')
-        ]);
+        // await Promise.all([
+        //     this.$store.dispatch(
+        //         'agents/loadPersonal',
+        //         this.profile.djangoProfile.username
+        //     ),
+        //     this.$store.dispatch('agents/loadPublic')
+        // ]);
     },
     computed: {
         ...mapGetters('user', ['profile', 'profileLoading']),

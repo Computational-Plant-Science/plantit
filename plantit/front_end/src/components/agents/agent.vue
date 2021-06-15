@@ -214,15 +214,17 @@
                                                     "
                                                 >
                                                     Resources Available
-                                                    <small>per container</small>
+                                                    <small
+                                                        >(per container)</small
+                                                    >
                                                 </h5>
                                                 <b>{{ getAgent.max_cores }}</b>
-                                                <small> cores</small>
+                                                <small> core(s)</small>
                                                 <br />
                                                 <b>{{
                                                     getAgent.max_processes
                                                 }}</b>
-                                                <small> processes</small>
+                                                <small> process(es)</small>
                                                 <br />
                                                 <span
                                                     v-if="
@@ -305,7 +307,11 @@
                                                                       : 'public'
                                                               }`
                                                     "
-                                                    :button-variant="getAgent.public ? 'warning' : 'info'"
+                                                    :button-variant="
+                                                        getAgent.public
+                                                            ? 'warning'
+                                                            : 'info'
+                                                    "
                                                     @change="togglePublic"
                                                 >
                                                     <i
@@ -373,11 +379,9 @@
                                                     title="View your public key"
                                                     @click="getKey"
                                                 >
-                                              <b-spinner
+                                                    <b-spinner
                                                         small
-                                                        v-if="
-                                                            gettingKey
-                                                        "
+                                                        v-if="gettingKey"
                                                         label="Loading..."
                                                         :variant="
                                                             profile.darkMode
@@ -386,7 +390,8 @@
                                                         "
                                                         class="ml-2 mb-1"
                                                     ></b-spinner>
-                                                    <i v-else
+                                                    <i
+                                                        v-else
                                                         class="fas fa-eye fa-fw"
                                                     ></i>
                                                     View Key
@@ -645,8 +650,8 @@
                                         "
                                         ><b-col
                                             ><small
-                                                >You are the only user with
-                                                access.</small
+                                                >You are this agent's only
+                                                user.</small
                                             ></b-col
                                         ></b-row
                                     >
@@ -698,7 +703,7 @@
                             >
                             <hr />
                         </div>
-                        <div v-if="getAgent.role === 'admin'">
+                        <div v-if="ownsAgent">
                             <b-row no-gutters>
                                 <b-col align-self="end"
                                     ><h5
@@ -765,9 +770,220 @@
                                     >
                                 </b-col></b-row
                             >
+                            <hr />
                         </div>
-                    </b-col>
-                    <!--<b-col md="auto">
+                        <div v-if="ownsAgent">
+                            <b-row no-gutters>
+                                <b-col align-self="end"
+                                    ><h5
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-white'
+                                                : 'text-dark'
+                                        "
+                                    >
+                                        Workflow Policies
+                                    </h5></b-col
+                                ><b-col class="ml-2" md="auto"
+                                    ><b-dropdown
+                                        dropleft
+                                        v-if="workflowPolicyType === 'none'"
+                                        class="mb-1"
+                                        size="sm"
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-dark'
+                                                : 'white'
+                                        "
+                                        v-b-tooltip.hover
+                                        :title="
+                                            `Configure workflow policies for ${getAgent.name}`
+                                        "
+                                        :text="workflowPolicyType"
+                                        v-model="workflowPolicyType"
+                                    >
+                                        <template #button-content>
+                                            Configure
+                                        </template>
+                                        <b-dropdown-item
+                                            @click="specifyAuthorizedWorkflow"
+                                            >Specify authorized
+                                            workflows</b-dropdown-item
+                                        >
+                                        <b-dropdown-item
+                                            @click="specifyBlockedWorkflow"
+                                            >Specify blocked
+                                            workflows</b-dropdown-item
+                                        > </b-dropdown
+                                    ><b-button
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-dark'
+                                                : 'white'
+                                        "
+                                        :disabled="authorizingWorkflow"
+                                        title="Authorize another workflow"
+                                        v-b-tooltip.hover
+                                        v-else-if="
+                                            workflowPolicyType === 'authorized'
+                                        "
+                                        @click="specifyAuthorizedWorkflow"
+                                        ><i class="fas fa-plus fa-fw"></i
+                                        >Authorize</b-button
+                                    ><b-button
+                                        :disabled="blockingWorkflow"
+                                        title="Block another workflow"
+                                        v-b-tooltip.hover
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-dark'
+                                                : 'white'
+                                        "
+                                        v-else
+                                        @click="specifyBlockedWorkflow"
+                                        ><i class="fas fa-plus fa-fw"></i
+                                        >Block</b-button
+                                    ></b-col
+                                >
+                            </b-row>
+                            <b-row v-if="workflowPolicyType === 'none'"
+                                ><b-col
+                                    ><small
+                                        >No restrictions (all workflows
+                                        permitted).</small
+                                    ></b-col
+                                ></b-row
+                            >
+                            <b-row v-else
+                                ><b-col align-self="end">
+                                    <b-row class="mb-2">
+                                        <b-col>
+                                            <small>{{
+                                                workflowPolicyType === 'none'
+                                                    ? ''
+                                                    : workflowPolicyType ===
+                                                      'authorized'
+                                                    ? 'Only the following workflows can run on this agent. To select particular workflows to block instead (and allow all others), first remove all authorized workflows.'
+                                                    : 'All workflows except the following can run on this agent. To select particular workflows to permit instead (and block all others), first remove all blocked workflows.'
+                                            }}</small>
+                                        </b-col>
+                                    </b-row>
+                                    <div
+                                        v-if="
+                                            workflowPolicyType === 'authorized'
+                                        "
+                                    >
+                                        <b-card
+                                            :bg-variant="
+                                                profile.darkMode
+                                                    ? 'dark'
+                                                    : 'white'
+                                            "
+                                            :header-bg-variant="
+                                                profile.darkMode
+                                                    ? 'dark'
+                                                    : 'white'
+                                            "
+                                            border-variant="default"
+                                            :header-border-variant="
+                                                profile.darkMode
+                                                    ? 'dark'
+                                                    : 'white'
+                                            "
+                                            :text-variant="
+                                                profile.darkMode
+                                                    ? 'white'
+                                                    : 'dark'
+                                            "
+                                            class="overflow-hidden"
+                                            v-for="workflow in getAgent.workflows_authorized"
+                                            v-bind:key="workflow.config.name"
+                                            no-body
+                                            ><b-card-body
+                                                class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
+                                                ><blurb
+                                                    :linkable="false"
+                                                    :workflow="workflow"
+                                                ></blurb
+                                                ><b-row class="mt-2">
+                                                    <b-col class="text-right"
+                                                        ><b-button
+                                                            :disabled="
+                                                                authorizingWorkflow
+                                                            "
+                                                            variant="outline-danger"
+                                                            @click="
+                                                                unauthorizeWorkflow(
+                                                                    workflow
+                                                                )
+                                                            "
+                                                            >Unauthorize</b-button
+                                                        ></b-col
+                                                    >
+                                                </b-row></b-card-body
+                                            ></b-card
+                                        >
+                                    </div>
+                                    <div
+                                        v-else-if="
+                                            workflowPolicyType === 'blocked'
+                                        "
+                                    >
+                                        <b-card
+                                            :bg-variant="
+                                                profile.darkMode
+                                                    ? 'dark'
+                                                    : 'white'
+                                            "
+                                            :header-bg-variant="
+                                                profile.darkMode
+                                                    ? 'dark'
+                                                    : 'white'
+                                            "
+                                            border-variant="default"
+                                            :header-border-variant="
+                                                profile.darkMode
+                                                    ? 'dark'
+                                                    : 'white'
+                                            "
+                                            :text-variant="
+                                                profile.darkMode
+                                                    ? 'white'
+                                                    : 'dark'
+                                            "
+                                            class="overflow-hidden"
+                                            v-for="workflow in getAgent.workflows_blocked"
+                                            v-bind:key="workflow.config.name"
+                                            no-body
+                                            ><b-card-body
+                                                class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
+                                                ><blurb
+                                                    :linkable="false"
+                                                    :workflow="workflow"
+                                                ></blurb
+                                                ><b-row class="mt-2">
+                                                    <b-col class="text-right"
+                                                        ><b-button
+                                                            :disabled="
+                                                                blockingWorkflow
+                                                            "
+                                                            variant="outline-danger"
+                                                            @click="
+                                                                unblockWorkflow(
+                                                                    workflow
+                                                                )
+                                                            "
+                                                            >Unblock</b-button
+                                                        ></b-col
+                                                    >
+                                                </b-row></b-card-body
+                                            ></b-card
+                                        >
+                                    </div>
+                                </b-col>
+                            </b-row>
+                        </div>
+                        <!--<b-col md="auto">
                         <b-row
                             ><b-col align-self="end"
                                 ><h5
@@ -852,9 +1068,462 @@
                             </b-row>
                         </div>
                     </b-col>-->
+                    </b-col>
                 </b-row>
             </div>
         </b-container>
+        <b-modal
+            id="authorizeWorkflow"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            size="lg"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            hide-header
+            hide-header-close
+            hide-footer
+        >
+            <b-row class="mb-2"
+                ><b-col
+                    ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Select a workflow
+                    </h4></b-col
+                ><b-col md="auto"
+                    ><b-button
+                        :disabled="publicWorkflowsLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Rescan workflows"
+                        @click="refreshWorkflows"
+                        class="text-right"
+                    >
+                        <b-spinner
+                            small
+                            v-if="publicWorkflowsLoading"
+                            label="Rescanning..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-redo mr-1"></i>Rescan
+                        Workflows</b-button
+                    ></b-col
+                ></b-row
+            >
+            <b-tabs content-class="mt-2">
+                <b-tab title="Yours">
+                    <div v-if="personalWorkflowsLoading">
+                        <b-row>
+                            <b-col class="text-center">
+                                <b-spinner
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="secondary"
+                                ></b-spinner>
+                            </b-col>
+                        </b-row>
+                    </div>
+                    <div v-else-if="boundWorkflows.length !== 0">
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            Select a personal workflow to authorize on
+                            <i class="fas fa-server fa-fw"></i>
+                            {{ getAgent.name }}. All users with access to
+                            <i class="fas fa-server fa-fw"></i>
+                            {{ getAgent.name }} will be able to use this
+                            workflow.
+                        </p>
+                        <p>
+                            <b-row class="mb-1"
+                                ><b-col
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    ><small
+                                        >{{
+                                            unauthorizedBoundWorkflows.length
+                                        }}
+                                        unauthorized workflow(s) found</small
+                                    ></b-col
+                                ></b-row
+                            >
+                            <b-card
+                                :bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :header-bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                border-variant="default"
+                                :header-border-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :text-variant="
+                                    profile.darkMode ? 'white' : 'dark'
+                                "
+                                class="overflow-hidden"
+                                v-for="workflow in unauthorizedBoundWorkflows"
+                                v-bind:key="workflow.config.name"
+                                no-body
+                                ><b-card-body
+                                    class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
+                                >
+                                    <blurb
+                                        :workflow="workflow"
+                                        :linkable="false"
+                                    ></blurb>
+                                    <b-row class="mt-2">
+                                        <b-col
+                                            ><b-button
+                                                :disabled="authorizingWorkflow"
+                                                block
+                                                variant="warning"
+                                                @click="
+                                                    authorizeWorkflow(workflow)
+                                                "
+                                                >Select</b-button
+                                            ></b-col
+                                        >
+                                    </b-row>
+                                </b-card-body>
+                            </b-card>
+                        </p>
+                    </div>
+                    <div class="text-center" v-else>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            No workflows found.
+                        </p>
+                    </div></b-tab
+                >
+                <b-tab title="Public">
+                    <div v-if="publicWorkflowsLoading">
+                        <b-row>
+                            <b-col class="text-center">
+                                <b-spinner
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="secondary"
+                                ></b-spinner>
+                            </b-col>
+                        </b-row>
+                    </div>
+                    <div v-else-if="publicWorkflows.length !== 0">
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            Select a public workflow to authorize on
+                            <i class="fas fa-server fa-fw"></i>
+                            {{ getAgent.name }}. All users with access to
+                            <i class="fas fa-server fa-fw"></i>
+                            {{ getAgent.name }} will be able to use this
+                            workflow.
+                        </p>
+                        <p>
+                            <b-row class="mb-1"
+                                ><b-col
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    ><small
+                                        >{{
+                                            unauthorizedPublicWorkflows.length
+                                        }}
+                                        unauthorized workflow(s) found</small
+                                    ></b-col
+                                ></b-row
+                            >
+                            <b-card
+                                :bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :header-bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                border-variant="default"
+                                :header-border-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :text-variant="
+                                    profile.darkMode ? 'white' : 'dark'
+                                "
+                                class="overflow-hidden"
+                                v-for="workflow in unauthorizedPublicWorkflows"
+                                v-bind:key="workflow.config.name"
+                                no-body
+                                ><b-card-body
+                                    class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
+                                >
+                                    <blurb
+                                        :workflow="workflow"
+                                        :linkable="false"
+                                    ></blurb>
+                                    <b-row class="mt-2">
+                                        <b-col
+                                            ><b-button
+                                                :disabled="authorizingWorkflow"
+                                                block
+                                                variant="warning"
+                                                @click="
+                                                    authorizeWorkflow(workflow)
+                                                "
+                                                >Select</b-button
+                                            ></b-col
+                                        >
+                                    </b-row>
+                                </b-card-body>
+                            </b-card>
+                        </p>
+                    </div>
+                    <div class="text-center" v-else>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            No workflows found.
+                        </p>
+                    </div></b-tab
+                >
+            </b-tabs>
+        </b-modal>
+        <b-modal
+            id="blockWorkflow"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            size="lg"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            hide-header
+            hide-header-close
+            hide-footer
+        >
+            <b-row class="mb-2"
+                ><b-col
+                    ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Select a workflow
+                    </h4></b-col
+                ><b-col md="auto"
+                    ><b-button
+                        :disabled="publicWorkflowsLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Rescan workflows"
+                        @click="refreshWorkflows"
+                        class="text-right"
+                    >
+                        <b-spinner
+                            small
+                            v-if="publicWorkflowsLoading"
+                            label="Rescanning..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-redo mr-1"></i>Rescan
+                        Workflows</b-button
+                    ></b-col
+                ></b-row
+            >
+            <b-tabs content-class="mt-2">
+                <b-tab title="Yours">
+                    <div v-if="personalWorkflowsLoading">
+                        <b-row>
+                            <b-col class="text-center">
+                                <b-spinner
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="secondary"
+                                ></b-spinner>
+                            </b-col>
+                        </b-row>
+                    </div>
+                    <div v-else-if="boundWorkflows.length !== 0">
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            Select a personal workflow to block on
+                            <i class="fas fa-server fa-fw"></i>
+                            {{ getAgent.name }}. All users with access to
+                            <i class="fas fa-server fa-fw"></i>
+                            {{ getAgent.name }} will be prevented from using
+                            this workflow.
+                        </p>
+                        <p>
+                            <b-row class="mb-1"
+                                ><b-col
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    ><small
+                                        >{{
+                                            unblockedBoundWorkflows.length
+                                        }}
+                                        unblocked workflow(s) found</small
+                                    ></b-col
+                                ></b-row
+                            >
+                            <b-card
+                                :bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :header-bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                border-variant="default"
+                                :header-border-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :text-variant="
+                                    profile.darkMode ? 'white' : 'dark'
+                                "
+                                class="overflow-hidden"
+                                v-for="workflow in unblockedBoundWorkflows"
+                                v-bind:key="workflow.config.name"
+                                no-body
+                                ><b-card-body
+                                    class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
+                                >
+                                    <blurb
+                                        :workflow="workflow"
+                                        :linkable="false"
+                                    ></blurb>
+                                    <b-row class="mt-2">
+                                        <b-col
+                                            ><b-button
+                                                :disabled="blockingWorkflow"
+                                                block
+                                                variant="warning"
+                                                @click="blockWorkflow(workflow)"
+                                                >Select</b-button
+                                            ></b-col
+                                        >
+                                    </b-row>
+                                </b-card-body>
+                            </b-card>
+                        </p>
+                    </div>
+                    <div class="text-center" v-else>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            No workflows found.
+                        </p>
+                    </div></b-tab
+                >
+                <b-tab title="Public">
+                    <div v-if="publicWorkflowsLoading">
+                        <b-row>
+                            <b-col class="text-center">
+                                <b-spinner
+                                    type="grow"
+                                    label="Loading..."
+                                    variant="secondary"
+                                ></b-spinner>
+                            </b-col>
+                        </b-row>
+                    </div>
+                    <div v-else-if="publicWorkflows.length !== 0">
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            Select a public workflow to block on
+                            <i class="fas fa-server fa-fw"></i>
+                            {{ getAgent.name }}. All users with access to
+                            <i class="fas fa-server fa-fw"></i>
+                            {{ getAgent.name }} will be prevented from using
+                            this workflow.
+                        </p>
+                        <p>
+                            <b-row class="mb-1"
+                                ><b-col
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-light'
+                                            : 'text-dark'
+                                    "
+                                    ><small
+                                        >{{
+                                            unblockedPublicWorkflows.length
+                                        }}
+                                        unblocked workflow(s) found</small
+                                    ></b-col
+                                ></b-row
+                            >
+                            <b-card
+                                :bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :header-bg-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                border-variant="default"
+                                :header-border-variant="
+                                    profile.darkMode ? 'dark' : 'white'
+                                "
+                                :text-variant="
+                                    profile.darkMode ? 'white' : 'dark'
+                                "
+                                class="overflow-hidden"
+                                v-for="workflow in unblockedPublicWorkflows"
+                                v-bind:key="workflow.config.name"
+                                no-body
+                                ><b-card-body
+                                    class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
+                                >
+                                    <blurb
+                                        :workflow="workflow"
+                                        :linkable="false"
+                                    ></blurb>
+                                    <b-row class="mt-2">
+                                        <b-col
+                                            ><b-button
+                                                :disabled="blockingWorkflow"
+                                                block
+                                                variant="warning"
+                                                @click="blockWorkflow(workflow)"
+                                                >Select</b-button
+                                            ></b-col
+                                        >
+                                    </b-row>
+                                </b-card-body>
+                            </b-card>
+                        </p>
+                    </div>
+                    <div class="text-center" v-else>
+                        <p
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                        >
+                            No workflows found.
+                        </p>
+                    </div></b-tab
+                >
+            </b-tabs>
+        </b-modal>
         <b-modal
             id="key"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
@@ -874,9 +1543,8 @@
             <b-row
                 ><b-col style="word-wrap: break-word;">
                     <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Here is your public key.
-                        Copy it into the <code>~/.ssh/authorized_keys</code> file on
-                        your agent.
+                        Here is your public key. Copy it into the
+                        <code>~/.ssh/authorized_keys</code> file on your agent.
                     </p>
                     <b-form-textarea
                         plaintext
@@ -993,11 +1661,13 @@ import VueCronEditorBuefy from 'vue-cron-editor-buefy';
 import parser from 'cron-parser';
 import { guid } from '@/utils';
 import router from '@/router';
+import blurb from '@/components/workflows/workflow-blurb.vue';
 
 export default {
     name: 'agent',
     components: {
-        VueCronEditorBuefy
+        VueCronEditorBuefy,
+        blurb
     },
     data: function() {
         return {
@@ -1016,17 +1686,69 @@ export default {
             sessionSocket: null,
             togglingPublic: false,
             publicKey: '',
-            gettingKey: false
+            gettingKey: false,
+            workflowPolicyType: 'none',
+            workflowSearchName: '',
+            workflowSearchResultInvalid: false,
+            searchWorkflows: false,
+            authorizingWorkflow: false,
+            blockingWorkflow: false
         };
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('workflows', ['recentlyRunWorkflows']),
+        ...mapGetters('workflows', [
+            'recentlyRunWorkflows',
+            'personalWorkflowsLoading',
+            'boundWorkflows',
+            'publicWorkflowsLoading',
+            'publicWorkflows'
+        ]),
         ...mapGetters('agents', [
             'agent',
             'personalAgentsLoading',
             'publicAgentsLoading'
         ]),
+        unauthorizedBoundWorkflows() {
+            return this.boundWorkflows.filter(
+                wf =>
+                    !this.getAgent.workflows_authorized.some(
+                        b =>
+                            b.repo.owner.login === wf.repo.owner.login &&
+                            b.config.name === wf.config.name
+                    )
+            );
+        },
+        unauthorizedPublicWorkflows() {
+            return this.publicWorkflows.filter(
+                wf =>
+                    !this.getAgent.workflows_authorized.some(
+                        b =>
+                            b.repo.owner.login === wf.repo.owner.login &&
+                            b.config.name === wf.config.name
+                    )
+            );
+        },
+        unblockedBoundWorkflows() {
+            return this.boundWorkflows.filter(
+                wf =>
+                    !this.getAgent.workflows_blocked.some(
+                        b =>
+                            b.repo.owner.login === wf.repo.owner.login &&
+                            b.config.name === wf.config.name
+                    )
+            );
+        },
+        unblockedPublicWorkflows() {
+            return this.publicWorkflows.filter(
+                wf =>
+                    !this.getAgent.workflows_blocked.some(
+                        b =>
+                            b.repo.owner.login === wf.repo.owner.login &&
+                            b.config.name === wf.config.name
+                    )
+            );
+        },
         agentLoading() {
             return this.publicAgentsLoading || this.personalAgentsLoading;
         },
@@ -1062,7 +1784,218 @@ export default {
             );
         }
     },
+    mounted: function() {
+        this.workflowPolicyType =
+            this.getAgent.workflows_authorized.length > 0
+                ? 'authorized'
+                : this.getAgent.workflows_blocked.length > 0
+                ? 'blocked'
+                : 'none';
+    },
+  watch: {
+     workflowPolicyType() {
+       // noop
+     },
+    getAgent() {
+       // noop
+    }
+  },
     methods: {
+        async refreshWorkflows() {
+            await Promise.all([
+                this.$store.dispatch('workflows/refreshPublic'),
+                this.$store.dispatch(
+                    'workflows/refreshPersonal',
+                    this.profile.githubProfile.login
+                )
+            ]);
+        },
+        specifyAuthorizedWorkflow() {
+            this.$bvModal.show('authorizeWorkflow');
+        },
+        specifyBlockedWorkflow() {
+            this.$bvModal.show('blockWorkflow');
+        },
+        async authorizeWorkflow(workflow) {
+            this.authorizingWorkflow = true;
+            let data = {
+                owner: workflow.repo.owner.login,
+                name: workflow.repo.name
+            };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/authorize/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'agents/addOrUpdate',
+                            response.data
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Authorized workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                        this.workflowPolicyType = 'authorized';
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to authorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.$bvModal.hide('authorizeWorkflow');
+                    this.authorizingWorkflow = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to authorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                        guid: guid().toString()
+                    });
+                    this.$bvModal.hide('authorizeWorkflow');
+                    this.authorizingWorkflow = false;
+                    throw error;
+                });
+        },
+        async unauthorizeWorkflow(workflow) {
+            this.authorizingWorkflow = true;
+            let data = {
+                owner: workflow.repo.owner.login,
+                name: workflow.repo.name
+            };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unauthorize/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'agents/addOrUpdate',
+                            response.data
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unauthorized workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                        if (this.getAgent.workflows_authorized.length === 0)
+                            this.workflowPolicyType = 'none';
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to unauthorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.authorizingWorkflow = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unauthorize workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                        guid: guid().toString()
+                    });
+                    this.authorizingWorkflow = false;
+                    throw error;
+                });
+        },
+        async blockWorkflow(workflow) {
+            this.blockingWorkflow = true;
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/block/`,
+                data: {
+                    owner: workflow.repo.owner.login,
+                    name: workflow.repo.name
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'agents/addOrUpdate',
+                            response.data
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Blocked workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                        this.workflowPolicyType = 'blocked';
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to block workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.$bvModal.hide('blockWorkflow');
+                    this.blockingWorkflow = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to block workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                        guid: guid().toString()
+                    });
+                    this.gettingKey = false;
+                    this.blockingWorkflow = false;
+                    throw error;
+                });
+        },
+        async unblockWorkflow(workflow) {
+            this.blockingWorkflow = true;
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unblock/`,
+                data: {
+                    owner: workflow.repo.owner.login,
+                    name: workflow.repo.name
+                },
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'agents/addOrUpdate',
+                            response.data
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Unblocked workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                        if (this.getAgent.workflows_authorized.length === 0)
+                            this.workflowPolicyType = 'none';
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to unblock workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.blockingWorkflow = false;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to unblock workflow ${workflow.config.name} on agent ${this.getAgent.name}`,
+                        guid: guid().toString()
+                    });
+                    this.blockingWorkflow = false;
+                    throw error;
+                });
+        },
         async getKey() {
             this.gettingKey = true;
             await axios
@@ -1410,10 +2343,10 @@ export default {
                           }
                       }
                     : {
-              auth: {
-                username: this.authenticationUsername
-              }
-                    };
+                          auth: {
+                              username: this.authenticationUsername
+                          }
+                      };
             await axios({
                 method: 'post',
                 url: `/apis/v1/agents/${this.$route.params.name}/health/`,

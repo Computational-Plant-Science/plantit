@@ -13,5 +13,9 @@ urlpatterns = [
     path(r'<name>/request/', views.request_access),
     path(r'<name>/revoke/', views.revoke_access),
     path(r'<name>/grant/', views.grant_access),
-    path(r'<name>/auth/', views.set_authentication_strategy)
+    path(r'<name>/auth/', views.set_authentication_strategy),
+    path(r'<name>/authorize/', views.authorize_workflow),
+    path(r'<name>/unauthorize/', views.unauthorize_workflow),
+    path(r'<name>/block/', views.block_workflow),
+    path(r'<name>/unblock/', views.unblock_workflow),
 ]

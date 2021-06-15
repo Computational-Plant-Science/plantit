@@ -107,6 +107,7 @@ class IDPViewSet(viewsets.ViewSet):
         profile.cyverse_access_token = access_token
         profile.cyverse_refresh_token = refresh_token
         profile.save()
+        user.profile = profile
         user.save()
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
