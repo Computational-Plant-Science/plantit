@@ -297,18 +297,28 @@ def configure_task_environment(task: Task, ssh: SSH):
 
     list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
 
-    log_task_status(task, [f"Uploading task definition"])
-    async_to_sync(push_task_event)(task)
-
-    with ssh.client.open_sftp() as sftp:
-        sftp.chdir(work_dir)
-        with sftp.open(f"{task.guid}.yaml", 'w') as cli_file: yaml.dump(del_none(cli_options), cli_file, default_flow_style=False)
-        if 'input' in cli_options: sftp.mkdir(join(work_dir, 'input'))
-
     log_task_status(task, [f"Uploading task executable"])
     async_to_sync(push_task_event)(task)
 
     upload_task_executables(task, ssh, cli_options)
+
+    log_task_status(task, [f"Uploading task definition"])
+    async_to_sync(push_task_event)(task)
+
+    with ssh.client.open_sftp() as sftp:
+        # TODO remove this utter hack
+        if 'input' in cli_options:
+            kind = cli_options['input']['kind']
+            path = cli_options['input']['path']
+            if kind == InputKind.DIRECTORY or kind == InputKind.FILES:
+                cli_options['input']['path'] = 'input'
+            else:
+                cli_options['input']['path'] = path.rpartition('/')[2]
+
+        sftp.chdir(work_dir)
+        with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
+            yaml.dump(del_none(cli_options), cli_file, default_flow_style=False)
+        if 'input' in cli_options: sftp.mkdir(join(work_dir, 'input'))
 
 
 def compose_singularity_command(
@@ -626,8 +636,18 @@ def execute_local_task(task: Task, ssh: SSH):
     precommand = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
     command = f"chmod +x {task.guid}.sh && ./{task.guid}.sh"
     workdir = join(task.agent.workdir, task.workdir)
-    lines = list(execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True))
-    log_task_status(task, [f"[{task.agent.name}] {line.strip()}" for line in lines if line.strip()])
+
+    count = 0
+    lines = []
+    for line in execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True):
+        stripped = line.strip()
+        if count < 4 and stripped:  # TODO make the chunking size configurable
+            lines.append(stripped)
+            count += 1
+        else:
+            log_task_status(task, [f"[{task.agent.name}] {line}" for line in lines])
+            lines = []
+            count = 0
 
     task.status = TaskStatus.SUCCESS
     now = timezone.now()
