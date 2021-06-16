@@ -3182,6 +3182,7 @@ export default {
         },
         inputSelected(node) {
             this.input.path = node.path;
+            this.input.kind = node.kind;
             this.loadSelectedInput(node.path);
         },
         outputSelected(node) {
@@ -3365,6 +3366,9 @@ export default {
         },
         getWorkflow: function() {
             // noop
+        },
+        selectedInput: function() {
+
         }
     },
     computed: {
@@ -3501,7 +3505,7 @@ export default {
                 this.getWorkflow.config.input !== undefined
             )
                 return (
-                    this.getWorkflow.config.input.path !== undefined &&
+                    this.getWorkflow.config.input.kind !== undefined &&
                     this.input.path !== '' &&
                     this.input.kind !== '' &&
                     this.inputFiletypeSelected &&

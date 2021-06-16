@@ -313,7 +313,7 @@ def configure_task_environment(task: Task, ssh: SSH):
             if kind == InputKind.DIRECTORY or kind == InputKind.FILES:
                 cli_options['input']['path'] = 'input'
             else:
-                cli_options['input']['path'] = path.rpartition('/')[2]
+                cli_options['input']['path'] = f"input/{path.rpartition('/')[2]}"
 
         sftp.chdir(work_dir)
         with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
