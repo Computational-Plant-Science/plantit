@@ -1,211 +1,190 @@
 <template>
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
-        <div v-if="profileLoading">
-            <b-row>
-                <b-col class="text-center">
+        <div v-if="isRootPath">
+            <b-row
+                ><b-col md="auto"
+                    ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        <i class="fas fa-stream fa-fw"></i>
+                        {{ contextPublic ? 'Public' : 'Your' }} Workflows
+                    </h2></b-col
+                >
+                <b-col align-self="center" class="mb-1" md="auto"
+                    ><b-button
+                        :disabled="workflowsLoading || bindingWorkflow"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        class="ml-0 mt-0 mr-0"
+                        @click="toggleContext"
+                        :title="
+                            contextPublic
+                                ? 'View your workflows'
+                                : 'View public workflows'
+                        "
+                        v-b-tooltip:hover
+                        ><span v-if="contextPublic"
+                            ><i class="fas fa-user"></i> Yours</span
+                        ><span v-else
+                            ><i class="fas fa-users"></i> Public</span
+                        ></b-button
+                    ></b-col
+                >
+                <b-col
+                    md="auto"
+                    class="ml-0 mb-1"
+                    align-self="center"
+                    v-if="!contextPublic"
+                    ><b-button
+                        :disabled="bindingWorkflow || workflowsLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Bind a new workflow"
+                        @click="showBindWorkflowModal"
+                        class="ml-0 mt-0 mr-0"
+                    >
+                        <b-spinner
+                            small
+                            v-if="bindingWorkflow"
+                            label="Binding..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-plug mr-1"></i>Bind</b-button
+                    ></b-col
+                >
+                <b-col
+                    md="auto"
+                    class="ml-0 mb-1"
+                    align-self="center"
+                    v-if="!contextPublic"
+                    ><b-button
+                        :disabled="workflowsLoading || bindingWorkflow"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Refresh workflows"
+                        @click="refreshWorkflows"
+                        class="ml-0 mt-0 mr-0"
+                    >
+                        <b-spinner
+                            small
+                            v-if="workflowsLoading"
+                            label="Refreshing..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-redo mr-1"></i
+                        >Refresh</b-button
+                    ></b-col
+                >
+                <b-col></b-col>
+                <b-col md="auto" align-self="center"
+                    ><small
+                        >powered by
+                        <i class="fab fa-github fa-fw fa-1x"></i></small
+                    ><b-img
+                        class="mt-1"
+                        rounded
+                        style="max-height: 1.2rem;"
+                        right
+                        :src="
+                            profile.darkMode
+                                ? require('../../assets/logos/github_white.png')
+                                : require('../../assets/logos/github_black.png')
+                        "
+                    ></b-img></b-col
+            ></b-row>
+            <b-row v-if="workflowsLoading || bindingWorkflow" class="mt-2">
+                <b-col>
                     <b-spinner
-                        type="grow"
+                        small
                         label="Loading..."
-                        variant="secondary"
-                    ></b-spinner>
+                        :variant="profile.darkMode ? 'light' : 'dark'"
+                        class="mr-1"
+                    ></b-spinner
+                    ><span
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        >Loading
+                        {{ publicContext ? 'public' : 'your' }}
+                        workflows...</span
+                    >
                 </b-col>
             </b-row>
+            <b-card-group deck columns v-else-if="getWorkflows.length !== 0">
+                <b-card
+                    v-for="workflow in getWorkflows"
+                    :key="workflow.repo.name"
+                    :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                    :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                    border-variant="default"
+                    :header-border-variant="
+                        profile.darkMode ? 'secondary' : 'default'
+                    "
+                    :text-variant="profile.darkMode ? 'white' : 'dark'"
+                    style="min-width: 30rem;"
+                    class="overflow-hidden mb-4"
+                >
+                    <blurb :linkable="true" :workflow="workflow"></blurb>
+                </b-card>
+            </b-card-group>
+            <b-row v-else
+                ><b-col
+                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    >{{
+                        contextPublic
+                            ? 'No workflows have been published by the community yet.'
+                            : "You haven't created any workflow bindings yet."
+                    }}</b-col
+                ></b-row
+            >
         </div>
-        <div v-else>
-            <div v-if="isRootPath">
-                <b-row
-                    ><b-col
-                        ><h2
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                        >
-                            <i class="fas fa-stream fa-fw"></i>
-                            {{ contextPublic ? 'Public' : 'Your' }} Workflows
-                        </h2></b-col
-                    ><b-col md="auto" align-self="center"
-                        ><small
-                            >powered by
-                            <i class="fab fa-github fa-fw fa-1x"></i></small
-                        ><b-img
-                            class="mt-1"
-                            rounded
-                            style="max-height: 1.2rem;"
-                            right
-                            :src="
-                                profile.darkMode
-                                    ? require('../../assets/logos/github_white.png')
-                                    : require('../../assets/logos/github_black.png')
-                            "
-                        ></b-img
-                    ></b-col>
-                    <b-col
-                        md="auto"
-                        class="ml-0"
-                        align-self="center"
-                        v-if="!contextPublic"
+        <router-view
+            v-else
+            :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+        ></router-view>
+        <b-modal
+            id="bindWorkflow"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            size="lg"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            hide-header
+            hide-header-close
+        >
+            <template #modal-footer
+                ><b-row v-if="bindingSelected"
+                    ><b-col md="auto"
                         ><b-button
-                            :disabled="workflowsLoading"
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
-                            size="md"
-                            v-b-tooltip.hover
-                            title="Bind a new workflow"
-                            @click="showBindWorkflowModal"
-                            class="ml-0 mt-0 mr-0"
-                        >
-                            <b-spinner
+                            :disabled="bindingWorkflow"
+                            variant="outline-danger"
+                            @click="unselectBinding"
+                            ><i class="fas fa-arrow-left fa-fw"></i><br />Go
+                            Back</b-button
+                        ></b-col
+                    ><b-col
+                        ><b-button variant="success" @click="bindWorkflow"
+                            ><i
+                                v-if="!bindingWorkflow"
+                                class="fas fa-check fa-fw"
+                            ></i
+                            ><b-spinner
                                 small
-                                v-if="workflowsLoading"
+                                v-else
                                 label="Binding..."
                                 :variant="profile.darkMode ? 'light' : 'dark'"
                                 class="mr-1"
                             ></b-spinner
-                            ><i v-else class="fas fa-plug mr-1"></i
-                            >Bind</b-button
-                        ></b-col
-                    >
-                    <b-col
-                        md="auto"
-                        class="ml-0"
-                        align-self="center"
-                        v-if="!contextPublic"
-                        ><b-button
-                            :disabled="workflowsLoading"
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
-                            size="md"
-                            v-b-tooltip.hover
-                            title="Refresh workflows"
-                            @click="refreshWorkflows"
-                            class="ml-0 mt-0 mr-0"
-                        >
-                            <b-spinner
-                                small
-                                v-if="workflowsLoading"
-                                label="Refreshing..."
-                                :variant="profile.darkMode ? 'light' : 'dark'"
-                                class="mr-1"
-                            ></b-spinner
-                            ><i v-else class="fas fa-redo mr-1"></i
-                            >Refresh</b-button
-                        ></b-col
-                    >
-                    <b-col md="auto" align-self="center"
-                        ><b-button
-                            :disabled="workflowsLoading"
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
-                            size="md"
-                            class="ml-0 mt-0 mr-0"
-                            @click="toggleContext"
-                            :title="
-                                contextPublic
-                                    ? 'View your workflows'
-                                    : 'View public workflows'
-                            "
-                            v-b-tooltip:hover
-                            ><span v-if="contextPublic"
-                                ><i class="fas fa-user"></i> Yours</span
-                            ><span v-else
-                                ><i class="fas fa-users"></i> Public</span
-                            ></b-button
+                            ><br />Bind</b-button
                         ></b-col
                     ></b-row
-                >
-                <b-row v-if="workflowsLoading || bindingWorkflow" class="mt-2">
-                    <b-col class="text-center">
-                        <b-spinner
-                            type="grow"
-                            label="Loading..."
-                            variant="secondary"
-                        ></b-spinner>
-                    </b-col>
-                </b-row>
-                <b-card-group
-                    deck
-                    columns
-                    v-else-if="getWorkflows.length !== 0"
-                >
-                    <b-card
-                        v-for="workflow in getWorkflows"
-                        :key="workflow.repo.name"
-                        :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        border-variant="default"
-                        :header-border-variant="
-                            profile.darkMode ? 'secondary' : 'default'
-                        "
-                        :text-variant="profile.darkMode ? 'white' : 'dark'"
-                        style="min-width: 30rem;"
-                        class="overflow-hidden mb-4"
-                    >
-                        <blurb :linkable="true" :workflow="workflow"></blurb>
-                    </b-card>
-                </b-card-group>
-                <b-row v-else
-                    ><b-col
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        >{{
-                            contextPublic
-                                ? 'No workflows have been published by the community yet.'
-                                : "You haven't created any workflow bindings yet."
-                        }}</b-col
-                    ></b-row
-                >
-            </div>
-            <router-view
-                v-else
-                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
-            ></router-view>
-            <b-modal
-                id="bindWorkflow"
-                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-                centered
-                size="lg"
-                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                hide-header
-                hide-header-close
-            >
-                <template #modal-footer
-                    ><b-row v-if="bindingSelected"
-                        ><b-col md="auto"
-                            ><b-button
-                                :disabled="bindingWorkflow"
-                                variant="outline-danger"
-                                @click="unselectBinding"
-                                ><i class="fas fa-arrow-left fa-fw"></i><br />Go
-                                Back</b-button
-                            ></b-col
-                        ><b-col
-                            ><b-button variant="success" @click="bindWorkflow"
-                                ><i
-                                    v-if="!bindingWorkflow"
-                                    class="fas fa-check fa-fw"
-                                ></i
-                                ><b-spinner
-                                    small
-                                    v-else
-                                    label="Binding..."
-                                    :variant="
-                                        profile.darkMode ? 'light' : 'dark'
-                                    "
-                                    class="mr-1"
-                                ></b-spinner
-                                ><br />Bind</b-button
-                            ></b-col
-                        ></b-row
-                    ><b-row v-else></b-row
-                ></template>
-                <!--<b-alert variant="danger" :show="searchResultAlreadyConnected"
+                ><b-row v-else></b-row
+            ></template>
+            <!--<b-alert variant="danger" :show="searchResultAlreadyConnected"
                     >This workflow is already connected!</b-alert
                 >-->
-                <!--<b-form-group
+            <!--<b-form-group
                     description="Type the name of the GitHub repository you'd like to connect."
                 >
                     <b-form-input
@@ -223,52 +202,46 @@
                         variant="secondary"
                     ></b-spinner>
                 </div>-->
-                <b-row class="mb-2" v-if="!bindingSelected"
-                    ><b-col
-                        ><h4
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                        >
-                            Bind a workflow
-                        </h4></b-col
-                    ><b-col md="auto"
-                        ><b-button
-                            :disabled="personalWorkflowsLoading"
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
-                            size="sm"
-                            v-b-tooltip.hover
-                            title="Rescan workflows"
-                            @click="refreshWorkflows"
-                            class="text-right"
-                        >
-                            <b-spinner
-                                small
-                                v-if="workflowsLoading"
-                                label="Rescanning..."
-                                :variant="profile.darkMode ? 'light' : 'dark'"
-                                class="mr-1"
-                            ></b-spinner
-                            ><i v-else class="fas fa-redo mr-1"></i>Rescan
-                            Workflows</b-button
-                        ></b-col
-                    ></b-row
-                >
-                <div v-if="personalWorkflowsLoading">
-                    <b-row>
-                        <b-col class="text-center">
-                            <b-spinner
-                                type="grow"
-                                label="Loading..."
-                                variant="secondary"
-                            ></b-spinner>
-                        </b-col>
-                    </b-row>
-                </div>
-                <div v-else-if="bindingSelected">
-                    <!--<b-row
+            <b-row class="mb-2" v-if="!bindingSelected"
+                ><b-col
+                    ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Bind a workflow
+                    </h4></b-col
+                ><b-col md="auto"
+                    ><b-button
+                        :disabled="personalWorkflowsLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Rescan workflows"
+                        @click="refreshWorkflows"
+                        class="text-right"
+                    >
+                        <b-spinner
+                            small
+                            v-if="workflowsLoading"
+                            label="Rescanning..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-redo mr-1"></i>Rescan
+                        Workflows</b-button
+                    ></b-col
+                ></b-row
+            >
+            <div v-if="personalWorkflowsLoading">
+                <b-row>
+                    <b-col class="text-center">
+                        <b-spinner
+                            type="grow"
+                            label="Loading..."
+                            variant="secondary"
+                        ></b-spinner>
+                    </b-col>
+                </b-row>
+            </div>
+            <div v-else-if="bindingSelected">
+                <!--<b-row
                         ><b-col class="text-center"
                             ><span v-if="workflowToConnectSelected"
                                 ><i
@@ -278,79 +251,65 @@
                             >
                         </b-col></b-row
                     ><b-row>-->
-                    <b-row>
-                        <b-col
-                            ><blurb
-                                :linkable="false"
-                                :workflow="binding"
-                            ></blurb
-                        ></b-col>
-                    </b-row>
-                </div>
-                <div
-                    class="text-center"
-                    v-else-if="bindableWorkflows.length === 0"
-                >
-                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        <!--Repository <b>{{ name }}</b> not found.-->
-                        No connectable workflows found. Add a
-                        <code>plantit.yaml</code> file to one of your
-                        repositories, then click
-                        <b-badge
-                            :variant="
-                                profile.darkMode ? 'dark' : 'outline-light'
-                            "
-                            ><i class="fas fa-redo mr-1"></i> Rescan
-                            Workflows</b-badge
-                        >
-                        and it will appear here.
-                    </p>
-                </div>
-                <div v-else>
-                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Select the <i class="fab fa-github fa-fw"></i>GitHub
-                        repository containing your workflow.
-                    </p>
-                    <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        To connect a repository you must have a configuration
-                        file named
-                        <code>plantit.yaml</code> in the project root. If you
-                        don't see your repo listed here, click
-                        <b-badge
-                            :variant="
-                                profile.darkMode ? 'dark' : 'outline-light'
-                            "
-                            ><i class="fas fa-redo mr-1"></i> Rescan
-                            Workflows</b-badge
-                        >
-                        to run a fresh scan for repositories with configuration
-                        files.
-                    </p>
-                    <b-row class="mb-1"
-                        ><b-col
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            ><small
-                                >{{ bindableWorkflows.length }} workflow(s)
-                                found</small
-                            ></b-col
-                        ></b-row
+                <b-row>
+                    <b-col
+                        ><blurb :linkable="false" :workflow="binding"></blurb
+                    ></b-col>
+                </b-row>
+            </div>
+            <div class="text-center" v-else-if="bindableWorkflows.length === 0">
+                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                    <!--Repository <b>{{ name }}</b> not found.-->
+                    No connectable workflows found. Add a
+                    <code>plantit.yaml</code> file to one of your repositories,
+                    then click
+                    <b-badge
+                        :variant="profile.darkMode ? 'dark' : 'outline-light'"
+                        ><i class="fas fa-redo mr-1"></i> Rescan
+                        Workflows</b-badge
                     >
-                    <b-card
-                        :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        border-variant="default"
-                        :header-border-variant="
-                            profile.darkMode ? 'dark' : 'white'
-                        "
-                        :text-variant="profile.darkMode ? 'white' : 'dark'"
-                        class="overflow-hidden"
-                        v-for="workflow in bindableWorkflows"
-                        v-bind:key="workflow.config.name"
-                        no-body
-                        ><b-card-body class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
-                            ><!--<b-row
+                    and it will appear here.
+                </p>
+            </div>
+            <div v-else>
+                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                    Select the <i class="fab fa-github fa-fw"></i>GitHub
+                    repository containing your workflow.
+                </p>
+                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                    To connect a repository you must have a configuration file
+                    named
+                    <code>plantit.yaml</code> in the project root. If you don't
+                    see your repo listed here, click
+                    <b-badge
+                        :variant="profile.darkMode ? 'dark' : 'outline-light'"
+                        ><i class="fas fa-redo mr-1"></i> Rescan
+                        Workflows</b-badge
+                    >
+                    to run a fresh scan for repositories with configuration
+                    files.
+                </p>
+                <b-row class="mb-1"
+                    ><b-col
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        ><small
+                            >{{ bindableWorkflows.length }} workflow(s)
+                            found</small
+                        ></b-col
+                    ></b-row
+                >
+                <b-card
+                    :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                    :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                    border-variant="default"
+                    :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+                    :text-variant="profile.darkMode ? 'white' : 'dark'"
+                    class="overflow-hidden"
+                    v-for="workflow in bindableWorkflows"
+                    v-bind:key="workflow.config.name"
+                    no-body
+                    ><b-card-body class="mr-1 mt-2 mb-2 ml-2 p-1 pt-2"
+                        ><!--<b-row
                                 ><b-col
                                     ><h4
                                         v-if="
@@ -392,239 +351,211 @@
                                     ></b-col
                                 ></b-row
                             >-->
-                            <blurb
-                                :workflow="workflow"
-                                :linkable="false"
-                            ></blurb>
-                            <div
-                                v-if="workflow.validation.is_valid"
-                                class="mt-1"
+                        <blurb :workflow="workflow" :linkable="false"></blurb>
+                        <div v-if="workflow.validation.is_valid" class="mt-1">
+                            <p
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
                             >
-                                <p
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
-                                >
-                                    <b-row>
-                                        <b-col>
-                                            <small>Image</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b>{{ workflow.config.image }}</b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            <small>GPU</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            {{
-                                                workflow.config.gpu
-                                                    ? 'Yes'
-                                                    : 'No'
-                                            }}
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            <small>Mount</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            {{
-                                                workflow.config.mount
-                                                    ? workflow.config.mount
-                                                    : 'None'
-                                            }}
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            <small>Parameters</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b>{{
-                                                workflow.config.params
-                                                    ? workflow.config.params
-                                                          .length
-                                                    : 'None'
-                                            }}</b>
-                                        </b-col>
-                                    </b-row>
-                                    <b-row>
-                                        <b-col>
-                                            <small>Command</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b
-                                                ><code>{{
-                                                    ' ' +
-                                                        workflow.config.commands
-                                                }}</code></b
-                                            >
-                                        </b-col>
-                                    </b-row>
-                                    <b-row
-                                        v-if="
-                                            workflow.config.input !== undefined
-                                        "
-                                    >
-                                        <b-col>
-                                            <small>Input</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b
-                                                ><code
-                                                    >[working
-                                                    directory]/input/{{
-                                                        workflow.config.input
-                                                            .filetypes
-                                                            ? '[' +
-                                                              (workflow.config
-                                                                  .input
-                                                                  .filetypes
-                                                                  ? '*.' +
-                                                                    workflow.config.input.filetypes.join(
-                                                                        ', *.'
-                                                                    )
-                                                                  : []) +
-                                                              ']'
-                                                            : ''
-                                                    }}</code
-                                                ></b
-                                            >
-                                        </b-col>
-                                    </b-row>
-                                    <b-row
-                                        v-if="
-                                            workflow.config.output !== undefined
-                                        "
-                                    >
-                                        <b-col>
-                                            <small>Output</small>
-                                        </b-col>
-                                        <b-col cols="10">
-                                            <b
-                                                ><code
-                                                    >[working directory]/{{
-                                                        workflow.config.output
-                                                            .path
-                                                            ? workflow.config
-                                                                  .output.path +
-                                                              '/'
-                                                            : ''
-                                                    }}{{
-                                                        workflow.config.output
-                                                            .include
-                                                            ? '[' +
-                                                              (workflow.config
-                                                                  .output
-                                                                  .exclude
-                                                                  ? '+ '
-                                                                  : '') +
-                                                              (workflow.config
-                                                                  .output
-                                                                  .include
-                                                                  .patterns
-                                                                  ? '*.' +
-                                                                    workflow.config.output.include.patterns.join(
-                                                                        ', *.'
-                                                                    )
-                                                                  : []) +
-                                                              (workflow.config
-                                                                  .output
-                                                                  .include.names
-                                                                  ? ', ' +
-                                                                    workflow.config.output.include.names.join(
-                                                                        ', '
-                                                                    )
-                                                                  : [])
-                                                            : ''
-                                                    }}{{
-                                                        workflow.config.output
-                                                            .exclude
-                                                            ? ' - ' +
-                                                              (workflow.config
-                                                                  .output
-                                                                  .exclude
-                                                                  .patterns
-                                                                  ? '*.' +
-                                                                    workflow.config.output.exclude.patterns.join(
-                                                                        ', *.'
-                                                                    )
-                                                                  : []) +
-                                                              (workflow.config
-                                                                  .output
-                                                                  .exclude.names
-                                                                  ? ', ' +
-                                                                    workflow.config.output.exclude.names.join(
-                                                                        ', '
-                                                                    )
-                                                                  : [])
-                                                            : '' + ']'
-                                                    }}
-                                                </code></b
-                                            >
-                                        </b-col>
-                                    </b-row>
-                                </p>
                                 <b-row>
-                                    <b-col
-                                        ><b-button
-                                            block
-                                            variant="success"
-                                            v-if="workflow.validation.is_valid"
-                                            @click="selectBinding(workflow)"
-                                            >Select</b-button
-                                        ></b-col
-                                    >
+                                    <b-col>
+                                        <small>Image</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        <b>{{ workflow.config.image }}</b>
+                                    </b-col>
                                 </b-row>
-                            </div>
-                            <div v-else>
-                                <p
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light'
-                                            : 'text-dark'
-                                    "
+                                <b-row>
+                                    <b-col>
+                                        <small>GPU</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        {{ workflow.config.gpu ? 'Yes' : 'No' }}
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        <small>Mount</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        {{
+                                            workflow.config.mount
+                                                ? workflow.config.mount
+                                                : 'None'
+                                        }}
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        <small>Parameters</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        <b>{{
+                                            workflow.config.params
+                                                ? workflow.config.params.length
+                                                : 'None'
+                                        }}</b>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col>
+                                        <small>Command</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        <b
+                                            ><code>{{
+                                                ' ' + workflow.config.commands
+                                            }}</code></b
+                                        >
+                                    </b-col>
+                                </b-row>
+                                <b-row
+                                    v-if="workflow.config.input !== undefined"
                                 >
-                                    <b class="text-danger">
-                                        <i
-                                            class="fas fa-exclamation-circle"
-                                        ></i>
-                                        This workflow has configuration errors.
-                                    </b>
-                                    You must correct any configuration errors in
-                                    your <code>plantit.yaml</code> file before
-                                    connecting your repository.
-                                </p>
-                                <b-list-group class="mb-2">
-                                    <b-list-group-item
-                                        v-for="error in workflow.validation
-                                            .errors"
-                                        v-bind:key="error"
-                                        :variant="
-                                            profile.darkMode ? 'dark' : 'light'
-                                        "
-                                        >{{ error }}</b-list-group-item
-                                    >
-                                </b-list-group>
-                                <json-viewer
-                                    :value="workflow.config"
-                                    :expand-depth="5"
-                                    copyable
-                                    boxed
-                                    sort
-                                    :theme="
-                                        profile.darkMode ? 'darkjson' : 'light'
+                                    <b-col>
+                                        <small>Input</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        <b
+                                            ><code
+                                                >[working directory]/input/{{
+                                                    workflow.config.input
+                                                        .filetypes
+                                                        ? '[' +
+                                                          (workflow.config.input
+                                                              .filetypes
+                                                              ? '*.' +
+                                                                workflow.config.input.filetypes.join(
+                                                                    ', *.'
+                                                                )
+                                                              : []) +
+                                                          ']'
+                                                        : ''
+                                                }}</code
+                                            ></b
+                                        >
+                                    </b-col>
+                                </b-row>
+                                <b-row
+                                    v-if="workflow.config.output !== undefined"
+                                >
+                                    <b-col>
+                                        <small>Output</small>
+                                    </b-col>
+                                    <b-col cols="10">
+                                        <b
+                                            ><code
+                                                >[working directory]/{{
+                                                    workflow.config.output.path
+                                                        ? workflow.config.output
+                                                              .path + '/'
+                                                        : ''
+                                                }}{{
+                                                    workflow.config.output
+                                                        .include
+                                                        ? '[' +
+                                                          (workflow.config
+                                                              .output.exclude
+                                                              ? '+ '
+                                                              : '') +
+                                                          (workflow.config
+                                                              .output.include
+                                                              .patterns
+                                                              ? '*.' +
+                                                                workflow.config.output.include.patterns.join(
+                                                                    ', *.'
+                                                                )
+                                                              : []) +
+                                                          (workflow.config
+                                                              .output.include
+                                                              .names
+                                                              ? ', ' +
+                                                                workflow.config.output.include.names.join(
+                                                                    ', '
+                                                                )
+                                                              : [])
+                                                        : ''
+                                                }}{{
+                                                    workflow.config.output
+                                                        .exclude
+                                                        ? ' - ' +
+                                                          (workflow.config
+                                                              .output.exclude
+                                                              .patterns
+                                                              ? '*.' +
+                                                                workflow.config.output.exclude.patterns.join(
+                                                                    ', *.'
+                                                                )
+                                                              : []) +
+                                                          (workflow.config
+                                                              .output.exclude
+                                                              .names
+                                                              ? ', ' +
+                                                                workflow.config.output.exclude.names.join(
+                                                                    ', '
+                                                                )
+                                                              : [])
+                                                        : '' + ']'
+                                                }}
+                                            </code></b
+                                        >
+                                    </b-col>
+                                </b-row>
+                            </p>
+                            <b-row>
+                                <b-col
+                                    ><b-button
+                                        block
+                                        variant="success"
+                                        v-if="workflow.validation.is_valid"
+                                        @click="selectBinding(workflow)"
+                                        >Select</b-button
+                                    ></b-col
+                                >
+                            </b-row>
+                        </div>
+                        <div v-else>
+                            <p
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                <b class="text-danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    This workflow has configuration errors.
+                                </b>
+                                You must correct any configuration errors in
+                                your <code>plantit.yaml</code> file before
+                                connecting your repository.
+                            </p>
+                            <b-list-group class="mb-2">
+                                <b-list-group-item
+                                    v-for="error in workflow.validation.errors"
+                                    v-bind:key="error"
+                                    :variant="
+                                        profile.darkMode ? 'dark' : 'light'
                                     "
-                                ></json-viewer>
-                            </div>
-                        </b-card-body>
-                    </b-card>
-                </div>
-                <!--<div class="text-left" v-else-if="singleSearchResult">
+                                    >{{ error }}</b-list-group-item
+                                >
+                            </b-list-group>
+                            <json-viewer
+                                :value="workflow.config"
+                                :expand-depth="5"
+                                copyable
+                                boxed
+                                sort
+                                :theme="profile.darkMode ? 'darkjson' : 'light'"
+                            ></json-viewer>
+                        </div>
+                    </b-card-body>
+                </b-card>
+            </div>
+            <!--<div class="text-left" v-else-if="singleSearchResult">
                     <h5 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         Repository Details
                     </h5>
@@ -649,8 +580,7 @@
                         Language: {{ searchResult[0].repo.language }}
                     </p>
                 </div>-->
-            </b-modal>
-        </div>
+        </b-modal>
     </b-container>
 </template>
 
@@ -658,7 +588,6 @@
 import blurb from '@/components/workflows/workflow-blurb.vue';
 import { mapGetters } from 'vuex';
 import * as Sentry from '@sentry/browser';
-// import debounce from 'lodash/debounce';
 import axios from 'axios';
 import moment from 'moment';
 import { guid } from '@/utils';

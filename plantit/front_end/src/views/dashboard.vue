@@ -3,11 +3,7 @@
         <div v-if="profileLoading">
             <b-row align-v="center">
                 <b-col class="text-center">
-                    <b-spinner
-                        type="grow"
-                        label="Loading..."
-                        variant="secondary"
-                    ></b-spinner>
+                    <b-img :src="require('../assets/PlantITLoading.gif')" style="transform: translate(0px, 150px); opacity: 0.1"></b-img>
                 </b-col>
             </b-row>
         </div>

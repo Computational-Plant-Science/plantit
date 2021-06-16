@@ -1,231 +1,205 @@
 <template>
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
-        <div v-if="profileLoading">
-            <b-row>
-                <b-col class="text-center">
+        <div v-if="isRootPath">
+            <b-row
+                ><b-col md="auto"
+                    ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        <i class="fas fa-server fa-fw"></i>
+                        {{ publicContext ? 'Public' : 'Your' }} Agents
+                    </h2></b-col
+                >
+                <b-col md="auto" class="ml-0 mb-1" align-self="center"
+                    ><b-button
+                        :disabled="agentsLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        class="ml-0 mt-0 mr-0"
+                        @click="toggleContext"
+                        :title="
+                            publicContext
+                                ? 'View your agents'
+                                : 'View public agents'
+                        "
+                        v-b-tooltip:hover
+                        ><span v-if="publicContext"
+                            ><i class="fas fa-user"></i> Yours</span
+                        ><span v-else
+                            ><i class="fas fa-users"></i> Public</span
+                        ></b-button
+                    ></b-col
+                >
+                <b-col
+                    md="auto"
+                    class="ml-0 mb-1"
+                    align-self="center"
+                    v-if="!publicContext"
+                    ><b-button
+                        :disabled="agentsLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Bind a new agent"
+                        @click="showBindAgentModal"
+                        class="ml-0 mt-0 mr-0"
+                    >
+                        <b-spinner
+                            small
+                            v-if="agentsLoading || bindingAgent"
+                            label="Binding..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-plug mr-1"></i>Bind</b-button
+                    ></b-col
+                >
+                <b-col md="auto" class="ml-0 mb-1" align-self="center"
+                    ><b-button
+                        :disabled="agentsLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Refresh agents"
+                        @click="refreshAgents"
+                        class="ml-0 mt-0 mr-0"
+                    >
+                        <b-spinner
+                            small
+                            v-if="agentsLoading"
+                            label="Refreshing..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-redo mr-1"></i
+                        >Refresh</b-button
+                    ></b-col
+                >
+            </b-row>
+            <b-row v-if="agentsLoading" class="mt-2">
+                <b-col>
                     <b-spinner
-                        type="grow"
+                        small
                         label="Loading..."
-                        variant="secondary"
-                    ></b-spinner>
+                        :variant="profile.darkMode ? 'light' : 'dark'"
+                        class="mr-1"
+                    ></b-spinner
+                    ><span
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        >Loading {{ publicContext ? 'public' : 'your' }} agents...</span
+                    >
                 </b-col>
             </b-row>
-        </div>
-        <div v-else>
-            <div v-if="isRootPath">
-                <b-row
-                    ><b-col
-                        ><h2
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                        >
-                            <i class="fas fa-server fa-fw"></i>
-                            {{ publicContext ? 'Public' : 'Your' }} Agents
-                        </h2></b-col
-                    >
-                    <b-col
-                        md="auto"
-                        class="ml-0"
-                        align-self="center"
-                        v-if="!publicContext"
-                        ><b-button
-                            :disabled="agentsLoading"
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
-                            size="md"
-                            v-b-tooltip.hover
-                            title="Bind a new agent"
-                            @click="showBindAgentModal"
-                            class="ml-0 mt-0 mr-0"
-                        >
-                            <b-spinner
-                                small
-                                v-if="agentsLoading || bindingAgent"
-                                label="Binding..."
-                                :variant="profile.darkMode ? 'light' : 'dark'"
-                                class="mr-1"
-                            ></b-spinner
-                            ><i v-else class="fas fa-plug mr-1"></i
-                            >Bind</b-button
-                        ></b-col
-                    >
-                    <b-col md="auto" class="ml-0" align-self="center"
-                        ><b-button
-                            :disabled="agentsLoading"
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
-                            size="md"
-                            v-b-tooltip.hover
-                            title="Refresh agents"
-                            @click="refreshAgents"
-                            class="ml-0 mt-0 mr-0"
-                        >
-                            <b-spinner
-                                small
-                                v-if="agentsLoading"
-                                label="Refreshing..."
-                                :variant="profile.darkMode ? 'light' : 'dark'"
-                                class="mr-1"
-                            ></b-spinner
-                            ><i v-else class="fas fa-redo mr-1"></i
-                            >Refresh</b-button
-                        ></b-col
-                    >
-                    <b-col md="auto" align-self="center"
-                        ><b-button
-                            :disabled="agentsLoading"
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
-                            size="md"
-                            class="ml-0 mt-0 mr-0"
-                            @click="toggleContext"
-                            :title="
-                                publicContext
-                                    ? 'View your agents'
-                                    : 'View public agents'
-                            "
-                            v-b-tooltip:hover
-                            ><span v-if="publicContext"
-                                ><i class="fas fa-user"></i> Yours</span
-                            ><span v-else
-                                ><i class="fas fa-users"></i> Public</span
-                            ></b-button
-                        ></b-col
-                    >
-                </b-row>
-                <b-row v-if="agentsLoading" class="mt-2">
-                    <b-col class="text-center">
-                        <b-spinner
-                            type="grow"
-                            label="Loading..."
-                            variant="secondary"
-                        ></b-spinner>
-                    </b-col>
-                </b-row>
-                <b-card-group deck columns v-else-if="getAgents.length !== 0">
-                    <b-card
-                        v-for="agent in getAgents"
-                        v-bind:key="agent.name"
-                        :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                        border-variant="default"
-                        :header-border-variant="
-                            profile.darkMode ? 'secondary' : 'default'
-                        "
-                        :text-variant="profile.darkMode ? 'white' : 'dark'"
-                        style="min-width: 30rem;"
-                        class="overflow-hidden mb-4"
-                    >
-                        <b-row style="z-index: 10">
-                            <b-col cols="10">
-                                <h2>
-                                    <b-link
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-white'
-                                                : 'text-dark'
-                                        "
-                                        variant="outline-dark"
-                                        v-b-tooltip.hover
-                                        :to="{
-                                            name: 'agent',
-                                            params: {
-                                                name: agent.name
-                                            }
-                                        }"
-                                    >
-                                        {{ agent.name }}
-                                    </b-link>
-                                </h2>
-                                <b-badge
-                                    v-if="!agent.public"
-                                    class="mr-1"
-                                    variant="info"
-                                    ><i class="fas fa-lock fa-fw"></i>
-                                    Private</b-badge
-                                >
-                                <b-badge v-else variant="warning" class="mr-1"
-                                    ><i class="fas fa-lock-open fa-fw"></i>
-                                    Public</b-badge
-                                >
-                                <b-badge variant="warning">{{
-                                    agent.role === 'admin'
-                                        ? agent.user ===
-                                          profile.djangoProfile.username
-                                            ? 'Owner'
-                                            : 'Admin'
-                                        : 'Guest'
-                                }}</b-badge>
-
-                                <br />
-                                <small>
-                                    {{ agent.description }}
-                                </small>
-                                <br />
-                            </b-col>
-                            <b-col cols="1"></b-col>
-                        </b-row>
-                        <b-img
-                            v-if="agent.logo"
-                            rounded
-                            class="card-img-right overflow-hidden"
-                            style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
-                            right
-                            :src="agent.logo"
-                        ></b-img>
-                    </b-card>
-                </b-card-group>
-                <b-row v-else
-                    ><b-col
-                        ><span
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            >{{
-                                publicContext
-                                    ? 'No public agents available.'
-                                    : "You haven't created any agent bindings yet."
-                            }}</span
-                        >
-                        <br />
-                        <span v-if="!publicContext">
-                            View
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                @click="toggleContext"
-                                ><i class="fas fa-users fa-1x fa-fw"></i>
-                                Public</b-link
-                            >
-                            agents to use an existing cluster or supercomputer,
-                            or
-                            <b-link
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light'
-                                        : 'text-dark'
-                                "
-                                @click="showBindAgentModal"
-                                ><i class="fas fa-plug fa-1x fa-fw"></i> bind an
-                                agent</b-link
-                            >
-                            of your own.</span
-                        ></b-col
-                    ></b-row
+            <b-card-group deck columns v-else-if="getAgents.length !== 0">
+                <b-card
+                    v-for="agent in getAgents"
+                    v-bind:key="agent.name"
+                    :bg-variant="profile.darkMode ? 'dark' : 'white'"
+                    :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                    border-variant="default"
+                    :header-border-variant="
+                        profile.darkMode ? 'secondary' : 'default'
+                    "
+                    :text-variant="profile.darkMode ? 'white' : 'dark'"
+                    style="min-width: 30rem;"
+                    class="overflow-hidden mb-4"
                 >
-            </div>
-            <router-view
-                v-else
-                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
-            ></router-view>
+                    <b-row style="z-index: 10">
+                        <b-col cols="10">
+                            <h2>
+                                <b-link
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    variant="outline-dark"
+                                    v-b-tooltip.hover
+                                    :to="{
+                                        name: 'agent',
+                                        params: {
+                                            name: agent.name
+                                        }
+                                    }"
+                                >
+                                    {{ agent.name }}
+                                </b-link>
+                            </h2>
+                            <b-badge
+                                v-if="!agent.public"
+                                class="mr-1"
+                                variant="info"
+                                ><i class="fas fa-lock fa-fw"></i>
+                                Private</b-badge
+                            >
+                            <b-badge v-else variant="warning" class="mr-1"
+                                ><i class="fas fa-lock-open fa-fw"></i>
+                                Public</b-badge
+                            >
+                            <b-badge variant="warning">{{
+                                agent.role === 'admin'
+                                    ? agent.user ===
+                                      profile.djangoProfile.username
+                                        ? 'Owner'
+                                        : 'Admin'
+                                    : 'Guest'
+                            }}</b-badge>
+
+                            <br />
+                            <small>
+                                {{ agent.description }}
+                            </small>
+                            <br />
+                        </b-col>
+                        <b-col cols="1"></b-col>
+                    </b-row>
+                    <b-img
+                        v-if="agent.logo"
+                        rounded
+                        class="card-img-right overflow-hidden"
+                        style="max-height: 4rem;position: absolute;right: 20px;top: 20px;z-index:1"
+                        right
+                        :src="agent.logo"
+                    ></b-img>
+                </b-card>
+            </b-card-group>
+            <b-row v-else
+                ><b-col
+                    ><span
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        >{{
+                            publicContext
+                                ? 'No public agents available.'
+                                : "You haven't created any agent bindings yet."
+                        }}</span
+                    >
+                    <br />
+                    <span v-if="!publicContext">
+                        View
+                        <b-link
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            @click="toggleContext"
+                            ><i class="fas fa-users fa-1x fa-fw"></i>
+                            Public</b-link
+                        >
+                        agents to use an existing cluster or supercomputer, or
+                        <b-link
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            @click="showBindAgentModal"
+                            ><i class="fas fa-plug fa-1x fa-fw"></i> bind an
+                            agent</b-link
+                        >
+                        of your own.</span
+                    ></b-col
+                ></b-row
+            >
         </div>
+        <router-view
+            v-else
+            :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+        ></router-view>
         <b-modal
             id="bindAgent"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"

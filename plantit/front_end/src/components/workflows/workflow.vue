@@ -22,10 +22,15 @@
                 v-if="workflowLoading || getWorkflow === null"
             >
                 <b-spinner
-                    type="grow"
-                    label="Loading..."
-                    variant="secondary"
-                ></b-spinner>
+                        small
+                        label="Loading..."
+                        :variant="profile.darkMode ? 'light' : 'dark'"
+                        class="mr-1"
+                    ></b-spinner
+                    ><span
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        >Loading workflow...</span
+                    >
             </b-row>
             <b-row v-else>
                 <b-col>
@@ -797,7 +802,7 @@
                                                                 v-if="
                                                                     !getWorkflow
                                                                         .config
-                                                                        .resources
+                                                                        .jobqueue
                                                                 "
                                                             >
                                                                 <b-alert
@@ -831,7 +836,7 @@
                                                                                     ' ' +
                                                                                         getWorkflow
                                                                                             .config
-                                                                                            .resources
+                                                                                            .jobqueue
                                                                                             .time
                                                                                 }}</code
                                                                             ></b
@@ -849,8 +854,8 @@
                                                                                     ' ' +
                                                                                         getWorkflow
                                                                                             .config
-                                                                                            .resources
-                                                                                            .mem
+                                                                                            .jobqueue
+                                                                                            .memory
                                                                                 }}</code
                                                                             ></b
                                                                         >
@@ -867,7 +872,7 @@
                                                                                     ' ' +
                                                                                         getWorkflow
                                                                                             .config
-                                                                                            .resources
+                                                                                            .jobqueue
                                                                                             .processes
                                                                                 }}</code
                                                                             ></b
@@ -885,7 +890,7 @@
                                                                                     ' ' +
                                                                                         getWorkflow
                                                                                             .config
-                                                                                            .resources
+                                                                                            .jobqueue
                                                                                             .cores
                                                                                 }}</code
                                                                             ></b
@@ -2029,8 +2034,8 @@
                                                                                                         parseInt(
                                                                                                             getWorkflow
                                                                                                                 .config
-                                                                                                                .resources
-                                                                                                                .mem
+                                                                                                                .jobqueue
+                                                                                                                .memory
                                                                                                         ) &&
                                                                                                         parseInt(
                                                                                                             agent.max_mem
@@ -2180,8 +2185,8 @@
                                                                                                     parseInt(
                                                                                                         getWorkflow
                                                                                                             .config
-                                                                                                            .resources
-                                                                                                            .mem
+                                                                                                            .jobqueue
+                                                                                                            .memory
                                                                                                     ) &&
                                                                                                     parseInt(
                                                                                                         agent.max_mem
@@ -3195,11 +3200,11 @@ export default {
             return (
                 (parseInt(agent.max_mem) !== -1 &&
                     parseInt(agent.max_mem) <
-                        parseInt(this.getWorkflow.config.resources.mem)) ||
+                        parseInt(this.getWorkflow.config.jobqueue.memory)) ||
                 parseInt(agent.max_cores) <
-                    parseInt(this.getWorkflow.config.resources.cores) ||
+                    parseInt(this.getWorkflow.config.jobqueue.cores) ||
                 parseInt(agent.max_processes) <
-                    parseInt(this.getWorkflow.config.resources.processes)
+                    parseInt(this.getWorkflow.config.jobqueue.processes)
             );
             // TODO walltime
         },
@@ -3212,7 +3217,7 @@ export default {
         },
         async onStart() {
             if (
-                !this.getWorkflow.config.resources &&
+                !this.getWorkflow.config.jobqueue &&
                 this.selectedAgent.executor !== 'Local'
             ) {
                 alert(
@@ -3225,8 +3230,6 @@ export default {
             this.params['config'] = {};
             this.params['config']['api_url'] = '/apis/v1/tasks/status/';
             let agent = this.selectedAgent;
-            if (this.getWorkflow.config.resources)
-                agent['resources'] = this.getWorkflow.config.resources;
             let taskName = this.taskName === '' ? this.taskGuid : this.taskName;
             let config = {
                 name: this.getWorkflow.config.name,
@@ -3238,6 +3241,8 @@ export default {
                 commands: this.getWorkflow.config.commands,
                 tags: this.tags
             };
+            if ('jobqueue' in this.getWorkflow.config)
+              config['jobqueue'] = this.getWorkflow.config.jobqueue;
             if ('gpu' in this.getWorkflow.config)
                 config['gpu'] = this.getWorkflow.config.gpu;
             if ('branch' in this.getWorkflow.config)

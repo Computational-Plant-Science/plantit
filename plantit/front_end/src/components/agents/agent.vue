@@ -79,11 +79,18 @@
                 >
                     <b-col
                         ><b-spinner
-                            type="grow"
+                            small
                             label="Loading..."
-                            variant="secondary"
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
                         ></b-spinner
-                    ></b-col>
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            >Loading agent...</span
+                        ></b-col
+                    >
                 </b-row>
                 <b-row v-else>
                     <b-col
@@ -1792,14 +1799,14 @@ export default {
                 ? 'blocked'
                 : 'none';
     },
-  watch: {
-     workflowPolicyType() {
-       // noop
-     },
-    getAgent() {
-       // noop
-    }
-  },
+    watch: {
+        workflowPolicyType() {
+            // noop
+        },
+        getAgent() {
+            // noop
+        }
+    },
     methods: {
         async refreshWorkflows() {
             await Promise.all([

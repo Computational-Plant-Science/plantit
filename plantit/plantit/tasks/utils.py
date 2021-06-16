@@ -104,10 +104,10 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
             "template_local_run.sh",
             "template_slurm_run.sh"]
 
-    jobqueue = None if 'resources' not in config['agent'] else config['agent']['resources']
-    new_flow = map_workflow_config_to_cli_config(config, task, jobqueue)
-    launcher = task.agent.launcher  # whether to use TACC launcher
-    if task.agent.launcher: del new_flow['jobqueue']
+    # jobqueue = None if 'jobqueue' not in config['agent'] else config['agent']['jobqueue']
+    # new_flow = map_workflow_config_to_cli_config(config, task, jobqueue)
+    # launcher = task.agent.launcher  # whether to use TACC launcher
+    # if task.agent.launcher: del new_flow['jobqueue']
 
     errors = []
     image = None
@@ -199,9 +199,9 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     jobqueue = None
     if 'jobqueue' in config:
         jobqueue = config['jobqueue']
-        if not (
-                'slurm' in jobqueue or 'yarn' in jobqueue or 'pbs' in jobqueue or 'moab' in jobqueue or 'sge' in jobqueue or 'lsf' in jobqueue or 'oar' in jobqueue or 'kube' in jobqueue):
-            raise ValueError(f"Unsupported jobqueue configuration: {jobqueue}")
+        # if not (
+        #         'slurm' in jobqueue or 'yarn' in jobqueue or 'pbs' in jobqueue or 'moab' in jobqueue or 'sge' in jobqueue or 'lsf' in jobqueue or 'oar' in jobqueue or 'kube' in jobqueue):
+        #     raise ValueError(f"Unsupported jobqueue configuration: {jobqueue}")
 
         if 'queue' in jobqueue:
             if not isinstance(jobqueue['queue'], str):
@@ -223,18 +223,21 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         if 'header_skip' in jobqueue and not all(extra is str for extra in jobqueue['header_skip']):
             errors.append('Section \'jobqueue\'.\'header_skip\' must be a list of str')
 
-    return errors, PlantITCLIOptions(
+    options = PlantITCLIOptions(
         workdir=work_dir,
         image=image,
-        command=command,
-        input=input,
-        parameters=parameters,
-        bind_mounts=bind_mounts,
-        # checksums=checksums,
-        log_file=log_file,
-        jobqueue=jobqueue,
-        no_cache=no_cache,
-        gpu=gpu)
+        command=command)
+
+    if input is not None: options['input'] = input
+    if parameters is not None: options['parameters'] = parameters
+    if bind_mounts is not None: options['bind_mounts'] = bind_mounts
+    # if checksums is not None: options['checksums'] = checksums
+    if log_file is not None: options['log_file'] = log_file
+    if jobqueue is not None: options['jobqueue'] = jobqueue
+    if no_cache is not None: options['no_cache'] = no_cache
+    if gpu is not None: options['gpu'] = gpu
+
+    return errors, options
 
 
 def create_task(username: str, agent_name: str, workflow: dict, name: str = None, guid: str = None) -> Task:
@@ -315,6 +318,8 @@ def configure_task_environment(task: Task, ssh: SSH):
             else:
                 cli_options['input']['path'] = f"input/{path.rpartition('/')[2]}"
 
+        if task.agent.executor == AgentExecutor.LOCAL: del cli_options['jobqueue']
+
         sftp.chdir(work_dir)
         with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
             yaml.dump(del_none(cli_options), cli_file, default_flow_style=False)
@@ -365,13 +370,13 @@ def compose_singularity_command(
 def compose_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
     nodes = min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1
 
-    if 'resources' not in 'options': return []
+    if 'jobqueue' not in 'options': return []
     gpu = task.agent.gpu and ('gpu' in options and options['gpu'])
-    jobqueue = options['resources']
+    jobqueue = options['jobqueue']
     commands = []
 
     if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}\n")
-    if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(f"#SBATCH --mem={jobqueue['mem']}\n")
+    if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(f"#SBATCH --mem={jobqueue['memory']}\n")
     if 'walltime' in task.workflow['config']:
         split_time = task.workflow['config']['walltime'].split(':')
         hours = int(split_time[0])
@@ -603,9 +608,9 @@ def compose_launcher_script(task: Task, options: PlantITCLIOptions) -> List[str]
             image=options['image'],
             command=options['command'],
             parameters=(options['parameters'] if 'parameters' in options else []),
-            bind_mounts=options['bind_mounts'],
-            no_cache=options['no_cache'],
-            gpu=options['gpu'],
+            bind_mounts=options['bind_mounts'] if 'bind_mounts' in options else None,
+            no_cache=options['no_cache'] if 'no_cache' in options else False,
+            gpu=options['gpu'] if 'gpu' in options else False,
             docker_username=docker_username,
             docker_password=docker_password)
         lines.append(command)
@@ -660,9 +665,15 @@ def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
     precommand = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
     command = f"sbatch {task.guid}.sh"
     workdir = join(task.agent.workdir, task.workdir)
-    output_lines = list(execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True))
 
-    job_id = parse_job_id(output_lines[-1])
+    lines = []
+    for line in execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True):
+        stripped = line.strip()
+        if stripped:
+            log_task_status(task, [f"[{task.agent.name}] {stripped}"])
+            lines.append(stripped)
+
+    job_id = parse_job_id(lines[-1])
     task.job_id = job_id
     task.updated = timezone.now()
     task.save()
@@ -860,7 +871,7 @@ def map_task(task: Task):
         'name': task.name,
         'work_dir': task.workdir,
         'task_logs': task_logs,
-        'agent': task.agent.name,
+        'agent': task.agent.name if task.agent is not None else None,
         'created': task.created.isoformat(),
         'updated': task.updated.isoformat(),
         'completed': task.completed.isoformat() if task.completed is not None else None,
@@ -936,7 +947,7 @@ def get_ssh_client(task: Task, auth: dict) -> SSH:
     return client
 
 
-def map_workflow_config_to_cli_config(config: dict, task: Task, resources: dict) -> dict:
+def map_workflow_config_to_cli_config(config: dict, task: Task, jobqueue: dict) -> dict:
     cli_config = {
         'image': config['image'],
         'command': config['commands'],
@@ -996,16 +1007,16 @@ def map_workflow_config_to_cli_config(config: dict, task: Task, resources: dict)
     if not sandbox and not task.agent.job_array:
         cli_config['jobqueue'] = dict()
         cli_config['jobqueue']['slurm'] = {
-            'cores': resources['cores'],
-            'processes': resources['processes'],
-            'walltime': resources['time'],
+            'cores': jobqueue['cores'],
+            'processes': jobqueue['processes'],
+            'walltime': jobqueue['time'],
             'local_directory': work_dir,
             'log_directory': work_dir,
             'env_extra': [task.agent.pre_commands]
         }
 
-        if 'mem' in resources:
-            cli_config['jobqueue']['slurm']['memory'] = resources['mem']
+        if 'memory' in jobqueue:
+            cli_config['jobqueue']['slurm']['memory'] = jobqueue['memory']
         if task.agent.queue is not None and task.agent.queue != '':
             cli_config['jobqueue']['slurm']['queue'] = task.agent.queue
         if task.agent.project is not None and task.agent.project != '':

@@ -1,12 +1,20 @@
 <template>
     <div>
         <b-container class="p-2 vl" fluid>
-            <b-row align-h="center" v-if="tasksLoading">
-                <b-spinner
-                    type="grow"
-                    label="Loading..."
-                    variant="secondary"
-                ></b-spinner>
+            <b-row v-if="tasksLoading">
+                <b-col>
+                    <b-spinner
+                        small
+                        v-if="tasksLoading"
+                        label="Loading..."
+                        :variant="profile.darkMode ? 'light' : 'dark'"
+                        class="mr-1"
+                    ></b-spinner
+                    ><span
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        >Loading task...</span
+                    >
+                </b-col>
             </b-row>
             <b-row align-content="center" v-else-if="notFound">
                 <b-col class="text-center">
@@ -20,18 +28,10 @@
             </b-row>
             <b-row v-else-if="getTask.cleaned_up" align-content="center">
                 <b-col>
-                    <p
-                        :class="
-                            profile.darkMode
-                                ? 'text-center text-white'
-                                : 'text-center text-dark'
-                        "
-                    >
-                        <i class="fas fa-broom fa-3x fa-fw"></i>
-                        <br />
-                        <br />
-                        This task has been cleaned up.
-                    </p>
+                    <h6 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                        <i class="fas fa-broom fa-1x fa-fw"></i> This task has
+                        been cleaned up.
+                    </h6>
                 </b-col>
             </b-row>
             <b-row v-else>
@@ -133,7 +133,11 @@
                                         }}</b-badge
                                     >
                                     <small> on </small>
-                                    <b class="mr-0">{{ getTask.agent }}</b>
+                                    <b class="mr-0">{{
+                                        getTask.agent
+                                            ? getTask.agent
+                                            : '[agent removed]'
+                                    }}</b>
                                 </h5>
                             </b-col>
                             <b-col
@@ -1720,7 +1724,10 @@ export default {
                 )
                 .then(async response => {
                     if (response.status === 200) {
-                        await this.$store.dispatch('tasks/setAll', response.data.tasks);
+                        await this.$store.dispatch(
+                            'tasks/setAll',
+                            response.data.tasks
+                        );
                         await router.push({
                             name: 'tasks'
                         });

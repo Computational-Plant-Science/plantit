@@ -3,33 +3,45 @@
         <b-row
             ><b-col
                 ><b-row
-                    ><b-col
+                    ><b-col md="auto"
                         ><h2
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
                         >
-          <i class="fas fa-database fa-fw"></i> {{ publicContext ? 'Public' : 'Your' }} Datasets
+                            <i class="fas fa-database fa-fw"></i>
+                            {{ publicContext ? 'Public' : 'Your' }} Datasets
                         </h2></b-col
-                    ><b-col md="auto" align-self="center"
-                        ><small>powered by</small
-                        ><b-img
-                            class="ml-2 mt-1"
-                            rounded
-                            style="max-height: 1.1rem;"
-                            right
-                            :src="
-                                require('../../assets/logos/cyverse_bright.png')
-                            "
-                        ></b-img
-                    ></b-col>
-                    <b-col md="auto" class="ml-0" align-self="center"
+                    >
+            <b-col class="ml-0 mb-1" align-self="center" md="auto"
                         ><b-button
                             :disabled="datasetsLoading"
                             :variant="
                                 profile.darkMode ? 'outline-light' : 'white'
                             "
-                            size="md"
+                            size="sm"
+                            class="ml-0 mt-0 mr-0"
+                            @click="toggleContext"
+                            :title="
+                                publicContext
+                                    ? 'View your datasets'
+                                    : 'View public datasets'
+                            "
+                            v-b-tooltip:hover
+                            ><span v-if="publicContext"
+                                ><i class="fas fa-user"></i> Yours</span
+                            ><span v-else
+                                ><i class="fas fa-users"></i> Public</span
+                            ></b-button
+                        ></b-col
+                    >
+                    <b-col md="auto" class="ml-0 mb-1" align-self="center"
+                        ><b-button
+                            :disabled="datasetsLoading"
+                            :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
+                            size="sm"
                             v-b-tooltip.hover
                             title="Refresh datasets"
                             @click="refreshDatasets"
@@ -46,39 +58,40 @@
                             >Refresh</b-button
                         ></b-col
                     >
-                    <b-col md="auto" align-self="center"
-                        ><b-button
-                            :disabled="datasetsLoading"
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
+                    <b-col></b-col><b-col md="auto" align-self="center"
+                        ><small>powered by</small
+                        ><b-img
+                            class="ml-2 mt-1"
+                            rounded
+                            style="max-height: 1.1rem;"
+                            right
+                            :src="
+                                require('../../assets/logos/cyverse_bright.png')
                             "
-                            size="md"
-                            class="ml-0 mt-0 mr-0"
-                            @click="toggleContext"
-                            :title="
-                                publicContext
-                                    ? 'View your datasets'
-                                    : 'View public datasets'
-                            "
-                            v-b-tooltip:hover
-                            ><span v-if="publicContext"
-                                ><i class="fas fa-user"></i> Yours</span
-                            ><span v-else
-                                ><i class="fas fa-users"></i> Public</span
-                            ></b-button
-                        ></b-col
-                    ></b-row
-                >
+                        ></b-img></b-col
+                ></b-row>
                 <b-row v-if="publicContext">
                     <b-col
                         ><b-row v-if="publicDatasetsLoading" class="text-center"
                             ><b-col
                                 ><b-spinner
-                                    type="grow"
+                                    small
                                     label="Loading..."
-                                    variant="secondary"
-                                ></b-spinner></b-col
-                        ></b-row>
+                                    :variant="
+                                        profile.darkMode ? 'light' : 'dark'
+                                    "
+                                    class="mr-1"
+                                ></b-spinner
+                                ><span
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Loading public datasets...</span
+                                ></b-col
+                            ></b-row
+                        >
                         <b-row v-else>
                             <b-col>
                                 <datatree
@@ -136,14 +149,25 @@
                                         ></b-row>-->
                         <b-row
                             v-if="personalDatasetsLoading"
-                            class="text-center"
                             ><b-col
                                 ><b-spinner
-                                    type="grow"
+                                    small
                                     label="Loading..."
-                                    variant="secondary"
-                                ></b-spinner></b-col
-                        ></b-row>
+                                    :variant="
+                                        profile.darkMode ? 'light' : 'dark'
+                                    "
+                                    class="mr-1"
+                                ></b-spinner
+                                ><span
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Loading personal datasets...</span
+                                ></b-col
+                            ></b-row
+                        >
                         <b-row v-else>
                             <b-col>
                                 <datatree
@@ -191,14 +215,26 @@
                                                         "
                                                     ></b-form-input></b-input-group></b-col
                                         ></b-row>-->
-                        <b-row v-if="sharedDatasetsLoading" class="text-center"
+                        <b-row v-if="sharedDatasetsLoading"
                             ><b-col
                                 ><b-spinner
-                                    type="grow"
+                                    small
                                     label="Loading..."
-                                    variant="secondary"
-                                ></b-spinner></b-col
-                        ></b-row>
+                                    :variant="
+                                        profile.darkMode ? 'light' : 'dark'
+                                    "
+                                    class="mr-1"
+                                ></b-spinner
+                                ><span
+                                    :class="
+                                        profile.darkMode
+                                            ? 'text-white'
+                                            : 'text-dark'
+                                    "
+                                    >Loading datasets shared with you...</span
+                                ></b-col
+                            ></b-row
+                        >
                         <b-row v-else>
                             <b-col>
                                 <datatree
@@ -267,7 +303,13 @@
                                 sharingDatasets === null ||
                                     sharingDatasets.length === 0
                             "
-                            ><b-col :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                            ><b-col
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
                                 You haven't shared any datasets with anyone.
                             </b-col></b-row
                         >
@@ -400,19 +442,13 @@ export default {
             else
                 switch (this.activeTab) {
                     case 0:
-                        await this.$store.dispatch(
-                            'datasets/loadPersonal'
-                        );
+                        await this.$store.dispatch('datasets/loadPersonal');
                         return;
                     case 1:
-                        await this.$store.dispatch(
-                            'datasets/loadShared'
-                        );
+                        await this.$store.dispatch('datasets/loadShared');
                         return;
                     case 2:
-                        await this.$store.dispatch(
-                            'datasets/loadSharing'
-                        );
+                        await this.$store.dispatch('datasets/loadSharing');
                         return;
                 }
         },

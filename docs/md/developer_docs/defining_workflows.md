@@ -4,7 +4,7 @@
 
 - [Defining Workflows](#defining-workflows)
   - [The `plantit.yaml` file](#the-plantityaml-file)
-    - [Deployment target resources](#deployment-target-resources)
+    - [Jobqueue deployment targets](#jobqueue-deployment-targets)
         - [GPU mode](#gpu-mode)
       - [Timeouts and other errors](#timeouts-and-other-errors)
     - [Parameters](#parameters)
@@ -33,12 +33,12 @@ image: docker://alpine        # the Docker or Singularity image your workflow's 
 commands: echo "I am Groot!"  # the commands to run inside your container(s)
 ```
 
-### Deployment target resources
+### Jobqueue deployment targets
 
-To make sure your **Workflow** can take full advantage of the resources made available by cluster or supercomputer schedulers, add a `resources` section to your `plantit.yaml` file. For example, to indicate that an instance of your workflow should request 1 process and 1 core on 1 node with 1GB of memory for 1 hour:
+To make sure your **Workflow** can take full advantage of the resources made available by cluster or supercomputer schedulers, add a `jobqueue` section to your `plantit.yaml` file. For example, to indicate that an instance of your workflow should request 1 process and 1 core on 1 node with 1GB of memory for 1 hour:
 
 ```yaml
-resources:
+jobqueue:
   time: "01:00:00"
   mem: "1GB"
   processes: 1
