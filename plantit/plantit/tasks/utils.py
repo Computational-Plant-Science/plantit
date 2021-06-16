@@ -104,7 +104,7 @@ def parse_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
             "template_local_run.sh",
             "template_slurm_run.sh"]
 
-    jobqueue = None if 'jobqueue' not in config['agent'] else config['agent']['jobqueue']
+    jobqueue = None if 'resources' not in config['agent'] else config['agent']['resources']
     new_flow = map_workflow_config_to_cli_config(config, task, jobqueue)
     launcher = task.agent.launcher  # whether to use TACC launcher
     if task.agent.launcher: del new_flow['jobqueue']
@@ -344,7 +344,7 @@ def compose_singularity_command(
     parameters.append(Parameter(key='WORKDIR', value=work_dir))
     for parameter in parameters:
         print(f"Replacing '{parameter['key'].upper()}' with '{parameter['value']}'")
-        command = command.replace(f"${parameter['key'].upper()}", parameter['value'])
+        command = command.replace(f"${parameter['key'].upper()}", str(parameter['value']))
 
     if no_cache:
         cmd += ' --disable-cache'
@@ -365,9 +365,9 @@ def compose_singularity_command(
 def compose_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
     nodes = min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1
 
-    if ['jobqueue'] not in 'options': return []
+    if 'resources' not in 'options': return []
     gpu = task.agent.gpu and ('gpu' in options and options['gpu'])
-    jobqueue = options['jobqueue']
+    jobqueue = options['resources']
     commands = []
 
     if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}\n")
@@ -660,7 +660,7 @@ def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
     precommand = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
     command = f"sbatch {task.guid}.sh"
     workdir = join(task.agent.workdir, task.workdir)
-    output_lines = execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True)
+    output_lines = list(execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True))
 
     job_id = parse_job_id(output_lines[-1])
     task.job_id = job_id

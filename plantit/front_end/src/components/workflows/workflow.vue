@@ -3443,7 +3443,7 @@ export default {
             );
         },
         mustAuthenticate() {
-            return !(
+            return this.selectedAgent.authentication === 'password' || !(
                 this.selectedAgent.user !== undefined &&
                 this.selectedAgent.user ===
                     this.profile.djangoProfile.username &&
