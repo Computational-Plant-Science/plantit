@@ -26,6 +26,9 @@ def map_agent(
         requests: List[AgentAccessRequest] = None):
     tasks = AgentTask.objects.filter(agent=agent)
     redis = RedisClient.get()
+    workflows_authorized = agent.workflows_authorized.all() if agent.workflows_authorized is not None else []
+    workflows_blocked = agent.workflows_blocked.all() if agent.workflows_blocked is not None else []
+
     mapped = {
         'name': agent.name,
         'guid': agent.guid,
@@ -46,8 +49,8 @@ def map_agent(
         'tasks': [map_agent_task(task) for task in tasks],
         'logo': agent.logo,
         'authentication': agent.authentication,
-        'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in agent.workflows_authorized.all()],
-        'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in agent.workflows_blocked.all()]
+        'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_authorized],
+        'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_blocked]
     }
 
     if agent.user is not None:
