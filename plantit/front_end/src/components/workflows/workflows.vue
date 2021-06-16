@@ -104,9 +104,7 @@
                     ></b-spinner
                     ><span
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                        >Loading
-                        {{ publicContext ? 'public' : 'your' }}
-                        workflows...</span
+                        >Loading workflows...</span
                     >
                 </b-col>
             </b-row>

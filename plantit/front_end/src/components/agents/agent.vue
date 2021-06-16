@@ -71,11 +71,7 @@
                     </b-col>
                 </b-row>
                 <b-row
-                    align-h="center"
-                    align-v="center"
-                    align-content="center"
                     v-if="agentLoading"
-                    class="text-center"
                 >
                     <b-col
                         ><b-spinner
@@ -1805,6 +1801,9 @@ export default {
         },
         getAgent() {
             // noop
+        },
+        agent() {
+          // noop
         }
     },
     methods: {
@@ -2065,9 +2064,9 @@ export default {
                         });
                     }
                 })
-                .catch(error => {
+                .catch(async error => {
                     Sentry.captureException(error);
-                    this.$store.dispatch('alerts/add', {
+                    await this.$store.dispatch('alerts/add', {
                         variant: 'danger',
                         message: `Failed to set authentication strategy for agent ${this.$router.currentRoute.params.name}`,
                         guid: guid().toString()
