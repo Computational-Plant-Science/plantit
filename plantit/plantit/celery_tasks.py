@@ -209,7 +209,7 @@ def cleanup_task(guid: str, auth: dict):
     ssh = get_ssh_client(task, auth)
     with ssh:
         for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
-            logger.info(f"[remote output] {line}")
+            logger.info(f"[{task.agent.name}] {line}")
 
     task.cleaned_up = True
     task.save()

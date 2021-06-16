@@ -627,7 +627,7 @@ def execute_local_task(task: Task, ssh: SSH):
     command = f"chmod +x {task.guid}.sh && ./{task.guid}.sh"
     workdir = join(task.agent.workdir, task.workdir)
     lines = list(execute_command(ssh=ssh, precommand=precommand, command=command, directory=workdir, allow_stderr=True))
-    log_task_status(task, [f"[remote output] {line}" for line in lines if not line.strip()])
+    log_task_status(task, [f"[{task.agent.name}] {line.strip()}" for line in lines if line.strip()])
 
     task.status = TaskStatus.SUCCESS
     now = timezone.now()

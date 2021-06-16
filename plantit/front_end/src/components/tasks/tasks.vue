@@ -437,7 +437,7 @@
                                                     variant="outline-danger"
                                                     size="sm"
                                                     v-b-tooltip.hover
-                                                    title="Delete Run"
+                                                    title="Delete Task"
                                                     class="text-right"
                                                     @click="
                                                         showRemovePrompt(task)

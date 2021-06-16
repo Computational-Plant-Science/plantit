@@ -262,7 +262,7 @@
                                     variant="outline-danger"
                                     size="sm"
                                     v-b-tooltip.hover
-                                    title="Delete Run"
+                                    title="Delete Task"
                                     @click="showDeletePrompt"
                                 >
                                     <i class="fas fa-trash"></i>
@@ -1718,12 +1718,10 @@ export default {
                 .get(
                     `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/delete/`
                 )
-                .then(response => {
-                    if (response.status === 200 && response.data.deleted) {
-                        this.showCanceledAlert = true;
-                        this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('tasks/loadAll');
-                        router.push({
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch('tasks/setAll', response.data.tasks);
+                        await router.push({
                             name: 'tasks'
                         });
                     } else {
