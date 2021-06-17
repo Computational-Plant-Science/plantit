@@ -1,4 +1,3 @@
-import json
 from itertools import chain
 
 from django.contrib.auth.decorators import login_required
@@ -6,7 +5,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, JsonResponse
 
 from plantit.notifications.models import Notification
-from plantit.notifications.utils import map_notification
+from plantit.utils import notification_to_dict
 
 
 @login_required
@@ -27,7 +26,7 @@ def list_by_user(request, owner):
         list(Notification.objects.filter(user=user))))
     notifications = notifications[start:(start + count)]
 
-    return JsonResponse({'notifications': [map_notification(notification) for notification in notifications]})
+    return JsonResponse({'notifications': [notification_to_dict(notification) for notification in notifications]})
 
 
 @login_required
@@ -37,8 +36,8 @@ def get_or_dismiss(request, owner, guid):
         notification = Notification.objects.get(user=user, guid=guid)
     except: return HttpResponseNotFound()
 
-    if request.method == 'GET': return JsonResponse(map_notification(notification))
+    if request.method == 'GET': return JsonResponse(notification_to_dict(notification))
     elif request.method == 'DELETE':
         notification.delete()
         notifications = Notification.objects.filter(user=user)
-        return JsonResponse({'notifications': [map_notification(notification) for notification in notifications]})
+        return JsonResponse({'notifications': [notification_to_dict(notification) for notification in notifications]})

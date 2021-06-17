@@ -1,8 +1,7 @@
-import asyncio
+import json
 import json
 import logging
 import os
-from datetime import datetime
 from urllib.parse import parse_qs
 from urllib.parse import urlencode
 
@@ -21,14 +20,14 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from plantit.celery_tasks import aggregate_user_statistics
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.users.utils import list_users, get_cyverse_profile, get_github_profile, get_or_create_keypair, get_private_key_path, get_user_statistics
-from plantit.utils import get_csrf_token
+from plantit.utils import list_users, get_user_statistics, get_user_cyverse_profile, get_user_github_profile, \
+    get_user_private_key_path, get_or_create_user_keypair
+from plantit.misc import get_csrf_token
 
 
 class IDPViewSet(viewsets.ViewSet):
@@ -216,7 +215,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         if stats_last_aggregated is None:
             self.logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
-            stats = get_user_statistics(user)
+            stats = async_to_sync(get_user_statistics)(user)
             redis = RedisClient.get()
             redis.set(f"stats/{user.username}", json.dumps(stats))
             user.profile.stats_last_aggregated = timezone.now()
@@ -227,7 +226,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
             if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
                 self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
-                stats = get_user_statistics(user)
+                stats = async_to_sync(get_user_statistics)(user)
                 redis = RedisClient.get()
                 redis.set(f"stats/{user.username}", json.dumps(stats))
                 user.profile.stats_last_aggregated = timezone.now()
@@ -256,7 +255,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
         if request.user.profile.cyverse_access_token != '':
             try:
-                response['cyverse_profile'] = get_cyverse_profile(request.user)
+                response['cyverse_profile'] = get_user_cyverse_profile(request.user)
             except ValueError:
                 # if the CyVerse request fails, log the user out
                 logout(request)
@@ -264,7 +263,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
                                 "%3A%2F%2Fkc.cyverse.org%2Fauth%2Frealms%2FCyVerse%2Faccount%2F")
 
         if request.user.profile.github_token != '' and user.profile.github_username != '':
-            response['github_profile'] = async_to_sync(get_github_profile)(request.user)
+            response['github_profile'] = async_to_sync(get_user_github_profile)(request.user)
 
         return JsonResponse(response)
 
@@ -327,7 +326,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'])
     def get_key(self, request):
         overwrite = request.GET.get('overwrite', False)
-        public_key = get_or_create_keypair(owner=request.user.username, overwrite=overwrite)
+        public_key = get_or_create_user_keypair(username=request.user.username, overwrite=overwrite)
         return JsonResponse({'public_key': public_key})
 
     @action(detail=False, methods=['post'])
@@ -341,7 +340,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         if 'password' in request.data:
             ssh = SSH(hostname, port=22, username=username, password=request.data['password'])
         else:
-            pkey = str(get_private_key_path(request.user.username))
+            pkey = str(get_user_private_key_path(request.user.username))
             self.logger.info(pkey)
             ssh = SSH(hostname, port=22, username=username, pkey=pkey)
 
@@ -367,7 +366,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
         if 'password' in request.data:
             ssh = SSH(hostname, port=22, username=username, password=request.data['password'])
         else:
-            ssh = SSH(hostname, port=22, username=username, pkey=str(get_private_key_path(request.user.username)))
+            ssh = SSH(hostname, port=22, username=username, pkey=str(get_user_private_key_path(request.user.username)))
 
         with ssh:
             output = []

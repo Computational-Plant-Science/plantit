@@ -5,9 +5,8 @@ from django.http import HttpResponseNotFound, JsonResponse, HttpResponseNotAllow
 from django_celery_beat.models import CrontabSchedule
 
 from plantit.agents.models import Agent, AgentTask
-from plantit.agents.utils import map_agent_task
 from plantit.tasks.models import DelayedTask
-from plantit.tasks.utils import map_delayed_task
+from plantit.utils import agent_task_to_dict, delayed_task_to_dict
 
 
 @login_required
@@ -46,7 +45,7 @@ def search_or_add_agent_task(request):
             args=json.dumps([agent.name, task_command]))
 
         return JsonResponse({
-            'task': map_agent_task(task),
+            'task': agent_task_to_dict(task),
             'created': created
         })
 
@@ -59,7 +58,7 @@ def get_or_delete_agent_task(request, name):
         return HttpResponseNotFound()
 
     if request.method == 'GET':
-        return JsonResponse(map_agent_task(task))
+        return JsonResponse(agent_task_to_dict(task))
     elif request.method == 'DELETE':
         task.delete()
         return JsonResponse({'deleted': True})
@@ -102,7 +101,7 @@ def search_or_add_delayed_task(request):
         args=json.dumps([task_command]))
 
     return JsonResponse({
-        'task': map_agent_task(task),
+        'task': agent_task_to_dict(task),
         'created': created
     })
 
@@ -115,7 +114,7 @@ def get_or_delete_delayed_task(request, name):
         return HttpResponseNotFound()
 
     if request.method == 'GET':
-        return JsonResponse(map_delayed_task(task))
+        return JsonResponse(delayed_task_to_dict(task))
     elif request.method == 'DELETE':
         task.delete()
         return JsonResponse({'deleted': True})

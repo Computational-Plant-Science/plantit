@@ -4,7 +4,7 @@ from typing import List
 import paramiko
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
-from plantit.utils import clean_html
+from plantit.misc import clean_html
 
 logger = logging.getLogger(__name__)
 

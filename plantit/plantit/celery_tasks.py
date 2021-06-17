@@ -23,11 +23,9 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
-from plantit.tasks.utils import log_task_status, push_task_event, remove_logs, get_result_files, get_job_walltime, get_job_status, \
-    configure_task_environment, get_container_logs, get_ssh_client, \
-    submit_jobqueue_task, execute_local_task
-from plantit.users.utils import refresh_cyverse_tokens, get_user_statistics
-from plantit.workflows.utils import repopulate_personal_workflow_bundle_cache, repopulate_public_workflow_bundle_cache
+from plantit.utils import log_task_status, push_task_event, get_task_ssh_client, configure_task_environment, execute_local_task, submit_jobqueue_task, \
+    get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_container_logs, remove_task_orchestration_logs, get_task_result_files, \
+    repopulate_personal_workflow_cache, repopulate_public_workflow_cache, get_user_statistics
 
 logger = get_task_logger(__name__)
 
@@ -49,7 +47,7 @@ def submit_task(guid: str, auth: dict):
 
     try:
         local = task.agent.executor == AgentExecutor.LOCAL
-        ssh = get_ssh_client(task, auth)
+        ssh = get_task_ssh_client(task, auth)
 
         with ssh:
             log_task_status(task, [f"Configuring environment"])
@@ -119,8 +117,8 @@ def poll_job_status(guid: str, auth: dict):
 
     # otherwise poll the scheduler for its status
     try:
-        job_status = get_job_status(task)
-        job_walltime = get_job_walltime(task)
+        job_status = get_jobqueue_task_job_status(task)
+        job_walltime = get_jobqueue_task_job_walltime(task)
         task.job_status = job_status
         task.job_elapsed_walltime = job_walltime
 
@@ -128,8 +126,8 @@ def poll_job_status(guid: str, auth: dict):
         task.updated = now
         task.save()
 
-        ssh = get_ssh_client(task, auth)
-        get_container_logs(task, ssh)
+        ssh = get_task_ssh_client(task, auth)
+        get_task_container_logs(task, ssh)
 
         if job_status == 'COMPLETED':
             task.completed = now
@@ -202,11 +200,11 @@ def cleanup_task(guid: str, auth: dict):
         return
 
     logger.info(f"Cleaning up task with GUID {guid} local working directory {task.agent.workdir}")
-    remove_logs(task.guid, task.agent.name)
+    remove_task_orchestration_logs(task.guid)
 
     logger.info(f"Cleaning up task with GUID {guid} remote working directory {task.agent.workdir}")
     command = f"rm -rf {join(task.agent.workdir, task.workdir)}"
-    ssh = get_ssh_client(task, auth)
+    ssh = get_task_ssh_client(task, auth)
     with ssh:
         for line in execute_command(ssh=ssh, precommand=task.agent.pre_commands, command=command, directory=task.agent.workdir, allow_stderr=True):
             logger.info(f"[{task.agent.name}] {line}")
@@ -227,7 +225,7 @@ def list_task_results(guid: str, auth: dict):
         return
 
     redis = RedisClient.get()
-    ssh = get_ssh_client(task, auth)
+    ssh = get_task_ssh_client(task, auth)
     previews = PreviewManager(join(settings.MEDIA_ROOT, task.guid), create_folder=True)
     workflow = redis.get(f"workflows/{task.workflow_owner}/{task.workflow_name}")
 
@@ -239,12 +237,12 @@ def list_task_results(guid: str, auth: dict):
     log_task_status(task, [f"Retrieving logs"])
     async_to_sync(push_task_event)(task)
 
-    get_container_logs(task, ssh)
+    get_task_container_logs(task, ssh)
 
     log_task_status(task, [f"Retrieving results"])
     async_to_sync(push_task_event)(task)
 
-    expected = get_result_files(task, workflow, auth)
+    expected = get_task_result_files(task, workflow, auth)
     found = [e for e in expected if e['exists']]
     workdir = join(task.agent.workdir, task.workdir)
     redis.set(f"results/{task.guid}", json.dumps(expected))
@@ -486,7 +484,7 @@ def aggregate_user_statistics():
     users = User.objects.all()
     for user in users:
         logger.info(f"Aggregating usage statistics for {user.username}")
-        stats = get_user_statistics(user)
+        stats = async_to_sync(get_user_statistics)(user)
         redis = RedisClient.get()
         redis.set(f"stats/{user.username}", json.dumps(stats))
         user.profile.stats_last_aggregated = timezone.now()
@@ -495,12 +493,12 @@ def aggregate_user_statistics():
 
 @app.task()
 def refresh_personal_workflows(owner: str):
-    repopulate_personal_workflow_bundle_cache(owner)
+    repopulate_personal_workflow_cache(owner)
 
 
 @app.task()
 def refresh_all_workflows(token: str):
-    repopulate_public_workflow_bundle_cache(token)
+    repopulate_public_workflow_cache(token)
 
 
 @app.task()
@@ -511,7 +509,7 @@ def refresh_user_cyverse_tokens(username: str):
         logger.warning(f"User {username} not found")
         return
 
-    refresh_cyverse_tokens(user)
+    refresh_user_cyverse_tokens(user)
 
 
 @app.task()
