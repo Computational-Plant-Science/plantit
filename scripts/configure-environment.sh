@@ -19,13 +19,6 @@ else
   github_client_id="${GITHUB_CLIENT_ID}"
 fi
 
-if [[ -z "${GITHUB_USERNAME}" ]]; then
-  github_username="some_github_username"
-  echo "Warning: GITHUB_USERNAME environment variable missing"
-else
-  github_username="${GITHUB_USERNAME}"
-fi
-
 if [[ -z "${GITHUB_SECRET}" ]]; then
   github_secret="some_github_secret"
   echo "Warning: GITHUB_SECRET environment variable missing"
@@ -103,6 +96,7 @@ CYVERSE_CLIENT_ID=$cyverse_client_id
 CYVERSE_CLIENT_SECRET=$cyverse_secret
 CYVERSE_USERNAME=$cyverse_username
 CYVERSE_PASSWORD=$cyverse_password
+CYVERSE_TOKEN_REFRESH_MINUTES=60
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=$secret_key
@@ -110,15 +104,14 @@ DJANGO_DEBUG=True
 DJANGO_FIELD_ENCRYPTION_KEY=$field_encryption_key
 DJANGO_API_URL=http://plantit/apis/v1/
 DJANGO_ALLOWED_HOSTS=*
-DJANGO_ADMIN_USERNAME=admin
-DJANGO_ADMIN_EMAIL=admin@example.com
-DJANGO_ADMIN_PASSWORD=$admin_password
 DJANGO_SECURE_SSL_REDIRECT=False
 DJANGO_SESSION_COOKIE_SECURE=False
 DJANGO_CSRF_COOKIE_SECURE=False
 USERS_CACHE=/code/users.json
 USERS_REFRESH_MINUTES=60
+USERS_STATS_REFRESH_MINUTES=10
 MORE_USERS=/code/more_users.json
+AGENT_KEYS=${AGENT_KEYS}
 WORKFLOWS_CACHE=/code/flows.json
 WORKFLOWS_REFRESH_MINUTES=60
 SESSIONS_LOGS=/code/sessions
@@ -126,6 +119,7 @@ RUNS_TIMEOUT_MULTIPLER=2
 RUNS_LOGS=/code/logs
 RUNS_REFRESH_SECONDS=60
 RUNS_CLEANUP_MINUTES=60
+LAUNCHER_SCRIPT_NAME=launcher
 SQL_ENGINE=django.db.backends.postgresql
 SQL_HOST=postgres
 SQL_PORT=5432
@@ -134,7 +128,6 @@ SQL_USER=postgres
 SQL_PASSWORD=$sql_password
 GITHUB_AUTH_URI=https://github.com/login/oauth/authorize
 GITHUB_REDIRECT_URI=http://localhost:3000/apis/v1/users/github_handle_temporary_code/
-GITHUB_USERNAME=$github_username
 GITHUB_KEY=$github_client_id
 GITHUB_SECRET=$github_secret
 GITHUB_CLIENT_ID=d15df2f5710e9597290f

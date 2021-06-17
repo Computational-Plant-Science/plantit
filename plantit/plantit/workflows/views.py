@@ -1,99 +1,144 @@
-import asyncio
 import json
+import logging
 
-import httpx
+from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden
 
-from plantit import settings
+from plantit.github import get_repo_readme, get_repo
 from plantit.redis import RedisClient
-from plantit.runs.utils import list_workflows_for_users
-from plantit.utils import get_repo_config, validate_workflow_config, get_repo_readme
-from plantit.workflows.utils import refresh_workflow
+from plantit.tasks.utils import del_none
+from plantit.users.models import Profile
+from plantit.users.utils import get_django_profile
+from plantit.workflows.models import Workflow
+from plantit.workflows.utils import bind_workflow_bundle, get_personal_workflow_bundles, get_public_workflow_bundles, get_workflow_bundle
+
+logger = logging.getLogger(__name__)
+
+# TODO: when this (https://code.djangoproject.com/ticket/31949) gets merged, remove the sync_to_async/async_to_sync hack
 
 
+@sync_to_async
 @login_required
-def list_all(request):
+@async_to_sync
+async def list_public(request):
+    profile = await get_django_profile(request.user)
+    invalidate = request.GET.get('invalidate', False)
+    bundles = await get_public_workflow_bundles(token=profile.github_token, invalidate=bool(invalidate))
+    return JsonResponse({'workflows': bundles})
+
+
+@sync_to_async
+@login_required
+@async_to_sync
+async def list_personal(request, owner):
+    profile = await get_django_profile(request.user)
+    if owner != profile.github_username:
+        try:
+            await sync_to_async(Profile.objects.get)(github_username=owner)
+        except:
+            return HttpResponseNotFound()
+
+    invalidate = request.GET.get('invalidate', False)
+    bundles = await get_personal_workflow_bundles(owner=owner, invalidate=bool(invalidate))
+    return JsonResponse({'workflows': bundles})
+
+
+@sync_to_async
+@login_required
+@async_to_sync
+async def get(request, owner, name):
+    profile = await get_django_profile(request.user)
+    invalidate = request.GET.get('invalidate', False)
+    bundle = await get_workflow_bundle(owner=owner, name=name, token=profile.github_token, invalidate=bool(invalidate))
+    return HttpResponseNotFound() if bundle is None else JsonResponse(bundle)
+
+
+@sync_to_async
+@login_required
+@async_to_sync
+async def search(request, owner, name):
+    profile = await get_django_profile(request.user)
+    repo = await get_repo(owner, name, profile.github_token)
+    return HttpResponseNotFound() if repo is None else JsonResponse(repo)
+
+
+@sync_to_async
+@login_required
+@async_to_sync
+async def refresh(request, owner, name):
+    try:
+        workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name)
+    except:
+        return HttpResponseNotFound()
+
     redis = RedisClient.get()
-    users = User.objects.exclude(profile__isnull=True).all()
-
-    with open(settings.MORE_USERS, 'r') as file:
-        more_users = json.load(file)
-        usernames = [user.profile.github_username for user in users] + more_users
-        workflows = [json.loads(redis.get(key)) for key in redis.scan_iter(match='workflow/*')]
-
-        if len(workflows) == 0:
-            print(f"Populating workflow cache")
-            workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
-            for workflow in workflows:
-                redis.set(f"workflow/{workflow['repo']['owner']['login']}/{workflow['repo']['name']}", json.dumps(workflow))
-
-    return JsonResponse({'workflows': workflows})
+    profile = await get_django_profile(request.user)
+    bundle = await bind_workflow_bundle(workflow, profile.github_token)
+    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
+    logger.info(f"Refreshed workflow {owner}/{name}")
+    return JsonResponse(bundle)
 
 
+# @sync_to_async
 @login_required
-def refresh_all(request):
+# @async_to_sync
+def readme(request, owner, name):
+    rm = get_repo_readme(name, owner, request.user.profile.github_token)
+    return JsonResponse({'readme': rm})
+
+
+@sync_to_async
+@login_required
+@async_to_sync
+async def toggle_public(request, owner, name):
+    profile = await get_django_profile(request.user)
+    if owner != profile.github_username:
+        return HttpResponseForbidden()
+
+    try:
+        workflow = await sync_to_async(Workflow.objects.get)(user=request.user, repo_owner=owner, repo_name=name)
+    except:
+        return HttpResponseNotFound()
+
     redis = RedisClient.get()
-    users = User.objects.all()
-
-    with open(settings.MORE_USERS, 'r') as file:
-        more_users = json.load(file)
-        usernames = [user.profile.github_username for user in users] + more_users
-
-        print(f"Refreshing workflow cache")
-        workflows = asyncio.run(list_workflows_for_users(usernames, request.user.profile.github_token))
-        for workflow in workflows:
-            redis.set(f"workflow/{workflow['repo']['owner']['login']}/{workflow['repo']['name']}", json.dumps(workflow))
-
-    return JsonResponse({'workflows': workflows})
+    workflow.public = not workflow.public
+    await sync_to_async(workflow.save)()
+    bundle = await bind_workflow_bundle(workflow, profile.github_token)
+    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
+    logger.info(f"Workflow {owner}/{name} is now {'public' if workflow.public else 'private'}")
+    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
 @login_required
-def list_by_user(request, username):
-    workflows = asyncio.run(list_workflows_for_users([username], request.user.profile.github_token))
-    return JsonResponse({'workflows': workflows})
+def bind(request, owner, name):
+    if owner != request.user.profile.github_username:
+        return HttpResponseForbidden()
 
-
-@login_required
-def get(request, username, name):
     redis = RedisClient.get()
-    workflow = redis.get(f"workflow/{username}/{name}")
-    if workflow is not None:
-        return JsonResponse(json.loads(workflow))
-    else:
-        workflow = refresh_workflow(username, name, request.user.profile.github_token)
-        result = validate_workflow_config(workflow['config'], request.user.profile.cyverse_token)
-        if not isinstance(result, bool):
-            workflow['validation_errors'] = result[1]
-
-        redis.set(f"workflow/{username}/{name}", json.dumps(workflow))
-        return JsonResponse(workflow)
+    body = json.loads(request.body.decode('utf-8'))
+    body['bound'] = True
+    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(body)))
+    Workflow.objects.create(user=request.user, repo_owner=owner, repo_name=name, public=False)
+    logger.info(f"Created binding for workflow {owner}/{name} as {body['config']['name']}")
+    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})
 
 
 @login_required
-def get_readme(request, username, name):
-    readme = get_repo_readme(name, username, request.user.profile.github_token)
-    return JsonResponse({'readme': readme})
+def unbind(request, owner, name):
+    if owner != request.user.profile.github_username:
+        return HttpResponseForbidden()
 
+    try:
+        workflow = Workflow.objects.get(user=request.user, repo_owner=owner, repo_name=name)
+    except:
+        return HttpResponseNotFound()
 
-@login_required
-def refresh(request, username, name):
+    workflow.delete()
     redis = RedisClient.get()
-    workflow = refresh_workflow(username, name, request.user.profile.github_token)
-    redis.set(f"workflow/{username}/{name}", json.dumps(workflow))
-    return JsonResponse(workflow)
-
-
-@login_required
-def validate(request, username, name):
-    headers = {"Authorization": f"token {request.user.profile.github_token}"}
-    with httpx.Client(headers=headers) as client:
-        response = client.get(f"https://api.github.com/repos/{username}/{name}")
-        repo = response.json()
-        config = get_repo_config(repo['name'], repo['owner']['login'], request.user.profile.github_token)
-        result = validate_workflow_config(config, request.user.profile.cyverse_token)
-        if isinstance(result, bool):
-            return JsonResponse({'result': result})
-        else:
-            return JsonResponse({'result': result[0], 'errors': result[1]})
+    cached = json.loads(redis.get(f"workflows/{owner}/{name}"))
+    cached['public'] = False
+    cached['bound'] = False
+    redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(cached)))
+    logger.info(f"Removed binding for workflow {owner}/{name}")
+    return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})

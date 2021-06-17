@@ -11,24 +11,28 @@ assert 'DJANGO_SESSION_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANG
 assert 'DJANGO_CSRF_COOKIE_SECURE' in os.environ, f"{missing_variable}: DJANGO_CSRF_COOKIE_SECURE"
 assert 'USERS_CACHE' in os.environ, f"{missing_variable}: USERS_CACHE"
 assert 'USERS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: USERS_REFRESH_MINUTES"
+assert 'USERS_STATS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: USERS_STATS_REFRESH_MINUTES"
 assert 'MORE_USERS' in os.environ, f"{missing_variable}: MORE_USERS"
+assert 'AGENT_KEYS' in os.environ, f"{missing_variable}: AGENT_KEYS"
 assert 'WORKFLOWS_CACHE' in os.environ, f"{missing_variable}: WORKFLOWS_CACHE"
 assert 'WORKFLOWS_REFRESH_MINUTES' in os.environ, f"{missing_variable}: WORKFLOWS_REFRESH_MINUTES"
 assert 'SESSIONS_LOGS' in os.environ, f"{missing_variable}: SESSION_LOGS"
 assert 'RUNS_TIMEOUT_MULTIPLIER' in os.environ, f"{missing_variable}: RUNS_TIMEOUT_MULTIPLIER"
 assert 'RUNS_REFRESH_SECONDS' in os.environ, f"{missing_variable}: RUNS_REFRESH_SECONDS"
 assert 'RUNS_CLEANUP_MINUTES' in os.environ, f"{missing_variable}: RUNS_CLEANUP_MINUTES"
+assert 'LAUNCHER_SCRIPT_NAME' in os.environ, f"{missing_variable}: LAUNCHER_SCRIPT_NAME"
 assert 'DJANGO_API_URL' in os.environ, f"{missing_variable}: DJANGO_API_URL"
 assert 'CYVERSE_REDIRECT_URL' in os.environ, f"{missing_variable}: CYVERSE_REDIRECT_URL"
 assert 'CYVERSE_CLIENT_ID' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_ID"
 assert 'CYVERSE_CLIENT_SECRET' in os.environ, f"{missing_variable}: CYVERSE_CLIENT_SECRET"
+assert 'CYVERSE_TOKEN_REFRESH_MINUTES' in os.environ, f"{missing_variable}: CYVERSE_TOKEN_REFRESH_MINUTES"
 assert 'GITHUB_AUTH_URI' in os.environ, f"{missing_variable}: GITHUB_AUTH_URI"
 assert 'GITHUB_REDIRECT_URI' in os.environ, f"{missing_variable}: GITHUB_REDIRECT_URI"
 assert 'GITHUB_KEY' in os.environ, f"{missing_variable}: GITHUB_KEY"
-assert 'GITHUB_USERNAME' in os.environ, f"{missing_variable}: GITHUB_USERNAME"
 assert 'GITHUB_SECRET' in os.environ, f"{missing_variable}: GITHUB_SECRET"
 assert 'NO_PREVIEW_THUMBNAIL' in os.environ, f"{missing_variable}: NO_PREVIEW_THUMBNAIL"
 
+CYVERSE_TOKEN_REFRESH_MINUTES = os.environ.get('CYVERSE_TOKEN_REFRESH_MINUTES')
 API_URL = os.environ.get('DJANGO_API_URL')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 DEBUG = os.environ.get('DJANGO_DEBUG')
@@ -37,7 +41,9 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split(',')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 USERS_CACHE = os.environ.get('USERS_CACHE')
 USERS_REFRESH_MINUTES = os.environ.get('USERS_REFRESH_MINUTES')
+USERS_STATS_REFRESH_MINUTES = os.environ.get('USERS_STATS_REFRESH_MINUTES')
 MORE_USERS = os.environ.get('MORE_USERS')
+AGENT_KEYS = os.environ.get('AGENT_KEYS')
 WORKFLOWS_CACHE = os.environ.get('WORKFLOWS_CACHE')
 WORKFLOWS_REFRESH_MINUTES = os.environ.get('WORKFLOWS_REFRESH_MINUTES')
 SESSIONS_LOGS = os.environ.get('SESSIONS_LOGS')
@@ -45,6 +51,7 @@ RUNS_TIMEOUT_MULTIPLIER = os.environ.get('RUNS_TIMEOUT_MULTIPLIER')
 RUNS_REFRESH_SECONDS = os.environ.get('RUNS_REFRESH_SECONDS')
 RUNS_CLEANUP_MINUTES = os.environ.get('RUNS_CLEANUP_MINUTES')
 NO_PREVIEW_THUMBNAIL = os.environ.get('NO_PREVIEW_THUMBNAIL')
+LAUNCHER_SCRIPT_NAME = os.environ.get('LAUNCHER_SCRIPT_NAME')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')
@@ -53,14 +60,17 @@ if not DEBUG:
 
 GITHUB_AUTH_URI = os.environ.get('GITHUB_AUTH_URI')
 GITHUB_REDIRECT_URI = os.environ.get('GITHUB_REDIRECT_URI')
-GITHUB_USERNAME = os.environ.get('GITHUB_USERNAME')
 GITHUB_KEY = os.environ.get('GITHUB_KEY')
 GITHUB_SECRET = os.environ.get('GITHUB_SECRET')
 
+# Celery timezone
+timezone = 'US/Eastern'
+
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
-STATIC_URL = "/assets/"
+STATIC_URL = "assets/"
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "front_end", "dist", "assets"),
+    os.path.join(BASE_DIR, "front_end", "static")
 )
 
 STATICFILES_FINDERS = [
@@ -105,7 +115,7 @@ CHANNEL_LAYERS = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    'plantit.runs.authentication.RunTokenAuthentication',
+    'plantit.tasks.authentication.TaskTokenAuthentication',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -116,7 +126,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'front_end', 'dist'),
-            os.path.join(BASE_DIR, 'templates')  # This is temporary until cyverse login is implemented
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -173,7 +182,7 @@ USE_TZ = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'plantit.runs.authentication.RunTokenAuthentication',
+        'plantit.tasks.authentication.TaskTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
 }

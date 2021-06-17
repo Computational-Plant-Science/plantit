@@ -65,9 +65,15 @@ This will start a number of containers:
 - `celery`: Celery worker
 - `sandbox`: test deployment target
 
-To bypass KeyCloak login and log directly into Django as superuser, browse to `http://localhost/accounts/login/` and use the values for `DJANGO_ADMIN_USERNAME` and `DJANGO_ADMIN_PASSWORD` configured in `.env`.
+The Django admin interface is at `http://localhost:3000/admin/`. To use it, you'll need to log into PlantIT at least once with CyVerse (this will create a Django account for you), then shell into the `plantit` container, run `./manage.py shell`, and update your profile with staff/superuser privileges. For instance:
 
-The Django admin interface is at `http://localhost/admin/`.
+```python
+from django.contrib.auth.models import User
+user = User.objects.get(username=<your CyVerse username>)
+user.is_staff = True
+user.is_superuser = True
+user.save()
+```
 
 #### Tests
 
@@ -140,6 +146,7 @@ CYVERSE_CLIENT_ID=<your cyverse client id>
 CYVERSE_CLIENT_SECRET=<your cyverse client secret>
 CVVERSE_USERNAME=<your cyverse username>
 CYVERSE_PASSWORD=<your cyverse password>
+CYVERSE_TOKEN_REFRESH_MINUTES=60
 NODE_ENV=development
 DJANGO_SETTINGS_MODULE=plantit.settings
 DJANGO_SECRET_KEY=<your django secret key>
@@ -157,12 +164,15 @@ CELERY_TEMPLATE_LOCAL_RUN_SCRIPT=/code/scripts/template_local_run.sh
 CELERY_TEMPLATE_SLURM_RUN_SCRIPT=/code/scripts/template_slurm_run.sh
 USERS_CACHE=/code/users.json
 USERS_REFRESH_MINUTES=60
+USERS_STATS_REFRESH_MINUTES=10
 MORE_USERS=/code/more_users.json
+AGENT_KEYS=/code/agent_keys
 WORKFLOWS_CACHE=/code/workflows.json
 WORKFLOWS_REFRESH_MINUTES=60
 SESSIONS_LOGS=/code/sessions
 RUNS_LOGS=/code/logs
 RUNS_TIMEOUT_MULTIPLIER=2
+LAUNCHER_SCRIPT_NAME=launch
 SQL_ENGINE=django.db.backends.postgresql
 SQL_HOST=postgres
 SQL_PORT=5432

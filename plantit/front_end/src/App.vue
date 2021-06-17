@@ -1,15 +1,15 @@
 <template>
     <div
         id="app"
-        :class="profile.darkMode ? 'theme-dark' : 'theme-light' + ' m-0'"
+        :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
         style="width: 100vw; min-height: 100vh;"
     >
         <b-container
             fluid
             class="m-0 p-0"
-            style="min-height: 98vh; background-color: transparent;"
+            style="background-color: transparent;"
         >
-            <Navigation v-if="$route.path !== '/'"></Navigation>
+            <navigation v-if="!isRootPath"></navigation>
             <router-view
                 :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
             ></router-view>
@@ -18,15 +18,20 @@
 </template>
 
 <script>
-import Navigation from '@/components/navigation';
+import navigation from '@/components/navigation';
 import { mapGetters } from 'vuex';
 
 export default {
     name: 'App',
     components: {
-        Navigation
+        navigation
     },
-    computed: mapGetters('user', ['profile'])
+    computed: {
+        ...mapGetters('user', ['profile']),
+        isRootPath() {
+            return this.$route.path === '/';
+        }
+    }
 };
 </script>
 

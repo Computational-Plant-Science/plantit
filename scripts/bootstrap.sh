@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Bootstrapping ${PWD##*/} development environment..."
-compose="docker-compose -f docker-compose.dev.yml"
+compose="docker compose -f docker-compose.dev.yml"
 nocache=0
 quiet=0
 
@@ -61,12 +61,6 @@ mkdir -p logs
 echo "Running migrations..."
 $compose exec -T plantit /code/scripts/wait-for-postgres.sh postgres python manage.py makemigrations
 $compose exec -T plantit python manage.py migrate
-
-echo "Creating superuser..."
-admin_password=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_PASSWORD" "$env_file")" )
-admin_username=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_USERNAME" "$env_file")" )
-admin_email=$(cut -d '=' -f 2 <<< "$(grep "DJANGO_ADMIN_EMAIL" "$env_file")" )
-$compose exec -T plantit /code/scripts/configure-superuser.sh -u "$admin_username" -p "$admin_password" -e "$admin_email"
 
 echo "Configuring sandbox container deployment target..."
 $compose exec -T plantit /bin/bash /code/scripts/configure-sandbox.sh

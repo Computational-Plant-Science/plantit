@@ -1,0 +1,145 @@
+import asyncio
+import json
+import uuid
+from typing import List
+
+import httpx
+import requests
+from asgiref.sync import async_to_sync, sync_to_async
+from channels.layers import get_channel_layer
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonResponse
+from django.utils import timezone
+
+from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
+from plantit.datasets.utils import map_dataset_policy
+
+
+@login_required
+def sharing(request):  # directories the current user is sharing
+    policies = DatasetAccessPolicy.objects.filter(owner=request.user)
+    return JsonResponse({'datasets': [map_dataset_policy(policy) for policy in policies]})
+
+
+@sync_to_async
+@login_required
+@async_to_sync
+async def shared(request):  # directories shared with the current user
+    policies = await sync_to_async(list)(DatasetAccessPolicy.objects.filter(guest=request.user))
+    urls = [f"https://de.cyverse.org/terrain/secured/filesystem/paged-directory?limit=1000&path={policy.path}" for policy in policies]
+    headers = {
+        "Authorization": f"Bearer {request.user.profile.cyverse_access_token}",
+    }
+    async with httpx.AsyncClient(headers=headers) as client:
+        tasks = [client.get(url).json() for url in urls]
+        results = await asyncio.gather(*tasks)
+        return JsonResponse({'datasets': [directory for directory in results]})
+
+
+# @sync_to_async
+# @login_required
+# @async_to_sync
+# async def share(request):
+#     owner = request.user
+#     body = json.loads(request.body.decode('utf-8'))
+#     guests = body['sharing']
+#     policies = []
+#
+#     for guest in guests:
+#         try:
+#             user = await sync_to_async(User.objects.get)(owner=guest['user'])
+#         except:
+#             return HttpResponseNotFound()
+#
+#         path = guest['paths'][0]['path']
+#         role = DatasetRole.read if guest['paths'][0]['permission'].lower() == 'read' else DatasetRole.write
+#         policy, created = await sync_to_async(DatasetAccessPolicy.objects.get_or_create)(owner=owner, guest=user, role=role, path=path)
+#         policies.append({
+#             'created': created,
+#             'policy': map_dataset_policy(policy)
+#         })
+#
+#         notification = await sync_to_async(DirectoryPolicyNotification.objects.create)(
+#             guid=str(uuid.uuid4()),
+#             user=user,
+#             created=timezone.now(),
+#             policy=policy,
+#             message=f"{owner.username} shared directory {policy.path} with you")
+#
+#         await get_channel_layer().group_send(f"notifications-{user.username}", {
+#             'type': 'push_notification',
+#             'notification': {
+#                 'id': notification.guid,
+#                 'username': notification.user.username,
+#                 'created': notification.created.isoformat(),
+#                 'message': notification.message,
+#                 'read': notification.read,
+#                 'policy': map_dataset_policy(notification.policy)
+#             }
+#         })
+#
+#     headers = {
+#         "Authorization": f"Bearer {request.user.profile.cyverse_access_token}",
+#     }
+#     async with httpx.AsyncClient(headers=headers) as client:
+#         response = await client.post("https://de.cyverse.org/terrain/secured/share", data=json.dumps(body))
+#         response.raise_for_status()
+#
+#     return JsonResponse({'policies': policies})
+
+
+# @sync_to_async
+# @login_required
+# @async_to_sync
+# async def unshare(request):
+#     owner = request.user
+#     body = json.loads(request.body.decode('utf-8'))
+#     guest_username = body['user']
+#     path = body['path']
+#     role_str = str(body['role'])
+#
+#     if role_str.lower() != 'read' and role_str.lower() != 'write':
+#         return HttpResponseBadRequest(f"Unsupported role {role_str} (allowed: read, write)")
+#     else:
+#         role = DatasetRole.read if role_str.lower() == 'read' else DatasetRole.write
+#
+#     try:
+#         guest = await sync_to_async(User.objects.get)(owner=guest_username)
+#     except:
+#         return HttpResponseNotFound()
+#
+#     try:
+#         policy = await sync_to_async(DatasetAccessPolicy.objects.get)(owner=owner, guest=guest, role=role, path=path)
+#     except:
+#         return HttpResponseNotFound()
+#
+#     notification = await sync_to_async(DirectoryPolicyNotification.objects.create)(
+#         guid=str(uuid.uuid4()),
+#         user=guest,
+#         created=timezone.now(),
+#         policy=policy,
+#         message=f"{owner.username} revoked your access to directory {policy.path}")
+#
+#     await get_channel_layer().group_send(f"notifications-{guest.username}", {
+#         'type': 'push_notification',
+#         'notification': {
+#             'id': notification.guid,
+#             'username': notification.user.username,
+#             'created': notification.created.isoformat(),
+#             'message': notification.message,
+#             'read': notification.read,
+#             'policy': map_dataset_policy(notification.policy)
+#         }
+#     })
+#
+#     headers = {
+#         "Authorization": f"Bearer {request.user.profile.cyverse_access_token}",
+#         "Content-Type": 'application/json;charset=utf-8'
+#     }
+#     async with httpx.AsyncClient(headers=headers) as client:
+#         response = await client.post("https://de.cyverse.org/terrain/secured/unshare", data=json.dumps({'unshare': [{'user': path, 'paths': [path]}]}))
+#         response.raise_for_status()
+#
+#     await sync_to_async(policy.delete)()
+#     return JsonResponse({'unshared': True})

@@ -5,7 +5,6 @@
                 <splash></splash>
                 <about></about>
                 <sponsors></sponsors>
-                <people></people>
             </b-col>
         </b-row>
     </b-container>
@@ -15,7 +14,6 @@
 // @ is an alias to /src
 import splash from '@/components/home/splash.vue';
 import about from '@/components/home/about.vue';
-import people from '@/components/home/people.vue';
 import sponsors from '../components/home/sponsors';
 
 export default {
@@ -23,7 +21,6 @@ export default {
     components: {
         splash,
         about,
-        people,
         sponsors
     }
 };

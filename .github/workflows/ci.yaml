@@ -42,7 +42,6 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
-          GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
           GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
           CYVERSE_CLIENT_ID: ${{ secrets.CYVERSE_CLIENT_ID }}
           CYVERSE_CLIENT_SECRET: ${{ secrets.CYVERSE_CLIENT_SECRET }}

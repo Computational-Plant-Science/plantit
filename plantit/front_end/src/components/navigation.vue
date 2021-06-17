@@ -1,9 +1,9 @@
 <template>
     <div class="m-0 p-0">
         <b-sidebar
-            id="runs"
+            id="tasks"
             shadow="lg"
-            :bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :bg-variant="profile.darkMode ? 'dark' : 'white'"
             :text-variant="profile.darkMode ? 'light' : 'dark'"
             no-header-close
             width="550px"
@@ -15,12 +15,12 @@
                         align-v="start"
                     >
                         <b-col
-                            class="ml-0 mr-0 pl-0 pr-0 pt-0 mt-0"
+                            class="mr-0 pl-0 pt-0 pr-0"
                             align-self="center"
                             md="auto"
                         >
                             <b-button
-                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                :variant="profile.darkMode ? 'outline-light' : 'white'"
                                 class="text-left m-0"
                                 @click="hide"
                             >
@@ -42,12 +42,12 @@
                                     "
                                     size="lg"
                                     type="search"
-                                    v-model="runSearchText"
+                                    v-model="taskSearchText"
                                 ></b-form-input>
                             </b-input-group>
                         </b-col>
                         <b-col
-                            class="ml-3 mr-0 pl-0 pt-0 pr-0 mt-1"
+                            class="ml-0 mr-0 pl-0 pr-0 pt-0 mt-0"
                             align-self="center"
                             md="auto"
                         >
@@ -58,11 +58,11 @@
                                         : 'text-dark mt-1'
                                 "
                             >
-                                Runs
+                                Tasks
                             </h4>
                         </b-col>
                     </b-row>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <br />
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -72,35 +72,38 @@
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col class="m-0 pl-0 pr-0 text-center">
                             <b-list-group
-                                v-if="runningRuns.length > 0"
+                                v-if="tasksRunning.length > 0"
                                 class="text-left m-0 p-0"
                             >
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="run in filteredRunningRuns"
-                                    v-bind:key="run.id"
+                                    v-for="task in filteredRunningTasks"
+                                    v-bind:key="task.name"
                                     :class="
                                         profile.darkMode
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
                                             : 'text-dark bg-white m-0 p-2 mb-3 overflow-hidden'
                                     "
                                     :to="{
-                                        name: 'run',
-                                        params: { id: run.id }
+                                        name: 'task',
+                                        params: {
+                                            owner: task.owner,
+                                            name: task.name
+                                        }
                                     }"
                                 >
                                     <b-img
                                         v-if="
-                                            run.workflow_image_url !==
+                                            task.workflow_image_url !==
                                                 undefined &&
-                                                run.workflow_image_url !== null
+                                                task.workflow_image_url !== null
                                         "
                                         rounded
                                         class="card-img-right"
                                         style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                         right
-                                        :src="run.workflow_image_url"
+                                        :src="task.workflow_image_url"
                                     ></b-img>
                                     <b-link
                                         :class="
@@ -109,21 +112,24 @@
                                                 : 'text-dark'
                                         "
                                         :to="{
-                                            name: 'run',
-                                            params: { id: run.id }
+                                            name: 'task',
+                                            params: {
+                                                owner: task.owner,
+                                                name: task.name
+                                            }
                                         }"
                                         replace
-                                        >{{ run.id }}</b-link
+                                        >{{ task.name }}</b-link
                                     >
                                     <br />
                                     <div
                                         v-if="
-                                            run.tags !== undefined &&
-                                                run.tags.length > 0
+                                            task.tags !== undefined &&
+                                                task.tags.length > 0
                                         "
                                     >
                                         <b-badge
-                                            v-for="tag in run.tags"
+                                            v-for="tag in task.tags"
                                             v-bind:key="tag"
                                             class="mr-1"
                                             variant="secondary"
@@ -131,29 +137,40 @@
                                         </b-badge>
                                         <br />
                                     </div>
-                                    <small v-if="!run.is_complete"
-                                        >Running</small
+                                    <b-spinner
+                                        class="mr-1"
+                                        small
+                                        v-if="!task.is_complete"
+                                        :variant="
+                                            profile.darkMode ? 'light' : 'dark'
+                                        "
                                     >
+                                    </b-spinner>
                                     <b-badge
                                         :variant="
-                                            run.is_failure || run.is_timeout
+                                            task.is_failure || task.is_timeout
                                                 ? 'danger'
-                                                : run.is_cancelled
+                                                : task.is_success
+                                                ? 'success'
+                                                : task.is_cancelled
                                                 ? 'secondary'
-                                                : 'success'
+                                                : 'warning'
                                         "
-                                        v-else
-                                        >{{ run.job_status }}</b-badge
+                                        >{{
+                                            task.status.toUpperCase()
+                                        }}</b-badge
                                     >
                                     <small> on </small>
                                     <b-badge
                                         class="ml-0 mr-0"
                                         variant="secondary"
-                                        >{{ run.cluster }}</b-badge
-                                    ><small> {{ prettify(run.updated) }}</small>
+                                        >{{ task.agent }}</b-badge
+                                    ><small>
+                                        {{ prettify(task.updated) }}</small
+                                    >
                                     <br />
                                     <small
-                                        v-if="run.workflow_name !== null"
+                                        v-if="task.workflow_name !== null"
                                         class="mr-1"
                                         ><a
                                             :class="
@@ -162,11 +179,11 @@
                                                     : 'text-dark'
                                             "
                                             :href="
-                                                `https://github.com/${run.workflow_owner}/${run.workflow_name}`
+                                                `https://github.com/${task.workflow_owner}/${task.workflow_name}`
                                             "
                                             ><i class="fab fa-github fa-fw"></i>
-                                            {{ run.workflow_owner }}/{{
-                                                run.workflow_name
+                                            {{ task.workflow_owner }}/{{
+                                                task.workflow_name
                                             }}</a
                                         >
                                     </small>
@@ -178,13 +195,13 @@
                                         ? 'text-center text-light pl-3 pr-3'
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
-                                v-if="runningRuns.length === 0"
+                                v-if="tasksRunning.length === 0"
                             >
-                                No workflows running.
+                                No tasks are running right now.
                             </p>
                         </b-col></b-row
                     >
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
+                    <br />
                     <b-row
                         class="m-3 mb-1 pl-0 pr-0 text-center"
                         align-v="center"
@@ -194,15 +211,15 @@
 
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col
-                            v-if="!runsLoading && completedRuns.length > 0"
+                            v-if="!tasksLoading && tasksCompleted.length > 0"
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <b-list-group class="text-left m-0 p-0">
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="run in filteredCompletedRuns"
-                                    v-bind:key="run.id"
+                                    v-for="task in filteredCompletedTasks"
+                                    v-bind:key="task.name"
                                     :class="
                                         profile.darkMode
                                             ? 'text-light bg-dark m-0 p-2 mb-3 overflow-hidden'
@@ -213,16 +230,16 @@
                                         ><b-col>
                                             <b-img
                                                 v-if="
-                                                    run.workflow_image_url !==
+                                                    task.workflow_image_url !==
                                                         undefined &&
-                                                        run.workflow_image_url !==
+                                                        task.workflow_image_url !==
                                                             null
                                                 "
                                                 rounded
                                                 class="card-img-right"
                                                 style="max-width: 3rem;opacity: 0.8;position: absolute;right: -15px;top: -10px;z-index:1;"
                                                 right
-                                                :src="run.workflow_image_url"
+                                                :src="task.workflow_image_url"
                                             ></b-img>
                                             <b-link
                                                 :class="
@@ -231,11 +248,14 @@
                                                         : 'text-dark'
                                                 "
                                                 :to="{
-                                                    name: 'run',
-                                                    params: { id: run.id }
+                                                    name: 'task',
+                                                    params: {
+                                                        owner: task.owner,
+                                                        name: task.name
+                                                    }
                                                 }"
                                                 replace
-                                                >{{ run.id }}</b-link
+                                                >{{ task.name }}</b-link
                                             >
                                         </b-col>
                                     </b-row>
@@ -243,44 +263,44 @@
                                         ><b-col>
                                             <div
                                                 v-if="
-                                                    run.tags !== undefined &&
-                                                        run.tags.length > 0
+                                                    task.tags !== undefined &&
+                                                        task.tags.length > 0
                                                 "
                                             >
                                                 <b-badge
-                                                    v-for="tag in run.tags"
+                                                    v-for="tag in task.tags"
                                                     v-bind:key="tag"
                                                     class="mr-1"
                                                     variant="secondary"
                                                     >{{ tag }}
                                                 </b-badge>
                                                 <br
-                                                    v-if="run.tags.length > 0"
+                                                    v-if="task.tags.length > 0"
                                                 />
                                             </div>
-                                            <small v-if="!run.is_complete"
-                                                >Running</small
-                                            >
                                             <b-badge
                                                 :variant="
-                                                    run.is_failure ||
-                                                    run.is_timeout
+                                                    task.is_failure ||
+                                                    task.is_timeout
                                                         ? 'danger'
-                                                        : run.is_cancelled
+                                                        : task.is_success
+                                                        ? 'success'
+                                                        : task.is_cancelled
                                                         ? 'secondary'
-                                                        : 'success'
+                                                        : 'warning'
                                                 "
-                                                v-else
-                                                >{{ run.job_status }}</b-badge
+                                                >{{
+                                                    task.status.toUpperCase()
+                                                }}</b-badge
                                             >
                                             <small> on </small>
                                             <b-badge
                                                 class="ml-0 mr-0"
                                                 variant="secondary"
-                                                >{{ run.cluster }}</b-badge
+                                                >{{ task.agent }}</b-badge
                                             ><small>
                                                 {{
-                                                    prettify(run.updated)
+                                                    prettify(task.updated)
                                                 }}</small
                                             >
                                         </b-col>
@@ -295,26 +315,26 @@
                                                             : 'text-dark'
                                                     "
                                                     :href="
-                                                        `https://github.com/${run.workflow_owner}/${run.workflow_name}`
+                                                        `https://github.com/${task.workflow_owner}/${task.workflow_name}`
                                                     "
                                                     ><i
                                                         class="fab fa-github fa-fw"
                                                     ></i>
-                                                    {{ run.workflow_owner }}/{{
-                                                        run.workflow_name
+                                                    {{ task.workflow_owner }}/{{
+                                                        task.workflow_name
                                                     }}</a
                                                 >
                                             </small>
                                         </b-col>
                                         <b-col md="auto">
                                             <b-button
-                                                v-if="run.is_complete"
+                                                v-if="task.is_complete"
                                                 variant="outline-danger"
                                                 size="sm"
                                                 v-b-tooltip.hover
-                                                title="Delete Run"
+                                                title="Delete Task"
                                                 class="text-right"
-                                                @click="showDeletePrompt(run)"
+                                                @click="showDeletePrompt(task)"
                                             >
                                                 <i class="fas fa-trash"></i>
                                                 Delete
@@ -322,7 +342,7 @@
                                         </b-col></b-row
                                     >
                                     <b-modal
-                                        :id="'delete ' + run.id"
+                                        :id="'remove ' + task.name"
                                         :title-class="
                                             profile.darkMode
                                                 ? 'text-white'
@@ -349,8 +369,8 @@
                                             profile.darkMode ? 'dark' : 'white'
                                         "
                                         ok-variant="outline-danger"
-                                        title="Delete this run?"
-                                        @ok="onDelete(run)"
+                                        title="Delete this task?"
+                                        @ok="removeTask(task)"
                                     >
                                         <p
                                             :class="
@@ -366,7 +386,7 @@
                             </b-list-group>
                         </b-col>
                         <b-col
-                            v-if="runsLoading || loadingMoreRuns"
+                            v-if="tasksLoading"
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <b-spinner
@@ -374,31 +394,8 @@
                                 variant="secondary"
                             ></b-spinner
                         ></b-col>
-                        <!--<b-col
-                            v-else-if="completedRuns.length > 0"
-                            class="m-0 pl-0 pr-0 text-center"
-                        >
-                            <b-nav vertical class="m-0 p-0">
-                                <b-nav-item class="m-0 p-0">
-                                    <b-button
-                                        :variant="
-                                            profile.darkMode ? 'dark' : 'light'
-                                        "
-                                        :disabled="runsLoading"
-                                        block
-                                        class="text-center m-0"
-                                        @click="loadRuns(currentRunPage + 1)"
-                                    >
-                                        <i
-                                            class="fas fa-chevron-down fa-fw"
-                                        ></i>
-                                        Load More
-                                    </b-button>
-                                </b-nav-item>
-                            </b-nav>
-                        </b-col>-->
                         <b-col
-                            v-if="!runsLoading && completedRuns.length === 0"
+                            v-if="!tasksLoading && tasksCompleted.length === 0"
                             class="m-0 pl-0 pr-0 text-center"
                         >
                             <p
@@ -408,7 +405,7 @@
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
                             >
-                                You haven't run any workflows yet.
+                                No tasks have completed.
                             </p>
                         </b-col>
                     </b-row>
@@ -419,7 +416,7 @@
             right
             id="notifications"
             shadow="lg"
-            :bg-variant="profile.darkMode ? 'dark' : 'light'"
+            :bg-variant="profile.darkMode ? 'dark' : 'white'"
             :text-variant="profile.darkMode ? 'light' : 'dark'"
             width="550px"
             no-header-close
@@ -458,7 +455,7 @@
                                 <i class="fas fa-check-double fa-1x fa-fw"></i>
                             </b-button>-->
                             <b-button
-                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                :variant="profile.darkMode ? 'outline-light' : 'white'"
                                 class="text-left m-0"
                                 @click="hide"
                             >
@@ -467,23 +464,16 @@
                             </b-button>
                         </b-col>
                     </b-row>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
-                    <b-row
-                        class="m-3 mb-1 pl-0 pr-0 text-center"
-                        align-v="center"
-                    >
-                        <b-col><b>Unread</b></b-col>
-                    </b-row>
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col class="m-0 pl-0 pr-0 text-center">
                             <b-list-group
-                                v-if="unreadNotifications.length > 0"
+                                v-if="notificationsUnread.length > 0"
                                 class="text-left m-0 p-0"
                             >
                                 <b-list-group-item
                                     variant="default"
                                     style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="notification in unreadNotifications"
+                                    v-for="notification in notificationsUnread"
                                     v-bind:key="notification.id"
                                     :class="
                                         profile.darkMode
@@ -494,10 +484,6 @@
                                     <b-row>
                                         <b-col>
                                             <p
-                                                v-if="
-                                                    notification.policy !==
-                                                        undefined
-                                                "
                                             >
                                                 {{ notification.message }}
                                                 <br />
@@ -514,14 +500,17 @@
                                                 :disabled="notification.read"
                                                 :variant="
                                                     profile.darkMode
-                                                        ? 'dark'
-                                                        : 'light'
+                                                        ? 'outline-light'
+                                                        : 'white'
                                                 "
                                                 class="text-left m-0"
-                                                @click="markRead(notification)"
+                                                @click="
+                                                    markNotificationRead(
+                                                        notification
+                                                    )
+                                                "
                                             >
-                                                Mark Read
-                                                <i class="fas fa-check"></i>
+                                                <i class="fas fa-check fa-fw"></i> Dismiss
                                             </b-button>
                                         </b-col>
                                     </b-row>
@@ -533,53 +522,9 @@
                                         ? 'text-center text-light pl-3 pr-3'
                                         : 'text-center text-dark pl-3 pr-3'
                                 "
-                                v-if="unreadNotifications.length === 0"
+                                v-if="notificationsUnread.length === 0"
                             >
-                                No notifications to show.
-                            </p>
-                        </b-col>
-                    </b-row>
-                    <hr class="mt-2 mb-2" style="border-color: gray" />
-                    <b-row
-                        class="m-3 mb-1 pl-0 pr-0 text-center"
-                        align-v="center"
-                    >
-                        <b-col><b>Read</b></b-col>
-                    </b-row>
-                    <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
-                        ><b-col class="m-0 pl-0 pr-0 text-center">
-                            <b-list-group
-                                v-if="readNotifications.length > 0"
-                                class="text-left m-0 p-0"
-                            >
-                                <b-list-group-item
-                                    variant="default"
-                                    style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="notification in readNotifications"
-                                    v-bind:key="notification.id"
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light bg-dark m-0 p-2 mb-2 overflow-hidden'
-                                            : 'text-dark bg-white m-0 p-2 mb-2 overflow-hidden'
-                                    "
-                                >
-                                    {{ notification.message }}
-                                    <br />
-                                    <br />
-                                    <small>{{
-                                        prettify(notification.created)
-                                    }}</small>
-                                </b-list-group-item>
-                            </b-list-group>
-                            <p
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-center text-light pl-3 pr-3'
-                                        : 'text-center text-dark pl-3 pr-3'
-                                "
-                                v-if="readNotifications.length === 0"
-                            >
-                                No notifications to show.
+                                No unread notifications.
                             </p>
                         </b-col>
                     </b-row>
@@ -588,20 +533,21 @@
         </b-sidebar>
         <b-navbar
             toggleable="sm"
-            class="logo p-0"
+            class="logo p-0 pt-1 pb-2"
             style="min-height: 44px; max-height: 46px; z-index: 1000"
             fixed="top"
+            :type="profile.darkMode ? 'dark' : 'secondary'"
             :variant="profile.darkMode ? 'dark' : 'white'"
         >
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-3 mr-1">
-                    <b-nav-item class="m-0 p-0" v-b-toggle.runs>
+                    <b-nav-item class="m-0 p-0" v-b-toggle.tasks>
                         <b-button
                             class="brand-img m-0 p-0"
                             v-bind:class="{ 'not-found': notFound }"
                             variant="outline-white"
                             @mouseenter="titleContent = 'sidebar'"
-                            @mouseleave="titleContent = 'breadcrumb'"
+                            @mouseleave="titleContent = 'brand'"
                         >
                             <b-img
                                 class="m-0 p-0 mb-3"
@@ -615,53 +561,129 @@
                 </b-navbar-nav>
                 <transition name="component-fade" mode="out-in">
                     <b-breadcrumb
-                        class="m-o p-0 mt-2"
+                        class="m-o p-0 mt-3"
                         style="background-color: transparent;"
                         v-if="titleContent === 'sidebar'"
                     >
                         <b-breadcrumb-item
                             disabled
-                            class="ml-3"
+                            class="ml-4"
                             :class="
                                 profile.darkMode ? 'crumb-dark' : 'crumb-light'
                             "
                         >
-                            <h5
+                            <h2
                                 :class="
                                     profile.darkMode
                                         ? 'crumb-dark'
                                         : 'crumb-light'
                                 "
                             >
-                                Your Runs
-                            </h5>
+                                Your Tasks ({{ tasksRunning.length }}
+                                in progress)
+                            </h2>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
-                    <b-breadcrumb
-                        class="m-o p-0 mt-2 text-warning"
-                        style="background-color: transparent"
-                        v-if="titleContent === 'breadcrumb'"
-                    >
-                        <b-breadcrumb-item
-                            v-for="crumb in crumbs"
-                            :key="crumb.text"
-                            :to="crumb.href"
-                            :disabled="crumb.text === 'runs'"
-                            class="ml-0 mr-0"
+                    <b-navbar-nav class="m-0 p-0"
+                        ><b-nav-item class="mt-1" href="/"
+                            ><h3
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-white'
+                                        : 'text-dark'
+                                "
+                                style="text-decoration: underline;"
+                            >
+                                plant<small
+                                    class="mb-3 text-success"
+                                    style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                    >IT</small
+                                >
+                            </h3></b-nav-item
                         >
-                            <h5
+                        <b-nav-item
+                            title="About"
+                            to="/about"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><span
                                 :class="
                                     profile.darkMode
-                                        ? 'crumb-dark'
-                                        : 'crumb-light'
+                                        ? 'text-secondary'
+                                        : 'text-dark'
                                 "
+                                ><i
+                                    class="fas fa-question-circle fa-1x fa-fw"
+                                ></i
+                                >About</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
+                            title="Docs"
+                            href="https://plantit.readthedocs.io/en/latest"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-book fa-1x fa-fw"></i
+                                >Docs</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
+                            href="https://github.com/Computational-Plant-Science/plantit"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="GitHub"
+                        >
+                            <span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fab fa-github fa-1x fa-fw"></i>
+                                Github</span
                             >
-                                {{ crumb.text }}
-                            </h5>
-                        </b-breadcrumb-item>
-                    </b-breadcrumb>
+                        </b-nav-item>
+                        <!--<b-nav-item
+                            href="#"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            title="Slack"
+                        >
+                            <span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fab fa-slack fa-1x fa-fw"></i>
+                                Slack</span
+                            >
+                        </b-nav-item>-->
+                    </b-navbar-nav>
                 </transition>
-                <b-navbar-nav class="ml-auto m-0 p-0">
+                <b-navbar-nav class="ml-auto p-0 m-0">
                     <b-nav-item
                         v-if="
                             profile.loggedIn
@@ -671,11 +693,11 @@
                         "
                         title="Log in to GitHub"
                         href="/apis/v1/idp/github_request_identity/"
-                        class="p-1 mt-2 ml-0 mr-0"
+                        class="p-0 mt-2 ml-0 mr-0"
                     >
                         <b-button
                             class="mt-2 text-left"
-                            variant="success"
+                            variant="warning"
                             size="md"
                         >
                             <i class="fab fa-github"></i>
@@ -697,16 +719,16 @@
                                 :variant="
                                     profile.darkMode ? 'outline-light' : 'white'
                                 "
-                                class="ml-0 mr-0 mt-2 text-left"
+                                class="ml-0 mr-0 mt-1 text-left"
                                 size="md"
                             >
                                 <span
                                     :title="
                                         'Notifications (' +
-                                            unreadNotifications.length +
+                                            notificationsUnread.length +
                                             ')'
                                     "
-                                    v-if="unreadNotifications.length > 0"
+                                    v-if="notificationsUnread.length > 0"
                                     class="fa-stack mr-2"
                                     ><i
                                         class="fas fa-dot-circle fa-stack-2x text-warning"
@@ -718,7 +740,7 @@
                                 <b-img
                                     v-if="profile.githubProfile"
                                     class="avatar m-0 mb-1 p-0 github-hover logo"
-                                    style="min-width: 32px; min-height: 32px; position: relative; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                                    style="min-width: 27px; min-height: 27px; position: relative; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
                                     rounded="circle"
                                     :src="
                                         profile.githubProfile
@@ -736,8 +758,8 @@
                             </b-button>
                         </template>
                         <b-dropdown-item
-                            title="Workflows"
-                            to="/workflows"
+                            title="Dashboard"
+                            to="/dashboard/"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -747,90 +769,13 @@
                                     : 'text-dark'
                             "
                         >
-                            <i class="fas fa-stream fa-1x fa-fw"></i>
-                            Workflows
+                            <i class="fas fa-desktop fa-1x fa-fw"></i>
+                            Dashboard
                         </b-dropdown-item>
-                        <b-dropdown-item
-                            title="Clusters"
-                            to="/clusters"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                        >
-                            <i class="fas fa-server fa-1x fa-fw"></i>
-                            Clusters
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                            title="Users"
-                            to="/users"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                        >
-                            <i class="fas fa-users fa-1x fa-fw"></i>
-                            Users
-                        </b-dropdown-item>
-                        <hr class="mt-2 mb-2" style="border-color: gray" />
-                        <b-dropdown-item
-                            title="Docs"
-                            href="https://plantit.readthedocs.io/en/latest"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                        >
-                            <i class="fas fa-book fa-1x fa-fw"></i>
-                            Docs
-                        </b-dropdown-item>
-                        <b-dropdown-item
-                            href="https://github.com/Computational-Plant-Science/plantit"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            title="GitHub"
-                        >
-                            <i class="fab fa-github fa-1x fa-fw"></i>
-                            Github
-                        </b-dropdown-item>
-                        <!--<b-dropdown-item
-                            href="#"
-                            :class="
-                                profile.darkMode ? 'text-light' : 'text-dark'
-                            "
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            title="Slack"
-                        >
-                            <i class="fab fa-slack fa-1x fa-fw"></i>
-                            Slack
-                        </b-dropdown-item>-->
-                        <hr class="mt-2 mb-2" style="border-color: gray" />
                         <b-dropdown-item
                             :title="
                                 'Notifications (' +
-                                    unreadNotifications.length +
+                                    notificationsUnread.length +
                                     ')'
                             "
                             :class="
@@ -845,12 +790,14 @@
                         >
                             <i class="fas fa-bell fa-1x fa-fw"></i>
                             Notifications
-                            <span v-if="unreadNotifications.length > 0"
-                                >({{ unreadNotifications.length }} unread)</span
+                            <span v-if="notificationsUnread.length > 0"
+                                >({{ notificationsUnread.length }} unread)</span
                             >
                         </b-dropdown-item>
                         <b-dropdown-item
-                            title="Profile"
+                            :title="
+                                profile.darkMode ? 'Light Mode' : 'Dark Mode'
+                            "
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -859,13 +806,23 @@
                                     ? 'text-secondary'
                                     : 'text-dark'
                             "
-                            :to="
-                                '/user/' + profile.djangoProfile.username + '/'
-                            "
+                            @click="toggleDarkMode"
                         >
-                            <i class="fas fa-user fa-1x fa-fw"></i>
-                            User Profile
-                        </b-dropdown-item>
+                            <b-spinner
+                                small
+                                v-if="togglingDarkMode"
+                                label="Loading..."
+                                :variant="profile.darkMode ? 'light' : 'dark'"
+                                class="ml-2 mb-1"
+                            ></b-spinner
+                            ><span v-else-if="profile.darkMode"
+                                ><i class="fas fa-sun fa-fw"></i> Light
+                                Mode</span
+                            ><span v-else
+                                ><i class="fas fa-moon fa-fw"></i> Dark
+                                Mode</span
+                            ></b-dropdown-item
+                        >
                         <b-dropdown-item
                             title="Log Out"
                             @click="logOut"
@@ -879,104 +836,24 @@
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
-        <!--<b-navbar
-            v-if="
-                openedCollectionLoading ||
-                    (openedCollection !== undefined &&
-                        openedCollection !== null &&
-                        !viewingCollection)
-            "
-            toggleable="sm"
-            fixed="bottom"
-            style="border-top: 1px solid gray"
-            :variant="profile.darkMode ? 'dark' : 'white'"
-        >
-            <b-navbar-nav v-if="openedCollectionLoading">
-                <b-spinner
-                    :variant="profile.darkMode ? 'light' : 'dark'"
-                    small
-                    class="mr-2"
-                ></b-spinner>
-            </b-navbar-nav>
-            <b-navbar-nav
-                v-else-if="
-                    openedCollection !== null && openedCollection !== undefined
-                "
+        <br />
+        <br />
+        <div v-if="alerts.length > 0">
+            <b-alert
+                class="m-0"
+                show
+                v-for="alert in alerts"
+                v-bind:key="alert.guid"
+                :variant="alert.variant"
+                dismissible
+                @dismissed="removeAlert(alert)"
+                ><b>{{ alert.message }}</b>
+                {{ prettifyShort(alert.time) }}</b-alert
             >
-                <b :class="profile.darkMode ? 'text-white' : 'text-dark'">
-                    <span v-if="openedCollection.opening">
-                        <b-spinner
-                            :variant="profile.darkMode ? 'light' : 'dark'"
-                            small
-                            class="mr-2"
-                        ></b-spinner
-                        >Opening <b>{{ openedCollection.path }}</b> on
-                        <b>{{ openedCollection.cluster }}</b>
-                    </span>
-                    <span v-else>
-                        <i class="far fa-folder-open fa-fw mr-2"></i>
-                        <b>{{ openedCollection.path }}</b> open on
-                        <b>{{ openedCollection.cluster }}</b
-                        >, {{ openedCollection.modified.length }} file(s)
-                        modified</span
-                    >
-                </b></b-navbar-nav
-            >
-            <b-navbar-nav
-                class="ml-auto"
-                v-if="
-                    openedCollection !== null &&
-                        openedCollection !== undefined &&
-                        openedCollection.opening
-                "
-            >
-                <small>{{
-                    openedCollection.output[openedCollection.output.length - 1]
-                }}</small>
-            </b-navbar-nav>
-            <b-navbar-nav class="ml-auto" v-if="!openedCollectionLoading">
-                <b-button
-                    :variant="profile.darkMode ? 'outline-light' : 'white'"
-                    title="View collection"
-                    class="mr-2"
-                    :to="{
-                        name: 'collection',
-                        params: { path: openedCollection.path }
-                    }"
-                >
-                    View
-                    <i class="fas fa-th fa-1x fa-fw"></i>
-                </b-button>
-                <b-dropdown
-                    v-if="openedCollection.modified.length !== 0"
-                    dropup
-                    :variant="profile.darkMode ? 'outline-light' : 'white'"
-                    class="mr-2"
-                >
-                    <template #button-content>
-                        Save
-                    </template>
-                    <b-dropdown-item @click="saveSession(false)"
-                        >All files</b-dropdown-item
-                    >
-                    <b-dropdown-item @click="saveSession(true)"
-                        >Only modified files</b-dropdown-item
-                    >
-                </b-dropdown>
-                <b-button
-                    variant="outline-danger"
-                    title="Close collection"
-                    class="text-left m-0"
-                    @click="closeCollection"
-                >
-                    Close
-                    <i class="far fa-folder fa-1x fa-fw"></i>
-                </b-button>
-            </b-navbar-nav>
-        </b-navbar>-->
+        </div>
         <b-toast
             auto-hide-delay="10000"
-            v-if="$route.name !== 'run' && toastRun !== null"
+            v-if="$route.name !== 'task' && taskToasted !== null"
             id="toast"
             :variant="profile.darkMode ? 'dark text-light' : 'light text-dark'"
             solid
@@ -985,24 +862,23 @@
                 ><b-link
                     class="text-dark"
                     :to="{
-                        name: 'run',
-                        params: { id: toastRun.id }
+                        name: 'task',
+                        params: {
+                            name: taskToasted.name,
+                            owner: taskToasted.owner
+                        }
                     }"
-                    >{{ `Run ${toastRun.id}` }}</b-link
+                    >{{ `Task ${taskToasted.name}` }}</b-link
                 ></template
             >
             <small>
-                <b v-if="!toastRun.is_complete">Running</b>
-                <b class="ml-0 mr-0" v-else>{{ toastRun.job_status }}</b>
+                <b v-if="!taskToasted.is_complete">Running</b>
+                <b class="ml-0 mr-0" v-else>{{ taskToasted.job_status }}</b>
                 on
-                <b>{{ toastRun.cluster }}</b>
-                {{ prettifyShort(toastRun.updated) }}
+                <b>{{ taskToasted.agent }}</b>
+                {{ prettifyShort(taskToasted.updated) }}
                 <br />
-                {{
-                    toastRun.submission_logs[
-                        toastRun.submission_logs.length - 1
-                    ]
-                }}
+                {{ taskToasted.task_logs[taskToasted.task_logs.length - 1] }}
             </small>
         </b-toast>
     </div>
@@ -1014,179 +890,132 @@ import moment from 'moment';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
+import store from '@/store/store';
 
 export default {
     name: 'Navigation',
     components: {},
     data() {
         return {
-            viewingCollection: false,
-            // cluster authentication
-            authenticationUsername: '',
-            authenticationPassword: '',
-            // run status constants
-            PENDING: 'PENDING',
-            STARTED: 'STARTED',
-            SUCCESS: 'SUCCESS',
-            FAILURE: 'FAILURE',
-            REVOKED: 'REVOKED',
-            // websockets
-            runSocket: null,
-            notificationSocket: null,
-            interactiveSocket: null,
             // user data
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null,
+            // websockets
+            workflowSocket: null,
+            taskSocket: null,
+            notificationSocket: null,
+            interactiveSocket: null,
+            // breadcrumb & brand
             crumbs: [],
-            notFound: false,
-            titleContent: 'breadcrumb',
-            currentRunPage: 0,
-            loadingMoreRuns: false,
-            toastRun: null,
-            fields: [
-                {
-                    key: 'id',
-                    label: 'Id',
-                    sortable: true
-                },
-                {
-                    key: 'state',
-                    label: 'State'
-                },
-                {
-                    key: 'created',
-                    sortable: true,
-                    formatter: value => {
-                        return `${moment(value).fromNow()} (${moment(
-                            value
-                        ).format('h:mm a')})`;
-                    }
-                },
-                {
-                    key: 'workflow_name',
-                    label: 'Workflow',
-                    sortable: true
-                }
-            ],
-            // run search
-            runSearchText: ''
+            titleContent: 'brand',
+            // task sidebar & toasts
+            taskPage: 0,
+            taskToasted: null,
+            taskSearchText: '',
+            // flags
+            togglingDarkMode: false,
+            notFound: false
         };
     },
     computed: {
         ...mapGetters('user', ['profile']),
-        ...mapGetters('runs', ['runsLoading', 'runs']),
+        ...mapGetters('alerts', ['alerts']),
+        ...mapGetters('tasks', [
+            'tasks',
+            'tasksLoading',
+            'tasksRunning',
+            'tasksCompleted'
+        ]),
         ...mapGetters('notifications', [
+            'notifications',
             'notificationsLoading',
-            'notifications'
+            'notificationsRead',
+            'notificationsUnread'
         ]),
-        ...mapGetters('collections', [
-            'openedCollection',
-            'openedCollectionLoading'
-        ]),
-        runningRuns() {
-            return this.runs.filter(r => !r.is_complete);
-        },
-        completedRuns() {
-            return this.runs.filter(r => r.is_complete);
-        },
-        filteredRunningRuns() {
-            return this.runningRuns.filter(
-                r =>
-                    (r.workflow_name !== null &&
-                        r.workflow_name.includes(this.runSearchText)) ||
-                    r.tags.some(t => t.includes(this.runSearchText))
+        filteredRunningTasks() {
+            return this.tasksRunning.filter(
+                sub =>
+                    (sub.workflow_name !== null &&
+                        sub.workflow_name.includes(this.taskSearchText)) ||
+                    sub.tags.some(tag => tag.includes(this.taskSearchText))
             );
         },
-        filteredCompletedRuns() {
-            return this.completedRuns.filter(
-                r =>
-                    (r.workflow_name !== null &&
-                        r.workflow_name.includes(this.runSearchText)) ||
-                    r.tags.some(t => t.includes(this.runSearchText))
+        filteredCompletedTasks() {
+            return this.tasksCompleted.filter(
+                sub =>
+                    (sub.workflow_name !== null &&
+                        sub.workflow_name.includes(this.taskSearchText)) ||
+                    sub.tags.some(tag => tag.includes(this.taskSearchText))
             );
-        },
-        unreadNotifications() {
-            return this.notifications.filter(n => !n.read);
-        },
-        readNotifications() {
-            return this.notifications.filter(n => n.read);
         }
     },
     created: async function() {
         this.crumbs = this.$route.meta.crumb;
-        this.viewingCollection =
-            this.$router.currentRoute.name === 'collection';
-        let ws_protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+
+        // user profile must be loaded before everything else to make sure we have tokens/profile properties
+        if (this.$route.name === 'about') return;
+        await store.dispatch('user/loadProfile');
+        await Promise.all([
+            this.$store.dispatch('users/loadAll'),
+            this.$store.dispatch('tasks/loadAll'),
+            this.$store.dispatch('notifications/loadAll'),
+            this.$store.dispatch('workflows/loadPublic'),
+            this.$store.dispatch(
+                'workflows/loadPersonal',
+                this.profile.githubProfile.login
+            ),
+            this.$store.dispatch('agents/loadPublic'),
+            this.$store.dispatch(
+                'agents/loadPersonal',
+                this.profile.djangoProfile.username
+            ),
+            this.$store.dispatch(
+                'agents/loadGuest',
+                this.profile.djangoProfile.username
+            ),
+            this.$store.dispatch('datasets/loadPublic'),
+            this.$store.dispatch('datasets/loadPersonal'),
+            this.$store.dispatch('datasets/loadShared'),
+            this.$store.dispatch('datasets/loadSharing')
+        ]);
 
         // TODO move websockets to vuex
-
-        // subscribe to run channel
-        this.runSocket = new WebSocket(
-            `${ws_protocol}${window.location.host}/ws/runs/${this.profile.djangoProfile.username}/`
+        let wsProtocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
+        this.taskSocket = new WebSocket(
+            `${wsProtocol}${window.location.host}/ws/tasks/${this.profile.djangoProfile.username}/`
         );
-        this.runSocket.onmessage = this.onRunUpdate;
-
-        // subscribe to notification channel
         this.notificationSocket = new WebSocket(
-            `${ws_protocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
+            `${wsProtocol}${window.location.host}/ws/notifications/${this.profile.djangoProfile.username}/`
         );
-        this.notificationSocket.onmessage = this.onNotification;
-
-        await Promise.all([
-            this.$store.dispatch('runs/loadAll'),
-            this.$store.dispatch('notifications/loadAll'),
-            // this.$store.dispatch('collections/loadOpened')
-        ]);
+        this.taskSocket.onmessage = this.handleTaskEvent;
+        this.notificationSocket.onmessage = this.handleNotificationEvent;
     },
     watch: {
         $route() {
             this.crumbs = this.$route.meta.crumb;
-            this.viewingCollection =
-                this.$router.currentRoute.name === 'collection';
-        },
-        openedCollection() {
-            // need this so the bottom navbar will hide itself after collection is closed
         }
     },
     methods: {
-        // async saveCollection(onlyModified) {},
-        async closeCollection() {
-            await this.$bvModal
-                .msgBoxConfirm(
-                    `Are you sure you want to close ${this.openedCollection.path} on ${this.openedCollection.cluster}?`,
-                    {
-                        title: 'Close Collection?',
-                        size: 'sm',
-                        okVariant: 'outline-danger',
-                        cancelVariant: 'white',
-                        okTitle: 'Yes',
-                        cancelTitle: 'No',
-                        centered: true
-                    }
-                )
-                .then(async value => {
-                    if (value)
-                        await this.$store.dispatch('collections/closeOpened');
-                })
-                .catch(err => {
-                    throw err;
-                });
+        removeAlert(alert) {
+            this.$store.dispatch('alerts/remove', alert);
         },
-        markAllRead() {},
-        markRead(notification) {
-            axios({
-                method: 'post',
-                url: `/apis/v1/notifications/${this.profile.djangoProfile.username}/mark_read/`,
-                data: {
-                    notification: notification
-                },
+        async toggleDarkMode() {
+            this.togglingDarkMode = true;
+            await this.$store.dispatch('user/toggleDarkMode');
+            this.togglingDarkMode = false;
+        },
+        markAllNotificationsRead() {},
+        async markNotificationRead(notification) {
+            await axios({
+                method: 'delete',
+                url: `/apis/v1/notifications/${this.profile.djangoProfile.username}/${notification.id}/`,
                 headers: { 'Content-Type': 'application/json' }
             })
-                .then(response => {
-                    this.$store.dispatch(
-                        'updateNotification',
-                        response.data.notification
+                .then(async response => {
+                    await this.$store.dispatch(
+                        'notifications/setAll',
+                        response.data.notifications
                     );
                 })
                 .catch(error => {
@@ -1194,37 +1023,29 @@ export default {
                     return error;
                 });
         },
-        // TODO move to VUEX
-        async onRunUpdate(event) {
+        async handleTaskEvent(event) {
             let data = JSON.parse(event.data);
-            var run = data.run;
-            this.toastRun = run;
+            let task = data.task;
+            this.taskToasted = task;
             this.$bvToast.show('toast');
-            await this.$store.dispatch('runs/update', run);
+            await this.$store.dispatch('tasks/update', task);
         },
-        async onNotification(event) {
+        async handleNotificationEvent(event) {
             let data = JSON.parse(event.data);
             let notification = data.notification;
             await this.$store.dispatch('notifications/update', notification);
         },
-        async onSessionEvent(event) {
-            let data = JSON.parse(event.data);
-            await this.$store.dispatch(
-                'collections/updateOpened',
-                data.session
-            );
-        },
-        onDelete(run) {
+        removeTask(task) {
             axios
-                .get(`/apis/v1/runs/${run.id}/delete/`)
+                .get(`/apis/v1/tasks/${task.owner}/${task.name}/delete/`)
                 .then(response => {
                     if (response.status === 200) {
                         this.showCanceledAlert = true;
                         this.canceledAlertMessage = response.data;
-                        this.$store.dispatch('runs/loadAll');
+                        this.$store.dispatch('tasks/loadAll');
                         if (
-                            this.$router.currentRoute.name === 'run' &&
-                            run.id === this.$router.currentRoute.params.id
+                            this.$router.currentRoute.name === 'task' &&
+                            task.name === this.$router.currentRoute.params.name
                         )
                             router.push({
                                 name: 'user',
@@ -1242,8 +1063,8 @@ export default {
                     return error;
                 });
         },
-        showDeletePrompt(run) {
-            this.$bvModal.show('delete ' + run.id);
+        showDeletePrompt(task) {
+            this.$bvModal.show('remove ' + task.name);
         },
         now() {
             return moment().format('MMMM Do YYYY, h:mm:ss a');
@@ -1259,7 +1080,7 @@ export default {
         },
         prettifyShort: function(date) {
             return `${moment(date).fromNow()}`;
-        },
+        }
     }
 };
 </script>
@@ -1308,14 +1129,14 @@ export default {
     content: " /"
 
 .component-fade-enter-active, .component-fade-leave-active
-    transition: opacity .3s ease
+    transition: opacity .1s ease
 
 .component-fade-enter, .component-fade-leave-to
     opacity: 0
 
 .brand-img
     -webkit-transition: -webkit-transform .1s ease-in-out
-        transition: transform .2s ease-in-out
+        transition: transform .1s ease-in-out
 
 .brand-img:hover
     border: none

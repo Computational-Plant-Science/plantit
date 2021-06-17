@@ -6,10 +6,10 @@
                 class="p-3 text-white"
                 footer-bg-variant="transparent"
                 footer-border-variant="white"
-                :border-variant="profile.darkMode ? 'default' : 'default'"
-                :text-variant="profile.darkMode ? 'dark' : 'white'"
-                :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.8"
+                border-variant="default"
+                text-variant="white"
+                bg-variant="white"
+                style="max-width: 430px;padding: 0;margin: 0 auto;float: none;margin-bottom: 10px; opacity: 0.95"
             >
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
@@ -19,29 +19,41 @@
                             center
                             class="m-0 p-0"
                         ></b-img>
-                        <h2 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                        <h1
+                            class="text-dark"
+                            style="text-decoration: underline;"
+                        >
                             plant<small
                                 class="mb-3 text-success"
-                                style="text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                                style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
                                 >IT</small
                             >
-                        </h2>
+                        </h1>
                     </b-col>
                 </b-row>
                 <b-navbar toggleable="sm" class="m-0 p-0">
                     <b-collapse class="justify-content-center m-0 p-0" is-nav>
                         <b-navbar-nav class="m-0 p-0">
                             <b-nav-item
+                                to="/about"
+                                title="About PlantIT"
+                                class="m-0 p-0"
+                            >
+                                <b-button
+                                    variant="outline-dark"
+                                >
+                                    <i class="fas fa-question-circle fa-2x"></i>
+                                    <br />
+                                    About
+                                </b-button>
+                            </b-nav-item>
+                            <b-nav-item
                                 href="https://plantit.readthedocs.io/en/latest"
                                 title="PlantIT Docs"
                                 class="m-0 p-0"
                             >
                                 <b-button
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
+                                    variant="outline-dark"
                                 >
                                     <i class="fas fa-book fa-2x"></i>
                                     <br />
@@ -50,15 +62,11 @@
                             </b-nav-item>
                             <b-nav-item
                                 class="m-0 p-0"
-                                title="GitHub"
+                                title="PlantIT on GitHub"
                                 href="https://github.com/Computational-Plant-Science/plantit/discussions/63"
                             >
                                 <b-button
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
+                                    variant="outline-dark"
                                     title="GitHub"
                                 >
                                     <i class="fab fa-github fa-2x"></i>
@@ -66,13 +74,19 @@
                                     Github
                                 </b-button>
                             </b-nav-item>
+                            <!--<b-nav-item href="#" class="m-0 p-0" title="Slack">
+                                <b-button
+                                    variant="outline-dark"
+                                    title="GitHub"
+                                >
+                                    <i class="fab fa-slack fa-2x"></i>
+                                    <br />
+                                    Slack
+                                </b-button>
+                            </b-nav-item>-->
                             <!--<b-nav-item class="m-0 p-0" title="Slack">
                                 <b-button
-                                    :variant="
-                                        profile.darkMode
-                                            ? 'outline-light'
-                                            : 'outline-dark'
-                                    "
+                                    variant="outline-dark"
                                     title="Slack"
                                 >
                                     <i class="fab fa-slack fa-2x"></i>
@@ -80,20 +94,16 @@
                                     Slack
                                 </b-button>
                             </b-nav-item>-->
-                            <b-nav-item
+
+
+                            <!--<b-nav-item
                                 v-if="profile.loggedIn"
                                 title="Enter PlantIT"
                                 class="m-0 p-0"
-                                :to="
-                                    '/user/' +
-                                        profile.djangoProfile.username +
-                                        '/'
-                                "
+                                :to="'/dashboard/'"
                             >
                                 <b-button
-                                    :variant="
-                                        profile.darkMode ? 'outline-light' : 'white'
-                                    "
+                                    variant="white"
                                 >
                                     <b-img
                                         v-if="profile.githubProfile"
@@ -102,7 +112,8 @@
                                         center
                                         :src="
                                             profile.githubProfile
-                                                ? profile.githubProfile.avatar_url
+                                                ? profile.githubProfile
+                                                      .avatar_url
                                                 : ''
                                         "
                                     ></b-img>
@@ -112,14 +123,14 @@
                                     ></i>
                                     Enter
                                 </b-button>
-                            </b-nav-item>
+                            </b-nav-item> -->
                         </b-navbar-nav>
                     </b-collapse>
                 </b-navbar>
-                <b-row class="m-0 p-0" v-if="!profile.loggedIn">
+                <b-row class="m-0 p-0">
                     <b-col class="m-0 p-0">
                         <b-button
-                            :variant="profile.darkMode ? 'outline-light' : 'white'"
+                            variant="white"
                             block
                             class="text-center"
                             href="/apis/v1/idp/cyverse_login/"
@@ -152,12 +163,10 @@ import { mapGetters } from 'vuex';
 
 export default {
     name: 'home-splash',
-    computed: mapGetters('user', [
-        'profile',
-    ]),
+    computed: mapGetters('user', ['profile']),
     created: function() {
         this.crumbs = this.$route.meta.crumb;
-        this.$store.dispatch('user/loadProfile');
+        // this.$store.dispatch('user/loadProfile');
     }
 };
 </script>
@@ -178,8 +187,8 @@ export default {
 
 #background
     background-image: url('../../assets/frontpage/index_bg.png')
-    background-blend-mode: overlay
-    background-color: hsla(0, 0%, 100%, 0)
+    background-blend-mode: normal
+    background-color: hsla(0%, 0%, 100%, 1)
     background-repeat: no-repeat
     background-position: center
     background-size: cover

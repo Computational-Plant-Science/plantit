@@ -4,18 +4,21 @@
 
 - [User Quickstart](#user-quickstart)
         - [Workflow](#workflow)
-        - [Run](#run)
+        - [Task](#task)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # User Quickstart
 
-PlantIT has 2 fundamental abstractions: <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** and <i class="fas fa-terminal fa-1x fa-fw"></i> **Run**.
+PlantIT has a few fundamental abstractions:
+
+- <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow**
+- <i class="fas fa-tasks fa-1x fa-fw"></i> **Task**
 
 ##### Workflow
 
-The **workflow** is PlantIT's unit of work. PlantIT doesn't much care what it looks like. If it will run in [Docker](https://www.docker.com/) or [Singularity](https://sylabs.io/singularity/), it will run on PlantIT.
+A <i class="fas fa-stream fa-1x fa-fw"></i> **Workflow** is an executable, packaged neatly for deployment to a server, cluster, or supercomputer. Workflows execute in a container runtime. PlantIT doesn't much care what your workflow does. If it will run in [Docker](https://www.docker.com/) or [Singularity](https://sylabs.io/singularity/), it will most likely run on PlantIT.
 
-##### Run
+##### Task
 
-A **run** is a single instantiation of a workflow &mdash; a deployment to an HPC cluster, for instance.
+A <i class="fas fa-tasks fa-1x fa-fw"></i> **Task** is a single instance of a workflow.

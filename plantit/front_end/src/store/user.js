@@ -12,7 +12,8 @@ export const user = {
             pushNotifications: 'disabled',
             djangoProfile: null,
             cyverseProfile: null,
-            githubProfile: null
+            githubProfile: null,
+            stats: null
         },
         profileLoading: true
     }),
@@ -35,6 +36,9 @@ export const user = {
         setGithubProfile(state, profile) {
             state.profile.githubProfile = profile;
         },
+        setStats(state, stats) {
+            state.profile.stats = stats;
+        },
         setProfileLoading(state, loading) {
             state.profileLoading = loading;
         }
@@ -55,7 +59,10 @@ export const user = {
             await axios
                 .get('/apis/v1/users/toggle_push_notifications/')
                 .then(response => {
-                    commit('setPushNotifications', response.data['push_notifications']);
+                    commit(
+                        'setPushNotifications',
+                        response.data['push_notifications']
+                    );
                 })
                 .catch(error => {
                     Sentry.captureException(error);
@@ -89,6 +96,9 @@ export const user = {
                         response.data.django_profile.push_notifications
                     );
 
+                    // set usage statistics
+                    commit('setStats', response.data.stats);
+
                     // determine whether user is logged in
                     let decoded = jwtDecode(
                         response.data.django_profile.cyverse_token
@@ -97,13 +107,17 @@ export const user = {
                     if (now > decoded.exp) commit('setLoggedIn', false);
                     else commit('setLoggedIn', true);
 
-
                     commit('setProfileLoading', false);
                 })
                 .catch(error => {
                     commit('setProfileLoading', false);
                     Sentry.captureException(error);
                     if (error.response.status === 500) throw error;
+                    else if (error.response.status === 401) {
+                        // if we get a 401, log the user out
+                        sessionStorage.clear();
+                        window.location.replace('/apis/v1/idp/cyverse_logout/');
+                    }
                 });
         }
     },
