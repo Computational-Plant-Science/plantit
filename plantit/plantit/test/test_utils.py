@@ -17,16 +17,13 @@ class Token:
         cyverse_username = os.environ.get('CYVERSE_USERNAME', None)
         cyverse_password = os.environ.get('CYVERSE_PASSWORD', None)
 
-        if cyverse_username is None:
-            raise ValueError("Missing environment variable 'CYVERSE_USERNAME'")
-        if cyverse_password is None:
-            raise ValueError("Missing environment variable 'CYVERSE_PASSWORD'")
+        if cyverse_username is None: raise ValueError("Missing environment variable 'CYVERSE_USERNAME'")
+        if cyverse_password is None: raise ValueError("Missing environment variable 'CYVERSE_PASSWORD'")
 
         print(f"Using CyVerse username '{cyverse_username}' and password '{cyverse_password}'")
 
-        response = requests.get(
-            'https://de.cyverse.org/terrain/token/cas',
-            auth=(cyverse_username, cyverse_password)).json()
+        response = requests.get('https://de.cyverse.org/terrain/token/cas', auth=(cyverse_username, cyverse_password)).json()
+        print(response)
         Token.__token = response['access_token']
 
         return Token.__token
@@ -56,7 +53,6 @@ class UtilsTest(TestCase):
     def test_validate_config_when_is_not_valid_missing_name(self):
         result = validate_repo_config({
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -66,28 +62,16 @@ class UtilsTest(TestCase):
     # def test_validate_config_when_is_not_valid_missing_author(self):
     #     result = validate_repo_config({
     #         'name': 'Test Flow',
-    #         'public': True,
     #         'image': 'docker://alpine',
     #         'commands': 'echo "Hello, world!"'
     #     }, Token.get())
     #     self.assertFalse(result[0])
     #     self.assertTrue('Missing attribute \'author\'' in result[1])
 
-    def test_validate_config_when_is_not_valid_missing_public(self):
-        result = validate_repo_config({
-            'name': 'Test Flow',
-            'author': 'Computational Plant Science Lab',
-            'image': 'docker://alpine',
-            'commands': 'echo "Hello, world!"'
-        }, Token.get())
-        self.assertFalse(result[0])
-        self.assertTrue('Missing attribute \'public\'' in result[1])
-
     def test_validate_config_when_is_not_valid_missing_image(self):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'commands': 'echo "Hello, world!"'
         }, Token.get())
         self.assertFalse(result[0])
@@ -97,7 +81,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
         }, Token.get())
         self.assertFalse(result[0])
@@ -107,7 +90,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': True,
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -118,29 +100,16 @@ class UtilsTest(TestCase):
     #     result = validate_repo_config({
     #         'name': 'Test Flow',
     #         'author': True,
-    #         'public': True,
     #         'image': 'docker://alpine',
     #         'commands': 'echo "Hello, world!"'
     #     }, Token.get())
     #     self.assertFalse(result[0])
     #     self.assertTrue('Attribute \'author\' must be a str' in result[1])
 
-    def test_validate_config_when_is_not_valid_public_wrong_type(self):
-        result = validate_repo_config({
-            'name': 'Test Flow',
-            'author': 'Computational Plant Science Lab',
-            'public': '',
-            'image': 'docker://alpine',
-            'commands': 'echo "Hello, world!"'
-        }, Token.get())
-        self.assertFalse(result[0])
-        self.assertTrue('Attribute \'public\' must be a bool' in result[1])
-
     def test_validate_config_when_is_not_valid_image_wrong_type(self):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': True,
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -151,7 +120,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': True
         }, Token.get())
@@ -162,7 +130,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': True,
             'commands': 'echo "Hello, world!"',
             'mount': True,
@@ -174,7 +141,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': True,
             'commands': 'echo "Hello, world!"',
             'mount': None,
@@ -186,7 +152,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': True,
             'commands': 'echo "Hello, world!"',
             'mount': [],
@@ -198,7 +163,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"'
         }, Token.get())
@@ -208,7 +172,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"',
             'output': {
@@ -221,7 +184,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"',
             'output': {
@@ -234,7 +196,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'echo "Hello, world!"',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt', 'kind' : 'file'},
@@ -246,7 +207,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'cat "$INPUT"',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay/cowsay.txt',
@@ -259,7 +219,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT"',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
@@ -272,7 +231,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT" | tee output.txt',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
@@ -285,7 +243,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT"',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
@@ -298,7 +255,6 @@ class UtilsTest(TestCase):
         result = validate_repo_config({
             'name': 'Test Flow',
             'author': 'Computational Plant Science Lab',
-            'public': True,
             'image': 'docker://alpine',
             'commands': 'ls "$INPUT" | tee output.txt',
             'input': {'path': '/iplant/home/shared/iplantcollaborative/testing_tools/cowsay',
