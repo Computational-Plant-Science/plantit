@@ -5,7 +5,7 @@
                 no-gutters
                 v-if="
                     getAgent.role !== 'admin' &&
-                        getAgent.role !== 'run' &&
+                        getAgent.role !== 'guest' &&
                         !getAgent.public
                 "
                 ><b-col class="text-center"
@@ -21,7 +21,7 @@
                         <br />
                         You do not have access to this agent.
                         <br />
-                        <b-button
+                        <!--<b-button
                             v-if="!accessRequested"
                             class="ml-0"
                             :variant="
@@ -49,7 +49,7 @@
                             You requested guest access
                             {{ prettify(accessRequest.created) }}. Your request
                             is pending.
-                        </b-button>
+                        </b-button>-->
                     </p></b-col
                 ></b-row
             >
@@ -70,9 +70,7 @@
                         </b-alert>
                     </b-col>
                 </b-row>
-                <b-row
-                    v-if="agentLoading"
-                >
+                <b-row v-if="agentLoading">
                     <b-col
                         ><b-spinner
                             small
@@ -332,7 +330,7 @@
                                                     }}
                                                 </b-form-checkbox>
                                             </b-col>
-                                            <b-col
+                                            <!--<b-col
                                                 v-else-if="
                                                     getAgent.role === 'none' &&
                                                         !accessRequested
@@ -360,7 +358,7 @@
                                                     ></i>
                                                     Request Guest Access
                                                 </b-button></b-col
-                                            >
+                                            >-->
                                             <b-col
                                                 v-if="
                                                     getAgent.role === 'admin' &&
@@ -562,7 +560,7 @@
                                                     Unbind</b-button
                                                 ></b-col
                                             >
-                                            <b-col
+                                            <!--<b-col
                                                 v-if="
                                                     getAgent.role === 'none' &&
                                                         accessRequested
@@ -591,7 +589,7 @@
                                                         )
                                                     }}. Your request is pending.
                                                 </b-button></b-col
-                                            >
+                                            >-->
                                             <!--<b-col></b-col>
                                             <b-col md="auto"
                                                 ><b-button
@@ -626,13 +624,9 @@
                             </div>
                         </b-card>
                         <br />
-                        <div
-                            v-if="
-                                getAgent.policies && getAgent.role === 'admin'
-                            "
-                        >
+                        <div v-if="getAgent.role === 'admin'">
                             <b-row no-gutters>
-                                <b-col align-self="end"
+                                <b-col align-self="end" md="auto" class="mr-1"
                                     ><h5
                                         :class="
                                             profile.darkMode
@@ -642,6 +636,21 @@
                                     >
                                         Users
                                     </h5></b-col
+                                ><b-col md="auto" class="ml-1 mb-1"
+                                    ><b-button
+                                        size="sm"
+                                        :variant="
+                                            profile.darkMode
+                                                ? 'outline-light'
+                                                : 'white'
+                                        "
+                                        :disabled="authorizingWorkflow"
+                                        title="Authorize a user"
+                                        v-b-tooltip.hover
+                                        @click="specifyAuthorizedUser"
+                                        ><i class="fas fa-plus fa-fw"></i
+                                        >Authorize</b-button
+                                    ></b-col
                                 >
                             </b-row>
                             <b-row
@@ -649,7 +658,8 @@
                                     <b-row
                                         v-if="
                                             !agentLoading &&
-                                                getAgent.policies.length < 2
+                                                getAgent.users_authorized
+                                                    .length === 0
                                         "
                                         ><b-col
                                             ><small
@@ -659,21 +669,34 @@
                                         ></b-row
                                     >
                                     <b-row
+                                        class="mt-1"
                                         v-else
-                                        v-for="policy in getAgent.policies.filter(
+                                        v-for="user in getAgent.users_authorized.filter(
                                             p =>
                                                 p.user !==
                                                 profile.djangoProfile.username
                                         )"
-                                        v-bind:key="policy.user"
+                                        v-bind:key="user.username"
                                     >
                                         <b-col
-                                            >{{ policy.user
-                                            }}<small>
-                                                can
-                                                {{ policy.role.toLowerCase() }}
-                                                this agent.</small
-                                            ></b-col
+                                            ><b-img
+                                                v-if="user.github_profile"
+                                                class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
+                                                style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                                                rounded="circle"
+                                                :src="
+                                                    user.github_profile
+                                                        ? user.github_profile
+                                                              .avatar_url
+                                                        : ''
+                                                "
+                                            ></b-img>
+                                            <i v-else class="far fa-user"></i>
+                                            <b
+                                                >{{ user.first_name }}
+                                                {{ user.last_name }}</b
+                                            >
+                                            ({{ user.username }})</b-col
                                         ><b-col
                                             class="ml-0"
                                             md="auto"
@@ -689,11 +712,9 @@
                                                 v-b-tooltip.hover
                                                 :title="
                                                     'Revoke access from ' +
-                                                        policy.user
+                                                        user.username
                                                 "
-                                                @click="
-                                                    revokeAccess(policy.user)
-                                                "
+                                                @click="unauthorizeUser(user)"
                                             >
                                                 <i
                                                     class="fas fa-lock fa-fw"
@@ -702,82 +723,13 @@
                                             </b-button></b-col
                                         >
                                     </b-row>
-                                </b-col></b-row
-                            >
-                            <hr />
-                        </div>
-                        <div v-if="ownsAgent">
-                            <b-row no-gutters>
-                                <b-col align-self="end"
-                                    ><h5
-                                        :class="
-                                            profile.darkMode
-                                                ? 'text-white'
-                                                : 'text-dark'
-                                        "
-                                    >
-                                        Access Requests
-                                    </h5></b-col
-                                >
+                                </b-col>
                             </b-row>
-                            <b-row v-if="getAgent.access_requests.length === 0"
-                                ><b-col
-                                    ><small
-                                        >No pending access requests.</small
-                                    ></b-col
-                                ></b-row
-                            >
-                            <b-row v-else
-                                ><b-col align-self="end">
-                                    <b-row
-                                        v-for="request in getAgent.access_requests"
-                                        v-bind:key="request.user"
-                                    >
-                                        <b-col md="auto">{{
-                                            request.user
-                                        }}</b-col
-                                        ><b-col align-self="middle"
-                                            ><small
-                                                >Requested
-                                                {{
-                                                    prettify(request.created)
-                                                }}</small
-                                            ></b-col
-                                        ><b-col
-                                            class="ml-0"
-                                            md="auto"
-                                            align-self="end"
-                                            ><b-button
-                                                class="ml-0"
-                                                :variant="
-                                                    profile.darkMode
-                                                        ? 'outline-light'
-                                                        : 'white'
-                                                "
-                                                size="sm"
-                                                v-b-tooltip.hover
-                                                :title="
-                                                    'Grant access to ' +
-                                                        request.user
-                                                "
-                                                @click="
-                                                    grantAccess(request.user)
-                                                "
-                                            >
-                                                <i
-                                                    class="fas fa-unlock fa-fw"
-                                                ></i>
-                                                Grant Access
-                                            </b-button></b-col
-                                        ></b-row
-                                    >
-                                </b-col></b-row
-                            >
                             <hr />
                         </div>
                         <div v-if="ownsAgent">
                             <b-row no-gutters>
-                                <b-col align-self="end"
+                                <b-col align-self="end" md="auto" class="mr-1"
                                     ><h5
                                         :class="
                                             profile.darkMode
@@ -787,15 +739,14 @@
                                     >
                                         Workflow Policies
                                     </h5></b-col
-                                ><b-col class="ml-2" md="auto"
+                                ><b-col class="ml-1" md="auto"
                                     ><b-dropdown
-                                        dropleft
                                         v-if="workflowPolicyType === 'none'"
                                         class="mb-1"
                                         size="sm"
                                         :variant="
                                             profile.darkMode
-                                                ? 'outline-dark'
+                                                ? 'outline-light'
                                                 : 'white'
                                         "
                                         v-b-tooltip.hover
@@ -806,7 +757,12 @@
                                         v-model="workflowPolicyType"
                                     >
                                         <template #button-content>
-                                            Configure
+                                            <span
+                                                ><i
+                                                    class="fas fa-cog fa-fw"
+                                                ></i>
+                                                Configure</span
+                                            >
                                         </template>
                                         <b-dropdown-item
                                             @click="specifyAuthorizedWorkflow"
@@ -1075,6 +1031,96 @@
                 </b-row>
             </div>
         </b-container>
+        <b-modal
+            id="authorizeUser"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            size="lg"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            hide-header
+            hide-header-close
+            hide-footer
+        >
+            <b-row class="mb-2"
+                ><b-col
+                    ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                        Select a user
+                    </h4></b-col
+                >
+                <b-col md="auto"
+                    ><b-button
+                        :disabled="usersLoading"
+                        :variant="profile.darkMode ? 'outline-light' : 'white'"
+                        size="sm"
+                        v-b-tooltip.hover
+                        title="Rescan users"
+                        @click="refreshUsers"
+                        class="text-right"
+                    >
+                        <b-spinner
+                            small
+                            v-if="usersLoading"
+                            label="Rescanning..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><i v-else class="fas fa-redo mr-1"></i>Rescan
+                        Users</b-button
+                    ></b-col
+                >
+            </b-row>
+            <div v-if="otherUsers.length !== 0">
+                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                    Select a user to authorize for
+                    <i class="fas fa-server fa-fw"></i>
+                    {{ getAgent.name }}.
+                </p>
+                <b-row class="mb-2"
+                    ><b-col
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                        ><small
+                            >{{ otherUsers.length }} user(s) found</small
+                        ></b-col
+                    ></b-row
+                >
+                <b-row v-for="user in otherUsers" v-bind:key="user.username">
+                    <b-col
+                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    >
+                        <b-img
+                            v-if="user.github_profile"
+                            class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
+                            style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
+                            rounded="circle"
+                            :src="
+                                user.github_profile
+                                    ? user.github_profile.avatar_url
+                                    : ''
+                            "
+                        ></b-img>
+                        <i v-else class="far fa-user"></i>
+                        <b>{{ user.first_name }} {{ user.last_name }}</b> ({{
+                            user.username
+                        }})
+                    </b-col>
+                    <b-col md="auto" align-self="center"
+                        ><b-button
+                            :disabled="authorizingUser"
+                            variant="warning"
+                            @click="authorizeUser(user)"
+                            >Select</b-button
+                        ></b-col
+                    >
+                </b-row>
+            </div>
+            <div class="text-center" v-else>
+                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                    <i class="fas fa-exclamation-circle fa-fw fa-2x"></i><br/>No unauthorized users found.
+                </p>
+            </div>
+        </b-modal>
         <b-modal
             id="authorizeWorkflow"
             :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
@@ -1695,11 +1741,13 @@ export default {
             workflowSearchResultInvalid: false,
             searchWorkflows: false,
             authorizingWorkflow: false,
-            blockingWorkflow: false
+            blockingWorkflow: false,
+            authorizingUser: false
         };
     },
     computed: {
         ...mapGetters('user', ['profile']),
+        ...mapGetters('users', ['allUsers', 'usersLoading']),
         ...mapGetters('workflows', [
             'recentlyRunWorkflows',
             'personalWorkflowsLoading',
@@ -1712,6 +1760,11 @@ export default {
             'personalAgentsLoading',
             'publicAgentsLoading'
         ]),
+        otherUsers() {
+            return this.allUsers.filter(
+                u => u.username !== this.profile.djangoProfile.username && !this.getAgent.users_authorized.some(ua => ua.username === u.username)
+            );
+        },
         unauthorizedBoundWorkflows() {
             return this.boundWorkflows.filter(
                 wf =>
@@ -1766,24 +1819,8 @@ export default {
         },
         mustAuthenticate() {
             return (
-                this.getAgent.policies.length === 0 ||
-                (this.getAgent.policies.length > 0 &&
-                    !this.getAgent.policies.some(
-                        p =>
-                            p.user === this.profile.djangoProfile.username &&
-                            (p.role.toLowerCase() === 'guest' ||
-                                p.role.toLowerCase() === 'admin')
-                    ))
-            );
-        },
-        accessRequested: function() {
-            return this.getAgent.access_requests.some(
-                r => r.user === this.profile.djangoProfile.username
-            );
-        },
-        accessRequest: function() {
-            return this.getAgent.access_requests.find(
-                r => r.user === this.profile.djangoProfile.username
+                this.getAgent.role !== 'admin' ||
+                this.getAgent.authentication === 'password'
             );
         }
     },
@@ -1803,7 +1840,7 @@ export default {
             // noop
         },
         agent() {
-          // noop
+            // noop
         }
     },
     methods: {
@@ -1816,11 +1853,112 @@ export default {
                 )
             ]);
         },
+        async refreshUsers() {
+            await this.$store.dispatch('users/loadAll');
+        },
+        specifyAuthorizedUser() {
+            this.$bvModal.show('authorizeUser');
+        },
         specifyAuthorizedWorkflow() {
             this.$bvModal.show('authorizeWorkflow');
         },
         specifyBlockedWorkflow() {
             this.$bvModal.show('blockWorkflow');
+        },
+        showKeyModal() {
+            this.$bvModal.show('key');
+        },
+        hideKeyModal() {
+            this.$bvModal.hide('key');
+            this.publicKey = '';
+        },
+        showUnbindAgentModal() {
+            this.$bvModal.show('unbind');
+        },
+        showAuthenticateModal() {
+            this.$bvModal.show('authenticate');
+        },
+        async authorizeUser(user) {
+            this.authorizingUser = true;
+            let data = { user: user.username };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/authorize_user/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'agents/addOrUpdate',
+                            response.data
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Authorized user ${user.username} for agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to authorize user ${user.username} for agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.$bvModal.hide('authorizeUser');
+                    this.authorizingUser = false;
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to authorize user ${user.username} for agent ${this.getAgent.name}`,
+                        guid: guid().toString()
+                    });
+                    this.$bvModal.hide('authorizeUser');
+                    this.authorizingUser = false;
+                    throw error;
+                });
+        },
+        async unauthorizeUser(user) {
+            this.authorizingUser = true;
+            let data = { user: user.username };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unauthorize_user/`,
+                data: data,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(async response => {
+                    if (response.status === 200) {
+                        await this.$store.dispatch(
+                            'agents/addOrUpdate',
+                            response.data
+                        );
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'success',
+                            message: `Revoked user ${user.username}'s access to agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                    } else {
+                        await this.$store.dispatch('alerts/add', {
+                            variant: 'danger',
+                            message: `Failed to revoke user ${user.username}'s access to agent ${this.getAgent.name}`,
+                            guid: guid().toString()
+                        });
+                    }
+                    this.authorizingUser = false;
+                })
+                .catch(async error => {
+                    Sentry.captureException(error);
+                    this.$store.dispatch('alerts/add', {
+                        variant: 'danger',
+                        message: `Failed to revoke user ${user.username}'s access to agent ${this.getAgent.name}`,
+                        guid: guid().toString()
+                    });
+                    this.authorizingUser = false;
+                    throw error;
+                });
         },
         async authorizeWorkflow(workflow) {
             this.authorizingWorkflow = true;
@@ -1830,7 +1968,7 @@ export default {
             };
             await axios({
                 method: 'post',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/authorize/`,
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/authorize_workflow/`,
                 data: data,
                 headers: { 'Content-Type': 'application/json' }
             })
@@ -1876,7 +2014,7 @@ export default {
             };
             await axios({
                 method: 'post',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unauthorize/`,
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unauthorize_workflow/`,
                 data: data,
                 headers: { 'Content-Type': 'application/json' }
             })
@@ -1917,7 +2055,7 @@ export default {
             this.blockingWorkflow = true;
             await axios({
                 method: 'post',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/block/`,
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/block_workflow/`,
                 data: {
                     owner: workflow.repo.owner.login,
                     name: workflow.repo.name
@@ -1962,7 +2100,7 @@ export default {
             this.blockingWorkflow = true;
             await axios({
                 method: 'post',
-                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unblock/`,
+                url: `/apis/v1/agents/${this.$router.currentRoute.params.name}/unblock_workflow/`,
                 data: {
                     owner: workflow.repo.owner.login,
                     name: workflow.repo.name
@@ -2113,82 +2251,6 @@ export default {
                         guid: guid().toString()
                     });
                     throw error;
-                });
-        },
-        showKeyModal() {
-            this.$bvModal.show('key');
-        },
-        hideKeyModal() {
-            this.$bvModal.hide('key');
-            this.publicKey = '';
-        },
-        showUnbindAgentModal() {
-            this.$bvModal.show('unbind');
-        },
-        showAuthenticateModal() {
-            this.$bvModal.show('authenticate');
-        },
-        revokeAccess(user) {
-            axios
-                .get(
-                    `/apis/v1/agents/revoke_access/?name=${this.$route.params.name}&user=${user}`
-                )
-                .then(() => {
-                    this.loadTarget();
-                    this.alertMessage = `Revoked user ${user}'s access to ${this.$route.params.name}`;
-                    this.alertEnabled = true;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) {
-                        this.alertMessage = `Failed to revoke user ${user}'s access to ${this.$route.params.name}`;
-                        this.alertEnabled = true;
-                        throw error;
-                    }
-                });
-        },
-        grantAccess(user) {
-            axios
-                .get(
-                    `/apis/v1/agents/grant_access/?name=${this.$route.params.name}&user=${user}`
-                )
-                .then(response => {
-                    this.loadTarget();
-                    if (response.data.granted)
-                        this.alertMessage = `Granted user ${user} access to ${this.$route.params.name}`;
-                    else
-                        this.alertMessage = `User ${user} already has access to ${this.$route.params.name}`;
-                    this.alertEnabled = true;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) {
-                        this.alertMessage = `Failed to grant user ${user} access to ${this.$route.params.name}`;
-                        this.alertEnabled = true;
-                        throw error;
-                    }
-                });
-        },
-        requestAccess() {
-            axios
-                .get(
-                    `/apis/v1/agents/request_access/?name=${this.$route.params.name}`
-                )
-                .then(response => {
-                    this.loadTarget();
-                    if (response.data.created)
-                        this.alertMessage = `Requested access to${this.$route.params.name}`;
-                    else
-                        this.alertMessage = `You've already requested access to ${this.$route.params.name}`;
-                    this.alertEnabled = true;
-                })
-                .catch(error => {
-                    Sentry.captureException(error);
-                    if (error.response.status === 500) {
-                        this.alertMessage = `Failed to request access to ${this.$route.params.name}`;
-                        this.alertEnabled = true;
-                        throw error;
-                    }
                 });
         },
         async togglePublic() {

@@ -205,15 +205,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
 
     @action(detail=False, methods=['get'])
     def get_all(self, request):
-        redis = RedisClient.get()
-        users = list_users(self.queryset, request.user.profile.github_token)
-        cached_users = [json.loads(redis.get(key)) for key in redis.scan_iter(match='user/*')]
-
-        if len(users) != len(cached_users):
-            self.logger.info(f"Populating user cache")
-            for user in users:
-                redis.set(f"user/{user['username']}", json.dumps(user))
-
+        users = list_users(request.user.profile.github_token)
         return JsonResponse({'users': users})
 
     @action(detail=False, methods=['get'])

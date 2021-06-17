@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, JsonResponse
 
-from plantit.notifications.models import TargetPolicyNotification, DirectoryPolicyNotification
+from plantit.notifications.models import Notification
 from plantit.notifications.utils import map_notification
 
 
@@ -25,8 +25,8 @@ def get_by_user(request, owner):
         return HttpResponseNotFound()
 
     notifications = list(chain(
-        list(DirectoryPolicyNotification.objects.filter(user=user)),
-        list(TargetPolicyNotification.objects.filter(user=user))))
+        # list(DirectoryPolicyNotification.objects.filter(user=user)),
+        list(Notification.objects.filter(user=user))))
     notifications = notifications[start:(start + count)]
 
     return JsonResponse({'notifications': [map_notification(n) for n in notifications]})
@@ -46,8 +46,8 @@ def mark_read(request, owner):
 
     try:
         notifications = list(chain(
-            list(DirectoryPolicyNotification.objects.filter(user=user, guid=guid)),
-            list(TargetPolicyNotification.objects.filter(user=user, guid=guid))))
+            # list(DirectoryPolicyNotification.objects.filter(user=user, guid=guid)),
+            list(Notification.objects.filter(user=user, guid=guid))))
         notification = notifications[0]
     except:
         return HttpResponseNotFound()

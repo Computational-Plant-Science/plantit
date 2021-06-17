@@ -1,3 +1,4 @@
+import json
 import logging
 import subprocess
 from datetime import timedelta
@@ -12,21 +13,24 @@ from django.contrib.auth.models import User
 
 import plantit.terrain as terrain
 import plantit.github as github
-from plantit.agents.utils import logger
+from plantit.redis import RedisClient
 from plantit.tasks.models import Task
 from plantit.workflows.models import Workflow
 
 logger = logging.getLogger(__name__)
 
 
-def list_users(queryset, github_token):
-    users = []
-    for user in list(queryset.exclude(profile__isnull=True)):
+def list_users(github_token: str):
+    # TODO factor out cache updating
+    redis = RedisClient.get()
+    users = User.objects.all()
+    mapped = []
+    for user in list(users.exclude(profile__isnull=True)):
         if user.profile.github_username:
             github_profile = requests.get(f"https://api.github.com/users/{user.profile.github_username}",
                                           headers={'Authorization': f"Bearer {github_token}"}).json()
             if 'login' in github_profile:
-                users.append({
+                mapped.append({
                     'username': user.username,
                     'first_name': user.first_name,
                     'last_name': user.last_name,
@@ -34,19 +38,21 @@ def list_users(queryset, github_token):
                     'github_profile': github_profile
                 })
             else:
-                users.append({
+                mapped.append({
                     'username': user.username,
                     'first_name': user.first_name,
                     'last_name': user.last_name,
                 })
         else:
-            users.append({
+            mapped.append({
                 'username': user.username,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
             })
 
-    return users
+    logger.info(f"Populating user cache")
+    for user in mapped: redis.set(f"users/{user['username']}", json.dumps(user))
+    return [json.loads(redis.get(key)) for key in redis.scan_iter(match='users/*')]
 
 
 @sync_to_async

@@ -12,14 +12,3 @@ class Notification(models.Model):
     created = models.DateTimeField(default=timezone.now)
     message = models.CharField(max_length=1000, null=True, blank=True)
     read: bool = models.BooleanField(default=False)
-
-    class Meta:
-        abstract = True
-
-
-class DirectoryPolicyNotification(Notification):
-    policy = models.ForeignKey(DatasetAccessPolicy, on_delete=models.CASCADE)
-
-
-class TargetPolicyNotification(Notification):
-    policy = models.ForeignKey(AgentAccessPolicy, on_delete=models.CASCADE)

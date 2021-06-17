@@ -8,14 +8,14 @@ from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, HttpResponseForbidden, HttpResponseNotAllowed, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.utils import timezone
 
 from plantit.ssh import SSH, execute_command
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAccessRequest, AgentAuthentication
-from plantit.agents.utils import map_agent
-from plantit.users.utils import get_or_create_keypair, get_private_key_path
-from plantit.notifications.models import TargetPolicyNotification
+from plantit.agents.utils import map_agent, get_agent_user, map_agent_async
+from plantit.users.utils import get_private_key_path
+from plantit.notifications.models import Notification
 from plantit.workflows.models import Workflow
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def list_or_bind(request):
             try: agents = agents.filter(user=User.objects.get(username=agent_owner))
             except: return HttpResponseNotFound()
 
-        return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in agents]})
+        return JsonResponse({'agents': [map_agent(agent, request.user) for agent in agents]})
     elif request.method == 'POST':
         body = json.loads(request.body.decode('utf-8'))
         auth = body['auth']
@@ -77,10 +77,9 @@ def list_or_bind(request):
                 agent.launcher = bool(config['launcher'])
                 agent.save()
 
-            policy = AgentAccessPolicy.objects.create(user=request.user, agent=agent, role=AgentRole.admin)
-            return JsonResponse({'created': created, 'agent': map_agent(agent, policy.role)})
+            return JsonResponse({'created': created, 'agent': map_agent(agent, request.user)})
 
-        return JsonResponse({'created': created, 'agent': map_agent(agent)})
+        return JsonResponse({'created': created, 'agent': map_agent(agent, request.user)})
 
 
 @login_required
@@ -89,21 +88,12 @@ def get_or_unbind(request, name):
     except: return HttpResponseNotFound()
 
     if request.method == 'GET':
-        policies = AgentAccessPolicy.objects.filter(agent=agent)
-        try: access_requests = AgentAccessRequest.objects.filter(agent=agent)
-        except: access_requests = None
-
-        if agent not in [policy.agent for policy in policies]:
-            return JsonResponse(map_agent(agent, AgentRole.none, None, access_requests))
-
-        try: role = AgentAccessPolicy.objects.get(user=request.user, agent=agent).role
-        except: role = AgentRole.none
-        return JsonResponse(map_agent(agent, role, list(policies), access_requests))
+        return JsonResponse(map_agent(agent, request.user))
     elif request.method == 'DELETE':
         agent.delete()
         logger.info(f"Removed binding for agent {name}")
         agents = Agent.objects.filter(user=request.user)
-        return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in agents]})
+        return JsonResponse({'agents': [map_agent(agent, request.user) for agent in agents]})
 
 
 
@@ -125,26 +115,52 @@ def host_exists(request, host):
         return JsonResponse({'exists': False})
 
 
+@sync_to_async
 @login_required
-def request_access(request, name):
-    if name is None:
+@async_to_sync
+async def authorize_user(request, name):
+    body = json.loads(request.body.decode('utf-8'))
+    user_name = body['user']
+    if name is None or user_name is None:
         return HttpResponseNotFound()
 
     try:
-        agent = Agent.objects.get(name=name)
+        agent = await sync_to_async(Agent.objects.get)(name=name)
+        user = await sync_to_async(User.objects.get)(username=user_name)
     except:
         return HttpResponseNotFound()
 
-    _, created = AgentAccessRequest.objects.get_or_create(user=request.user, agent=agent)
-    return JsonResponse({
-        'created': created
+    agent_user = await get_agent_user(agent)
+    if agent_user is not None and agent_user.username != request.user.username:
+        return HttpResponseForbidden()
+
+    await sync_to_async(agent.users_authorized.add)(user)
+    await sync_to_async(agent.save)()
+
+    notification = await sync_to_async(Notification.objects.create)(
+        guid=str(uuid.uuid4()),
+        user=user,
+        created=timezone.now(),
+        message=f"You were granted access to {agent.name}")
+
+    await get_channel_layer().group_send(f"notifications-{user.username}", {
+        'type': 'push_notification',
+        'notification': {
+            'id': notification.guid,
+            'username': notification.user.username,
+            'created': notification.created.isoformat(),
+            'message': notification.message,
+            'read': notification.read,
+        }
     })
+    output = await map_agent_async(agent, request.user)
+    return JsonResponse(output)
 
 
 @sync_to_async
 @login_required
 @async_to_sync
-async def grant_access(request, name):
+async def unauthorize_user(request, name):
     body = json.loads(request.body.decode('utf-8'))
     user_name = body['user']
     if name is None or user_name is None:
@@ -152,23 +168,22 @@ async def grant_access(request, name):
 
     try:
         agent = await sync_to_async(Agent.objects.get)(name=name)
-        user = await sync_to_async(User.objects.get)(owner=user_name)
+        user = await sync_to_async(User.objects.get)(username=user_name)
     except:
         return HttpResponseNotFound()
 
-    if agent.user is not None and agent.user.username != request.user.username:
+    agent_user = await get_agent_user(agent)
+    if agent_user is not None and agent_user.username != request.user.username:
         return HttpResponseForbidden()
 
-    policy, created = await sync_to_async(AgentAccessPolicy.objects.get_or_create)(user=user, agent=agent, role=AgentRole.run)
-    access_request = await sync_to_async(AgentAccessRequest.objects.get)(user=user, agent=agent)
-    await sync_to_async(access_request.delete)()
+    await sync_to_async(agent.users_authorized.remove)(user)
+    await sync_to_async(agent.save)()
 
-    notification = await sync_to_async(TargetPolicyNotification.objects.create)(
+    notification = await sync_to_async(Notification.objects.create)(
         guid=str(uuid.uuid4()),
         user=user,
         created=timezone.now(),
-        policy=policy,
-        message=f"You were granted access to {policy.agent.name}")
+        message=f"Your access to {agent.name} was revoked")
 
     await get_channel_layer().group_send(f"notifications-{user.username}", {
         'type': 'push_notification',
@@ -178,57 +193,10 @@ async def grant_access(request, name):
             'created': notification.created.isoformat(),
             'message': notification.message,
             'read': notification.read,
-            'policy': {
-                'user': user.username,
-                'role': str(notification.policy.role)
-            }
         }
     })
-
-    return JsonResponse({'granted': created})
-
-
-@login_required
-async def revoke_access(request, name):
-    body = json.loads(request.body.decode('utf-8'))
-    user_name = body['user']
-    if name is None or user_name is None:
-        return HttpResponseNotFound()
-
-    try:
-        agent = await sync_to_async(Agent.objects.get)(name=name)
-        user = await sync_to_async(User.objects.get)(owner=user_name)
-        policy = await sync_to_async(AgentAccessPolicy.objects.get)(user=user, agent=agent)
-    except:
-        return HttpResponseNotFound()
-
-    if agent.user is not None and agent.user.username != request.user.username:
-        return HttpResponseForbidden()
-
-    notification = await sync_to_async(TargetPolicyNotification.objects.create)(
-        guid=str(uuid.uuid4()),
-        user=user,
-        created=timezone.now(),
-        policy=policy,
-        message=f"Your access to {policy.agent.name} was revoked")
-
-    await get_channel_layer().group_send(f"notifications-{user.username}", {
-        'type': 'push_notification',
-        'notification': {
-            'id': notification.guid,
-            'username': notification.user.username,
-            'created': notification.created.isoformat(),
-            'message': notification.message,
-            'read': notification.read,
-            'policy': {
-                'user': user.username,
-                'role': str(notification.policy.role)
-            }
-        }
-    })
-
-    await sync_to_async(policy.delete)()
-    return HttpResponse()
+    output = await map_agent_async(agent, request.user)
+    return JsonResponse(output)
 
 
 @login_required
@@ -251,7 +219,7 @@ def authorize_workflow(request, name):
     agent.workflows_authorized.add(workflow)
     agent.save()
 
-    return JsonResponse(map_agent(agent, AgentRole.admin))
+    return JsonResponse(map_agent(agent, request.user))
 
 
 @login_required
@@ -274,7 +242,7 @@ def unauthorize_workflow(request, name):
     agent.workflows_authorized.remove(workflow)
     agent.save()
 
-    return JsonResponse(map_agent(agent, AgentRole.admin))
+    return JsonResponse(map_agent(agent, request.user))
 
 
 @login_required
@@ -297,7 +265,7 @@ def block_workflow(request, name):
     agent.workflows_blocked.add(workflow)
     agent.save()
 
-    return JsonResponse(map_agent(agent, AgentRole.admin))
+    return JsonResponse(map_agent(agent, request.user))
 
 
 @login_required
@@ -320,7 +288,7 @@ def unblock_workflow(request, name):
     agent.workflows_blocked.remove(workflow)
     agent.save()
 
-    return JsonResponse(map_agent(agent, AgentRole.admin))
+    return JsonResponse(map_agent(agent, request.user))
 
 
 @login_required
@@ -392,4 +360,4 @@ def set_authentication_strategy(request, name):
     agent.save()
     logger.info(f"Agent {name} is now using {authentication} authentication")
 
-    return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})
+    return JsonResponse({'agents': [map_agent(agent, request.user) for agent in list(Agent.objects.filter(user=request.user))]})

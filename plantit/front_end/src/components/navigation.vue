@@ -946,7 +946,7 @@ import moment from 'moment';
 import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import router from '@/router';
-import store from "@/store/store";
+import store from '@/store/store';
 
 export default {
     name: 'Navigation',
@@ -1010,9 +1010,10 @@ export default {
         this.crumbs = this.$route.meta.crumb;
 
         // user profile must be loaded before everything else to make sure we have tokens/profile properties
-      if (this.$route.name === 'about') return;
+        if (this.$route.name === 'about') return;
         await store.dispatch('user/loadProfile');
         await Promise.all([
+            this.$store.dispatch('users/loadAll'),
             this.$store.dispatch('tasks/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
             this.$store.dispatch('workflows/loadPublic'),

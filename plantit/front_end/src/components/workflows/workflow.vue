@@ -22,15 +22,14 @@
                 v-if="workflowLoading || getWorkflow === null"
             >
                 <b-spinner
-                        small
-                        label="Loading..."
-                        :variant="profile.darkMode ? 'light' : 'dark'"
-                        class="mr-1"
-                    ></b-spinner
-                    ><span
-                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                        >Loading workflow...</span
-                    >
+                    small
+                    label="Loading..."
+                    :variant="profile.darkMode ? 'light' : 'dark'"
+                    class="mr-1"
+                ></b-spinner
+                ><span :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                    >Loading workflow...</span
+                >
             </b-row>
             <b-row v-else>
                 <b-col>
@@ -3242,7 +3241,7 @@ export default {
                 tags: this.tags
             };
             if ('jobqueue' in this.getWorkflow.config)
-              config['jobqueue'] = this.getWorkflow.config.jobqueue;
+                config['jobqueue'] = this.getWorkflow.config.jobqueue;
             if ('gpu' in this.getWorkflow.config)
                 config['gpu'] = this.getWorkflow.config.gpu;
             if ('branch' in this.getWorkflow.config)
@@ -3372,9 +3371,7 @@ export default {
         getWorkflow: function() {
             // noop
         },
-        selectedInput: function() {
-
-        }
+        selectedInput: function() {}
     },
     computed: {
         ...mapGetters('user', ['profile']),
@@ -3448,15 +3445,16 @@ export default {
             );
         },
         mustAuthenticate() {
-            return this.selectedAgent.authentication === 'password' || !(
-                this.selectedAgent.user !== undefined &&
-                this.selectedAgent.user ===
-                    this.profile.djangoProfile.username &&
-                !this.selectedAgent.policies.some(
-                    p =>
-                        p.user === this.profile.djangoProfile.username &&
-                        (p.role.toLowerCase() === 'guest' ||
-                            p.role.toLowerCase() === 'admin')
+            return (
+                this.selectedAgent.authentication === 'password' ||
+                !(
+                    this.selectedAgent.user !== undefined &&
+                    this.selectedAgent.user !==
+                        this.profile.djangoProfile.username &&
+                    !this.selectedAgent.users_authorized.some(
+                        ua =>
+                            ua.username === this.profile.djangoProfile.username
+                    )
                 )
             );
         },

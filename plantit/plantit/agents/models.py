@@ -2,6 +2,7 @@ from enum import Enum
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
@@ -53,15 +54,16 @@ class Agent(models.Model):
     authentication = models.CharField(max_length=10, choices=AgentAuthentication.choices, default=AgentAuthentication.PASSWORD)
     workflows_authorized = models.ManyToManyField(Workflow, related_name='agents_authorized', null=True, blank=True)
     workflows_blocked = models.ManyToManyField(Workflow, related_name='agents_blocked', null=True, blank=True)
+    users_authorized = models.ManyToManyField(User, related_name='agents_authorized', null=True, blank=True)
 
     def __str__(self):
         return self.name
 
 
-class AgentRole(Enum):
-    admin = 'ADMIN'
-    guest = 'GUEST'
-    none = 'NONE'
+class AgentRole(str, Enum):
+    admin = 'admin'
+    guest = 'guest'
+    none = 'none'
 
 
 class AgentAccessPolicy(models.Model):
