@@ -7,11 +7,11 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidde
 
 from plantit.github import get_repo_readme, get_repo
 from plantit.redis import RedisClient
-from plantit.tasks.utils import del_none
+from plantit.utils import get_user_django_profile, get_public_workflows, get_personal_workflows, get_workflow, \
+    workflow_to_dict
+from plantit.misc import del_none
 from plantit.users.models import Profile
-from plantit.users.utils import get_django_profile
 from plantit.workflows.models import Workflow
-from plantit.workflows.utils import bind_workflow_bundle, get_personal_workflow_bundles, get_public_workflow_bundles, get_workflow_bundle
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 @login_required
 @async_to_sync
 async def list_public(request):
-    profile = await get_django_profile(request.user)
+    profile = await get_user_django_profile(request.user)
     invalidate = request.GET.get('invalidate', False)
-    bundles = await get_public_workflow_bundles(token=profile.github_token, invalidate=bool(invalidate))
+    bundles = await get_public_workflows(token=profile.github_token, invalidate=bool(invalidate))
     return JsonResponse({'workflows': bundles})
 
 
@@ -32,7 +32,7 @@ async def list_public(request):
 @login_required
 @async_to_sync
 async def list_personal(request, owner):
-    profile = await get_django_profile(request.user)
+    profile = await get_user_django_profile(request.user)
     if owner != profile.github_username:
         try:
             await sync_to_async(Profile.objects.get)(github_username=owner)
@@ -40,7 +40,7 @@ async def list_personal(request, owner):
             return HttpResponseNotFound()
 
     invalidate = request.GET.get('invalidate', False)
-    bundles = await get_personal_workflow_bundles(owner=owner, invalidate=bool(invalidate))
+    bundles = await get_personal_workflows(owner=owner, invalidate=bool(invalidate))
     return JsonResponse({'workflows': bundles})
 
 
@@ -48,9 +48,9 @@ async def list_personal(request, owner):
 @login_required
 @async_to_sync
 async def get(request, owner, name):
-    profile = await get_django_profile(request.user)
+    profile = await get_user_django_profile(request.user)
     invalidate = request.GET.get('invalidate', False)
-    bundle = await get_workflow_bundle(owner=owner, name=name, token=profile.github_token, invalidate=bool(invalidate))
+    bundle = await get_workflow(owner=owner, name=name, token=profile.github_token, invalidate=bool(invalidate))
     return HttpResponseNotFound() if bundle is None else JsonResponse(bundle)
 
 
@@ -58,7 +58,7 @@ async def get(request, owner, name):
 @login_required
 @async_to_sync
 async def search(request, owner, name):
-    profile = await get_django_profile(request.user)
+    profile = await get_user_django_profile(request.user)
     repo = await get_repo(owner, name, profile.github_token)
     return HttpResponseNotFound() if repo is None else JsonResponse(repo)
 
@@ -73,8 +73,8 @@ async def refresh(request, owner, name):
         return HttpResponseNotFound()
 
     redis = RedisClient.get()
-    profile = await get_django_profile(request.user)
-    bundle = await bind_workflow_bundle(workflow, profile.github_token)
+    profile = await get_user_django_profile(request.user)
+    bundle = await workflow_to_dict(workflow, profile.github_token)
     redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
     logger.info(f"Refreshed workflow {owner}/{name}")
     return JsonResponse(bundle)
@@ -92,7 +92,7 @@ def readme(request, owner, name):
 @login_required
 @async_to_sync
 async def toggle_public(request, owner, name):
-    profile = await get_django_profile(request.user)
+    profile = await get_user_django_profile(request.user)
     if owner != profile.github_username:
         return HttpResponseForbidden()
 
@@ -104,7 +104,7 @@ async def toggle_public(request, owner, name):
     redis = RedisClient.get()
     workflow.public = not workflow.public
     await sync_to_async(workflow.save)()
-    bundle = await bind_workflow_bundle(workflow, profile.github_token)
+    bundle = await workflow_to_dict(workflow, profile.github_token)
     redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(bundle)))
     logger.info(f"Workflow {owner}/{name} is now {'public' if workflow.public else 'private'}")
     return JsonResponse({'workflows': [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"workflows/{owner}/*")]})

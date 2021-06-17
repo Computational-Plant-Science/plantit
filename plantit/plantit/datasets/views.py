@@ -13,13 +13,13 @@ from django.http import HttpResponseNotFound, HttpResponseBadRequest, JsonRespon
 from django.utils import timezone
 
 from plantit.datasets.models import DatasetAccessPolicy, DatasetRole
-from plantit.datasets.utils import map_dataset_policy
+from plantit.utils import dataset_access_policy_to_dict
 
 
 @login_required
 def sharing(request):  # directories the current user is sharing
     policies = DatasetAccessPolicy.objects.filter(owner=request.user)
-    return JsonResponse({'datasets': [map_dataset_policy(policy) for policy in policies]})
+    return JsonResponse({'datasets': [dataset_access_policy_to_dict(policy) for policy in policies]})
 
 
 @sync_to_async
@@ -57,7 +57,7 @@ async def shared(request):  # directories shared with the current user
 #         policy, created = await sync_to_async(DatasetAccessPolicy.objects.get_or_create)(owner=owner, guest=user, role=role, path=path)
 #         policies.append({
 #             'created': created,
-#             'policy': map_dataset_policy(policy)
+#             'policy': dataset_access_policy_to_dict(policy)
 #         })
 #
 #         notification = await sync_to_async(DirectoryPolicyNotification.objects.create)(
@@ -75,7 +75,7 @@ async def shared(request):  # directories shared with the current user
 #                 'created': notification.created.isoformat(),
 #                 'message': notification.message,
 #                 'read': notification.read,
-#                 'policy': map_dataset_policy(notification.policy)
+#                 'policy': dataset_access_policy_to_dict(notification.policy)
 #             }
 #         })
 #
@@ -129,7 +129,7 @@ async def shared(request):  # directories shared with the current user
 #             'created': notification.created.isoformat(),
 #             'message': notification.message,
 #             'read': notification.read,
-#             'policy': map_dataset_policy(notification.policy)
+#             'policy': dataset_access_policy_to_dict(notification.policy)
 #         }
 #     })
 #

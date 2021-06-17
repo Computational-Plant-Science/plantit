@@ -8,14 +8,13 @@ from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponseNotFound, HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidden, HttpResponseBadRequest
 from django.utils import timezone
 
-from plantit.ssh import SSH, execute_command
-from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAccessRequest, AgentAuthentication
-from plantit.agents.utils import map_agent, get_agent_user, map_agent_async
-from plantit.users.utils import get_private_key_path
+from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentAuthentication
 from plantit.notifications.models import Notification
+from plantit.ssh import SSH, execute_command
+from plantit.utils import agent_to_dict, get_agent_user, agent_to_dict_async, get_user_private_key_path
 from plantit.workflows.models import Workflow
 
 logger = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ def list_or_bind(request):
             try: agents = agents.filter(users_authorized__username__exact=agent_guest)
             except: return HttpResponseNotFound()
 
-        return JsonResponse({'agents': [map_agent(agent, request.user) for agent in agents]})
+        return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in agents]})
     elif request.method == 'POST':
         body = json.loads(request.body.decode('utf-8'))
         auth = body['auth']
@@ -84,9 +83,9 @@ def list_or_bind(request):
                 agent.launcher = bool(config['launcher'])
                 agent.save()
 
-            return JsonResponse({'created': created, 'agent': map_agent(agent, request.user)})
+            return JsonResponse({'created': created, 'agent': agent_to_dict(agent, request.user)})
 
-        return JsonResponse({'created': created, 'agent': map_agent(agent, request.user)})
+        return JsonResponse({'created': created, 'agent': agent_to_dict(agent, request.user)})
 
 
 @login_required
@@ -95,12 +94,12 @@ def get_or_unbind(request, name):
     except: return HttpResponseNotFound()
 
     if request.method == 'GET':
-        return JsonResponse(map_agent(agent, request.user))
+        return JsonResponse(agent_to_dict(agent, request.user))
     elif request.method == 'DELETE':
         agent.delete()
         logger.info(f"Removed binding for agent {name}")
         agents = Agent.objects.filter(user=request.user)
-        return JsonResponse({'agents': [map_agent(agent, request.user) for agent in agents]})
+        return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in agents]})
 
 
 
@@ -160,7 +159,7 @@ async def authorize_user(request, name):
             'read': notification.read,
         }
     })
-    output = await map_agent_async(agent, request.user)
+    output = await agent_to_dict_async(agent, request.user)
     return JsonResponse(output)
 
 
@@ -202,7 +201,7 @@ async def unauthorize_user(request, name):
             'read': notification.read,
         }
     })
-    output = await map_agent_async(agent, request.user)
+    output = await agent_to_dict_async(agent, request.user)
     return JsonResponse(output)
 
 
@@ -226,7 +225,7 @@ def authorize_workflow(request, name):
     agent.workflows_authorized.add(workflow)
     agent.save()
 
-    return JsonResponse(map_agent(agent, request.user))
+    return JsonResponse(agent_to_dict(agent, request.user))
 
 
 @login_required
@@ -249,7 +248,7 @@ def unauthorize_workflow(request, name):
     agent.workflows_authorized.remove(workflow)
     agent.save()
 
-    return JsonResponse(map_agent(agent, request.user))
+    return JsonResponse(agent_to_dict(agent, request.user))
 
 
 @login_required
@@ -272,7 +271,7 @@ def block_workflow(request, name):
     agent.workflows_blocked.add(workflow)
     agent.save()
 
-    return JsonResponse(map_agent(agent, request.user))
+    return JsonResponse(agent_to_dict(agent, request.user))
 
 
 @login_required
@@ -295,7 +294,7 @@ def unblock_workflow(request, name):
     agent.workflows_blocked.remove(workflow)
     agent.save()
 
-    return JsonResponse(map_agent(agent, request.user))
+    return JsonResponse(agent_to_dict(agent, request.user))
 
 
 @login_required
@@ -312,7 +311,7 @@ def toggle_public(request, name):
     agent.save()
     logger.info(f"Agent {name} is now {'public' if agent.public else 'private'}")
 
-    return JsonResponse({'agents': [map_agent(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})
+    return JsonResponse({'agents': [agent_to_dict(agent, AgentRole.admin) for agent in list(Agent.objects.filter(user=request.user))]})
 
 
 @login_required
@@ -330,7 +329,7 @@ def healthcheck(request, name):
             except: return HttpResponseBadRequest()
             ssh = SSH(host=agent.hostname, port=22, username=username, password=password)
         else:
-            ssh = SSH(host=agent.hostname, port=22, username=agent.username, pkey=str(get_private_key_path(request.user.username)))
+            ssh = SSH(host=agent.hostname, port=22, username=agent.username, pkey=str(get_user_private_key_path(request.user.username)))
 
         with ssh:
             logger.info(f"Checking agent {agent.name}'s health")
@@ -367,4 +366,4 @@ def set_authentication_strategy(request, name):
     agent.save()
     logger.info(f"Agent {name} is now using {authentication} authentication")
 
-    return JsonResponse({'agents': [map_agent(agent, request.user) for agent in list(Agent.objects.filter(user=request.user))]})
+    return JsonResponse({'agents': [agent_to_dict(agent, request.user) for agent in list(Agent.objects.filter(user=request.user))]})

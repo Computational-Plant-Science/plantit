@@ -17,8 +17,8 @@ from plantit.agents.models import Agent
 from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
-from plantit.tasks.utils import log_task_status, map_task, get_task_log_file_path, create_task, map_delayed_task, \
-    map_repeating_task, cancel_task, push_task_event, get_ssh_client, parse_auth_options
+from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestration_log_file_path, log_task_status, \
+    push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict
 
 
 @login_required
@@ -28,7 +28,7 @@ def get_all_or_create(request):
 
     if request.method == 'GET':
         tasks = Task.objects.all()
-        return JsonResponse({'tasks': [map_task(sub) for sub in tasks]})
+        return JsonResponse({'tasks': [task_to_dict(sub) for sub in tasks]})
     elif request.method == 'POST':
         config = workflow['config']
         agent = Agent.objects.get(name=config['agent']['name'])
@@ -45,14 +45,14 @@ def get_all_or_create(request):
                 guid=task_guid)
 
             # submit the task
-            auth = parse_auth_options(workflow['auth'])
+            auth = parse_task_auth_options(workflow['auth'])
             submit_task.delay(task.guid, auth)
             tasks = list(Task.objects.filter(user=user))
-            return JsonResponse({'tasks': [map_task(t) for t in tasks]})
+            return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 
         # TODO refactor delayed/repeating task logic, maybe move to `create_task`
         # elif workflow['type'] == 'After':
-        #     eta, seconds = parse_eta(workflow)
+        #     eta, seconds = parse_task_eta(workflow)
         #     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
         #     task, created = DelayedTask.objects.get_or_create(
         #         user=user,
@@ -67,10 +67,10 @@ def get_all_or_create(request):
         #         args=json.dumps([user.username, agent.name, workflow]))
         #     return JsonResponse({
         #         'created': created,
-        #         'task': map_delayed_task(task)
+        #         'task': delayed_task_to_dict(task)
         #     })
         # elif workflow['type'] == 'Every':
-        #     eta, seconds = parse_eta(workflow)
+        #     eta, seconds = parse_task_eta(workflow)
         #     schedule, _ = IntervalSchedule.objects.get_or_create(every=seconds, period=IntervalSchedule.SECONDS)
         #     task, created = RepeatingTask.objects.get_or_create(
         #         user=user,
@@ -84,7 +84,7 @@ def get_all_or_create(request):
         #         args=json.dumps([user.username, agent.name, workflow]))
         #     return JsonResponse({
         #         'created': created,
-        #         'task': map_repeating_task(task)
+        #         'task': repeating_task_to_dict(task)
         #     })
         else:
             raise ValueError(f"Unsupported task type (expected: Now, Later, or Periodically)")
@@ -117,7 +117,7 @@ def get_by_owner(request, owner):
     #         count = start + 20
     #         tasks = tasks[start:(start + count)]
 
-    return JsonResponse({'tasks': [map_task(t) for t in tasks]})
+    return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 
 
 @login_required
@@ -125,7 +125,7 @@ def get_by_owner_and_name(request, owner, name):
     try:
         user = User.objects.get(username=owner)
         task = Task.objects.get(user=user, name=name)
-        return JsonResponse(map_task(task))
+        return JsonResponse(task_to_dict(task))
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -185,7 +185,7 @@ def get_3d_model(request, guid):
     except:
         return HttpResponseNotFound()
 
-    ssh = get_ssh_client(task)
+    ssh = get_task_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
 
     with tempfile.NamedTemporaryFile() as temp_file:
@@ -204,7 +204,7 @@ def get_output_file(request, owner, name, file):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    ssh = get_ssh_client(task)
+    ssh = get_task_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
 
     with ssh:
@@ -231,7 +231,7 @@ def get_task_logs(request, owner, name):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    log_path = get_task_log_file_path(task)
+    log_path = get_task_orchestration_log_file_path(task)
     return FileResponse(open(log_path, 'rb')) if Path(log_path).is_file() else HttpResponseNotFound()
 
 
@@ -243,7 +243,7 @@ def get_container_logs(request, owner, name):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    ssh = get_ssh_client(task)
+    ssh = get_task_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
     log_file = f"plantit.{task.job_id}.out" if task.agent.launcher else f"{user.username}.{task.name}.{task.agent.name.lower()}.log"
 
@@ -272,7 +272,7 @@ def get_file_text(request, owner, name):
     except Task.DoesNotExist:
         return HttpResponseNotFound()
 
-    ssh = get_ssh_client(task)
+    ssh = get_task_ssh_client(task)
     workdir = join(task.agent.workdir, task.workdir)
 
     with ssh:
@@ -329,7 +329,7 @@ def delete(request, owner, name):
     task.delete()
     tasks = list(Task.objects.filter(user=user))
 
-    return JsonResponse({'tasks': [map_task(t) for t in tasks]})
+    return JsonResponse({'tasks': [task_to_dict(t) for t in tasks]})
 
 
 @login_required
@@ -380,7 +380,7 @@ def search(request, owner, workflow_name, page):
         start = int(page) * 20
         count = start + 20
         tasks = Task.objects.filter(user=user, workflow_name=workflow_name).order_by('-created')[start:(start + count)]
-        return JsonResponse([map_task(t) for t in tasks], safe=False)
+        return JsonResponse([task_to_dict(t) for t in tasks], safe=False)
     except:
         return HttpResponseNotFound()
 
@@ -394,7 +394,7 @@ def search_delayed(request, owner, workflow_name):
         return HttpResponseNotFound()
 
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
-    return JsonResponse([map_delayed_task(t) for t in tasks], safe=False)
+    return JsonResponse([delayed_task_to_dict(t) for t in tasks], safe=False)
 
 
 @login_required
@@ -406,4 +406,4 @@ def search_repeating(request, owner, workflow_name):
         return HttpResponseNotFound()
 
     tasks = [t for t in tasks if t.workflow_name == workflow_name]
-    return JsonResponse([map_repeating_task(t) for t in tasks], safe=False)
+    return JsonResponse([repeating_task_to_dict(t) for t in tasks], safe=False)
