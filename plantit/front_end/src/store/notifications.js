@@ -24,6 +24,9 @@ export const notifications = {
         }
     },
     actions: {
+        async setAll({ commit }, notifications) {
+            commit('setAll', notifications);
+        },
         async loadAll({ commit, rootState }) {
             commit('setLoading', true);
             await axios

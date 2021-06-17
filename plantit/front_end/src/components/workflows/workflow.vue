@@ -18,7 +18,6 @@
                 </b-col>
             </b-row>
             <b-row
-                align-h="center"
                 v-if="workflowLoading || getWorkflow === null"
             >
                 <b-spinner
@@ -1939,7 +1938,7 @@
                                                                         active-nav-item-class="bg-info text-dark"
                                                                     >
                                                                         <b-tab
-                                                                            title="Personal"
+                                                                            title="Yours"
                                                                             :title-link-class="
                                                                                 profile.darkMode
                                                                                     ? 'text-white'
@@ -1983,6 +1982,157 @@
                                                                                 <b-row
                                                                                     class="text-right"
                                                                                     v-for="agent in validPersonalAgents"
+                                                                                    v-bind:key="
+                                                                                        agent.name
+                                                                                    "
+                                                                                >
+                                                                                    <b-col
+                                                                                        md="auto"
+                                                                                        ><b-button
+                                                                                            size="md"
+                                                                                            class="text-left pt-2"
+                                                                                            @click="
+                                                                                                agentSelected(
+                                                                                                    agent
+                                                                                                )
+                                                                                            "
+                                                                                            :variant="
+                                                                                                profile.darkMode
+                                                                                                    ? 'dark'
+                                                                                                    : 'white'
+                                                                                            "
+                                                                                            :disabled="
+                                                                                                agentUnsupported(
+                                                                                                    agent
+                                                                                                ) ||
+                                                                                                    agent.disabled
+                                                                                            "
+                                                                                            >{{
+                                                                                                agent.name
+                                                                                            }}</b-button
+                                                                                        ></b-col
+                                                                                    >
+                                                                                    <b-col
+                                                                                        align-self="end"
+                                                                                    >
+                                                                                        <small
+                                                                                            >{{
+                                                                                                agent.max_cores
+                                                                                            }}
+                                                                                            cores,
+                                                                                            {{
+                                                                                                agent.max_processes
+                                                                                            }}
+                                                                                            processes,
+                                                                                            <span
+                                                                                                v-if="
+                                                                                                    parseInt(
+                                                                                                        agent.max_mem
+                                                                                                    ) >=
+                                                                                                        parseInt(
+                                                                                                            getWorkflow
+                                                                                                                .config
+                                                                                                                .jobqueue
+                                                                                                                .memory
+                                                                                                        ) &&
+                                                                                                        parseInt(
+                                                                                                            agent.max_mem
+                                                                                                        ) >
+                                                                                                            0
+                                                                                                "
+                                                                                                >{{
+                                                                                                    agent.max_mem
+                                                                                                }}
+                                                                                                GB
+                                                                                                memory</span
+                                                                                            >
+                                                                                            <span
+                                                                                                v-else-if="
+                                                                                                    parseInt(
+                                                                                                        agent.max_mem
+                                                                                                    ) >
+                                                                                                        0
+                                                                                                "
+                                                                                                class="text-danger"
+                                                                                                >{{
+                                                                                                    agent.max_mem
+                                                                                                }}
+                                                                                                GB
+                                                                                                memory</span
+                                                                                            >
+                                                                                            <span
+                                                                                                v-else-if="
+                                                                                                    parseInt(
+                                                                                                        agent.max_mem
+                                                                                                    ) ===
+                                                                                                        -1
+                                                                                                "
+                                                                                                >virtual
+                                                                                                memory</span
+                                                                                            ><span
+                                                                                                v-if="
+                                                                                                    agent.gpu
+                                                                                                "
+                                                                                            >
+                                                                                                ,
+                                                                                                GPU
+                                                                                            </span>
+                                                                                            <span
+                                                                                                v-else
+                                                                                                >,
+                                                                                                No
+                                                                                                GPU
+                                                                                            </span></small
+                                                                                        ></b-col
+                                                                                    >
+                                                                                </b-row>
+                                                                            </div>
+                                                                        </b-tab>
+                                                                        <b-tab
+                                                                            title="Guest"
+                                                                            :title-link-class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'theme-dark m-0 p-3'
+                                                                                    : 'theme-light m-0 p-3'
+                                                                            "
+                                                                        >
+                                                                            <b-row
+                                                                                align-h="center"
+                                                                                v-if="
+                                                                                    personalAgentsLoading
+                                                                                "
+                                                                            >
+                                                                                <b-spinner
+                                                                                    type="grow"
+                                                                                    label="Loading..."
+                                                                                    variant="secondary"
+                                                                                ></b-spinner>
+                                                                            </b-row>
+                                                                            <b-row
+                                                                                align-h="center"
+                                                                                class="text-center"
+                                                                                v-else-if="
+                                                                                    validGuestAgents.length ===
+                                                                                        0
+                                                                                "
+                                                                            >
+                                                                                <b-col>
+                                                                                    None
+                                                                                    to
+                                                                                    show.
+                                                                                </b-col>
+                                                                            </b-row>
+                                                                            <div
+                                                                                v-else
+                                                                            >
+                                                                                <b-row
+                                                                                    class="text-right"
+                                                                                    v-for="agent in validGuestAgents"
                                                                                     v-bind:key="
                                                                                         agent.name
                                                                                     "
@@ -3391,7 +3541,8 @@ export default {
             'publicAgentsLoading',
             'publicAgents',
             'personalAgentsLoading',
-            'personalAgents'
+            'personalAgents',
+            'guestAgents'
         ]),
         ...mapGetters('datasets', [
             'personalDatasets',
@@ -3403,6 +3554,24 @@ export default {
             'sharedDatasetsLoading',
             'sharingDatasetsLoading'
         ]),
+        validGuestAgents() {
+            return this.guestAgents.filter(
+                a =>
+                    !a.workflows_blocked.some(
+                        wf =>
+                            wf.repo.owner.login ===
+                                this.getWorkflow.repo.owner.login &&
+                            wf.config.name === this.getWorkflow.config.name
+                    ) &&
+                    (a.workflows_authorized.length === 0 ||
+                        a.workflows_authorized.some(
+                            wf =>
+                                wf.repo.owner.login ===
+                                    this.getWorkflow.repo.owner.login &&
+                                wf.config.name === this.getWorkflow.config.name
+                        ))
+            );
+        },
         validPersonalAgents() {
             return this.personalAgents.filter(
                 a =>

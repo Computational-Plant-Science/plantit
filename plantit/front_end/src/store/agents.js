@@ -8,14 +8,18 @@ export const agents = {
         public: [],
         publicLoading: true,
         personal: [],
-        personalLoading: true
+        guest: [],
+        personalLoading: true,
     }),
     mutations: {
-        setPublic(state, datasets) {
-            state.public = datasets;
+        setPublic(state, agents) {
+            state.public = agents;
         },
-        setPersonal(state, datasets) {
-            state.personal = datasets;
+        setGuest(state, agents) {
+           state.guest = agents;
+        },
+        setPersonal(state, agents) {
+            state.personal = agents;
         },
         setPublicLoading(state, loading) {
             state.publicLoading = loading;
@@ -64,6 +68,20 @@ export const agents = {
                 .get(`/apis/v1/agents/?owner=${owner}`)
                 .then(response => {
                     commit('setPersonal', response.data.agents);
+                    commit('setPersonalLoading', false);
+                })
+                .catch(error => {
+                    commit('setPersonalLoading', false);
+                    Sentry.captureException(error);
+                    throw error;
+                });
+        },
+        async loadGuest({ commit }, owner) {
+            commit('setPersonalLoading', true);
+            await axios
+                .get(`/apis/v1/agents/?guest=${owner}`)
+                .then(response => {
+                    commit('setGuest', response.data.agents);
                     commit('setPersonalLoading', false);
                 })
                 .catch(error => {
@@ -135,6 +153,7 @@ export const agents = {
         publicAgents: state => state.public,
         publicAgentsLoading: state => state.publicLoading,
         personalAgents: state => state.personal,
+        guestAgents: state => state.guest,
         personalAgentsLoading: state => state.personalLoading
     }
 };

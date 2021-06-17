@@ -1,8 +1,8 @@
 from django.urls import path
 
-from . import views, consumers
+from . import views
 
 urlpatterns = [
-    path(r'<owner>/', views.get_by_user),
-    path(r'<owner>/mark_read/', views.mark_read)
+    path(r'<owner>/', views.list_by_user),
+    path(r'<owner>/<guid>/', views.get_or_dismiss)
 ]

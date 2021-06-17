@@ -15,19 +15,18 @@
                         align-v="start"
                     >
                         <b-col
-                            class="ml-0 mr-0 pl-0 pr-0 pt-0 mt-0"
+                            class="mr-0 pl-0 pt-0 pr-0"
                             align-self="center"
                             md="auto"
                         >
-                            <h4
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-light mt-1'
-                                        : 'text-dark mt-1'
-                                "
+                            <b-button
+                                :variant="profile.darkMode ? 'outline-light' : 'white'"
+                                class="text-left m-0"
+                                @click="hide"
                             >
-                                Tasks
-                            </h4>
+                                <i class="fas fa-arrow-left fa-1x fa-fw"></i>
+                                Hide
+                            </b-button>
                         </b-col>
                         <b-col align-self="center"
                             ><b-input-group size="sm"
@@ -48,18 +47,19 @@
                             </b-input-group>
                         </b-col>
                         <b-col
-                            class="ml-3 mr-0 pl-0 pt-0 pr-0 mt-1"
+                            class="ml-0 mr-0 pl-0 pr-0 pt-0 mt-0"
                             align-self="center"
                             md="auto"
                         >
-                            <b-button
-                                :variant="profile.darkMode ? 'dark' : 'light'"
-                                class="text-left m-0"
-                                @click="hide"
+                            <h4
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light mt-1'
+                                        : 'text-dark mt-1'
+                                "
                             >
-                                <i class="fas fa-arrow-left fa-1x fa-fw"></i>
-                                Hide
-                            </b-button>
+                                Tasks
+                            </h4>
                         </b-col>
                     </b-row>
                     <br />
@@ -455,7 +455,7 @@
                                 <i class="fas fa-check-double fa-1x fa-fw"></i>
                             </b-button>-->
                             <b-button
-                                :variant="profile.darkMode ? 'dark' : 'light'"
+                                :variant="profile.darkMode ? 'outline-light' : 'white'"
                                 class="text-left m-0"
                                 @click="hide"
                             >
@@ -463,13 +463,6 @@
                                 <i class="fas fa-arrow-right fa-1x fa-fw"></i>
                             </b-button>
                         </b-col>
-                    </b-row>
-                    <br />
-                    <b-row
-                        class="m-3 mb-1 pl-0 pr-0 text-center"
-                        align-v="center"
-                    >
-                        <b-col><b>Unread</b></b-col>
                     </b-row>
                     <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
                         ><b-col class="m-0 pl-0 pr-0 text-center">
@@ -491,10 +484,6 @@
                                     <b-row>
                                         <b-col>
                                             <p
-                                                v-if="
-                                                    notification.policy !==
-                                                        undefined
-                                                "
                                             >
                                                 {{ notification.message }}
                                                 <br />
@@ -511,8 +500,8 @@
                                                 :disabled="notification.read"
                                                 :variant="
                                                     profile.darkMode
-                                                        ? 'dark'
-                                                        : 'light'
+                                                        ? 'outline-light'
+                                                        : 'white'
                                                 "
                                                 class="text-left m-0"
                                                 @click="
@@ -521,8 +510,7 @@
                                                     )
                                                 "
                                             >
-                                                Mark Read
-                                                <i class="fas fa-check"></i>
+                                                <i class="fas fa-check fa-fw"></i> Dismiss
                                             </b-button>
                                         </b-col>
                                     </b-row>
@@ -537,50 +525,6 @@
                                 v-if="notificationsUnread.length === 0"
                             >
                                 No unread notifications.
-                            </p>
-                        </b-col>
-                    </b-row>
-                    <br />
-                    <b-row
-                        class="m-3 mb-1 pl-0 pr-0 text-center"
-                        align-v="center"
-                    >
-                        <b-col><b>Read</b></b-col>
-                    </b-row>
-                    <b-row class="m-3 mb-1 pl-0 pr-0" align-v="center"
-                        ><b-col class="m-0 pl-0 pr-0 text-center">
-                            <b-list-group
-                                v-if="notificationsRead.length > 0"
-                                class="text-left m-0 p-0"
-                            >
-                                <b-list-group-item
-                                    variant="default"
-                                    style="box-shadow: -2px 2px 2px #adb5bd"
-                                    v-for="notification in notificationsRead"
-                                    v-bind:key="notification.id"
-                                    :class="
-                                        profile.darkMode
-                                            ? 'text-light bg-dark m-0 p-2 mb-2 overflow-hidden'
-                                            : 'text-dark bg-white m-0 p-2 mb-2 overflow-hidden'
-                                    "
-                                >
-                                    {{ notification.message }}
-                                    <br />
-                                    <br />
-                                    <small>{{
-                                        prettify(notification.created)
-                                    }}</small>
-                                </b-list-group-item>
-                            </b-list-group>
-                            <p
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-center text-light pl-3 pr-3'
-                                        : 'text-center text-dark pl-3 pr-3'
-                                "
-                                v-if="notificationsRead.length === 0"
-                            >
-                                No read notifications.
                             </p>
                         </b-col>
                     </b-row>
@@ -1026,6 +970,10 @@ export default {
                 'agents/loadPersonal',
                 this.profile.djangoProfile.username
             ),
+            this.$store.dispatch(
+                'agents/loadGuest',
+                this.profile.djangoProfile.username
+            ),
             this.$store.dispatch('datasets/loadPublic'),
             this.$store.dispatch('datasets/loadPersonal'),
             this.$store.dispatch('datasets/loadShared'),
@@ -1058,19 +1006,16 @@ export default {
             this.togglingDarkMode = false;
         },
         markAllNotificationsRead() {},
-        markNotificationRead(notification) {
-            axios({
-                method: 'post',
-                url: `/apis/v1/notifications/${this.profile.djangoProfile.username}/mark_read/`,
-                data: {
-                    notification: notification
-                },
+        async markNotificationRead(notification) {
+            await axios({
+                method: 'delete',
+                url: `/apis/v1/notifications/${this.profile.djangoProfile.username}/${notification.id}/`,
                 headers: { 'Content-Type': 'application/json' }
             })
-                .then(response => {
-                    this.$store.dispatch(
-                        'updateNotification',
-                        response.data.notification
+                .then(async response => {
+                    await this.$store.dispatch(
+                        'notifications/setAll',
+                        response.data.notifications
                     );
                 })
                 .catch(error => {

@@ -10,7 +10,7 @@ from plantit.notifications.utils import map_notification
 
 
 @login_required
-def get_by_user(request, owner):
+def list_by_user(request, owner):
     try:
         params = request.query_params
     except:
@@ -19,41 +19,26 @@ def get_by_user(request, owner):
     start = int(page) * 20
     count = start + 20
 
-    try:
-        user = User.objects.get(username=owner)
-    except:
-        return HttpResponseNotFound()
+    try: user = User.objects.get(username=owner)
+    except: return HttpResponseNotFound()
 
     notifications = list(chain(
         # list(DirectoryPolicyNotification.objects.filter(user=user)),
         list(Notification.objects.filter(user=user))))
     notifications = notifications[start:(start + count)]
 
-    return JsonResponse({'notifications': [map_notification(n) for n in notifications]})
+    return JsonResponse({'notifications': [map_notification(notification) for notification in notifications]})
 
 
 @login_required
-def mark_many_read(request, owner):
-    # TODO
-    pass
-
-
-@login_required
-def mark_read(request, owner):
-    user = request.user
-    body = json.loads(request.body.decode('utf-8'))
-    guid = body['notification']['id']
-
+def get_or_dismiss(request, owner, guid):
     try:
-        notifications = list(chain(
-            # list(DirectoryPolicyNotification.objects.filter(user=user, guid=guid)),
-            list(Notification.objects.filter(user=user, guid=guid))))
-        notification = notifications[0]
-    except:
-        return HttpResponseNotFound()
+        user = User.objects.get(username=owner)
+        notification = Notification.objects.get(user=user, guid=guid)
+    except: return HttpResponseNotFound()
 
-    notification.read = True
-    notification.save()
-    return JsonResponse({
-        'notification': map_notification(notification)
-    })
+    if request.method == 'GET': return JsonResponse(map_notification(notification))
+    elif request.method == 'DELETE':
+        notification.delete()
+        notifications = Notification.objects.filter(user=user)
+        return JsonResponse({'notifications': [map_notification(notification) for notification in notifications]})

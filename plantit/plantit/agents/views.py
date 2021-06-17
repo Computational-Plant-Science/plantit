@@ -27,12 +27,19 @@ def list_or_bind(request):
         agents = Agent.objects.all()
         public = request.GET.get('public')
         agent_name = request.GET.get('name')
-        agent_owner = request.GET.get('owner')
+        agent_owner = request.GET.get('owner', None)
+        agent_guest = request.GET.get('guest', None)
+
+        if agent_owner is not None and agent_guest is not None:
+            return HttpResponseBadRequest('Expected either \'owner\' or \'guest\' query param, not both')
 
         if public is not None and bool(public): agents = agents.filter(public=bool(public))
         if agent_name is not None and type(agent_name) is str: agents = agents.filter(name=agent_name)
         if agent_owner is not None and type(agent_owner) is str:
             try: agents = agents.filter(user=User.objects.get(username=agent_owner))
+            except: return HttpResponseNotFound()
+        elif agent_guest is not None and type(agent_guest) is str:
+            try: agents = agents.filter(users_authorized__username__exact=agent_guest)
             except: return HttpResponseNotFound()
 
         return JsonResponse({'agents': [map_agent(agent, request.user) for agent in agents]})
@@ -141,7 +148,7 @@ async def authorize_user(request, name):
         guid=str(uuid.uuid4()),
         user=user,
         created=timezone.now(),
-        message=f"You were granted access to {agent.name}")
+        message=f"You were granted access to agent {agent.name}")
 
     await get_channel_layer().group_send(f"notifications-{user.username}", {
         'type': 'push_notification',
@@ -183,7 +190,7 @@ async def unauthorize_user(request, name):
         guid=str(uuid.uuid4()),
         user=user,
         created=timezone.now(),
-        message=f"Your access to {agent.name} was revoked")
+        message=f"Your access to agent {agent.name} was revoked")
 
     await get_channel_layer().group_send(f"notifications-{user.username}", {
         'type': 'push_notification',
