@@ -3,7 +3,10 @@
         <div v-if="profileLoading">
             <b-row align-v="center">
                 <b-col class="text-center">
-                    <b-img :src="require('../assets/PlantITLoading.gif')" style="transform: translate(0px, 150px); opacity: 0.1"></b-img>
+                    <b-img
+                        :src="require('../assets/PlantITLoading.gif')"
+                        style="transform: translate(0px, 150px); opacity: 0.1"
+                    ></b-img>
                 </b-col>
             </b-row>
         </div>
@@ -143,6 +146,88 @@
                                                     : 'text-dark'
                                             "
                                         >
+                                            Workflows
+                                        </h5>
+                                        <b>{{
+                                            profile.stats.owned_workflows.length
+                                        }}</b>
+                                        maintained
+                                        <br />
+                                        <b>{{
+                                            profile.stats.used_workflows.length
+                                        }}</b>
+                                        used
+                                    </b-col>
+                                    <b-col md="auto">
+                                        <h5
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Datasets
+                                        </h5>
+                                        <i
+                                            class="fas fa-spinner"
+                                            v-if="personalDatasetsLoading"
+                                        ></i
+                                        ><b v-else>{{
+                                            personalDatasets.folders.length
+                                        }}</b>
+                                        owned
+                                        <br />
+                                        <i
+                                            class="fas fa-spinner"
+                                            v-if="sharedDatasetsLoading"
+                                        ></i
+                                        ><b v-else>{{
+                                            sharedDatasets.folders.length
+                                        }}</b>
+                                        shared with you
+                                        <br />
+                                        <i
+                                            class="fas fa-spinner"
+                                            v-if="sharingDatasetsLoading"
+                                        ></i
+                                        ><b v-else>{{
+                                            sharingDatasets.length
+                                        }}</b>
+                                        you've shared
+                                    </b-col>
+                                    <b-col md="auto">
+                                        <h5
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Agents
+                                        </h5>
+                                        <b>{{
+                                            profile.stats.owned_agents.length
+                                        }}</b>
+                                        administered
+                                        <br />
+                                        <b>{{
+                                            profile.stats.guest_agents.length
+                                        }}</b>
+                                        guest passes
+                                        <br />
+                                        <b>{{
+                                            profile.stats.used_agents.length
+                                        }}</b>
+                                        used
+                                    </b-col>
+                                    <b-col md="auto">
+                                        <h5
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
                                             Tasks
                                         </h5>
                                         <b>{{ tasksRunning.length }}</b>
@@ -165,26 +250,6 @@
                                             )
                                         }}</b>
                                         cumulative runtime
-                                    </b-col>
-                                    <b-col>
-                                        <h5
-                                            :class="
-                                                profile.darkMode
-                                                    ? 'text-light'
-                                                    : 'text-dark'
-                                            "
-                                        >
-                                            Workflows
-                                        </h5>
-                                        <b>{{
-                                            profile.stats.owned_workflows
-                                        }}</b>
-                                        maintained
-                                        <br />
-                                        <b>{{
-                                            profile.stats.used_workflows
-                                        }}</b>
-                                        used
                                     </b-col>
                                 </b-row>
                                 <div
@@ -333,6 +398,15 @@ export default {
             'tasksLoading',
             'tasksRunning',
             'tasksCompleted'
+        ]),
+        ...mapGetters('datasets', [
+            'personalDatasets',
+            'personalDatasetsLoading',
+            'sharedDatasets',
+            'sharedDatasetsLoading',
+            'sharingDatasets',
+            'sharingDatasetsLoading',
+            'publicDatasets'
         ]),
         ...mapGetters('notifications', ['notifications']),
         ...mapGetters('workflows', [

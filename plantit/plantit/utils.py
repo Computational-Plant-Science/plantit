@@ -123,22 +123,38 @@ def filter_tasks(user: User, completed: bool = None):
     return list(tasks)
 
 
+@sync_to_async
+def filter_agents(user: User = None, guest: User = None):
+    if user is not None and guest is None: return list(Agent.objects.filter(user=user))
+    elif user is None and guest is not None: return list(Agent.objects.filter(users_authorized__username=guest.username))
+    else: raise ValueError(f"Expected either user or guest to be None")
+
+
 async def get_user_statistics(user: User) -> dict:
     all_tasks = await filter_tasks(user=user)
     completed_tasks = await filter_tasks(user=user, completed=True)
+    profile = await get_user_django_profile(user)
 
     total_tasks = len(all_tasks)
     total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
     total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
-    owned_workflows = len(await get_personal_workflows(owner=user.username))
-    used_workflows = len(np.unique([f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]))
+    owned_workflows = [f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}" for workflow in await get_personal_workflows(owner=profile.github_username)]
+    used_workflows = list(np.unique([f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]))
+    owned_agents = [await sync_to_async(agent_to_dict)(agent, user) for agent in await filter_agents(user=user)]
+    guest_agents = [await sync_to_async(agent_to_dict)(agent, user) for agent in await filter_agents(guest=user)]
+    used_agents = list(np.unique([await get_task_agent(task) for task in all_tasks]))
+    # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
+    # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
 
     return {
         'total_tasks': total_tasks,
         'total_task_seconds': total_time,
         'total_task_results': total_results,
         'owned_workflows': owned_workflows,
-        'used_workflows': used_workflows
+        'used_workflows': used_workflows,
+        'owned_agents': owned_agents,
+        'guest_agents': guest_agents,
+        'used_agents': used_agents,
     }
 
 
@@ -350,6 +366,11 @@ def empty_personal_workflow_cache(owner: str):
 @sync_to_async
 def get_task_user(task: Task):
     return task.user
+
+
+@sync_to_async
+def get_task_agent(task: Task):
+    return task.agent
 
 
 def parse_task_walltime(walltime) -> timedelta:

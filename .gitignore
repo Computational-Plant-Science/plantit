@@ -10,6 +10,7 @@ plantit/front_end/dist
 plantit/static/
 plantit/settings.py
 config/ssh/*
+config/certbot/*
 agent_keys
 
 #Documentation
