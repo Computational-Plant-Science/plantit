@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import uuid
+from collections import Counter
 from datetime import timedelta, datetime
 from math import ceil
 from os import environ
@@ -139,10 +140,14 @@ async def get_user_statistics(user: User) -> dict:
     total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
     total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
     owned_workflows = [f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}" for workflow in await get_personal_workflows(owner=profile.github_username)]
-    used_workflows = list(np.unique([f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]))
-    owned_agents = [await sync_to_async(agent_to_dict)(agent, user) for agent in await filter_agents(user=user)]
-    guest_agents = [await sync_to_async(agent_to_dict)(agent, user) for agent in await filter_agents(guest=user)]
-    used_agents = list(np.unique([await get_task_agent(task) for task in all_tasks]))
+    used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
+    used_workflows_counter = Counter(used_workflows)
+    unique_used_workflows = list(np.unique(used_workflows))
+    owned_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in await filter_agents(user=user)]
+    guest_agents = [(await sync_to_async(agent_to_dict)(agent, user))['name'] for agent in await filter_agents(guest=user)]
+    used_agents = [(await sync_to_async(agent_to_dict)(await get_task_agent(task), user))['name'] for task in all_tasks]
+    used_agents_counter = Counter(used_agents)
+    unique_used_agents = list(np.unique(used_agents))
     # owned_datasets = terrain.list_dir(f"/iplant/home/{user.username}", profile.cyverse_access_token)
     # guest_datasets = terrain.list_dir(f"/iplant/home/", profile.cyverse_access_token)
 
@@ -151,10 +156,20 @@ async def get_user_statistics(user: User) -> dict:
         'total_task_seconds': total_time,
         'total_task_results': total_results,
         'owned_workflows': owned_workflows,
-        'used_workflows': used_workflows,
+        'workflow_usage': {
+            'values': [used_workflows_counter[workflow] for workflow in unique_used_workflows],
+            'labels': unique_used_workflows,
+        },
+        'agent_usage': {
+            'values': [used_agents_counter[agent] for agent in unique_used_agents],
+            'labels': unique_used_agents,
+        },
+        'task_status': {
+            'values': [1 if task.status == 'success' else 0 for task in all_tasks],
+            'labels': ['SUCCESS' if task.status == 'success' else 'FAILURE' for task in all_tasks],
+        },
         'owned_agents': owned_agents,
         'guest_agents': guest_agents,
-        'used_agents': used_agents,
     }
 
 

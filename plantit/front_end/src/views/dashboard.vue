@@ -154,7 +154,8 @@
                                         maintained
                                         <br />
                                         <b>{{
-                                            profile.stats.used_workflows.length
+                                            profile.stats.workflow_usage.labels
+                                                .length
                                         }}</b>
                                         used
                                     </b-col>
@@ -195,6 +196,14 @@
                                         }}</b>
                                         you've shared
                                     </b-col>
+                                    <!--<b-col md="auto"><b-col md="auto"><Plotly
+                                            v-if="
+                                                profile.stats.used_datasets
+                                                    .length > 0
+                                            "
+                                            :data="workflowPlotData"
+                                            :layout="workflowPlotLayout"
+                                        ></Plotly></b-col></b-col>-->
                                     <b-col md="auto">
                                         <h5
                                             :class="
@@ -216,7 +225,8 @@
                                         guest passes
                                         <br />
                                         <b>{{
-                                            profile.stats.used_agents.length
+                                            profile.stats.agent_usage.labels
+                                                .length
                                         }}</b>
                                         used
                                     </b-col>
@@ -252,6 +262,45 @@
                                         cumulative runtime
                                     </b-col>
                                 </b-row>
+                                <b-row align-v="start">
+                                    <b-col md="auto">
+                                        <h2
+                                            :class="
+                                                profile.darkMode
+                                                    ? 'text-light'
+                                                    : 'text-dark'
+                                            "
+                                        >
+                                            Your usage visualized
+                                        </h2>
+                                    </b-col></b-row
+                                >
+                                <b-row
+                                    ><b-col md="auto"
+                                        ><Plotly
+                                            v-if="
+                                                profile.stats.workflow_usage
+                                                    .labels.length > 0
+                                            "
+                                            :data="workflowPlotData"
+                                            :layout="workflowPlotLayout"
+                                        ></Plotly></b-col
+                                    ><b-col md="auto"
+                                        ><Plotly
+                                            v-if="
+                                                profile.stats.agent_usage.labels
+                                                    .length > 0
+                                            "
+                                            :data="agentPlotData"
+                                            :layout="agentPlotLayout"
+                                        ></Plotly></b-col
+                                    ><b-col md="auto"
+                                        ><Plotly
+                                            v-if="profile.stats.total_tasks > 0"
+                                            :data="taskPlotData"
+                                            :layout="taskPlotLayout"
+                                        ></Plotly></b-col
+                                ></b-row>
                                 <div
                                     v-if="
                                         profile.stats.timeseries !== undefined
@@ -370,9 +419,13 @@
 <script>
 import { mapGetters } from 'vuex';
 import moment from 'moment';
+import { Plotly } from 'vue-plotly';
 
 export default {
     name: 'dashboard',
+    components: {
+        Plotly
+    },
     data: function() {
         return {
             crumbs: []
@@ -415,6 +468,51 @@ export default {
         ]),
         isRootPath() {
             return this.$route.name === 'dashboard';
+        },
+        workflowPlotData() {
+            return [
+                {
+                    values: this.profile.stats.workflow_usage.values,
+                    labels: this.profile.stats.workflow_usage.labels,
+                    type: 'pie'
+                }
+            ];
+        },
+        workflowPlotLayout() {
+            return {
+                title: 'Workflow Usage'
+            };
+        },
+        agentPlotData() {
+            return [
+                {
+                    values: this.profile.stats.agent_usage.values,
+                    labels: this.profile.stats.agent_usage.labels,
+                    type: 'pie'
+                }
+            ];
+        },
+        agentPlotLayout() {
+            return {
+                title: 'Agent Usage'
+            };
+        },
+        taskPlotData() {
+            return [
+                {
+                    values: this.profile.stats.task_status.values,
+                    labels: this.profile.stats.task_status.labels,
+                    marker: {
+                        colors: ['rgb(214, 223, 93)', 'rgb(255, 114, 114)']
+                    },
+                    type: 'pie'
+                }
+            ];
+        },
+        taskPlotLayout() {
+            return {
+                title: 'Task Status'
+            };
         }
     }
 };

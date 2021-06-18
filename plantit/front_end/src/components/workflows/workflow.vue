@@ -3614,17 +3614,10 @@ export default {
             );
         },
         mustAuthenticate() {
+            let ownsAgent = this.selectedAgent.user !== undefined && this.selectedAgent.user === this.profile.djangoProfile.username;
+            let isGuest = this.selectedAgent.users_authorized.some(user => user.username === this.profile.djangoProfile.username);
             return (
-                this.selectedAgent.authentication === 'password' ||
-                !(
-                    this.selectedAgent.user !== undefined &&
-                    this.selectedAgent.user !==
-                        this.profile.djangoProfile.username &&
-                    !this.selectedAgent.users_authorized.some(
-                        ua =>
-                            ua.username === this.profile.djangoProfile.username
-                    )
-                )
+                this.selectedAgent.authentication === 'password' || (!ownsAgent && !isGuest)
             );
         },
         getWorkflow() {
