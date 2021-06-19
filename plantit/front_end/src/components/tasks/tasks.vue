@@ -179,7 +179,9 @@
                                                     : 'success'
                                             "
                                             v-else
-                                            >{{ task.status }}</b-badge
+                                            >{{
+                                                task.status.toUpperCase()
+                                            }}</b-badge
                                         >
                                         <small>
                                             on
@@ -368,7 +370,9 @@
                                                         : 'success'
                                                 "
                                                 v-else
-                                                >{{ task.status }}</b-badge
+                                                >{{
+                                                    task.status.toUpperCase()
+                                                }}</b-badge
                                             >
                                             <small>
                                                 on
