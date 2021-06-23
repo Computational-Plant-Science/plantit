@@ -20,7 +20,9 @@
                             md="auto"
                         >
                             <b-button
-                                :variant="profile.darkMode ? 'outline-light' : 'white'"
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
                                 class="text-left m-0"
                                 @click="hide"
                             >
@@ -455,7 +457,9 @@
                                 <i class="fas fa-check-double fa-1x fa-fw"></i>
                             </b-button>-->
                             <b-button
-                                :variant="profile.darkMode ? 'outline-light' : 'white'"
+                                :variant="
+                                    profile.darkMode ? 'outline-light' : 'white'
+                                "
                                 class="text-left m-0"
                                 @click="hide"
                             >
@@ -483,8 +487,7 @@
                                 >
                                     <b-row>
                                         <b-col>
-                                            <p
-                                            >
+                                            <p>
                                                 {{ notification.message }}
                                                 <br />
                                                 <small>{{
@@ -510,7 +513,10 @@
                                                     )
                                                 "
                                             >
-                                                <i class="fas fa-check fa-fw"></i> Dismiss
+                                                <i
+                                                    class="fas fa-check fa-fw"
+                                                ></i>
+                                                Dismiss
                                             </b-button>
                                         </b-col>
                                     </b-row>
@@ -639,6 +645,25 @@
                                 "
                                 ><i class="fas fa-book fa-1x fa-fw"></i
                                 >Docs</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
+                            title="Stats"
+                            to="/stats"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-chart-bar fa-1x fa-fw"></i
+                                >Stats</span
                             ></b-nav-item
                         >
                         <b-nav-item

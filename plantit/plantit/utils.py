@@ -98,9 +98,21 @@ def get_user_django_profile(user: User):
 def get_user_cyverse_profile(user: User) -> dict:
     profile = terrain.get_profile(user.username, user.profile.cyverse_access_token)
     altered = False
-    if profile['first_name'] != user.first_name: user.first_name = profile['first_name']
-    if profile['last_name'] != user.last_name: user.last_name = profile['last_name']
-    if altered: user.save()
+
+    if profile['first_name'] != user.first_name:
+        user.first_name = profile['first_name']
+        altered = True
+    if profile['last_name'] != user.last_name:
+        user.last_name = profile['last_name']
+        altered = True
+    if profile['institution'] != user.profile.institution:
+        user.profile.institution = profile['institution']
+        altered = True
+
+    if altered:
+        user.profile.save()
+        user.save()
+
     return profile
 
 
@@ -170,6 +182,7 @@ async def get_user_statistics(user: User) -> dict:
         },
         'owned_agents': owned_agents,
         'guest_agents': guest_agents,
+        'institution': cyverse_user_data['institution']
     }
 
 
