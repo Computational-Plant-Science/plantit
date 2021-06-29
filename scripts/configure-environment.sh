@@ -5,6 +5,13 @@ secret_key=$(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.Syste
 sql_password=$(python2 -c "exec(\"import random\nprint('%s' % ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789') for i in range(50)))\")")
 field_encryption_key=$(python2 -c "exec(\"import cryptography.fernet\nprint('%s' % cryptography.fernet.Fernet.generate_key())\")")
 
+if [[ -z "${MAPBOX_TOKEN}" ]]; then
+  mapbox_token="some_mapbox_token"
+  echo "Warning: MAPBOX_TOKEN environment variable missing"
+else
+  mapbox_token="${MAPBOX_TOKEN}"
+fi
+
 if [[ -z "${SQL_PASSWORD}" ]]; then
   sql_password="some_sql_password"
   echo "Warning: SQL_PASSWORD environment variable missing"
@@ -91,6 +98,8 @@ fi
 
 cat <<EOT >>".env"
 VUE_APP_TITLE=plantit
+MAPBOX_TOKEN=mapbox_token
+GEOCODE_REFRESH_MINUTES=60
 CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
 CYVERSE_CLIENT_ID=$cyverse_client_id
 CYVERSE_CLIENT_SECRET=$cyverse_secret

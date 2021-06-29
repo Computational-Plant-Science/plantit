@@ -25,7 +25,7 @@ from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus
 from plantit.utils import log_task_status, push_task_event, get_task_ssh_client, configure_task_environment, execute_local_task, submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_container_logs, remove_task_orchestration_logs, get_task_result_files, \
-    repopulate_personal_workflow_cache, repopulate_public_workflow_cache, get_user_statistics
+    repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache
 
 logger = get_task_logger(__name__)
 
@@ -484,7 +484,7 @@ def aggregate_user_statistics():
     users = User.objects.all()
     for user in users:
         logger.info(f"Aggregating usage statistics for {user.username}")
-        stats = async_to_sync(get_user_statistics)(user)
+        stats = async_to_sync(calculate_user_statistics)(user)
         redis = RedisClient.get()
         redis.set(f"stats/{user.username}", json.dumps(stats))
         user.profile.stats_last_aggregated = timezone.now()
@@ -499,6 +499,11 @@ def refresh_personal_workflows(owner: str):
 @app.task()
 def refresh_all_workflows(token: str):
     repopulate_public_workflow_cache(token)
+
+
+@app.task()
+def refresh_user_institutions():
+    repopulate_institutions_cache()
 
 
 @app.task()
@@ -533,6 +538,9 @@ def setup_periodic_tasks(sender, **kwargs):
 
     # refresh CyVerse auth tokens for all users with running tasks (in case outputs need to get pushed on completion)
     sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')
+
+    # refresh user institution geocoding info
+    sender.add_periodic_task(int(settings.GEOCODE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions')
 
     # aggregate usage stats for each user
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_user_statistics.s(), name='aggregate user statistics')

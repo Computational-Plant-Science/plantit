@@ -4,6 +4,7 @@ from django.http import JsonResponse
 
 from plantit.tasks.models import Task
 from plantit.users.models import Profile
+from plantit.utils import list_institutions
 from plantit.workflows.models import Workflow
 
 
@@ -16,5 +17,4 @@ def counts(request):
 
 
 def institutions(request):
-    institution_counts = list(Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
-    return JsonResponse({'institutions': [{count['institution']: count['institution__count']} for count in institution_counts]})
+    return JsonResponse({'institutions': list_institutions()})

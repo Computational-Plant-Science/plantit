@@ -4,9 +4,11 @@ import fileinput
 import json
 import logging
 import os
+import pprint
 import subprocess
 import sys
 import uuid
+from pprint import pprint
 from collections import Counter
 from datetime import timedelta, datetime
 from math import ceil
@@ -15,6 +17,7 @@ from os.path import isdir
 from os.path import join
 from pathlib import Path
 from typing import List
+from urllib.parse import quote_plus
 
 import numpy as np
 import requests
@@ -26,6 +29,7 @@ from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import MultipleObjectsReturned
+from django.db.models import Count
 from django.utils import timezone
 
 import plantit.github as github
@@ -50,8 +54,27 @@ logger = logging.getLogger(__name__)
 
 # users
 
-def list_users(github_token: str) -> List[dict]:
-    # TODO factor out cache updating
+def list_users(github_token: str, invalidate: bool = False) -> List[dict]:
+    redis = RedisClient.get()
+    updated = redis.get(f"users_updated")
+
+    # repopulate if empty or invalidation requested
+    if updated is None or len(list(redis.scan_iter(match=f"users/*"))) == 0 or invalidate:
+        repopulate_user_cache(github_token)
+    else:
+        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+        age_secs = age.total_seconds()
+        max_secs = (int(settings.USERS_REFRESH_MINUTES) * 60)
+
+        # otherwise only if stale
+        if age_secs > max_secs:
+            logger.info(f"User cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
+            repopulate_user_cache(github_token)
+
+    return [json.loads(redis.get(key)) for key in redis.scan_iter(match=f"users/*")]
+
+
+def repopulate_user_cache(github_token: str):
     redis = RedisClient.get()
     users = User.objects.all()
     mapped = []
@@ -82,7 +105,6 @@ def list_users(github_token: str) -> List[dict]:
 
     logger.info(f"Populating user cache")
     for user in mapped: redis.set(f"users/{user['username']}", json.dumps(user))
-    return [json.loads(redis.get(key)) for key in redis.scan_iter(match='users/*')]
 
 
 @sync_to_async
@@ -131,19 +153,52 @@ async def get_user_github_profile(user: User) -> dict:
 
 @sync_to_async
 def filter_tasks(user: User, completed: bool = None):
-    if completed is not None and completed: tasks = Task.objects.filter(user=user, completed__isnull=False)
-    else: tasks = Task.objects.filter(user=user)
+    if completed is not None and completed:
+        tasks = Task.objects.filter(user=user, completed__isnull=False)
+    else:
+        tasks = Task.objects.filter(user=user)
     return list(tasks)
 
 
 @sync_to_async
 def filter_agents(user: User = None, guest: User = None):
-    if user is not None and guest is None: return list(Agent.objects.filter(user=user))
-    elif user is None and guest is not None: return list(Agent.objects.filter(users_authorized__username=guest.username))
-    else: raise ValueError(f"Expected either user or guest to be None")
+    if user is not None and guest is None:
+        return list(Agent.objects.filter(user=user))
+    elif user is None and guest is not None:
+        return list(Agent.objects.filter(users_authorized__username=guest.username))
+    else:
+        raise ValueError(f"Expected either user or guest to be None")
 
 
-async def get_user_statistics(user: User) -> dict:
+def get_user_statistics(user: User) -> dict:
+    redis = RedisClient.get()
+    stats_last_aggregated = user.profile.stats_last_aggregated
+
+    if stats_last_aggregated is None:
+        logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
+        stats = async_to_sync(calculate_user_statistics)(user)
+        redis = RedisClient.get()
+        redis.set(f"stats/{user.username}", json.dumps(stats))
+        user.profile.stats_last_aggregated = timezone.now()
+        user.profile.save()
+    else:
+        stats = redis.get(f"stats/{user.username}")
+        stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
+
+        if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
+            logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
+            stats = async_to_sync(calculate_user_statistics)(user)
+            redis = RedisClient.get()
+            redis.set(f"stats/{user.username}", json.dumps(stats))
+            user.profile.stats_last_aggregated = timezone.now()
+            user.profile.save()
+        else:
+            stats = json.loads(stats)
+
+    return stats
+
+
+async def calculate_user_statistics(user: User) -> dict:
     all_tasks = await filter_tasks(user=user)
     completed_tasks = await filter_tasks(user=user, completed=True)
     profile = await get_user_django_profile(user)
@@ -151,7 +206,8 @@ async def get_user_statistics(user: User) -> dict:
     total_tasks = len(all_tasks)
     total_time = sum([(task.completed - task.created).total_seconds() for task in completed_tasks])
     total_results = sum([len(task.results if task.results is not None else []) for task in completed_tasks])
-    owned_workflows = [f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}" for workflow in await get_personal_workflows(owner=profile.github_username)]
+    owned_workflows = [f"{workflow['repo']['owner']['login']}/{workflow['config']['name'] if 'name' in workflow['config'] else '[unnamed]'}" for
+                       workflow in await list_personal_workflows(owner=profile.github_username)] if profile.github_username != '' else []
     used_workflows = [f"{task.workflow_owner}/{task.workflow_name}" for task in all_tasks]
     used_workflows_counter = Counter(used_workflows)
     unique_used_workflows = list(np.unique(used_workflows))
@@ -182,7 +238,7 @@ async def get_user_statistics(user: User) -> dict:
         },
         'owned_agents': owned_agents,
         'guest_agents': guest_agents,
-        'institution': cyverse_user_data['institution']
+        'institution': profile.institution
     }
 
 
@@ -227,10 +283,57 @@ def get_user_public_key_path(username: str) -> Path:
     return Path(join(path, f"{username}_id_rsa.pub"))
 
 
+def repopulate_institutions_cache():
+    redis = RedisClient.get()
+    institution_counts = list(Profile.objects.exclude(institution__exact='').values('institution').annotate(Count('institution')))
+
+    for institution_count in institution_counts:
+        institution = institution_count['institution']
+        count = institution_count['institution__count']
+
+        place = quote_plus(institution)
+        response = requests.get(f"https://api.mapbox.com/geocoding/v5/mapbox.places/{place}.json?access_token={settings.MAPBOX_TOKEN}")
+        content = response.json()
+        feature = content['features'][0]
+        feature['id'] = institution
+        feature['properties'] = {
+            'name': institution,
+            'count': count
+        }
+        redis.set(f"institutions/{institution}", json.dumps({
+            'institution': institution,
+            'count': count,
+            'geocode': feature
+        }))
+
+    redis.set("institutions_updated", timezone.now().timestamp())
+
+
+def list_institutions(invalidate: bool = False) -> List[dict]:
+    redis = RedisClient.get()
+    updated = redis.get('institutions_updated')
+
+    # repopulate if empty or invalidation requested
+    if updated is None or len(list(redis.scan_iter(match=f"institutions/*"))) == 0 or invalidate:
+        logger.info(f"Populating user institution cache")
+        repopulate_institutions_cache()
+    else:
+        age = (datetime.now() - datetime.fromtimestamp(float(updated)))
+        age_secs = age.total_seconds()
+        max_secs = (int(settings.GEOCODE_REFRESH_MINUTES) * 60)
+
+        # otherwise only if stale
+        if age_secs > max_secs:
+            logger.info(f"User institution cache is stale ({age_secs}s old, {age_secs - max_secs}s past limit), repopulating")
+            repopulate_institutions_cache()
+
+    return [json.loads(redis.get(key)) for key in redis.scan_iter(match='institutions/*')]
+
+
 # workflows
 
 @sync_to_async
-def filter_workflows(user: User = None, public: bool = None):
+def list_workflows(user: User = None, public: bool = None):
     workflows = Workflow.objects.all()
     if user is not None: workflows = workflows.filter(user=user)
     if public is not None: workflows = workflows.filter(public=public)
@@ -257,6 +360,8 @@ async def workflow_to_dict(workflow: Workflow, token: str) -> dict:
 
 
 async def repopulate_personal_workflow_cache(owner: str):
+    if owner is None or owner == '': raise ValueError(f"No owner name provided")
+
     try:
         profile = await sync_to_async(Profile.objects.get)(github_username=owner)
         user = await get_profile_user(profile)
@@ -270,7 +375,7 @@ async def repopulate_personal_workflow_cache(owner: str):
     empty_personal_workflow_cache(owner)
 
     profile = await get_user_django_profile(user)
-    owned = await filter_workflows(user=user)
+    owned = await list_workflows(user=user)
     bind = asyncio.gather(*[workflow_to_dict(workflow, profile.github_token) for workflow in owned])
     tasks = await asyncio.gather(*[bind, github.list_connectable_repos_by_owner(owner, profile.github_token)])
     bound = tasks[0]
@@ -298,12 +403,13 @@ async def repopulate_personal_workflow_cache(owner: str):
     redis = RedisClient.get()
     for workflow in both: redis.set(f"workflows/{owner}/{workflow['repo']['name']}", json.dumps(del_none(workflow)))
     redis.set(f"workflows_updated/{owner}", timezone.now().timestamp())
-    logger.info(f"Added {len(bound)} bound, {len(bindable) - len(bound)} bindable, {len(both)} total to {owner}'s workflow cache" + ("" if missing == 0 else f"({missing} with missing configuration files)"))
+    logger.info(f"Added {len(bound)} bound, {len(bindable) - len(bound)} bindable, {len(both)} total to {owner}'s workflow cache" + (
+        "" if missing == 0 else f"({missing} with missing configuration files)"))
 
 
 async def repopulate_public_workflow_cache(token: str):
     redis = RedisClient.get()
-    public_workflows = await filter_workflows(public=True)
+    public_workflows = await list_workflows(public=True)
     encountered_users = []
 
     for workflow, user in list(zip(public_workflows, [await get_workflow_user(workflow) for workflow in public_workflows])):
@@ -323,7 +429,7 @@ async def repopulate_public_workflow_cache(token: str):
     redis.set(f"public_workflows_updated", timezone.now().timestamp())
 
 
-async def get_public_workflows(token: str, invalidate: bool = False) -> List[dict]:
+async def list_public_workflows(token: str, invalidate: bool = False) -> List[dict]:
     redis = RedisClient.get()
     updated = redis.get('public_workflows_updated')
 
@@ -345,7 +451,7 @@ async def get_public_workflows(token: str, invalidate: bool = False) -> List[dic
     return [workflow for workflow in workflows if workflow['public']]
 
 
-async def get_personal_workflows(owner: str, invalidate: bool = False) -> List[dict]:
+async def list_personal_workflows(owner: str, invalidate: bool = False) -> List[dict]:
     redis = RedisClient.get()
     updated = redis.get(f"workflows_updated/{owner}")
 
@@ -371,8 +477,10 @@ async def get_workflow(owner: str, name: str, token: str, invalidate: bool = Fal
     workflow = redis.get(f"workflows/{owner}/{name}")
 
     if updated is None or workflow is None or invalidate:
-        try: workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name)
-        except: raise ValueError(f"Workflow {owner}/{name} not found")
+        try:
+            workflow = await sync_to_async(Workflow.objects.get)(repo_owner=owner, repo_name=name)
+        except:
+            raise ValueError(f"Workflow {owner}/{name} not found")
 
         workflow = await workflow_to_dict(workflow, token)
         redis.set(f"workflows/{owner}/{name}", json.dumps(del_none(workflow)))
@@ -731,9 +839,12 @@ def compose_task_pull_command(task: Task, options: PlantITCLIOptions) -> str:
     if input['kind'] != InputKind.FILE and 'patterns' in input:
         # allow for both spellings of JPG
         patterns = [pattern.lower() for pattern in input['patterns']]
-        if 'jpg' in patterns and 'jpeg' not in patterns: patterns.append("jpeg")
-        elif 'jpeg' in patterns and 'jpg' not in patterns: patterns.append("jpg")
-    else: patterns = []
+        if 'jpg' in patterns and 'jpeg' not in patterns:
+            patterns.append("jpeg")
+        elif 'jpeg' in patterns and 'jpg' not in patterns:
+            patterns.append("jpg")
+    else:
+        patterns = []
 
     command = f"plantit terrain pull \"{input['path']}\"" \
               f" -p \"{join(task.agent.workdir, task.workdir, 'input')}\"" \
@@ -841,7 +952,8 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
         path = options['input']['path']
         cyverse_token = task.user.profile.cyverse_access_token
         inputs = [terrain.get_file(path, cyverse_token)] if kind == InputKind.FILE else terrain.list_dir(path, cyverse_token)
-    else: inputs = []
+    else:
+        inputs = []
 
     resource_requests = [] if task.agent.executor == AgentExecutor.LOCAL else compose_jobqueue_task_resource_requests(task, options, inputs)
     pull_command = compose_task_pull_command(task, options)
@@ -1221,14 +1333,17 @@ def get_task_ssh_client(task: Task, auth: dict) -> SSH:
     elif 'path' in auth:
         logger.info(f"Using key authentication (username: {username})")
         client = SSH(host=task.agent.hostname, port=task.agent.port, username=task.agent.username, pkey=auth['path'])
-    else: raise ValueError(f"Unrecognized authentication strategy")
+    else:
+        raise ValueError(f"Unrecognized authentication strategy")
 
     return client
 
 
 def parse_task_auth_options(auth: dict) -> dict:
-    if 'password' in auth: return PasswordTaskAuth(username=auth['username'], password=auth['password'])
-    else: return KeyTaskAuth(username=auth['username'], path=str(get_user_private_key_path(auth['username'])))
+    if 'password' in auth:
+        return PasswordTaskAuth(username=auth['username'], password=auth['password'])
+    else:
+        return KeyTaskAuth(username=auth['username'], path=str(get_user_private_key_path(auth['username'])))
 
 
 def task_to_dict(task: Task) -> dict:
@@ -1418,7 +1533,12 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
         'tasks': [agent_task_to_dict(task) for task in tasks],
         'logo': agent.logo,
         'authentication': agent.authentication,
-        'users_authorized': [json.loads(redis.get(f"users/{user.username}")) for user in users_authorized if user is not None],
+        'users_authorized': [{
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            } for user in users_authorized if user is not None],
         'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_authorized],
         'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_blocked]
     }
