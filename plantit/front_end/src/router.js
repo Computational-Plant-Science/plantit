@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import home from './views/home.vue';
 import about from './views/about.vue';
+import stats from './views/stats.vue';
 import dashboard from './views/dashboard.vue';
 import users from './components/users/users.vue';
 import user from './components/users/user.vue';
@@ -37,6 +38,16 @@ let router = new Router({
             component: about,
             meta: {
                 title: 'About PlantIT',
+                crumb: [],
+                requiresAuth: false
+            }
+        },
+        {
+            path: '/stats',
+            name: 'stats',
+            component: stats,
+            meta: {
+                title: 'PlantIT Stats',
                 crumb: [],
                 requiresAuth: false
             }

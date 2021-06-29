@@ -7,7 +7,7 @@ from django.http import JsonResponse, HttpResponseNotFound, HttpResponseForbidde
 
 from plantit.github import get_repo_readme, get_repo
 from plantit.redis import RedisClient
-from plantit.utils import get_user_django_profile, get_public_workflows, get_personal_workflows, get_workflow, \
+from plantit.utils import get_user_django_profile, list_public_workflows, list_personal_workflows, get_workflow, \
     workflow_to_dict
 from plantit.misc import del_none
 from plantit.users.models import Profile
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 async def list_public(request):
     profile = await get_user_django_profile(request.user)
     invalidate = request.GET.get('invalidate', False)
-    bundles = await get_public_workflows(token=profile.github_token, invalidate=bool(invalidate))
+    bundles = await list_public_workflows(token=profile.github_token, invalidate=bool(invalidate))
     return JsonResponse({'workflows': bundles})
 
 
@@ -40,7 +40,7 @@ async def list_personal(request, owner):
             return HttpResponseNotFound()
 
     invalidate = request.GET.get('invalidate', False)
-    bundles = await get_personal_workflows(owner=owner, invalidate=bool(invalidate))
+    bundles = await list_personal_workflows(owner=owner, invalidate=bool(invalidate))
     return JsonResponse({'workflows': bundles})
 
 

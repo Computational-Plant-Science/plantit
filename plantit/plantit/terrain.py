@@ -12,9 +12,6 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 logger = logging.getLogger(__name__)
 
 
-# TODO use asyncx
-
-
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),

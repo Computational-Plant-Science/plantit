@@ -10,6 +10,7 @@ class Profile(models.Model):
     github_token: str = models.CharField(max_length=500, blank=True, default='')
     cyverse_access_token: str = models.TextField(blank=True, default='')
     cyverse_refresh_token: str = models.TextField(blank=True, default='')
+    institution = models.CharField(max_length=255, blank=True, default='')
     dark_mode: bool = models.BooleanField(default=False)
     interactive_mode = models.ForeignKey(Agent, null=True, blank=True, on_delete=models.PROTECT)
     push_notification_status = models.CharField(max_length=10, null=False, blank=False, default='disabled')

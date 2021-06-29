@@ -25,8 +25,8 @@ from plantit.sns import SnsClient, get_sns_subscription_status
 from plantit.ssh import SSH, execute_command
 from plantit.users.models import Profile
 from plantit.users.serializers import UserSerializer
-from plantit.utils import list_users, get_user_statistics, get_user_cyverse_profile, get_user_github_profile, \
-    get_user_private_key_path, get_or_create_user_keypair
+from plantit.utils import list_users, calculate_user_statistics, get_user_cyverse_profile, get_user_github_profile, \
+    get_user_private_key_path, get_or_create_user_keypair, get_user_statistics
 from plantit.misc import get_csrf_token
 
 
@@ -210,29 +210,7 @@ class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
     @action(detail=False, methods=['get'])
     def get_current(self, request):
         user = request.user
-        redis = RedisClient.get()
-        stats_last_aggregated = user.profile.stats_last_aggregated
-
-        if stats_last_aggregated is None:
-            self.logger.info(f"No usage statistics for {user.username}. Aggregating stats...")
-            stats = async_to_sync(get_user_statistics)(user)
-            redis = RedisClient.get()
-            redis.set(f"stats/{user.username}", json.dumps(stats))
-            user.profile.stats_last_aggregated = timezone.now()
-            user.profile.save()
-        else:
-            stats = redis.get(f"stats/{user.username}")
-            stats_age_minutes = (timezone.now() - stats_last_aggregated).total_seconds() / 60
-
-            if stats is None or stats_age_minutes > int(os.environ.get('USERS_STATS_REFRESH_MINUTES')):
-                self.logger.info(f"{stats_age_minutes} elapsed since last aggregating usage statistics for {user.username}. Refreshing stats...")
-                stats = async_to_sync(get_user_statistics)(user)
-                redis = RedisClient.get()
-                redis.set(f"stats/{user.username}", json.dumps(stats))
-                user.profile.stats_last_aggregated = timezone.now()
-                user.profile.save()
-            else:
-                stats = json.loads(stats)
+        stats = get_user_statistics(user)
 
         if user.profile.push_notification_status == 'pending':
             user.profile.push_notification_status = get_sns_subscription_status(user.profile.push_notification_topic_arn)
