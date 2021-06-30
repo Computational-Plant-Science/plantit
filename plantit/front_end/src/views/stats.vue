@@ -24,7 +24,6 @@
                 ></b-col>
                 <b-col align-self="end" class="text-left ml-0 pl-0"
                     ><h4
-                        v-if="workflowCount >= 0"
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
                     >
                         <i class="fas fa-user fa-fw"></i> Users

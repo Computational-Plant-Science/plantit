@@ -99,7 +99,7 @@ fi
 cat <<EOT >>".env"
 VUE_APP_TITLE=plantit
 MAPBOX_TOKEN=mapbox_token
-GEOCODE_REFRESH_MINUTES=60
+MAPBOX_FEATURE_REFRESH_MINUTES=60
 CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/users/cyverse_handle_temporary_code/
 CYVERSE_CLIENT_ID=$cyverse_client_id
 CYVERSE_CLIENT_SECRET=$cyverse_secret

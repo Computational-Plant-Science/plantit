@@ -3,7 +3,7 @@ import os
 missing_variable = 'Environment variable not configured'
 
 assert 'MAPBOX_TOKEN' in os.environ, f"{missing_variable}: MAPBOX_TOKEN"
-assert 'GEOCODE_REFRESH_MINUTES' in os.environ, f"{missing_variable}: GEOCODE_REFRESH_MINUTES"
+assert 'MAPBOX_FEATURE_REFRESH_MINUTES' in os.environ, f"{missing_variable}: MAPBOX_FEATURE_REFRESH_MINUTES"
 assert 'DJANGO_SECRET_KEY' in os.environ, f"{missing_variable}: DJANGO_SECRET_KEY"
 assert 'DJANGO_DEBUG' in os.environ, f"{missing_variable}: DJANGO_DEBUG"
 assert 'DJANGO_FIELD_ENCRYPTION_KEY' in os.environ, f"{missing_variable}: DJANGO_FIELD_ENCRYPTION_KEY"
@@ -35,7 +35,7 @@ assert 'GITHUB_SECRET' in os.environ, f"{missing_variable}: GITHUB_SECRET"
 assert 'NO_PREVIEW_THUMBNAIL' in os.environ, f"{missing_variable}: NO_PREVIEW_THUMBNAIL"
 
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
-GEOCODE_REFRESH_MINUTES = os.environ.get('GEOCODE_REFRESH_MINUTES')
+MAPBOX_FEATURE_REFRESH_MINUTES = os.environ.get('MAPBOX_FEATURE_REFRESH_MINUTES')
 CYVERSE_TOKEN_REFRESH_MINUTES = os.environ.get('CYVERSE_TOKEN_REFRESH_MINUTES')
 API_URL = os.environ.get('DJANGO_API_URL')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')

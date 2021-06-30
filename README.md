@@ -142,7 +142,7 @@ key=value
 ```
 VUE_APP_TITLE=plantit
 MAPBOX_TOKEN=<your Mapbox token>
-GEOCODE_REFRESH_MINUTES=60
+MAPBOX_FEATURE_REFRESH_MINUTES=60
 CYVERSE_REDIRECT_URL=http://localhost:3000/apis/v1/idp/cyverse_handle_temporary_code/
 CYVERSE_CLIENT_ID=<your cyverse client id>
 CYVERSE_CLIENT_SECRET=<your cyverse client secret>

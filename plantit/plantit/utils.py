@@ -320,7 +320,7 @@ def list_institutions(invalidate: bool = False) -> List[dict]:
     else:
         age = (datetime.now() - datetime.fromtimestamp(float(updated)))
         age_secs = age.total_seconds()
-        max_secs = (int(settings.GEOCODE_REFRESH_MINUTES) * 60)
+        max_secs = (int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60)
 
         # otherwise only if stale
         if age_secs > max_secs:

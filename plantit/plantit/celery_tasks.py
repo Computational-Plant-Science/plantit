@@ -540,7 +540,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(int(settings.CYVERSE_TOKEN_REFRESH_MINUTES) * 60, refresh_all_user_cyverse_tokens.s(), name='refresh CyVerse tokens')
 
     # refresh user institution geocoding info
-    sender.add_periodic_task(int(settings.GEOCODE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions')
+    sender.add_periodic_task(int(settings.MAPBOX_FEATURE_REFRESH_MINUTES) * 60, refresh_user_institutions.s(), name='refresh user institutions')
 
     # aggregate usage stats for each user
     sender.add_periodic_task(int(settings.USERS_STATS_REFRESH_MINUTES) * 60, aggregate_user_statistics.s(), name='aggregate user statistics')
