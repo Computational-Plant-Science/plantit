@@ -74,10 +74,7 @@
                                         : 'text-dark'
                                 "
                             >
-                                <i
-                                    v-if="crumb.text !== 'Dashboard'"
-                                    class="fas fa-caret-right fa-fw fa-1x"
-                                ></i>
+                                <i class="fas fa-caret-right fa-fw fa-1x"></i>
                                 {{ crumb.text }}
                             </h5>
                         </b-breadcrumb-item>
@@ -89,35 +86,43 @@
                 >--></b-row
             >
             <b-row
-                ><b-col md="auto" style="max-width: 15rem"
+                ><b-col
                     ><b-button
-                        class="m-1 text-left"
                         block
+                        class="m-1"
                         :variant="profile.darkMode ? 'dark' : 'light'"
                         to="/dashboard/workflows/"
                         ><i class="fas fa-stream fa-fw"></i> Workflows</b-button
+                    ></b-col
+                ><b-col
                     ><b-button
-                        class="m-1 text-left"
                         block
+                        class="m-1"
                         :variant="profile.darkMode ? 'dark' : 'light'"
                         to="/dashboard/datasets/"
                         ><i class="fas fa-database fa-fw"></i>
                         Datasets</b-button
-                    >
+                    ></b-col
+                ><b-col>
                     <b-button
-                        class="m-1 text-left"
                         block
+                        class="m-1"
                         :variant="profile.darkMode ? 'dark' : 'light'"
                         to="/dashboard/agents/"
                         ><i class="fas fa-server fa-fw"></i> Agents</b-button
+                    ></b-col
+                ><b-col
                     ><b-button
-                        class="m-1 text-left"
                         block
+                        class="m-1"
                         :variant="profile.darkMode ? 'dark' : 'light'"
                         to="/dashboard/tasks/"
                         ><i class="fas fa-tasks fa-fw"></i> Tasks</b-button
                     ></b-col
-                ><b-col
+                >
+            </b-row>
+            <b-row>
+                <b-col
                     ><router-view
                         :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
                     ></router-view>
@@ -553,7 +558,13 @@ export default {
                     values: this.profile.stats.task_status.values,
                     labels: this.profile.stats.task_status.labels,
                     marker: {
-                        colors: this.tasks.map(t => t.status === 'success' ? 'rgb(214, 223, 93)' : t.status === 'failure' ? 'rgb(255, 114, 114)' : 'rgb(128, 128, 128)')
+                        colors: this.tasks.map(t =>
+                            t.status === 'success'
+                                ? 'rgb(214, 223, 93)'
+                                : t.status === 'failure'
+                                ? 'rgb(255, 114, 114)'
+                                : 'rgb(128, 128, 128)'
+                        )
                     },
                     type: 'pie'
                 }
@@ -587,7 +598,13 @@ export default {
                     mode: 'markers',
                     type: 'scatter',
                     marker: {
-                      color: this.tasks.map(t => t.status === 'success' ? 'rgb(214, 223, 93)' : t.status === 'failure' ? 'rgb(255, 114, 114)' : 'rgb(128, 128, 128)'),
+                        color: this.tasks.map(t =>
+                            t.status === 'success'
+                                ? 'rgb(214, 223, 93)'
+                                : t.status === 'failure'
+                                ? 'rgb(255, 114, 114)'
+                                : 'rgb(128, 128, 128)'
+                        ),
                         line: {
                             color: 'rgba(156, 165, 196, 1.0)',
                             width: 1

@@ -691,7 +691,7 @@
                                                         : ''
                                                 "
                                             ></b-img>
-                                            <i v-else class="far fa-user"></i>
+                                            <i v-else class="far fa-user mr-1"></i>
                                             <b
                                                 >{{ user.first_name }}
                                                 {{ user.last_name }}</b
