@@ -604,9 +604,19 @@
                                     class="mb-3 text-success"
                                     style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
                                     >IT</small
-                                >
-                            </h3></b-nav-item
-                        >
+                                ><small
+                                    ><small
+                                        ><small
+                                            ><b-badge variant="success"
+                                                ><span v-if="version !== 0">{{
+                                                    version
+                                                }}</span
+                                                ><i
+                                                    class="fas fa-spinner"
+                                                    v-else
+                                                ></i></b-badge></small></small
+                                ></small></h3
+                        ></b-nav-item>
                         <b-nav-item
                             title="About"
                             to="/about"
@@ -629,25 +639,6 @@
                             ></b-nav-item
                         >
                         <b-nav-item
-                            title="Docs"
-                            href="https://plantit.readthedocs.io/en/latest"
-                            class="mt-2"
-                            :link-class="
-                                profile.darkMode
-                                    ? 'text-secondary'
-                                    : 'text-dark'
-                            "
-                            ><span
-                                :class="
-                                    profile.darkMode
-                                        ? 'text-secondary'
-                                        : 'text-dark'
-                                "
-                                ><i class="fas fa-book fa-1x fa-fw"></i
-                                >Docs</span
-                            ></b-nav-item
-                        >
-                        <b-nav-item
                             title="Stats"
                             to="/stats"
                             class="mt-2"
@@ -664,6 +655,25 @@
                                 "
                                 ><i class="fas fa-chart-bar fa-1x fa-fw"></i
                                 >Stats</span
+                            ></b-nav-item
+                        >
+                        <b-nav-item
+                            title="Docs"
+                            href="https://plantit.readthedocs.io/en/latest"
+                            class="mt-2"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            ><span
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><i class="fas fa-book fa-1x fa-fw"></i
+                                >Docs</span
                             ></b-nav-item
                         >
                         <b-nav-item
@@ -940,7 +950,9 @@ export default {
             taskSearchText: '',
             // flags
             togglingDarkMode: false,
-            notFound: false
+            notFound: false,
+            // version
+            version: 0
         };
     },
     computed: {
@@ -982,6 +994,7 @@ export default {
         if (this.$route.name === 'about') return;
         await store.dispatch('user/loadProfile');
         await Promise.all([
+            this.getVersion(),
             this.$store.dispatch('users/loadAll'),
             this.$store.dispatch('tasks/loadAll'),
             this.$store.dispatch('notifications/loadAll'),
@@ -1022,6 +1035,20 @@ export default {
         }
     },
     methods: {
+        async getVersion() {
+            await axios({
+                method: 'get',
+                url: `https://api.github.com/repos/Computational-Plant-Science/plantit/tags`,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    this.version = response.data[0].name;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
         removeAlert(alert) {
             this.$store.dispatch('alerts/remove', alert);
         },
@@ -1030,7 +1057,9 @@ export default {
             await this.$store.dispatch('user/toggleDarkMode');
             this.togglingDarkMode = false;
         },
-        markAllNotificationsRead() {},
+        markAllNotificationsRead() {
+            // TODO
+        },
         async markNotificationRead(notification) {
             await axios({
                 method: 'delete',
