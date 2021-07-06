@@ -793,8 +793,8 @@
                             </b-button>
                         </template>
                         <b-dropdown-item
-                            title="Splash"
-                            to="/splash/"
+                            title="Home"
+                            to="/home/"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "

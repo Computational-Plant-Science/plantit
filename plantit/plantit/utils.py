@@ -42,7 +42,7 @@ from plantit.misc import del_none, format_bind_mount, parse_bind_mount
 from plantit.notifications.models import Notification
 from plantit.redis import RedisClient
 from plantit.ssh import SSH, execute_command
-from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, JobQueueTask
+from plantit.tasks.models import DelayedTask, RepeatingTask, TaskStatus, JobQueueTask, TaskCounter
 from plantit.tasks.models import Task
 from plantit.tasks.options import BindMount
 from plantit.tasks.options import PlantITCLIOptions, Parameter, Input, PasswordTaskAuth, KeyTaskAuth, InputKind
@@ -747,6 +747,11 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
     for tag in workflow['config']['tags']: task.tags.add(tag)  # add task tags
     task.workdir = f"{task.guid}/"  # use GUID for working directory name
     task.save()
+
+    counter = TaskCounter.load()
+    counter.count = counter.count + 1
+    counter.save()
+
     return task
 
 

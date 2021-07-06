@@ -21,6 +21,28 @@ class TaskStatus(models.TextChoices):
     CANCELED = 'canceled', gettext_lazy('Canceled')
 
 
+class SingletonModel(models.Model):
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super(SingletonModel, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class TaskCounter(SingletonModel):
+    count = models.PositiveBigIntegerField(default=0, null=False, blank=False)
+
+
 class Task(models.Model):
     class Meta:
         ordering = ['-created']
