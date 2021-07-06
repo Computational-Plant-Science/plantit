@@ -872,6 +872,24 @@
                             Log Out
                         </b-dropdown-item>
                     </b-nav-item-dropdown>
+                    <b-nav-item v-else>
+                        <b-button
+                            variant="white"
+                            block
+                            class="text-center mt-1"
+                            href="/apis/v1/idp/cyverse_login/"
+                        >
+                            Log in with
+                            <b-img
+                                :src="
+                                    require('@/assets/sponsors/cyversebw-notext.png')
+                                "
+                                height="18px"
+                                alt="Cyverse"
+                            ></b-img>
+                            <b>CyVerse</b>
+                        </b-button>
+                    </b-nav-item>
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
@@ -996,7 +1014,7 @@ export default {
         this.crumbs = this.$route.meta.crumb;
 
         // user profile must be loaded before everything else to make sure we have tokens/profile properties
-        if (this.$route.name === 'about') {
+        if (this.$route.name === 'about' || this.$route.name === 'usage') {
             await this.getVersion();
             return;
         }

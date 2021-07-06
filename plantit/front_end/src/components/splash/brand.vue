@@ -52,6 +52,20 @@
                                 </b-button>
                             </b-nav-item>
                             <b-nav-item
+                                title="Usage"
+                                to="/usage"
+                                class="mt-2"
+                                :link-class="
+                                    profile.darkMode
+                                        ? 'text-secondary'
+                                        : 'text-dark'
+                                "
+                                ><b-button variant="outline-dark"
+                                    ><i class="fas fa-chart-bar fa-2x"></i
+                                    ><br />Usage</b-button
+                                ></b-nav-item
+                            >
+                            <b-nav-item
                                 href="https://plantit.readthedocs.io/en/latest"
                                 title="PlantIT Docs"
                                 class="m-0 p-0"

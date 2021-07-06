@@ -2,14 +2,25 @@
     <div>
         <br />
         <br />
-        <b-container>
-            <b-row class="mb-2">
+        <b-container fluid>
+            <b-row >
                 <b-col class="text-center">
-                    <h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
-                        Cumulative Usage
-                    </h5>
+                    <b-img
+                        style="max-width: 5rem;transform: translate(0px, 20px);"
+                        :src="require('../assets/logo.png')"
+                        center
+                        class="m-0 p-0"
+                    ></b-img>
+                    <h1 class="text-dark" style="text-decoration: underline;">
+                        plant<small
+                            class="mb-3 text-success"
+                            style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
+                            >IT</small
+                        ><small class="ml-1">usage</small>
+                    </h1>
                 </b-col>
             </b-row>
+            <br/>
             <b-row>
                 <b-col align-self="end" class="text-right mr-0"
                     ><h1 v-if="userCount >= 0" class="text-success">
@@ -23,9 +34,7 @@
                     ></b-spinner
                 ></b-col>
                 <b-col align-self="end" class="text-left ml-0 pl-0"
-                    ><h5
-                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                    >
+                    ><h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
                         <i class="fas fa-user fa-fw"></i> Users
                     </h5>
                 </b-col>
@@ -63,13 +72,6 @@
                 </b-col>
             </b-row>
             <br />
-            <b-row class="mb-2">
-                <b-col class="text-center">
-                    <h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
-                        Represented Institutions
-                    </h5>
-                </b-col>
-            </b-row>
             <div id="map" style="height: 40rem"></div>
         </b-container>
     </div>
@@ -224,7 +226,7 @@ export default {
         institutionPlotLayout() {
             return {
                 title: {
-                    text: 'Represented Institutions',
+                    text: 'User Institutions',
                     font: {
                         color: this.profile.darkMode ? '#ffffff' : '#1c1e23'
                     }

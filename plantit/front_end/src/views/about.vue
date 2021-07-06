@@ -19,7 +19,7 @@
                             class="mb-3 text-success"
                             style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
                             >IT</small
-                        >
+                        ><small class="ml-1">overview</small>
                     </h1>
                 </b-col>
             </b-row>
