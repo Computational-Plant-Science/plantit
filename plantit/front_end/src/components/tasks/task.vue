@@ -133,16 +133,24 @@
                                         }}</b-badge
                                     >
                                     <small> on </small>
-                                    <b-link :class="profile.darkMode ? 'text-light' : 'text-dark'" :to="{
-                                        name: 'agent',
-                                        params: {
-                                            name: getTask.agent
-                                        }
-                                    }">{{
-                                        getTask.agent
-                                            ? getTask.agent
-                                            : '[agent removed]'
-                                    }}</b-link>
+                                    <b-link
+                                        :class="
+                                            profile.darkMode
+                                                ? 'text-light'
+                                                : 'text-dark'
+                                        "
+                                        :to="{
+                                            name: 'agent',
+                                            params: {
+                                                name: getTask.agent
+                                            }
+                                        }"
+                                        >{{
+                                            getTask.agent
+                                                ? getTask.agent
+                                                : '[agent removed]'
+                                        }}</b-link
+                                    >
                                 </h5>
                             </b-col>
                             <b-col

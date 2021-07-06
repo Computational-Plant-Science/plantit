@@ -2,6 +2,7 @@
     <div class="m-0 p-0">
         <b-sidebar
             id="tasks"
+            v-model="tasksSidebarOpen"
             shadow="lg"
             :bg-variant="profile.darkMode ? 'dark' : 'white'"
             :text-variant="profile.darkMode ? 'light' : 'dark'"
@@ -547,13 +548,16 @@
         >
             <b-collapse class="m-0 p-0" is-nav>
                 <b-navbar-nav class="m-0 p-0 pl-3 mr-1">
-                    <b-nav-item class="m-0 p-0" v-b-toggle.tasks>
+                    <b-nav-item class="m-0 p-0" @click="showTasksSidebar">
                         <b-button
-                            class="brand-img m-0 p-0"
-                            v-bind:class="{ 'not-found': notFound }"
+                            :class="
+                                profile.loggedIn
+                                    ? 'brand-img m-0 p-0'
+                                    : 'brand-img-nl m-0 p-0'
+                            "
                             variant="outline-white"
-                            @mouseenter="titleContent = 'sidebar'"
-                            @mouseleave="titleContent = 'brand'"
+                            @mouseenter="brandEnter"
+                            @mouseleave="brandLeave"
                         >
                             <b-img
                                 class="m-0 p-0 mb-3"
@@ -948,6 +952,7 @@ export default {
             taskPage: 0,
             taskToasted: null,
             taskSearchText: '',
+            tasksSidebarOpen: false,
             // flags
             togglingDarkMode: false,
             notFound: false,
@@ -1039,6 +1044,21 @@ export default {
         }
     },
     methods: {
+        showTasksSidebar() {
+            // this.$refs.tasks.show();
+            if (this.profile.loggedIn) this.tasksSidebarOpen = true;
+        },
+        hideTasksSidebar() {
+            this.tasksSidebarOpen = false;
+        },
+        brandEnter() {
+            if (this.profile.loggedIn) {
+                this.titleContent = 'sidebar';
+            }
+        },
+        brandLeave() {
+            this.titleContent = 'brand';
+        },
         async getVersion() {
             await axios({
                 method: 'get',
@@ -1195,6 +1215,10 @@ export default {
 .brand-img
     -webkit-transition: -webkit-transform .1s ease-in-out
         transition: transform .1s ease-in-out
+
+.brand-img-nl
+    -webkit-transition: -webkit-transform .1s ease-in-out
+    transition: transform .1s ease-in-out
 
 .brand-img:hover
     border: none

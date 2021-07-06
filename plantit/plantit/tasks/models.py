@@ -21,8 +21,8 @@ class TaskStatus(models.TextChoices):
     CANCELED = 'canceled', gettext_lazy('Canceled')
 
 
+# from https://steelkiwi.com/blog/practical-application-singleton-design-pattern/
 class SingletonModel(models.Model):
-
     class Meta:
         abstract = True
 

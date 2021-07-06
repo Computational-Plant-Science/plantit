@@ -185,11 +185,24 @@
                                         >
                                         <small>
                                             on
-                                            <b class="ml-0 mr-0">{{
-                                                task.agent
-                                                    ? task.agent
-                                                    : '[agent removed]'
-                                            }}</b>
+                                            <b-link
+                                                :class="
+                                                    profile.darkMode
+                                                        ? 'text-light'
+                                                        : 'text-dark'
+                                                "
+                                                :to="{
+                                                    name: 'agent',
+                                                    params: {
+                                                        name: task.agent
+                                                    }
+                                                }"
+                                                >{{
+                                                    task.agent
+                                                        ? task.agent
+                                                        : '[agent removed]'
+                                                }}</b-link
+                                            >
                                             {{ prettify(task.updated) }}</small
                                         >
                                         <br />
@@ -376,11 +389,24 @@
                                             >
                                             <small>
                                                 on
-                                                <b class="ml-0 mr-0">{{
-                                                    task.agent
-                                                        ? task.agent
-                                                        : '[agent removed]'
-                                                }}</b>
+                                                <b-link
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                    :to="{
+                                                        name: 'agent',
+                                                        params: {
+                                                            name: task.agent
+                                                        }
+                                                    }"
+                                                    >{{
+                                                        task.agent
+                                                            ? task.agent
+                                                            : '[agent removed]'
+                                                    }}</b-link
+                                                >
                                                 {{
                                                     prettify(task.updated)
                                                 }}</small
