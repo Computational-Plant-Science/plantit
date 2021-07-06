@@ -54,7 +54,7 @@
                             <b-nav-item
                                 title="Usage"
                                 to="/usage"
-                                class="mt-2"
+                                class="m-0 p-0"
                                 :link-class="
                                     profile.darkMode
                                         ? 'text-secondary'
