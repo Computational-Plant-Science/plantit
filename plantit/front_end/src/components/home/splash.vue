@@ -14,11 +14,17 @@
                 <b-row align-v="center" class="justify-content-md-center">
                     <b-col>
                         <b-img
-                            style="max-width: 5rem;transform: translate(0px, 20px);"
+                            style="max-width: 5rem;transform: translate(0px, 20px); position: relative; top: 15px"
                             :src="require('../../assets/logo.png')"
                             center
                             class="m-0 p-0"
                         ></b-img>
+                        <b-badge
+                            variant="success"
+                            style="top: 14px; left: 25px; position: relative;"
+                            ><span v-if="version !== 0">{{ version }}</span
+                            ><i class="fas fa-spinner" v-else></i
+                        ></b-badge>
                         <h1
                             class="text-dark"
                             style="text-decoration: underline;"
@@ -39,9 +45,7 @@
                                 title="About PlantIT"
                                 class="m-0 p-0"
                             >
-                                <b-button
-                                    variant="outline-dark"
-                                >
+                                <b-button variant="outline-dark">
                                     <i class="fas fa-question-circle fa-2x"></i>
                                     <br />
                                     About
@@ -52,9 +56,7 @@
                                 title="PlantIT Docs"
                                 class="m-0 p-0"
                             >
-                                <b-button
-                                    variant="outline-dark"
-                                >
+                                <b-button variant="outline-dark">
                                     <i class="fas fa-book fa-2x"></i>
                                     <br />
                                     Docs
@@ -65,10 +67,7 @@
                                 title="PlantIT on GitHub"
                                 href="https://github.com/Computational-Plant-Science/plantit/discussions/63"
                             >
-                                <b-button
-                                    variant="outline-dark"
-                                    title="GitHub"
-                                >
+                                <b-button variant="outline-dark" title="GitHub">
                                     <i class="fab fa-github fa-2x"></i>
                                     <br />
                                     Github
@@ -94,7 +93,6 @@
                                     Slack
                                 </b-button>
                             </b-nav-item>-->
-
 
                             <!--<b-nav-item
                                 v-if="profile.loggedIn"
@@ -160,13 +158,37 @@
 
 <script>
 import { mapGetters } from 'vuex';
+import axios from 'axios';
+import * as Sentry from '@sentry/browser';
 
 export default {
     name: 'home-splash',
+    data: function() {
+        return {
+            version: 0
+        };
+    },
     computed: mapGetters('user', ['profile']),
-    created: function() {
+    created: async function() {
         this.crumbs = this.$route.meta.crumb;
+        await this.getVersion();
         // this.$store.dispatch('user/loadProfile');
+    },
+    methods: {
+        async getVersion() {
+            await axios({
+                method: 'get',
+                url: `https://api.github.com/repos/Computational-Plant-Science/plantit/tags`,
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    this.version = response.data[0].name;
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        }
     }
 };
 </script>
