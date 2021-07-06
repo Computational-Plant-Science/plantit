@@ -1390,6 +1390,34 @@
                 :src="thumbnailUrl"
             ></b-embed>
         </b-modal>
+      <b-modal
+                id="authenticate"
+                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+                centered
+                close
+                :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+                :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+                :title="'Authenticate with ' + this.getTask.agent"
+                @ok="onStart"
+                ok-variant="success"
+            >
+                <b-form-input
+                    v-model="authenticationUsername"
+                    type="text"
+                    placeholder="Your username"
+                    required
+                ></b-form-input>
+                <b-form-input
+                    v-model="authenticationPassword"
+                    type="password"
+                    placeholder="Your password"
+                    required
+                ></b-form-input>
+            </b-modal>
     </div>
 </template>
 <script>
@@ -1439,7 +1467,9 @@ export default {
             showCanceledAlert: false,
             showFailedToCancelAlert: false,
             // the "v-if hack" (https://michaelnthiessen.com/force-re-render/)
-            render: true
+            render: true,
+            authenticationUsername: '',
+          authenticationPassword: ''
         };
     },
     methods: {
@@ -1711,8 +1741,7 @@ export default {
         },
         cancel() {
             this.canceled = true;
-            axios
-                .get(
+            axios.get(
                     `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`
                 )
                 .then(response => {

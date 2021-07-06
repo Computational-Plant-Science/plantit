@@ -594,7 +594,7 @@
                             </h2>
                         </b-breadcrumb-item>
                     </b-breadcrumb>
-                    <b-navbar-nav class="m-0 p-0"
+                    <b-navbar-nav class="m-0 p-0" align="center"
                         ><b-nav-item class="mt-1" href="/"
                             ><h3
                                 :class="
@@ -872,12 +872,11 @@
                             Log Out
                         </b-dropdown-item>
                     </b-nav-item-dropdown>
-                    <b-nav-item v-else>
+                    <b-nav-item href="/apis/v1/idp/cyverse_login/" v-else>
                         <b-button
                             variant="white"
                             block
                             class="text-center mt-1"
-                            href="/apis/v1/idp/cyverse_login/"
                         >
                             Log in with
                             <b-img

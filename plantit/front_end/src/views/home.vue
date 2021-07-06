@@ -54,6 +54,7 @@
             >
         </div>
         <div v-else>
+          <b-container>
             <b-row
                 ><b-col
                     ><b-button
@@ -90,6 +91,7 @@
                     ></b-col
                 >
             </b-row>
+            </b-container>
             <b-row class="mt-2" v-if="!isRootPath"
                 ><b-col align-self="end"
                     ><b-breadcrumb

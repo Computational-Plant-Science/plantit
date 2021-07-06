@@ -1166,8 +1166,8 @@ async def push_task_event(task: Task):
     })
 
 
-def cancel_task(task: Task):
-    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+def cancel_task(task: Task, auth):
+    ssh = get_task_ssh_client(task, auth)
     with ssh:
         if isinstance(task, JobQueueTask):
             lines = []

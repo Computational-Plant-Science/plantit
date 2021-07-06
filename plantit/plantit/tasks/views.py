@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from plantit import settings
-from plantit.agents.models import Agent
+from plantit.agents.models import Agent, AgentExecutor
 from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
@@ -301,10 +301,12 @@ def cancel(request, owner, name):
     if task.is_complete:
         return HttpResponse(f"User {owner}'s task {name} already completed")
 
-    if task.is_sandbox:
+    if task.agent.executor == AgentExecutor.LOCAL and task.celery_task_id is not None:
         AsyncResult(task.celery_task_id).revoke()  # cancel the Celery task
     else:
-        cancel_task(task)  # cancel the scheduler job
+        # auth = parse_task_auth_options(json.loads(request.body.decode('utf-8'))['auth'])
+        # cancel_task(task, auth)
+        pass
 
     now = timezone.now()
     task.status = TaskStatus.CANCELED
@@ -313,7 +315,7 @@ def cancel(request, owner, name):
     task.save()
 
     msg = f"Cancelled user {owner}'s task {name}"
-    log_task_status(task, msg)
+    log_task_status(task, [msg])
     push_task_event(task)
     return JsonResponse({'canceled': True})
 
