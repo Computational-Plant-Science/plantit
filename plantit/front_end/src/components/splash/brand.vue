@@ -21,7 +21,7 @@
                         ></b-img>
                         <b-badge
                             variant="success"
-                            style="top: 14px; left: 25px; position: relative;"
+                            style="top: 14px; position: relative;"
                             ><span v-if="version !== 0">{{ version }}</span
                             ><i class="fas fa-spinner" v-else></i
                         ></b-badge>
@@ -98,7 +98,7 @@
                                 v-if="profile.loggedIn"
                                 title="Enter PlantIT"
                                 class="m-0 p-0"
-                                :to="'/dashboard/'"
+                                :to="'/home/'"
                             >
                                 <b-button
                                     variant="white"

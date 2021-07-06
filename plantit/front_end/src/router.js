@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import home from './views/home.vue';
+import splash from './views/splash.vue';
 import about from './views/about.vue';
-import stats from './views/stats.vue';
-import dashboard from './views/dashboard.vue';
+import usage from './views/usage.vue';
+import home from './views/home.vue';
 import users from './components/users/users.vue';
 import user from './components/users/user.vue';
 import tasks from './components/tasks/tasks.vue';
@@ -24,8 +24,8 @@ let router = new Router({
     routes: [
         {
             path: '/',
-            name: 'home',
-            component: home,
+            name: 'splash',
+            component: splash,
             meta: {
                 title: 'PlantIT',
                 crumb: [],
@@ -43,25 +43,25 @@ let router = new Router({
             }
         },
         {
-            path: '/stats',
-            name: 'stats',
-            component: stats,
+            path: '/usage',
+            name: 'usage',
+            component: usage,
             meta: {
-                title: 'PlantIT Stats',
+                title: 'PlantIT Usage',
                 crumb: [],
                 requiresAuth: false
             }
         },
         {
-            path: '/dashboard',
-            name: 'dashboard',
-            component: dashboard,
+            path: '/home',
+            name: 'home',
+            component: home,
             meta: {
-                title: 'Dashboard',
+                title: 'Home',
                 crumb: [
                     {
-                        text: 'Dashboard',
-                        href: '/dashboard'
+                        text: 'Home',
+                        href: '/home'
                     }
                 ],
                 requiresAuth: false
@@ -75,12 +75,12 @@ let router = new Router({
                         title: 'Users',
                         crumb: [
                             {
-                                text: 'Dashboard',
-                                href: '/dashboard'
+                                text: 'Home',
+                                href: '/home'
                             },
                             {
                                 text: 'Users',
-                                href: '/dashboard/users'
+                                href: '/home/users'
                             }
                         ],
                         requiresAuth: true
@@ -95,12 +95,12 @@ let router = new Router({
                                 title: 'User',
                                 crumb: [
                                     {
-                                        text: 'Dashboard',
-                                        href: '/dashboard'
+                                        text: 'Home',
+                                        href: '/home'
                                     },
                                     {
                                         text: 'Users',
-                                        href: '/dashboard/users'
+                                        href: '/home/users'
                                     }
                                 ],
                                 requiresAuth: true
@@ -118,12 +118,12 @@ let router = new Router({
                         title: 'Datasets',
                         crumb: [
                             {
-                                text: 'Dashboard',
-                                href: '/dashboard'
+                                text: 'Home',
+                                href: '/home'
                             },
                             {
                                 text: 'Datasets',
-                                href: '/dashboard/datasets'
+                                href: '/home/datasets'
                             }
                         ],
                         requiresAuth: true
@@ -138,8 +138,8 @@ let router = new Router({
                                 title: 'Dataset',
                                 crumb: [
                                     {
-                                        text: 'Dashboard',
-                                        href: '/dashboard'
+                                        text: 'Home',
+                                        href: '/home'
                                     },
                                     {
                                         text: 'Datasets',
@@ -159,12 +159,12 @@ let router = new Router({
                         title: 'Workflows',
                         crumb: [
                             {
-                                text: 'Dashboard',
-                                href: '/dashboard'
+                                text: 'Home',
+                                href: '/home'
                             },
                             {
                                 text: 'Workflows',
-                                href: '/dashboard/workflows'
+                                href: '/home/workflows'
                             }
                         ],
                         requiresAuth: true
@@ -179,12 +179,12 @@ let router = new Router({
                                 title: 'Workflow',
                                 crumb: [
                                     {
-                                        text: 'Dashboard',
-                                        href: '/dashboard'
+                                        text: 'Home',
+                                        href: '/home'
                                     },
                                     {
                                         text: 'Workflows',
-                                        href: '/dashboard/workflows'
+                                        href: '/home/workflows'
                                     }
                                 ],
                                 requiresAuth: true
@@ -200,12 +200,12 @@ let router = new Router({
                         title: 'Agents',
                         crumb: [
                             {
-                                text: 'Dashboard',
-                                href: '/dashboard'
+                                text: 'Home',
+                                href: '/home'
                             },
                             {
                                 text: 'Agents',
-                                href: '/dashboard/agents'
+                                href: '/home/agents'
                             }
                         ],
                         requiresAuth: true
@@ -220,12 +220,12 @@ let router = new Router({
                                 title: 'Agent',
                                 crumb: [
                                     {
-                                        text: 'Dashboard',
-                                        href: '/dashboard'
+                                        text: 'Home',
+                                        href: '/home'
                                     },
                                     {
                                         text: 'Agents',
-                                        href: '/dashboard/agents'
+                                        href: '/home/agents'
                                     }
                                 ],
                                 requiresAuth: true
@@ -241,12 +241,12 @@ let router = new Router({
                         title: 'Tasks',
                         crumb: [
                             {
-                                text: 'Dashboard',
-                                href: '/dashboard'
+                                text: 'Home',
+                                href: '/home'
                             },
                             {
                                 text: 'Tasks',
-                                href: '/dashboard/tasks'
+                                href: '/home/tasks'
                             }
                         ],
                         requiresAuth: true
@@ -261,12 +261,12 @@ let router = new Router({
                                 title: 'Task',
                                 crumb: [
                                     {
-                                        text: 'Dashboard',
-                                        href: '/dashboard'
+                                        text: 'Home',
+                                        href: '/home'
                                     },
                                     {
                                         text: 'Tasks',
-                                        href: '/dashboard/tasks'
+                                        href: '/home/tasks'
                                     }
                                 ],
                                 requiresAuth: true
@@ -297,8 +297,8 @@ let router = new Router({
 });
 
 router.beforeEach(async (to, from, next) => {
-    if (to.name === 'dashboard') {
-        to.meta.title = 'Dashboard';
+    if (to.name === 'home') {
+        to.meta.title = 'Home';
     }
     if (to.name === 'workflow') {
         to.meta.title = `Workflow: ${to.params.name}`;
@@ -347,7 +347,7 @@ router.beforeEach(async (to, from, next) => {
     // }
     // if (to.matched.some(record => record.name === 'user')) {
     //     while (to.meta.crumb.length > 0) to.meta.crumb.pop();
-    //     to.meta.crumb.push({ text: 'Your Dashboard' });
+    //     to.meta.crumb.push({ text: 'Your Home' });
     //     to.meta.crumb.push({
     //         text: `User: ${to.params.username}`,
     //         href: `/user/${to.params.username}`

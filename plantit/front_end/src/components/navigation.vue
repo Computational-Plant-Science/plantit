@@ -639,8 +639,8 @@
                             ></b-nav-item
                         >
                         <b-nav-item
-                            title="Stats"
-                            to="/stats"
+                            title="Usage"
+                            to="/usage"
                             class="mt-2"
                             :link-class="
                                 profile.darkMode
@@ -654,7 +654,7 @@
                                         : 'text-dark'
                                 "
                                 ><i class="fas fa-chart-bar fa-1x fa-fw"></i
-                                >Stats</span
+                                >Usage</span
                             ></b-nav-item
                         >
                         <b-nav-item
@@ -793,8 +793,8 @@
                             </b-button>
                         </template>
                         <b-dropdown-item
-                            title="Dashboard"
-                            to="/dashboard/"
+                            title="Splash"
+                            to="/splash/"
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
                             "
@@ -805,7 +805,7 @@
                             "
                         >
                             <i class="fas fa-desktop fa-1x fa-fw"></i>
-                            Dashboard
+                            Home
                         </b-dropdown-item>
                         <b-dropdown-item
                             :title="
@@ -991,7 +991,11 @@ export default {
         this.crumbs = this.$route.meta.crumb;
 
         // user profile must be loaded before everything else to make sure we have tokens/profile properties
-        if (this.$route.name === 'about') return;
+        if (this.$route.name === 'about') {
+            await this.getVersion();
+            return;
+        }
+
         await store.dispatch('user/loadProfile');
         await Promise.all([
             this.getVersion(),

@@ -5,9 +5,9 @@
         <b-container>
             <b-row class="mb-2">
                 <b-col class="text-center">
-                    <h2 :class="profile.darkMode ? 'text-white' : 'text-dark'">
-                        Cumulative Stats
-                    </h2>
+                    <h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                        Cumulative Usage
+                    </h5>
                 </b-col>
             </b-row>
             <b-row>
@@ -23,11 +23,11 @@
                     ></b-spinner
                 ></b-col>
                 <b-col align-self="end" class="text-left ml-0 pl-0"
-                    ><h4
+                    ><h5
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
                     >
                         <i class="fas fa-user fa-fw"></i> Users
-                    </h4>
+                    </h5>
                 </b-col>
                 <b-col align-self="end" class="text-right mr-0"
                     ><h1 v-if="workflowCount >= 0" class="text-success">
@@ -65,9 +65,9 @@
             <br />
             <b-row class="mb-2">
                 <b-col class="text-center">
-                    <h2 :class="profile.darkMode ? 'text-white' : 'text-dark'">
+                    <h5 :class="profile.darkMode ? 'text-white' : 'text-dark'">
                         Represented Institutions
-                    </h2>
+                    </h5>
                 </b-col>
             </b-row>
             <div id="map" style="height: 40rem"></div>
@@ -82,7 +82,7 @@ import * as Sentry from '@sentry/browser';
 import mapboxgl from 'mapbox-gl';
 
 export default {
-    name: 'stats',
+    name: 'usage',
     data: function() {
         return {
             map: {},

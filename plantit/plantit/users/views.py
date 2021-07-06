@@ -110,7 +110,7 @@ class IDPViewSet(viewsets.ViewSet):
         user.save()
 
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        return redirect(f"/dashboard/")
+        return redirect(f"/home/")
 
     @action(methods=['get'], detail=False)
     def github_request_identity(self, request):
@@ -147,7 +147,7 @@ class IDPViewSet(viewsets.ViewSet):
         user.profile.save()
         user.save()
 
-        return redirect(f"/dashboard/")
+        return redirect(f"/home/")
 
 
 class UsersViewSet(viewsets.ModelViewSet, mixins.RetrieveModelMixin):
