@@ -15,11 +15,11 @@
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
                         style="text-decoration: underline;"
                     >
-                        plant<small
+                        <small class="mr-1">about</small>plant<small
                             class="mb-3 text-success"
                             style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
                             >IT</small
-                        ><small class="ml-1">overview</small>
+                        >
                     </h1>
                 </b-col>
             </b-row>

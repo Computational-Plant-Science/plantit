@@ -55,6 +55,7 @@ services:
       - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
       - AWS_SECRET_KEY=${AWS_SECRET_KEY}
       - AWS_REGION=${AWS_REGION}
+      - AWS_FEEDBACK_ARN=${AWS_FEEDBACK_ARN}
     command: ["/code/scripts/wait-for-postgres.sh", "postgres", "python", "manage.py", "runserver", "0.0.0.0:3000"]
     depends_on:
       - postgres
@@ -155,6 +156,7 @@ services:
       - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
       - AWS_SECRET_KEY=${AWS_SECRET_KEY}
       - AWS_REGION=${AWS_REGION}
+      - AWS_FEEDBACK_ARN=${AWS_FEEDBACK_ARN}
     healthcheck:
       test: celery -A plantit status | grep "OK"
       interval: 60s

@@ -96,6 +96,13 @@ else
   aws_region="${AWS_REGION}"
 fi
 
+if [[ -z "${AWS_FEEDBACK_ARN}" ]]; then
+  aws_feedback_arn="some_aws_feedback_arn"
+  echo "Warning: AWS_FEEDBACK_ARN environment variable missing"
+else
+  aws_feedback_arn="${AWS_FEEDBACK_ARN}"
+fi
+
 cat <<EOT >>".env"
 VUE_APP_TITLE=plantit
 MAPBOX_TOKEN=mapbox_token
@@ -146,4 +153,5 @@ NO_PREVIEW_THUMBNAIL=/code/plantit/front_end/src/assets/no_preview_thumbnail.png
 AWS_ACCESS_KEY=$aws_access_key
 AWS_SECRET_KEY=$aws_secret_key
 AWS_REGION=$aws_region
+AWS_FEEDBACK_ARN=$aws_feedback_arn
 EOT
