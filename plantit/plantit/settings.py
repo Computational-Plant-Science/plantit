@@ -34,7 +34,6 @@ assert 'GITHUB_KEY' in os.environ, f"{missing_variable}: GITHUB_KEY"
 assert 'GITHUB_SECRET' in os.environ, f"{missing_variable}: GITHUB_SECRET"
 assert 'NO_PREVIEW_THUMBNAIL' in os.environ, f"{missing_variable}: NO_PREVIEW_THUMBNAIL"
 assert 'AWS_FEEDBACK_ARN' in os.environ, f"{missing_variable} AWS_FEEDBACK_ARN"
-assert 'AWS_FEEDBACK_SUB_ARNS' in os.environ, f"{missing_variable} AWS_FEEDBACK_SUB_ARNS"  # comma-delimited
 
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
 MAPBOX_FEATURE_REFRESH_MINUTES = os.environ.get('MAPBOX_FEATURE_REFRESH_MINUTES')
@@ -59,7 +58,6 @@ RUNS_CLEANUP_MINUTES = os.environ.get('RUNS_CLEANUP_MINUTES')
 NO_PREVIEW_THUMBNAIL = os.environ.get('NO_PREVIEW_THUMBNAIL')
 LAUNCHER_SCRIPT_NAME = os.environ.get('LAUNCHER_SCRIPT_NAME')
 AWS_FEEDBACK_ARN = os.environ.get("AWS_FEEDBACK_ARN")
-AWS_FEEDBACK_SUB_ARNS = os.environ.get("AWS_FEEDBACK_SUB_ARNS").split(',')
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT')
