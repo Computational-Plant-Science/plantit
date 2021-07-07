@@ -34,6 +34,7 @@ urlpatterns = [
                   url('tasks/', include("plantit.tasks.urls")),
                   url('stats/', include("plantit.stats.urls")),
                   url('notifications/', include("plantit.notifications.urls")),
+                  url('feedback/', include("plantit.feedback.urls")),
               ] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
 websocket_urlpatterns = [

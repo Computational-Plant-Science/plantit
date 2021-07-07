@@ -863,6 +863,40 @@
                             ></b-dropdown-item
                         >
                         <b-dropdown-item
+                            title="
+                                Feedback
+                            "
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            @click="showFeedbackModal"
+                        >
+                            <i class="fas fa-comment-alt fa-1x fa-fw"></i>
+                            Feedback
+                        </b-dropdown-item>
+                        <b-dropdown-item
+                            title="
+                               Contact
+                            "
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            href="mailto:wbonelli@uga.edu"
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                        >
+                            <i class="fas fa-envelope fa-1x fa-fw"></i>
+                            Contact
+                        </b-dropdown-item>
+                        <b-dropdown-item
                             title="Log Out"
                             @click="logOut"
                             class="text-danger"
@@ -937,6 +971,64 @@
                 {{ taskToasted.task_logs[taskToasted.task_logs.length - 1] }}
             </small>
         </b-toast>
+        <b-modal
+            id="feedback"
+            title="Thanks for your feedback!"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-text-variant="profile.darkMode ? 'white' : 'dark'"
+            ok-variant="success"
+            :ok-disabled="!feedbackValid"
+            @ok="submitFeedback"
+        >
+            <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
+                Feel free to answer one or more of the following questions, or
+                <b-link
+                    :class="profile.darkMode ? 'text-light' : 'text-dark'"
+                    href="mailto:wbonelli@uga.edu"
+                    >send us an email</b-link
+                >
+                to share free-form feedback.
+            </p>
+            <br />
+            <b>Has PlantIT helped you?</b>
+            <b-form-textarea
+                v-model="feedbackUsed"
+                placeholder="How have you used PlantIT? Do you have any success stories?"
+            ></b-form-textarea>
+            <br />
+            <b>How could PlantIT be better?</b>
+            <b-form-textarea
+                v-model="feedbackWanted"
+                placeholder="How could PlantIT better serve your use case? Have you found anything frustrating?"
+            ></b-form-textarea>
+            <br />
+            <b>Could PlantIT be more accessible?</b>
+            <b-form-textarea
+                v-model="feedbackEase"
+                placeholder="Can you think of anything that might make PlantIT easier to use?"
+            ></b-form-textarea>
+            <br />
+            <b>Do you have feature requests?</b>
+            <b-form-textarea
+                v-model="feedbackFeatures"
+                placeholder="Are there any particular features you'd like to see in PlantIT?"
+            ></b-form-textarea>
+            <br />
+            <b-form-checkbox v-model="feedbackAnonymous"
+                ><b>Anonymize?</b> By default all feedback is anonymous. Uncheck
+                this box if you'd like us to be able to see who you are. We
+                might get in touch to ask if we can display your comments on the
+                site!</b-form-checkbox
+            >
+        </b-modal>
     </div>
 </template>
 
@@ -974,7 +1066,13 @@ export default {
             togglingDarkMode: false,
             notFound: false,
             // version
-            version: 0
+            version: 0,
+            // feedback
+            feedbackUsed: '',
+            feedbackWanted: '',
+            feedbackEase: '',
+            feedbackFeatures: '',
+            feedbackAnonymous: true
         };
     },
     computed: {
@@ -992,6 +1090,14 @@ export default {
             'notificationsRead',
             'notificationsUnread'
         ]),
+        feedbackValid() {
+            return (
+                this.feedbackUsed !== '' ||
+                this.feedbackWanted !== '' ||
+                this.feedbackEase !== '' ||
+                this.feedbackFeatures !== ''
+            );
+        },
         filteredRunningTasks() {
             return this.tasksRunning.filter(
                 sub =>
@@ -1061,6 +1167,35 @@ export default {
         }
     },
     methods: {
+        async submitFeedback() {
+            if (!this.feedbackValid) return;
+            let data = {
+                used: this.feedbackUsed,
+                wanted: this.feedbackWanted,
+                ease: this.feedbackEase,
+                features: this.feedbackFeatures,
+                anonymous: this.feedbackAnonymous
+            };
+            await axios({
+                method: 'post',
+                url: `/apis/v1/feedback/`,
+                headers: { 'Content-Type': 'application/json' },
+                data: data
+            })
+                .then(() => {
+                    alert('Submitted feedback!');
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    return error;
+                });
+        },
+        showFeedbackModal() {
+            this.$bvModal.show('feedback');
+        },
+        hideFeedbackModal() {
+            this.$bvModal.hide('feedback');
+        },
         showTasksSidebar() {
             // this.$refs.tasks.show();
             if (this.profile.loggedIn) this.tasksSidebarOpen = true;

@@ -54,43 +54,45 @@
             >
         </div>
         <div v-else>
-          <b-container>
-            <b-row
-                ><b-col
-                    ><b-button
-                        block
-                        class="m-1"
-                        :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/home/workflows/"
-                        ><i class="fas fa-stream fa-fw"></i> Workflows</b-button
-                    ></b-col
-                ><b-col
-                    ><b-button
-                        block
-                        class="m-1"
-                        :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/home/datasets/"
-                        ><i class="fas fa-database fa-fw"></i>
-                        Datasets</b-button
-                    ></b-col
-                ><b-col>
-                    <b-button
-                        block
-                        class="m-1"
-                        :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/home/agents/"
-                        ><i class="fas fa-server fa-fw"></i> Agents</b-button
-                    ></b-col
-                ><b-col
-                    ><b-button
-                        block
-                        class="m-1"
-                        :variant="profile.darkMode ? 'dark' : 'light'"
-                        to="/home/tasks/"
-                        ><i class="fas fa-tasks fa-fw"></i> Tasks</b-button
-                    ></b-col
-                >
-            </b-row>
+            <b-container>
+                <b-row
+                    ><b-col
+                        ><b-button
+                            block
+                            class="m-1"
+                            :variant="profile.darkMode ? 'dark' : 'light'"
+                            to="/home/workflows/"
+                            ><i class="fas fa-stream fa-fw"></i>
+                            Workflows</b-button
+                        ></b-col
+                    ><b-col
+                        ><b-button
+                            block
+                            class="m-1"
+                            :variant="profile.darkMode ? 'dark' : 'light'"
+                            to="/home/datasets/"
+                            ><i class="fas fa-database fa-fw"></i>
+                            Datasets</b-button
+                        ></b-col
+                    ><b-col>
+                        <b-button
+                            block
+                            class="m-1"
+                            :variant="profile.darkMode ? 'dark' : 'light'"
+                            to="/home/agents/"
+                            ><i class="fas fa-server fa-fw"></i>
+                            Agents</b-button
+                        ></b-col
+                    ><b-col
+                        ><b-button
+                            block
+                            class="m-1"
+                            :variant="profile.darkMode ? 'dark' : 'light'"
+                            to="/home/tasks/"
+                            ><i class="fas fa-tasks fa-fw"></i> Tasks</b-button
+                        ></b-col
+                    >
+                </b-row>
             </b-container>
             <b-row class="mt-2" v-if="!isRootPath"
                 ><b-col align-self="end"

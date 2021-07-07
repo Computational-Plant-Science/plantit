@@ -3,7 +3,7 @@
         <br />
         <br />
         <b-container fluid>
-            <b-row >
+            <b-row>
                 <b-col class="text-center">
                     <b-img
                         style="max-width: 5rem;transform: translate(0px, 20px);"
@@ -11,7 +11,10 @@
                         center
                         class="m-0 p-0"
                     ></b-img>
-                    <h1 class="text-dark" style="text-decoration: underline;">
+                    <h1
+                        :class="profile.darkMode ? 'text-white' : 'text-dark'"
+                        style="text-decoration: underline;"
+                    >
                         plant<small
                             class="mb-3 text-success"
                             style="text-decoration: underline;text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;"
@@ -20,7 +23,7 @@
                     </h1>
                 </b-col>
             </b-row>
-            <br/>
+            <br />
             <b-row>
                 <b-col align-self="end" class="text-right mr-0"
                     ><h1 v-if="userCount >= 0" class="text-success">
