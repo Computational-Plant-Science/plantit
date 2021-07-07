@@ -2,13 +2,14 @@
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
         <div v-if="isRootPath">
             <b-row
-                ><b-col md="auto"
+                ><b-col
                     ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-tasks fa-fw"></i> Your Tasks
                     </h2></b-col
                 >
                 <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
+                    id="refresh-tasks"
                         :disabled="tasksLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
@@ -26,6 +27,13 @@
                         ></b-spinner
                         ><i v-else class="fas fa-redo mr-1"></i
                         >{{ tasksLoading ? 'Loading...' : 'Refresh' }}</b-button
+                    ><b-popover
+                        :show.sync="profile.tutorials"
+                        triggers="manual"
+                        placement="left"
+                        target="refresh-tasks"
+                        title="Refresh Tasks"
+                        >Click here to refresh your tasks.</b-popover
                     ></b-col
                 >
             </b-row>

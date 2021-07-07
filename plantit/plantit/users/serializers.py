@@ -7,7 +7,7 @@ from plantit.users.models import Profile
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('github_username', 'github_token', 'cyverse_access_token', 'dark_mode', 'push_notification_sub_arn', 'institution')
+        fields = ('github_username', 'github_token', 'cyverse_access_token', 'dark_mode', 'push_notification_sub_arn', 'institution', 'shown_tutorials')
 
 
 class UserSerializer(serializers.ModelSerializer):

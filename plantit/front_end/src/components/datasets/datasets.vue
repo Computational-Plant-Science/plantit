@@ -3,7 +3,7 @@
         <b-row
             ><b-col
                 ><b-row
-                    ><b-col md="auto"
+                    ><b-col
                         ><h2
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -13,8 +13,9 @@
                             {{ publicContext ? 'Public' : 'Your' }} Datasets
                         </h2></b-col
                     >
-            <b-col class="ml-0 mb-1" align-self="center" md="auto"
-                        ><b-button
+                    <b-col md="auto" class="ml-0 mb-1" align-self="center">
+                      <b-button
+                            id="switch-dataset-context"
                             :disabled="datasetsLoading"
                             :variant="
                                 profile.darkMode ? 'outline-light' : 'white'
@@ -33,10 +34,19 @@
                             ><span v-else
                                 ><i class="fas fa-users"></i> Public</span
                             ></b-button
+                        ><b-popover
+                            :show.sync="profile.tutorials"
+                            triggers="manual"
+                            placement="left"
+                            target="switch-dataset-context"
+                            title="Workflow Context"
+                            >Click here to toggle between public datasets and
+                            your own.</b-popover
                         ></b-col
                     >
                     <b-col md="auto" class="ml-0 mb-1" align-self="center"
                         ><b-button
+                            id="refresh-datasets"
                             :disabled="datasetsLoading"
                             :variant="
                                 profile.darkMode ? 'outline-light' : 'white'
@@ -56,9 +66,17 @@
                             ></b-spinner
                             ><i v-else class="fas fa-redo mr-1"></i
                             >Refresh</b-button
+                        ><b-popover
+                            :show.sync="profile.tutorials"
+                            triggers="manual"
+                            placement="bottom"
+                            target="refresh-datasets"
+                            title="Refresh Datasets"
+                            >Click here to refresh data from the CyVerse Data
+                            Store.</b-popover
                         ></b-col
                     >
-                    <b-col></b-col><b-col md="auto" align-self="center"
+                    <b-col md="auto" align-self="center" class="mb-1"
                         ><small>powered by</small
                         ><b-img
                             class="ml-2 mt-1"
@@ -147,8 +165,7 @@
                                                         "
                                                     ></b-form-input></b-input-group></b-col
                                         ></b-row>-->
-                        <b-row
-                            v-if="personalDatasetsLoading"
+                        <b-row v-if="personalDatasetsLoading"
                             ><b-col
                                 ><b-spinner
                                     small

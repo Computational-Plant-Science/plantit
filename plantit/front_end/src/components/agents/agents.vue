@@ -2,7 +2,7 @@
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
         <div v-if="isRootPath">
             <b-row
-                ><b-col md="auto"
+                ><b-col
                     ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-server fa-fw"></i>
                         {{ publicContext ? 'Public' : 'Your' }} Agents
@@ -10,6 +10,7 @@
                 >
                 <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
+                        id="switch-agent-context"
                         :disabled="agentsLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
@@ -26,6 +27,14 @@
                         ><span v-else
                             ><i class="fas fa-users"></i> Public</span
                         ></b-button
+                    ><b-popover
+                        :show.sync="profile.tutorials"
+                        triggers="manual"
+                        placement="left"
+                        target="switch-agent-context"
+                        title="Agent Context"
+                        >Click here to toggle between public agents and your
+                        own.</b-popover
                     ></b-col
                 >
                 <b-col
@@ -34,6 +43,7 @@
                     align-self="center"
                     v-if="!publicContext"
                     ><b-button
+                        id="bind-agent"
                         :disabled="agentsLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
@@ -50,10 +60,19 @@
                             class="mr-1"
                         ></b-spinner
                         ><i v-else class="fas fa-plug mr-1"></i>Bind</b-button
+                    ><b-popover
+                        :show.sync="profile.tutorials"
+                        triggers="manual"
+                        placement="bottom"
+                        target="bind-agent"
+                        title="Bind Agent"
+                        >Click here to connect a server, cluster, or
+                        supercomputer of your own.</b-popover
                     ></b-col
                 >
                 <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
+                        id="refresh-agents"
                         :disabled="agentsLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
@@ -71,6 +90,13 @@
                         ></b-spinner
                         ><i v-else class="fas fa-redo mr-1"></i
                         >Refresh</b-button
+                    ><b-popover
+                        :show.sync="profile.tutorials"
+                        triggers="manual"
+                        placement="topright"
+                        target="refresh-agents"
+                        title="Refresh Agents"
+                        >Click here to refresh the list of agents.</b-popover
                     ></b-col
                 >
             </b-row>
@@ -84,7 +110,8 @@
                     ></b-spinner
                     ><span
                         :class="profile.darkMode ? 'text-white' : 'text-dark'"
-                        >Loading {{ publicContext ? 'public' : 'your' }} agents...</span
+                        >Loading
+                        {{ publicContext ? 'public' : 'your' }} agents...</span
                     >
                 </b-col>
             </b-row>

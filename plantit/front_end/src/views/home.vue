@@ -58,40 +58,76 @@
                 <b-row
                     ><b-col
                         ><b-button
+                            id="workflows-button"
                             block
                             class="m-1"
                             :variant="profile.darkMode ? 'dark' : 'light'"
                             to="/home/workflows/"
                             ><i class="fas fa-stream fa-fw"></i>
                             Workflows</b-button
+                        ><b-popover
+                            :show.sync="profile.tutorials && isRootPath"
+                            triggers="manual"
+                            placement="bottom"
+                            target="workflows-button"
+                            title="Your Workflows"
+                            >Click here to see explore and run public workflows,
+                            or share your own.</b-popover
                         ></b-col
                     ><b-col
                         ><b-button
+                            id="datasets-button"
                             block
                             class="m-1"
                             :variant="profile.darkMode ? 'dark' : 'light'"
                             to="/home/datasets/"
                             ><i class="fas fa-database fa-fw"></i>
                             Datasets</b-button
+                        ><b-popover
+                            :show.sync="profile.tutorials && isRootPath"
+                            triggers="manual"
+                            placement="bottom"
+                            target="datasets-button"
+                            title="Your Datasets"
+                            >Click here to view your data in the CyVerse Data
+                            Store.</b-popover
                         ></b-col
                     ><b-col>
                         <b-button
+                            id="agents-button"
                             block
                             class="m-1"
                             :variant="profile.darkMode ? 'dark' : 'light'"
                             to="/home/agents/"
                             ><i class="fas fa-server fa-fw"></i>
                             Agents</b-button
+                        ><b-popover
+                            :show.sync="profile.tutorials && isRootPath"
+                            triggers="manual"
+                            placement="bottom"
+                            target="agents-button"
+                            title="Your Agents"
+                            >Click here to view and manage servers, clusters,
+                            and other computing resources.</b-popover
                         ></b-col
                     ><b-col
                         ><b-button
+                            id="tasks-button"
                             block
                             class="m-1"
                             :variant="profile.darkMode ? 'dark' : 'light'"
                             to="/home/tasks/"
                             ><i class="fas fa-tasks fa-fw"></i> Tasks</b-button
-                        ></b-col
-                    >
+                        ><b-popover
+                            :show.sync="profile.tutorials && isRootPath"
+                            triggers="manual"
+                            placement="bottom"
+                            target="tasks-button"
+                            title="Your Tasks"
+                            >Click here to see your workflow submissions and
+                            results.</b-popover
+                        >
+                    </b-col>
                 </b-row>
             </b-container>
             <b-row class="mt-2" v-if="!isRootPath"

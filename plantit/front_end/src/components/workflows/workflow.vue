@@ -17,9 +17,7 @@
                     </b-alert>
                 </b-col>
             </b-row>
-            <b-row
-                v-if="workflowLoading || getWorkflow === null"
-            >
+            <b-row v-if="workflowLoading || getWorkflow === null">
                 <b-spinner
                     small
                     label="Loading..."
@@ -208,6 +206,7 @@
                                                 align-self="center"
                                                 md="auto"
                                                 ><b-button
+                                                    id="refresh-workflow"
                                                     size="sm"
                                                     :disabled="workflowLoading"
                                                     :variant="
@@ -233,7 +232,22 @@
                                                                 : 'dark'
                                                         "
                                                         class="ml-2 mb-1"
-                                                    ></b-spinner> </b-button></b-col
+                                                    ></b-spinner> </b-button
+                                                ><b-popover
+                                                    :show.sync="
+                                                        profile.tutorials
+                                                    "
+                                                    triggers="manual"
+                                                    placement="bottomright"
+                                                    target="refresh-workflow"
+                                                    title="Refresh Workflow"
+                                                    >Click here to refresh the
+                                                    workflow. This will retrieve
+                                                    and rebind the associated
+                                                    repository's
+                                                    <code>plantit.yaml</code>
+                                                    file.</b-popover
+                                                ></b-col
                                             ><b-col
                                                 v-if="ownsWorkflow"
                                                 class="m-0"
@@ -318,7 +332,7 @@
                                         <b-tabs
                                             v-model="activeTab"
                                             nav-class="bg-transparent"
-                                            active-nav-item-class="bg-info text-dark"
+                                            active-nav-item-class="bg-transparent text-dark"
                                             pills
                                             ><b-tab
                                                 title="About"
@@ -333,6 +347,20 @@
                                                         : 'theme-light m-0 p-3'
                                                 "
                                             >
+                                          <template #title>
+                                          <b-button
+                                                        id="about-workflow"
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        v-b-tooltip.hover
+                                                        :title="
+                                                            `About ${getWorkflow.config.name}`
+                                                        "
+                                                    ><i class="fas fa-question fa-fw"></i> About
+                                                    </b-button></template>
                                                 <b-row class="mb-3">
                                                     <b-col>
                                                         <h5
@@ -944,6 +972,35 @@
                                                         ? 'theme-dark m-0 p-3'
                                                         : 'theme-light m-0 p-3'
                                                 "
+                                                ><template #title>
+                                                    <b-button
+                                                        id="submit-workflow"
+                                                        :disabled="
+                                                            workflowLoading
+                                                        "
+                                                        :variant="
+                                                            profile.darkMode
+                                                                ? 'outline-light'
+                                                                : 'white'
+                                                        "
+                                                        v-b-tooltip.hover
+                                                        :title="
+                                                            `Submit ${getWorkflow.config.name}`
+                                                        "
+                                                    ><i class="fas fa-terminal fa-fw"></i> Submit
+                                                    </b-button>
+                                                    <b-popover
+                                                        :show.sync="
+                                                            profile.tutorials
+                                                        "
+                                                        triggers="manual"
+                                                        placement="right"
+                                                        target="submit-workflow"
+                                                        title="Submit Workflow"
+                                                        >Click here to configure
+                                                        and submit {{ getWorkflow.config.name }} to
+                                                        an agent.</b-popover
+                                                    ></template
                                                 ><b-row>
                                                     <b-col>
                                                         <b-card-group
@@ -2534,7 +2591,7 @@
                                                             variant="success"
                                                             block
                                                         >
-                                                            Submit<b-spinner
+                                                            <i class="fas fa-chevron-right fa-fw"></i> Start<b-spinner
                                                                 small
                                                                 v-if="submitted"
                                                                 label="Loading..."
@@ -3614,10 +3671,15 @@ export default {
             );
         },
         mustAuthenticate() {
-            let ownsAgent = this.selectedAgent.user !== undefined && this.selectedAgent.user === this.profile.djangoProfile.username;
-            let isGuest = this.selectedAgent.users_authorized.some(user => user.username === this.profile.djangoProfile.username);
+            let ownsAgent =
+                this.selectedAgent.user !== undefined &&
+                this.selectedAgent.user === this.profile.djangoProfile.username;
+            let isGuest = this.selectedAgent.users_authorized.some(
+                user => user.username === this.profile.djangoProfile.username
+            );
             return (
-                this.selectedAgent.authentication === 'password' || (!ownsAgent && !isGuest)
+                this.selectedAgent.authentication === 'password' ||
+                (!ownsAgent && !isGuest)
             );
         },
         getWorkflow() {

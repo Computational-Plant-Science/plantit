@@ -2,7 +2,7 @@
     <b-container fluid class="m-0 p-3" style="background-color: transparent;">
         <div v-if="isRootPath">
             <b-row
-                ><b-col md="auto"
+                ><b-col
                     ><h2 :class="profile.darkMode ? 'text-light' : 'text-dark'">
                         <i class="fas fa-stream fa-fw"></i>
                         {{ contextPublic ? 'Public' : 'Your' }} Workflows
@@ -10,6 +10,7 @@
                 >
                 <b-col align-self="center" class="mb-1" md="auto"
                     ><b-button
+                        id="switch-workflow-context"
                         :disabled="workflowsLoading || bindingWorkflow"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
@@ -26,6 +27,14 @@
                         ><span v-else
                             ><i class="fas fa-users"></i> Public</span
                         ></b-button
+                    ><b-popover
+                        :show.sync="profile.tutorials"
+                        triggers="manual"
+                        placement="topleft"
+                        target="switch-workflow-context"
+                        title="Workflow Context"
+                        >Click here to toggle between public workflows and your
+                        own.</b-popover
                     ></b-col
                 >
                 <b-col
@@ -34,6 +43,7 @@
                     align-self="center"
                     v-if="!contextPublic"
                     ><b-button
+                        id="bind-workflow"
                         :disabled="bindingWorkflow || workflowsLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
@@ -50,6 +60,14 @@
                             class="mr-1"
                         ></b-spinner
                         ><i v-else class="fas fa-plug mr-1"></i>Bind</b-button
+                    ><b-popover
+                        :show.sync="profile.tutorials"
+                        triggers="manual"
+                        placement="bottomleft"
+                        target="bind-workflow"
+                        title="Bind Workflow"
+                        >Click here to bind a GitHub repository to a PlantIT
+                        workflow.</b-popover
                     ></b-col
                 >
                 <b-col
@@ -58,6 +76,7 @@
                     align-self="center"
                     v-if="!contextPublic"
                     ><b-button
+                        id="refresh-workflows"
                         :disabled="workflowsLoading || bindingWorkflow"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
@@ -75,10 +94,18 @@
                         ></b-spinner
                         ><i v-else class="fas fa-redo mr-1"></i
                         >Refresh</b-button
+                    ><b-popover
+                        :show.sync="profile.tutorials"
+                        triggers="manual"
+                        placement="bottomright"
+                        target="refresh-workflows"
+                        title="Refresh Workflows"
+                        >Click here to re-synchronize your workflows with GitHub
+                        (helpful if you have introduced changes to a
+                        <code>plantit.yaml</code> file).</b-popover
                     ></b-col
                 >
-                <b-col></b-col>
-                <b-col md="auto" align-self="center"
+                <b-col md="auto" align-self="center" class="mb-1"
                     ><small
                         >powered by
                         <i class="fab fa-github fa-fw fa-1x"></i></small

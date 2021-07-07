@@ -636,9 +636,7 @@
                                         ? 'text-secondary'
                                         : 'text-dark'
                                 "
-                                ><i
-                                    class="fas fa-question-circle fa-1x fa-fw"
-                                ></i
+                                ><i class="fas fa-seedling fa-1x fa-fw"></i
                                 >About</span
                             ></b-nav-item
                         >
@@ -768,12 +766,26 @@
                                             ')'
                                     "
                                     v-if="notificationsUnread.length > 0"
-                                    class="fa-stack mr-2"
                                     ><i
-                                        class="fas fa-dot-circle fa-stack-2x text-warning"
+                                        v-if="profile.darkMode"
+                                        class="fas fa-bell fa-1x text-light"
                                     ></i
                                     ><i
-                                        class="fas fa-bell fa-stack-1x text-dark"
+                                        v-else
+                                        class="fas fa-bell fa-1x text-dark"
+                                    ></i
+                                ></span>
+                                <span
+                                    :title="'Showing Tutorials'"
+                                    v-if="profile.tutorials"
+                                    class="fa-stack mr-2"
+                                    ><i
+                                        v-if="profile.darkMode"
+                                        class="fas fa-question fa-1x text-light"
+                                    ></i
+                                    ><i
+                                        v-else
+                                        class="fas fa-question fa-1x text-dark"
                                     ></i
                                 ></span>
                                 <b-img
@@ -861,6 +873,32 @@
                                 ><i class="fas fa-moon fa-fw"></i> Dark
                                 Mode</span
                             ></b-dropdown-item
+                        >
+                        <b-dropdown-item
+                            :title="
+                                profile.darkMode ? 'Light Mode' : 'Dark Mode'
+                            "
+                            :class="
+                                profile.darkMode ? 'text-light' : 'text-dark'
+                            "
+                            :link-class="
+                                profile.darkMode
+                                    ? 'text-secondary'
+                                    : 'text-dark'
+                            "
+                            @click="toggleTutorials"
+                        >
+                            <i class="fas fa-question-circle fa-fw"></i>
+                            <b-spinner
+                                small
+                                v-if="togglingTutorials"
+                                label="Loading..."
+                                :variant="profile.tutorials ? 'light' : 'dark'"
+                                class="ml-2 mb-1"
+                            ></b-spinner>
+                            <span v-else-if="profile.tutorials"> Hide</span
+                            ><span v-else> Show</span>
+                            Tutorials</b-dropdown-item
                         >
                         <b-dropdown-item
                             title="
@@ -1064,6 +1102,7 @@ export default {
             tasksSidebarOpen: false,
             // flags
             togglingDarkMode: false,
+            togglingTutorials: false,
             notFound: false,
             // version
             version: 0,
@@ -1232,6 +1271,11 @@ export default {
             this.togglingDarkMode = true;
             await this.$store.dispatch('user/toggleDarkMode');
             this.togglingDarkMode = false;
+        },
+        async toggleTutorials() {
+            this.togglingTutorials = true;
+            await this.$store.dispatch('user/toggleTutorials');
+            this.togglingTutorials = false;
         },
         markAllNotificationsRead() {
             // TODO

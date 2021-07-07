@@ -13,6 +13,7 @@ export const user = {
             djangoProfile: null,
             cyverseProfile: null,
             githubProfile: null,
+            tutorials: false,
             stats: null
         },
         profileLoading: true
@@ -24,8 +25,8 @@ export const user = {
         setDarkMode(state, mode) {
             state.profile.darkMode = mode;
         },
-        setPushNotifications(state, mode) {
-            state.profile.pushNotifications = mode;
+        setPushNotifications(state, notifications) {
+            state.profile.pushNotifications = notifications;
         },
         setDjangoProfile(state, profile) {
             state.profile.djangoProfile = profile;
@@ -35,6 +36,9 @@ export const user = {
         },
         setGithubProfile(state, profile) {
             state.profile.githubProfile = profile;
+        },
+        setTutorials(state, show) {
+            state.profile.tutorials = show;
         },
         setStats(state, stats) {
             state.profile.stats = stats;
@@ -69,6 +73,17 @@ export const user = {
                     if (error.response.status === 500) throw error;
                 });
         },
+        async toggleTutorials({ commit }) {
+            await axios
+                .get('/apis/v1/users/toggle_tutorials/')
+                .then(response => {
+                    commit('setTutorials', response.data['tutorials']);
+                })
+                .catch(error => {
+                    Sentry.captureException(error);
+                    if (error.response.status === 500) throw error;
+                });
+        },
         logIn({ commit }) {
             commit('setLoggedIn', true);
         },
@@ -88,6 +103,12 @@ export const user = {
                     commit(
                         'setDarkMode',
                         response.data.django_profile.dark_mode
+                    );
+
+                    // set tutorials
+                    commit(
+                        'setTutorials',
+                        response.data.django_profile.tutorials
                     );
 
                     // set push notifications
