@@ -347,8 +347,8 @@
                                                         : 'theme-light m-0 p-3'
                                                 "
                                             >
-                                          <template #title>
-                                          <b-button
+                                                <template #title>
+                                                    <b-button
                                                         id="about-workflow"
                                                         :variant="
                                                             profile.darkMode
@@ -359,8 +359,12 @@
                                                         :title="
                                                             `About ${getWorkflow.config.name}`
                                                         "
-                                                    ><i class="fas fa-question fa-fw"></i> About
-                                                    </b-button></template>
+                                                        ><i
+                                                            class="fas fa-question fa-fw"
+                                                        ></i>
+                                                        About
+                                                    </b-button></template
+                                                >
                                                 <b-row class="mb-3">
                                                     <b-col>
                                                         <h5
@@ -987,7 +991,10 @@
                                                         :title="
                                                             `Submit ${getWorkflow.config.name}`
                                                         "
-                                                    ><i class="fas fa-terminal fa-fw"></i> Submit
+                                                        ><i
+                                                            class="fas fa-terminal fa-fw"
+                                                        ></i>
+                                                        Submit
                                                     </b-button>
                                                     <b-popover
                                                         :show.sync="
@@ -998,8 +1005,12 @@
                                                         target="submit-workflow"
                                                         title="Submit Workflow"
                                                         >Click here to configure
-                                                        and submit {{ getWorkflow.config.name }} to
-                                                        an agent.</b-popover
+                                                        and submit
+                                                        {{
+                                                            getWorkflow.config
+                                                                .name
+                                                        }}
+                                                        to an agent.</b-popover
                                                     ></template
                                                 ><b-row>
                                                     <b-col>
@@ -1121,6 +1132,63 @@
                                                                                 taskGuid
                                                                             "
                                                                         ></b-form-input>
+                                                                    </b-col>
+                                                                </b-row>
+                                                            </b-card>
+                                                            <b-card
+                                                                :bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :header-bg-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                border-variant="default"
+                                                                :header-border-variant="
+                                                                    profile.darkMode
+                                                                        ? 'dark'
+                                                                        : 'white'
+                                                                "
+                                                                :text-variant="
+                                                                    profile.darkMode
+                                                                        ? 'white'
+                                                                        : 'dark'
+                                                                "
+                                                                style="min-width: 80rem"
+                                                                class="mb-4"
+                                                            >
+                                                                <b-row>
+                                                                    <b-col>
+                                                                        <h4
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <b-img
+                                                                                class="mb-1"
+                                                                                style="max-width: 25px"
+                                                                                :src="profile.darkMode ? require('../../assets/miappe_icon.png') : require('../../assets/miappe_icon_black.png')"
+                                                                            ></b-img>
+                                                                            MIAPPE
+                                                                        </h4>
+                                                                    </b-col>
+                                                                </b-row>
+                                                                <b-row
+                                                                    ><b-col
+                                                                        ><b
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            Select the MIAPPE investigation and study this task corresponds to.
+                                                                        </b>
                                                                     </b-col>
                                                                 </b-row>
                                                             </b-card>
@@ -2591,7 +2659,10 @@
                                                             variant="success"
                                                             block
                                                         >
-                                                            <i class="fas fa-chevron-right fa-fw"></i> Start<b-spinner
+                                                            <i
+                                                                class="fas fa-chevron-right fa-fw"
+                                                            ></i>
+                                                            Start<b-spinner
                                                                 small
                                                                 v-if="submitted"
                                                                 label="Loading..."

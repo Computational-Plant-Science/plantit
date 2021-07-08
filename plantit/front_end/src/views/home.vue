@@ -128,6 +128,28 @@
                             results.</b-popover
                         >
                     </b-col>
+                    <b-col
+                        ><b-button
+                            id="miappe-button"
+                            block
+                            class="m-1"
+                            :variant="profile.darkMode ? 'dark' : 'light'"
+                            to="/home/miappe/"
+                            ><b-img
+                          class="mb-1"
+                                style="max-width: 18px"
+                                :src="profile.darkMode ? require('../assets/miappe_icon.png') : require('../assets/miappe_icon_black.png')"
+                            ></b-img>
+                            MIAPPE</b-button
+                        ><b-popover
+                            :show.sync="profile.tutorials && isRootPath"
+                            triggers="manual"
+                            placement="bottom"
+                            target="miappe-button"
+                            title="Your MIAPPE metadata"
+                            >Click here to see your MIAPPE metadata.</b-popover
+                        >
+                    </b-col>
                 </b-row>
             </b-container>
             <b-row class="mt-2" v-if="!isRootPath"

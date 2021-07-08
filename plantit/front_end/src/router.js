@@ -14,6 +14,7 @@ import workflows from './components/workflows/workflows.vue';
 import workflow from './components/workflows/workflow.vue';
 import datasets from './components/datasets/datasets.vue';
 import dataset from './components/datasets/dataset.vue';
+import miappe from './components/miappe/miappe.vue';
 import store from './store/store.js';
 
 Vue.use(Router);
@@ -273,6 +274,25 @@ let router = new Router({
                             }
                         }
                     ]
+                },
+                {
+                    path: 'miappe',
+                    name: 'miappe',
+                    component: miappe,
+                    meta: {
+                        title: 'MIAPPE',
+                        crumb: [
+                            {
+                                text: 'Home',
+                                href: '/home'
+                            },
+                            {
+                                text: 'MIAPPE',
+                                href: '/home/miappe'
+                            }
+                        ],
+                        requiresAuth: true
+                    },
                 }
             ]
         },
