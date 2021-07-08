@@ -36,7 +36,7 @@ class RoleAdmin(admin.ModelAdmin):
 
 class FileForm(ModelForm):
     class Meta:
-        model = File
+        model = DataFile
         fields = '__all__'
 
 
@@ -117,7 +117,7 @@ class ObservedVariableAdmin(admin.ModelAdmin):
 admin.site.register(Investigation, InvestigationAdmin)
 admin.site.register(Study, StudyAdmin)
 admin.site.register(Role, RoleAdmin)
-admin.site.register(File, FileAdmin)
+admin.site.register(DataFile, FileAdmin)
 admin.site.register(BiologicalMaterial, BiologicalMaterialAdmin)
 admin.site.register(EnvironmentParameter, EnvironmentParameterAdmin)
 admin.site.register(ExperimentalFactor, ExperimentalFactorAdmin)

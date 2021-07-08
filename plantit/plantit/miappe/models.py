@@ -13,18 +13,22 @@ class Investigation(models.Model):
         CC_BY_NC_SA = 'NS', gettext_lazy('CC BY-NC-SA 4.0')
         CC_BY_NC_ND = 'NN', gettext_lazy('CC BY-NC-ND 4.0')
 
+    owner = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE)
+    team = models.ManyToManyField(User, related_name='investigation_team', null=True, blank=True)
     unique_id = models.CharField(max_length=255, unique=True, blank=True)
     title = models.CharField(max_length=255, blank=False)
     description = models.TextField(blank=True)
     submission_date = models.DateField(blank=True, null=True)
     public_release_date = models.DateField(blank=True, null=True)
     license = models.CharField(max_length=2, choices=License.choices, default=License.CC_BY)
-    miappe_version = models.CharField(max_length=50, blank=True)
+    miappe_version = models.CharField(max_length=50, blank=True, default='1.1')
     associated_publication = models.CharField(max_length=255, blank=True)
 
 
 class Study(models.Model):
-    path = models.CharField(max_length=255, unique=True, blank=True)
+    team = models.ManyToManyField(User, related_name='study_team', null=True, blank=True)
+    investigation = models.ForeignKey(Investigation, null=False, blank=False, on_delete=models.CASCADE)
+    unique_id = models.CharField(max_length=255, unique=True, blank=True)
     title = models.CharField(max_length=250, blank=False)
     description = models.TextField(blank=True)
     start_date = models.DateField(default=timezone.now, blank=True, null=True)
@@ -45,12 +49,7 @@ class Study(models.Model):
     cultural_practices = models.TextField(blank=True)
 
 
-class Role(models.Model):
-    user: User = models.ManyToManyField(User)
-    description: str = models.CharField(max_length=255, blank=True)
-
-
-class File(models.Model):
+class DataFile(models.Model):
     path: str = models.CharField(max_length=1000, blank=True)
     description: str = models.TextField(blank=True)
     version: int = models.IntegerField(default=1, blank=True, null=True)

@@ -10,19 +10,10 @@ from .tasks.consumers import TaskConsumer
 from .users.views import UsersViewSet, IDPViewSet
 
 router = routers.DefaultRouter()
+
+# user info and auth
 router.register('users', UsersViewSet)
 router.register('idp', IDPViewSet, basename='idp')
-router.register('miappe/investigations', InvestigationViewSet)
-router.register('miappe/studies', StudyViewSet)
-router.register('miappe/roles', RoleViewSet)
-router.register('miappe/files', FileViewSet)
-router.register('miappe/biological_materials', BiologicalMaterialViewSet)
-router.register('miappe/environment_parameters', EnvironmentParameterViewSet)
-router.register('miappe/experimental_factors', ExperimentalFactorViewSet)
-router.register('miappe/events', EventViewSet)
-router.register('miappe/observation_units', ObservationUnitViewSet)
-router.register('miappe/samples', SampleViewSet)
-router.register('miappe/observed_variables', ObservedVariableViewSet)
 
 urlpatterns = [
                   url('', include(router.urls)),
@@ -35,6 +26,7 @@ urlpatterns = [
                   url('stats/', include("plantit.stats.urls")),
                   url('notifications/', include("plantit.notifications.urls")),
                   url('feedback/', include("plantit.feedback.urls")),
+                  url('miappe/', include("plantit.miappe.urls")),
               ] + static(r'/favicon.ico', document_root='static/favicon.ico')
 
 websocket_urlpatterns = [

@@ -15,15 +15,9 @@ class StudySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RoleSerializer(serializers.ModelSerializer):
+class DataFileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Role
-        fields = '__all__'
-
-
-class FileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = File
+        model = DataFile
         fields = '__all__'
 
 

@@ -8,6 +8,7 @@ import { users } from '@/store/users';
 import { tasks } from '@/store/tasks';
 import { alerts } from '@/store/alerts';
 import { agents } from '@/store/agents';
+import { miappe } from '@/store/miappe';
 import { workflows } from '@/store/workflows';
 import { datasets } from '@/store/datasets';
 import { notifications } from '@/store/notifications';
@@ -32,6 +33,7 @@ const store = new Vuex.Store({
         tasks,
         alerts,
         agents,
+        miappe,
         datasets,
         workflows,
         notifications

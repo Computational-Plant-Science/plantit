@@ -136,9 +136,13 @@
                             :variant="profile.darkMode ? 'dark' : 'light'"
                             to="/home/miappe/"
                             ><b-img
-                          class="mb-1"
+                                class="mb-1"
                                 style="max-width: 18px"
-                                :src="profile.darkMode ? require('../assets/miappe_icon.png') : require('../assets/miappe_icon_black.png')"
+                                :src="
+                                    profile.darkMode
+                                        ? require('../assets/miappe_icon.png')
+                                        : require('../assets/miappe_icon_black.png')
+                                "
                             ></b-img>
                             MIAPPE</b-button
                         ><b-popover
