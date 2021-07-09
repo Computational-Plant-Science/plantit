@@ -14,7 +14,8 @@ import workflows from './components/workflows/workflows.vue';
 import workflow from './components/workflows/workflow.vue';
 import datasets from './components/datasets/datasets.vue';
 import dataset from './components/datasets/dataset.vue';
-import miappe from './components/miappe/miappe.vue';
+import projects from './components/projects/projects.vue';
+import project from './components/projects/project.vue';
 import store from './store/store.js';
 
 Vue.use(Router);
@@ -276,23 +277,45 @@ let router = new Router({
                     ]
                 },
                 {
-                    path: 'miappe',
-                    name: 'miappe',
-                    component: miappe,
+                    path: 'projects',
+                    name: 'projects',
+                    component: projects,
                     meta: {
-                        title: 'MIAPPE',
+                        title: 'Projects',
                         crumb: [
                             {
                                 text: 'Home',
                                 href: '/home'
                             },
                             {
-                                text: 'MIAPPE',
-                                href: '/home/miappe'
+                                text: 'Projects',
+                                href: '/home/projects'
                             }
                         ],
                         requiresAuth: true
                     },
+                    children: [
+                        {
+                            path: ':owner/:title',
+                            name: 'project',
+                            props: true,
+                            component: project,
+                            meta: {
+                                title: 'Project',
+                                crumb: [
+                                    {
+                                        text: 'Home',
+                                        href: '/home'
+                                    },
+                                    {
+                                        text: 'Projects',
+                                        href: '/home/projects'
+                                    }
+                                ],
+                                requiresAuth: true
+                            }
+                        }
+                    ]
                 }
             ]
         },
@@ -339,6 +362,13 @@ router.beforeEach(async (to, from, next) => {
         while (to.meta.crumb.length > 2) to.meta.crumb.pop();
         to.meta.crumb.push({
             text: `${to.params.name}`
+        });
+    }
+    if (to.name === 'project') {
+        to.meta.title = `Project: ${to.params.owner}/${to.params.title}`;
+        while (to.meta.crumb.length > 2) to.meta.crumb.pop();
+        to.meta.crumb.push({
+            text: `${to.params.owner}/${to.params.title}`
         });
     }
     // if (to.name === 'dataset') to.meta.title = `Dataset: ${to.params.path}`;

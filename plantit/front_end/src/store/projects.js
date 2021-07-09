@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as Sentry from '@sentry/browser';
 import Vue from "vue";
 
-export const miappe = {
+export const projects = {
     namespaced: true,
     state: () => ({
         personal: [],
@@ -10,23 +10,23 @@ export const miappe = {
         loading: true
     }),
     mutations: {
-        setPersonal(state, investigations) {
-            state.personal = investigations;
+        setPersonal(state, projects) {
+            state.personal = projects;
         },
-        setOthers(state, investigations) {
-            state.others = investigations;
+        setOthers(state, projects) {
+            state.others = projects;
         },
         setLoading(state, loading) {
             state.loading = loading;
         },
-        addOrUpdate(state, investigation) {
-            let i = state.personal.findIndex(inv => inv.unique_id === investigation.unique_id);
-            if (i === -1) state.personal.unshift(investigation);
-            else Vue.set(state.personal, i, investigation);
+        addOrUpdate(state, project) {
+            let i = state.personal.findIndex(inv => inv.unique_id === project.unique_id);
+            if (i === -1) state.personal.unshift(project);
+            else Vue.set(state.personal, i, project);
 
-            let j = state.others.findIndex(inv => inv.unique_id === investigation.unique_id);
-            if (j === -1) state.others.unshift(investigation);
-            else Vue.set(state.others, j, investigation);
+            let j = state.others.findIndex(inv => inv.unique_id === project.unique_id);
+            if (j === -1) state.others.unshift(project);
+            else Vue.set(state.others, j, project);
         },
     },
     actions: {
@@ -35,7 +35,7 @@ export const miappe = {
             await axios
                 .get(`/apis/v1/miappe/${rootState.user.profile.djangoProfile.username}/`)
                 .then(response => {
-                    commit('setPersonal', response.data.investigations);
+                    commit('setPersonal', response.data.projects);
                     commit('setLoading', false);
                 })
                 .catch(error => {
@@ -45,11 +45,11 @@ export const miappe = {
                 });
         },
         async loadOthers({ commit, rootState }) {
-            commit('setLoading', true);
+            commit('setLoading', true)
             await axios
                 .get(`/apis/v1/miappe/?team=${rootState.user.profile.djangoProfile.username}`)
                 .then(response => {
-                    commit('setOthers', response.data.investigations);
+                    commit('setOthers', response.data.projects);
                     commit('setLoading', false);
                 })
                 .catch(error => {
@@ -58,13 +58,13 @@ export const miappe = {
                     throw error;
                 });
         },
-        addOrUpdate({ commit }, investigation) {
-            commit('addOrUpdate', investigation);
+        addOrUpdate({ commit }, projects) {
+            commit('addOrUpdate', projects);
         }
     },
     getters: {
-        personalInvestigations: state => state.personal,
-        othersInvestigations: state => state.others,
-        studies: state => state.studies
+        personalProjects: state => state.personal,
+        othersProjects: state => state.others,
+        projectsLoading: state => state.loading,
     }
 };

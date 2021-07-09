@@ -1187,8 +1187,8 @@ export default {
             this.$store.dispatch('datasets/loadPersonal'),
             this.$store.dispatch('datasets/loadShared'),
             this.$store.dispatch('datasets/loadSharing'),
-            this.$store.dispatch('miappe/loadPersonal'),
-            this.$store.dispatch('miappe/loadOthers')
+            this.$store.dispatch('projects/loadPersonal'),
+            this.$store.dispatch('projects/loadOthers')
         ]);
 
         // TODO move websockets to vuex

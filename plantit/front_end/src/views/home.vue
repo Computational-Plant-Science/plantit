@@ -130,11 +130,11 @@
                     </b-col>
                     <b-col
                         ><b-button
-                            id="miappe-button"
+                            id="projects-button"
                             block
                             class="m-1"
                             :variant="profile.darkMode ? 'dark' : 'light'"
-                            to="/home/miappe/"
+                            to="/home/projects/"
                             ><b-img
                                 class="mb-1"
                                 style="max-width: 18px"
@@ -144,14 +144,15 @@
                                         : require('../assets/miappe_icon_black.png')
                                 "
                             ></b-img>
-                            MIAPPE</b-button
+                            Projects</b-button
                         ><b-popover
                             :show.sync="profile.tutorials && isRootPath"
                             triggers="manual"
                             placement="bottom"
-                            target="miappe-button"
-                            title="Your MIAPPE metadata"
-                            >Click here to see your MIAPPE metadata.</b-popover
+                            target="projects-button"
+                            title="Your MIAPPE investigations"
+                            >Click here to see your MIAPPE investigations and
+                            manage your metadata.</b-popover
                         >
                     </b-col>
                 </b-row>
@@ -221,7 +222,7 @@
                                             </b-col>
                                         </b-row>
                                         <b-row>
-                                            <b-col md="auto">
+                                            <b-col md="auto" class="mt-3">
                                                 <h5
                                                     :class="
                                                         profile.darkMode
@@ -243,7 +244,7 @@
                                                 }}</b>
                                                 used
                                             </b-col>
-                                            <b-col md="auto">
+                                            <b-col md="auto" class="mt-3">
                                                 <h5
                                                     :class="
                                                         profile.darkMode
@@ -294,7 +295,7 @@
                                             :data="workflowPlotData"
                                             :layout="workflowPlotLayout"
                                         ></Plotly></b-col></b-col>-->
-                                            <b-col md="auto">
+                                            <b-col md="auto" class="mt-3">
                                                 <h5
                                                     :class="
                                                         profile.darkMode
@@ -322,7 +323,7 @@
                                                 }}</b>
                                                 used
                                             </b-col>
-                                            <b-col md="auto">
+                                            <b-col md="auto" class="mt-3">
                                                 <h5
                                                     :class="
                                                         profile.darkMode
@@ -358,6 +359,26 @@
                                                     )
                                                 }}</b>
                                                 cumulative runtime
+                                            </b-col>
+                                            <b-col md="auto" class="mt-3">
+                                                <h5
+                                                    :class="
+                                                        profile.darkMode
+                                                            ? 'text-light'
+                                                            : 'text-dark'
+                                                    "
+                                                >
+                                                    Projects
+                                                </h5>
+                                                <b>{{
+                                                    personalProjects.length
+                                                }}</b>
+                                                owned
+                                                <br />
+                                                <b>{{
+                                                    othersProjects.length
+                                                }}</b>
+                                                invited
                                             </b-col>
                                         </b-row>
                                     </b-col>
@@ -563,6 +584,7 @@ export default {
             'boundWorkflows',
             'personalWorkflowsLoading'
         ]),
+        ...mapGetters('projects', ['personalProjects', 'othersProjects']),
         isRootPath() {
             return this.$route.name === 'home';
         },

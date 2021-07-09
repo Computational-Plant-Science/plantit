@@ -671,11 +671,7 @@
                                     <b-row
                                         class="mt-1"
                                         v-else
-                                        v-for="user in getAgent.users_authorized.filter(
-                                            p =>
-                                                p.user !==
-                                                profile.djangoProfile.username
-                                        )"
+                                        v-for="user in authorizedUsers"
                                         v-bind:key="user.username"
                                     >
                                         <b-col
@@ -691,7 +687,10 @@
                                                         : ''
                                                 "
                                             ></b-img>
-                                            <i v-else class="far fa-user mr-1"></i>
+                                            <i
+                                                v-else
+                                                class="far fa-user mr-1"
+                                            ></i>
                                             <b
                                                 >{{ user.first_name }}
                                                 {{ user.last_name }}</b
@@ -1117,7 +1116,8 @@
             </div>
             <div class="text-center" v-else>
                 <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                    <i class="fas fa-exclamation-circle fa-fw fa-2x"></i><br/>No unauthorized users found.
+                    <i class="fas fa-exclamation-circle fa-fw fa-2x"></i
+                    ><br />No unauthorized users found.
                 </p>
             </div>
         </b-modal>
@@ -1760,9 +1760,17 @@ export default {
             'personalAgentsLoading',
             'publicAgentsLoading'
         ]),
+        authorizedUsers() {
+            return this.getAgent.users_authorized
+                .filter(p => p.user !== this.profile.djangoProfile.username);
+        },
         otherUsers() {
             return this.allUsers.filter(
-                u => u.username !== this.profile.djangoProfile.username && !this.getAgent.users_authorized.some(ua => ua.username === u.username)
+                u =>
+                    u.username !== this.profile.djangoProfile.username &&
+                    !this.getAgent.users_authorized.some(
+                        ua => ua.username === u.username
+                    )
             );
         },
         unauthorizedBoundWorkflows() {

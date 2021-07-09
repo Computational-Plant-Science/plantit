@@ -38,6 +38,7 @@ from plantit import settings
 from plantit.agents.models import Agent, AgentAccessPolicy, AgentRole, AgentExecutor, AgentTask
 from plantit.datasets.models import DatasetAccessPolicy
 from plantit.docker import parse_image_components, image_exists
+from plantit.miappe.models import Investigation, Study
 from plantit.misc import del_none, format_bind_mount, parse_bind_mount
 from plantit.notifications.models import Notification
 from plantit.redis import RedisClient
@@ -1543,6 +1544,7 @@ def agent_to_dict(agent: Agent, user: User = None) -> dict:
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
+                'github_profile': async_to_sync(get_user_github_profile)(user)
             } for user in users_authorized if user is not None],
         'workflows_authorized': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_authorized],
         'workflows_blocked': [json.loads(redis.get(f"workflows/{workflow.repo_owner}/{workflow.repo_name}")) for workflow in workflows_blocked]
@@ -1565,3 +1567,57 @@ def agent_task_to_dict(task: AgentTask) -> dict:
 
 def has_virtual_memory(agent: Agent) -> bool:
     return agent.header_skip == '--mem'
+
+
+# MIAPPE
+
+def person_to_dict(user: User, role: str) -> dict:
+    return {
+        'name': f"{user.first_name} {user.last_name}",
+        'email': user.email,
+        'id': user.username,
+        'affiliation': user.profile.institution,
+        'role': role,
+    }
+
+
+def study_to_dict(study: Study) -> dict:
+    team = [person_to_dict(person, 'Researcher') for person in study.team.all()]
+    return {
+        'unique_id': study.unique_id,
+        'title': study.title,
+        'description': study.description,
+        'start_date': study.start_date,
+        'end_date': study.end_date,
+        'contact_institution': study.contact_institution,
+        'country': study.country,
+        'site_name': study.site_name if study.site_name != '' else None,
+        'latitude': study.latitude,
+        'longitude': study.longitude,
+        'altitude': study.altitude,
+        'experimental_design_description': study.experimental_design_description if study.experimental_design_description != '' else None,
+        'experimental_design_type': study.experimental_design_type if study.experimental_design_type != '' else None,
+        'experimental_design_map': study.experimental_design_map if study.experimental_design_map != '' else None,
+        'observation_unit_level_hierarchy': study.observation_unit_level_hierarchy if study.observation_unit_level_hierarchy != '' else None,
+        'observation_unit_description': study.observation_unit_description if study.observation_unit_description != '' else None,
+        'growth_facility_description': study.growth_facility_description if study.growth_facility_description != '' else None,
+        'growth_facility_type': study.growth_facility_type if study.growth_facility_type != '' else None,
+        'cultural_practices': study.cultural_practices if study.cultural_practices != '' else None,
+        'team': team,
+    }
+
+
+def project_to_dict(project: Investigation) -> dict:
+    studies = [study_to_dict(study) for study in Study.objects.filter(investigation=project)]
+    team = [person_to_dict(person, 'Researcher') for person in project.team.all()]
+    return {
+        'unique_id': project.unique_id,
+        'owner': project.owner.username,
+        'title': project.title,
+        'description': project.description,
+        'submission_date': project.submission_date,
+        'public_release_date': project.public_release_date,
+        'associated_publication': project.associated_publication,
+        'studies': studies,
+        'team': team
+    }
