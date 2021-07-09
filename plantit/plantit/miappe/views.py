@@ -32,23 +32,23 @@ def suggested_experimental_factors(request):
 def list_or_create(request):
     if request.method == 'GET':
         team = request.GET.get('team', None)
-        projects = [project_to_dict(investigation) for investigation in
+        projects = [project_to_dict(project) for project in
                     (Investigation.objects.all() if team is None else Investigation.objects.filter(team__username=team))]
         return JsonResponse({'projects': projects})
     elif request.method == 'POST':
         body = json.loads(request.body.decode('utf-8'))
-        unique_id = f"plantit-projects-{request.user.username}-{body['title']}"
+        unique_id = f"plantit-projects-{request.user.username}-{body['title'].replace(' ', '-')}"
 
         if Investigation.objects.filter(unique_id=unique_id).count() > 0:
             return HttpResponseBadRequest('Duplicate title')
 
-        investigation = Investigation.objects.create(
+        project = Investigation.objects.create(
             owner=request.user,
             title=body['title'],
-            unique_id=f"plantit-projects-{request.user.username}-{body['title']}",
+            unique_id=unique_id,
             description=body['description'] if 'description' in body else None)
 
-        return JsonResponse(project_to_dict(investigation))
+        return JsonResponse(project_to_dict(project))
 
 
 @login_required
@@ -60,44 +60,36 @@ def list_by_owner(request, owner):
 
 
 @login_required
-def get_by_owner_and_unique_id(request, owner, id):
-    if request.method != 'GET': return HttpResponseNotAllowed()
+def get_or_delete(request, owner, title):
     if request.user.username != owner: return HttpResponseForbidden()
 
-    try:
-        investigation = Investigation.objects.get(owner=request.user, unique_id=id)
-        return JsonResponse(project_to_dict(investigation))
-    except:
-        return HttpResponseNotFound()
+    if request.method == 'GET':
+        try:
+            project = Investigation.objects.get(owner=request.user, title=title)
+            return JsonResponse(project_to_dict(project))
+        except:
+            return HttpResponseNotFound()
+    elif request.method == 'DELETE':
+        project = Investigation.objects.get(owner=request.user, title=title)
+        project.delete()
+        projects = [project_to_dict(project) for project in Investigation.objects.filter(owner=request.user)]
+        return JsonResponse({'projects': projects})
 
 
 @login_required
-def exists(request, owner, id):
+def exists(request, owner, title):
     if request.method != 'GET': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
 
     try:
-        investigation = Investigation.objects.get(owner=request.user, unique_id=id)
+        Investigation.objects.get(owner=request.user, title=title)
         return JsonResponse({'exists': True})
     except:
         return JsonResponse({'exists': False})
 
 
 @login_required
-def delete(request, owner, id):
-    if request.method != 'DELETE': return HttpResponseNotAllowed()
-    if request.user.username != owner: return HttpResponseForbidden()
-
-    try:
-        investigation = Investigation.objects.get(owner=request.user, unique_id=id)
-        investigation.delete()
-        return HttpResponse()
-    except:
-        return HttpResponseNotFound()
-
-
-@login_required
-def add_team_member(request, owner, id):
+def add_team_member(request, owner, title):
     if request.method != 'POST': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
 
@@ -105,19 +97,19 @@ def add_team_member(request, owner, id):
     username = body['username']
 
     try:
-        investigation = Investigation.objects.get(owner=request.user, unique_id=id)
+        project = Investigation.objects.get(owner=request.user, title=title)
         user = User.objects.get(username=username)
     except:
         return HttpResponseNotFound()
 
-    investigation.team.add(user)
-    investigation.save()
+    project.team.add(user)
+    project.save()
 
-    return JsonResponse(project_to_dict(investigation))
+    return JsonResponse(project_to_dict(project))
 
 
 @login_required
-def remove_team_member(request, owner, id):
+def remove_team_member(request, owner, title):
     if request.method != 'POST': return HttpResponseNotAllowed()
     if request.user.username != owner: return HttpResponseForbidden()
 
@@ -125,12 +117,48 @@ def remove_team_member(request, owner, id):
     username = body['username']
 
     try:
-        investigation = Investigation.objects.get(owner=request.user, unique_id=id)
+        project = Investigation.objects.get(owner=request.user, title=title)
         user = User.objects.get(username=username)
     except:
         return HttpResponseNotFound()
 
-    investigation.team.remove(user)
-    investigation.save()
+    project.team.remove(user)
+    project.save()
 
-    return JsonResponse(project_to_dict(investigation))
+    return JsonResponse(project_to_dict(project))
+
+
+@login_required
+def add_study(request, owner, title):
+    if request.method != 'POST': return HttpResponseNotAllowed()
+    if request.user.username != owner: return HttpResponseForbidden()
+
+    body = json.loads(request.body.decode('utf-8'))
+    study_title = body['title']
+    study_description = body['description']
+
+    try:
+        project = Investigation.objects.get(owner=request.user, title=title)
+    except:
+        return HttpResponseNotFound()
+
+    study = Study.objects.create(investigation=project, title=study_title, description=study_description)
+    return JsonResponse(project_to_dict(project))
+
+
+@login_required
+def remove_study(request, owner, title):
+    if request.method != 'POST': return HttpResponseNotAllowed()
+    if request.user.username != owner: return HttpResponseForbidden()
+
+    body = json.loads(request.body.decode('utf-8'))
+    study_title = body['title']
+
+    try:
+        project = Investigation.objects.get(owner=request.user, title=title)
+        study = Study.objects.get(investigation=project, title=study_title)
+    except:
+        return HttpResponseNotFound()
+
+    study.delete()
+    return JsonResponse(project_to_dict(project))

@@ -58,6 +58,9 @@ export const projects = {
                     throw error;
                 });
         },
+        setPersonal({commit}, projects) {
+            commit('setPersonal', projects);
+        },
         addOrUpdate({ commit }, projects) {
             commit('addOrUpdate', projects);
         }

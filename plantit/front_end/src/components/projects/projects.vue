@@ -24,31 +24,8 @@
                             ></b-img>
                             {{ sharedContext ? 'Shared' : 'Your' }} MIAPPE
                             Projects
-                        </h2></b-col
+                        </h2> </b-col
                     ><b-col md="auto" class="ml-0 mb-1" align-self="center"
-                        ><b-button
-                            id="create-project"
-                            :disabled="projectsLoading"
-                            :variant="
-                                profile.darkMode ? 'outline-light' : 'white'
-                            "
-                            size="sm"
-                            class="ml-0 mt-0 mr-0"
-                            @click="showCreateProjectModal"
-                            title="Create a new project"
-                            v-b-tooltip:hover
-                            ><i class="fas fa-plus"></i> Create</b-button
-                        ><b-popover
-                            :show.sync="profile.tutorials"
-                            triggers="manual"
-                            placement="left"
-                            target="create-project"
-                            title="Create a new project"
-                            >Click here to create a new MIAPPE
-                            investigation.</b-popover
-                        ></b-col
-                    >
-                    <b-col md="auto" class="ml-0 mb-1" align-self="center"
                         ><b-button
                             id="switch-projects-context"
                             :disabled="projectsLoading"
@@ -78,9 +55,83 @@
                             >Click here to toggle between your projects and
                             those other users have invited you to.</b-popover
                         ></b-col
+                    ><b-col md="auto" class="ml-0 mb-1" align-self="center"
+                        ><b-button
+                            id="create-project"
+                            :disabled="projectsLoading"
+                            :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
+                            size="sm"
+                            class="ml-0 mt-0 mr-0"
+                            @click="showCreateProjectModal"
+                            title="Create a new project"
+                            v-b-tooltip:hover
+                            ><i class="fas fa-plus"></i> Create</b-button
+                        ><b-popover
+                            :show.sync="profile.tutorials"
+                            triggers="manual"
+                            placement="left"
+                            target="create-project"
+                            title="Create a new project"
+                            >Click here to create a new MIAPPE
+                            investigation.</b-popover
+                        ></b-col
+                    >
+                    <b-col
+                        md="auto"
+                        class="ml-0 mb-1"
+                        align-self="center"
+                        v-if="!sharedContext"
+                        ><b-button
+                            id="refresh-workflows"
+                            :disabled="projectsLoading"
+                            :variant="
+                                profile.darkMode ? 'outline-light' : 'white'
+                            "
+                            size="sm"
+                            v-b-tooltip.hover
+                            title="Refresh projects"
+                            @click="refreshProjects"
+                            class="ml-0 mt-0 mr-0"
+                        >
+                            <b-spinner
+                                small
+                                v-if="projectsLoading"
+                                label="Refreshing..."
+                                :variant="profile.darkMode ? 'light' : 'dark'"
+                                class="mr-1"
+                            ></b-spinner
+                            ><i v-else class="fas fa-redo mr-1"></i
+                            >Refresh</b-button
+                        ><b-popover
+                            :show.sync="profile.tutorials"
+                            triggers="manual"
+                            placement="bottomright"
+                            target="refresh-projects"
+                            title="Refresh Projects"
+                            >Click here to refresh the list of
+                            projects.</b-popover
+                        ></b-col
                     >
                 </b-row>
-                <b-row
+                <b-row v-if="projectsLoading" class="mt-2">
+                    <b-col>
+                        <b-spinner
+                            small
+                            label="Loading..."
+                            :variant="profile.darkMode ? 'light' : 'dark'"
+                            class="mr-1"
+                        ></b-spinner
+                        ><span
+                            :class="
+                                profile.darkMode ? 'text-white' : 'text-dark'
+                            "
+                            >Loading projects...</span
+                        >
+                    </b-col>
+                </b-row>
+                <b-row v-else
                     ><b-col v-if="!sharedContext">
                         <span v-if="personalProjects.length === 0"
                             >You haven't started any projects.</span
@@ -320,15 +371,13 @@
                                     <b-row>
                                         <b-col><h5>Team Members</h5></b-col>
                                     </b-row>
-                                    <span v-if="team(project).length === 1"
+                                    <span v-if="project.team.length === 1"
                                         >You are the only team member in this
                                         project.</span
                                     >
                                     <b-card-group>
                                         <b-card
-                                            v-for="member in team(
-                                                project
-                                            ).filter(
+                                            v-for="member in project.team.filter(
                                                 u =>
                                                     u.id !==
                                                     profile.djangoProfile
@@ -370,6 +419,10 @@
                     ></b-row
                 >
             </div>
+            <router-view
+                v-else
+                :class="profile.darkMode ? 'theme-dark' : 'theme-light'"
+            ></router-view>
         </b-container>
         <b-modal
             id="createProject"
@@ -432,95 +485,6 @@
                 ></b-form-textarea>
             </b-form-group>
         </b-modal>
-        <b-modal
-            id="addTeamMember"
-            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-            centered
-            size="lg"
-            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-            hide-header
-            hide-header-close
-            hide-footer
-        >
-            <b-row class="mb-2"
-                ><b-col
-                    ><h4 :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                        Select a user
-                    </h4></b-col
-                >
-                <b-col md="auto"
-                    ><b-button
-                        :disabled="usersLoading"
-                        :variant="profile.darkMode ? 'outline-light' : 'white'"
-                        size="sm"
-                        v-b-tooltip.hover
-                        title="Rescan users"
-                        @click="refreshUsers"
-                        class="text-right"
-                    >
-                        <b-spinner
-                            small
-                            v-if="usersLoading"
-                            label="Rescanning..."
-                            :variant="profile.darkMode ? 'light' : 'dark'"
-                            class="mr-1"
-                        ></b-spinner
-                        ><i v-else class="fas fa-redo mr-1"></i>Rescan
-                        Users</b-button
-                    ></b-col
-                >
-            </b-row>
-            <div v-if="otherUsers.length !== 0">
-                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                    Select a user to invite to this project.
-                </p>
-                <b-row class="mb-2"
-                    ><b-col
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                        ><small
-                            >{{ otherUsers.length }} user(s) found</small
-                        ></b-col
-                    ></b-row
-                >
-                <b-row v-for="user in otherUsers" v-bind:key="user.username">
-                    <b-col
-                        :class="profile.darkMode ? 'text-light' : 'text-dark'"
-                    >
-                        <b-img
-                            v-if="user.github_profile"
-                            class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
-                            style="width: 2rem; height: 2rem; left: -3px; top: 1.5px; border: 1px solid #e2e3b0;"
-                            rounded="circle"
-                            :src="
-                                user.github_profile
-                                    ? user.github_profile.avatar_url
-                                    : ''
-                            "
-                        ></b-img>
-                        <i v-else class="far fa-user fa-fw mr-1"></i>
-                        <b>{{ user.first_name }} {{ user.last_name }}</b> ({{
-                            user.username
-                        }})
-                    </b-col>
-                    <b-col md="auto" align-self="center"
-                        ><b-button
-                            :disabled="addingTeamMember"
-                            variant="warning"
-                            @click="addTeamMember(selectedInvestigation, user)"
-                            >Select</b-button
-                        ></b-col
-                    >
-                </b-row>
-            </div>
-            <div class="text-center" v-else>
-                <p :class="profile.darkMode ? 'text-light' : 'text-dark'">
-                    <i class="fas fa-exclamation-circle fa-fw fa-2x"></i
-                    ><br />No other users found.
-                </p>
-            </div>
-        </b-modal>
     </div>
 </template>
 
@@ -554,6 +518,11 @@ export default {
         };
     },
     methods: {
+        async refreshProjects() {
+            if (this.sharedContext)
+                await this.$store.dispatch('projects/loadOthers');
+            else await this.$store.dispatch('projects/loadPersonal');
+        },
         showCreateProjectModal() {
             this.$bvModal.show('createProject');
         },
@@ -564,9 +533,9 @@ export default {
             this.projectTitle = '';
             this.projectDescription = '';
         },
-        onProjectTitleChange() {
+        async onProjectTitleChange() {
             this.projectTitleLoading = true;
-            return axios
+            await axios
                 .get(
                     `/apis/v1/miappe/${this.profile.djangoProfile.username}/${this.projectTitle}/exists/`
                 )
@@ -598,7 +567,7 @@ export default {
                     if (response.status === 200) {
                         await Promise.all([
                             this.$store.dispatch(
-                                'miappe/addOrUpdate',
+                                'projects/addOrUpdate',
                                 response.data
                             ),
                             this.$store.dispatch('alerts/add', {
@@ -644,18 +613,10 @@ export default {
             if (found === undefined) return undefined;
             return found.github_profile.avatar_url;
         },
-        async refreshUsers() {
-            await this.$store.dispatch('users/loadAll');
-        },
         prettify: function(date) {
             return `${moment(date).fromNow()} (${moment(date).format(
                 'MMMM Do YYYY, h:mm a'
             )})`;
-        }
-    },
-    watch: {
-        personalInvestigations() {
-            //
         }
     },
     computed: {
@@ -673,10 +634,12 @@ export default {
             return this.selectedInvestigation !== null;
         },
         projectUniqueId() {
-            return `plantit-projects-${this.profile.djangoProfile.username}-${this.projectTitle}`;
+            return `plantit-projects-${
+                this.profile.djangoProfile.username
+            }-${this.projectTitle.replace(' ', '-')}`;
         },
         projectTitleValid() {
-            return this.projectTitle !== '';
+            return this.projectTitle !== '' && !this.projectTitleExists;
         },
         projectDescriptionValid() {
             return this.projectDescription !== '';

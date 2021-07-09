@@ -28,21 +28,25 @@
             >
                 {{ project.description }}
             </h6>
-            <small v-if="project.submission_date !== null"
-                >Submission: {{ prettify(project.submission_date) }}</small
-            >
-            <br />
-            <small v-if="project.public_release_date !== null"
-                >Release: {{ prettify(project.public_release_date) }}</small
-            >
-            <br />
-            <small v-if="project.studies.length !== 0"
-                >Studies: {{ project.studies.length }}</small
-            >
-            <br />
-            <small v-if="project.team.length !== 0"
-                >Team Members: {{ project.team.length }}</small
-            >
+            <span v-if="project.submission_date !== null">
+                <small
+                    >Submission: {{ prettify(project.submission_date) }}</small
+                >
+                <br />
+            </span>
+            <span v-if="project.public_release_date !== null">
+                <small
+                    >Release: {{ prettify(project.public_release_date) }}</small
+                >
+                <br />
+            </span>
+            <span v-if="project.studies.length !== 0">
+                <small>Studies: {{ project.studies.length }}</small>
+                <br />
+            </span>
+            <span v-if="project.team.length !== 0">
+                <small>Team Members: {{ project.team.length }}</small>
+            </span>
         </b-card-body>
     </b-card>
 </template>
