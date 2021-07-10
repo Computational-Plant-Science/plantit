@@ -10,7 +10,6 @@
             ></b-row>
             <b-card
                 v-else
-                :title="getProject.title"
                 :sub-title="getProject.unique_id"
                 :bg-variant="profile.darkMode ? 'dark' : 'white'"
                 :header-text-variant="profile.darkMode ? 'white' : 'dark'"
@@ -21,7 +20,15 @@
                 <b-card-body>
                     <b-row
                         ><b-col>
-                            <h4>{{ getProject.title }}</h4> </b-col
+                            <h4
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                {{ getProject.title }}
+                            </h4> </b-col
                         ><b-col
                             v-if="ownsProject"
                             class="m-0"
@@ -59,7 +66,16 @@
                     </span>
                     <br />
                     <b-row>
-                        <b-col><h5>Studies</h5></b-col
+                        <b-col
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Studies
+                            </h5></b-col
                         ><b-col md="auto"
                             ><b-button
                                 id="add-study"
@@ -98,47 +114,35 @@
                     <span v-if="getProject.studies.length === 0"
                         >This project has no studies.</span
                     >
-                    <b-card-group>
-                        <b-card
-                            :bg-variant="profile.darkMode ? 'dark' : 'white'"
-                            :header-text-variant="
-                                profile.darkMode ? 'white' : 'dark'
-                            "
-                            :text-variant="profile.darkMode ? 'white' : 'dark'"
-                            :body-text-variant="
-                                profile.darkMode ? 'white' : 'dark'
-                            "
-                            v-for="study in getProject.studies"
-                            v-bind:key="study.title"
-                            no-body
-                            ><b-card-body>
-                                <b-row
-                                    ><b-col>
-                                        <b>{{ study.title }}</b></b-col
-                                    ><b-col
-                                        class="ml-0"
-                                        md="auto"
-                                        align-self="middle"
-                                        ><b-button
-                                            class="ml-0"
-                                            variant="outline-danger"
-                                            size="sm"
-                                            v-b-tooltip.hover
-                                            :title="
-                                                'Remove ' +
-                                                    study.title +
-                                                    ' from this project'
-                                            "
-                                            @click="showRemoveStudyModal(study)"
-                                        >
-                                            <i
-                                                class="fas fa-times-circle fa-fw"
-                                            ></i>
-                                            Remove
-                                        </b-button></b-col
-                                    ></b-row
+                    <div
+                        class="mt-2 pt-1"
+                        style="border-top: 1px solid lightgray"
+                        v-for="study in getProject.studies"
+                        v-bind:key="study.title"
+                    >
+                        <b-row
+                            ><b-col>
+                                <b>{{ study.title }}</b></b-col
+                            ><b-col class="ml-0" md="auto" align-self="center"
+                                ><b-button
+                                    class="ml-0"
+                                    variant="outline-danger"
+                                    size="sm"
+                                    v-b-tooltip.hover
+                                    :title="
+                                        'Remove ' +
+                                            study.title +
+                                            ' from this project'
+                                    "
+                                    @click="showRemoveStudyModal(study)"
                                 >
-                                <span
+                                    <i class="fas fa-times-circle fa-fw"></i>
+                                    Remove
+                                </b-button></b-col
+                            ></b-row
+                        ><b-row
+                            ><b-col
+                                ><span
                                     v-if="
                                         study.description !== null &&
                                             study.description !== ''
@@ -243,13 +247,23 @@
                                         >Cultural Practices:
                                         {{ study.cultural_practices }}</small
                                     >
-                                </span>
-                            </b-card-body></b-card
-                        ></b-card-group
-                    >
+                                </span></b-col
+                            ></b-row
+                        >
+                    </div>
                     <br />
+                    <br/>
                     <b-row>
-                        <b-col><h5>Team Members</h5></b-col
+                        <b-col
+                            ><h5
+                                :class="
+                                    profile.darkMode
+                                        ? 'text-light'
+                                        : 'text-dark'
+                                "
+                            >
+                                Team Members
+                            </h5></b-col
                         ><b-col md="auto"
                             ><b-button
                                 id="add-member"
@@ -291,7 +305,7 @@
                     <b-row
                         v-for="member in getProject.team"
                         v-bind:key="member.id"
-                        ><b-col align-self="middle"
+                        ><b-col align-self="center"
                             ><b-img
                                 v-if="avatarUrl(member) !== ''"
                                 class="avatar m-0 mb-1 mr-2 p-0 github-hover logo"
@@ -302,7 +316,7 @@
                             <b>{{ member.name }}</b>
                             ({{ member.id }}),
                             <span>{{ member.affiliation }}</span></b-col
-                        ><b-col class="ml-0" md="auto" align-self="middle"
+                        ><b-col class="ml-0" md="auto" align-self="center"
                             ><b-button
                                 class="ml-0"
                                 variant="outline-danger"

@@ -136,13 +136,14 @@ def add_study(request, owner, title):
     body = json.loads(request.body.decode('utf-8'))
     study_title = body['title']
     study_description = body['description']
+    unique_id = f"plantit-projects-{request.user.username}-{title.replace(' ', '-')}-{study_title.replace(' ', '-')}"
 
     try:
         project = Investigation.objects.get(owner=request.user, title=title)
     except:
         return HttpResponseNotFound()
 
-    study = Study.objects.create(investigation=project, title=study_title, description=study_description)
+    study = Study.objects.create(investigation=project, title=study_title, unique_id=unique_id, description=study_description)
     return JsonResponse(project_to_dict(project))
 
 

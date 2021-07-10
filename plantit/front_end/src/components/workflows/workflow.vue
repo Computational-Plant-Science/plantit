@@ -1172,11 +1172,51 @@
                                                                             <b-img
                                                                                 class="mb-1"
                                                                                 style="max-width: 25px"
-                                                                                :src="profile.darkMode ? require('../../assets/miappe_icon.png') : require('../../assets/miappe_icon_black.png')"
+                                                                                :src="
+                                                                                    profile.darkMode
+                                                                                        ? require('../../assets/miappe_icon.png')
+                                                                                        : require('../../assets/miappe_icon_black.png')
+                                                                                "
                                                                             ></b-img>
                                                                             MIAPPE
-                                                                        </h4>
-                                                                    </b-col>
+                                                                        </h4> </b-col
+                                                                    ><b-col
+                                                                        md="auto"
+                                                                        ><h5
+                                                                            :class="
+                                                                                profile.darkMode
+                                                                                    ? 'text-white'
+                                                                                    : 'text-dark'
+                                                                            "
+                                                                        >
+                                                                            <span
+                                                                                v-if="
+                                                                                    selectedProject !==
+                                                                                        null
+                                                                                "
+                                                                                >{{
+                                                                                    selectedProject.title
+                                                                                }}</span
+                                                                            >
+                                                                            <span
+                                                                                v-if="
+                                                                                    selectedStudy !==
+                                                                                        null
+                                                                                "
+                                                                                >, {{
+                                                                                    selectedStudy.title
+                                                                                }}</span
+                                                                            >
+                                                                            <span
+                                                                                v-if="
+                                                                                    selectedProject ===
+                                                                                        null
+                                                                                "
+                                                                                ><i
+                                                                                    class="text-danger fas fa-exclamation fa-fw"
+                                                                                ></i
+                                                                            ></span><span v-else><i class="fas fa-check fa-fw ml-1 text-success"></i></span></h5
+                                                                    ></b-col>
                                                                 </b-row>
                                                                 <b-row
                                                                     ><b-col
@@ -1187,10 +1227,102 @@
                                                                                     : 'text-dark'
                                                                             "
                                                                         >
-                                                                            Select the MIAPPE investigation and study this task corresponds to.
+                                                                            Select
+                                                                            the
+                                                                            MIAPPE
+                                                                            investigation
+                                                                            and
+                                                                            study
+                                                                            this
+                                                                            task
+                                                                            corresponds
+                                                                            to.
                                                                         </b>
                                                                     </b-col>
                                                                 </b-row>
+                                                                <b-row
+                                                                    class="mt-1"
+                                                                    ><b-col
+                                                                        cols="3"
+                                                                        >Project</b-col
+                                                                    ><b-col
+                                                                        cols="9"
+                                                                        v-if="
+                                                                            selectedProject !==
+                                                                                null
+                                                                        "
+                                                                        >Study</b-col
+                                                                    ></b-row
+                                                                >
+                                                                <b-row
+                                                                    class="mt-1"
+                                                                    v-for="project in personalProjects"
+                                                                    v-bind:key="
+                                                                        project.title
+                                                                    "
+                                                                    ><b-col
+                                                                        style="border-left: 1px solid lightgray"
+                                                                        cols="3"
+                                                                    >
+                                                                        <b-button
+                                                                            :variant="
+                                                                                profile.darkMode
+                                                                                    ? 'outline-light'
+                                                                                    : 'white'
+                                                                            "
+                                                                            @click="
+                                                                                selectedProject = project
+                                                                            "
+                                                                            >{{
+                                                                                project.title
+                                                                            }}<i
+                                                                                v-if="
+                                                                                    selectedProject !==
+                                                                                        null &&
+                                                                                        selectedProject.title ===
+                                                                                            project.title
+                                                                                "
+                                                                                class="fas fa-check fa-fw text-success ml-1"
+                                                                            ></i
+                                                                        ></b-button> </b-col
+                                                                    ><b-col
+                                                                        style="border-left: 1px solid lightgray"
+                                                                        cols="9"
+                                                                        v-if="
+                                                                            selectedProject !==
+                                                                                null
+                                                                        "
+                                                                        ><b-row
+                                                                            v-for="study in project.studies"
+                                                                            v-bind:key="
+                                                                                study.title
+                                                                            "
+                                                                            ><b-col
+                                                                                ><b-button
+                                                                                    :disabled="
+                                                                                        project.title !==
+                                                                                            selectedProject.title
+                                                                                    "
+                                                                                    :variant="
+                                                                                        profile.darkMode
+                                                                                            ? 'outline-light'
+                                                                                            : 'white'
+                                                                                    "
+                                                                                    @click="
+                                                                                        selectedStudy = study
+                                                                                    "
+                                                                                    >{{
+                                                                                        study.title
+                                                                                    }}<i
+                                                                                        v-if="
+                                                                                            selectedStudy !==
+                                                                                                null &&
+                                                                                                selectedStudy.title ===
+                                                                                                    study.title && selectedProject === project
+                                                                                        "
+                                                                                        class="fas fa-check fa-fw ml-1 text-success"
+                                                                                    ></i></b-button></b-col></b-row></b-col
+                                                                ></b-row>
                                                             </b-card>
                                                             <b-card
                                                                 :bg-variant="
@@ -2033,11 +2165,11 @@
                                                                                     selectedAgent.name !==
                                                                                         ''
                                                                                 "
-                                                                                class="fas fa-check text-success fa-fw"
+                                                                                class="fas fa-check text-success fa-fw ml-1"
                                                                             ></i>
                                                                             <i
                                                                                 v-else
-                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                                class="fas fa-exclamation text-danger fa-fw ml-1"
                                                                             ></i></h5
                                                                     ></b-col>
                                                                 </b-row>
@@ -3100,6 +3232,8 @@ export default {
     },
     data: function() {
         return {
+            selectedProject: null,
+            selectedStudy: null,
             togglingPublic: false,
             selectedInput: null,
             selectedInputLoading: false,
@@ -3682,6 +3816,7 @@ export default {
             'sharedDatasetsLoading',
             'sharingDatasetsLoading'
         ]),
+        ...mapGetters('projects', ['personalProjects', 'othersProjects']),
         validGuestAgents() {
             return this.guestAgents.filter(
                 a =>
