@@ -147,7 +147,7 @@ def poll_job_status(guid: str, auth: dict):
 
         task.save()
         if task.is_complete:
-            list_task_results.s(guid).apply_async()
+            list_task_results.s(guid, auth).apply_async()
             final_message = f"{task.agent.executor} job {task.job_id} {job_status}" + (
                 f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             log_task_status(task, [final_message])
