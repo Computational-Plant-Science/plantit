@@ -155,8 +155,7 @@
                                                 >{{
                                                     task.project.title
                                                 }}</b-badge
-                                            ><small
-                                                v-if="task.study !== null"
+                                            ><small v-if="task.study !== null"
                                                 ><b-badge
                                                     class="mr-2"
                                                     variant="info"
@@ -377,6 +376,18 @@
                                             >
                                         </b-col>
                                     </b-row>
+                                    <span v-if="task.project !== null">
+                                        <b-badge class="mr-2" variant="info">{{
+                                            task.project.title
+                                        }}</b-badge
+                                        ><small v-if="task.study !== null"
+                                            ><b-badge
+                                                class="mr-2"
+                                                variant="info"
+                                                >{{ task.study.title }}</b-badge
+                                            ></small
+                                        ></span
+                                    >
                                     <b-row
                                         ><b-col>
                                             <div
