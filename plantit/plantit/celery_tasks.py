@@ -152,7 +152,7 @@ def poll_job_status(guid: str, auth: dict):
                 f" after {job_walltime}" if job_walltime is not None else '') + f", cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             log_task_status(task, [final_message])
             async_to_sync(push_task_event)(task)
-            cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
+            cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
 
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})

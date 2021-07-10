@@ -773,12 +773,8 @@ def configure_task_environment(task: Task, ssh: SSH):
 
     list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
 
-    log_task_status(task, [f"Uploading task executable"])
-    async_to_sync(push_task_event)(task)
-
+    log_task_status(task, [f"Uploading task"])
     upload_task_executables(task, ssh, cli_options)
-
-    log_task_status(task, [f"Uploading task definition"])
     async_to_sync(push_task_event)(task)
 
     with ssh.client.open_sftp() as sftp:
@@ -792,6 +788,9 @@ def configure_task_environment(task: Task, ssh: SSH):
                 cli_options['input']['path'] = f"input/{path.rpartition('/')[2]}"
 
         if task.agent.executor == AgentExecutor.LOCAL: del cli_options['jobqueue']
+        else: cli_options['jobqueue'] = {
+            'slurm': cli_options['jobqueue']
+        }
 
         sftp.chdir(work_dir)
         with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
