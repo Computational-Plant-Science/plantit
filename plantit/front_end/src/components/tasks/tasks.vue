@@ -191,8 +191,8 @@
                                             "
                                         >
                                         </b-spinner>
-                                        <small v-if="!task.is_complete"
-                                            >Running</small
+                                        <b-badge variant="warning" v-if="!task.is_complete"
+                                            >Running</b-badge
                                         >
                                         <b-badge
                                             :variant="

@@ -22,7 +22,7 @@ from plantit.github import get_repo
 from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
-from plantit.tasks.models import Task, TaskStatus
+from plantit.tasks.models import Task, TaskStatus, JobQueueTask
 from plantit.utils import log_task_status, push_task_event, get_task_ssh_client, configure_task_environment, execute_local_task, submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_container_logs, remove_task_orchestration_logs, get_task_result_files, \
     repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache
@@ -33,7 +33,10 @@ logger = get_task_logger(__name__)
 @app.task(track_started=True)
 def submit_task(guid: str, auth: dict):
     try:
-        task = Task.objects.get(guid=guid)
+        try:
+            task = JobQueueTask.objects.get(guid=guid)
+        except:
+            task = Task.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
         return
@@ -95,7 +98,7 @@ def submit_task(guid: str, auth: dict):
 @app.task()
 def poll_job_status(guid: str, auth: dict):
     try:
-        task = Task.objects.get(guid=guid)
+        task = JobQueueTask.objects.get(guid=guid)
     except:
         logger.warning(f"Could not find task with GUID {guid} (might have been deleted?)")
         return
@@ -117,8 +120,8 @@ def poll_job_status(guid: str, auth: dict):
 
     # otherwise poll the scheduler for its status
     try:
-        job_status = get_jobqueue_task_job_status(task)
-        job_walltime = get_jobqueue_task_job_walltime(task)
+        job_status = get_jobqueue_task_job_status(task, auth)
+        job_walltime = get_jobqueue_task_job_walltime(task, auth)
         task.job_status = job_status
         task.job_elapsed_walltime = job_walltime
 

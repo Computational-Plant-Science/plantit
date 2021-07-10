@@ -105,7 +105,7 @@ class Task(models.Model):
 
 
 class JobQueueTask(Task):
-    job_id = models.CharField(max_length=7, null=True, blank=True)
+    job_id = models.CharField(max_length=50, null=True, blank=True)
     job_status = models.CharField(max_length=15, null=True, blank=True)
     job_requested_walltime = models.CharField(max_length=8, null=True, blank=True)
     job_elapsed_walltime = models.CharField(max_length=8, null=True, blank=True)
@@ -120,7 +120,7 @@ class JobQueueTask(Task):
 
     @property
     def is_failure(self):
-        return self.job_status == 'FAILURE' or self.job_status == 'FAILED' or self.job_status == 'NODE_FAIL'
+        return self.job_status == 'FAILURE' or self.job_status == 'FAILED' or self.job_status == 'NODE_FAIL' or self.status == 'FAILURE'
 
     @property
     def is_cancelled(self):

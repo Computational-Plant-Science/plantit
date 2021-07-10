@@ -844,14 +844,9 @@
                                                                     does not
                                                                     specify
                                                                     resource
-                                                                    requests and
-                                                                    can only be
-                                                                    submitted to
-                                                                    agents
-                                                                    configured
-                                                                    for the
-                                                                    <b>Local</b>
-                                                                    executor.</b-alert
+                                                                    requests. If submitted to an agent with a
+                                                                    <b>Jobqueue</b>
+                                                                    executor, defaults of 1 hour, 10 GB, 1 core & 1 process will be requested.</b-alert
                                                                 >
                                                             </b-col>
                                                             <b-col
@@ -1068,7 +1063,10 @@
                                                                             "
                                                                         >
                                                                             {{
-                                                                                taskName !== '' ? taskName : taskGuid
+                                                                                taskName !==
+                                                                                ''
+                                                                                    ? taskName
+                                                                                    : taskGuid
                                                                             }}
                                                                             <i
                                                                                 v-if="
@@ -1766,21 +1764,19 @@
                                                                                 v-if="
                                                                                     inputValid
                                                                                 "
-                                                                                >{{
-                                                                                    selectedInput.path
-                                                                                }}
-
-                                                                                <i
+                                                                                ><i
                                                                                     v-if="
                                                                                         selectedInput.type ===
                                                                                             'file'
                                                                                     "
-                                                                                    class="fas fa-file fa-fw"
+                                                                                    class="fas fa-file fa-fw mr-1"
                                                                                 ></i>
                                                                                 <i
                                                                                     v-else
-                                                                                    class="fas fa-folder fa-fw"
-                                                                                ></i>
+                                                                                    class="fas fa-folder fa-fw mr-1"
+                                                                                ></i>{{
+                                                                                    selectedInput.path
+                                                                                }}
                                                                                 <i
                                                                                     class="fas fa-check text-success fa-fw"
                                                                                 ></i>
@@ -3692,15 +3688,15 @@ export default {
             this.$bvModal.show('authenticate');
         },
         async onStart() {
-            if (
-                this.getWorkflow.config.jobqueue === undefined &&
-                this.selectedAgent.executor !== 'Local'
-            ) {
-                alert(
-                    'This workflow configuration lacks a section specifying job-queue scheduler resource requests. It can only be submitted to agents configured for in-process execution.'
-                );
-                return;
-            }
+            // if (
+            //     this.getWorkflow.config.jobqueue === undefined &&
+            //     this.selectedAgent.executor !== 'Local'
+            // ) {
+            //     alert(
+            //         'This workflow configuration lacks a section specifying job-queue scheduler resource requests. It can only be submitted to agents configured for in-process execution.'
+            //     );
+            //     return;
+            // }
 
             // prepare configuration
             this.params['config'] = {};
@@ -3719,6 +3715,17 @@ export default {
             };
             if ('jobqueue' in this.getWorkflow.config)
                 config['jobqueue'] = this.getWorkflow.config.jobqueue;
+            else if (
+                this.getWorkflow.config.jobqueue === undefined &&
+                this.selectedAgent.executor !== 'Local'
+            )
+                // default jobqueue request
+                config['jobqueue'] = {
+                    walltime: '01:00:00',
+                    memory: '10GB',
+                    processes: 1,
+                    cores: 1
+                };
             if ('gpu' in this.getWorkflow.config)
                 config['gpu'] = this.getWorkflow.config.gpu;
             if ('branch' in this.getWorkflow.config)

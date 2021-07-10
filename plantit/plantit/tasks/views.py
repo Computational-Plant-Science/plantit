@@ -38,7 +38,6 @@ def get_all_or_create(request):
             task_name = config.get('task_name', None)
             task_guid = config.get('task_guid', None)
             if task_guid is None: return HttpResponseBadRequest()
-            print(workflow['miappe'])
             task = create_task(
                 username=user.username,
                 agent_name=agent.name,

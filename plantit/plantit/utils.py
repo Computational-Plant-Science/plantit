@@ -977,15 +977,15 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
 def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
     nodes = min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1
 
-    if 'jobqueue' not in 'options': return []
+    if 'jobqueue' not in options: return []
     gpu = task.agent.gpu and ('gpu' in options and options['gpu'])
     jobqueue = options['jobqueue']
     commands = []
 
-    if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}\n")
-    if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(f"#SBATCH --mem={jobqueue['memory']}\n")
-    if 'walltime' in task.workflow['config']:
-        split_time = task.workflow['config']['walltime'].split(':')
+    if 'cores' in jobqueue: commands.append(f"#SBATCH --cpus-per-task={int(jobqueue['cores'])}")
+    if 'memory' in jobqueue and not has_virtual_memory(task.agent): commands.append(f"#SBATCH --mem={jobqueue['memory']}")
+    if 'walltime' in jobqueue:
+        split_time = jobqueue['walltime'].split(':')
         hours = int(split_time[0])
         minutes = int(split_time[1])
         seconds = int(split_time[2])
@@ -1004,23 +1004,23 @@ def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptio
 
         task.job_requested_walltime = adjusted_str
         task.save()
-        commands.append(f"#SBATCH --time={adjusted_str}\n")
-    if gpu: commands.append(f"#SBATCH --gres=gpu:1\n")
+        commands.append(f"#SBATCH --time={adjusted_str}")
+    if gpu: commands.append(f"#SBATCH --gres=gpu:1")
     if task.agent.queue is not None and task.agent.queue != '': commands.append(
-        f"#SBATCH --partition={task.agent.gpu_queue if gpu else task.agent.queue}\n")
-    if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}\n")
+        f"#SBATCH --partition={task.agent.gpu_queue if gpu else task.agent.queue}")
+    if task.agent.project is not None and task.agent.project != '': commands.append(f"#SBATCH -A {task.agent.project}")
     if len(inputs) > 0:
         if task.agent.job_array:
-            commands.append(f"#SBATCH --array=1-{len(inputs)}\n")
-        commands.append(f"#SBATCH -N {nodes}\n")
-        commands.append(f"#SBATCH --ntasks={nodes}\n")
+            commands.append(f"#SBATCH --array=1-{len(inputs)}")
+        commands.append(f"#SBATCH -N {nodes}")
+        commands.append(f"#SBATCH --ntasks={nodes}")
     else:
-        commands.append(f"#SBATCH -N 1\n")
-        commands.append("#SBATCH --ntasks=1\n")
-    commands.append("#SBATCH --mail-type=END,FAIL\n")
-    commands.append(f"#SBATCH --mail-user={task.user.email}\n")
-    commands.append("#SBATCH --output=plantit.%j.out\n")
-    commands.append("#SBATCH --error=plantit.%j.err\n")
+        commands.append(f"#SBATCH -N 1")
+        commands.append("#SBATCH --ntasks=1")
+    commands.append("#SBATCH --mail-type=END,FAIL")
+    commands.append(f"#SBATCH --mail-user={task.user.email}")
+    commands.append("#SBATCH --output=plantit.%j.out")
+    commands.append("#SBATCH --error=plantit.%j.err")
 
     newline = '\n'
     logger.info(f"Using resource requests: {newline.join(commands)}")
@@ -1135,7 +1135,7 @@ def execute_local_task(task: Task, ssh: SSH):
     task.save()
 
 
-def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
+def submit_jobqueue_task(task: JobQueueTask, ssh: SSH) -> str:
     precommand = '; '.join(str(task.agent.pre_commands).splitlines()) if task.agent.pre_commands else ':'
     command = f"sbatch {task.guid}.sh"
     workdir = join(task.agent.workdir, task.workdir)
@@ -1151,6 +1151,8 @@ def submit_jobqueue_task(task: Task, ssh: SSH) -> str:
     task.job_id = job_id
     task.updated = timezone.now()
     task.save()
+
+    logger.info(f"Set task job ID: {task.job_id}")
 
     return job_id
 
@@ -1247,8 +1249,8 @@ def remove_task_orchestration_logs(guid: str):
     os.remove(local_log_path)
 
 
-def get_jobqueue_task_job_walltime(task: JobQueueTask) -> (str, str):
-    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+def get_jobqueue_task_job_walltime(task: JobQueueTask, auth: dict) -> (str, str):
+    ssh = get_task_ssh_client(task, auth)
     with ssh:
         lines = execute_command(
             ssh=ssh,
@@ -1266,8 +1268,8 @@ def get_jobqueue_task_job_walltime(task: JobQueueTask) -> (str, str):
             return None
 
 
-def get_jobqueue_task_job_status(task: JobQueueTask) -> str:
-    ssh = SSH(task.agent.hostname, task.agent.port, task.agent.username)
+def get_jobqueue_task_job_status(task: JobQueueTask, auth: dict) -> str:
+    ssh = get_task_ssh_client(task, auth)
     with ssh:
         lines = execute_command(
             ssh=ssh,
