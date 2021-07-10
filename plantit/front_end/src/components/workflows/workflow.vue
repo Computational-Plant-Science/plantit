@@ -830,9 +830,10 @@
                                                                 md="auto"
                                                                 class="text-right"
                                                                 v-if="
-                                                                    !getWorkflow
+                                                                    getWorkflow
                                                                         .config
-                                                                        .jobqueue
+                                                                        .jobqueue ===
+                                                                        undefined
                                                                 "
                                                             >
                                                                 <b-alert
@@ -1067,7 +1068,7 @@
                                                                             "
                                                                         >
                                                                             {{
-                                                                                taskName
+                                                                                taskName !== '' ? taskName : taskGuid
                                                                             }}
                                                                             <i
                                                                                 v-if="
@@ -1111,9 +1112,10 @@
                                                                             name
                                                                             is
                                                                             provided,
-                                                                            an
+                                                                            the
                                                                             auto-generated
                                                                             GUID
+                                                                            below
                                                                             will
                                                                             be
                                                                             used.
@@ -1178,7 +1180,7 @@
                                                                                         : require('../../assets/miappe_icon_black.png')
                                                                                 "
                                                                             ></b-img>
-                                                                            MIAPPE
+                                                                            Project
                                                                         </h4> </b-col
                                                                     ><b-col
                                                                         md="auto"
@@ -1203,7 +1205,8 @@
                                                                                     selectedStudy !==
                                                                                         null
                                                                                 "
-                                                                                >, {{
+                                                                                >,
+                                                                                {{
                                                                                     selectedStudy.title
                                                                                 }}</span
                                                                             >
@@ -1212,10 +1215,14 @@
                                                                                     selectedProject ===
                                                                                         null
                                                                                 "
+                                                                                >None
+                                                                                Selected</span
+                                                                            ><span
+                                                                                v-else
                                                                                 ><i
-                                                                                    class="text-danger fas fa-exclamation fa-fw"
+                                                                                    class="fas fa-check fa-fw ml-1 text-success"
                                                                                 ></i
-                                                                            ></span><span v-else><i class="fas fa-check fa-fw ml-1 text-success"></i></span></h5
+                                                                            ></span></h5
                                                                     ></b-col>
                                                                 </b-row>
                                                                 <b-row
@@ -1230,7 +1237,7 @@
                                                                             Select
                                                                             the
                                                                             MIAPPE
-                                                                            investigation
+                                                                            project
                                                                             and
                                                                             study
                                                                             this
@@ -1241,17 +1248,21 @@
                                                                     </b-col>
                                                                 </b-row>
                                                                 <b-row
-                                                                    class="mt-1"
+                                                                    class="mt-2"
                                                                     ><b-col
                                                                         cols="3"
-                                                                        >Project</b-col
+                                                                        ><i
+                                                                            >Project</i
+                                                                        ></b-col
                                                                     ><b-col
                                                                         cols="9"
                                                                         v-if="
                                                                             selectedProject !==
                                                                                 null
                                                                         "
-                                                                        >Study</b-col
+                                                                        ><i
+                                                                            >Study</i
+                                                                        ></b-col
                                                                     ></b-row
                                                                 >
                                                                 <b-row
@@ -1318,7 +1329,9 @@
                                                                                             selectedStudy !==
                                                                                                 null &&
                                                                                                 selectedStudy.title ===
-                                                                                                    study.title && selectedProject === project
+                                                                                                    study.title &&
+                                                                                                selectedProject ===
+                                                                                                    project
                                                                                         "
                                                                                         class="fas fa-check fa-fw ml-1 text-success"
                                                                                     ></i></b-button></b-col></b-row></b-col
@@ -1522,11 +1535,11 @@
                                                                                 v-if="
                                                                                     paramsValid
                                                                                 "
-                                                                                class="fas fa-check text-success fa-fw"
+                                                                                class="fas fa-check text-success fa-fw ml-1"
                                                                             ></i>
                                                                             <i
                                                                                 v-else
-                                                                                class="fas fa-exclamation text-danger fa-fw"
+                                                                                class="fas fa-exclamation text-danger fa-fw ml-1"
                                                                             ></i></h5
                                                                     ></b-col>
                                                                 </b-row>
@@ -1548,6 +1561,7 @@
                                                                     </b-col>
                                                                 </b-row>
                                                                 <b-row
+                                                                    class="mt-2"
                                                                     ><b-col>
                                                                         <b-row
                                                                             class="mt-1"
@@ -1556,8 +1570,43 @@
                                                                                 param.name
                                                                             "
                                                                         >
-                                                                            <b-col
-                                                                                >{{
+                                                                            <b-col>
+                                                                                <i
+                                                                                    v-if="
+                                                                                        param.type ===
+                                                                                            'number'
+                                                                                    "
+                                                                                    class="fas fa-calculator fa-fw mr-1"
+                                                                                ></i>
+                                                                                <i
+                                                                                    v-else-if="
+                                                                                        param.type ===
+                                                                                            'boolean'
+                                                                                    "
+                                                                                    class="far fa-flag fa-fw mr-1"
+                                                                                ></i>
+                                                                                <i
+                                                                                    v-else-if="
+                                                                                        param.type ===
+                                                                                            'string'
+                                                                                    "
+                                                                                    class="fas fa-edit fa-fw mr-1"
+                                                                                ></i>
+                                                                                <i
+                                                                                    v-else-if="
+                                                                                        param.type ===
+                                                                                            'select'
+                                                                                    "
+                                                                                    class="fas fa-list fa-fw mr-1"
+                                                                                ></i>
+                                                                                <i
+                                                                                    v-else-if="
+                                                                                        param.type ===
+                                                                                            'multiselect'
+                                                                                    "
+                                                                                    class="fas fa-th-list fa-fw mr-1"
+                                                                                ></i>
+                                                                                {{
                                                                                     param.name.toLowerCase()
                                                                                 }}</b-col
                                                                             ><b-col>
@@ -2167,10 +2216,13 @@
                                                                                 "
                                                                                 class="fas fa-check text-success fa-fw ml-1"
                                                                             ></i>
-                                                                            <i
+                                                                            <span
                                                                                 v-else
-                                                                                class="fas fa-exclamation text-danger fa-fw ml-1"
-                                                                            ></i></h5
+                                                                                >None
+                                                                                Selected<i
+                                                                                    class="fas fa-exclamation text-danger fa-fw ml-1"
+                                                                                ></i>
+                                                                            </span></h5
                                                                     ></b-col>
                                                                 </b-row>
                                                                 <div>
@@ -2283,15 +2335,19 @@
                                                                                             processes,
                                                                                             <span
                                                                                                 v-if="
-                                                                                                    parseInt(
-                                                                                                        agent.max_mem
-                                                                                                    ) >=
+                                                                                                    getWorkflow
+                                                                                                        .config
+                                                                                                        .jobqueue !==
+                                                                                                        undefined &&
                                                                                                         parseInt(
-                                                                                                            getWorkflow
-                                                                                                                .config
-                                                                                                                .jobqueue
-                                                                                                                .memory
-                                                                                                        ) &&
+                                                                                                            agent.max_mem
+                                                                                                        ) >=
+                                                                                                            parseInt(
+                                                                                                                getWorkflow
+                                                                                                                    .config
+                                                                                                                    .jobqueue
+                                                                                                                    .memory
+                                                                                                            ) &&
                                                                                                         parseInt(
                                                                                                             agent.max_mem
                                                                                                         ) >
@@ -2434,15 +2490,19 @@
                                                                                             processes,
                                                                                             <span
                                                                                                 v-if="
-                                                                                                    parseInt(
-                                                                                                        agent.max_mem
-                                                                                                    ) >=
+                                                                                                    getWorkflow
+                                                                                                        .config
+                                                                                                        .jobqueue !==
+                                                                                                        undefined &&
                                                                                                         parseInt(
-                                                                                                            getWorkflow
-                                                                                                                .config
-                                                                                                                .jobqueue
-                                                                                                                .memory
-                                                                                                        ) &&
+                                                                                                            agent.max_mem
+                                                                                                        ) >=
+                                                                                                            parseInt(
+                                                                                                                getWorkflow
+                                                                                                                    .config
+                                                                                                                    .jobqueue
+                                                                                                                    .memory
+                                                                                                            ) &&
                                                                                                         parseInt(
                                                                                                             agent.max_mem
                                                                                                         ) >
@@ -2585,15 +2645,19 @@
                                                                                             processes, </small
                                                                                         ><span
                                                                                             v-if="
-                                                                                                parseInt(
-                                                                                                    agent.max_mem
-                                                                                                ) >=
+                                                                                                getWorkflow
+                                                                                                    .config
+                                                                                                    .jobqueue !==
+                                                                                                    undefined &&
                                                                                                     parseInt(
-                                                                                                        getWorkflow
-                                                                                                            .config
-                                                                                                            .jobqueue
-                                                                                                            .memory
-                                                                                                    ) &&
+                                                                                                        agent.max_mem
+                                                                                                    ) >=
+                                                                                                        parseInt(
+                                                                                                            getWorkflow
+                                                                                                                .config
+                                                                                                                .jobqueue
+                                                                                                                .memory
+                                                                                                        ) &&
                                                                                                     parseInt(
                                                                                                         agent.max_mem
                                                                                                     ) >
@@ -3608,6 +3672,7 @@ export default {
             this.selectedAgent = agent;
         },
         agentUnsupported(agent) {
+            if (this.getWorkflow.config.jobqueue === undefined) return false;
             return (
                 (parseInt(agent.max_mem) !== -1 &&
                     parseInt(agent.max_mem) <
@@ -3628,7 +3693,7 @@ export default {
         },
         async onStart() {
             if (
-                !this.getWorkflow.config.jobqueue &&
+                this.getWorkflow.config.jobqueue === undefined &&
                 this.selectedAgent.executor !== 'Local'
             ) {
                 alert(
@@ -3683,8 +3748,8 @@ export default {
                 config: config,
                 type: this.submitType,
                 miappe: {
-                  'project': this.selectedProject,
-                  'study': this.selectedStudy
+                    project: this.selectedProject,
+                    study: this.selectedStudy
                 }
             };
             if (this.mustAuthenticate)
