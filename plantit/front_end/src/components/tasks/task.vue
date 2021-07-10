@@ -99,6 +99,20 @@
                                 </h5>
                             </b-col>
                         </b-row>
+                        <b-row v-if="getTask.project !== null"
+                            ><b-col md="auto"
+                                ><h5>
+                                    <b-badge class="mr-2" variant="info">{{
+                                        getTask.project.title
+                                    }}</b-badge
+                                    ><small v-if="getTask.study !== null"
+                                        ><b-badge class="mr-2" variant="info">{{
+                                            getTask.study.title
+                                        }}</b-badge></small
+                                    >
+                                </h5></b-col
+                            ></b-row
+                        >
                         <b-row class="m-0 p-0">
                             <b-col align-self="end" class="m-0 p-0">
                                 <h5
@@ -1390,34 +1404,34 @@
                 :src="thumbnailUrl"
             ></b-embed>
         </b-modal>
-      <b-modal
-                id="authenticate"
-                :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
-                centered
-                close
-                :header-text-variant="profile.darkMode ? 'white' : 'dark'"
-                :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
-                :header-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
-                :title="'Authenticate with ' + this.getTask.agent"
-                @ok="onStart"
-                ok-variant="success"
-            >
-                <b-form-input
-                    v-model="authenticationUsername"
-                    type="text"
-                    placeholder="Your username"
-                    required
-                ></b-form-input>
-                <b-form-input
-                    v-model="authenticationPassword"
-                    type="password"
-                    placeholder="Your password"
-                    required
-                ></b-form-input>
-            </b-modal>
+        <b-modal
+            id="authenticate"
+            :title-class="profile.darkMode ? 'text-white' : 'text-dark'"
+            centered
+            close
+            :header-text-variant="profile.darkMode ? 'white' : 'dark'"
+            :header-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :body-bg-variant="profile.darkMode ? 'dark' : 'white'"
+            :header-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :footer-border-variant="profile.darkMode ? 'dark' : 'white'"
+            :title="'Authenticate with ' + this.getTask.agent"
+            @ok="onStart"
+            ok-variant="success"
+        >
+            <b-form-input
+                v-model="authenticationUsername"
+                type="text"
+                placeholder="Your username"
+                required
+            ></b-form-input>
+            <b-form-input
+                v-model="authenticationPassword"
+                type="password"
+                placeholder="Your password"
+                required
+            ></b-form-input>
+        </b-modal>
     </div>
 </template>
 <script>
@@ -1469,7 +1483,7 @@ export default {
             // the "v-if hack" (https://michaelnthiessen.com/force-re-render/)
             render: true,
             authenticationUsername: '',
-          authenticationPassword: ''
+            authenticationPassword: ''
         };
     },
     methods: {
@@ -1741,7 +1755,8 @@ export default {
         },
         cancel() {
             this.canceled = true;
-            axios.get(
+            axios
+                .get(
                     `/apis/v1/tasks/${this.$router.currentRoute.params.owner}/${this.$router.currentRoute.params.name}/cancel/`
                 )
                 .then(response => {

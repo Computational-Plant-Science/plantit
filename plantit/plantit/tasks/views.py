@@ -17,7 +17,8 @@ from plantit.agents.models import Agent, AgentExecutor
 from plantit.celery_tasks import submit_task
 from plantit.redis import RedisClient
 from plantit.tasks.models import Task, DelayedTask, RepeatingTask, TaskStatus
-from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestration_log_file_path, log_task_status, \
+from plantit.utils import task_to_dict, create_task, parse_task_auth_options, get_task_ssh_client, get_task_orchestration_log_file_path, \
+    log_task_status, \
     push_task_event, cancel_task, delayed_task_to_dict, repeating_task_to_dict
 
 
@@ -42,7 +43,9 @@ def get_all_or_create(request):
                 agent_name=agent.name,
                 workflow=workflow,
                 name=task_name if task_name is not None and task_name != '' else task_guid,
-                guid=task_guid)
+                guid=task_guid,
+                investigation=workflow['miappe']['project']['title'],
+                study=workflow['miappe']['study']['title'])
 
             # submit the task
             auth = parse_task_auth_options(workflow['auth'])
@@ -86,6 +89,7 @@ def get_all_or_create(request):
         #         'created': created,
         #         'task': repeating_task_to_dict(task)
         #     })
+
         else:
             raise ValueError(f"Unsupported task type (expected: Now, Later, or Periodically)")
 

@@ -9,7 +9,7 @@
                 >
                 <b-col md="auto" class="ml-0 mb-1" align-self="center"
                     ><b-button
-                    id="refresh-tasks"
+                        id="refresh-tasks"
                         :disabled="tasksLoading"
                         :variant="profile.darkMode ? 'outline-light' : 'white'"
                         size="sm"
@@ -148,6 +148,24 @@
                                             >{{ task.name }}</b-link
                                         >
                                         <br />
+                                        <span v-if="task.project !== null">
+                                            <b-badge
+                                                class="mr-2"
+                                                variant="info"
+                                                >{{
+                                                    task.project.title
+                                                }}</b-badge
+                                            ><small
+                                                v-if="task.study !== null"
+                                                ><b-badge
+                                                    class="mr-2"
+                                                    variant="info"
+                                                    >{{
+                                                        task.study.title
+                                                    }}</b-badge
+                                                ></small
+                                            ></span
+                                        >
                                         <div
                                             v-if="
                                                 task.tags !== undefined &&

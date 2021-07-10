@@ -54,7 +54,7 @@
             >
         </div>
         <div v-else>
-            <b-container>
+            <b-container fluid>
                 <b-row
                     ><b-col
                         ><b-button
@@ -150,9 +150,9 @@
                             triggers="manual"
                             placement="bottom"
                             target="projects-button"
-                            title="Your MIAPPE investigations"
-                            >Click here to see your MIAPPE investigations and
-                            manage your metadata.</b-popover
+                            title="Your MIAPPE projects"
+                            >Click here to see your MIAPPE projects and manage
+                            your metadata.</b-popover
                         >
                     </b-col>
                 </b-row>

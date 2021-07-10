@@ -3681,7 +3681,11 @@ export default {
             let data = {
                 repo: this.getWorkflow.repo,
                 config: config,
-                type: this.submitType
+                type: this.submitType,
+                miappe: {
+                  'project': this.selectedProject,
+                  'study': this.selectedStudy
+                }
             };
             if (this.mustAuthenticate)
                 data['auth'] = {

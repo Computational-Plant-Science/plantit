@@ -704,7 +704,7 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
     return errors, options
 
 
-def create_task(username: str, agent_name: str, workflow: dict, name: str = None, guid: str = None) -> Task:
+def create_task(username: str, agent_name: str, workflow: dict, name: str = None, guid: str = None, investigation: str = None, study: str = None) -> Task:
     repo_owner = workflow['repo']['owner']['login']
     repo_name = workflow['repo']['name']
     agent = Agent.objects.get(name=agent_name)
@@ -739,6 +739,10 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
             created=now,
             updated=now,
             token=binascii.hexlify(os.urandom(20)).decode())
+
+    # add MIAPPE info
+    if investigation is not None: task.investigation = Investigation.objects.get(owner=user, title=investigation)
+    if study is not None: task.study = Study.objects.get(investigation=task.investigation, title=study)
 
     # add repo logo
     if 'logo' in workflow['config']:
@@ -1375,6 +1379,15 @@ def task_to_dict(task: Task) -> dict:
         'status': task.status,
         'owner': task.user.username,
         'name': task.name,
+        'project': {
+            'title': task.investigation.title,
+            'owner': task.investigation.owner.username,
+            'description': task.investigation.description
+        } if task.investigation is not None else None,
+        'study': {
+            'title': task.study.title,
+            'description': task.study.description
+        } if task.study is not None else None,
         'work_dir': task.workdir,
         'task_logs': task_logs,
         'agent': task.agent.name if task.agent is not None else None,
