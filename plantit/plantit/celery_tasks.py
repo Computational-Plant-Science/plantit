@@ -113,7 +113,7 @@ def poll_job_status(guid: str, auth: dict):
         final_message = f"Job {task.job_id} failed, cleaning up in {cleanup_delay}m"
         log_task_status(task, [final_message])
         async_to_sync(push_task_event)(task)
-        cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
+        cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
 
         if task.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
@@ -159,7 +159,7 @@ def poll_job_status(guid: str, auth: dict):
         else:
             log_task_status(task, [f"Job {task.job_id} {job_status}, walltime {job_walltime}, polling again in {refresh_delay}s"])
             async_to_sync(push_task_event)(task)
-            poll_job_status.s(guid).apply_async(countdown=refresh_delay)
+            poll_job_status.s(guid, auth).apply_async(countdown=refresh_delay)
     except StopIteration:
         if not (task.job_status == 'COMPLETED' or task.job_status == 'COMPLETING'):
             task.status = TaskStatus.FAILURE
@@ -174,7 +174,7 @@ def poll_job_status(guid: str, auth: dict):
             final_message = f"Job {task.job_id} succeeded, cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m"
             log_task_status(task, [final_message])
             async_to_sync(push_task_event)(task)
-            cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
+            cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
 
             if task.user.profile.push_notification_status == 'enabled':
                 SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
@@ -188,7 +188,7 @@ def poll_job_status(guid: str, auth: dict):
         final_message = f"Job {task.job_id} encountered unexpected error (cleaning up in {int(environ.get('RUNS_CLEANUP_MINUTES'))}m): {traceback.format_exc()}"
         log_task_status(task, [final_message])
         async_to_sync(push_task_event)(task)
-        cleanup_task.s(guid).apply_async(countdown=cleanup_delay)
+        cleanup_task.s(guid, auth).apply_async(countdown=cleanup_delay)
 
         if task.user.profile.push_notification_status == 'enabled':
             SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
