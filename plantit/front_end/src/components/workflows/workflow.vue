@@ -863,12 +863,12 @@
                                                                                         getWorkflow
                                                                                             .config
                                                                                             .jobqueue
-                                                                                            .time
+                                                                                            .walltime
                                                                                 }}</code
                                                                             ></b
                                                                         >
                                                                         <small>
-                                                                            time</small
+                                                                            walltime</small
                                                                         >
                                                                     </b-col>
                                                                 </b-row>
@@ -3724,7 +3724,8 @@ export default {
                     walltime: '01:00:00',
                     memory: '10GB',
                     processes: 1,
-                    cores: 1
+                    cores: 1,
+                    queue: agent.queue,
                 };
             if ('gpu' in this.getWorkflow.config)
                 config['gpu'] = this.getWorkflow.config.gpu;

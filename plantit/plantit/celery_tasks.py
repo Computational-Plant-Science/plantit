@@ -23,9 +23,11 @@ from plantit.redis import RedisClient
 from plantit.sns import SnsClient
 from plantit.ssh import execute_command
 from plantit.tasks.models import Task, TaskStatus, JobQueueTask
-from plantit.utils import log_task_status, push_task_event, get_task_ssh_client, configure_task_environment, execute_local_task, submit_jobqueue_task, \
+from plantit.utils import log_task_status, push_task_event, get_task_ssh_client, configure_local_task_environment, execute_local_task, \
+    submit_jobqueue_task, \
     get_jobqueue_task_job_status, get_jobqueue_task_job_walltime, get_task_container_logs, remove_task_orchestration_logs, get_task_result_files, \
-    repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache
+    repopulate_personal_workflow_cache, repopulate_public_workflow_cache, calculate_user_statistics, repopulate_institutions_cache, \
+    configure_jobqueue_task_environment
 
 logger = get_task_logger(__name__)
 
@@ -55,9 +57,9 @@ def submit_task(guid: str, auth: dict):
         with ssh:
             log_task_status(task, [f"Configuring environment"])
             async_to_sync(push_task_event)(task)
-            configure_task_environment(task, ssh)
 
             if local:
+                configure_local_task_environment(task, ssh)
                 log_task_status(task, [f"Invoking script"])
                 async_to_sync(push_task_event)(task)
 
@@ -73,6 +75,7 @@ def submit_task(guid: str, auth: dict):
                 if task.user.profile.push_notification_status == 'enabled':
                     SnsClient.get().publish_message(task.user.profile.push_notification_topic_arn, f"PlantIT task {task.guid}", final_message, {})
             else:
+                configure_jobqueue_task_environment(task, ssh)
                 log_task_status(task, [f"Submitting script"])
                 async_to_sync(push_task_event)(task)
 

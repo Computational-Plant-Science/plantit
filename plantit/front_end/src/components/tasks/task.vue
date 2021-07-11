@@ -124,11 +124,10 @@
                                 >
                                     <b-spinner
                                         class="mb-1 mr-1"
+                                        style="position: relative; top: -10px; left: 12px"
                                         small
                                         v-if="!getTask.is_complete"
-                                        :variant="
-                                            profile.darkMode ? 'light' : 'dark'
-                                        "
+                                        variant="warning"
                                     >
                                     </b-spinner>
                                     <b-badge

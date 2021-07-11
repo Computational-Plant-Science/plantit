@@ -670,22 +670,28 @@ def parse_task_cli_options(task: Task) -> (List[str], PlantITCLIOptions):
         if 'queue' in jobqueue:
             if not isinstance(jobqueue['queue'], str):
                 errors.append('Section \'jobqueue\'.\'queue\' must be a str')
+        else: jobqueue['queue'] = task.agent.queue
         if 'project' in jobqueue:
             if not isinstance(jobqueue['project'], str):
                 errors.append('Section \'jobqueue\'.\'project\' must be a str')
+        else: jobqueue['project'] = task.agent.project
         if 'walltime' in jobqueue:
             if not isinstance(jobqueue['walltime'], str):
                 errors.append('Section \'jobqueue\'.\'walltime\' must be a str')
+        else: jobqueue['walltime'] = task.agent.max_walltime
         if 'cores' in jobqueue:
             if not isinstance(jobqueue['cores'], int):
                 errors.append('Section \'jobqueue\'.\'cores\' must be a int')
+        else: jobqueue['cores'] = task.agent.max_cores
         if 'processes' in jobqueue:
             if not isinstance(jobqueue['processes'], int):
                 errors.append('Section \'jobqueue\'.\'processes\' must be a int')
-        if 'extra' in jobqueue and not all(extra is str for extra in jobqueue['extra']):
-            errors.append('Section \'jobqueue\'.\'extra\' must be a list of str')
+        else: jobqueue['processes'] = task.agent.max_processes
         if 'header_skip' in jobqueue and not all(extra is str for extra in jobqueue['header_skip']):
             errors.append('Section \'jobqueue\'.\'header_skip\' must be a list of str')
+        elif task.agent.header_skip is not None and task.agent.header_skip != '': jobqueue['header_skip'] = task.agent.header_skip
+        if 'extra' in jobqueue and not all(extra is str for extra in jobqueue['extra']):
+            errors.append('Section \'jobqueue\'.\'extra\' must be a list of str')
 
     options = PlantITCLIOptions(
         workdir=work_dir,
@@ -760,7 +766,7 @@ def create_task(username: str, agent_name: str, workflow: dict, name: str = None
     return task
 
 
-def configure_task_environment(task: Task, ssh: SSH):
+def configure_local_task_environment(task: Task, ssh: SSH):
     log_task_status(task, [f"Verifying configuration"])
     async_to_sync(push_task_event)(task)
 
@@ -787,10 +793,44 @@ def configure_task_environment(task: Task, ssh: SSH):
             else:
                 cli_options['input']['path'] = f"input/{path.rpartition('/')[2]}"
 
-        if task.agent.executor == AgentExecutor.LOCAL: del cli_options['jobqueue']
-        else: cli_options['jobqueue'] = {
-            'slurm': cli_options['jobqueue']
-        }
+        del cli_options['jobqueue']
+
+        sftp.chdir(work_dir)
+        with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
+            yaml.dump(del_none(cli_options), cli_file, default_flow_style=False)
+        if 'input' in cli_options: sftp.mkdir(join(work_dir, 'input'))
+
+
+def configure_jobqueue_task_environment(task: JobQueueTask, ssh: SSH):
+    log_task_status(task, [f"Verifying configuration"])
+    async_to_sync(push_task_event)(task)
+
+    parse_errors, cli_options = parse_task_cli_options(task)
+
+
+    if len(parse_errors) > 0: raise ValueError(f"Failed to parse task options: {' '.join(parse_errors)}")
+
+    work_dir = join(task.agent.workdir, task.guid)
+    log_task_status(task, [f"Creating working directory"])
+    async_to_sync(push_task_event)(task)
+
+    list(execute_command(ssh=ssh, precommand=':', command=f"mkdir {work_dir}"))
+
+    log_task_status(task, [f"Uploading task"])
+    upload_task_executables(task, ssh, cli_options)
+    async_to_sync(push_task_event)(task)
+
+    with ssh.client.open_sftp() as sftp:
+        # TODO remove this utter hack
+        if 'input' in cli_options:
+            kind = cli_options['input']['kind']
+            path = cli_options['input']['path']
+            if kind == InputKind.DIRECTORY or kind == InputKind.FILES:
+                cli_options['input']['path'] = 'input'
+            else:
+                cli_options['input']['path'] = f"input/{path.rpartition('/')[2]}"
+
+        cli_options['jobqueue'] = {'slurm': cli_options['jobqueue']}
 
         sftp.chdir(work_dir)
         with sftp.open(f"{task.guid}.yaml", 'w') as cli_file:
@@ -973,7 +1013,7 @@ def compose_task_run_script(task: Task, options: PlantITCLIOptions, template: st
     return template_header + resource_requests + [task.agent.pre_commands] + [pull_command] + run_commands + [zip_command] + [push_command]
 
 
-def compose_jobqueue_task_resource_requests(task: Task, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
+def compose_jobqueue_task_resource_requests(task: JobQueueTask, options: PlantITCLIOptions, inputs: List[str]) -> List[str]:
     nodes = min(len(inputs), task.agent.max_nodes) if inputs is not None and not task.agent.job_array else 1
 
     if 'jobqueue' not in options: return []
@@ -1157,7 +1197,7 @@ def submit_jobqueue_task(task: JobQueueTask, ssh: SSH) -> str:
 
 
 def log_task_status(task: Task, messages: List[str]):
-    log_path = join(environ.get('RUNS_LOGS'), f"{task.guid}.plantit.log")
+    log_path = join(environ.get('TASKS_LOGS'), f"{task.guid}.plantit.log")
     with open(log_path, 'a') as log:
         for message in messages:
             logger.info(f"[Task {task.guid} ({task.user.username}/{task.name})] {message}")
@@ -1196,7 +1236,7 @@ def cancel_task(task: Task, auth):
 
 
 def get_task_orchestration_log_file_path(task: Task):
-    return join(os.environ.get('RUNS_LOGS'), f"{task.guid}.plantit.log")
+    return join(os.environ.get('TASKS_LOGS'), f"{task.guid}.plantit.log")
 
 
 def get_task_container_log_file_name(task: Task):
@@ -1207,7 +1247,7 @@ def get_task_container_log_file_name(task: Task):
 
 
 def get_task_container_log_file_path(task: Task):
-    return join(os.environ.get('RUNS_LOGS'), get_task_container_log_file_name(task))
+    return join(os.environ.get('TASKS_LOGS'), get_task_container_log_file_name(task))
 
 
 def get_task_container_logs(task: Task, ssh: SSH):

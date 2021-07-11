@@ -905,7 +905,7 @@
                                 to load modules).</small
                             ><br /></b-col
                     ></b-row>
-                    <b-row v-if="executorCheckOutput.length > 0" class="mb-3"
+                    <!--<b-row v-if="executorCheckOutput.length > 0" class="mb-3"
                         ><b-col
                             :class="
                                 profile.darkMode ? 'text-light' : 'text-dark'
@@ -917,7 +917,7 @@
                                 >{{ line + '\n' }}</span
                             ></b-col
                         ></b-row
-                    >
+                    >-->
                     <b-row>
                         <b-col>
                             <b-button
